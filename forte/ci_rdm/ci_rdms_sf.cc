@@ -47,7 +47,7 @@ void CI_RDMS::compute_1rdm_sf(std::vector<double>& opdm) {
     if (print_)
         outfile->Printf("\n  Time spent forming 1-map:   %1.6f", t_one);
 
-    opdm.assign(no2_, 0.0);
+    opdm.assign(norb2_, 0.0);
     timer build("Build SF 1-RDM");
 
     for (size_t J = 0; J < dim_space_; ++J) {
@@ -60,7 +60,7 @@ void CI_RDMS::compute_1rdm_sf(std::vector<double>& opdm) {
                 const auto [I, _q] = aaJ_mo_sign;
                 auto q = std::abs(_q) - 1;
                 auto sign = ((_q < 0) == sign_p) ? 1 : -1;
-                opdm[q * no_ + p] += evecs_->get(I, root1_) * vJ * sign;
+                opdm[q * norb_ + p] += evecs_->get(I, root1_) * vJ * sign;
             }
         }
         for (auto& bJ_mo_sign : b_ann_list_[J]) {
@@ -71,7 +71,7 @@ void CI_RDMS::compute_1rdm_sf(std::vector<double>& opdm) {
                 const auto [I, _q] = bbJ_mo_sign;
                 auto q = std::abs(_q) - 1;
                 auto sign = ((_q < 0) == sign_p) ? 1 : -1;
-                opdm[q * no_ + p] += evecs_->get(I, root1_) * vJ * sign;
+                opdm[q * norb_ + p] += evecs_->get(I, root1_) * vJ * sign;
             }
         }
     }
@@ -87,17 +87,17 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
 
-    opdm.assign(no2_, 0.0);
+    opdm.assign(norb2_, 0.0);
     timer build("Build SF 1-RDM");
 
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        for (int pp : dets[J].get_alfa_occ(no_)) {
-            opdm[pp * no_ + pp] += cJ_sq;
+        for (int pp : dets[J].get_alfa_occ(norb_)) {
+            opdm[pp * norb_ + pp] += cJ_sq;
         }
-        for (int pp : dets[J].get_beta_occ(no_)) {
-            opdm[pp * no_ + pp] += cJ_sq;
+        for (int pp : dets[J].get_beta_occ(norb_)) {
+            opdm[pp * norb_ + pp] += cJ_sq;
         }
     }
 
@@ -115,8 +115,8 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
                 auto q = std::abs(_q) - 1;
                 auto sign = ((_q < 0) == sign_p) ? 1 : -1;
 
-                opdm[p * no_ + q] += vI1 * evecs_->get(J, root2_) * sign;
-                opdm[q * no_ + p] += evecs_->get(J, root1_) * vI2 * sign;
+                opdm[p * norb_ + q] += vI1 * evecs_->get(J, root2_) * sign;
+                opdm[q * norb_ + p] += evecs_->get(J, root1_) * vI2 * sign;
             }
         }
     }
@@ -134,8 +134,8 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
                 auto q = std::abs(_q) - 1;
                 auto sign = ((_q < 0) == sign_p) ? 1 : -1;
 
-                opdm[p * no_ + q] += vI1 * evecs_->get(J, root2_) * sign;
-                opdm[q * no_ + p] += evecs_->get(J, root1_) * vI2 * sign;
+                opdm[p * norb_ + q] += vI1 * evecs_->get(J, root2_) * sign;
+                opdm[q * norb_ + p] += evecs_->get(J, root1_) * vI2 * sign;
             }
         }
     }
@@ -154,7 +154,7 @@ void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
         outfile->Printf("\n  Time spent forming 2-map:   %1.6f", t_two);
     }
 
-    tpdm.assign(no4_, 0.0);
+    tpdm.assign(norb4_, 0.0);
     timer build("Build SF 2-RDM");
 
     for (size_t J = 0; J < dim_space_; ++J) {
@@ -173,10 +173,10 @@ void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
                 auto sign = ((_r < 0) == sign_pq) ? 1 : -1;
                 auto value = evecs_->get(I, root2_) * vJ * sign;
 
-                tpdm[p * no3_ + q * no2_ + r * no_ + s] += value;
-                tpdm[p * no3_ + q * no2_ + s * no_ + r] -= value;
-                tpdm[q * no3_ + p * no2_ + r * no_ + s] -= value;
-                tpdm[q * no3_ + p * no2_ + s * no_ + r] += value;
+                tpdm[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                tpdm[p * norb3_ + q * norb2_ + s * norb_ + r] -= value;
+                tpdm[q * norb3_ + p * norb2_ + r * norb_ + s] -= value;
+                tpdm[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
             }
         }
 
@@ -193,10 +193,10 @@ void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
                 auto sign = ((_r < 0) == sign_pq) ? 1 : -1;
                 auto value = evecs_->get(I, root2_) * vJ * sign;
 
-                tpdm[p * no3_ + q * no2_ + r * no_ + s] += value;
-                tpdm[p * no3_ + q * no2_ + s * no_ + r] -= value;
-                tpdm[q * no3_ + p * no2_ + r * no_ + s] -= value;
-                tpdm[q * no3_ + p * no2_ + s * no_ + r] += value;
+                tpdm[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                tpdm[p * norb3_ + q * norb2_ + s * norb_ + r] -= value;
+                tpdm[q * norb3_ + p * norb2_ + r * norb_ + s] -= value;
+                tpdm[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
             }
         }
 
@@ -213,8 +213,8 @@ void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
                 auto sign = ((_r < 0) == sign_pq) ? 1 : -1;
                 auto value = evecs_->get(I, root2_) * vJ * sign;
 
-                tpdm[p * no3_ + q * no2_ + r * no_ + s] += value;
-                tpdm[q * no3_ + p * no2_ + s * no_ + r] += value;
+                tpdm[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                tpdm[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
             }
         }
     }
@@ -230,14 +230,14 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
     op->build_strings(wfn_);
     op->tp_s_lists(wfn_);
 
-    tpdm.assign(no4_, 0.0);
+    tpdm.assign(norb4_, 0.0);
     timer build("Build SF 2-RDM");
 
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
         auto cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        auto aocc = dets[J].get_alfa_occ(no_);
-        auto bocc = dets[J].get_beta_occ(no_);
+        auto aocc = dets[J].get_alfa_occ(norb_);
+        auto bocc = dets[J].get_beta_occ(norb_);
 
         auto naocc = aocc.size();
         auto nbocc = bocc.size();
@@ -247,11 +247,11 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
             for (size_t q = p + 1; q < naocc; ++q) {
                 auto qq = aocc[q];
 
-                tpdm[pp * no3_ + qq * no2_ + pp * no_ + qq] += cJ_sq;
-                tpdm[qq * no3_ + pp * no2_ + pp * no_ + qq] -= cJ_sq;
+                tpdm[pp * norb3_ + qq * norb2_ + pp * norb_ + qq] += cJ_sq;
+                tpdm[qq * norb3_ + pp * norb2_ + pp * norb_ + qq] -= cJ_sq;
 
-                tpdm[qq * no3_ + pp * no2_ + qq * no_ + pp] += cJ_sq;
-                tpdm[pp * no3_ + qq * no2_ + qq * no_ + pp] -= cJ_sq;
+                tpdm[qq * norb3_ + pp * norb2_ + qq * norb_ + pp] += cJ_sq;
+                tpdm[pp * norb3_ + qq * norb2_ + qq * norb_ + pp] -= cJ_sq;
             }
         }
 
@@ -260,11 +260,11 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
             for (size_t q = p + 1; q < nbocc; ++q) {
                 auto qq = bocc[q];
 
-                tpdm[pp * no3_ + qq * no2_ + pp * no_ + qq] += cJ_sq;
-                tpdm[qq * no3_ + pp * no2_ + pp * no_ + qq] -= cJ_sq;
+                tpdm[pp * norb3_ + qq * norb2_ + pp * norb_ + qq] += cJ_sq;
+                tpdm[qq * norb3_ + pp * norb2_ + pp * norb_ + qq] -= cJ_sq;
 
-                tpdm[qq * no3_ + pp * no2_ + qq * no_ + pp] += cJ_sq;
-                tpdm[pp * no3_ + qq * no2_ + qq * no_ + pp] -= cJ_sq;
+                tpdm[qq * norb3_ + pp * norb2_ + qq * norb_ + pp] += cJ_sq;
+                tpdm[pp * norb3_ + qq * norb2_ + qq * norb_ + pp] -= cJ_sq;
             }
         }
 
@@ -273,8 +273,8 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
             for (size_t q = 0; q < nbocc; ++q) {
                 auto qq = bocc[q];
 
-                tpdm[pp * no3_ + qq * no2_ + pp * no_ + qq] += cJ_sq;
-                tpdm[qq * no3_ + pp * no2_ + qq * no_ + pp] += cJ_sq;
+                tpdm[pp * norb3_ + qq * norb2_ + pp * norb_ + qq] += cJ_sq;
+                tpdm[qq * norb3_ + pp * norb2_ + qq * norb_ + pp] += cJ_sq;
             }
         }
     }
@@ -295,16 +295,16 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
                 auto sign = ((_r < 0) == sign_pq) ? 1 : -1;
 
                 auto value = vJ1 * evecs_->get(I, root2_) * sign;
-                tpdm[p * no3_ + q * no2_ + r * no_ + s] += value;
-                tpdm[p * no3_ + q * no2_ + s * no_ + r] -= value;
-                tpdm[q * no3_ + p * no2_ + r * no_ + s] -= value;
-                tpdm[q * no3_ + p * no2_ + s * no_ + r] += value;
+                tpdm[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                tpdm[p * norb3_ + q * norb2_ + s * norb_ + r] -= value;
+                tpdm[q * norb3_ + p * norb2_ + r * norb_ + s] -= value;
+                tpdm[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
 
                 value = evecs_->get(I, root1_) * vJ2 * sign;
-                tpdm[r * no3_ + s * no2_ + p * no_ + q] += value;
-                tpdm[s * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm[r * no3_ + s * no2_ + q * no_ + p] -= value;
-                tpdm[s * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm[r * norb3_ + s * norb2_ + p * norb_ + q] += value;
+                tpdm[s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm[r * norb3_ + s * norb2_ + q * norb_ + p] -= value;
+                tpdm[s * norb3_ + r * norb2_ + q * norb_ + p] += value;
             }
         }
     }
@@ -325,16 +325,16 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
                 auto sign = ((_r < 0) == sign_pq) ? 1 : -1;
 
                 auto value = vJ1 * evecs_->get(I, root2_) * sign;
-                tpdm[p * no3_ + q * no2_ + r * no_ + s] += value;
-                tpdm[p * no3_ + q * no2_ + s * no_ + r] -= value;
-                tpdm[q * no3_ + p * no2_ + r * no_ + s] -= value;
-                tpdm[q * no3_ + p * no2_ + s * no_ + r] += value;
+                tpdm[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                tpdm[p * norb3_ + q * norb2_ + s * norb_ + r] -= value;
+                tpdm[q * norb3_ + p * norb2_ + r * norb_ + s] -= value;
+                tpdm[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
 
                 value = evecs_->get(I, root1_) * vJ2 * sign;
-                tpdm[r * no3_ + s * no2_ + p * no_ + q] += value;
-                tpdm[s * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm[r * no3_ + s * no2_ + q * no_ + p] -= value;
-                tpdm[s * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm[r * norb3_ + s * norb2_ + p * norb_ + q] += value;
+                tpdm[s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm[r * norb3_ + s * norb2_ + q * norb_ + p] -= value;
+                tpdm[s * norb3_ + r * norb2_ + q * norb_ + p] += value;
             }
         }
     }
@@ -355,12 +355,12 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
                 auto sign = ((_r < 0) == sign_pq) ? 1 : -1;
 
                 double value = vJ1 * evecs_->get(I, root2_) * sign;
-                tpdm[p * no3_ + q * no2_ + r * no_ + s] += value;
-                tpdm[q * no3_ + p * no2_ + s * no_ + r] += value;
+                tpdm[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                tpdm[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
 
                 value = evecs_->get(I, root1_) * vJ2 * sign;
-                tpdm[r * no3_ + s * no2_ + p * no_ + q] += value;
-                tpdm[s * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm[r * norb3_ + s * norb2_ + p * norb_ + q] += value;
+                tpdm[s * norb3_ + r * norb2_ + q * norb_ + p] += value;
             }
         }
     }
@@ -380,7 +380,7 @@ void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
     }
 
     timer build("Build SF 3-RDM");
-    tpdm3.assign(no6_, 0.0);
+    tpdm3.assign(norb6_, 0.0);
 
     for (size_t J = 0; J < dim_space_; ++J) {
         auto vJ = evecs_->get(J, root1_);
@@ -398,47 +398,47 @@ void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
                 auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
                 auto value = evecs_->get(I, root2_) * vJ * sign;
 
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] -= value;
             }
         }
 
@@ -455,20 +455,20 @@ void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
                 auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
                 auto value = evecs_->get(I, root2_) * vJ * sign;
 
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] += value;
 
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] += value;
 
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] += value;
             }
         }
 
@@ -485,20 +485,20 @@ void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
                 auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
                 double value = evecs_->get(I, root2_) * vJ * sign;
 
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] += value;
 
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] += value;
 
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] += value;
             }
         }
 
@@ -515,47 +515,47 @@ void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
                 auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
                 auto value = evecs_->get(I, root2_) * vJ * sign;
 
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] -= value;
             }
         }
     }
@@ -571,7 +571,7 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
     op->build_strings(wfn_);
     op->three_s_lists(wfn_);
 
-    tpdm3.assign(no6_, 0.0);
+    tpdm3.assign(norb6_, 0.0);
     timer build("Build SF 3-RDM");
 
     // Build the diagonal part
@@ -579,8 +579,8 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
     for (size_t I = 0; I < dim_space_; ++I) {
         double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
 
-        auto aocc = dets[I].get_alfa_occ(no_);
-        auto bocc = dets[I].get_beta_occ(no_);
+        auto aocc = dets[I].get_alfa_occ(norb_);
+        auto bocc = dets[I].get_beta_occ(norb_);
         auto na = aocc.size();
         auto nb = bocc.size();
 
@@ -591,47 +591,83 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
                 for (size_t r = q + 1; r < na; ++r) {
                     auto rr = aocc[r];
 
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] -= cI_sq;
 
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] += cI_sq;
 
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] -= cI_sq;
 
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] += cI_sq;
 
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] -= cI_sq;
 
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] += cI_sq;
                 }
             }
         }
@@ -643,20 +679,32 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
                 for (size_t r = 0; r < nb; ++r) {
                     auto rr = bocc[r];
 
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] += cI_sq;
 
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] += cI_sq;
 
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] += cI_sq;
                 }
             }
         }
@@ -668,20 +716,32 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
                 for (size_t r = q + 1; r < nb; ++r) {
                     auto rr = bocc[r];
 
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] += cI_sq;
 
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] += cI_sq;
 
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] += cI_sq;
                 }
             }
         }
@@ -693,47 +753,83 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
                 for (size_t r = q + 1; r < nb; ++r) {
                     auto rr = bocc[r];
 
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[pp * norb5_ + qq * norb4_ + rr * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] -= cI_sq;
 
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[pp * norb5_ + rr * norb4_ + qq * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] += cI_sq;
 
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[rr * norb5_ + pp * norb4_ + qq * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] -= cI_sq;
 
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[rr * norb5_ + qq * norb4_ + pp * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] += cI_sq;
 
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] += cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[qq * norb5_ + rr * norb4_ + pp * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] -= cI_sq;
 
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + pp * norb2_ + qq * norb_ +
+                          rr] -= cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + pp * norb2_ + rr * norb_ +
+                          qq] += cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + rr * norb2_ + pp * norb_ +
+                          qq] -= cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + rr * norb2_ + qq * norb_ +
+                          pp] += cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + qq * norb2_ + rr * norb_ +
+                          pp] -= cI_sq;
+                    tpdm3[qq * norb5_ + pp * norb4_ + rr * norb3_ + qq * norb2_ + pp * norb_ +
+                          rr] += cI_sq;
                 }
             }
         }
@@ -760,91 +856,91 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
 
                 auto value = vJ1 * evecs_->get(I, root2_) * sign;
 
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
                 value = evecs_->get(I, root1_) * vJ2 * sign;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + q * no_ + r] -= value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + q * no_ + r] += value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + q * no_ + r] += value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + p * norb2_ + q * norb_ + r] += value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + p * norb2_ + q * norb_ + r] -= value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + p * norb2_ + q * norb_ + r] -= value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + p * norb2_ + q * norb_ + r] += value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + p * norb2_ + q * norb_ + r] -= value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + p * norb2_ + q * norb_ + r] += value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + r * no_ + q] += value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + r * no_ + q] -= value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + r * no_ + q] += value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + p * norb2_ + r * norb_ + q] -= value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + p * norb2_ + r * norb_ + q] += value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + p * norb2_ + r * norb_ + q] += value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + p * norb2_ + r * norb_ + q] -= value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + p * norb2_ + r * norb_ + q] += value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + p * norb2_ + r * norb_ + q] -= value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + p * no_ + r] += value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + p * no_ + r] += value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + p * no_ + r] -= value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + q * norb2_ + p * norb_ + r] -= value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + q * norb2_ + p * norb_ + r] += value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + q * norb2_ + p * norb_ + r] += value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + q * norb2_ + p * norb_ + r] -= value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + q * norb2_ + p * norb_ + r] += value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + q * norb2_ + p * norb_ + r] -= value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + r * no_ + p] += value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + r * no_ + p] += value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + r * no_ + p] -= value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + q * norb2_ + r * norb_ + p] += value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + q * norb2_ + r * norb_ + p] -= value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + q * norb2_ + r * norb_ + p] -= value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + q * norb2_ + r * norb_ + p] += value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + q * norb2_ + r * norb_ + p] -= value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + q * norb2_ + r * norb_ + p] += value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + p * no_ + q] += value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + p * no_ + q] += value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + r * norb2_ + p * norb_ + q] += value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + r * norb2_ + p * norb_ + q] += value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + r * norb2_ + p * norb_ + q] += value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + q * no_ + p] -= value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + q * no_ + p] += value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + q * no_ + p] += value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + r * norb2_ + q * norb_ + p] -= value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + r * norb2_ + q * norb_ + p] -= value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + r * norb2_ + q * norb_ + p] -= value;
             }
         }
     }
@@ -867,36 +963,36 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
                 auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
 
                 auto value = vJ1 * evecs_->get(I, root2_) * sign;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] += value;
 
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] += value;
 
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
                 value = evecs_->get(I, root1_) * vJ2 * sign;
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + p * norb2_ + q * norb_ + r] += value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + p * norb2_ + q * norb_ + r] -= value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + q * norb2_ + p * norb_ + r] -= value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + q * norb2_ + p * norb_ + r] += value;
 
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + r * norb2_ + q * norb_ + p] -= value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + r * norb2_ + p * norb_ + q] += value;
 
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + p * norb2_ + r * norb_ + q] += value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + p * norb2_ + r * norb_ + q] -= value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + q * norb2_ + r * norb_ + p] -= value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + q * norb2_ + r * norb_ + p] += value;
             }
         }
     }
@@ -919,36 +1015,36 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
                 auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
 
                 auto value = vJ1 * evecs_->get(I, root2_) * sign;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] += value;
 
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] += value;
 
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
                 value = evecs_->get(I, root1_) * vJ2 * sign;
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + p * norb2_ + q * norb_ + r] += value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + p * norb2_ + q * norb_ + r] -= value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + p * norb2_ + r * norb_ + q] -= value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + p * norb2_ + r * norb_ + q] += value;
 
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + q * norb2_ + p * norb_ + r] += value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + q * norb2_ + p * norb_ + r] -= value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + r * norb2_ + p * norb_ + q] += value;
 
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + r * norb2_ + q * norb_ + p] -= value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + q * norb2_ + r * norb_ + p] -= value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + q * norb2_ + r * norb_ + p] += value;
             }
         }
     }
@@ -972,91 +1068,91 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
 
                 auto value = vJ1 * evecs_->get(I, root2_) * sign;
 
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] += value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ + t] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + u * no_ + s] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + t * norb_ + u] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + u * norb_ + t] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + t * norb_ + s] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ + t] += value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + s * norb_ + u] -= value;
+                tpdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + u * norb_ + s] += value;
 
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -= value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ + t] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + s * no_ + u] += value;
-                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + t * norb_ + u] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + u * norb_ + t] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ + s] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + s * norb_ + t] -= value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + s * norb_ + u] += value;
+                tpdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + u * norb_ + s] -= value;
 
                 value = evecs_->get(I, root1_) * vJ2 * sign;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + q * no_ + r] -= value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + q * no_ + r] += value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + q * no_ + r] += value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + p * norb2_ + q * norb_ + r] += value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + p * norb2_ + q * norb_ + r] -= value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + p * norb2_ + q * norb_ + r] -= value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + p * norb2_ + q * norb_ + r] += value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + p * norb2_ + q * norb_ + r] -= value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + p * norb2_ + q * norb_ + r] += value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + r * no_ + q] += value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + r * no_ + q] -= value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + r * no_ + q] += value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + p * norb2_ + r * norb_ + q] -= value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + p * norb2_ + r * norb_ + q] += value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + p * norb2_ + r * norb_ + q] += value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + p * norb2_ + r * norb_ + q] -= value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + p * norb2_ + r * norb_ + q] += value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + p * norb2_ + r * norb_ + q] -= value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + p * no_ + r] += value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + p * no_ + r] += value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + p * no_ + r] -= value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + q * norb2_ + p * norb_ + r] -= value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + q * norb2_ + p * norb_ + r] += value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + q * norb2_ + p * norb_ + r] += value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + q * norb2_ + p * norb_ + r] -= value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + q * norb2_ + p * norb_ + r] += value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + q * norb2_ + p * norb_ + r] -= value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + r * no_ + p] += value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + r * no_ + p] += value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + r * no_ + p] -= value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + q * norb2_ + r * norb_ + p] += value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + q * norb2_ + r * norb_ + p] -= value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + q * norb2_ + r * norb_ + p] -= value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + q * norb2_ + r * norb_ + p] += value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + q * norb2_ + r * norb_ + p] -= value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + q * norb2_ + r * norb_ + p] += value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + p * no_ + q] += value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + p * no_ + q] += value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + r * norb2_ + p * norb_ + q] += value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + r * norb2_ + p * norb_ + q] += value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + r * norb2_ + p * norb_ + q] += value;
 
-                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + q * no_ + p] -= value;
-                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + q * no_ + p] += value;
-                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
-                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
-                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + q * no_ + p] += value;
-                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
+                tpdm3[s * norb5_ + t * norb4_ + u * norb3_ + r * norb2_ + q * norb_ + p] -= value;
+                tpdm3[s * norb5_ + u * norb4_ + t * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                tpdm3[u * norb5_ + t * norb4_ + s * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                tpdm3[u * norb5_ + s * norb4_ + t * norb3_ + r * norb2_ + q * norb_ + p] -= value;
+                tpdm3[t * norb5_ + s * norb4_ + u * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                tpdm3[t * norb5_ + u * norb4_ + s * norb3_ + r * norb2_ + q * norb_ + p] -= value;
             }
         }
     }
@@ -1069,9 +1165,9 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
 
 void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2,
                                       std::vector<double>& rdm3) {
-    rdm1.resize(no2_, 0.0);
-    rdm2.resize(no4_, 0.0);
-    rdm3.resize(no6_, 0.0);
+    rdm1.resize(norb2_, 0.0);
+    rdm2.resize(norb4_, 0.0);
+    rdm3.resize(norb6_, 0.0);
 
     SortedStringList a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
     SortedStringList b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
@@ -1089,17 +1185,17 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
 
         for (size_t nda = 0; nda < na_; ++nda) {
             size_t p = det_a.find_first_one();
-            rdm1[p * no_ + p] += CIa;
+            rdm1[p * norb_ + p] += CIa;
 
             String det_ac(det_a);
             det_a.clear_first_one();
             for (size_t ndaa = nda; ndaa < na_; ++ndaa) {
                 size_t q = det_ac.find_first_one();
                 // aa 2-rdm
-                rdm2[p * no3_ + q * no2_ + p * no_ + q] += CIa;
-                rdm2[q * no3_ + p * no2_ + q * no_ + p] += CIa;
-                rdm2[p * no3_ + q * no2_ + q * no_ + p] -= CIa;
-                rdm2[q * no3_ + p * no2_ + p * no_ + q] -= CIa;
+                rdm2[p * norb3_ + q * norb2_ + p * norb_ + q] += CIa;
+                rdm2[q * norb3_ + p * norb2_ + q * norb_ + p] += CIa;
+                rdm2[p * norb3_ + q * norb2_ + q * norb_ + p] -= CIa;
+                rdm2[q * norb3_ + p * norb2_ + p * norb_ + q] -= CIa;
                 det_ac.clear_first_one();
 
                 // aaa 3rdm
@@ -1115,20 +1211,20 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
                 for (size_t n = 0; n < nb_; ++n) {
                     size_t r = det_bc.find_first_one();
 
-                    rdm3[p * no5_ + q * no4_ + r * no3_ + p * no2_ + q * no_ + r] += CIa;
-                    rdm3[p * no5_ + q * no4_ + r * no3_ + q * no2_ + p * no_ + r] -= CIa;
-                    rdm3[q * no5_ + p * no4_ + r * no3_ + p * no2_ + q * no_ + r] -= CIa;
-                    rdm3[q * no5_ + p * no4_ + r * no3_ + q * no2_ + p * no_ + r] += CIa;
+                    rdm3[p * norb5_ + q * norb4_ + r * norb3_ + p * norb2_ + q * norb_ + r] += CIa;
+                    rdm3[p * norb5_ + q * norb4_ + r * norb3_ + q * norb2_ + p * norb_ + r] -= CIa;
+                    rdm3[q * norb5_ + p * norb4_ + r * norb3_ + p * norb2_ + q * norb_ + r] -= CIa;
+                    rdm3[q * norb5_ + p * norb4_ + r * norb3_ + q * norb2_ + p * norb_ + r] += CIa;
 
-                    rdm3[r * no5_ + q * no4_ + p * no3_ + r * no2_ + q * no_ + p] += CIa;
-                    rdm3[r * no5_ + q * no4_ + p * no3_ + r * no2_ + p * no_ + q] -= CIa;
-                    rdm3[r * no5_ + p * no4_ + q * no3_ + r * no2_ + q * no_ + p] -= CIa;
-                    rdm3[r * no5_ + p * no4_ + q * no3_ + r * no2_ + p * no_ + q] += CIa;
+                    rdm3[r * norb5_ + q * norb4_ + p * norb3_ + r * norb2_ + q * norb_ + p] += CIa;
+                    rdm3[r * norb5_ + q * norb4_ + p * norb3_ + r * norb2_ + p * norb_ + q] -= CIa;
+                    rdm3[r * norb5_ + p * norb4_ + q * norb3_ + r * norb2_ + q * norb_ + p] -= CIa;
+                    rdm3[r * norb5_ + p * norb4_ + q * norb3_ + r * norb2_ + p * norb_ + q] += CIa;
 
-                    rdm3[p * no5_ + r * no4_ + q * no3_ + p * no2_ + r * no_ + q] += CIa;
-                    rdm3[p * no5_ + r * no4_ + q * no3_ + q * no2_ + r * no_ + p] -= CIa;
-                    rdm3[q * no5_ + r * no4_ + p * no3_ + p * no2_ + r * no_ + q] -= CIa;
-                    rdm3[q * no5_ + r * no4_ + p * no3_ + q * no2_ + r * no_ + p] += CIa;
+                    rdm3[p * norb5_ + r * norb4_ + q * norb3_ + p * norb2_ + r * norb_ + q] += CIa;
+                    rdm3[p * norb5_ + r * norb4_ + q * norb3_ + q * norb2_ + r * norb_ + p] -= CIa;
+                    rdm3[q * norb5_ + r * norb4_ + p * norb3_ + p * norb2_ + r * norb_ + q] -= CIa;
+                    rdm3[q * norb5_ + r * norb4_ + p * norb3_ + q * norb2_ + r * norb_ + p] += CIa;
 
                     det_bc.clear_first_one();
                 }
@@ -1137,8 +1233,8 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
             String det_bc(det_b);
             for (size_t n = 0; n < nb_; ++n) {
                 size_t q = det_bc.find_first_one();
-                rdm2[p * no3_ + q * no2_ + p * no_ + q] += CIa;
-                rdm2[q * no3_ + p * no2_ + q * no_ + p] += CIa;
+                rdm2[p * norb3_ + q * norb2_ + p * norb_ + q] += CIa;
+                rdm2[q * norb3_ + p * norb2_ + q * norb_ + p] += CIa;
                 det_bc.clear_first_one();
             }
         }
@@ -1150,15 +1246,15 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
             size_t p = det_b.find_first_one();
 
             // b -1rdm
-            rdm1[p * no_ + p] += CIb;
+            rdm1[p * norb_ + p] += CIb;
             String det_bc(det_b);
             for (size_t ndbb = ndb; ndbb < nb_; ++ndbb) {
                 size_t q = det_bc.find_first_one();
                 // bb-2rdm
-                rdm2[p * no3_ + q * no2_ + p * no_ + q] += CIb;
-                rdm2[q * no3_ + p * no2_ + q * no_ + p] += CIb;
-                rdm2[p * no3_ + q * no2_ + q * no_ + p] -= CIb;
-                rdm2[q * no3_ + p * no2_ + p * no_ + q] -= CIb;
+                rdm2[p * norb3_ + q * norb2_ + p * norb_ + q] += CIb;
+                rdm2[q * norb3_ + p * norb2_ + q * norb_ + p] += CIb;
+                rdm2[p * norb3_ + q * norb2_ + q * norb_ + p] -= CIb;
+                rdm2[q * norb3_ + p * norb2_ + p * norb_ + q] -= CIb;
                 det_bc.clear_first_one();
 
                 // bbb-3rdm
@@ -1174,20 +1270,20 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
                 for (size_t n = 0; n < na_; ++n) {
                     size_t r = det_ac.find_first_one();
 
-                    rdm3[r * no5_ + p * no4_ + q * no3_ + r * no2_ + p * no_ + q] += CIb;
-                    rdm3[r * no5_ + p * no4_ + q * no3_ + r * no2_ + q * no_ + p] -= CIb;
-                    rdm3[r * no5_ + q * no4_ + p * no3_ + r * no2_ + p * no_ + q] -= CIb;
-                    rdm3[r * no5_ + q * no4_ + p * no3_ + r * no2_ + q * no_ + p] += CIb;
+                    rdm3[r * norb5_ + p * norb4_ + q * norb3_ + r * norb2_ + p * norb_ + q] += CIb;
+                    rdm3[r * norb5_ + p * norb4_ + q * norb3_ + r * norb2_ + q * norb_ + p] -= CIb;
+                    rdm3[r * norb5_ + q * norb4_ + p * norb3_ + r * norb2_ + p * norb_ + q] -= CIb;
+                    rdm3[r * norb5_ + q * norb4_ + p * norb3_ + r * norb2_ + q * norb_ + p] += CIb;
 
-                    rdm3[p * no5_ + r * no4_ + q * no3_ + p * no2_ + r * no_ + q] += CIb;
-                    rdm3[p * no5_ + r * no4_ + q * no3_ + q * no2_ + r * no_ + p] -= CIb;
-                    rdm3[q * no5_ + r * no4_ + p * no3_ + p * no2_ + r * no_ + q] -= CIb;
-                    rdm3[q * no5_ + r * no4_ + p * no3_ + q * no2_ + r * no_ + p] += CIb;
+                    rdm3[p * norb5_ + r * norb4_ + q * norb3_ + p * norb2_ + r * norb_ + q] += CIb;
+                    rdm3[p * norb5_ + r * norb4_ + q * norb3_ + q * norb2_ + r * norb_ + p] -= CIb;
+                    rdm3[q * norb5_ + r * norb4_ + p * norb3_ + p * norb2_ + r * norb_ + q] -= CIb;
+                    rdm3[q * norb5_ + r * norb4_ + p * norb3_ + q * norb2_ + r * norb_ + p] += CIb;
 
-                    rdm3[q * no5_ + p * no4_ + r * no3_ + q * no2_ + p * no_ + r] += CIb;
-                    rdm3[q * no5_ + p * no4_ + r * no3_ + p * no2_ + q * no_ + r] -= CIb;
-                    rdm3[p * no5_ + q * no4_ + r * no3_ + q * no2_ + p * no_ + r] -= CIb;
-                    rdm3[p * no5_ + q * no4_ + r * no3_ + p * no2_ + q * no_ + r] += CIb;
+                    rdm3[q * norb5_ + p * norb4_ + r * norb3_ + q * norb2_ + p * norb_ + r] += CIb;
+                    rdm3[q * norb5_ + p * norb4_ + r * norb3_ + p * norb2_ + q * norb_ + r] -= CIb;
+                    rdm3[p * norb5_ + q * norb4_ + r * norb3_ + q * norb2_ + p * norb_ + r] -= CIb;
+                    rdm3[p * norb5_ + q * norb4_ + r * norb3_ + p * norb2_ + q * norb_ + r] += CIb;
 
                     det_ac.clear_first_one();
                 }
@@ -1229,101 +1325,149 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
 
                     double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
                     double value = Csq * Ia.slater_sign(p, q);
-                    rdm1[p * no_ + q] += value;
-                    rdm1[q * no_ + p] += value;
+                    rdm1[p * norb_ + q] += value;
+                    rdm1[q * norb_ + p] += value;
 
                     // 2-rdm
                     auto Iac = Ia;
                     Iac ^= Ia_sub;
                     for (size_t nbit_a = 1; nbit_a < na_; nbit_a++) {
                         uint64_t m = Iac.find_first_one();
-                        rdm2[p * no3_ + m * no2_ + q * no_ + m] += value;
-                        rdm2[m * no3_ + p * no2_ + q * no_ + m] -= value;
-                        rdm2[m * no3_ + p * no2_ + m * no_ + q] += value;
-                        rdm2[p * no3_ + m * no2_ + m * no_ + q] -= value;
+                        rdm2[p * norb3_ + m * norb2_ + q * norb_ + m] += value;
+                        rdm2[m * norb3_ + p * norb2_ + q * norb_ + m] -= value;
+                        rdm2[m * norb3_ + p * norb2_ + m * norb_ + q] += value;
+                        rdm2[p * norb3_ + m * norb2_ + m * norb_ + q] -= value;
 
-                        rdm2[q * no3_ + m * no2_ + p * no_ + m] += value;
-                        rdm2[m * no3_ + q * no2_ + p * no_ + m] -= value;
-                        rdm2[m * no3_ + q * no2_ + m * no_ + p] += value;
-                        rdm2[q * no3_ + m * no2_ + m * no_ + p] -= value;
+                        rdm2[q * norb3_ + m * norb2_ + p * norb_ + m] += value;
+                        rdm2[m * norb3_ + q * norb2_ + p * norb_ + m] -= value;
+                        rdm2[m * norb3_ + q * norb2_ + m * norb_ + p] += value;
+                        rdm2[q * norb3_ + m * norb2_ + m * norb_ + p] -= value;
                         Iac.clear_first_one();
 
                         auto Ibc = Ib;
                         for (size_t idx = 0; idx < nb_; ++idx) {
                             uint64_t n = Ibc.find_first_one();
-                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] += value;
-                            rdm3[p * no5_ + m * no4_ + n * no3_ + m * no2_ + q * no_ + n] -= value;
-                            rdm3[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] += value;
-                            rdm3[m * no5_ + p * no4_ + n * no3_ + q * no2_ + m * no_ + n] -= value;
+                            rdm3[p * norb5_ + m * norb4_ + n * norb3_ + q * norb2_ + m * norb_ +
+                                 n] += value;
+                            rdm3[p * norb5_ + m * norb4_ + n * norb3_ + m * norb2_ + q * norb_ +
+                                 n] -= value;
+                            rdm3[m * norb5_ + p * norb4_ + n * norb3_ + m * norb2_ + q * norb_ +
+                                 n] += value;
+                            rdm3[m * norb5_ + p * norb4_ + n * norb3_ + q * norb2_ + m * norb_ +
+                                 n] -= value;
 
-                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] += value;
-                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + q * no_ + m] -= value;
-                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] += value;
-                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + m * no_ + q] -= value;
+                            rdm3[n * norb5_ + m * norb4_ + p * norb3_ + n * norb2_ + m * norb_ +
+                                 q] += value;
+                            rdm3[n * norb5_ + m * norb4_ + p * norb3_ + n * norb2_ + q * norb_ +
+                                 m] -= value;
+                            rdm3[n * norb5_ + p * norb4_ + m * norb3_ + n * norb2_ + q * norb_ +
+                                 m] += value;
+                            rdm3[n * norb5_ + p * norb4_ + m * norb3_ + n * norb2_ + m * norb_ +
+                                 q] -= value;
 
-                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] += value;
-                            rdm3[p * no5_ + n * no4_ + m * no3_ + m * no2_ + n * no_ + q] -= value;
-                            rdm3[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] += value;
-                            rdm3[m * no5_ + n * no4_ + p * no3_ + q * no2_ + n * no_ + m] -= value;
+                            rdm3[p * norb5_ + n * norb4_ + m * norb3_ + q * norb2_ + n * norb_ +
+                                 m] += value;
+                            rdm3[p * norb5_ + n * norb4_ + m * norb3_ + m * norb2_ + n * norb_ +
+                                 q] -= value;
+                            rdm3[m * norb5_ + n * norb4_ + p * norb3_ + m * norb2_ + n * norb_ +
+                                 q] += value;
+                            rdm3[m * norb5_ + n * norb4_ + p * norb3_ + q * norb2_ + n * norb_ +
+                                 m] -= value;
 
-                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] += value;
-                            rdm3[q * no5_ + m * no4_ + n * no3_ + m * no2_ + p * no_ + n] -= value;
-                            rdm3[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] += value;
-                            rdm3[m * no5_ + q * no4_ + n * no3_ + p * no2_ + m * no_ + n] -= value;
+                            rdm3[q * norb5_ + m * norb4_ + n * norb3_ + p * norb2_ + m * norb_ +
+                                 n] += value;
+                            rdm3[q * norb5_ + m * norb4_ + n * norb3_ + m * norb2_ + p * norb_ +
+                                 n] -= value;
+                            rdm3[m * norb5_ + q * norb4_ + n * norb3_ + m * norb2_ + p * norb_ +
+                                 n] += value;
+                            rdm3[m * norb5_ + q * norb4_ + n * norb3_ + p * norb2_ + m * norb_ +
+                                 n] -= value;
 
-                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] += value;
-                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + p * no_ + m] -= value;
-                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] += value;
-                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + m * no_ + p] -= value;
+                            rdm3[n * norb5_ + m * norb4_ + q * norb3_ + n * norb2_ + m * norb_ +
+                                 p] += value;
+                            rdm3[n * norb5_ + m * norb4_ + q * norb3_ + n * norb2_ + p * norb_ +
+                                 m] -= value;
+                            rdm3[n * norb5_ + q * norb4_ + m * norb3_ + n * norb2_ + p * norb_ +
+                                 m] += value;
+                            rdm3[n * norb5_ + q * norb4_ + m * norb3_ + n * norb2_ + m * norb_ +
+                                 p] -= value;
 
-                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] += value;
-                            rdm3[q * no5_ + n * no4_ + m * no3_ + m * no2_ + n * no_ + p] -= value;
-                            rdm3[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] += value;
-                            rdm3[m * no5_ + n * no4_ + q * no3_ + p * no2_ + n * no_ + m] -= value;
+                            rdm3[q * norb5_ + n * norb4_ + m * norb3_ + p * norb2_ + n * norb_ +
+                                 m] += value;
+                            rdm3[q * norb5_ + n * norb4_ + m * norb3_ + m * norb2_ + n * norb_ +
+                                 p] -= value;
+                            rdm3[m * norb5_ + n * norb4_ + q * norb3_ + m * norb2_ + n * norb_ +
+                                 p] += value;
+                            rdm3[m * norb5_ + n * norb4_ + q * norb3_ + p * norb2_ + n * norb_ +
+                                 m] -= value;
                             Ibc.clear_first_one();
                         }
                     }
                     auto Ibc = Ib;
                     for (size_t nidx = 0; nidx < nb_; ++nidx) {
                         uint64_t n = Ibc.find_first_one();
-                        rdm2[p * no3_ + n * no2_ + q * no_ + n] += value;
-                        rdm2[q * no3_ + n * no2_ + p * no_ + n] += value;
-                        rdm2[n * no3_ + p * no2_ + n * no_ + q] += value;
-                        rdm2[n * no3_ + q * no2_ + n * no_ + p] += value;
+                        rdm2[p * norb3_ + n * norb2_ + q * norb_ + n] += value;
+                        rdm2[q * norb3_ + n * norb2_ + p * norb_ + n] += value;
+                        rdm2[n * norb3_ + p * norb2_ + n * norb_ + q] += value;
+                        rdm2[n * norb3_ + q * norb2_ + n * norb_ + p] += value;
                         Ibc.clear_first_one();
 
                         String Ibcc = Ibc;
                         for (size_t idx = nidx + 1; idx < nb_; ++idx) {
                             uint64_t m = Ibcc.find_first_one();
-                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] += value;
-                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + n * no_ + m] -= value;
-                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] += value;
-                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + m * no_ + n] -= value;
+                            rdm3[p * norb5_ + m * norb4_ + n * norb3_ + q * norb2_ + m * norb_ +
+                                 n] += value;
+                            rdm3[p * norb5_ + m * norb4_ + n * norb3_ + q * norb2_ + n * norb_ +
+                                 m] -= value;
+                            rdm3[p * norb5_ + n * norb4_ + m * norb3_ + q * norb2_ + n * norb_ +
+                                 m] += value;
+                            rdm3[p * norb5_ + n * norb4_ + m * norb3_ + q * norb2_ + m * norb_ +
+                                 n] -= value;
 
-                            rdm3[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] += value;
-                            rdm3[m * no5_ + p * no4_ + n * no3_ + n * no2_ + q * no_ + m] -= value;
-                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] += value;
-                            rdm3[n * no5_ + p * no4_ + m * no3_ + m * no2_ + q * no_ + n] -= value;
+                            rdm3[m * norb5_ + p * norb4_ + n * norb3_ + m * norb2_ + q * norb_ +
+                                 n] += value;
+                            rdm3[m * norb5_ + p * norb4_ + n * norb3_ + n * norb2_ + q * norb_ +
+                                 m] -= value;
+                            rdm3[n * norb5_ + p * norb4_ + m * norb3_ + n * norb2_ + q * norb_ +
+                                 m] += value;
+                            rdm3[n * norb5_ + p * norb4_ + m * norb3_ + m * norb2_ + q * norb_ +
+                                 n] -= value;
 
-                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] += value;
-                            rdm3[n * no5_ + m * no4_ + p * no3_ + m * no2_ + n * no_ + q] -= value;
-                            rdm3[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] += value;
-                            rdm3[m * no5_ + n * no4_ + p * no3_ + n * no2_ + m * no_ + q] -= value;
+                            rdm3[n * norb5_ + m * norb4_ + p * norb3_ + n * norb2_ + m * norb_ +
+                                 q] += value;
+                            rdm3[n * norb5_ + m * norb4_ + p * norb3_ + m * norb2_ + n * norb_ +
+                                 q] -= value;
+                            rdm3[m * norb5_ + n * norb4_ + p * norb3_ + m * norb2_ + n * norb_ +
+                                 q] += value;
+                            rdm3[m * norb5_ + n * norb4_ + p * norb3_ + n * norb2_ + m * norb_ +
+                                 q] -= value;
 
-                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] += value;
-                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + n * no_ + m] -= value;
-                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] += value;
-                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + m * no_ + n] -= value;
+                            rdm3[q * norb5_ + m * norb4_ + n * norb3_ + p * norb2_ + m * norb_ +
+                                 n] += value;
+                            rdm3[q * norb5_ + m * norb4_ + n * norb3_ + p * norb2_ + n * norb_ +
+                                 m] -= value;
+                            rdm3[q * norb5_ + n * norb4_ + m * norb3_ + p * norb2_ + n * norb_ +
+                                 m] += value;
+                            rdm3[q * norb5_ + n * norb4_ + m * norb3_ + p * norb2_ + m * norb_ +
+                                 n] -= value;
 
-                            rdm3[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] += value;
-                            rdm3[m * no5_ + q * no4_ + n * no3_ + n * no2_ + p * no_ + m] -= value;
-                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] += value;
-                            rdm3[n * no5_ + q * no4_ + m * no3_ + m * no2_ + p * no_ + n] -= value;
+                            rdm3[m * norb5_ + q * norb4_ + n * norb3_ + m * norb2_ + p * norb_ +
+                                 n] += value;
+                            rdm3[m * norb5_ + q * norb4_ + n * norb3_ + n * norb2_ + p * norb_ +
+                                 m] -= value;
+                            rdm3[n * norb5_ + q * norb4_ + m * norb3_ + n * norb2_ + p * norb_ +
+                                 m] += value;
+                            rdm3[n * norb5_ + q * norb4_ + m * norb3_ + m * norb2_ + p * norb_ +
+                                 n] -= value;
 
-                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] += value;
-                            rdm3[n * no5_ + m * no4_ + q * no3_ + m * no2_ + n * no_ + p] -= value;
-                            rdm3[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] += value;
-                            rdm3[m * no5_ + n * no4_ + q * no3_ + n * no2_ + m * no_ + p] -= value;
+                            rdm3[n * norb5_ + m * norb4_ + q * norb3_ + n * norb2_ + m * norb_ +
+                                 p] += value;
+                            rdm3[n * norb5_ + m * norb4_ + q * norb3_ + m * norb2_ + n * norb_ +
+                                 p] -= value;
+                            rdm3[m * norb5_ + n * norb4_ + q * norb3_ + m * norb2_ + n * norb_ +
+                                 p] += value;
+                            rdm3[m * norb5_ + n * norb4_ + q * norb3_ + n * norb2_ + m * norb_ +
+                                 p] -= value;
                             Ibcc.clear_first_one();
                         }
                     }
@@ -1357,15 +1501,15 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
                     double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
                     double value = Csq * Ia.slater_sign(p, q) * Ja.slater_sign(r, s);
 
-                    rdm2[p * no3_ + q * no2_ + r * no_ + s] += value;
-                    rdm2[p * no3_ + q * no2_ + s * no_ + r] -= value;
-                    rdm2[q * no3_ + p * no2_ + r * no_ + s] -= value;
-                    rdm2[q * no3_ + p * no2_ + s * no_ + r] += value;
+                    rdm2[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                    rdm2[p * norb3_ + q * norb2_ + s * norb_ + r] -= value;
+                    rdm2[q * norb3_ + p * norb2_ + r * norb_ + s] -= value;
+                    rdm2[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
 
-                    rdm2[r * no3_ + s * no2_ + p * no_ + q] += value;
-                    rdm2[s * no3_ + r * no2_ + p * no_ + q] -= value;
-                    rdm2[r * no3_ + s * no2_ + q * no_ + p] -= value;
-                    rdm2[s * no3_ + r * no2_ + q * no_ + p] += value;
+                    rdm2[r * norb3_ + s * norb2_ + p * norb_ + q] += value;
+                    rdm2[s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                    rdm2[r * norb3_ + s * norb2_ + q * norb_ + p] -= value;
+                    rdm2[s * norb3_ + r * norb2_ + q * norb_ + p] += value;
 
                     // 3-rdm
                     String Iac(Ia);
@@ -1379,35 +1523,59 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
                     String Ibc = Ib;
                     for (size_t ndb = 0; ndb < nb_; ++ndb) {
                         uint64_t n = Ibc.find_first_one();
-                        rdm3[p * no5_ + q * no4_ + n * no3_ + r * no2_ + s * no_ + n] += value;
-                        rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] -= value;
-                        rdm3[q * no5_ + p * no4_ + n * no3_ + s * no2_ + r * no_ + n] += value;
-                        rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] -= value;
+                        rdm3[p * norb5_ + q * norb4_ + n * norb3_ + r * norb2_ + s * norb_ + n] +=
+                            value;
+                        rdm3[p * norb5_ + q * norb4_ + n * norb3_ + s * norb2_ + r * norb_ + n] -=
+                            value;
+                        rdm3[q * norb5_ + p * norb4_ + n * norb3_ + s * norb2_ + r * norb_ + n] +=
+                            value;
+                        rdm3[q * norb5_ + p * norb4_ + n * norb3_ + r * norb2_ + s * norb_ + n] -=
+                            value;
 
-                        rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + s * no_ + r] += value;
-                        rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] -= value;
-                        rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + r * no_ + s] += value;
-                        rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] -= value;
+                        rdm3[n * norb5_ + q * norb4_ + p * norb3_ + n * norb2_ + s * norb_ + r] +=
+                            value;
+                        rdm3[n * norb5_ + q * norb4_ + p * norb3_ + n * norb2_ + r * norb_ + s] -=
+                            value;
+                        rdm3[n * norb5_ + p * norb4_ + q * norb3_ + n * norb2_ + r * norb_ + s] +=
+                            value;
+                        rdm3[n * norb5_ + p * norb4_ + q * norb3_ + n * norb2_ + s * norb_ + r] -=
+                            value;
 
-                        rdm3[p * no5_ + n * no4_ + q * no3_ + r * no2_ + n * no_ + s] += value;
-                        rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ + r] -= value;
-                        rdm3[q * no5_ + n * no4_ + p * no3_ + s * no2_ + n * no_ + r] += value;
-                        rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + n * no_ + s] -= value;
+                        rdm3[p * norb5_ + n * norb4_ + q * norb3_ + r * norb2_ + n * norb_ + s] +=
+                            value;
+                        rdm3[p * norb5_ + n * norb4_ + q * norb3_ + s * norb2_ + n * norb_ + r] -=
+                            value;
+                        rdm3[q * norb5_ + n * norb4_ + p * norb3_ + s * norb2_ + n * norb_ + r] +=
+                            value;
+                        rdm3[q * norb5_ + n * norb4_ + p * norb3_ + r * norb2_ + n * norb_ + s] -=
+                            value;
 
-                        rdm3[r * no5_ + s * no4_ + n * no3_ + p * no2_ + q * no_ + n] += value;
-                        rdm3[s * no5_ + r * no4_ + n * no3_ + p * no2_ + q * no_ + n] -= value;
-                        rdm3[s * no5_ + r * no4_ + n * no3_ + q * no2_ + p * no_ + n] += value;
-                        rdm3[r * no5_ + s * no4_ + n * no3_ + q * no2_ + p * no_ + n] -= value;
+                        rdm3[r * norb5_ + s * norb4_ + n * norb3_ + p * norb2_ + q * norb_ + n] +=
+                            value;
+                        rdm3[s * norb5_ + r * norb4_ + n * norb3_ + p * norb2_ + q * norb_ + n] -=
+                            value;
+                        rdm3[s * norb5_ + r * norb4_ + n * norb3_ + q * norb2_ + p * norb_ + n] +=
+                            value;
+                        rdm3[r * norb5_ + s * norb4_ + n * norb3_ + q * norb2_ + p * norb_ + n] -=
+                            value;
 
-                        rdm3[n * no5_ + s * no4_ + r * no3_ + n * no2_ + q * no_ + p] += value;
-                        rdm3[n * no5_ + r * no4_ + s * no3_ + n * no2_ + q * no_ + p] -= value;
-                        rdm3[n * no5_ + r * no4_ + s * no3_ + n * no2_ + p * no_ + q] += value;
-                        rdm3[n * no5_ + s * no4_ + r * no3_ + n * no2_ + p * no_ + q] -= value;
+                        rdm3[n * norb5_ + s * norb4_ + r * norb3_ + n * norb2_ + q * norb_ + p] +=
+                            value;
+                        rdm3[n * norb5_ + r * norb4_ + s * norb3_ + n * norb2_ + q * norb_ + p] -=
+                            value;
+                        rdm3[n * norb5_ + r * norb4_ + s * norb3_ + n * norb2_ + p * norb_ + q] +=
+                            value;
+                        rdm3[n * norb5_ + s * norb4_ + r * norb3_ + n * norb2_ + p * norb_ + q] -=
+                            value;
 
-                        rdm3[r * no5_ + n * no4_ + s * no3_ + p * no2_ + n * no_ + q] += value;
-                        rdm3[s * no5_ + n * no4_ + r * no3_ + p * no2_ + n * no_ + q] -= value;
-                        rdm3[s * no5_ + n * no4_ + r * no3_ + q * no2_ + n * no_ + p] += value;
-                        rdm3[r * no5_ + n * no4_ + s * no3_ + q * no2_ + n * no_ + p] -= value;
+                        rdm3[r * norb5_ + n * norb4_ + s * norb3_ + p * norb2_ + n * norb_ + q] +=
+                            value;
+                        rdm3[s * norb5_ + n * norb4_ + r * norb3_ + p * norb2_ + n * norb_ + q] -=
+                            value;
+                        rdm3[s * norb5_ + n * norb4_ + r * norb3_ + q * norb2_ + n * norb_ + p] +=
+                            value;
+                        rdm3[r * norb5_ + n * norb4_ + s * norb3_ + q * norb2_ + n * norb_ + p] -=
+                            value;
                         Ibc.clear_first_one();
                     }
 
@@ -1467,99 +1635,147 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
                     double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
 
                     double value = Csq * Ib.slater_sign(p, q);
-                    rdm1[p * no_ + q] += value;
-                    rdm1[q * no_ + p] += value;
+                    rdm1[p * norb_ + q] += value;
+                    rdm1[q * norb_ + p] += value;
                     auto Ibc = Ib;
                     Ibc ^= Ib_sub;
                     for (size_t ndb = 1; ndb < nb_; ++ndb) {
                         uint64_t m = Ibc.find_first_one();
-                        rdm2[p * no3_ + m * no2_ + q * no_ + m] += value;
-                        rdm2[m * no3_ + p * no2_ + q * no_ + m] -= value;
-                        rdm2[m * no3_ + p * no2_ + m * no_ + q] += value;
-                        rdm2[p * no3_ + m * no2_ + m * no_ + q] -= value;
+                        rdm2[p * norb3_ + m * norb2_ + q * norb_ + m] += value;
+                        rdm2[m * norb3_ + p * norb2_ + q * norb_ + m] -= value;
+                        rdm2[m * norb3_ + p * norb2_ + m * norb_ + q] += value;
+                        rdm2[p * norb3_ + m * norb2_ + m * norb_ + q] -= value;
 
-                        rdm2[q * no3_ + m * no2_ + p * no_ + m] += value;
-                        rdm2[m * no3_ + q * no2_ + p * no_ + m] -= value;
-                        rdm2[m * no3_ + q * no2_ + m * no_ + p] += value;
-                        rdm2[q * no3_ + m * no2_ + m * no_ + p] -= value;
+                        rdm2[q * norb3_ + m * norb2_ + p * norb_ + m] += value;
+                        rdm2[m * norb3_ + q * norb2_ + p * norb_ + m] -= value;
+                        rdm2[m * norb3_ + q * norb2_ + m * norb_ + p] += value;
+                        rdm2[q * norb3_ + m * norb2_ + m * norb_ + p] -= value;
                         Ibc.clear_first_one();
 
                         String Iac = Ia;
                         for (size_t idx = 0; idx < na_; ++idx) {
                             uint64_t n = Iac.find_first_one();
-                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] += value;
-                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + m * no_ + q] -= value;
-                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] += value;
-                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + q * no_ + m] -= value;
+                            rdm3[n * norb5_ + p * norb4_ + m * norb3_ + n * norb2_ + q * norb_ +
+                                 m] += value;
+                            rdm3[n * norb5_ + p * norb4_ + m * norb3_ + n * norb2_ + m * norb_ +
+                                 q] -= value;
+                            rdm3[n * norb5_ + m * norb4_ + p * norb3_ + n * norb2_ + m * norb_ +
+                                 q] += value;
+                            rdm3[n * norb5_ + m * norb4_ + p * norb3_ + n * norb2_ + q * norb_ +
+                                 m] -= value;
 
-                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] += value;
-                            rdm3[p * no5_ + n * no4_ + m * no3_ + m * no2_ + n * no_ + q] -= value;
-                            rdm3[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] += value;
-                            rdm3[m * no5_ + n * no4_ + p * no3_ + q * no2_ + n * no_ + m] -= value;
+                            rdm3[p * norb5_ + n * norb4_ + m * norb3_ + q * norb2_ + n * norb_ +
+                                 m] += value;
+                            rdm3[p * norb5_ + n * norb4_ + m * norb3_ + m * norb2_ + n * norb_ +
+                                 q] -= value;
+                            rdm3[m * norb5_ + n * norb4_ + p * norb3_ + m * norb2_ + n * norb_ +
+                                 q] += value;
+                            rdm3[m * norb5_ + n * norb4_ + p * norb3_ + q * norb2_ + n * norb_ +
+                                 m] -= value;
 
-                            rdm3[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] += value;
-                            rdm3[m * no5_ + p * no4_ + n * no3_ + q * no2_ + m * no_ + n] -= value;
-                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] += value;
-                            rdm3[p * no5_ + m * no4_ + n * no3_ + m * no2_ + q * no_ + n] -= value;
+                            rdm3[m * norb5_ + p * norb4_ + n * norb3_ + m * norb2_ + q * norb_ +
+                                 n] += value;
+                            rdm3[m * norb5_ + p * norb4_ + n * norb3_ + q * norb2_ + m * norb_ +
+                                 n] -= value;
+                            rdm3[p * norb5_ + m * norb4_ + n * norb3_ + q * norb2_ + m * norb_ +
+                                 n] += value;
+                            rdm3[p * norb5_ + m * norb4_ + n * norb3_ + m * norb2_ + q * norb_ +
+                                 n] -= value;
 
-                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] += value;
-                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + m * no_ + p] -= value;
-                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] += value;
-                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + p * no_ + m] -= value;
+                            rdm3[n * norb5_ + q * norb4_ + m * norb3_ + n * norb2_ + p * norb_ +
+                                 m] += value;
+                            rdm3[n * norb5_ + q * norb4_ + m * norb3_ + n * norb2_ + m * norb_ +
+                                 p] -= value;
+                            rdm3[n * norb5_ + m * norb4_ + q * norb3_ + n * norb2_ + m * norb_ +
+                                 p] += value;
+                            rdm3[n * norb5_ + m * norb4_ + q * norb3_ + n * norb2_ + p * norb_ +
+                                 m] -= value;
 
-                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] += value;
-                            rdm3[q * no5_ + n * no4_ + m * no3_ + m * no2_ + n * no_ + p] -= value;
-                            rdm3[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] += value;
-                            rdm3[m * no5_ + n * no4_ + q * no3_ + p * no2_ + n * no_ + m] -= value;
+                            rdm3[q * norb5_ + n * norb4_ + m * norb3_ + p * norb2_ + n * norb_ +
+                                 m] += value;
+                            rdm3[q * norb5_ + n * norb4_ + m * norb3_ + m * norb2_ + n * norb_ +
+                                 p] -= value;
+                            rdm3[m * norb5_ + n * norb4_ + q * norb3_ + m * norb2_ + n * norb_ +
+                                 p] += value;
+                            rdm3[m * norb5_ + n * norb4_ + q * norb3_ + p * norb2_ + n * norb_ +
+                                 m] -= value;
 
-                            rdm3[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] += value;
-                            rdm3[m * no5_ + q * no4_ + n * no3_ + p * no2_ + m * no_ + n] -= value;
-                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] += value;
-                            rdm3[q * no5_ + m * no4_ + n * no3_ + m * no2_ + p * no_ + n] -= value;
+                            rdm3[m * norb5_ + q * norb4_ + n * norb3_ + m * norb2_ + p * norb_ +
+                                 n] += value;
+                            rdm3[m * norb5_ + q * norb4_ + n * norb3_ + p * norb2_ + m * norb_ +
+                                 n] -= value;
+                            rdm3[q * norb5_ + m * norb4_ + n * norb3_ + p * norb2_ + m * norb_ +
+                                 n] += value;
+                            rdm3[q * norb5_ + m * norb4_ + n * norb3_ + m * norb2_ + p * norb_ +
+                                 n] -= value;
                             Iac.clear_first_one();
                         }
                     }
                     auto Iac = Ia;
                     for (size_t nidx = 0; nidx < na_; ++nidx) {
                         uint64_t n = Iac.find_first_one();
-                        rdm2[n * no3_ + p * no2_ + n * no_ + q] += value;
-                        rdm2[n * no3_ + q * no2_ + n * no_ + p] += value;
-                        rdm2[p * no3_ + n * no2_ + q * no_ + n] += value;
-                        rdm2[q * no3_ + n * no2_ + p * no_ + n] += value;
+                        rdm2[n * norb3_ + p * norb2_ + n * norb_ + q] += value;
+                        rdm2[n * norb3_ + q * norb2_ + n * norb_ + p] += value;
+                        rdm2[p * norb3_ + n * norb2_ + q * norb_ + n] += value;
+                        rdm2[q * norb3_ + n * norb2_ + p * norb_ + n] += value;
                         Iac.clear_first_one();
 
                         auto Iacc = Iac;
                         for (size_t midx = nidx + 1; midx < na_; ++midx) {
                             uint64_t m = Iacc.find_first_one();
-                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] += value;
-                            rdm3[n * no5_ + m * no4_ + p * no3_ + m * no2_ + n * no_ + q] -= value;
-                            rdm3[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] += value;
-                            rdm3[m * no5_ + n * no4_ + p * no3_ + n * no2_ + m * no_ + q] -= value;
+                            rdm3[n * norb5_ + m * norb4_ + p * norb3_ + n * norb2_ + m * norb_ +
+                                 q] += value;
+                            rdm3[n * norb5_ + m * norb4_ + p * norb3_ + m * norb2_ + n * norb_ +
+                                 q] -= value;
+                            rdm3[m * norb5_ + n * norb4_ + p * norb3_ + m * norb2_ + n * norb_ +
+                                 q] += value;
+                            rdm3[m * norb5_ + n * norb4_ + p * norb3_ + n * norb2_ + m * norb_ +
+                                 q] -= value;
 
-                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] += value;
-                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + n * no_ + m] -= value;
-                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] += value;
-                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + m * no_ + n] -= value;
+                            rdm3[p * norb5_ + m * norb4_ + n * norb3_ + q * norb2_ + m * norb_ +
+                                 n] += value;
+                            rdm3[p * norb5_ + m * norb4_ + n * norb3_ + q * norb2_ + n * norb_ +
+                                 m] -= value;
+                            rdm3[p * norb5_ + n * norb4_ + m * norb3_ + q * norb2_ + n * norb_ +
+                                 m] += value;
+                            rdm3[p * norb5_ + n * norb4_ + m * norb3_ + q * norb2_ + m * norb_ +
+                                 n] -= value;
 
-                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] += value;
-                            rdm3[n * no5_ + p * no4_ + m * no3_ + m * no2_ + q * no_ + n] -= value;
-                            rdm3[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] += value;
-                            rdm3[m * no5_ + p * no4_ + n * no3_ + n * no2_ + q * no_ + m] -= value;
+                            rdm3[n * norb5_ + p * norb4_ + m * norb3_ + n * norb2_ + q * norb_ +
+                                 m] += value;
+                            rdm3[n * norb5_ + p * norb4_ + m * norb3_ + m * norb2_ + q * norb_ +
+                                 n] -= value;
+                            rdm3[m * norb5_ + p * norb4_ + n * norb3_ + m * norb2_ + q * norb_ +
+                                 n] += value;
+                            rdm3[m * norb5_ + p * norb4_ + n * norb3_ + n * norb2_ + q * norb_ +
+                                 m] -= value;
 
-                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] += value;
-                            rdm3[n * no5_ + m * no4_ + q * no3_ + m * no2_ + n * no_ + p] -= value;
-                            rdm3[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] += value;
-                            rdm3[m * no5_ + n * no4_ + q * no3_ + n * no2_ + m * no_ + p] -= value;
+                            rdm3[n * norb5_ + m * norb4_ + q * norb3_ + n * norb2_ + m * norb_ +
+                                 p] += value;
+                            rdm3[n * norb5_ + m * norb4_ + q * norb3_ + m * norb2_ + n * norb_ +
+                                 p] -= value;
+                            rdm3[m * norb5_ + n * norb4_ + q * norb3_ + m * norb2_ + n * norb_ +
+                                 p] += value;
+                            rdm3[m * norb5_ + n * norb4_ + q * norb3_ + n * norb2_ + m * norb_ +
+                                 p] -= value;
 
-                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] += value;
-                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + n * no_ + m] -= value;
-                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] += value;
-                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + m * no_ + n] -= value;
+                            rdm3[q * norb5_ + m * norb4_ + n * norb3_ + p * norb2_ + m * norb_ +
+                                 n] += value;
+                            rdm3[q * norb5_ + m * norb4_ + n * norb3_ + p * norb2_ + n * norb_ +
+                                 m] -= value;
+                            rdm3[q * norb5_ + n * norb4_ + m * norb3_ + p * norb2_ + n * norb_ +
+                                 m] += value;
+                            rdm3[q * norb5_ + n * norb4_ + m * norb3_ + p * norb2_ + m * norb_ +
+                                 n] -= value;
 
-                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] += value;
-                            rdm3[n * no5_ + q * no4_ + m * no3_ + m * no2_ + p * no_ + n] -= value;
-                            rdm3[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] += value;
-                            rdm3[m * no5_ + q * no4_ + n * no3_ + n * no2_ + p * no_ + m] -= value;
+                            rdm3[n * norb5_ + q * norb4_ + m * norb3_ + n * norb2_ + p * norb_ +
+                                 m] += value;
+                            rdm3[n * norb5_ + q * norb4_ + m * norb3_ + m * norb2_ + p * norb_ +
+                                 n] -= value;
+                            rdm3[m * norb5_ + q * norb4_ + n * norb3_ + m * norb2_ + p * norb_ +
+                                 n] += value;
+                            rdm3[m * norb5_ + q * norb4_ + n * norb3_ + n * norb2_ + p * norb_ +
+                                 m] -= value;
 
                             Iacc.clear_first_one();
                         }
@@ -1592,15 +1808,15 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
 
                     double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
                     double value = Csq * Ib.slater_sign(p, q) * Jb.slater_sign(r, s);
-                    rdm2[p * no3_ + q * no2_ + r * no_ + s] += value;
-                    rdm2[p * no3_ + q * no2_ + s * no_ + r] -= value;
-                    rdm2[q * no3_ + p * no2_ + r * no_ + s] -= value;
-                    rdm2[q * no3_ + p * no2_ + s * no_ + r] += value;
+                    rdm2[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                    rdm2[p * norb3_ + q * norb2_ + s * norb_ + r] -= value;
+                    rdm2[q * norb3_ + p * norb2_ + r * norb_ + s] -= value;
+                    rdm2[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
 
-                    rdm2[r * no3_ + s * no2_ + p * no_ + q] += value;
-                    rdm2[s * no3_ + r * no2_ + p * no_ + q] -= value;
-                    rdm2[r * no3_ + s * no2_ + q * no_ + p] -= value;
-                    rdm2[s * no3_ + r * no2_ + q * no_ + p] += value;
+                    rdm2[r * norb3_ + s * norb2_ + p * norb_ + q] += value;
+                    rdm2[s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                    rdm2[r * norb3_ + s * norb2_ + q * norb_ + p] -= value;
+                    rdm2[s * norb3_ + r * norb2_ + q * norb_ + p] += value;
 
                     // 3-rdm
                     auto Ibc = Ib;
@@ -1613,35 +1829,59 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
                     auto Iac = Ia;
                     for (size_t nda = 0; nda < na_; ++nda) {
                         uint64_t n = Iac.find_first_one();
-                        rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + r * no_ + s] += value;
-                        rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] -= value;
-                        rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + s * no_ + r] += value;
-                        rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] -= value;
+                        rdm3[n * norb5_ + p * norb4_ + q * norb3_ + n * norb2_ + r * norb_ + s] +=
+                            value;
+                        rdm3[n * norb5_ + p * norb4_ + q * norb3_ + n * norb2_ + s * norb_ + r] -=
+                            value;
+                        rdm3[n * norb5_ + q * norb4_ + p * norb3_ + n * norb2_ + s * norb_ + r] +=
+                            value;
+                        rdm3[n * norb5_ + q * norb4_ + p * norb3_ + n * norb2_ + r * norb_ + s] -=
+                            value;
 
-                        rdm3[p * no5_ + n * no4_ + q * no3_ + r * no2_ + n * no_ + s] += value;
-                        rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ + r] -= value;
-                        rdm3[q * no5_ + n * no4_ + p * no3_ + s * no2_ + n * no_ + r] += value;
-                        rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + n * no_ + s] -= value;
+                        rdm3[p * norb5_ + n * norb4_ + q * norb3_ + r * norb2_ + n * norb_ + s] +=
+                            value;
+                        rdm3[p * norb5_ + n * norb4_ + q * norb3_ + s * norb2_ + n * norb_ + r] -=
+                            value;
+                        rdm3[q * norb5_ + n * norb4_ + p * norb3_ + s * norb2_ + n * norb_ + r] +=
+                            value;
+                        rdm3[q * norb5_ + n * norb4_ + p * norb3_ + r * norb2_ + n * norb_ + s] -=
+                            value;
 
-                        rdm3[q * no5_ + p * no4_ + n * no3_ + s * no2_ + r * no_ + n] += value;
-                        rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] -= value;
-                        rdm3[p * no5_ + q * no4_ + n * no3_ + r * no2_ + s * no_ + n] += value;
-                        rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] -= value;
+                        rdm3[q * norb5_ + p * norb4_ + n * norb3_ + s * norb2_ + r * norb_ + n] +=
+                            value;
+                        rdm3[q * norb5_ + p * norb4_ + n * norb3_ + r * norb2_ + s * norb_ + n] -=
+                            value;
+                        rdm3[p * norb5_ + q * norb4_ + n * norb3_ + r * norb2_ + s * norb_ + n] +=
+                            value;
+                        rdm3[p * norb5_ + q * norb4_ + n * norb3_ + s * norb2_ + r * norb_ + n] -=
+                            value;
 
-                        rdm3[n * no5_ + r * no4_ + s * no3_ + n * no2_ + p * no_ + q] += value;
-                        rdm3[n * no5_ + r * no4_ + s * no3_ + n * no2_ + q * no_ + p] -= value;
-                        rdm3[n * no5_ + s * no4_ + r * no3_ + n * no2_ + q * no_ + p] += value;
-                        rdm3[n * no5_ + s * no4_ + r * no3_ + n * no2_ + p * no_ + q] -= value;
+                        rdm3[n * norb5_ + r * norb4_ + s * norb3_ + n * norb2_ + p * norb_ + q] +=
+                            value;
+                        rdm3[n * norb5_ + r * norb4_ + s * norb3_ + n * norb2_ + q * norb_ + p] -=
+                            value;
+                        rdm3[n * norb5_ + s * norb4_ + r * norb3_ + n * norb2_ + q * norb_ + p] +=
+                            value;
+                        rdm3[n * norb5_ + s * norb4_ + r * norb3_ + n * norb2_ + p * norb_ + q] -=
+                            value;
 
-                        rdm3[r * no5_ + n * no4_ + s * no3_ + p * no2_ + n * no_ + q] += value;
-                        rdm3[r * no5_ + n * no4_ + s * no3_ + q * no2_ + n * no_ + p] -= value;
-                        rdm3[s * no5_ + n * no4_ + r * no3_ + q * no2_ + n * no_ + p] += value;
-                        rdm3[s * no5_ + n * no4_ + r * no3_ + p * no2_ + n * no_ + q] -= value;
+                        rdm3[r * norb5_ + n * norb4_ + s * norb3_ + p * norb2_ + n * norb_ + q] +=
+                            value;
+                        rdm3[r * norb5_ + n * norb4_ + s * norb3_ + q * norb2_ + n * norb_ + p] -=
+                            value;
+                        rdm3[s * norb5_ + n * norb4_ + r * norb3_ + q * norb2_ + n * norb_ + p] +=
+                            value;
+                        rdm3[s * norb5_ + n * norb4_ + r * norb3_ + p * norb2_ + n * norb_ + q] -=
+                            value;
 
-                        rdm3[s * no5_ + r * no4_ + n * no3_ + q * no2_ + p * no_ + n] += value;
-                        rdm3[s * no5_ + r * no4_ + n * no3_ + p * no2_ + q * no_ + n] -= value;
-                        rdm3[r * no5_ + s * no4_ + n * no3_ + p * no2_ + q * no_ + n] += value;
-                        rdm3[r * no5_ + s * no4_ + n * no3_ + q * no2_ + p * no_ + n] -= value;
+                        rdm3[s * norb5_ + r * norb4_ + n * norb3_ + q * norb2_ + p * norb_ + n] +=
+                            value;
+                        rdm3[s * norb5_ + r * norb4_ + n * norb3_ + p * norb2_ + q * norb_ + n] -=
+                            value;
+                        rdm3[r * norb5_ + s * norb4_ + n * norb3_ + p * norb2_ + q * norb_ + n] +=
+                            value;
+                        rdm3[r * norb5_ + s * norb4_ + n * norb3_ + q * norb2_ + p * norb_ + n] -=
+                            value;
                         Iac.clear_first_one();
                     }
                 } else if (ndiff == 6) {
@@ -1711,71 +1951,71 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
 
                             double value =
                                 Csq * sign_Ips * Ib.slater_sign(q, r); // * ui64_slater_sign(Jb,r);
-                            rdm2[p * no3_ + q * no2_ + s * no_ + r] += value;
-                            rdm2[q * no3_ + p * no2_ + r * no_ + s] += value;
+                            rdm2[p * norb3_ + q * norb2_ + s * norb_ + r] += value;
+                            rdm2[q * norb3_ + p * norb2_ + r * norb_ + s] += value;
 
                             auto Iac(detIa);
                             Iac ^= Ia_d;
                             for (size_t d = 1; d < na_; ++d) {
                                 uint64_t n = Iac.find_first_one();
-                                rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ + r] +=
-                                    value;
-                                rdm3[n * no5_ + p * no4_ + q * no3_ + s * no2_ + n * no_ + r] -=
-                                    value;
-                                rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] +=
-                                    value;
-                                rdm3[p * no5_ + n * no4_ + q * no3_ + n * no2_ + s * no_ + r] -=
-                                    value;
+                                rdm3[p * norb5_ + n * norb4_ + q * norb3_ + s * norb2_ + n * norb_ +
+                                     r] += value;
+                                rdm3[n * norb5_ + p * norb4_ + q * norb3_ + s * norb2_ + n * norb_ +
+                                     r] -= value;
+                                rdm3[n * norb5_ + p * norb4_ + q * norb3_ + n * norb2_ + s * norb_ +
+                                     r] += value;
+                                rdm3[p * norb5_ + n * norb4_ + q * norb3_ + n * norb2_ + s * norb_ +
+                                     r] -= value;
 
-                                rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + n * no_ + s] +=
-                                    value;
-                                rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + n * no_ + s] -=
-                                    value;
-                                rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] +=
-                                    value;
-                                rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + s * no_ + n] -=
-                                    value;
+                                rdm3[q * norb5_ + n * norb4_ + p * norb3_ + r * norb2_ + n * norb_ +
+                                     s] += value;
+                                rdm3[q * norb5_ + p * norb4_ + n * norb3_ + r * norb2_ + n * norb_ +
+                                     s] -= value;
+                                rdm3[q * norb5_ + p * norb4_ + n * norb3_ + r * norb2_ + s * norb_ +
+                                     n] += value;
+                                rdm3[q * norb5_ + n * norb4_ + p * norb3_ + r * norb2_ + s * norb_ +
+                                     n] -= value;
 
-                                rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] +=
-                                    value;
-                                rdm3[n * no5_ + q * no4_ + p * no3_ + s * no2_ + r * no_ + n] -=
-                                    value;
-                                rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] +=
-                                    value;
-                                rdm3[p * no5_ + q * no4_ + n * no3_ + n * no2_ + r * no_ + s] -=
-                                    value;
+                                rdm3[p * norb5_ + q * norb4_ + n * norb3_ + s * norb2_ + r * norb_ +
+                                     n] += value;
+                                rdm3[n * norb5_ + q * norb4_ + p * norb3_ + s * norb2_ + r * norb_ +
+                                     n] -= value;
+                                rdm3[n * norb5_ + q * norb4_ + p * norb3_ + n * norb2_ + r * norb_ +
+                                     s] += value;
+                                rdm3[p * norb5_ + q * norb4_ + n * norb3_ + n * norb2_ + r * norb_ +
+                                     s] -= value;
                                 Iac.clear_first_one();
                             }
                             auto Ibc(Ib);
                             Ibc ^= Ib_sub;
                             for (size_t d = 1; d < nb_; ++d) {
                                 uint64_t n = Ibc.find_first_one();
-                                rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] +=
-                                    value;
-                                rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + n * no_ + r] -=
-                                    value;
-                                rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ + r] +=
-                                    value;
-                                rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + r * no_ + n] -=
-                                    value;
+                                rdm3[p * norb5_ + q * norb4_ + n * norb3_ + s * norb2_ + r * norb_ +
+                                     n] += value;
+                                rdm3[p * norb5_ + q * norb4_ + n * norb3_ + s * norb2_ + n * norb_ +
+                                     r] -= value;
+                                rdm3[p * norb5_ + n * norb4_ + q * norb3_ + s * norb2_ + n * norb_ +
+                                     r] += value;
+                                rdm3[p * norb5_ + n * norb4_ + q * norb3_ + s * norb2_ + r * norb_ +
+                                     n] -= value;
 
-                                rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] +=
-                                    value;
-                                rdm3[q * no5_ + p * no4_ + n * no3_ + n * no2_ + s * no_ + r] -=
-                                    value;
-                                rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] +=
-                                    value;
-                                rdm3[n * no5_ + p * no4_ + q * no3_ + r * no2_ + s * no_ + n] -=
-                                    value;
+                                rdm3[q * norb5_ + p * norb4_ + n * norb3_ + r * norb2_ + s * norb_ +
+                                     n] += value;
+                                rdm3[q * norb5_ + p * norb4_ + n * norb3_ + n * norb2_ + s * norb_ +
+                                     r] -= value;
+                                rdm3[n * norb5_ + p * norb4_ + q * norb3_ + n * norb2_ + s * norb_ +
+                                     r] += value;
+                                rdm3[n * norb5_ + p * norb4_ + q * norb3_ + r * norb2_ + s * norb_ +
+                                     n] -= value;
 
-                                rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] +=
-                                    value;
-                                rdm3[n * no5_ + q * no4_ + p * no3_ + r * no2_ + n * no_ + s] -=
-                                    value;
-                                rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + n * no_ + s] +=
-                                    value;
-                                rdm3[q * no5_ + n * no4_ + p * no3_ + n * no2_ + r * no_ + s] -=
-                                    value;
+                                rdm3[n * norb5_ + q * norb4_ + p * norb3_ + n * norb2_ + r * norb_ +
+                                     s] += value;
+                                rdm3[n * norb5_ + q * norb4_ + p * norb3_ + r * norb2_ + n * norb_ +
+                                     s] -= value;
+                                rdm3[q * norb5_ + n * norb4_ + p * norb3_ + r * norb2_ + n * norb_ +
+                                     s] += value;
+                                rdm3[q * norb5_ + n * norb4_ + p * norb3_ + n * norb2_ + r * norb_ +
+                                     s] -= value;
                                 Ibc.clear_first_one();
                             }
                         } else if (nbdiff == 4) {
@@ -1793,20 +2033,32 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
                             double value = Csq * sign_IJ *
                                            Ib.slater_sign(q, r) * // ui64_slater_sign(Ib,r) *
                                            Jb.slater_sign(t, u);  // * ui64_slater_sign(Jb,u);
-                            rdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-                            rdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-                            rdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-                            rdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
+                            rdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ +
+                                 u] += value;
+                            rdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + u * norb_ +
+                                 t] -= value;
+                            rdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ +
+                                 t] += value;
+                            rdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + t * norb_ +
+                                 u] -= value;
 
-                            rdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-                            rdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-                            rdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-                            rdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
+                            rdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ +
+                                 u] += value;
+                            rdm3[q * norb5_ + p * norb4_ + r * norb3_ + u * norb2_ + s * norb_ +
+                                 t] -= value;
+                            rdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ +
+                                 t] += value;
+                            rdm3[r * norb5_ + p * norb4_ + q * norb3_ + t * norb2_ + s * norb_ +
+                                 u] -= value;
 
-                            rdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-                            rdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
-                            rdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
-                            rdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
+                            rdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ +
+                                 s] += value;
+                            rdm3[r * norb5_ + q * norb4_ + p * norb3_ + t * norb2_ + u * norb_ +
+                                 s] -= value;
+                            rdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ +
+                                 s] += value;
+                            rdm3[q * norb5_ + r * norb4_ + p * norb3_ + u * norb2_ + t * norb_ +
+                                 s] -= value;
                         }
                     }
                 }
@@ -1850,20 +2102,32 @@ void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<dou
                             uint64_t u = Jb_sub.find_first_one();
                             double el = Csq * sign * Ib.slater_sign(r) * Jb.slater_sign(u);
 
-                            rdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += el;
-                            rdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= el;
-                            rdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= el;
-                            rdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += el;
+                            rdm3[p * norb5_ + q * norb4_ + r * norb3_ + s * norb2_ + t * norb_ +
+                                 u] += el;
+                            rdm3[p * norb5_ + q * norb4_ + r * norb3_ + t * norb2_ + s * norb_ +
+                                 u] -= el;
+                            rdm3[q * norb5_ + p * norb4_ + r * norb3_ + s * norb2_ + t * norb_ +
+                                 u] -= el;
+                            rdm3[q * norb5_ + p * norb4_ + r * norb3_ + t * norb2_ + s * norb_ +
+                                 u] += el;
 
-                            rdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += el;
-                            rdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= el;
-                            rdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= el;
-                            rdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += el;
+                            rdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + t * norb_ +
+                                 s] += el;
+                            rdm3[r * norb5_ + q * norb4_ + p * norb3_ + u * norb2_ + s * norb_ +
+                                 t] -= el;
+                            rdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + t * norb_ +
+                                 s] -= el;
+                            rdm3[r * norb5_ + p * norb4_ + q * norb3_ + u * norb2_ + s * norb_ +
+                                 t] += el;
 
-                            rdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += el;
-                            rdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= el;
-                            rdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= el;
-                            rdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += el;
+                            rdm3[p * norb5_ + r * norb4_ + q * norb3_ + s * norb2_ + u * norb_ +
+                                 t] += el;
+                            rdm3[p * norb5_ + r * norb4_ + q * norb3_ + t * norb2_ + u * norb_ +
+                                 s] -= el;
+                            rdm3[q * norb5_ + r * norb4_ + p * norb3_ + s * norb2_ + u * norb_ +
+                                 t] -= el;
+                            rdm3[q * norb5_ + r * norb4_ + p * norb3_ + t * norb2_ + u * norb_ +
+                                 s] += el;
                         }
                     }
                 }

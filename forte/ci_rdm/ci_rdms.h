@@ -47,7 +47,7 @@ class CI_RDMS {
 
     // Class constructor and destructor
     // I (York) think the following is correct, please check.
-    // e.g., <root1| p^+ q^+ s r | root2> = 2rdm[p*ncmo^(3) + q*ncmo^(2) + r*ncmo + s]
+    // e.g., <root1| p^+ q^+ s r | root2> = 2rdm[p*nmo^(3) + q*nmo^(2) + r*nmo + s]
     CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
             int root2);
@@ -61,7 +61,7 @@ class CI_RDMS {
     // All rdms are stored in spin-labeled vector format.
     // They are accessed in the standard way. E.g., for the alpha/alpha 2-RDM,
     // the element corresponding to p,q,r,s would be accessed with:
-    // tp2rdm_aa[p*ncmo^(3) + q*ncmo^(2) + r*ncmo + s], where ncmo is the number
+    // tp2rdm_aa[p*nmo^(3) + q*nmo^(2) + r*nmo + s], where nmo is the number
     // of active orbitals.
 
     // The most efficient algorithms use coupling lists to fill the
@@ -152,12 +152,12 @@ class CI_RDMS {
     int root2_;
 
     // The number of orbitals
-    size_t no_;
-    size_t no2_;
-    size_t no3_;
-    size_t no4_;
-    size_t no5_;
-    size_t no6_;
+    size_t norb_;
+    size_t norb2_;
+    size_t norb3_;
+    size_t norb4_;
+    size_t norb5_;
+    size_t norb6_;
 
     // The correlated mos per irrep
     psi::Dimension active_dim_;
