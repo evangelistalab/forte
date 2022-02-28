@@ -55,8 +55,8 @@ void DSRG_MRPT2::set_j() {
 
 void DSRG_MRPT2::set_v() {   
     if (eri_df_) {
-        B = BTF_->build(tensor_type_, "B", {"Lgg", "LGG"});
-        V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"pphh"}));
+        //NOTICE: B block space can be further compressed.
+        B = BTF_->build(tensor_type_, "B", {"Lph", "LPH", "Lcp", "LCP", "Lav", "LAV", "Lcc", "LCC", "Lvv", "LVV"});
         for (const std::string& block : B.block_labels()) {
             std::vector<size_t> iaux = label_to_spacemo_[block[0]];
             std::vector<size_t> ip   = label_to_spacemo_[block[1]];
@@ -64,11 +64,6 @@ void DSRG_MRPT2::set_v() {
             ambit::Tensor Bblock = ints_->three_integral_block(iaux, ip, ih);
             B.block(block).copy(Bblock);
         }
-        V["abij"] =  B["gai"] * B["gbj"];
-        V["abij"] -= B["gaj"] * B["gbi"];
-        V["aBiJ"] =  B["gai"] * B["gBJ"];
-        V["ABIJ"] =  B["gAI"] * B["gBJ"];
-        V["ABIJ"] -= B["gAJ"] * B["gBI"];
     } else {
         V = BTF_->build(CoreTensor, "Electron Repulsion Integral",
                 spin_cases({"gphh", "pghh", "ppgh", "pphg", "gchc", "pghc", "pcgc", "pchg",
@@ -247,8 +242,14 @@ void DSRG_MRPT2::set_dsrg_tensor() {
         });
 
     // An intermediate tensor : T2 / Delta
-    T2OverDelta["ijab"] += V["abij"] * Eeps2_m2["ijab"];
-    T2OverDelta["iJaB"] += V["aBiJ"] * Eeps2_m2["iJaB"];
+    if (eri_df_) {
+        T2OverDelta["ijab"] += B["gai"] * B["gbj"] * Eeps2_m2["ijab"];
+        T2OverDelta["ijab"] -= B["gaj"] * B["gbi"] * Eeps2_m2["ijab"];
+        T2OverDelta["iJaB"] += B["gai"] * B["gBJ"] * Eeps2_m2["iJaB"];
+    } else {
+        T2OverDelta["ijab"] += V["abij"] * Eeps2_m2["ijab"];
+        T2OverDelta["iJaB"] += V["aBiJ"] * Eeps2_m2["iJaB"];
+    }
 
     // Delta1 * Gamma1_
     DelGam1["xu"] = Delta1["xu"] * Gamma1_["xu"];
