@@ -54,12 +54,6 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ForteOptions> foptions, bool quiet)
     : mo_space_info_(mo_space_info), ints_(ints), print_(not quiet), fix_orbital_success_(true) {
     read_options(foptions);
-
-    print_h2("Semicanonicalize Orbitals");
-    auto true_or_false = [](bool x) { return x ? "TRUE" : "FALSE"; };
-    outfile->Printf("\n    MIX INACTIVE ORBITALS   ...... %5s", true_or_false(inactive_mix_));
-    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS ...... %5s", true_or_false(active_mix_));
-
     // initialize the dimension objects
     startup();
 }
@@ -134,16 +128,21 @@ void SemiCanonical::set_U_to_identity() {
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 }
 
-void SemiCanonical::semicanonicalize(RDMs& rdms, const bool& build_fock, const bool& nat_orb,
+void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock, const bool& nat_orb,
                                      const bool& transform) {
     timer t_semi("semicanonicalize orbitals");
+
+    print_h2("Semicanonicalize Orbitals");
+    auto true_or_false = [](bool x) { return x ? "TRUE" : "FALSE"; };
+    outfile->Printf("\n    MIX INACTIVE ORBITALS   ...... %5s", true_or_false(inactive_mix_));
+    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS ...... %5s", true_or_false(active_mix_));
 
     // build Fock matrix
     if (build_fock) {
         timer t_fock("build Fock");
         // use spin-free 1-RDM
         // TODO: this need to be changed if UHF reference is available
-        auto g1 = rdms.SF_G1().clone();
+        auto g1 = rdms->SF_G1().clone();
         g1.scale(0.5);
         ints_->make_fock_matrix(g1, g1);
     }
@@ -153,13 +152,13 @@ void SemiCanonical::semicanonicalize(RDMs& rdms, const bool& build_fock, const b
     build_transformation_matrices(already_semi);
     if (transform and (not already_semi)) {
         ints_->rotate_orbitals(Ua_, Ub_);
-        rdms.rotate(Ua_t_, Ub_t_);
+        rdms->rotate(Ua_t_, Ub_t_);
     }
     if (print_)
         print_timing("orbital canonicalization", t_semi.stop());
 }
 
-bool SemiCanonical::check_orbitals(RDMs& rdms, const bool& nat_orb) {
+bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_orb) {
     bool semi = true;
 
     // print orbitals requested
@@ -215,7 +214,7 @@ bool SemiCanonical::check_orbitals(RDMs& rdms, const bool& nat_orb) {
     return semi;
 }
 
-void SemiCanonical::prepare_matrix_blocks(RDMs& rdms, const bool& nat_orb) {
+void SemiCanonical::prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, const bool& nat_orb) {
     mats_.clear();
 
     // Fock alpha should be the same as beta
@@ -226,7 +225,7 @@ void SemiCanonical::prepare_matrix_blocks(RDMs& rdms, const bool& nat_orb) {
     }
 
     // 1-RDM in Matrix format
-    auto d1 = rdms.SF_G1mat(mo_space_info_->dimension("ACTIVE"));
+    auto d1 = rdms->SF_G1mat(mo_space_info_->dimension("ACTIVE"));
     auto docc_offset = mo_space_info_->dimension("INACTIVE_DOCC");
 
     // loop over orbital spaces

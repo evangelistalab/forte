@@ -172,12 +172,12 @@ double MCSCF_2STEP::compute_energy() {
 
     // convergence for final CI
     double r_conv = options_->get_double("R_CONVERGENCE");
-    std::unique_ptr<ActiveSpaceSolver> as_solver;
+    std::shared_ptr<ActiveSpaceSolver> as_solver;
 
     // perform a perfect initial CI
     double e_c = diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
                                          {print_ ? print_ : 1, e_conv_, r_conv, false, false});
-    auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+    auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);
     cas_grad.evaluate(R, dG);
 
@@ -345,7 +345,7 @@ double MCSCF_2STEP::compute_energy() {
             auto print_level = debug_print_ ? 5 : print_;
             e_c = diagonalize_hamiltonian(as_solver, fci_ints,
                                           {print_level, dl_e_conv, dl_r_conv, true, dump_wfn});
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
         }
 
         diis_manager.reset_subspace();
@@ -389,7 +389,7 @@ double MCSCF_2STEP::compute_energy() {
         // for nuclear gradient
         if (der_type_ == "FIRST") {
             // recompute gradient due to canonicalization
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
             cas_grad.set_rdms(rdms);
             cas_grad.evaluate(R, dG);
 
@@ -433,7 +433,7 @@ bool MCSCF_2STEP::is_single_reference() {
 }
 
 double
-MCSCF_2STEP::diagonalize_hamiltonian(std::unique_ptr<ActiveSpaceSolver>& as_solver,
+MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
                                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<int, double, double, bool, bool>& params) {
     auto state_nroots_map = to_state_nroots_map(state_weights_map_);

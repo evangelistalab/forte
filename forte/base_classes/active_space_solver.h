@@ -36,6 +36,7 @@
 #include "psi4/libmints/matrix.h"
 
 #include "base_classes/state_info.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
@@ -45,7 +46,6 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class RDMs;
 class SCFInfo;
 
 /**
@@ -94,13 +94,23 @@ class ActiveSpaceSolver {
 
     /// Compute RDMs of all states in the given map
     /// First entry of the pair corresponds to bra and the second is the ket.
-    std::vector<RDMs> rdms(
+    std::vector<std::shared_ptr<RDMs>> rdms(
         std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
-        int max_rdm_level);
+        int max_rdm_level, RDMsType rdm_type);
 
     /// Compute the state-averaged reference
-    RDMs compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                              int max_rdm_level);
+    std::shared_ptr<RDMs>
+    compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                         int max_rdm_level, RDMsType rdm_type);
+
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap <Ψ(N-1)|Ψ'(N-1)>, where the (N-1)-electron wave function is given by
+    /// Ψ(N-1) = h_{pσ} (t) |Ψ (N)> = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ(N)>.
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ(N)| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ(N)>
+    std::map<StateInfo, std::vector<double>>
+    compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket);
 
     /// Print a summary of the computation information
     void print_options();
@@ -177,19 +187,6 @@ class ActiveSpaceSolver {
     /// A map of state symmetries to the file name of wave function stored on disk
     std::map<StateInfo, std::string> state_filename_map_;
 
-    /// Average spin multiplets for RDMs
-    /// If true, the weight of a state will be averaged by its multiplicity.
-    /// Moreover, all its ms components will be computed by the solver.
-    bool ms_avg_;
-
-    /// Compute the state-averaged reference when spin multiplets are also averaged
-    RDMs compute_avg_rdms_ms_avg(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                                 int max_rdm_level);
-
-    /// Compute the state-averaged reference when spin multiplets are also averaged
-    RDMs compute_avg_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                          int max_rdm_level);
-
     /// A variable to control printing information
     int print_ = 1;
 
@@ -215,9 +212,9 @@ class ActiveSpaceSolver {
  * @param mo_space_info orbital space information
  * @param ints an integral object
  * @param options user-provided options
- * @return a unique pointer for the base class ActiveSpaceMethod
+ * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);

@@ -198,8 +198,99 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
     // <[Hbar2, T2]> C_6 C_2
     if (do_cu3_) {
-        E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
-        E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
+        if (store_cu3_) {
+            timer t("DSRG [H2, T2] L3");
+            E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
+            E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xyzuwv");
+        } else {
+            // direct algorithm for 3RDM: Alex's trick JCTC 16, 6343–6357 (2020)
+            // t_{uvez} v_{ewxy} D_{xyzuwv} = - t_{uvez} v_{ezxy} D_{uvxy}
+            //                                + t_{uvez} v_{ewxy} < x^+ y^+ w z^+ v u >
+
+            // - need to transform the integrals to the same orbital basis as active space solver
+            // - TODO: maybe we (York) should make the CI vectors consistent at the first place
+            ambit::Tensor Tbra, Tket;
+            ambit::Tensor Ua = Uactv_.block("aa");
+
+            timer timer_v("DSRG [H2, T2] D3V direct");
+            Tbra = H2.block("vaaa").clone();
+            Tbra("ewuv") = H2.block("vaaa")("ezxy") * Ua("wz") * Ua("ux") * Ua("vy");
+            Tket = T2.block("aava").clone();
+            Tket("uvew") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
+            auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
+            timer_v.stop();
+
+            timer timer_c("DSRG [H2, T2] D3C direct");
+            Tbra = T2.block("caaa").clone();
+            Tbra("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
+            Tket = H2.block("aaca").clone();
+            Tket("uvmw") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
+            auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
+            timer_c.stop();
+
+            // - 2-RDM contributions
+            auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
+            G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
+
+            double E3v = -H2["ezxy"] * T2["uvez"] * G2["xyuv"];
+            double E3c = T2["mzxy"] * H2["uvmz"] * G2["xyuv"];
+
+            // - add together
+            for (const auto& state_weights : state_to_weights_) {
+                const auto& state = state_weights.first;
+                const auto& weights = state_weights.second;
+                for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
+                    if (weights[i] < 1.0e-15)
+                        continue;
+                    E3v += weights[i] * E3v_map[state][i];
+                    E3c -= weights[i] * E3c_map[state][i];
+                }
+            }
+
+            // => spin-free 1- and 2-cumulant contributions <=
+
+            // - virtual contraction
+            temp = ambit::BlockedTensor::build(tensor_type_, "temp_va", {"va"});
+            temp["ex"] = H2["ewxy"] * L1_["yw"];
+            temp["ex"] -= 0.5 * H2["ewyx"] * L1_["yw"];
+            E3v -= temp["ex"] * T2["uvez"] * G2["xzuv"];
+
+            temp["eu"] = 0.5 * S2["uvez"] * L1_["zv"];
+            E3v -= H2["ewxy"] * temp["eu"] * L2_["xyuw"];
+
+            temp = ambit::BlockedTensor::build(tensor_type_, "temp_vaaa", {"vaaa"});
+            temp["ewuy"] = H2["ewxy"] * L1_["xu"];
+            E3v -= 0.5 * temp["ewuy"] * S2["uvez"] * L2_["yzwv"];
+
+            temp["ewxu"] = H2["ewxy"] * L1_["yu"];
+            E3v += 0.5 * temp["ewxu"] * T2["uvez"] * L2_["xzwv"];
+            E3v += 0.5 * temp["ewxv"] * T2["uvez"] * L2_["xzuw"];
+
+            temp["ezxy"] = H2["ewxy"] * L1_["zw"];
+            E3v += 0.5 * temp["ezxy"] * T2["uvez"] * G2["xyuv"];
+
+            // - core contraction
+            temp = ambit::BlockedTensor::build(tensor_type_, "temp_ac", {"ac"});
+            temp["um"] = H2["uvmz"] * L1_["zv"];
+            temp["um"] -= 0.5 * H2["vumz"] * L1_["zv"];
+            E3c += temp["um"] * T2["mwxy"] * L2_["xyuw"];
+
+            temp["xm"] = S2["mwxy"] * L1_["yw"];
+            E3c += 0.5 * H2["uvmz"] * temp["xm"] * G2["xzuv"];
+
+            temp = ambit::BlockedTensor::build(tensor_type_, "temp_caaa", {"caaa"});
+            temp["mzxv"] = H2["uvmz"] * L1_["xu"];
+            E3c += 0.5 * temp["mzxv"] * S2["mwxy"] * L2_["yzwv"];
+
+            temp["mzuy"] = H2["uvmz"] * L1_["yv"];
+            E3c -= 0.5 * temp["mzuy"] * T2["mwxy"] * L2_["xzuw"];
+            E3c -= 0.5 * temp["mzux"] * T2["mwxy"] * L2_["yzwu"];
+
+            temp["mwuv"] = H2["uvmz"] * L1_["zw"];
+            E3c -= 0.5 * temp["mwuv"] * T2["mwxy"] * G2["xyuv"];
+
+            E3 += E3c + E3v;
+        }
     }
 
     return {E1, E2, E3};
@@ -581,7 +672,6 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     local_timer timer;
 
     // particle-particle contractions
-    // TODO: need to investigate why using "r" fails when C2 does not contain all "rs"
     C2["ijes"] += batched("e", alpha * B["gae"] * B["gbs"] * T2["ijab"]);
     C2["ijus"] += batched("u", alpha * B["gau"] * B["gbs"] * T2["ijab"]);
     C2["ijms"] += batched("m", alpha * B["gam"] * B["gbs"] * T2["ijab"]);
@@ -679,7 +769,7 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
     C2["jqsb"] += temp["jqsb"];
     C2["qjbs"] += temp["jqsb"];
 
-    if (qjsb_large.size() != 0) {
+    if (!qjsb_large.empty()) {
         C2["e,j,f,v0"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,a,v0"]);
         C2["j,e,v0,f"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,a,v0"]);
 
@@ -694,7 +784,7 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
         C2["j,e,v0,f"] += batched("e", 0.5 * alpha * temp["i,j,y,v0"] * B["g,y,f"] * B["g,e,i"]);
     }
 
-    if (jqsb_large.size() != 0) {
+    if (!jqsb_large.empty()) {
         C2["j,e,f,v0"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,v0,a"]);
         C2["e,j,v0,f"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,v0,a"]);
 

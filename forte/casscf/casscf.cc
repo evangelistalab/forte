@@ -351,15 +351,14 @@ void CASSCF::diagonalize_hamiltonian() {
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print_);
     const auto state_energies_map = active_space_solver->compute_energy();
-    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map_, 2);
+    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     E_casscf_ = compute_average_state_energy(state_energies_map, state_weights_map_);
 
     // Compute 1-RDM
-    gamma1_ = cas_ref_.g1a().clone();
-    gamma1_("ij") += cas_ref_.g1b()("ij");
+    gamma1_ = cas_ref_->SF_G1();
 
     // Compute 2-RDM
-    gamma2_ = cas_ref_.SF_G2();
+    gamma2_ = cas_ref_->SF_G2();
 }
 
 std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {

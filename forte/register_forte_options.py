@@ -80,8 +80,6 @@ def register_driver_options(options):
         "Initial guess for active space wave functions"
     )
 
-    options.add_bool("SPIN_AVG_DENSITY", False, "Form spin-averaged density if true")
-
     options.add_int("PRINT", 1, "Set the print level.")
 
     options.add_bool("READ_ORBITALS", False, "Read orbitals from file if true")
@@ -747,6 +745,11 @@ def register_dsrg_options(options):
 
     options.add_str("DSRG_T1_AMPS_GUESS", "PT2", ["PT2", "ZERO"],
                     "The initial guess of T1 amplitudes for nonperturbative DSRG methods")
+
+    options.add_str("DSRG_3RDM_ALGORITHM", "EXPLICIT", ["EXPLICIT", "DIRECT"],
+                    "Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]")
+
+    options.add_bool("DSRG_RDM_MS_AVG", False, "Form Ms-averaged density if true")
 
 
 def register_dwms_options(options):

@@ -44,8 +44,9 @@ class SA_DSRGPT : public SADSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    SA_DSRGPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    SA_DSRGPT(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+              std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
   protected:
     /// Read options

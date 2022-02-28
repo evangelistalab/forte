@@ -56,7 +56,7 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT3::DSRG_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+DSRG_MRPT3::DSRG_MRPT3(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
@@ -101,7 +101,7 @@ void DSRG_MRPT3::startup() {
 
     // number of elements stored in memory
     size_t nelement = 6 * sh * sh * sh * sh + 6 * sa * sa * sa * sa;
-    if (foptions_->get_str("THREEPDC") != "ZERO") {
+    if (do_cu3_) {
         nelement += 4 * sa * sa * sa * sa * sa * sa;
     }
 

@@ -203,9 +203,9 @@ void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
 
 #if 0
     outfile->Printf("\n OPDM:");
-    for (int p = 0; p < ncmo_; ++p) {
+    for (int p = 0; p < no_; ++p) {
         outfile->Printf("\n");
-        for (int q = 0; q < ncmo_; ++q) {
+        for (int q = 0; q < no_; ++q) {
             outfile->Printf("%15.12f ",rdm[oei_index(p,q)]);
         }
     }
@@ -312,9 +312,9 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
     } // End loop over h
 #if 0
     outfile->Printf("\n TPDM:");
-    for (int p = 0; p < ncmo_; ++p) {
+    for (int p = 0; p < no_; ++p) {
         for (int q = 0; q <= p; ++q) {
-            for (int r = 0; r < ncmo_; ++r) {
+            for (int r = 0; r < no_; ++r) {
                 for (int s = 0; s <= r; ++s) {
                     if (std::fabs(rdm[tei_index(p,q,r,s)]) > 1.0e-12){
                         outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm[tei_index(p,q,r,s)]);
@@ -389,10 +389,10 @@ void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
     }
 #if 0
     outfile->Printf("\n TPDM (ab):");
-    for (int p = 0; p < ncmo_; ++p) {
-        for (int q = 0; q < ncmo_; ++q) {
-            for (int r = 0; r < ncmo_; ++r) {
-                for (int s = 0; s < ncmo_; ++s) {
+    for (int p = 0; p < no_; ++p) {
+        for (int q = 0; q < no_; ++q) {
+            for (int r = 0; r < no_; ++r) {
+                for (int s = 0; s < no_; ++s) {
                     if (std::fabs(rdm[tei_index(p,q,r,s)]) > 1.0e-12){
                         outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm[tei_index(p,q,r,s)]);
 
@@ -615,7 +615,7 @@ void FCIVector::rdm_test() {
         } while (std::next_permutation(Ib, Ib + ncmo_));
     } while (std::next_permutation(Ia, Ia + ncmo_));
 
-    Determinant I; // <- xsize (ncmo_);
+    Determinant I; // <- xsize (no_);
 
     bool test_2rdm_aa = true;
     bool test_2rdm_bb = true;
@@ -832,7 +832,7 @@ void FCIVector::rdm_test() {
 
     if (test_3rdm_aaa) {
         double error_3rdm_aaa = 0.0;
-        //        for (size_t p = 0; p < ncmo_; ++p){
+        //        for (size_t p = 0; p < no_; ++p){
         for (size_t p = 0; p < 1; ++p) {
             for (size_t q = p + 1; q < ncmo_; ++q) {
                 for (size_t r = q + 1; r < ncmo_; ++r) {
@@ -879,7 +879,7 @@ void FCIVector::rdm_test() {
     if (test_3rdm_bbb) {
         double error_3rdm_bbb = 0.0;
         for (size_t p = 0; p < 1; ++p) {
-            //            for (size_t p = 0; p < ncmo_; ++p){
+            //            for (size_t p = 0; p < no_; ++p){
             for (size_t q = p + 1; q < ncmo_; ++q) {
                 for (size_t r = q + 1; r < ncmo_; ++r) {
                     for (size_t s = 0; s < ncmo_; ++s) {

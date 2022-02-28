@@ -59,7 +59,7 @@ class SemiCanonical {
                   std::shared_ptr<ForteOptions> options, bool quiet = false);
 
     /// Transforms integrals and RDMs
-    void semicanonicalize(RDMs& rdms, const bool& build_fock = true, const bool& nat_orb = false,
+    void semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock = true, const bool& nat_orb = false,
                           const bool& transform = true);
 
     /// Return the alpha rotation matrix
@@ -69,10 +69,10 @@ class SemiCanonical {
     psi::SharedMatrix Ub() { return Ub_; }
 
     /// Return the alpha rotation matrix in the active space
-    ambit::Tensor Ua_t() { return Ua_t_; }
+    ambit::Tensor Ua_t() const { return Ua_t_.clone(); }
 
     /// Return the beta rotation matrix in the active space
-    ambit::Tensor Ub_t() { return Ub_t_; }
+    ambit::Tensor Ub_t() const { return Ub_t_.clone(); }
 
     /// Return if the orbital ordering and phases are fixed successfully
     bool fix_orbital_success() const { return fix_orbital_success_; }
@@ -126,7 +126,7 @@ class SemiCanonical {
     void set_U_to_identity();
 
     /// Check if orbitals are semicanonicalized
-    bool check_orbitals(RDMs& rdms, const bool& nat_orb);
+    bool check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_orb);
 
     /// Thresholds for Fock matrix testing
     double threshold_tight_;
@@ -135,7 +135,7 @@ class SemiCanonical {
     /// Blocks of Fock or 1RDM to be checked and diagonalized
     std::map<std::string, std::shared_ptr<psi::Matrix>> mats_;
     /// Prepare blocks of Fock or 1RDM to be checked
-    void prepare_matrix_blocks(RDMs& rdms, const bool& nat_orb);
+    void prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, const bool& nat_orb);
 
     /// If certain Fock blocks need to be diagonalized
     std::map<std::string, bool> checked_results_;

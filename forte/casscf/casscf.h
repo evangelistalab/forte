@@ -89,7 +89,7 @@ class CASSCF {
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
     /// The reference object generated from Francesco's Full CI
-    RDMs cas_ref_;
+    std::shared_ptr<RDMs> cas_ref_;
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;

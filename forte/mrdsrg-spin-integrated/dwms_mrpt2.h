@@ -122,7 +122,7 @@ class DWMS_DSRGPT2 {
 
     /// perform DSRG-PT2/3 computation and return the dressed integrals within active space
     std::shared_ptr<ActiveSpaceIntegrals> compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
-                                                          RDMs& reference,
+                                                          std::shared_ptr<RDMs> reference,
                                                           std::string level = "PT2");
 
     /// perform a macro DSRG-PT2/3 computation
@@ -152,11 +152,12 @@ class DWMS_DSRGPT2 {
                    ambit::Tensor& H3bbb);
 
     /// contract H with transition densities
-    double contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, RDMs& TrD, bool transpose);
+    double contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, std::shared_ptr<RDMs> TrD,
+                               bool transpose);
     double contract_Heff_2TrDM(ambit::Tensor& H2aa, ambit::Tensor& H2ab, ambit::Tensor& H2bb,
-                               RDMs& TrD, bool transpose);
+                               std::shared_ptr<RDMs> TrD, bool transpose);
     double contract_Heff_3TrDM(ambit::Tensor& H3aaa, ambit::Tensor& H3aab, ambit::Tensor& H3abb,
-                               ambit::Tensor& H3bbb, RDMs& TrD, bool transpose);
+                               ambit::Tensor& H3bbb, std::shared_ptr<RDMs> TrD, bool transpose);
 
     /// compute DWMS energies by diagonalizing separate Hamiltonians
     void compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);

@@ -309,7 +309,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 
     // perform SA-DSRG-PT2/3 if needed
     if (dwms_ref_ != "CASCI") {
-        RDMs rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
+        auto rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
 
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
         fci_ints_ = compute_dsrg_pt(dsrg_pt, rdms, dwms_ref_);
@@ -398,7 +398,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 }
 
 std::shared_ptr<ActiveSpaceIntegrals>
-DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, RDMs& rdms,
+DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, std::shared_ptr<RDMs> rdms,
                               std::string level) {
     // use semicanonical orbitals only for THREE-DSRG-MRPT2
     do_semi_ = (level.find("PT2") != std::string::npos) && eri_df_;
@@ -445,7 +445,7 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
 
     // compute RDMs
     fci_mo->set_sa_info(sa_info_new);
-    RDMs rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
+    auto rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
 
     // update MK vacuum energy
     // double new_Eref = compute_Eref_from_rdms(reference, ints_, mo_space_info_, Enuc_);
@@ -594,7 +594,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 }
 
                 // compute transition densities
-                RDMs TrD;
+                std::shared_ptr<RDMs> TrD;
                 TrD = fci_mo->transition_reference(MM, NN, true, n, max_hbar_level_, false);
 
                 outfile->Printf("\n  Contract %s with Heff.", msg.c_str());
@@ -640,7 +640,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 auto& T1M = T1s[M];
                 auto& T2M = T2s[M];
                 for (int N = M + 1; N < nroots; ++N) {
-                    RDMs TrD = fci_mo->transition_reference(M, N, true, n, max_hbar_level_, false);
+                    auto TrD = fci_mo->transition_reference(M, N, true, n, max_hbar_level_, false);
 
                     T1M["ia"] -= T1s[N]["ia"];
                     T1M["IA"] -= T1s[N]["IA"];
@@ -784,7 +784,7 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
                 // compute transition densities
                 outfile->Printf("\n  Compute %s.", msg.c_str());
-                RDMs TrD = (M <= N) ? fci_mo->transition_reference(M, N, true, n, 3, false)
+                auto TrD = (M <= N) ? fci_mo->transition_reference(M, N, true, n, 3, false)
                                     : fci_mo->transition_reference(N, M, true, n, 3, false);
                 bool transpose = (M <= N) ? false : true;
 
@@ -892,39 +892,40 @@ void DWMS_DSRGPT2::rotate_H3(ambit::Tensor& H3aaa, ambit::Tensor& H3aab, ambit::
         Ub_("pa") * Ub_("qb") * Ub_("rc") * temp("abcdef") * Ub_("sd") * Ub_("te") * Ub_("of");
 }
 
-double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, RDMs& TrD,
-                                         bool transpose) {
+double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b,
+                                         std::shared_ptr<RDMs> TrD, bool transpose) {
     double coupling = 0.0;
     std::string indices = transpose ? "vu" : "uv";
 
-    coupling += H1a("vu") * TrD.g1a()(indices);
-    coupling += H1b("vu") * TrD.g1b()(indices);
+    coupling += H1a("vu") * TrD->g1a()(indices);
+    coupling += H1b("vu") * TrD->g1b()(indices);
 
     return coupling;
 }
 
 double DWMS_DSRGPT2::contract_Heff_2TrDM(ambit::Tensor& H2aa, ambit::Tensor& H2ab,
-                                         ambit::Tensor& H2bb, RDMs& TrD, bool transpose) {
+                                         ambit::Tensor& H2bb, std::shared_ptr<RDMs> TrD,
+                                         bool transpose) {
     double coupling = 0.0;
     std::string indices = transpose ? "uvxy" : "xyuv";
 
-    coupling += 0.25 * H2aa("uvxy") * TrD.g2aa()(indices);
-    coupling += H2ab("uvxy") * TrD.g2ab()(indices);
-    coupling += 0.25 * H2bb("uvxy") * TrD.g2bb()(indices);
+    coupling += 0.25 * H2aa("uvxy") * TrD->g2aa()(indices);
+    coupling += H2ab("uvxy") * TrD->g2ab()(indices);
+    coupling += 0.25 * H2bb("uvxy") * TrD->g2bb()(indices);
 
     return coupling;
 }
 
 double DWMS_DSRGPT2::contract_Heff_3TrDM(ambit::Tensor& H3aaa, ambit::Tensor& H3aab,
-                                         ambit::Tensor& H3abb, ambit::Tensor& H3bbb, RDMs& TrD,
-                                         bool transpose) {
+                                         ambit::Tensor& H3abb, ambit::Tensor& H3bbb,
+                                         std::shared_ptr<RDMs> TrD, bool transpose) {
     double coupling = 0.0;
     std::string indices = transpose ? "uvwxyz" : "xyzuvw";
 
-    coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD.g3aaa()(indices);
-    coupling += 0.25 * H3aab("uvwxyz") * TrD.g3aab()(indices);
-    coupling += 0.25 * H3abb("uvwxyz") * TrD.g3abb()(indices);
-    coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD.g3bbb()(indices);
+    coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD->g3aaa()(indices);
+    coupling += 0.25 * H3aab("uvwxyz") * TrD->g3aab()(indices);
+    coupling += 0.25 * H3abb("uvwxyz") * TrD->g3abb()(indices);
+    coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD->g3bbb()(indices);
 
     return coupling;
 }

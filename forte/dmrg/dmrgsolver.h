@@ -67,13 +67,14 @@ class DMRGSolver : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// RDMs override
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            int max_rdm_level, RDMsType rdm_type) override;
 
     /// Transition RDMs override
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType rdm_type) override;
 
     /// Set options override
     void set_options(std::shared_ptr<ForteOptions> options) override;
@@ -141,7 +142,8 @@ class DMRGSolver : public ActiveSpaceMethod {
     void startup();
 
     /// Return the RDMs for the current state
-    RDMs fill_current_rdms(std::shared_ptr<CheMPS2::DMRG> solver, const bool do_3rdm);
+    std::shared_ptr<RDMs> fill_current_rdms(std::shared_ptr<CheMPS2::DMRG> solver,
+                                            const bool do_3rdm, RDMsType rdm_type);
 };
 } // namespace forte
 #endif // _dmrgsolver_h_

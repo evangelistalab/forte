@@ -48,6 +48,11 @@ class ProcedureDSRG:
 
         # Read options
         self.solver_type = options.get_str('CORRELATION_SOLVER')
+        if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG", "DSRG_MRPT", "DSRG-MRPT"]:
+            self.rdm_type = forte.RDMsType.spin_free
+        else:
+            self.rdm_type = forte.RDMsType.spin_free if options.get_bool('DSRG_RDM_MS_AVG') \
+                else forte.RDMsType.spin_dependent
 
         self.do_semicanonical = options.get_bool("SEMI_CANONICAL")
 
@@ -58,6 +63,14 @@ class ProcedureDSRG:
             self.relax_ref = "ONCE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
+        if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
+            as_type = options.get_str("ACTIVE_SPACE_SOLVER")
+            if as_type == "CAS" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
+                self.max_rdm_level = 2
+            else:
+                psi4.core.print_out(f"\n  DSRG 3RDM direct algorithm only available for CAS/SA-MRDSRG")
+                psi4.core.print_out(f"\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
+                options.set_str("DSRG_3RDM_ALGORITHM", "EXPLICIT")
 
         self.relax_convergence = float('inf')
         self.e_convergence = options.get_double("E_CONVERGENCE")
@@ -114,7 +127,7 @@ class ProcedureDSRG:
         self.energies_environment = {}  # energies pushed to Psi4 environment globals
 
         # Compute RDMs from initial ActiveSpaceSolver
-        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level)
+        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type)
 
         # Save a copy CI vectors
         try:
@@ -135,9 +148,13 @@ class ProcedureDSRG:
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
             self.dsrg_solver = forte.make_dsrg_method(*args)
+            self.dsrg_solver.set_state_weights_map(self.state_weights_map)
+            self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
         elif self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             self.dsrg_solver = forte.make_sadsrg_method(*args)
+            self.dsrg_solver.set_state_weights_map(self.state_weights_map)
+            self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
         elif self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
             self.dsrg_solver = forte.make_dsrg_so_y(*args)
@@ -215,7 +232,8 @@ class ProcedureDSRG:
 
             # Compute relaxed dipole
             if self.do_dipole:
-                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level)
+                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
+                                                                          self.rdm_type)
                 dm_u = ProcedureDSRG.grab_dipole_unrelaxed()
                 dm_r = self.compute_dipole_relaxed()
                 self.dipoles.append((dm_u, dm_r))
@@ -234,9 +252,10 @@ class ProcedureDSRG:
 
             # - Compute RDMs (RDMs available if done relaxed dipole)
             if self.do_multi_state or (not self.do_dipole):
-                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level)
+                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
+                                                                          self.rdm_type)
 
-            # - Transform RDMs to the semi-canonical orbitals of last step
+            # - Transform RDMs to the semi-canonical orbitals of last step (because of integrals)
             self.rdms.rotate(self.Ua, self.Ub)
 
             # - Semi-canonicalize RDMs and orbitals
@@ -247,7 +266,8 @@ class ProcedureDSRG:
                     psi4.core.print_out("\n  DSRG checkpoint files removed due to the unsuccessful"
                                         " attempt to fix orbital phase and order.")
                     self.dsrg_solver.clean_checkpoints()
-            self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
+            self.Ua = forte.ambit_doublet(self.Ua, self.semi.Ua_t(), ["ij", "jk", "ik"])
+            self.Ub = forte.ambit_doublet(self.Ub, self.semi.Ub_t(), ["ij", "jk", "ik"])
 
             # - Compute DSRG energy
             self.make_dsrg_solver()

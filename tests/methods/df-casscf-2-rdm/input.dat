@@ -58,7 +58,7 @@ as_solver = forte.make_active_space_solver("FCI", state_map, scf_info, mo_space_
 as_solver.compute_energy()
 
 # - now compute the 1-RDM and test the off-diagonal
-rdms = as_solver.compute_average_rdms(state_weights_map, 1)
+rdms = as_solver.compute_average_rdms(state_weights_map, 1, forte.RDMsType.spin_free)
 d1 = rdms.SF_G1mat()
 d1.print_out()  # Let's print out and see
 d1.zero_diagonal()

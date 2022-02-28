@@ -38,7 +38,7 @@ using namespace psi;
 
 namespace forte {
 
-SA_DSRGPT::SA_DSRGPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+SA_DSRGPT::SA_DSRGPT(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : SADSRG(rdms, scf_info, options, ints, mo_space_info) {
@@ -67,6 +67,7 @@ void SA_DSRGPT::print_options() {
         {"Source operator", source_},
         {"Core-Virtual source type", ccvv_source_},
         {"Reference relaxation", relax_ref_},
+        {"3RDM algorithm", L3_algorithm_},
         {"Internal amplitudes", internal_amp_}};
 
     if (multi_state_) {

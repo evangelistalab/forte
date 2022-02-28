@@ -225,7 +225,6 @@ fci:
    long:
       - fci-6
       - fci-7 # moved to pytest
-      - fci-10
       - fci-ex-1 # moved to pytest
       - fci-rdms-1 # moved to pytest
       - fci-one-electron # moved to pytest

@@ -42,7 +42,7 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+MRDSRG_SO::MRDSRG_SO(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
@@ -81,7 +81,7 @@ std::shared_ptr<ActiveSpaceIntegrals> MRDSRG_SO::compute_Heff_actv() {
 }
 
 void MRDSRG_SO::startup() {
-    Eref = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
+    Eref = compute_reference_energy();
 
     frozen_core_energy = ints_->frozen_core_energy();
 
@@ -201,12 +201,12 @@ void MRDSRG_SO::startup() {
     Eta1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = (i[0] == i[1] ? 1.0 : 0.0);
     });
-    (rdms_.g1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_->g1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
         size_t index = i[0] * na_ + i[1];
         (Gamma1.block("aa")).data()[index] = value;
         (Eta1.block("aa")).data()[index] -= value;
     });
-    (rdms_.g1b()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_->g1b()).citerate([&](const std::vector<size_t>& i, const double& value) {
         size_t index = (i[0] + na_mo) * na_ + (i[1] + na_mo);
         (Gamma1.block("aa")).data()[index] = value;
         (Eta1.block("aa")).data()[index] -= value;
@@ -214,7 +214,7 @@ void MRDSRG_SO::startup() {
 
     // prepare two-body density cumulant
     Lambda2 = BTF_->build(tensor_type_, "Lambda2", {"aaaa"});
-    (rdms_.L2aa()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_->L2aa()).citerate([&](const std::vector<size_t>& i, const double& value) {
         if (std::fabs(value) > 1.0e-15) {
             size_t index = 0;
             for (int m = 0; m < 4; ++m) {
@@ -223,7 +223,7 @@ void MRDSRG_SO::startup() {
             (Lambda2.block("aaaa")).data()[index] = value;
         }
     });
-    (rdms_.L2bb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_->L2bb()).citerate([&](const std::vector<size_t>& i, const double& value) {
         if (std::fabs(value) > 1.0e-15) {
             size_t index = 0;
             for (int m = 0; m < 4; ++m) {
@@ -232,7 +232,7 @@ void MRDSRG_SO::startup() {
             (Lambda2.block("aaaa")).data()[index] = value;
         }
     });
-    (rdms_.L2ab()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_->L2ab()).citerate([&](const std::vector<size_t>& i, const double& value) {
         if (std::fabs(value) > 1.0e-15) {
             size_t i0 = i[0];
             size_t i1 = i[1] + na_mo;
@@ -254,7 +254,7 @@ void MRDSRG_SO::startup() {
     // prepare three-body density cumulant
     if (foptions_->get_str("THREEPDC") != "ZERO") {
         Lambda3 = BTF_->build(tensor_type_, "Lambda3", {"aaaaaa"});
-        (rdms_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        (rdms_->L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t index = 0;
                 for (int m = 0; m < 6; ++m) {
@@ -263,7 +263,7 @@ void MRDSRG_SO::startup() {
                 (Lambda3.block("aaaaaa")).data()[index] = value;
             }
         });
-        (rdms_.L3bbb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        (rdms_->L3bbb()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t index = 0;
                 for (int m = 0; m < 6; ++m) {
@@ -272,7 +272,7 @@ void MRDSRG_SO::startup() {
                 (Lambda3.block("aaaaaa")).data()[index] = value;
             }
         });
-        (rdms_.L3aab()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        (rdms_->L3aab()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 // original: a[0]a[1]b[2]; permutation: a[0]b[2]a[1] (-1),
                 // b[2]a[0]a[1] (+1)
@@ -320,7 +320,7 @@ void MRDSRG_SO::startup() {
                 }
             }
         });
-        (rdms_.L3abb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        (rdms_->L3abb()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 // original: a[0]b[1]b[2]; permutation: b[1]a[0]b[2] (-1),
                 // b[1]b[2]a[0] (+1)

@@ -32,6 +32,7 @@
 #include <vector>
 #include <unordered_set>
 
+#include "base_classes/rdms.h"
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
@@ -44,7 +45,6 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class RDMs;
 class SCFInfo;
 
 /**
@@ -123,12 +123,27 @@ class ActiveSpaceMethod {
      * @param max_rdm_level the maximum RDM rank
      * @return
      */
-    virtual std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                   int max_rdm_level) = 0;
+    virtual std::vector<std::shared_ptr<RDMs>>
+    rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+         RDMsType type) = 0;
 
-    virtual std::vector<RDMs>
+    virtual std::vector<std::shared_ptr<RDMs>>
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) = 0;
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType type) = 0;
+
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
+    /// h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
+    virtual std::vector<double>
+    compute_complementary_H2caa_overlap(const std::vector<size_t>& roots, ambit::Tensor Tbra,
+                                        ambit::Tensor Tket) {
+        throw std::runtime_error(
+            "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
+    }
 
     /// Set options from an option object
     /// @param options the options passed in
@@ -295,9 +310,10 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);
 
-std::vector<RDMs> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
-                                  std::shared_ptr<ActiveSpaceMethod> m2,
-                                  std::vector<std::pair<size_t, size_t>>, int max_rdm_level);
+// std::vector<std::shared_ptr<RDMs>> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
+//                                                    std::shared_ptr<ActiveSpaceMethod> m2,
+//                                                    std::vector<std::pair<size_t, size_t>>,
+//                                                    int max_rdm_level);
 
 } // namespace forte
 

@@ -96,7 +96,7 @@ void export_ActiveSpaceMethod(py::module& m) {
 }
 
 void export_ActiveSpaceSolver(py::module& m) {
-    py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
+    py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("rdms", &ActiveSpaceSolver::rdms)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
@@ -223,7 +223,7 @@ PYBIND11_MODULE(_forte, m) {
 
     m.def(
         "spinorbital_rdms",
-        [](RDMs& rdms) {
+        [](std::shared_ptr<RDMs> rdms) {
             auto sordms = spinorbital_rdms(rdms);
             std::vector<py::array_t<double>> pysordms;
             for (const auto& sordm : sordms) {
@@ -235,7 +235,7 @@ PYBIND11_MODULE(_forte, m) {
 
     m.def(
         "spinorbital_cumulants",
-        [](RDMs& rdms) {
+        [](std::shared_ptr<RDMs> rdms) {
             auto sordms = spinorbital_cumulants(rdms);
             std::vector<py::array_t<double>> pysordms;
             for (const auto& sordm : sordms) {
@@ -322,6 +322,10 @@ PYBIND11_MODULE(_forte, m) {
              "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
+             "Set the pointer of ActiveSpaceSolver")
+        .def("set_state_weights_map", &MASTER_DSRG::set_state_weights_map,
+             "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
@@ -334,6 +338,10 @@ PYBIND11_MODULE(_forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_active_space_solver", &SADSRG::set_active_space_solver,
+             "Set the pointer of ActiveSpaceSolver")
+        .def("set_state_weights_map", &SADSRG::set_state_weights_map,
+             "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
@@ -357,8 +365,8 @@ PYBIND11_MODULE(_forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals");
 
     py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
-        .def(py::init<RDMs, std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<MOSpaceInfo>>())
+        .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>,
+                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
         .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
 
     // export DressedQuantity for dipole moments

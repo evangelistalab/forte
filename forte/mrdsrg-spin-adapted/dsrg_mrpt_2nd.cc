@@ -73,9 +73,11 @@ double DSRG_MRPT::compute_energy_pt2() {
     energy.push_back({"<[V, T2]> L2", Ecorr - Etemp});
     Etemp = Ecorr;
 
-    H2_T2_C0_L3(V_, T2_, 1.0, Ecorr);
-    energy.push_back({"<[V, T2]> L3", Ecorr - Etemp});
-    Etemp = Ecorr;
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
+        H2_T2_C0_L3(V_, T2_, 1.0, Ecorr);
+        energy.push_back({"<[V, T2]> L3", Ecorr - Etemp});
+        Etemp = Ecorr;
+    }
 
     Etotal = Ecorr + Eref_;
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});

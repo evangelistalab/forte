@@ -50,7 +50,7 @@ using namespace psi;
 
 namespace forte {
 
-SOMRDSRG::SOMRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+SOMRDSRG::SOMRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
@@ -82,7 +82,7 @@ std::shared_ptr<ActiveSpaceIntegrals> SOMRDSRG::compute_Heff_actv() {
 }
 
 void SOMRDSRG::startup() {
-    Eref = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
+    Eref = compute_reference_energy();
 
     frozen_core_energy = ints_->frozen_core_energy();
 
@@ -217,9 +217,9 @@ void SOMRDSRG::startup() {
     Matrix gamma_aa("Gamma_aa", nactv, nactv);
     Matrix gamma_AA("Gamma_AA", nactv, nactv);
 
-    rdms_.g1a().iterate(
+    rdms_->g1a().iterate(
         [&](const std::vector<size_t>& i, double& value) { gamma_aa.set(i[0], i[1], value); });
-    rdms_.g1b().iterate(
+    rdms_->g1b().iterate(
         [&](const std::vector<size_t>& i, double& value) { gamma_AA.set(i[0], i[1], value); });
 
     // Fill up the active part of Gamma
@@ -241,18 +241,18 @@ void SOMRDSRG::startup() {
     Matrix lambda2_aA("Lambda2_aA", nactv * nactv, nactv * nactv);
     Matrix lambda2_AA("Lambda2_AA", nactv * nactv, nactv * nactv);
 
-    rdms_.L2aa().iterate([&](const std::vector<size_t>& i, double& value) {
+    rdms_->L2aa().iterate([&](const std::vector<size_t>& i, double& value) {
         size_t I = nactv * i[0] + i[1];
         size_t J = nactv * i[2] + i[3];
         lambda2_aa.set(I, J, value);
     });
-    rdms_.L2ab().iterate([&](const std::vector<size_t>& i, double& value) {
+    rdms_->L2ab().iterate([&](const std::vector<size_t>& i, double& value) {
         size_t I = nactv * i[0] + i[1];
         size_t J = nactv * i[2] + i[3];
         lambda2_aA.set(I, J, value);
     });
 
-    rdms_.L2bb().iterate([&](const std::vector<size_t>& i, double& value) {
+    rdms_->L2bb().iterate([&](const std::vector<size_t>& i, double& value) {
         size_t I = nactv * i[0] + i[1];
         size_t J = nactv * i[2] + i[3];
         lambda2_AA.set(I, J, value);
@@ -306,22 +306,22 @@ void SOMRDSRG::startup() {
         Matrix lambda3_aAA("Lambda3_aAA", nactv * nactv * nactv, nactv * nactv * nactv);
         Matrix lambda3_AAA("Lambda3_AAA", nactv * nactv * nactv, nactv * nactv * nactv);
 
-        rdms_.L3aaa().iterate([&](const std::vector<size_t>& i, double& value) {
+        rdms_->L3aaa().iterate([&](const std::vector<size_t>& i, double& value) {
             size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
             size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
             lambda3_aaa.set(I, J, value);
         });
-        rdms_.L3aab().iterate([&](const std::vector<size_t>& i, double& value) {
+        rdms_->L3aab().iterate([&](const std::vector<size_t>& i, double& value) {
             size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
             size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
             lambda3_aaA.set(I, J, value);
         });
-        rdms_.L3abb().iterate([&](const std::vector<size_t>& i, double& value) {
+        rdms_->L3abb().iterate([&](const std::vector<size_t>& i, double& value) {
             size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
             size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
             lambda3_aAA.set(I, J, value);
         });
-        rdms_.L3bbb().iterate([&](const std::vector<size_t>& i, double& value) {
+        rdms_->L3bbb().iterate([&](const std::vector<size_t>& i, double& value) {
             size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
             size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
             lambda3_AAA.set(I, J, value);

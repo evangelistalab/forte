@@ -1,7 +1,39 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
+#include "psi4/libmints/matrix.h"
+
 #include "base_classes/dynamic_correlation_solver.h"
+#include "base_classes/mo_space_info.h"
 
 namespace forte {
-DynamicCorrelationSolver::DynamicCorrelationSolver(RDMs rdms,
+DynamicCorrelationSolver::DynamicCorrelationSolver(std::shared_ptr<RDMs> rdms,
                                                    std::shared_ptr<SCFInfo> scf_info,
                                                    std::shared_ptr<ForteOptions> options,
                                                    std::shared_ptr<ForteIntegrals> ints,
@@ -38,6 +70,37 @@ void DynamicCorrelationSolver::startup() {
     }
 }
 
+double DynamicCorrelationSolver::compute_reference_energy() {
+    // Identical to the one in CASSCF_ORB_GRAD class.
+    // Eref = Enuc + Eclosed + Fclosed["uv"] * D1["uv"] + 0.5 * (uv|xy) * D2["uxvy"]
+    double Eref = Enuc_;
+
+    psi::SharedMatrix Fclosed;
+    double Eclosed;
+    auto dim_start = psi::Dimension(mo_space_info_->nirrep());
+    auto dim_end = mo_space_info_->dimension("INACTIVE_DOCC");
+    std::tie(Fclosed, std::ignore, Eclosed) = ints_->make_fock_inactive(dim_start, dim_end);
+    Eref += Eclosed;
+
+    auto nactv = mo_space_info_->size("ACTIVE");
+    auto Fc = ambit::Tensor::build(ambit::CoreTensor, "F closed", {nactv, nactv});
+    auto actv_relative_mos = mo_space_info_->relative_mo("ACTIVE");
+    Fc.iterate([&](const std::vector<size_t>& i, double& value){
+        size_t h1, h2, p, q;
+        std::tie(h1, p) = actv_relative_mos[i[0]];
+        std::tie(h2, q) = actv_relative_mos[i[1]];
+        if (h1 == h2)
+            value = Fclosed->get(h1, p, q);
+    });
+    Eref += Fc("uv") * rdms_->SF_G1()("uv");
+
+    auto actv_mos = mo_space_info_->corr_absolute_mo("ACTIVE");
+    auto V = ints_->aptei_ab_block(actv_mos, actv_mos, actv_mos, actv_mos);
+    Eref += 0.5 * V("uvxy") * rdms_->SF_G2()("uvxy");
+
+    return Eref;
+}
+
 void DynamicCorrelationSolver::clean_checkpoints() {
     if (not t1_file_chk_.empty()) {
         if (remove(t1_file_chk_.c_str()) != 0) {
@@ -51,10 +114,9 @@ void DynamicCorrelationSolver::clean_checkpoints() {
     }
 }
 
-std::shared_ptr<DynamicCorrelationSolver>
-make_dynamic_correlation_solver(const std::string& /*type*/, std::shared_ptr<ForteOptions> /*options*/,
-                                std::shared_ptr<ForteIntegrals> /*ints*/,
-                                std::shared_ptr<MOSpaceInfo> /*mo_space_info*/) {
+std::shared_ptr<DynamicCorrelationSolver> make_dynamic_correlation_solver(
+    const std::string& /*type*/, std::shared_ptr<ForteOptions> /*options*/,
+    std::shared_ptr<ForteIntegrals> /*ints*/, std::shared_ptr<MOSpaceInfo> /*mo_space_info*/) {
     // TODO fill and return objects!
     //    return DynamicCorrelationSolver();
     return std::shared_ptr<DynamicCorrelationSolver>();

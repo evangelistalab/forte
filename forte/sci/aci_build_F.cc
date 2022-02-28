@@ -738,11 +738,11 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     // Guess the total memory needed to store all singles and doubles out of all dets
-    //    size_t nsingle_a = nalpha_ * (ncmo_ - nalpha_);
-    //    size_t nsingle_b = nbeta_ * (ncmo_ - nbeta_);
-    //    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ -
-    //    nalpha_ - 1) / 4; size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_)
-    //    * (ncmo_ - nbeta_ - 1) / 4; size_t ndouble_ab = nsingle_a * nsingle_b; size_t
+    //    size_t nsingle_a = nalpha_ * (no_ - nalpha_);
+    //    size_t nsingle_b = nbeta_ * (no_ - nbeta_);
+    //    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (no_ - nalpha_) * (no_ -
+    //    nalpha_ - 1) / 4; size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (no_ - nbeta_)
+    //    * (no_ - nbeta_ - 1) / 4; size_t ndouble_ab = nsingle_a * nsingle_b; size_t
     //    nexcitations = nsingle_a + nsingle_b
     //    + ndouble_aa + ndouble_bb + ndouble_ab; size_t guess_size = n_dets *
     //    nexcitations;
@@ -997,8 +997,8 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
         int end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
-        // size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
-        // size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
+        // size_t guess_a = nalpha_ * (no_ - nalpha_);
+        // size_t guess_b = nbeta_ * (no_ - nbeta_);
         // size_t guess_aa = guess_a * guess_a / 4;
         // size_t guess_bb = guess_b * guess_b / 4;
         // size_t guess_ab = guess_a * guess_b;
@@ -1279,11 +1279,11 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
         int end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
-        // size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
-        // size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
-        // size_t guess_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ -
-        // nalpha_ - 1) / 4; size_t guess_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_)
-        // * (ncmo_ - nbeta_ - 1) / 4; size_t guess_ab = guess_a * guess_b;
+        // size_t guess_a = nalpha_ * (no_ - nalpha_);
+        // size_t guess_b = nbeta_ * (no_ - nbeta_);
+        // size_t guess_aa = nalpha_ * (nalpha_ - 1) * (no_ - nalpha_) * (no_ -
+        // nalpha_ - 1) / 4; size_t guess_bb = nbeta_ * (nbeta_ - 1) * (no_ - nbeta_)
+        // * (no_ - nbeta_ - 1) / 4; size_t guess_ab = guess_a * guess_b;
 
         // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb +
         // guess_ab);

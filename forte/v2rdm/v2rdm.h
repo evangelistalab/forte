@@ -63,7 +63,7 @@ class V2RDM : public psi::Wavefunction {
     ~V2RDM();
 
     /// Returns the reference object of forte
-    RDMs reference();
+    std::shared_ptr<RDMs> reference();
 
   protected:
     /// Start-up function called in the constructor

@@ -158,14 +158,12 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& 
         // [H2, T2] from cavv
         ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
         temp["vu"] += 2.0 * H2["muef"] * T2["mvef"];
-        //        temp["vu"] += H2["umef"] * T2["vmef"];
         temp["vu"] -= H2["muef"] * T2["vmef"];
         E += temp["vu"] * L1_["uv"];
 
         // [H2, T2] from ccav
         temp.zero();
         temp["vu"] += 2.0 * H2["mnve"] * T2["mnue"];
-        //        temp["vu"] += H2["mnev"] * T2["mneu"];
         temp["vu"] -= H2["mnev"] * T2["mnue"];
         E += temp["vu"] * Eta1_["uv"];
     }
