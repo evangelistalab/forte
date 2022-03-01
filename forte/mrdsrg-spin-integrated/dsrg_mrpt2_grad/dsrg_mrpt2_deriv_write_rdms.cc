@@ -395,7 +395,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     }
 
     // terms contracted with V["abij"]
-    temp = BTF_->build(CoreTensor, "temporal tensor", {"pphh", "PPHH", "pPhH"}, true);
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"pphh", "pPhH"}, true);
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph", "phPH"}, true);
 
     if (CORRELATION_TERM) {
@@ -407,21 +407,17 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     }
 
     temp["xynv"] -= Z["un"] * Gamma2_["uvxy"];
-    temp["XYNV"] -= Z["UN"] * Gamma2_["UVXY"];
     temp["xYnV"] -= Z["un"] * Gamma2_["uVxY"];
 
     temp["evxy"] += Z["eu"] * Gamma2_["uvxy"];
-    temp["EVXY"] += Z["EU"] * Gamma2_["UVXY"];
     temp["eVxY"] += Z["eu"] * Gamma2_["uVxY"];
 
     // CASSCF reference
     temp["xyuv"] += 0.25 * Gamma2_["uvxy"];
-    temp["XYUV"] += 0.25 * Gamma2_["UVXY"];
     temp["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
     // CI contribution
     temp["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
-    temp["XYUV"] += 0.125 * Gamma2_tilde["UVXY"];
     temp["xYuV"] += 0.125 * Gamma2_tilde["uVxY"];
 
     // all-alpha and all-beta
@@ -433,21 +429,17 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp.zero();
 
     temp["eumv"] += 2.0 * Z["em"] * Gamma1_["uv"];
-    temp["EUMV"] += 2.0 * Z["EM"] * Gamma1_["UV"];
     temp["eUmV"] += 2.0 * Z["em"] * Gamma1_["UV"];
 
     temp["u,a1,n,u1"] += 2.0 * Z["un"] * Gamma1_["u1,a1"];
-    temp["U,A1,N,U1"] += 2.0 * Z["UN"] * Gamma1_["U1,A1"];
     temp["u,A1,n,U1"] += 2.0 * Z["un"] * Gamma1_["U1,A1"];
 
     temp["v,a1,u,u1"] += Z["uv"] * Gamma1_["u1,a1"];
-    temp["V,A1,U,U1"] += Z["UV"] * Gamma1_["U1,A1"];
     temp["v,A1,u,U1"] += Z["uv"] * Gamma1_["U1,A1"];
 
     // <[F, T2]> and <[V, T1]>
     if (X5_TERM || X6_TERM || X7_TERM) {
         temp["aviu"] += sigma3_xi3["ia"] * Gamma1_["uv"];
-        temp["AVIU"] += sigma3_xi3["IA"] * Gamma1_["UV"];
         temp["aViU"] += sigma3_xi3["ia"] * Gamma1_["UV"];
     }
 
@@ -472,7 +464,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     d2aa.flush(1);
     d2bb.flush(1);
     d2ab.flush(1);
-
     d2aa.set_keep_flag(1);
     d2bb.set_keep_flag(1);
     d2ab.set_keep_flag(1);
@@ -498,27 +489,28 @@ void DSRG_MRPT2::write_df_rdm() {
     });
 
     BlockedTensor df_3rdm_temp = BTF_->build(tensor_type_, "df_3rdm_temp", {"Lgg"}, true);
+    {
+        // density terms contracted with V["abij"]
+        BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"}, true);
 
-    // density terms contracted with V["abij"]
-    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"}, true);
+        if (CORRELATION_TERM) {
+            dvabij["abij"] += Tau1["ijab"];
+            dvabij["aBiJ"] += Tau1["iJaB"];
 
-    if (CORRELATION_TERM) {
-        dvabij["abij"] += Tau1["ijab"];
-        dvabij["aBiJ"] += Tau1["iJaB"];
+            dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
+            dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+        }
+        // CASSCF reference
+        dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];
+        dvabij["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
-        dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
-        dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+        // CI contribution
+        dvabij["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
+        dvabij["xYuV"] += 0.125 * Gamma2_tilde["uVxY"];
+
+        df_3rdm_temp["Q!,a,i"] += 4.0 * Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
+        df_3rdm_temp["Q!,a,i"] += 4.0 * Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
     }
-    // CASSCF reference
-    dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];
-    dvabij["xYuV"] += 0.25 * Gamma2_["uVxY"];
-
-    // CI contribution
-    dvabij["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
-    dvabij["xYuV"] += 0.125 * Gamma2_tilde["uVxY"];
-
-    df_3rdm_temp["Q!,a,i"] += 4.0 * Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
-    df_3rdm_temp["Q!,a,i"] += 4.0 * Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
 
     // - Z["un"] * Gamma2_["uvxy"]
     // - Z["UN"] * Gamma2_["UVXY"]

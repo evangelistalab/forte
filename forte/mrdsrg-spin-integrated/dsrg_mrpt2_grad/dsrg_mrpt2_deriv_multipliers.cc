@@ -187,96 +187,67 @@ void DSRG_MRPT2::set_tau() {
 
 void DSRG_MRPT2::set_sigma_xi() {
     outfile->Printf("\n    Initializing multipliers for one-body amplitude.. ");
-    BlockedTensor Sigma = BTF_->build(CoreTensor, "Sigma", spin_cases({"hp"}));
-    BlockedTensor Sigma1 = BTF_->build(CoreTensor, "Sigma * DelEeps1", spin_cases({"hp"}));
-    BlockedTensor Sigma2 = BTF_->build(CoreTensor, "Sigma * Eeps1", spin_cases({"hp"}));
-    BlockedTensor Sigma3 = BTF_->build(CoreTensor, "Sigma * (1 + Eeps1)", spin_cases({"hp"}));
     sigma3_xi3 = BTF_->build(CoreTensor, "Sigma3 + Xi3", spin_cases({"hp"}));
     sigma2_xi3 = BTF_->build(CoreTensor, "Sigma2 + Xi3", spin_cases({"hp"}));
     sigma1_xi1_xi2 = BTF_->build(CoreTensor, "2s * Sigma1 + Xi1 - 2s * Xi2", spin_cases({"hp"}));
+    {
+        BlockedTensor Sigma = BTF_->build(CoreTensor, "Sigma", {"hp"}, true);
+        BlockedTensor Sigma1 = BTF_->build(CoreTensor, "Sigma * DelEeps1", {"hp"}, true);
+        BlockedTensor Sigma2 = BTF_->build(CoreTensor, "Sigma * Eeps1", {"hp"}, true);
+        BlockedTensor Sigma3 = BTF_->build(CoreTensor, "Sigma * (1 + Eeps1)", {"hp"}, true);
+        if (X5_TERM) {
+            Sigma["xe"] += 0.5 * T2_["uvey"] * Lambda2_["xyuv"];
+            Sigma["xe"] += T2_["uVeY"] * Lambda2_["xYuV"];
+            Sigma["mv"] -= 0.5 * T2_["umxy"] * Lambda2_["xyuv"];
+            Sigma["mv"] -= T2_["mUxY"] * Lambda2_["xYvU"];
+        }
+        if (X7_TERM) {
+            Sigma["me"] += T1_["me"];
+            Sigma["mv"] += T1_["mu"] * Eta1_["uv"];
+            Sigma["ve"] += T1_["ue"] * Gamma1_["uv"];
+        }
+        Sigma1["ia"] = Sigma["ia"] * DelEeps1["ia"];
+        Sigma2["ia"] = Sigma["ia"] * Eeps1["ia"];
+        Sigma3["ia"] = Sigma["ia"];
+        Sigma3["ia"] += Sigma2["ia"];
 
-    if (X5_TERM) {
-        Sigma["xe"] += 0.5 * T2_["uvey"] * Lambda2_["xyuv"];
-        Sigma["xe"] += T2_["uVeY"] * Lambda2_["xYuV"];
-        Sigma["XE"] += 0.5 * T2_["UVEY"] * Lambda2_["XYUV"];
-        Sigma["XE"] += T2_["uVyE"] * Lambda2_["yXuV"];
+        outfile->Printf("Done");
+        outfile->Printf("\n    Initializing multipliers for renormalize Fock ... ");
+        BlockedTensor Xi = BTF_->build(CoreTensor, "Xi", {"hp"});
+        BlockedTensor Xi1 = BTF_->build(CoreTensor, "Xi * Eeps1_m2", {"hp"});
+        BlockedTensor Xi2 = BTF_->build(CoreTensor, "Xi * Eeps1", {"hp"});
+        BlockedTensor Xi3 = BTF_->build(CoreTensor, "Xi * Eeps1_m1", {"hp"});
+        if (X6_TERM) {
+            Xi["ue"] += 0.5 * V_["evxy"] * Lambda2_["xyuv"];
+            Xi["ue"] += V_["eVxY"] * Lambda2_["xYuV"];
+            Xi["mx"] -= 0.5 * V_["uvmy"] * Lambda2_["xyuv"];
+            Xi["mx"] -= V_["uVmY"] * Lambda2_["xYuV"];
+        }
+        if (X7_TERM) {
+            Xi["me"] += F_["em"];
+            Xi["mu"] += F_["vm"] * Eta1_["uv"];
+            Xi["ue"] += F_["ev"] * Gamma1_["uv"];
+        }
+        Xi1["ia"] = Xi["ia"] * Eeps1_m2["ia"];
+        Xi2["ia"] = Xi["ia"] * Eeps1["ia"];
+        Xi3["ia"] = Xi["ia"] * Eeps1_m1["ia"];
 
-        Sigma["mv"] -= 0.5 * T2_["umxy"] * Lambda2_["xyuv"];
-        Sigma["mv"] -= T2_["mUxY"] * Lambda2_["xYvU"];
-        Sigma["MV"] -= 0.5 * T2_["UMXY"] * Lambda2_["XYUV"];
-        Sigma["MV"] -= T2_["uMxY"] * Lambda2_["xYuV"];
+        sigma3_xi3["ia"] =  Sigma3["ia"];
+        sigma3_xi3["ia"] += Xi3["ia"];
+        sigma2_xi3["ia"] =  Sigma2["ia"];
+        sigma2_xi3["ia"] += Xi3["ia"];
+        sigma1_xi1_xi2["ia"] =  2 * s_ * Sigma1["ia"];
+        sigma1_xi1_xi2["ia"] += Xi1["ia"];
+        sigma1_xi1_xi2["ia"] -= 2 * s_ * Xi2["ia"];
     }
-    if (X7_TERM) {
-        Sigma["me"] += T1_["me"];
-        Sigma["mv"] += T1_["mu"] * Eta1_["uv"];
-        Sigma["ve"] += T1_["ue"] * Gamma1_["uv"];
-
-        Sigma["ME"] += T1_["ME"];
-        Sigma["MV"] += T1_["MU"] * Eta1_["UV"];
-        Sigma["VE"] += T1_["UE"] * Gamma1_["UV"];
+    std::map<string, string> capital_blocks;
+    capital_blocks = {{"ca", "CA"}, {"cv", "CV"}, {"aa", "AA"}, {"av", "AV"}};
+    auto blocklabels = {"ca", "cv", "aa", "av"};
+    for (const std::string& block : blocklabels) {
+        sigma3_xi3.block(capital_blocks[block])("pq") = sigma3_xi3.block(block)("pq");
+        sigma2_xi3.block(capital_blocks[block])("pq") = sigma2_xi3.block(block)("pq");
+        sigma1_xi1_xi2.block(capital_blocks[block])("pq") = sigma1_xi1_xi2.block(block)("pq"); 
     }
-    Sigma1["ia"] = Sigma["ia"] * DelEeps1["ia"];
-    Sigma1["IA"] = Sigma["IA"] * DelEeps1["IA"];
-    Sigma2["ia"] = Sigma["ia"] * Eeps1["ia"];
-    Sigma2["IA"] = Sigma["IA"] * Eeps1["IA"];
-    Sigma3["ia"] = Sigma["ia"];
-    Sigma3["ia"] += Sigma2["ia"];
-    Sigma3["IA"] = Sigma["IA"];
-    Sigma3["IA"] += Sigma2["IA"];
-
-    outfile->Printf("Done");
-
-    outfile->Printf("\n    Initializing multipliers for renormalize Fock ... ");
-    BlockedTensor Xi = BTF_->build(CoreTensor, "Xi", spin_cases({"hp"}));
-    BlockedTensor Xi1 = BTF_->build(CoreTensor, "Xi * Eeps1_m2", spin_cases({"hp"}));
-    BlockedTensor Xi2 = BTF_->build(CoreTensor, "Xi * Eeps1", spin_cases({"hp"}));
-    BlockedTensor Xi3 = BTF_->build(CoreTensor, "Xi * Eeps1_m1", spin_cases({"hp"}));
-
-    if (X6_TERM) {
-        Xi["ue"] += 0.5 * V_["evxy"] * Lambda2_["xyuv"];
-        Xi["ue"] += V_["eVxY"] * Lambda2_["xYuV"];
-        Xi["UE"] += 0.5 * V_["EVXY"] * Lambda2_["XYUV"];
-        Xi["UE"] += V_["vExY"] * Lambda2_["xYvU"];
-
-        Xi["mx"] -= 0.5 * V_["uvmy"] * Lambda2_["xyuv"];
-        Xi["mx"] -= V_["uVmY"] * Lambda2_["xYuV"];
-        Xi["MX"] -= 0.5 * V_["UVMY"] * Lambda2_["XYUV"];
-        Xi["MX"] -= V_["uVyM"] * Lambda2_["yXuV"];
-    }
-    if (X7_TERM) {
-        Xi["me"] += F_["em"];
-        Xi["mu"] += F_["vm"] * Eta1_["uv"];
-        Xi["ue"] += F_["ev"] * Gamma1_["uv"];
-
-        Xi["ME"] += F_["EM"];
-        Xi["MU"] += F_["VM"] * Eta1_["UV"];
-        Xi["UE"] += F_["EV"] * Gamma1_["UV"];
-    }
-    Xi1["ia"] = Xi["ia"] * Eeps1_m2["ia"];
-    Xi1["IA"] = Xi["IA"] * Eeps1_m2["IA"];
-    Xi2["ia"] = Xi["ia"] * Eeps1["ia"];
-    Xi2["IA"] = Xi["IA"] * Eeps1["IA"];
-    Xi3["ia"] = Xi["ia"] * Eeps1_m1["ia"];
-    Xi3["IA"] = Xi["IA"] * Eeps1_m1["IA"];
-
-
-    sigma3_xi3["ia"] =  Sigma3["ia"];
-    sigma3_xi3["ia"] += Xi3["ia"];
-    sigma3_xi3["IA"] =  Sigma3["IA"];
-    sigma3_xi3["IA"] += Xi3["IA"];
-
-    sigma2_xi3["ia"] =  Sigma2["ia"];
-    sigma2_xi3["ia"] += Xi3["ia"];
-    sigma2_xi3["IA"] =  Sigma2["IA"];
-    sigma2_xi3["IA"] += Xi3["IA"];
-
-    sigma1_xi1_xi2["ia"] =  2 * s_ * Sigma1["ia"];
-    sigma1_xi1_xi2["ia"] += Xi1["ia"];
-    sigma1_xi1_xi2["ia"] -= 2 * s_ * Xi2["ia"];
-    sigma1_xi1_xi2["IA"] =  2 * s_ * Sigma1["IA"];
-    sigma1_xi1_xi2["IA"] += Xi1["IA"];
-    sigma1_xi1_xi2["IA"] -= 2 * s_ * Xi2["IA"];
-
     outfile->Printf("Done");
 }
 
