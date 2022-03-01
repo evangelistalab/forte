@@ -9,6 +9,8 @@
 #include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
 #include "gradient_tpdm/backtransform_tpdm.h"
+#include "psi4/lib3index/3index.h"
+#include "psi4/libmints/mintshelper.h"
 
 using namespace ambit;
 using namespace psi;
@@ -398,11 +400,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
     if (CORRELATION_TERM) {
         temp["abij"] += Tau1["ijab"];
-        temp["ABIJ"] += Tau1["IJAB"];
         temp["aBiJ"] += Tau1["iJaB"];
 
         temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
-        temp["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
         temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
     }
 
@@ -476,7 +476,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     d2aa.set_keep_flag(1);
     d2bb.set_keep_flag(1);
     d2ab.set_keep_flag(1);
-
     d2aa.close();
     d2bb.close();
     d2ab.close();
@@ -485,142 +484,105 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 }
 
 void DSRG_MRPT2::write_df_rdm() {
-    BlockedTensor df_2rdm = BTF_->build(tensor_type_, "df_2rdm", {"LL"});
-    BlockedTensor df_3rdm = BTF_->build(tensor_type_, "df_3rdm", {"Lgg", "LGG"});
+    /**
+     * Initializing the DF metric J^(-1/2).
+     */
+    BlockedTensor Jm12 = BTF_->build(tensor_type_, "Jm12", {"LL"});
+    std::shared_ptr<BasisSet> auxiliary_ = ints_->wfn()->get_basisset("DF_BASIS_MP2");
+    auto metric = std::make_shared<FittingMetric>(auxiliary_, true);
+    // "form_eig_inverse()" genererates J^(-1/2); "form_full_eig_inverse()" genererates J^(-1)
+    metric->form_eig_inverse(Process::environment.options.get_double("DF_FITTING_CONDITION"));
+    auto J = metric->get_metric();
+    (Jm12.block("LL")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = J->get(i[0], i[1]);
+    });
+
+    BlockedTensor df_3rdm_temp = BTF_->build(tensor_type_, "df_3rdm_temp", {"Lgg"});
 
     // density terms contracted with V["abij"]
-    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "PPHH", "pPhH"});
+    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"});
 
     if (CORRELATION_TERM) {
         dvabij["abij"] += Tau1["ijab"];
-        dvabij["ABIJ"] += Tau1["IJAB"];
         dvabij["aBiJ"] += Tau1["iJaB"];
 
         dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
-        dvabij["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
         dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
     }
-
     // CASSCF reference
     dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];
-    dvabij["XYUV"] += 0.25 * Gamma2_["UVXY"];
     dvabij["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
     // CI contribution
     dvabij["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
-    dvabij["XYUV"] += 0.125 * Gamma2_tilde["UVXY"];
     dvabij["xYuV"] += 0.125 * Gamma2_tilde["uVxY"];
 
-    // Coulomb part
-    df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
-    df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
-    df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["abij"];
-    df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["aBiJ"];
-
-    // Exchange part
-    df_3rdm["Q!,b,i"] -= Jm12["Q!,R!"] * B["R!,a,j"] * dvabij["abij"];
-    df_3rdm["Q!,b,i"] += Jm12["Q!,R!"] * B["R!,A,J"] * dvabij["bAiJ"];
-    df_3rdm["Q!,i,b"] -= Jm12["Q!,R!"] * B["R!,j,a"] * dvabij["abij"];
-    df_3rdm["Q!,i,b"] += Jm12["Q!,R!"] * B["R!,J,A"] * dvabij["bAiJ"];
-
+    df_3rdm_temp["Q!,a,i"] += 4.0 * Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
+    df_3rdm_temp["Q!,a,i"] += 4.0 * Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
 
     // - Z["un"] * Gamma2_["uvxy"]
     // - Z["UN"] * Gamma2_["UVXY"]
     // - Z["un"] * Gamma2_["uVxY"]
     // Coulomb part
-    df_3rdm["Q!,x,n"] -= 0.5 * Jm12["Q!,R!"] * B["R!,y,v"] * Z["un"] * Gamma2_["uvxy"];
-    df_3rdm["Q!,x,n"] -= 0.5 * Jm12["Q!,R!"] * B["R!,Y,V"] * Z["un"] * Gamma2_["uVxY"];
-    df_3rdm["Q!,n,x"] -= 0.5 * Jm12["Q!,R!"] * B["R!,v,y"] * Z["un"] * Gamma2_["uvxy"];
-    df_3rdm["Q!,n,x"] -= 0.5 * Jm12["Q!,R!"] * B["R!,V,Y"] * Z["un"] * Gamma2_["uVxY"];
+    df_3rdm_temp["Q!,x,n"] -= Jm12["Q!,R!"] * B["R!,y,v"] * Z["un"] * Gamma2_["uvxy"];
+    df_3rdm_temp["Q!,x,n"] -= Jm12["Q!,R!"] * B["R!,Y,V"] * Z["un"] * Gamma2_["uVxY"];
 
-    df_3rdm["R!,y,v"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,x,n"] * Z["un"] * Gamma2_["uvxy"];
-    df_3rdm["R!,y,v"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,X,N"] * Z["UN"] * Gamma2_["vUyX"];
-    df_3rdm["R!,v,y"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,n,x"] * Z["un"] * Gamma2_["uvxy"];
-    df_3rdm["R!,v,y"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,N,X"] * Z["UN"] * Gamma2_["vUyX"];
+    df_3rdm_temp["R!,y,v"] -= Jm12["Q!,R!"] * B["Q!,x,n"] * Z["un"] * Gamma2_["uvxy"];
+    df_3rdm_temp["R!,y,v"] -= Jm12["Q!,R!"] * B["Q!,X,N"] * Z["UN"] * Gamma2_["vUyX"];
 
     // Exchange part
-    df_3rdm["Q!,y,n"] += 0.5 * Jm12["Q!,R!"] * B["R!,x,v"] * Z["un"] * Gamma2_["uvxy"];
-    df_3rdm["Q!,y,n"] -= 0.5 * Jm12["Q!,R!"] * B["R!,X,V"] * Z["un"] * Gamma2_["uVyX"];
-    df_3rdm["Q!,n,y"] += 0.5 * Jm12["Q!,R!"] * B["R!,v,x"] * Z["un"] * Gamma2_["uvxy"];
-    df_3rdm["Q!,n,y"] -= 0.5 * Jm12["Q!,R!"] * B["R!,V,X"] * Z["un"] * Gamma2_["uVyX"];
+    df_3rdm_temp["Q!,y,n"] += Jm12["Q!,R!"] * B["R!,x,v"] * Z["un"] * Gamma2_["uvxy"];
+    df_3rdm_temp["Q!,y,n"] -= Jm12["Q!,R!"] * B["R!,X,V"] * Z["un"] * Gamma2_["uVyX"];
 
-    df_3rdm["R!,x,v"] += 0.5 * Jm12["Q!,R!"] * B["Q!,y,n"] * Z["un"] * Gamma2_["uvxy"];
-    df_3rdm["R!,x,v"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,Y,N"] * Z["UN"] * Gamma2_["vUxY"];
-    df_3rdm["R!,v,x"] += 0.5 * Jm12["Q!,R!"] * B["Q!,n,y"] * Z["un"] * Gamma2_["uvxy"];
-    df_3rdm["R!,v,x"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,N,Y"] * Z["UN"] * Gamma2_["vUxY"];
+    df_3rdm_temp["R!,x,v"] += Jm12["Q!,R!"] * B["Q!,y,n"] * Z["un"] * Gamma2_["uvxy"];
+    df_3rdm_temp["R!,x,v"] -= Jm12["Q!,R!"] * B["Q!,Y,N"] * Z["UN"] * Gamma2_["vUxY"];
 
     // Z["eu"] * Gamma2_["uvxy"];
     // Z["EU"] * Gamma2_["UVXY"];
     // Z["eu"] * Gamma2_["uVxY"];
     // Coulomb part
-    df_3rdm["Q!,x,e"] += 0.5 * Jm12["Q!,R!"] * B["R!,y,v"] * Z["ue"] * Gamma2_["uvxy"];
-    df_3rdm["Q!,x,e"] += 0.5 * Jm12["Q!,R!"] * B["R!,Y,V"] * Z["ue"] * Gamma2_["uVxY"];
-    df_3rdm["Q!,e,x"] += 0.5 * Jm12["Q!,R!"] * B["R!,v,y"] * Z["ue"] * Gamma2_["uvxy"];
-    df_3rdm["Q!,e,x"] += 0.5 * Jm12["Q!,R!"] * B["R!,V,Y"] * Z["ue"] * Gamma2_["uVxY"];
+    df_3rdm_temp["Q!,x,e"] += Jm12["Q!,R!"] * B["R!,y,v"] * Z["ue"] * Gamma2_["uvxy"];
+    df_3rdm_temp["Q!,x,e"] += Jm12["Q!,R!"] * B["R!,Y,V"] * Z["ue"] * Gamma2_["uVxY"];
 
-    df_3rdm["R!,y,v"] += 0.5 * Jm12["Q!,R!"] * B["Q!,x,e"] * Z["ue"] * Gamma2_["uvxy"];
-    df_3rdm["R!,y,v"] += 0.5 * Jm12["Q!,R!"] * B["Q!,X,E"] * Z["UE"] * Gamma2_["vUyX"];
-    df_3rdm["R!,v,y"] += 0.5 * Jm12["Q!,R!"] * B["Q!,e,x"] * Z["ue"] * Gamma2_["uvxy"];
-    df_3rdm["R!,v,y"] += 0.5 * Jm12["Q!,R!"] * B["Q!,E,X"] * Z["UE"] * Gamma2_["vUyX"];
+    df_3rdm_temp["R!,y,v"] += Jm12["Q!,R!"] * B["Q!,x,e"] * Z["ue"] * Gamma2_["uvxy"];
+    df_3rdm_temp["R!,y,v"] += Jm12["Q!,R!"] * B["Q!,X,E"] * Z["UE"] * Gamma2_["vUyX"];
 
     // Exchange part
-    df_3rdm["Q!,y,e"] -= 0.5 * Jm12["Q!,R!"] * B["R!,x,v"] * Z["ue"] * Gamma2_["uvxy"];
-    df_3rdm["Q!,y,e"] += 0.5 * Jm12["Q!,R!"] * B["R!,X,V"] * Z["ue"] * Gamma2_["uVyX"];
-    df_3rdm["Q!,e,y"] -= 0.5 * Jm12["Q!,R!"] * B["R!,v,x"] * Z["ue"] * Gamma2_["uvxy"];
-    df_3rdm["Q!,e,y"] += 0.5 * Jm12["Q!,R!"] * B["R!,V,X"] * Z["ue"] * Gamma2_["uVyX"];
+    df_3rdm_temp["Q!,y,e"] -= Jm12["Q!,R!"] * B["R!,x,v"] * Z["ue"] * Gamma2_["uvxy"];
+    df_3rdm_temp["Q!,y,e"] += Jm12["Q!,R!"] * B["R!,X,V"] * Z["ue"] * Gamma2_["uVyX"];
 
-    df_3rdm["R!,x,v"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,y,e"] * Z["ue"] * Gamma2_["uvxy"];
-    df_3rdm["R!,x,v"] += 0.5 * Jm12["Q!,R!"] * B["Q!,Y,E"] * Z["UE"] * Gamma2_["vUxY"];
-    df_3rdm["R!,v,x"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,e,y"] * Z["ue"] * Gamma2_["uvxy"];
-    df_3rdm["R!,v,x"] += 0.5 * Jm12["Q!,R!"] * B["Q!,E,Y"] * Z["UE"] * Gamma2_["vUxY"];
+    df_3rdm_temp["R!,x,v"] -= Jm12["Q!,R!"] * B["Q!,y,e"] * Z["ue"] * Gamma2_["uvxy"];
+    df_3rdm_temp["R!,x,v"] += Jm12["Q!,R!"] * B["Q!,Y,E"] * Z["UE"] * Gamma2_["vUxY"];
 
     // 2.0 * Z["em"] * Gamma1_["uv"]
     // 2.0 * Z["EM"] * Gamma1_["UV"]
     // 2.0 * Z["em"] * Gamma1_["UV"]
     // Coulomb part
-    df_3rdm["Q!,e,m"] +=       Jm12["Q!,R!"] * B["R!,u,v"] * Z["em"] * Gamma1_["uv"];
-    df_3rdm["Q!,e,m"] +=       Jm12["Q!,R!"] * B["R!,U,V"] * Z["em"] * Gamma1_["UV"];
-    df_3rdm["Q!,m,e"] +=       Jm12["Q!,R!"] * B["R!,u,v"] * Z["em"] * Gamma1_["uv"];
-    df_3rdm["Q!,m,e"] +=       Jm12["Q!,R!"] * B["R!,U,V"] * Z["em"] * Gamma1_["UV"];
-    df_3rdm["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,e,m"] * Z["em"] * Gamma1_["uv"];
-    df_3rdm["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,E,M"] * Z["EM"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,e,m"] += 4.0 * Jm12["Q!,R!"] * B["R!,u,v"] * Z["em"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,v"] += 4.0 * Jm12["Q!,R!"] * B["Q!,e,m"] * Z["em"] * Gamma1_["uv"];
     // Exchange part
-    df_3rdm["Q!,e,v"] -= Jm12["Q!,R!"] * B["R!,u,m"] * Z["em"] * Gamma1_["uv"];
-    df_3rdm["Q!,v,e"] -= Jm12["Q!,R!"] * B["R!,m,u"] * Z["em"] * Gamma1_["uv"];
-    df_3rdm["R!,u,m"] -= Jm12["Q!,R!"] * B["Q!,e,v"] * Z["em"] * Gamma1_["uv"];
-    df_3rdm["R!,m,u"] -= Jm12["Q!,R!"] * B["Q!,v,e"] * Z["em"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,e,v"] -= 2.0 * Jm12["Q!,R!"] * B["R!,u,m"] * Z["em"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,m"] -= 2.0 * Jm12["Q!,R!"] * B["Q!,e,v"] * Z["em"] * Gamma1_["uv"];
 
     // 2.0 * Z["xm"] * Gamma1_["uv"]
     // 2.0 * Z["XM"] * Gamma1_["UV"]
     // 2.0 * Z["xm"] * Gamma1_["UV"]
     // Coulomb part
-    df_3rdm["Q!,x,m"] +=       Jm12["Q!,R!"] * B["R!,u,v"] * Z["xm"] * Gamma1_["uv"];
-    df_3rdm["Q!,x,m"] +=       Jm12["Q!,R!"] * B["R!,U,V"] * Z["xm"] * Gamma1_["UV"];
-    df_3rdm["Q!,m,x"] +=       Jm12["Q!,R!"] * B["R!,u,v"] * Z["xm"] * Gamma1_["uv"];
-    df_3rdm["Q!,m,x"] +=       Jm12["Q!,R!"] * B["R!,U,V"] * Z["xm"] * Gamma1_["UV"];
-    df_3rdm["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,x,m"] * Z["xm"] * Gamma1_["uv"];
-    df_3rdm["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,X,M"] * Z["XM"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,x,m"] += 4.0 * Jm12["Q!,R!"] * B["R!,u,v"] * Z["xm"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,v"] += 4.0 * Jm12["Q!,R!"] * B["Q!,x,m"] * Z["xm"] * Gamma1_["uv"];
     // Exchange part
-    df_3rdm["Q!,x,v"] -= Jm12["Q!,R!"] * B["R!,u,m"] * Z["xm"] * Gamma1_["uv"];
-    df_3rdm["Q!,v,x"] -= Jm12["Q!,R!"] * B["R!,m,u"] * Z["xm"] * Gamma1_["uv"];
-    df_3rdm["R!,u,m"] -= Jm12["Q!,R!"] * B["Q!,x,v"] * Z["xm"] * Gamma1_["uv"];
-    df_3rdm["R!,m,u"] -= Jm12["Q!,R!"] * B["Q!,v,x"] * Z["xm"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,x,v"] -= 2.0 * Jm12["Q!,R!"] * B["R!,u,m"] * Z["xm"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,m"] -= 2.0 * Jm12["Q!,R!"] * B["Q!,x,v"] * Z["xm"] * Gamma1_["uv"];
 
     // Z["xy"] * Gamma1_["uv"]
     // Z["XY"] * Gamma1_["UV"]
     // Z["xy"] * Gamma1_["UV"]
     // Coulomb part
-    df_3rdm["Q!,x,y"] +=       0.5 * Jm12["Q!,R!"] * B["R!,u,v"] * Z["xy"] * Gamma1_["uv"];
-    df_3rdm["Q!,x,y"] +=       0.5 * Jm12["Q!,R!"] * B["R!,U,V"] * Z["xy"] * Gamma1_["UV"];
-    df_3rdm["Q!,y,x"] +=       0.5 * Jm12["Q!,R!"] * B["R!,u,v"] * Z["xy"] * Gamma1_["uv"];
-    df_3rdm["Q!,y,x"] +=       0.5 * Jm12["Q!,R!"] * B["R!,U,V"] * Z["xy"] * Gamma1_["UV"];
-    df_3rdm["R!,u,v"] += 2.0 * 0.5 * Jm12["Q!,R!"] * B["Q!,x,y"] * Z["xy"] * Gamma1_["uv"];
-    df_3rdm["R!,u,v"] += 2.0 * 0.5 * Jm12["Q!,R!"] * B["Q!,X,Y"] * Z["XY"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,x,y"] += 2.0 * Jm12["Q!,R!"] * B["R!,u,v"] * Z["xy"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,x,y"] * Z["xy"] * Gamma1_["uv"];
     // Exchange part
-    df_3rdm["Q!,x,v"] -= 0.5 * Jm12["Q!,R!"] * B["R!,u,y"] * Z["xy"] * Gamma1_["uv"];
-    df_3rdm["Q!,v,x"] -= 0.5 * Jm12["Q!,R!"] * B["R!,y,u"] * Z["xy"] * Gamma1_["uv"];
-    df_3rdm["R!,u,y"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,x,v"] * Z["xy"] * Gamma1_["uv"];
-    df_3rdm["R!,y,u"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,v,x"] * Z["xy"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,x,v"] -= Jm12["Q!,R!"] * B["R!,u,y"] * Z["xy"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,y"] -= Jm12["Q!,R!"] * B["Q!,x,v"] * Z["xy"] * Gamma1_["uv"];
 
     // <[F, T2]> and <[V, T1]>
     // if X5_TERM || X6_TERM || X7_TERM is true
@@ -628,98 +590,67 @@ void DSRG_MRPT2::write_df_rdm() {
     // sigma3_xi3["IA"] * Gamma1_["UV"]
     // sigma3_xi3["ia"] * Gamma1_["UV"]
     // Coulomb part
-    df_3rdm["Q!,i,a"] +=       0.5 * Jm12["Q!,R!"] * B["R!,u,v"] * sigma3_xi3["ia"] * Gamma1_["uv"];
-    df_3rdm["Q!,i,a"] +=       0.5 * Jm12["Q!,R!"] * B["R!,U,V"] * sigma3_xi3["ia"] * Gamma1_["UV"];
-    df_3rdm["Q!,a,i"] +=       0.5 * Jm12["Q!,R!"] * B["R!,u,v"] * sigma3_xi3["ia"] * Gamma1_["uv"];
-    df_3rdm["Q!,a,i"] +=       0.5 * Jm12["Q!,R!"] * B["R!,U,V"] * sigma3_xi3["ia"] * Gamma1_["UV"];
-    df_3rdm["R!,u,v"] += 2.0 * 0.5 * Jm12["Q!,R!"] * B["Q!,i,a"] * sigma3_xi3["ia"] * Gamma1_["uv"];
-    df_3rdm["R!,u,v"] += 2.0 * 0.5 * Jm12["Q!,R!"] * B["Q!,I,A"] * sigma3_xi3["IA"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,i,a"] += 2.0 * Jm12["Q!,R!"] * B["R!,u,v"] * sigma3_xi3["ia"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,i,a"] * sigma3_xi3["ia"] * Gamma1_["uv"];
     // Exchange part
-    df_3rdm["Q!,i,v"] -= 0.5 * Jm12["Q!,R!"] * B["R!,u,a"] * sigma3_xi3["ia"] * Gamma1_["uv"];
-    df_3rdm["Q!,v,i"] -= 0.5 * Jm12["Q!,R!"] * B["R!,a,u"] * sigma3_xi3["ia"] * Gamma1_["uv"];
-    df_3rdm["R!,u,a"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,i,v"] * sigma3_xi3["ia"] * Gamma1_["uv"];
-    df_3rdm["R!,a,u"] -= 0.5 * Jm12["Q!,R!"] * B["Q!,v,i"] * sigma3_xi3["ia"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,i,v"] -= Jm12["Q!,R!"] * B["R!,u,a"] * sigma3_xi3["ia"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,a"] -= Jm12["Q!,R!"] * B["Q!,i,v"] * sigma3_xi3["ia"] * Gamma1_["uv"];
 
     /************************************************************************************************/
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"gg", "GG"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"gg"});
     // <[F, T2]> and <[V, T1]>
     temp["em"] += sigma3_xi3["me"];
     temp["em"] += 2.0 * Z["em"];
-    temp["EM"] += sigma3_xi3["ME"]; 
-    temp["EM"] += 2.0 * Z["EM"];  
 
     temp["un"] += 2.0 * Z["un"];
     temp["un"] -= 2.0 * Z["vn"] * Gamma1_["uv"];
-    temp["UN"] += 2.0 * Z["UN"];
-    temp["UN"] -= 2.0 * Z["VN"] * Gamma1_["UV"];
     // <[F, T2]> and <[V, T1]>
     temp["un"] += sigma3_xi3["nu"];
-    temp["UN"] += sigma3_xi3["NU"];
 
     temp["ev"] += 2.0 * Z["eu"] * Gamma1_["uv"];
-    temp["EV"] += 2.0 * Z["EU"] * Gamma1_["UV"];
     // <[F, T2]> and <[V, T1]>
     temp["ev"] += sigma3_xi3["ve"];
-    temp["EV"] += sigma3_xi3["VE"];
 
     temp["mn"] += Z["mn"];
-    temp["MN"] += Z["MN"];
 
     temp["uv"] += Z["uv"];
     temp["uv"] += Gamma1_["uv"];
     temp["uv"] += 0.5 * Gamma1_tilde["uv"];
-    temp["UV"] += Z["UV"];
-    temp["UV"] += Gamma1_["UV"];
-    temp["UV"] += 0.5 * Gamma1_tilde["UV"];
 
     temp["ef"] += Z["ef"];
-    temp["EF"] += Z["EF"];
 
     // Coulomb part
-    df_3rdm["Q!,p,r"] += 0.5 * Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["pr"];
-    df_3rdm["Q!,p,r"] += 0.5 * Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["pr"];
-    df_3rdm["Q!,r,p"] += 0.5 * Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["pr"];
-    df_3rdm["Q!,r,p"] += 0.5 * Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["pr"];
-
-    df_3rdm["Q!,m,n"] += 0.5 * Jm12["Q!,R!"] * B["R!,p,r"] * I["mn"] * temp["pr"];
-    df_3rdm["Q!,m,n"] += 0.5 * Jm12["Q!,R!"] * B["R!,P,R"] * I["mn"] * temp["PR"];
-    df_3rdm["Q!,n,m"] += 0.5 * Jm12["Q!,R!"] * B["R!,r,p"] * I["mn"] * temp["pr"];
-    df_3rdm["Q!,n,m"] += 0.5 * Jm12["Q!,R!"] * B["R!,R,P"] * I["mn"] * temp["PR"];
+    df_3rdm_temp["Q!,p,r"] += 2.0 * Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["pr"];
+    df_3rdm_temp["Q!,m,n"] += 2.0 * Jm12["Q!,R!"] * B["R!,p,r"] * I["mn"] * temp["pr"];
 
     // Exchange part
-    df_3rdm["Q!,p,m"] -= 0.5 * Jm12["Q!,R!"] * B["R!,m,r"] * temp["pr"];
-    df_3rdm["Q!,m,p"] -= 0.5 * Jm12["Q!,R!"] * B["R!,r,m"] * temp["pr"];
-    df_3rdm["Q!,m,r"] -= 0.5 * Jm12["Q!,R!"] * B["R!,p,m"] * temp["pr"];
-    df_3rdm["Q!,r,m"] -= 0.5 * Jm12["Q!,R!"] * B["R!,m,p"] * temp["pr"];
+    df_3rdm_temp["Q!,p,m"] -= Jm12["Q!,R!"] * B["R!,m,r"] * temp["pr"];
+    df_3rdm_temp["Q!,m,r"] -= Jm12["Q!,R!"] * B["R!,p,m"] * temp["pr"];
 
     /**************************** CASSCF energy term : 0.5 * V["mnmn"] ****************************/
     // Coulomb part
-    df_3rdm["Q!,m1,n1"] += Jm12["Q!,P!"] * B["P!,m,n"] * I["mn"] * I["m1,n1"];
-    df_3rdm["Q!,m1,n1"] += Jm12["Q!,P!"] * B["P!,M,N"] * I["MN"] * I["m1,n1"];
+    df_3rdm_temp["Q!,m1,n1"] += 2.0 * Jm12["Q!,P!"] * B["P!,m,n"] * I["mn"] * I["m1,n1"];
     // Exchange part
-    df_3rdm["Q!,m,n"]   -= Jm12["Q!,P!"] * B["P!,n,m"];
+    df_3rdm_temp["Q!,m,n"]   -= Jm12["Q!,P!"] * B["P!,n,m"];
 
     // residue terms 
-    df_3rdm["Q!,m,n"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["mn"] * Gamma1_["uv"];
-    df_3rdm["Q!,m,n"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["mn"] * Gamma1_["UV"];
+    df_3rdm_temp["Q!,m,n"] += 2.0 * Jm12["Q!,R!"] * B["R!,u,v"] * Z["mn"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,m,v"] -= Jm12["Q!,R!"] * B["R!,u,n"] * Z["mn"] * Gamma1_["uv"];
 
-    df_3rdm["Q!,m,v"] -= Jm12["Q!,R!"] * B["R!,u,n"] * Z["mn"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,m,n"] * Z["mn"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,n"] -= Jm12["Q!,R!"] * B["Q!,m,v"] * Z["mn"] * Gamma1_["uv"];
 
-    df_3rdm["R!,u,v"] += Jm12["Q!,R!"] * B["Q!,m,n"] * Z["mn"] * Gamma1_["uv"];
-    df_3rdm["R!,u,v"] += Jm12["Q!,R!"] * B["Q!,M,N"] * Z["MN"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,e,f"] += 2.0 * Jm12["Q!,R!"] * B["R!,u,v"] * Z["ef"] * Gamma1_["uv"];
+    df_3rdm_temp["Q!,e,v"] -= Jm12["Q!,R!"] * B["R!,u,f"] * Z["ef"] * Gamma1_["uv"];
 
-    df_3rdm["R!,u,n"] -= Jm12["Q!,R!"] * B["Q!,m,v"] * Z["mn"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,e,f"] * Z["ef"] * Gamma1_["uv"];
+    df_3rdm_temp["R!,u,f"] -= Jm12["Q!,R!"] * B["Q!,e,v"] * Z["ef"] * Gamma1_["uv"];
 
-    df_3rdm["Q!,e,f"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["ef"] * Gamma1_["uv"];
-    df_3rdm["Q!,e,f"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["ef"] * Gamma1_["UV"];
 
-    df_3rdm["Q!,e,v"] -= Jm12["Q!,R!"] * B["R!,u,f"] * Z["ef"] * Gamma1_["uv"];
-
-    df_3rdm["R!,u,v"] += Jm12["Q!,R!"] * B["Q!,e,f"] * Z["ef"] * Gamma1_["uv"];
-    df_3rdm["R!,u,v"] += Jm12["Q!,R!"] * B["Q!,E,F"] * Z["EF"] * Gamma1_["uv"];
-
-    df_3rdm["R!,u,f"] -= Jm12["Q!,R!"] * B["Q!,e,v"] * Z["ef"] * Gamma1_["uv"];
+    BlockedTensor df_3rdm = BTF_->build(tensor_type_, "df_3rdm", {"Lgg"});
+    df_3rdm["Q!,p,q"] += 0.5 * df_3rdm_temp["Q!,p,q"];
+    df_3rdm["Q!,q,p"] += 0.5 * df_3rdm_temp["Q!,p,q"];
 
     /******************************* Backtransform (P|pq) to (P|\mu \nu) *******************************/
 
@@ -837,6 +768,7 @@ void DSRG_MRPT2::write_df_rdm() {
 
     // Using restricted orbitals, thus B["A!,P,Q"] * Jm12["A!,R!"] * df_3rdm["S!,P,Q"]
     // equals B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"], yielding a factor 2
+    BlockedTensor df_2rdm = BTF_->build(tensor_type_, "df_2rdm", {"LL"});
     df_2rdm["R!,S!"] += 0.5 * B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"];
     df_2rdm["S!,R!"] += 0.5 * B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"];
 

@@ -212,10 +212,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * NOTICE: this function shall be revoked in the future.
      */
     void set_v();
-    /**
-     * Initializing the DF metric J^(-1/2).
-     */
-    void set_j();
     /// Set CI-relevant integrals
     void set_ci_ints();
     /**
@@ -446,11 +442,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     double Alpha;
     ambit::Tensor x_ci;
-
-    ambit::BlockedTensor V_sumA_Alpha;
-    ambit::BlockedTensor V_sumB_Alpha;
-    ambit::BlockedTensor V_sumA_Beta;
-    ambit::BlockedTensor V_sumB_Beta;
+    ambit::BlockedTensor V_pmqm;
 
     ambit::Tensor ci;
 

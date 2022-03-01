@@ -12,9 +12,9 @@ namespace forte {
 
 void DSRG_MRPT2::set_tau() {
     outfile->Printf("\n    Initializing multipliers for two-body amplitude.. ");
-    Tau1 = BTF_->build(CoreTensor, "Tau1", spin_cases({"hhpp"}));
-    Tau2 = BTF_->build(CoreTensor, "Tau2", spin_cases({"hhpp"}));
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
+    Tau1 = BTF_->build(CoreTensor, "Tau1", {"hhpp","hHpP"});
+    Tau2 = BTF_->build(CoreTensor, "Tau2", {"hhpp","hHpP"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp","hHpP"}, true);
 
     // Tau * Delta
     // <[V, T2]> (C_2)^4
@@ -30,18 +30,6 @@ void DSRG_MRPT2::set_tau() {
         temp["mvef"] += 0.125 * V_["efmu"] * Gamma1_["uv"];
         temp["mvzx"] += 0.125 * V_["wymu"] * Gamma1_["uv"] * Eta1_["zw"] * Eta1_["xy"];
         temp["vyez"] += 0.125 * V_["ewux"] * Gamma1_["uv"] * Gamma1_["xy"] * Eta1_["zw"];
-
-        /**************************************** β β β β ****************************************/
-        temp["MNEF"] += 0.0625 * V_["EFMN"];
-        temp["MNUX"] += 0.0625 * V_["VYMN"] * Eta1_["UV"] * Eta1_["XY"];
-        temp["VYEF"] += 0.0625 * V_["EFUX"] * Gamma1_["UV"] * Gamma1_["XY"];
-        temp["V,Y,Z,U1"] +=
-            0.0625 * V_["W,A1,U,X"] * Gamma1_["UV"] * Gamma1_["XY"] * Eta1_["ZW"] * Eta1_["U1,A1"];
-        temp["MNEU"] += 0.125 * V_["EVMN"] * Eta1_["UV"];
-        temp["MVEF"] += 0.125 * V_["EFMU"] * Gamma1_["UV"];
-        temp["MVEZ"] += 0.250 * V_["EWMU"] * Gamma1_["UV"] * Eta1_["ZW"];
-        temp["MVZX"] += 0.125 * V_["WYMU"] * Gamma1_["UV"] * Eta1_["ZW"] * Eta1_["XY"];
-        temp["VYEZ"] += 0.125 * V_["EWUX"] * Gamma1_["UV"] * Gamma1_["XY"] * Eta1_["ZW"];
 
         /**************************************** α β α β ****************************************/
         Tau2["mNeF"] += 0.25 * V_["eFmN"];
@@ -70,12 +58,6 @@ void DSRG_MRPT2::set_tau() {
         temp["u,v,z,u1"] +=
             0.03125 * V_["w,a1,x,y"] * Eta1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
 
-        /********************************** β β β β **********************************/
-        temp["UVEZ"] += 0.0625 * V_["EWXY"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        temp["UVEF"] += 0.03125 * V_["EFXY"] * Lambda2_["XYUV"]; 
-        temp["U,V,Z,U1"] +=
-            0.03125 * V_["W,A1,X,Y"] * Eta1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
-
         /********************************** α β α β **********************************/
         Tau2["uVeF"] += 0.25 * V_["eFxY"] * Lambda2_["xYuV"];
         Tau2["uVeZ"] += 0.25 * V_["eWxY"] * Eta1_["ZW"] * Lambda2_["xYuV"];
@@ -90,12 +72,6 @@ void DSRG_MRPT2::set_tau() {
         temp["mnxy"] += 0.03125 * V_["uvmn"] * Lambda2_["xyuv"];
         temp["a1,w,x,y"] +=
             0.03125 * V_["u,v,u1,z"] * Gamma1_["u1,a1"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-
-        /************************************ β β β β ************************************/
-        temp["MWXY"] += 0.0625 * V_["UVMZ"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        temp["MNXY"] += 0.03125 * V_["UVMN"] * Lambda2_["XYUV"];
-        temp["W,A1,X,Y"] +=
-            0.03125 * V_["U,V,Z,U1"] * Gamma1_["ZW"] * Gamma1_["U1,A1"] * Lambda2_["XYUV"];
 
         /************************************ α β α β ************************************/
         Tau2["mNxY"] += 0.25 * V_["uVmN"] * Lambda2_["xYuV"];
@@ -117,18 +93,6 @@ void DSRG_MRPT2::set_tau() {
         temp["zuye"] -= 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
         temp["z,u,y,u1"] -=
             0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
-
-        /********************************** β β β β **********************************/
-        temp["MUYE"] -= 0.25 * V_["VEMX"] * Lambda2_["XYUV"];
-        temp["MUYZ"] -= 0.25 * V_["VWMX"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        temp["ZUYE"] -= 0.25 * V_["VEWX"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        temp["Z,U,Y,U1"] -=
-            0.25 * V_["V,A1,W,X"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
-        temp["MUYE"] -= 0.25 * V_["vExM"] * Lambda2_["xYvU"];
-        temp["MUYZ"] -= 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
-        temp["ZUYE"] -= 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        temp["Z,U,Y,U1"] -=
-            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
 
         /********************************** α β α β **********************************/
         Tau2["mUyE"] -= 0.25 * V_["vEmX"] * Lambda2_["yXvU"];
@@ -170,12 +134,6 @@ void DSRG_MRPT2::set_tau() {
         temp.block("aava")("xyew") -= 0.0625 * V_.block("vaaa")("ezuv") * rdms_.L3aaa()("xyzuvw");
         temp.block("aava")("xyew") += 0.125  * V_.block("vAaA")("eZuV") * rdms_.L3aab()("xyZuwV");
 
-        /**************************************** β β β β ****************************************/
-        temp.block("CAAA")("MWXY") += 0.0625 * V_.block("AACA")("UVMZ") * rdms_.L3bbb()("XYZUVW");
-        temp.block("CAAA")("MWXY") -= 0.125  * V_.block("aAaC")("uVzM") * rdms_.L3abb()("zXYuVW");
-        temp.block("AAVA")("XYEW") -= 0.0625 * V_.block("VAAA")("EZUV") * rdms_.L3bbb()("XYZUVW");
-        temp.block("AAVA")("XYEW") += 0.125  * V_.block("aVaA")("zEuV") * rdms_.L3abb()("zXYuVW");
-
         /**************************************** α β α β ****************************************/
         Tau2.block("cAaA")("mWxY") -= 0.125 * V_.block("aaca")("uvmz") * rdms_.L3aab()("xzYuvW");
         Tau2.block("cAaA")("mWxY") += 0.250 * V_.block("aAcA")("uVmZ") * rdms_.L3abb()("xYZuVW");
@@ -190,9 +148,6 @@ void DSRG_MRPT2::set_tau() {
         /******************** α α α α ********************/
         temp["iuax"] += 0.25 * DelGam1["xu"] * sigma2_xi3["ia"];
 
-        /******************** β β β β ********************/
-        temp["IUAX"] += 0.25 * DelGam1["XU"] * sigma2_xi3["IA"];
-
         /******************** α β α β ********************/
         Tau2["iUaX"] += 0.25 * DelGam1["XU"] * sigma2_xi3["ia"];
         Tau2["uIxA"] += 0.25 * DelGam1["xu"] * sigma2_xi3["IA"];
@@ -202,10 +157,6 @@ void DSRG_MRPT2::set_tau() {
         /******************** α α α α ********************/
         temp["uvey"] += 0.125 * F_["ex"] * Lambda2_["xyuv"];
         temp["umxy"] -= 0.125 * F_["vm"] * Lambda2_["xyuv"];
-
-        /******************** β β β β ********************/
-        temp["UVEY"] += 0.125 * F_["EX"] * Lambda2_["XYUV"];
-        temp["UMXY"] -= 0.125 * F_["VM"] * Lambda2_["XYUV"];
 
         /******************** α β α β ********************/
         Tau2["uVeY"] += 0.125 * F_["ex"] * Lambda2_["xYuV"];
@@ -222,19 +173,13 @@ void DSRG_MRPT2::set_tau() {
     Tau2["ijba"] -= temp["ijab"];
     Tau2["jiab"] -= temp["ijab"];
     Tau2["jiba"] += temp["ijab"];
-    Tau2["IJAB"] += temp["IJAB"];
-    Tau2["IJBA"] -= temp["IJAB"];
-    Tau2["JIAB"] -= temp["IJAB"];
-    Tau2["JIBA"] += temp["IJAB"];
 
     // Remove the internal terms based on the DSRG formalism
     Tau2.block("aaaa").zero();
     Tau2.block("aAaA").zero();
-    Tau2.block("AAAA").zero();
 
     // Tau * [1 - e^(-s * Delta^2)]
     Tau1["ijab"] = Tau2["ijab"] * Eeps2_m1["ijab"];
-    Tau1["IJAB"] = Tau2["IJAB"] * Eeps2_m1["IJAB"];
     Tau1["iJaB"] = Tau2["iJaB"] * Eeps2_m1["iJaB"];
 
     outfile->Printf("Done");
@@ -337,8 +282,8 @@ void DSRG_MRPT2::set_sigma_xi() {
 
 void DSRG_MRPT2::set_kappa() {
     outfile->Printf("\n    Initializing multipliers for renormalize ERIs ... ");
-    Kappa = BTF_->build(CoreTensor, "Kappa", spin_cases({"hhpp"}));
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
+    Kappa = BTF_->build(CoreTensor, "Kappa", {"hhpp","hHpP"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp","hHpP"}, true);
 
     // <[V, T2]> (C_2)^4
     if (PT2_TERM) {
@@ -351,16 +296,6 @@ void DSRG_MRPT2::set_kappa() {
         temp["mnef"] += 0.0625 * T2_["mnef"];
         temp["mnvy"] += 0.0625 * T2_["mnux"] * Eta1_["uv"] * Eta1_["xy"];
         temp["uxef"] += 0.0625 * T2_["vyef"] * Gamma1_["uv"] * Gamma1_["xy"];
-        
-        /************************************ β β β β ************************************/
-        temp["MNEV"] += 0.125  * T2_["MNEU"] * Eta1_["UV"];
-        temp["MUEW"] += 0.250  * T2_["MVEZ"] * Gamma1_["UV"] * Eta1_["ZW"];
-        temp["UXEW"] += 0.125  * T2_["VYEZ"] * Gamma1_["UV"] * Gamma1_["XY"] * Eta1_["ZW"];
-        temp["MUEF"] += 0.125  * T2_["MVEF"] * Gamma1_["UV"];
-        temp["MUWY"] += 0.125  * T2_["MVZX"] * Gamma1_["UV"] * Eta1_["ZW"] * Eta1_["XY"];
-        temp["MNEF"] += 0.0625 * T2_["MNEF"];
-        temp["MNVY"] += 0.0625 * T2_["MNUX"] * Eta1_["UV"] * Eta1_["XY"];
-        temp["UXEF"] += 0.0625 * T2_["VYEF"] * Gamma1_["UV"] * Gamma1_["XY"];
 
         /************************************ α β α β ************************************/
         Kappa["mNeF"] += 0.25 * T2_["mNeF"];
@@ -385,10 +320,6 @@ void DSRG_MRPT2::set_kappa() {
         temp["xyew"] += 0.0625  * T2_["uvez"] * Eta1_["zw"] * Lambda2_["xyuv"];
         temp["xyef"] += 0.03125 * T2_["uvef"] * Lambda2_["xyuv"];
 
-        /****************************** β β β β ******************************/
-        temp["XYEW"] += 0.0625  * T2_["UVEZ"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        temp["XYEF"] += 0.03125 * T2_["UVEF"] * Lambda2_["XYUV"];
-
         /****************************** α β α β ******************************/
         Kappa["xYeF"] += 0.25   * T2_["uVeF"] * Lambda2_["xYuV"];
         Kappa["xYeW"] += 0.25   * T2_["uVeZ"] * Eta1_["ZW"] * Lambda2_["xYuV"];
@@ -399,10 +330,6 @@ void DSRG_MRPT2::set_kappa() {
         /******************************* α α α α *******************************/
         temp["mzuv"] += 0.0625  * T2_["mwxy"] * Gamma1_["zw"] * Lambda2_["xyuv"];
         temp["mnuv"] += 0.03125 * T2_["mnxy"] * Lambda2_["xyuv"];
-
-        /******************************* β β β β *******************************/
-        temp["MZUV"] += 0.0625  * T2_["MWXY"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        temp["MNUV"] += 0.03125 * T2_["MNXY"] * Lambda2_["XYUV"];
 
         /******************************* α β α β *******************************/
         Kappa["mNuV"] += 0.250 * T2_["mNxY"] * Lambda2_["xYuV"];
@@ -418,14 +345,6 @@ void DSRG_MRPT2::set_kappa() {
         temp["mxve"] -= 0.25 * T2_["mUeY"] * Lambda2_["xYvU"];
         temp["mxvw"] -= 0.25 * T2_["mUzY"] * Eta1_["zw"] * Lambda2_["xYvU"];
         temp["wxve"] -= 0.25 * T2_["zUeY"] * Gamma1_["zw"] * Lambda2_["xYvU"];
-
-        /******************************* β β β β *******************************/
-        temp["MXVE"] -= 0.25 * T2_["MUYE"] * Lambda2_["XYUV"];
-        temp["MXVW"] -= 0.25 * T2_["MUYZ"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        temp["WXVE"] -= 0.25 * T2_["ZUYE"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        temp["MXVE"] -= 0.25 * T2_["uMyE"] * Lambda2_["yXuV"];
-        temp["MXVW"] -= 0.25 * T2_["uMyZ"] * Eta1_["ZW"] * Lambda2_["yXuV"];
-        temp["WXVE"] -= 0.25 * T2_["uZyE"] * Gamma1_["ZW"] * Lambda2_["yXuV"];
 
         /******************************* α β α β *******************************/
         Kappa["mXvE"] -= 0.25 * T2_["mUyE"] * Lambda2_["yXvU"];
@@ -455,12 +374,6 @@ void DSRG_MRPT2::set_kappa() {
         temp.block("aava")("uvez") -= 0.0625 * T2_.block("aava")("xyew") * rdms_.L3aaa()("xyzuvw");
         temp.block("aava")("uvez") += 0.125  * T2_.block("aAvA")("xYeW") * rdms_.L3aab()("xzYuvW");
 
-        /**************************************** β β β β ****************************************/
-        temp.block("CAAA")("MZUV") += 0.0625 * T2_.block("CAAA")("MWXY") * rdms_.L3bbb()("XYZUVW");
-        temp.block("CAAA")("MZUV") -= 0.125  * T2_.block("aCaA")("wMxY") * rdms_.L3abb()("xYZwUV");
-        temp.block("AAVA")("UVEZ") -= 0.0625 * T2_.block("AAVA")("XYEW") * rdms_.L3bbb()("XYZUVW");
-        temp.block("AAVA")("UVEZ") += 0.125  * T2_.block("aAaV")("xYwE") * rdms_.L3abb()("xYZwUV");
-
         /**************************************** α β α β ****************************************/
         Kappa.block("cAaA")("mZuV") -= 0.125 * T2_.block("caaa")("mwxy") * rdms_.L3aab()("xyZuwV");
         Kappa.block("cAaA")("mZuV") += 0.250 * T2_.block("cAaA")("mWxY") * rdms_.L3abb()("xYZuVW");
@@ -477,10 +390,6 @@ void DSRG_MRPT2::set_kappa() {
         temp["xyev"] += 0.125 * T1_["ue"] * Lambda2_["xyuv"];
         temp["myuv"] -= 0.125 * T1_["mx"] * Lambda2_["xyuv"];
 
-        /********************* β β β β *********************/
-        temp["XYEV"] += 0.125 * T1_["UE"] * Lambda2_["XYUV"];
-        temp["MYUV"] -= 0.125 * T1_["MX"] * Lambda2_["XYUV"];
-
         /********************* α β α β *********************/     
         Kappa["xYeV"] += 0.25 * T1_["ue"] * Lambda2_["xYuV"];
         Kappa["yXvE"] += 0.25 * T1_["UE"] * Lambda2_["yXvU"];
@@ -492,10 +401,6 @@ void DSRG_MRPT2::set_kappa() {
     Kappa["ijba"] -= temp["ijab"];
     Kappa["jiab"] -= temp["ijab"];
     Kappa["jiba"] += temp["ijab"];
-    Kappa["IJAB"] += temp["IJAB"];
-    Kappa["IJBA"] -= temp["IJAB"];
-    Kappa["JIAB"] -= temp["IJAB"];
-    Kappa["JIBA"] += temp["IJAB"];
 
     outfile->Printf("Done");
 }

@@ -4,8 +4,6 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
-#include "psi4/lib3index/3index.h"
-#include "psi4/libmints/mintshelper.h"
 
 using namespace ambit;
 using namespace psi;
@@ -14,7 +12,6 @@ namespace forte {
 
 void DSRG_MRPT2::set_ci_ints() {
     ci = ci_vectors_[0];
-
     // X_K <K|p^+ q|0> + <0|p^+ q|K> X_K
     Gamma1_tilde = BTF_->build(CoreTensor, "Gamma1_tilde", spin_cases({"aa"}));
     // X_K <K|p^+ q^+ r s|0> + <0|p^+ q^+ r s|K> X_K
@@ -37,19 +34,6 @@ void DSRG_MRPT2::set_h() {
         } else {
             value = ints_->oei_b(i[0], i[1]);
         }
-    });
-}
-
-void DSRG_MRPT2::set_j() {  
-    Jm12 = BTF_->build(tensor_type_, "Jm12", {"LL"});
-    std::shared_ptr<BasisSet> auxiliary_ = ints_->wfn()->get_basisset("DF_BASIS_MP2");
-    auto metric = std::make_shared<FittingMetric>(auxiliary_, true);
-    // "form_eig_inverse()" genererates J^(-1/2); "form_full_eig_inverse()" genererates J^(-1)
-    metric->form_eig_inverse(Process::environment.options.get_double("DF_FITTING_CONDITION"));
-    auto J = metric->get_metric();
-
-    (Jm12.block("LL")).iterate([&](const std::vector<size_t>& i, double& value) {
-        value = J->get(i[0], i[1]);
     });
 }
 
@@ -84,35 +68,15 @@ void DSRG_MRPT2::set_v() {
         });
     }
 
-    V_sumA_Alpha = BTF_->build(
-        CoreTensor, "normal Dimension-reduced Electron Repulsion Integral alpha", {"gg"});
-    V_sumB_Alpha = BTF_->build(CoreTensor,
-                               "normal Dimension-reduced Electron Repulsion Integral beta", {"gg"});
-    V_sumA_Beta = BTF_->build(
-        CoreTensor, "index-reversed Dimension-reduced Electron Repulsion Integral beta", {"GG"});
-    V_sumB_Beta = BTF_->build(
-        CoreTensor, "normal Dimension-reduced Electron Repulsion Integral all beta", {"GG"});
-
+    V_pmqm = BTF_->build(CoreTensor, "Sum_{m} V[pmqm]+ V['pMqM']", {"gg"});
     if (eri_df_) {
-        // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
-        V_sumA_Alpha["pq"]  = B["gpq"] * B["gmn"] * I["mn"];
-        V_sumA_Alpha["pq"] -= B["gpm"] * B["gmq"];
-        // Summation of V["pMqM"] over index "M"
-        V_sumB_Alpha["pq"] = B["gpq"] * B["gMN"] * I["MN"];
-        // Summation of V["mPmQ"] over index "m"
-        V_sumA_Beta["PQ"] =  B["gmn"] * B["gPQ"] * I["mn"];
-        // Summation of V["PMQM"] over index "M"
-        V_sumB_Beta["PQ"] =  B["gPQ"] * B["gMN"] * I["MN"];
-        V_sumB_Beta["PQ"] -= B["gPM"] * B["gMQ"];
+        // Summation of V["pmqm"] + V["pMqM"] over index "M"
+        V_pmqm["pq"] = 2.0 * B["gpq"] * B["gmn"] * I["mn"];
+        V_pmqm["pq"] -=      B["gpm"] * B["gmq"];
     } else {
-        // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
-        V_sumA_Alpha["pq"] = V["pmqn"] * I["mn"];
-        // Summation of V["pMqM"] over index "M"
-        V_sumB_Alpha["pq"] = V["pMqN"] * I["MN"];
-        // Summation of V["mPmQ"] over index "m"
-        V_sumA_Beta["PQ"] = V["mPnQ"] * I["mn"];
-        // Summation of V["PMQM"] over index "M"
-        V_sumB_Beta["PQ"] = V["PMQN"] * I["MN"];
+        // Summation of V["pmqm"] + V["pMqM"] over index "M"
+        V_pmqm["pq"]  = V["pmqn"] * I["mn"];
+        V_pmqm["pq"] += V["pMqN"] * I["MN"];
     }
 }
 
@@ -243,8 +207,7 @@ void DSRG_MRPT2::set_dsrg_tensor() {
 
     // An intermediate tensor : T2 / Delta
     if (eri_df_) {
-        T2OverDelta["ijab"] += B["gai"] * B["gbj"] * Eeps2_m2["ijab"];
-        T2OverDelta["ijab"] -= B["gaj"] * B["gbi"] * Eeps2_m2["ijab"];
+        T2OverDelta["ijab"] += 2.0 * B["gai"] * B["gbj"] * Eeps2_m2["ijab"];
         T2OverDelta["iJaB"] += B["gai"] * B["gBJ"] * Eeps2_m2["iJaB"];
     } else {
         T2OverDelta["ijab"] += V["abij"] * Eeps2_m2["ijab"];
