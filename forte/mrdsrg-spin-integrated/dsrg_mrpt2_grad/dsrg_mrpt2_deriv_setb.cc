@@ -22,7 +22,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
 
     Z_b = BTF_->build(CoreTensor, "b(AX=b)", spin_cases({"gg"}));
     // NOTICE: constant b for z{core-virtual}
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}), true);
     temp["mlcd"] += Kappa["mlcd"] * Eeps2_p["mlcd"];
     temp["mLcD"] += Kappa["mLcD"] * Eeps2_p["mLcD"];
 
@@ -84,7 +84,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
 
     // NOTICE: constant b for z{active-active}
     {
-        BlockedTensor temp_z = BTF_->build(CoreTensor, "temporal matrix Z{aa} for symmetrization", spin_cases({"aa"}));
+        BlockedTensor temp_z = BTF_->build(CoreTensor, "temporal matrix Z{aa} for symmetrization", spin_cases({"aa"}), true);
         if (CORRELATION_TERM) {
             temp_z["wz"] += 0.5 * sigma3_xi3["za"] * F["wa"];
             temp_z["wz"] += 0.5 * sigma3_xi3["iz"] * F["iw"];
@@ -306,9 +306,9 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         }
     }
 
-    BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"gg"});
-    BlockedTensor temp3 = BTF_->build(CoreTensor, "Z{active-active} diagonal components", {"aa", "AA"});
-    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal matrix{aa} for temp2 symmetrization", spin_cases({"aa"}));
+    BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"gg"}, true);
+    BlockedTensor temp3 = BTF_->build(CoreTensor, "Z{active-active} diagonal components", {"aa", "AA"}, true);
+    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal matrix{aa} for temp2 symmetrization", spin_cases({"aa"}), true);
     if (eri_df_) {
         Z_b["mw"] += 2.0 * Z["m1,n1"] * Gamma1_["wv"] * B["g,n1,m1"] * B["gvm"];
         Z_b["mw"] -= Z["m1,n1"] * Gamma1_["wv"] * B["g,n1,m"] * B["g,v,m1"];
@@ -413,8 +413,8 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Alpha +=       Gamma2_["uVxY"] * V["xYuV"];
     }
 
-    temp = BTF_->build(CoreTensor, "temporal tensor", {"aa"});
-    BlockedTensor temp_alpha = BTF_->build(CoreTensor, "Unsymmetrized contractions in Alpha", {"aa"});
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"aa"}, true);
+    BlockedTensor temp_alpha = BTF_->build(CoreTensor, "Unsymmetrized contractions in Alpha", {"aa"}, true);
     if (PT2_TERM) {
         temp_alpha["uv"] += 0.50 * T2_["vmef"] * V_["efum"];
         temp_alpha["uv"] +=        T2_["vmez"] * V_["ewum"] * Eta1_["zw"];
@@ -480,7 +480,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
     temp["vu"] += temp_alpha["uv"];
     Alpha += temp["uv"] * Gamma1_["uv"];
 
-    temp4 = BTF_->build(CoreTensor, "temporal tensor 4", {"aaaa", "aAaA"});
+    temp4 = BTF_->build(CoreTensor, "temporal tensor 4", {"aaaa", "aAaA"}, true);
     if (X1_TERM) {
         temp4["uvxy"] += 0.125 * V_["efxy"] * T2_["uvef"];
         temp4["uvxy"] += 0.25  * V_["ewxy"] * T2_["uvez"] * Eta1_["zw"];
@@ -686,7 +686,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
 
     b_ck("K") += 2 * Alpha * ci("K");
 
-    BlockedTensor temp5 = BTF_->build(CoreTensor, "temporal tensor", {"aa", "AA"});
+    BlockedTensor temp5 = BTF_->build(CoreTensor, "temporal tensor", {"aa", "AA"}, true);
     if (eri_df_) {
         temp5["uv"] += 2.0 * Z["mn"] * B["gmn"] * B["gvu"];
         temp5["uv"] -= Z["mn"] * B["gmu"] * B["gvn"];
@@ -715,9 +715,9 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         block_factor3["aAAaAA"] = 1.0;
         block_factor3["AAAAAA"] = 1.0;
 
-        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body tensor", spin_cases({"aa"}));
-        auto sym_2 = BTF_->build(CoreTensor, "symmetrized 2-body tensor", spin_cases({"aaaa"}));
-        auto sym_3 = BTF_->build(CoreTensor, "symmetrized 3-body tensor", spin_cases({"aaaaaa"}));
+        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body tensor", spin_cases({"aa"}), true);
+        auto sym_2 = BTF_->build(CoreTensor, "symmetrized 2-body tensor", spin_cases({"aaaa"}), true);
+        auto sym_3 = BTF_->build(CoreTensor, "symmetrized 3-body tensor", spin_cases({"aaaaaa"}), true);
         {
             auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", {"aa"}, true);
 
@@ -957,7 +957,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             sym_1.block("AA")("pq") = sym_1.block("aa")("pq");
         }
         {
-            auto temp_2 = BTF_->build(CoreTensor, "2-body intermediate tensor", {"aaaa","aAaA"});
+            auto temp_2 = BTF_->build(CoreTensor, "2-body intermediate tensor", {"aaaa","aAaA"}, true);
 
             if (X4_TERM) {
                 // -0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw")
@@ -1090,7 +1090,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             sym_2["uVxY"] += temp_2["xYuV"];
         }
         {
-            auto temp_3 = BTF_->build(CoreTensor, "3-body intermediate tensor", spin_cases({"aaaaaa"}));
+            auto temp_3 = BTF_->build(CoreTensor, "3-body intermediate tensor", spin_cases({"aaaaaa"}), true);
             if (X4_TERM) {
 
                 // -0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw")

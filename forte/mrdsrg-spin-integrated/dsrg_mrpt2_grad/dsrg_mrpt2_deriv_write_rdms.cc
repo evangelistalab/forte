@@ -71,7 +71,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         }
     });
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"ca"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"ca"}, true);
     temp["nu"] = Z["un"];
     temp["nv"] -= Z["un"] * Gamma1_["uv"];
 
@@ -84,7 +84,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         }
     });
 
-    temp = BTF_->build(CoreTensor, "temporal tensor", {"va"});
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"va"}, true);
     temp["ev"] = Z["eu"] * Gamma1_["uv"];
 
     (temp.block("va")).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -185,7 +185,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
     IWL d2bb(psio_.get(), PSIF_MO_BB_TPDM, 1.0e-14, 0, 0);
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"vc", "VC"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"vc", "VC"}, true);
     // <[F, T2]> and <[V, T1]>
     temp["em"] += 0.5 * sigma3_xi3["me"];
     temp["EM"] += 0.5 * sigma3_xi3["ME"];   
@@ -209,7 +209,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
-    temp = BTF_->build(CoreTensor, "temporal tensor", {"ac", "AC"});
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"ac", "AC"}, true);
     temp["un"] = Z["un"];
     temp["un"] -= Z["vn"] * Gamma1_["uv"];
     temp["UN"] = Z["UN"];
@@ -238,7 +238,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
-    temp = BTF_->build(CoreTensor, "temporal tensor", {"va", "VA"});
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"va", "VA"}, true);
     temp["ev"] = Z["eu"] * Gamma1_["uv"];
     temp["EV"] = Z["EU"] * Gamma1_["UV"];
     // <[F, T2]> and <[V, T1]>
@@ -395,8 +395,8 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     }
 
     // terms contracted with V["abij"]
-    temp = BTF_->build(CoreTensor, "temporal tensor", {"pphh", "PPHH", "pPhH"});
-    BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph", "phPH"});
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"pphh", "PPHH", "pPhH"}, true);
+    BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph", "phPH"}, true);
 
     if (CORRELATION_TERM) {
         temp["abij"] += Tau1["ijab"];
@@ -487,7 +487,7 @@ void DSRG_MRPT2::write_df_rdm() {
     /**
      * Initializing the DF metric J^(-1/2).
      */
-    BlockedTensor Jm12 = BTF_->build(tensor_type_, "Jm12", {"LL"});
+    BlockedTensor Jm12 = BTF_->build(tensor_type_, "Jm12", {"LL"}, true);
     std::shared_ptr<BasisSet> auxiliary_ = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     auto metric = std::make_shared<FittingMetric>(auxiliary_, true);
     // "form_eig_inverse()" genererates J^(-1/2); "form_full_eig_inverse()" genererates J^(-1)
@@ -497,10 +497,10 @@ void DSRG_MRPT2::write_df_rdm() {
         value = J->get(i[0], i[1]);
     });
 
-    BlockedTensor df_3rdm_temp = BTF_->build(tensor_type_, "df_3rdm_temp", {"Lgg"});
+    BlockedTensor df_3rdm_temp = BTF_->build(tensor_type_, "df_3rdm_temp", {"Lgg"}, true);
 
     // density terms contracted with V["abij"]
-    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"});
+    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"}, true);
 
     if (CORRELATION_TERM) {
         dvabij["abij"] += Tau1["ijab"];
@@ -598,7 +598,7 @@ void DSRG_MRPT2::write_df_rdm() {
 
     /************************************************************************************************/
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"gg"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"gg"}, true);
     // <[F, T2]> and <[V, T1]>
     temp["em"] += sigma3_xi3["me"];
     temp["em"] += 2.0 * Z["em"];
@@ -648,7 +648,7 @@ void DSRG_MRPT2::write_df_rdm() {
     df_3rdm_temp["R!,u,f"] -= Jm12["Q!,R!"] * B["Q!,e,v"] * Z["ef"] * Gamma1_["uv"];
 
 
-    BlockedTensor df_3rdm = BTF_->build(tensor_type_, "df_3rdm", {"Lgg"});
+    BlockedTensor df_3rdm = BTF_->build(tensor_type_, "df_3rdm", {"Lgg"}, true);
     df_3rdm["Q!,p,q"] += 0.5 * df_3rdm_temp["Q!,p,q"];
     df_3rdm["Q!,q,p"] += 0.5 * df_3rdm_temp["Q!,p,q"];
 
@@ -768,7 +768,7 @@ void DSRG_MRPT2::write_df_rdm() {
 
     // Using restricted orbitals, thus B["A!,P,Q"] * Jm12["A!,R!"] * df_3rdm["S!,P,Q"]
     // equals B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"], yielding a factor 2
-    BlockedTensor df_2rdm = BTF_->build(tensor_type_, "df_2rdm", {"LL"});
+    BlockedTensor df_2rdm = BTF_->build(tensor_type_, "df_2rdm", {"LL"}, true);
     df_2rdm["R!,S!"] += 0.5 * B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"];
     df_2rdm["S!,R!"] += 0.5 * B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"];
 

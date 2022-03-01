@@ -56,8 +56,8 @@ void DSRG_MRPT2::set_w() {
     // Form Gamma_tilde
     for (const auto& pair : as_solver_->state_energies_map()) {
         const auto& state = pair.first;
-        auto g1r = BTF_->build(tensor_type_, "1GRDM_ket", spin_cases({"aa"}));
-        auto g2r = BTF_->build(tensor_type_, "2GRDM_ket", spin_cases({"aaaa"}));
+        auto g1r = BTF_->build(tensor_type_, "1GRDM_ket", spin_cases({"aa"}), true);
+        auto g2r = BTF_->build(tensor_type_, "2GRDM_ket", spin_cases({"aaaa"}), true);
         auto vec_ptr = x_ci.data();
 
         as_solver_->generalized_rdms(state, 0, vec_ptr, Gamma1_tilde, false, 1);
@@ -72,7 +72,7 @@ void DSRG_MRPT2::set_w() {
         Gamma2_tilde["uVxY"] += g2r["uVxY"];
     }
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp","hHpP"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp","hHpP"}, true);
     // NOTICE: w for {virtual-general}
     if (CORRELATION_TERM) {
         W["pe"] += 0.5 * sigma3_xi3["ie"] * F["ip"];
@@ -320,7 +320,7 @@ void DSRG_MRPT2::set_w() {
     }
 
     // CASSCF reference
-    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"ag"});
+    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"ag"}, true);
     W["mp"] += F["mp"];
     temp1["vp"] = H["vp"];
     temp1["vp"] += V_pmqm["vp"];
@@ -369,9 +369,9 @@ void DSRG_MRPT2::set_w() {
 }
 
 void DSRG_MRPT2::set_z_cc() {
-    BlockedTensor val1 = BTF_->build(CoreTensor, "val1", {"c"});
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
-    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
+    BlockedTensor val1 = BTF_->build(CoreTensor, "val1", {"c"}, true);
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}), true);
+    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}), true);
 
     // core-core diagonal entries
     if (CORRELATION_TERM) {
@@ -413,7 +413,7 @@ void DSRG_MRPT2::set_z_cc() {
             temp_1.zero();
         }
     }
-    BlockedTensor zmn = BTF_->build(CoreTensor, "z{mn} normal", {"cc"});
+    BlockedTensor zmn = BTF_->build(CoreTensor, "z{mn} normal", {"cc"}, true);
     // core-core block entries within normal conditions
     if (CORRELATION_TERM) {
         zmn["mn"] += 0.5 * sigma3_xi3["na"] * F["ma"];
@@ -469,9 +469,9 @@ void DSRG_MRPT2::set_z_cc() {
 }
 
 void DSRG_MRPT2::set_z_vv() {
-    BlockedTensor val2 = BTF_->build(CoreTensor, "val2", {"v"});
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
-    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
+    BlockedTensor val2 = BTF_->build(CoreTensor, "val2", {"v"}, true);
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}), true);
+    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}), true);
 
     // virtual-virtual diagonal entries
     if (CORRELATION_TERM) {
@@ -512,7 +512,7 @@ void DSRG_MRPT2::set_z_vv() {
         }
     }
 
-    BlockedTensor zef = BTF_->build(CoreTensor, "z{ef} normal", {"vv"});
+    BlockedTensor zef = BTF_->build(CoreTensor, "z{ef} normal", {"vv"}, true);
     // virtual-virtual block entries within normal conditions
     if (CORRELATION_TERM) {
         zef["ef"] += 0.5 * sigma3_xi3["if"] * F["ie"];
@@ -569,9 +569,9 @@ void DSRG_MRPT2::set_z_vv() {
 }
 
 void DSRG_MRPT2::set_z_aa_diag() {
-    BlockedTensor val3 = BTF_->build(CoreTensor, "val3", {"a"});
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
-    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
+    BlockedTensor val3 = BTF_->build(CoreTensor, "val3", {"a"}, true);
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}), true);
+    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}), true);
 
     // active-active diagonal entries
     if (CORRELATION_TERM) {
@@ -683,7 +683,7 @@ double diff_f_norm(std::vector<double> const& vec1, std::vector<double> const& v
 }
 
 void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<double> & y_vec) {
-    BlockedTensor qk = BTF_->build(CoreTensor, "vector qk (orbital rotation) in GMRES", {"vc", "VC", "ca", "CA", "va", "VA", "aa", "AA"});
+    BlockedTensor qk = BTF_->build(CoreTensor, "vector qk (orbital rotation) in GMRES", {"vc", "VC", "ca", "CA", "va", "VA", "aa", "AA"}, true);
     auto qk_ci = ambit::Tensor::build(ambit::CoreTensor, "qk (ci) in GMRES", {ndets});
 
     for (const std::string& row : {"vc", "VC", "ca", "CA", "va", "VA", "aa", "AA"}) {
@@ -713,7 +713,7 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
         });
     }
 
-    BlockedTensor y = BTF_->build(CoreTensor, "y (orbital rotation) in GMRES", {"vc", "ca", "va", "aa"});
+    BlockedTensor y = BTF_->build(CoreTensor, "y (orbital rotation) in GMRES", {"vc", "ca", "va", "aa"}, true);
     auto y_ci = ambit::Tensor::build(ambit::CoreTensor, "y (ci) in GMRES", {ndets});
 
     /// MO RESPONSE -- MO RESPONSE
@@ -908,7 +908,7 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     }
 
     // ACTIVE-ACTIVE
-    BlockedTensor temp_y = BTF_->build(CoreTensor, "temporal matrix for y{aa} symmetrization", spin_cases({"aa"}));
+    BlockedTensor temp_y = BTF_->build(CoreTensor, "temporal matrix for y{aa} symmetrization", spin_cases({"aa"}), true);
     temp_y["wz"] -= F["w,n1"] * qk["n1,z"];
     temp_y["wz"] += H["w,n1"] * Gamma1_["uz"] * qk["n1,u"];
     temp_y["wz"] += V_pmqm["w,n1"] * Gamma1_["uz"] * qk["n1,u"];
@@ -963,12 +963,12 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
 
     /// MO RESPONSE -- CI EQUATION
     // Form contraction between qk_ci and ci, cc1, cc2
-    auto cc1_qkci = BTF_->build(CoreTensor, "cc1 * qk_ci", spin_cases({"aa"}));
-    auto cc2_qkci = BTF_->build(CoreTensor, "cc2 * qk_ci", spin_cases({"aaaa"}));
+    auto cc1_qkci = BTF_->build(CoreTensor, "cc1 * qk_ci", spin_cases({"aa"}), true);
+    auto cc2_qkci = BTF_->build(CoreTensor, "cc2 * qk_ci", spin_cases({"aaaa"}), true);
     for (const auto& pair : as_solver_->state_energies_map()) {
         const auto& state = pair.first;
-        auto g1r = BTF_->build(tensor_type_, "1GRDM_ket", spin_cases({"aa"}));
-        auto g2r = BTF_->build(tensor_type_, "2GRDM_ket", spin_cases({"aaaa"}));
+        auto g1r = BTF_->build(tensor_type_, "1GRDM_ket", spin_cases({"aa"}), true);
+        auto g2r = BTF_->build(tensor_type_, "2GRDM_ket", spin_cases({"aaaa"}), true);
         auto vec_ptr = qk_ci.data();
         as_solver_->generalized_rdms(state, 0, vec_ptr, cc1_qkci, false, 1);
         as_solver_->generalized_rdms(state, 0, vec_ptr, g1r, true, 1);
@@ -985,7 +985,7 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     double ci_qk_dot;
     ci_qk_dot = ci("I") * qk_ci("I");
 
-    temp_y = BTF_->build(CoreTensor, "temporal matrix for y{aa} symmetrization", spin_cases({"aa"}));
+    temp_y = BTF_->build(CoreTensor, "temporal matrix for y{aa} symmetrization", spin_cases({"aa"}), true);
     temp_y["wz"] -= 0.50 * H["vw"] * cc1_qkci["zv"];
     temp_y["wz"] -= 0.50 * V_pmqm["uw"] * cc1_qkci["uz"];
 
@@ -1075,10 +1075,10 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
         block_factor2["aAaA"] = 1.0;
         block_factor2["AAAA"] = 1.0;
 
-        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body tensor", spin_cases({"aa"}));
-        auto sym_2 = BTF_->build(CoreTensor, "symmetrized 2-body tensor", spin_cases({"aaaa"}));
+        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body tensor", spin_cases({"aa"}), true);
+        auto sym_2 = BTF_->build(CoreTensor, "symmetrized 2-body tensor", spin_cases({"aaaa"}), true);
         {
-            auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", {"aa"});
+            auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", {"aa"}, true);
             temp_1["uv"] -= 2 * H["vn"] * qk["nu"];
             temp_1["uv"] -= 2 * V_pmqm["vn"] * qk["nu"];
             temp_1["uv"] += 2 * H["ve"] * qk["eu"];
@@ -1107,7 +1107,7 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
             sym_1.block("AA")("pq") = sym_1.block("aa")("pq");
         }
         {
-            auto temp_2 = BTF_->build(CoreTensor, "2-body intermediate tensor", {"aaaa","aAaA"});
+            auto temp_2 = BTF_->build(CoreTensor, "2-body intermediate tensor", {"aaaa","aAaA"}, true);
 
             if (eri_df_) {
                 temp_2["uvxy"] -= 2 * qk["nu"] * B["gxn"] * B["gyv"];
@@ -1206,8 +1206,8 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
 }
 
 void DSRG_MRPT2::set_preconditioner(std::vector<double> & D) {
-    BlockedTensor D_mo = BTF_->build(CoreTensor, "Preconditioner (orbital rotation) in GMRES", {"vc", "ca", "va", "aa"});
-    BlockedTensor temp_d = BTF_->build(CoreTensor, "temporal tensor", {"vc", "ca", "va", "aa"});
+    BlockedTensor D_mo = BTF_->build(CoreTensor, "Preconditioner (orbital rotation) in GMRES", {"vc", "ca", "va", "aa"}, true);
+    BlockedTensor temp_d = BTF_->build(CoreTensor, "temporal tensor", {"vc", "ca", "va", "aa"}, true);
 
     // VIRTUAL-CORE
     D_mo["em"] += Delta1["m,e"];
