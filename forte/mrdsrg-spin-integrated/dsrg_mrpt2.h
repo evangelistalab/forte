@@ -327,17 +327,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      */
     void set_b(int, std::map<string, int>, std::map<string, int>);
     /**
-     * The core-core block of the OPDM Z.
+     * The diagonal core-core, virtual-virtual blocks 
+     * and the diagonal entries of the active-active block of the OPDM Z.
      */
-    void set_z_cc();
-    /**
-     * The virtual-virtual block of the OPDM Z.
-     */
-    void set_z_vv();
-    /**
-     * The diagonal entries of the active-active block of the OPDM Z.
-     */
-    void set_z_aa_diag();
+    void set_z_diag();
     /**
      * Initialize and solve the multiplier W.
      *
