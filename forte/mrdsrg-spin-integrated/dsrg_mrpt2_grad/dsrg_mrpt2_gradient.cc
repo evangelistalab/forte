@@ -79,6 +79,10 @@ void DSRG_MRPT2::set_tensor() {
     I_ci.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 
+    W = BTF_->build(CoreTensor, "Energy weighted density matrix(Lagrangian)", spin_cases({"gg"}));
+    Z = BTF_->build(CoreTensor, "Z Matrix", spin_cases({"gg"}));
+    Z_b = BTF_->build(CoreTensor, "b(AX=b)", spin_cases({"gg"}));
+
     set_density();
     set_h();
     set_v();
@@ -92,6 +96,8 @@ void DSRG_MRPT2::set_multiplier() {
     set_sigma_xi();
     set_tau();
     set_kappa();
+    // this function aims to save memory and increase speed
+    pre_contract();
     set_z();
     set_w();
 }

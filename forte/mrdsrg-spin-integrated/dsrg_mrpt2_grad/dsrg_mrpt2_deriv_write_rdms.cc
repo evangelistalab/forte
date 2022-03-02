@@ -399,8 +399,8 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph", "phPH"}, true);
 
     if (CORRELATION_TERM) {
-        temp["abij"] += Tau1["ijab"];
-        temp["aBiJ"] += Tau1["iJaB"];
+        temp["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
+        temp["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
 
         temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
         temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
@@ -494,8 +494,8 @@ void DSRG_MRPT2::write_df_rdm() {
         BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"}, true);
 
         if (CORRELATION_TERM) {
-            dvabij["abij"] += Tau1["ijab"];
-            dvabij["aBiJ"] += Tau1["iJaB"];
+            dvabij["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
+            dvabij["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
 
             dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
             dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];

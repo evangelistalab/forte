@@ -12,7 +12,6 @@ namespace forte {
 
 void DSRG_MRPT2::set_tau() {
     outfile->Printf("\n    Initializing multipliers for two-body amplitude.. ");
-    Tau1 = BTF_->build(CoreTensor, "Tau1", {"hhpp","hHpP"});
     Tau2 = BTF_->build(CoreTensor, "Tau2", {"hhpp","hHpP"});
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp","hHpP"}, true);
 
@@ -173,15 +172,9 @@ void DSRG_MRPT2::set_tau() {
     Tau2["ijba"] -= temp["ijab"];
     Tau2["jiab"] -= temp["ijab"];
     Tau2["jiba"] += temp["ijab"];
-
     // Remove the internal terms based on the DSRG formalism
     Tau2.block("aaaa").zero();
     Tau2.block("aAaA").zero();
-
-    // Tau * [1 - e^(-s * Delta^2)]
-    Tau1["ijab"] = Tau2["ijab"] * Eeps2_m1["ijab"];
-    Tau1["iJaB"] = Tau2["iJaB"] * Eeps2_m1["iJaB"];
-
     outfile->Printf("Done");
 }
 

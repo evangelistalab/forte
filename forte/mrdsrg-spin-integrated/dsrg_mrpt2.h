@@ -287,6 +287,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void gmres_solver(std::vector<double>&);
     void solve_linear_iter();
     void z_vector_contraction(std::vector<double> &, std::vector<double> &);
+    void pre_contract();
     /**
      * Solve the Linear System Ax=b and yield Z using direct methods.
      */
@@ -424,9 +425,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     // Lagrange multiplier
     std::vector<double> b;
+    ambit::BlockedTensor temp_z;
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
-    ambit::BlockedTensor Tau1;
     ambit::BlockedTensor Tau2;
     ambit::BlockedTensor Kappa;
     ambit::BlockedTensor sigma3_xi3;

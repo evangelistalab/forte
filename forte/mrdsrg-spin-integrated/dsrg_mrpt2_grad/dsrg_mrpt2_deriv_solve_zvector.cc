@@ -39,17 +39,116 @@ void DSRG_MRPT2::set_zvec_moinfo() {
                  {"va", na},    {"VA", na},    {"aa", 0},  {"AA", 0}};
 }
 
+void DSRG_MRPT2::pre_contract() {
+    temp_z = BTF_->build(CoreTensor, "temporal matrix Z{aa} for symmetrization", spin_cases({"aa"}), true);
+    temp_z["wz"] += 0.5 * sigma3_xi3["za"] * F["wa"];
+    temp_z["wz"] += 0.5 * sigma3_xi3["iz"] * F["iw"];
+    // contracted with Tau * [1 - e^(-s * Delta^2)]
+    {
+        BlockedTensor Tau_tilde = BTF_->build(CoreTensor, "Tau_tilde", {"hhpp"}, true);
+        {
+            Tau_tilde["ijab"] = Tau2["ijab"] * Eeps2_m1["ijab"];
+        }
+        if (eri_df_) {
+            W["pe"] += 2.0 * Tau_tilde["ijeb"] * B["gpi"] * B["gbj"];
+            W["im"] += 2.0 * Tau_tilde["mjab"] * B["gai"] * B["gbj"];
+            W["zw"] += 2.0 * Tau_tilde["ijwb"] * B["gzi"] * B["gbj"];
+            W["zw"] += 2.0 * Tau_tilde["wjab"] * B["gaz"] * B["gbj"];
+
+            Z["mn"] += 2.0 * Tau_tilde["njab"] * B["gam"] * B["gbj"];
+            Z["mn"] -= 2.0 * Tau_tilde["mjab"] * B["gan"] * B["gbj"];
+            Z["ef"] += 2.0 * Tau_tilde["ijfb"] * B["gei"] * B["gbj"];
+            Z["ef"] -= 2.0 * Tau_tilde["ijeb"] * B["gfi"] * B["gbj"];
+
+            Z_b["em"] += 2.0 * Tau_tilde["mjab"] * B["gae"] * B["gbj"];
+            Z_b["em"] -= 2.0 * Tau_tilde["ijeb"] * B["gmi"] * B["gbj"];
+            temp_z["wz"] += 2.0 * Tau_tilde["ijzb"] * B["gwi"] * B["gbj"];
+            temp_z["wz"] += 2.0 * Tau_tilde["zjab"] * B["gaw"] * B["gbj"];
+            Z_b["ew"] += 2.0 * Tau_tilde["ijwb"] * B["gei"] * B["gbj"];
+            Z_b["ew"] += 2.0 * Tau_tilde["wjab"] * B["gae"] * B["gbj"];
+            Z_b["ew"] -= 2.0 * Tau_tilde["ijeb"] * B["gwi"] * B["gbj"];
+            Z_b["mw"] += 2.0 * Tau_tilde["ijwb"] * B["gmi"] * B["gbj"];
+            Z_b["mw"] += 2.0 * Tau_tilde["wjab"] * B["gam"] * B["gbj"];
+            Z_b["mw"] -= 2.0 * Tau_tilde["mjab"] * B["gaw"] * B["gbj"];
+        } else {
+            W["pe"] += Tau_tilde["ijeb"] * V["pbij"];
+            W["im"] += Tau_tilde["mjab"] * V["abij"];
+            W["zw"] += Tau_tilde["ijwb"] * V["zbij"];
+            W["zw"] += Tau_tilde["wjab"] * V["abzj"];
+
+            Z["mn"] += Tau_tilde["njab"] * V["abmj"];
+            Z["mn"] -= Tau_tilde["mjab"] * V["abnj"];
+            Z["ef"] += Tau_tilde["ijfb"] * V["ebij"];
+            Z["ef"] -= Tau_tilde["ijeb"] * V["fbij"];
+
+            Z_b["em"] += Tau_tilde["mjab"] * V["abej"];
+            Z_b["em"] -= Tau_tilde["ijeb"] * V["mbij"];
+            temp_z["wz"] += Tau_tilde["ijzb"] * V["wbij"];
+            temp_z["wz"] += Tau_tilde["zjab"] * V["abwj"];
+            Z_b["ew"] += Tau_tilde["ijwb"] * V["ebij"];
+            Z_b["ew"] += Tau_tilde["wjab"] * V["abej"];
+            Z_b["ew"] -= Tau_tilde["ijeb"] * V["wbij"];
+            Z_b["mw"] += Tau_tilde["ijwb"] * V["mbij"];
+            Z_b["mw"] += Tau_tilde["wjab"] * V["abmj"];
+            Z_b["mw"] -= Tau_tilde["mjab"] * V["abwj"];
+        }
+        Tau_tilde = BTF_->build(CoreTensor, "Tau_tilde", {"hHpP"}, true);
+        {
+            Tau_tilde["iJaB"] = Tau2["iJaB"] * Eeps2_m1["iJaB"];
+        }
+        if (eri_df_) {
+            W["pe"] += 2.0 * Tau_tilde["iJeB"] * B["gpi"] * B["gBJ"];
+            W["im"] += 2.0 * Tau_tilde["mJaB"] * B["gai"] * B["gBJ"];
+            W["zw"] += 2.0 * Tau_tilde["iJwB"] * B["gzi"] * B["gBJ"];
+            W["zw"] += 2.0 * Tau_tilde["wJaB"] * B["gaz"] * B["gBJ"];
+
+            Z["mn"] += 2.0 * Tau_tilde["nJaB"] * B["gam"] * B["gBJ"];
+            Z["mn"] -= 2.0 * Tau_tilde["mJaB"] * B["gan"] * B["gBJ"];
+            Z["ef"] += 2.0 * Tau_tilde["iJfB"] * B["gei"] * B["gBJ"];
+            Z["ef"] -= 2.0 * Tau_tilde["iJeB"] * B["gfi"] * B["gBJ"];
+
+            Z_b["em"] += 2.0 * Tau_tilde["mJaB"] * B["gae"] * B["gBJ"];
+            Z_b["em"] -= 2.0 * Tau_tilde["iJeB"] * B["gmi"] * B["gBJ"]; 
+            temp_z["wz"] += 2.0 * Tau_tilde["iJzB"] * B["gwi"] * B["gBJ"];
+            temp_z["wz"] += 2.0 * Tau_tilde["zJaB"] * B["gaw"] * B["gBJ"];
+            Z_b["ew"] += 2.0 * Tau_tilde["iJwB"] * B["gei"] * B["gBJ"];
+            Z_b["ew"] += 2.0 * Tau_tilde["wJaB"] * B["gae"] * B["gBJ"];
+            Z_b["ew"] -= 2.0 * Tau_tilde["iJeB"] * B["gwi"] * B["gBJ"];
+            Z_b["mw"] += 2.0 * Tau_tilde["iJwB"] * B["gmi"] * B["gBJ"];
+            Z_b["mw"] += 2.0 * Tau_tilde["wJaB"] * B["gam"] * B["gBJ"];
+            Z_b["mw"] -= 2.0 * Tau_tilde["mJaB"] * B["gaw"] * B["gBJ"];
+        } else {
+            W["pe"] += 2.0 * Tau_tilde["iJeB"] * V["pBiJ"];
+            W["im"] += 2.0 * Tau_tilde["mJaB"] * V["aBiJ"];
+            W["zw"] += 2.0 * Tau_tilde["iJwB"] * V["zBiJ"];
+            W["zw"] += 2.0 * Tau_tilde["wJaB"] * V["aBzJ"];
+
+            Z["mn"] += 2.0 * Tau_tilde["nJaB"] * V["aBmJ"];
+            Z["mn"] -= 2.0 * Tau_tilde["mJaB"] * V["aBnJ"];
+            Z["ef"] += 2.0 * Tau_tilde["iJfB"] * V["eBiJ"];
+            Z["ef"] -= 2.0 * Tau_tilde["iJeB"] * V["fBiJ"];
+
+            Z_b["em"] += 2.0 * Tau_tilde["mJaB"] * V["aBeJ"];
+            Z_b["em"] -= 2.0 * Tau_tilde["iJeB"] * V["mBiJ"];
+            temp_z["wz"] += 2.0 * Tau_tilde["iJzB"] * V["wBiJ"];
+            temp_z["wz"] += 2.0 * Tau_tilde["zJaB"] * V["aBwJ"];  
+            Z_b["ew"] += 2.0 * Tau_tilde["iJwB"] * V["eBiJ"];
+            Z_b["ew"] += 2.0 * Tau_tilde["wJaB"] * V["aBeJ"];
+            Z_b["ew"] -= 2.0 * Tau_tilde["iJeB"] * V["wBiJ"];
+            Z_b["mw"] += 2.0 * Tau_tilde["iJwB"] * V["mBiJ"];
+            Z_b["mw"] += 2.0 * Tau_tilde["wJaB"] * V["aBmJ"];
+            Z_b["mw"] -= 2.0 * Tau_tilde["mJaB"] * V["aBwJ"];
+        }
+    }
+}
+
 void DSRG_MRPT2::set_z() {
-    Z = BTF_->build(CoreTensor, "Z Matrix", spin_cases({"gg"}));
-    outfile->Printf("\n    Initializing Diagonal Entries of the OPDM Z ..... ");
     set_z_diag();
-    outfile->Printf("Done");
     solve_linear_iter();
 }
 
 void DSRG_MRPT2::set_w() {
     outfile->Printf("\n    Solving Entries of the EWDM W.................... ");
-    W = BTF_->build(CoreTensor, "Energy weighted density matrix(Lagrangian)", spin_cases({"gg"}));
     // Form Gamma_tilde
     for (const auto& pair : as_solver_->state_energies_map()) {
         const auto& state = pair.first;
@@ -78,68 +177,51 @@ void DSRG_MRPT2::set_w() {
         W["pe"] += Z["eu"] * V_pmqm["vp"] * Gamma1_["uv"];
         W["pe"] += Z["e,f1"] * F["f1,p"];
         if (eri_df_) {
-            W["pe"] += 2.0 * Tau1["ijeb"] * B["gpi"] * B["gbj"];
-            W["pe"] += 2.0 * Tau1["iJeB"] * B["gpi"] * B["gBJ"];
-
             W["jm"] += 2.0 * sigma3_xi3["ia"] * B["gai"] * B["gmj"];
             W["jm"] -= 0.5 * sigma3_xi3["ia"] * B["gaj"] * B["gmi"];
             W["jm"] -= 0.5 * sigma3_xi3["ia"] * B["gam"] * B["gji"];
-            W["im"] += 2.0 * Tau1["mjab"] * B["gai"] * B["gbj"];
-            W["im"] += 2.0 * Tau1["mJaB"] * B["gai"] * B["gBJ"];
-
             W["zw"] +=       sigma3_xi3["ia"] * Gamma1_["wv"] * B["gai"] * B["gzv"];
             W["zw"] -= 0.5 * sigma3_xi3["ia"] * Gamma1_["wv"] * B["gav"] * B["gzi"];
             W["zw"] +=       sigma3_xi3["ia"] * Gamma1_["uw"] * B["gai"] * B["guz"];
             W["zw"] -= 0.5 * sigma3_xi3["ia"] * Gamma1_["uw"] * B["gaz"] * B["gui"];
-            W["zw"] += 2.0 * Tau1["ijwb"] * B["gzi"] * B["gbj"];
-            W["zw"] += 2.0 * Tau1["iJwB"] * B["gzi"] * B["gBJ"];
-            W["zw"] += 2.0 * Tau1["wjab"] * B["gaz"] * B["gbj"];
-            W["zw"] += 2.0 * Tau1["wJaB"] * B["gaz"] * B["gBJ"];
         } else {
-            W["pe"] +=       Tau1["ijeb"] * V["pbij"];
-            W["pe"] += 2.0 * Tau1["iJeB"] * V["pBiJ"];
-
             W["jm"] += 0.5 * sigma3_xi3["ia"] * V["amij"];
             W["jm"] += 0.5 * sigma3_xi3["IA"] * V["mAjI"];
             W["jm"] += 0.5 * sigma3_xi3["ia"] * V["ajim"];
             W["jm"] += 0.5 * sigma3_xi3["IA"] * V["jAmI"];
-            W["im"] +=       Tau1["mjab"] * V["abij"];
-            W["im"] += 2.0 * Tau1["mJaB"] * V["aBiJ"];
-
             W["zw"] += 0.5 * sigma3_xi3["ia"] * Gamma1_["wv"] * V["aziv"];
             W["zw"] += 0.5 * sigma3_xi3["IA"] * Gamma1_["wv"] * V["zAvI"];
             W["zw"] += 0.5 * sigma3_xi3["ia"] * Gamma1_["uw"] * V["auiz"];
             W["zw"] += 0.5 * sigma3_xi3["IA"] * Gamma1_["uw"] * V["uAzI"];
-            W["zw"] +=       Tau1["ijwb"] * V["zbij"];
-            W["zw"] += 2.0 * Tau1["iJwB"] * V["zBiJ"];
-            W["zw"] +=       Tau1["wjab"] * V["abzj"];
-            W["zw"] += 2.0 * Tau1["wJaB"] * V["aBzJ"];
         }
-        BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
-        temp["klcd"] += Kappa["klcd"] * Eeps2_p["klcd"];
-        if (eri_df_) {
-            W["pe"] += 2.0 * temp["kled"] * B["gpk"] * B["gdl"];
-            W["im"] += 2.0 * temp["mlcd"] * B["gci"] * B["gdl"];
-            W["zw"] += 2.0 * temp["klwd"] * B["gzk"] * B["gdl"];
-            W["zw"] += 2.0 * temp["wlcd"] * B["gcz"] * B["gdl"];
-        } else {
-            W["pe"] += temp["kled"] * V["pdkl"];
-            W["im"] += temp["mlcd"] * V["cdil"];
-            W["zw"] += temp["klwd"] * V["zdkl"];
-            W["zw"] += temp["wlcd"] * V["cdzl"];
-        }
-        temp = BTF_->build(CoreTensor, "temporal tensor", {"hHpP"}, true);
-        temp["kLcD"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
-        if (eri_df_) {
-            W["pe"] += 2.0 * temp["kLeD"] * B["gpk"] * B["gDL"];
-            W["im"] += 2.0 * temp["mLcD"] * B["gci"] * B["gDL"];
-            W["zw"] += 2.0 * temp["kLwD"] * B["gzk"] * B["gDL"];
-            W["zw"] += 2.0 * temp["wLcD"] * B["gcz"] * B["gDL"];
-        } else {
-            W["pe"] += 2.0 * temp["kLeD"] * V["pDkL"];
-            W["im"] += 2.0 * temp["mLcD"] * V["cDiL"];
-            W["zw"] += 2.0 * temp["kLwD"] * V["zDkL"];
-            W["zw"] += 2.0 * temp["wLcD"] * V["cDzL"];
+        // contracted with temporal tensors
+        {
+            BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
+            temp["klcd"] += Kappa["klcd"] * Eeps2_p["klcd"];
+            if (eri_df_) {
+                W["pe"] += 2.0 * temp["kled"] * B["gpk"] * B["gdl"];
+                W["im"] += 2.0 * temp["mlcd"] * B["gci"] * B["gdl"];
+                W["zw"] += 2.0 * temp["klwd"] * B["gzk"] * B["gdl"];
+                W["zw"] += 2.0 * temp["wlcd"] * B["gcz"] * B["gdl"];
+            } else {
+                W["pe"] += temp["kled"] * V["pdkl"];
+                W["im"] += temp["mlcd"] * V["cdil"];
+                W["zw"] += temp["klwd"] * V["zdkl"];
+                W["zw"] += temp["wlcd"] * V["cdzl"];
+            }
+            temp = BTF_->build(CoreTensor, "temporal tensor", {"hHpP"}, true);
+            temp["kLcD"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+            if (eri_df_) {
+                W["pe"] += 2.0 * temp["kLeD"] * B["gpk"] * B["gDL"];
+                W["im"] += 2.0 * temp["mLcD"] * B["gci"] * B["gDL"];
+                W["zw"] += 2.0 * temp["kLwD"] * B["gzk"] * B["gDL"];
+                W["zw"] += 2.0 * temp["wLcD"] * B["gcz"] * B["gDL"];
+            } else {
+                W["pe"] += 2.0 * temp["kLeD"] * V["pDkL"];
+                W["im"] += 2.0 * temp["mLcD"] * V["cDiL"];
+                W["zw"] += 2.0 * temp["kLwD"] * V["zDkL"];
+                W["zw"] += 2.0 * temp["wLcD"] * V["cDzL"];
+            }
         }
     }
     W["im"] += Z["e1,m"] * F["i,e1"];
@@ -310,6 +392,7 @@ void DSRG_MRPT2::set_w() {
 }
 
 void DSRG_MRPT2::set_z_diag() {
+    outfile->Printf("\n    Initializing Diagonal Entries of the OPDM Z ..... ");
     BlockedTensor val = BTF_->build(CoreTensor, "val", {"c", "a", "v"}, true);
     if (CORRELATION_TERM) {
         val["m"] -= sigma1_xi1_xi2["ma"] * F["ma"];
@@ -340,96 +423,81 @@ void DSRG_MRPT2::set_z_diag() {
         Z["mn"] -= 0.5 * sigma3_xi3["ma"] * F["na"];
         Z["ef"] += 0.5 * sigma3_xi3["if"] * F["ie"];
         Z["ef"] -= 0.5 * sigma3_xi3["ie"] * F["if"];
-        if (eri_df_) {
-            Z["mn"] += 2.0 * Tau1["njab"] * B["gam"] * B["gbj"];
-            Z["mn"] += 2.0 * Tau1["nJaB"] * B["gam"] * B["gBJ"];
-            Z["mn"] -= 2.0 * Tau1["mjab"] * B["gan"] * B["gbj"];
-            Z["mn"] -= 2.0 * Tau1["mJaB"] * B["gan"] * B["gBJ"];
-            Z["ef"] += 2.0 * Tau1["ijfb"] * B["gei"] * B["gbj"];
-            Z["ef"] += 2.0 * Tau1["iJfB"] * B["gei"] * B["gBJ"];
-            Z["ef"] -= 2.0 * Tau1["ijeb"] * B["gfi"] * B["gbj"];
-            Z["ef"] -= 2.0 * Tau1["iJeB"] * B["gfi"] * B["gBJ"];
+        // contracted with temp
+        {
+            if (eri_df_) {
+                BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
+                BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hhpp"}, true);
+                temp["ijab"] += 2.0 * Eeps2["ijab"] * B["gai"] * B["gbj"];
+                temp_1["ijab"] += Kappa["ijab"] * Delta2["ijab"];
+                val["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
+                val["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
+                val["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
+                val["e"] += 4.0 * s_ * temp["kled"] * temp_1["kled"];
+                val["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"];
+                val["u"] -= 4.0 * s_ * temp["ulcd"] * temp_1["ulcd"];
+                val["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"];
+                val["u"] += 4.0 * s_ * temp["klud"] * temp_1["klud"];
+                temp.zero();
+                temp["klcd"] += Kappa["klcd"] * Eeps2_p["klcd"];
+                Z["mn"] += 2.0 * temp["nlcd"] * B["gcm"] * B["gdl"];
+                Z["mn"] -= 2.0 * temp["mlcd"] * B["gcn"] * B["gdl"];
+                Z["ef"] += 2.0 * temp["klfd"] * B["gek"] * B["gdl"];
+                Z["ef"] -= 2.0 * temp["kled"] * B["gfk"] * B["gdl"];
 
-            BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
-            BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hhpp"}, true);
-            temp["ijab"] += 2.0 * Eeps2["ijab"] * B["gai"] * B["gbj"];
-            temp_1["ijab"] += Kappa["ijab"] * Delta2["ijab"];
-            val["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
-            val["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
-            val["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
-            val["e"] += 4.0 * s_ * temp["kled"] * temp_1["kled"];
-            val["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"];
-            val["u"] -= 4.0 * s_ * temp["ulcd"] * temp_1["ulcd"];
-            val["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"];
-            val["u"] += 4.0 * s_ * temp["klud"] * temp_1["klud"];
-            temp.zero();
-            temp["klcd"] += Kappa["klcd"] * Eeps2_p["klcd"];
-            Z["mn"] += 2.0 * temp["nlcd"] * B["gcm"] * B["gdl"];
-            Z["mn"] -= 2.0 * temp["mlcd"] * B["gcn"] * B["gdl"];
-            Z["ef"] += 2.0 * temp["klfd"] * B["gek"] * B["gdl"];
-            Z["ef"] -= 2.0 * temp["kled"] * B["gfk"] * B["gdl"];
-
-            temp = BTF_->build(CoreTensor, "temporal tensor", {"hHpP"}, true);
-            temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hHpP"}, true);
-            temp["iJaB"] += Eeps2["iJaB"] * B["gai"] * B["gBJ"];
-            temp_1["iJaB"] += Kappa["iJaB"] * Delta2["iJaB"];
-            val["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
-            val["m"] -= 8.0 * s_ * temp["mLcD"] * temp_1["mLcD"];
-            val["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
-            val["e"] += 8.0 * s_ * temp["kLeD"] * temp_1["kLeD"];
-            val["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"];
-            val["u"] -= 8.0 * s_ * temp["uLcD"] * temp_1["uLcD"];
-            val["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"];
-            val["u"] += 8.0 * s_ * temp["kLuD"] * temp_1["kLuD"];
-            temp.zero();
-            temp["kLcD"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
-            Z["mn"] += 2.0 * temp["nLcD"] * B["gcm"] * B["gDL"];
-            Z["mn"] -= 2.0 * temp["mLcD"] * B["gcn"] * B["gDL"];
-            Z["ef"] += 2.0 * temp["kLfD"] * B["gek"] * B["gDL"];
-            Z["ef"] -= 2.0 * temp["kLeD"] * B["gfk"] * B["gDL"];
-        } else {
-            Z["mn"] +=       Tau1["njab"] * V["abmj"];
-            Z["mn"] += 2.0 * Tau1["nJaB"] * V["aBmJ"];
-            Z["mn"] -=       Tau1["mjab"] * V["abnj"];
-            Z["mn"] -= 2.0 * Tau1["mJaB"] * V["aBnJ"];
-            Z["ef"] +=       Tau1["ijfb"] * V["ebij"];
-            Z["ef"] += 2.0 * Tau1["iJfB"] * V["eBiJ"];
-            Z["ef"] -=       Tau1["ijeb"] * V["fbij"];
-            Z["ef"] -= 2.0 * Tau1["iJeB"] * V["fBiJ"];
-
-            BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"}, true);
-            BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hhpp", "hHpP"}, true);
-            temp["ijab"] += V["abij"] * Eeps2["ijab"];
-            temp["iJaB"] += V["aBiJ"] * Eeps2["iJaB"];
-            temp_1["ijab"] += Kappa["ijab"] * Delta2["ijab"];
-            temp_1["iJaB"] += Kappa["iJaB"] * Delta2["iJaB"];
-            val["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
-            val["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
-            val["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
-            val["m"] -= 8.0 * s_ * temp["mLcD"] * temp_1["mLcD"];
-            val["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
-            val["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
-            val["e"] += 4.0 * s_ * temp["kled"] * temp_1["kled"];
-            val["e"] += 8.0 * s_ * temp["kLeD"] * temp_1["kLeD"];
-            val["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"];
-            val["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"];
-            val["u"] -= 4.0 * s_ * temp["ulcd"] * temp_1["ulcd"];
-            val["u"] -= 8.0 * s_ * temp["uLcD"] * temp_1["uLcD"];
-            val["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"];
-            val["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"];
-            val["u"] += 4.0 * s_ * temp["klud"] * temp_1["klud"];
-            val["u"] += 8.0 * s_ * temp["kLuD"] * temp_1["kLuD"];
-            temp.zero();
-            temp["klcd"] += Kappa["klcd"] * Eeps2_p["klcd"];
-            temp["kLcD"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
-            Z["mn"] +=       temp["nlcd"] * V["cdml"];
-            Z["mn"] += 2.0 * temp["nLcD"] * V["cDmL"];
-            Z["mn"] -=       temp["mlcd"] * V["cdnl"];
-            Z["mn"] -= 2.0 * temp["mLcD"] * V["cDnL"];
-            Z["ef"] +=       temp["klfd"] * V["edkl"];
-            Z["ef"] += 2.0 * temp["kLfD"] * V["eDkL"];
-            Z["ef"] -=       temp["kled"] * V["fdkl"];
-            Z["ef"] -= 2.0 * temp["kLeD"] * V["fDkL"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"hHpP"}, true);
+                temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hHpP"}, true);
+                temp["iJaB"] += Eeps2["iJaB"] * B["gai"] * B["gBJ"];
+                temp_1["iJaB"] += Kappa["iJaB"] * Delta2["iJaB"];
+                val["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
+                val["m"] -= 8.0 * s_ * temp["mLcD"] * temp_1["mLcD"];
+                val["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
+                val["e"] += 8.0 * s_ * temp["kLeD"] * temp_1["kLeD"];
+                val["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"];
+                val["u"] -= 8.0 * s_ * temp["uLcD"] * temp_1["uLcD"];
+                val["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"];
+                val["u"] += 8.0 * s_ * temp["kLuD"] * temp_1["kLuD"];
+                temp.zero();
+                temp["kLcD"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+                Z["mn"] += 2.0 * temp["nLcD"] * B["gcm"] * B["gDL"];
+                Z["mn"] -= 2.0 * temp["mLcD"] * B["gcn"] * B["gDL"];
+                Z["ef"] += 2.0 * temp["kLfD"] * B["gek"] * B["gDL"];
+                Z["ef"] -= 2.0 * temp["kLeD"] * B["gfk"] * B["gDL"];
+            } else {
+                BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"}, true);
+                BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hhpp", "hHpP"}, true);
+                temp["ijab"] += V["abij"] * Eeps2["ijab"];
+                temp["iJaB"] += V["aBiJ"] * Eeps2["iJaB"];
+                temp_1["ijab"] += Kappa["ijab"] * Delta2["ijab"];
+                temp_1["iJaB"] += Kappa["iJaB"] * Delta2["iJaB"];
+                val["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
+                val["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
+                val["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
+                val["m"] -= 8.0 * s_ * temp["mLcD"] * temp_1["mLcD"];
+                val["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
+                val["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
+                val["e"] += 4.0 * s_ * temp["kled"] * temp_1["kled"];
+                val["e"] += 8.0 * s_ * temp["kLeD"] * temp_1["kLeD"];
+                val["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"];
+                val["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"];
+                val["u"] -= 4.0 * s_ * temp["ulcd"] * temp_1["ulcd"];
+                val["u"] -= 8.0 * s_ * temp["uLcD"] * temp_1["uLcD"];
+                val["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"];
+                val["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"];
+                val["u"] += 4.0 * s_ * temp["klud"] * temp_1["klud"];
+                val["u"] += 8.0 * s_ * temp["kLuD"] * temp_1["kLuD"];
+                temp.zero();
+                temp["klcd"] += Kappa["klcd"] * Eeps2_p["klcd"];
+                temp["kLcD"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+                Z["mn"] +=       temp["nlcd"] * V["cdml"];
+                Z["mn"] += 2.0 * temp["nLcD"] * V["cDmL"];
+                Z["mn"] -=       temp["mlcd"] * V["cdnl"];
+                Z["mn"] -= 2.0 * temp["mLcD"] * V["cDnL"];
+                Z["ef"] +=       temp["klfd"] * V["edkl"];
+                Z["ef"] += 2.0 * temp["kLfD"] * V["eDkL"];
+                Z["ef"] -=       temp["kled"] * V["fdkl"];
+                Z["ef"] -= 2.0 * temp["kLeD"] * V["fDkL"];
+            }
         }
     }
 
@@ -463,6 +531,7 @@ void DSRG_MRPT2::set_z_diag() {
     for (const std::string& block : blocklabels) {
         Z.block(capital_blocks[block])("pq") = Z.block(block)("pq");
     }
+    outfile->Printf("Done");
 }
 
 double f_norm(std::vector<double> const& vec) {
