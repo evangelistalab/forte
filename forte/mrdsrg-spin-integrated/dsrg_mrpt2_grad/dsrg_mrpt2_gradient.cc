@@ -35,7 +35,6 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
         write_2rdm_spin_dependent();
         tpdm_backtransform();
     }
-
     outfile->Printf("\n    Computing Gradient .............................. Done\n");
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }

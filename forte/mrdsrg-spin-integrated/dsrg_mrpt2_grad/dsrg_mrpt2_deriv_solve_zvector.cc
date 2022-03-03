@@ -40,7 +40,7 @@ void DSRG_MRPT2::set_zvec_moinfo() {
 }
 
 void DSRG_MRPT2::pre_contract() {
-    temp_z = BTF_->build(CoreTensor, "temporal matrix Z{aa} for symmetrization", spin_cases({"aa"}), true);
+    temp_z = BTF_->build(CoreTensor, "temporal matrix Z{aa} for symmetrization", spin_cases({"aa"}));
     temp_z["wz"] += 0.5 * sigma3_xi3["za"] * F["wa"];
     temp_z["wz"] += 0.5 * sigma3_xi3["iz"] * F["iw"];
     // contracted with Tau * [1 - e^(-s * Delta^2)]
@@ -426,6 +426,11 @@ void DSRG_MRPT2::set_z_diag() {
         // contracted with temp
         {
             if (eri_df_) {
+                BlockedTensor Eeps2 = BTF_->build(CoreTensor, "e^[-s*(Delta2)^2]", {"hhpp"}, true);
+                Eeps2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                                  double& value) {
+                    value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                });
                 BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
                 BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hhpp"}, true);
                 temp["ijab"] += 2.0 * Eeps2["ijab"] * B["gai"] * B["gbj"];
@@ -445,6 +450,11 @@ void DSRG_MRPT2::set_z_diag() {
                 Z["ef"] += 2.0 * temp["klfd"] * B["gek"] * B["gdl"];
                 Z["ef"] -= 2.0 * temp["kled"] * B["gfk"] * B["gdl"];
 
+                Eeps2 = BTF_->build(CoreTensor, "e^[-s*(Delta2)^2]", {"hHpP"}, true);
+                Eeps2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                                  double& value) {
+                    value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                });
                 temp = BTF_->build(CoreTensor, "temporal tensor", {"hHpP"}, true);
                 temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hHpP"}, true);
                 temp["iJaB"] += Eeps2["iJaB"] * B["gai"] * B["gBJ"];
@@ -464,6 +474,11 @@ void DSRG_MRPT2::set_z_diag() {
                 Z["ef"] += 2.0 * temp["kLfD"] * B["gek"] * B["gDL"];
                 Z["ef"] -= 2.0 * temp["kLeD"] * B["gfk"] * B["gDL"];
             } else {
+                BlockedTensor Eeps2 = BTF_->build(CoreTensor, "e^[-s*(Delta2)^2]", {"hhpp", "hHpP"}, true);
+                Eeps2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                                  double& value) {
+                    value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                });
                 BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"}, true);
                 BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hhpp", "hHpP"}, true);
                 temp["ijab"] += V["abij"] * Eeps2["ijab"];

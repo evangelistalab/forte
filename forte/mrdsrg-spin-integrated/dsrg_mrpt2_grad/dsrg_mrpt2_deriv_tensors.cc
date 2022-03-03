@@ -98,7 +98,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
     Eeps1 = BTF_->build(CoreTensor, "e^[-s*(Delta1)^2]", spin_cases({"hp"}));
     Eeps1_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)", spin_cases({"hp"}));
     Eeps1_m2 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)^2", spin_cases({"hp"}));
-    Eeps2 = BTF_->build(CoreTensor, "e^[-s*(Delta2)^2]", spin_cases({"hhpp"}));
     Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", spin_cases({"hhpp"}));
     Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", spin_cases({"hhpp"}));
     Eeps2_m2 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)^2", spin_cases({"hhpp"}));
@@ -134,19 +133,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
                 value = Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]];
             }
         });
-    Eeps2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                      double& value) {
-        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
-            value =
-                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-        } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
-            value =
-                dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-        } else {
-            value =
-                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-        }
-    });
     Eeps2_p.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
