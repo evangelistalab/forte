@@ -402,8 +402,15 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         temp["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
         temp["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
 
-        temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
-        temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+        {
+            BlockedTensor Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp", "hHpP"}, true);
+            Eeps2_p.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            });
+            temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
+            temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+        }
     }
 
     temp["xynv"] -= Z["un"] * Gamma2_["uvxy"];
@@ -497,8 +504,22 @@ void DSRG_MRPT2::write_df_rdm() {
             dvabij["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
             dvabij["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
 
-            dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
-            dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+            {
+                BlockedTensor Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp"}, true);
+                Eeps2_p.iterate(
+                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                    value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                });
+                dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
+            }
+            {
+                BlockedTensor Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hHpP"}, true);
+                Eeps2_p.iterate(
+                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                    value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                });
+                dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+            }
         }
         // CASSCF reference
         dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];

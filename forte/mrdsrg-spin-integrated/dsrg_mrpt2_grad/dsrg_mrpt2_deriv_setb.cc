@@ -77,59 +77,6 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             Z_b["mw"] -= 0.5 * sigma3_xi3["ia"] * V["awim"];
             Z_b["mw"] -= 0.5 * sigma3_xi3["IA"] * V["wAmI"];
         }
-        // contracted with temporal tensors
-        {
-            BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
-            temp["klcd"] += Kappa["klcd"] * Eeps2_p["klcd"];
-            if (eri_df_) {
-                Z_b["em"] += 2.0 * temp["mlcd"] * B["gce"] * B["gdl"];
-                Z_b["em"] -= 2.0 * temp["kled"] * B["gmk"] * B["gdl"];
-                temp_z["wz"] += 2.0 * temp["klzd"] * B["gwk"] * B["gdl"];
-                temp_z["wz"] += 2.0 * temp["zlcd"] * B["gcw"] * B["gdl"];
-                Z_b["ew"] += 2.0 * temp["klwd"] * B["gek"] * B["gdl"];
-                Z_b["ew"] += 2.0 * temp["wlcd"] * B["gce"] * B["gdl"];
-                Z_b["ew"] -= 2.0 * temp["kled"] * B["gwk"] * B["gdl"];
-                Z_b["mw"] += 2.0 * temp["klwd"] * B["gmk"] * B["gdl"];
-                Z_b["mw"] += 2.0 * temp["wlcd"] * B["gcm"] * B["gdl"];
-                Z_b["mw"] -= 2.0 * temp["mlcd"] * B["gcw"] * B["gdl"];
-            } else {
-                Z_b["em"] += temp["mlcd"] * V["cdel"];
-                Z_b["em"] -= temp["kled"] * V["mdkl"];
-                temp_z["wz"] += temp["klzd"] * V["wdkl"];
-                temp_z["wz"] += temp["zlcd"] * V["cdwl"];
-                Z_b["ew"] += temp["klwd"] * V["edkl"];
-                Z_b["ew"] += temp["wlcd"] * V["cdel"];
-                Z_b["ew"] -= temp["kled"] * V["wdkl"];
-                Z_b["mw"] += temp["klwd"] * V["mdkl"];
-                Z_b["mw"] += temp["wlcd"] * V["cdml"];
-                Z_b["mw"] -= temp["mlcd"] * V["cdwl"];
-            }
-            temp = BTF_->build(CoreTensor, "temporal tensor", {"hHpP"}, true);
-            temp["kLcD"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
-            if (eri_df_) {
-                Z_b["em"] += 2.0 * temp["mLcD"] * B["gce"] * B["gDL"];
-                Z_b["em"] -= 2.0 * temp["kLeD"] * B["gmk"] * B["gDL"];
-                temp_z["wz"] += 2.0 * temp["kLzD"] * B["gwk"] * B["gDL"];
-                temp_z["wz"] += 2.0 * temp["zLcD"] * B["gcw"] * B["gDL"];
-                Z_b["ew"] += 2.0 * temp["kLwD"] * B["gek"] * B["gDL"];
-                Z_b["ew"] += 2.0 * temp["wLcD"] * B["gce"] * B["gDL"];
-                Z_b["ew"] -= 2.0 * temp["kLeD"] * B["gwk"] * B["gDL"];
-                Z_b["mw"] += 2.0 * temp["kLwD"] * B["gmk"] * B["gDL"];
-                Z_b["mw"] += 2.0 * temp["wLcD"] * B["gcm"] * B["gDL"];
-                Z_b["mw"] -= 2.0 * temp["mLcD"] * B["gcw"] * B["gDL"];
-            } else {
-                Z_b["em"] += 2.0 * temp["mLcD"] * V["cDeL"];
-                Z_b["em"] -= 2.0 * temp["kLeD"] * V["mDkL"];
-                temp_z["wz"] += 2.0 * temp["kLzD"] * V["wDkL"];
-                temp_z["wz"] += 2.0 * temp["zLcD"] * V["cDwL"];
-                Z_b["ew"] += 2.0 * temp["kLwD"] * V["eDkL"];
-                Z_b["ew"] += 2.0 * temp["wLcD"] * V["cDeL"];
-                Z_b["ew"] -= 2.0 * temp["kLeD"] * V["wDkL"];
-                Z_b["mw"] += 2.0 * temp["kLwD"] * V["mDkL"];
-                Z_b["mw"] += 2.0 * temp["wLcD"] * V["cDmL"];
-                Z_b["mw"] -= 2.0 * temp["mLcD"] * V["cDwL"];
-            }
-        }
     }
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"gg"}, true);
     BlockedTensor temp3 = BTF_->build(CoreTensor, "Z{active-active} diagonal components", {"aa", "AA"}, true);
