@@ -47,6 +47,11 @@ void DSRG_MRPT2::pre_contract() {
         temp_z["wz"] += 0.5 * sigma3_xi3["iz"] * F["iw"];
         BlockedTensor Tau_tilde = BTF_->build(CoreTensor, "Tau_tilde", {"hhpp"}, true);
         {
+            BlockedTensor Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hhpp"}, true);
+            Eeps2_m1.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            });
             Tau_tilde["ijab"] = Tau2["ijab"] * Eeps2_m1["ijab"];
         }
         if (eri_df_) {
@@ -94,6 +99,11 @@ void DSRG_MRPT2::pre_contract() {
         }
         Tau_tilde = BTF_->build(CoreTensor, "Tau_tilde", {"hHpP"}, true);
         {
+            BlockedTensor Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hHpP"}, true);
+            Eeps2_m1.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            });
             Tau_tilde["iJaB"] = Tau2["iJaB"] * Eeps2_m1["iJaB"];
         }
         if (eri_df_) {

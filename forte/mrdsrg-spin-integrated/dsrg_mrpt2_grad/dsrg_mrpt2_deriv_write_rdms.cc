@@ -399,9 +399,15 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph", "phPH"}, true);
 
     if (CORRELATION_TERM) {
-        temp["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
-        temp["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
-
+        {
+            BlockedTensor Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hhpp", "hHpP"}, true);
+            Eeps2_m1.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            });
+            temp["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
+            temp["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
+        }
         {
             BlockedTensor Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp", "hHpP"}, true);
             Eeps2_p.iterate(
@@ -501,9 +507,22 @@ void DSRG_MRPT2::write_df_rdm() {
         BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"}, true);
 
         if (CORRELATION_TERM) {
-            dvabij["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
-            dvabij["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
-
+            {
+                BlockedTensor Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hhpp"}, true);
+                Eeps2_m1.iterate(
+                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                    value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                });
+                dvabij["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
+            }
+            {
+                BlockedTensor Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hHpP"}, true);
+                Eeps2_m1.iterate(
+                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                    value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                });
+                dvabij["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
+            }
             {
                 BlockedTensor Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp"}, true);
                 Eeps2_p.iterate(
