@@ -159,7 +159,7 @@ void DSRG_MRPT2::pre_contract() {
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
                 value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
             });
-            temp["klcd"] += Kappa["klcd"] * Eeps2_p["klcd"];
+            temp["klcd"] = Kappa["klcd"] * Eeps2_p["klcd"];
         }
         if (eri_df_) {
             W["pe"] += 2.0 * temp["kled"] * B["gpk"] * B["gdl"];
@@ -211,7 +211,7 @@ void DSRG_MRPT2::pre_contract() {
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
                 value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
             });
-            temp["kLcD"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+            temp["kLcD"] = Kappa["kLcD"] * Eeps2_p["kLcD"];
         }
         if (eri_df_) {
             W["pe"] += 2.0 * temp["kLeD"] * B["gpk"] * B["gDL"];
@@ -513,9 +513,9 @@ void DSRG_MRPT2::set_z_diag() {
                     value = dsrg_source_->compute_regularized_denominator_derivR(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);        
                 });
                 if (eri_df_) {
-                    T2OverDelta["ijab"] += 2.0 * B["gai"] * B["gbj"] * Eeps2_m2["ijab"];
+                    T2OverDelta["ijab"] = 2.0 * B["gai"] * B["gbj"] * Eeps2_m2["ijab"];
                 } else {
-                    T2OverDelta["ijab"] += V["abij"] * Eeps2_m2["ijab"];
+                    T2OverDelta["ijab"] = V["abij"] * Eeps2_m2["ijab"];
                 }
                 val["m"] -= 2.0 * T2OverDelta["mjab"] * Tau2["mjab"];
                 val["e"] += 2.0 * T2OverDelta["ijeb"] * Tau2["ijeb"];
@@ -530,9 +530,9 @@ void DSRG_MRPT2::set_z_diag() {
                     value = dsrg_source_->compute_regularized_denominator_derivR(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);        
                 });
                 if (eri_df_) {
-                    T2OverDelta["iJaB"] += B["gai"] * B["gBJ"] * Eeps2_m2["iJaB"];
+                    T2OverDelta["iJaB"] = B["gai"] * B["gBJ"] * Eeps2_m2["iJaB"];
                 } else {
-                    T2OverDelta["iJaB"] += V["aBiJ"] * Eeps2_m2["iJaB"];
+                    T2OverDelta["iJaB"] = V["aBiJ"] * Eeps2_m2["iJaB"];
                 }
                 val["m"] -= 4.0 * T2OverDelta["mJaB"] * Tau2["mJaB"];
                 val["e"] += 4.0 * T2OverDelta["iJeB"] * Tau2["iJeB"];
