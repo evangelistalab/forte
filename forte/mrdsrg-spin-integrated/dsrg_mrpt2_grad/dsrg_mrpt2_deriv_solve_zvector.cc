@@ -590,7 +590,7 @@ void DSRG_MRPT2::set_z_diag() {
                     {
                         BlockedTensor temp2 = BTF_->build(CoreTensor, "temp2", {"hHpP"}, true);
                         temp2["iJaB"] = B["gai"] * B["gBJ"];
-                        temp["iJaB"] += 2.0 * Eeps2["iJaB"] * temp2["iJaB"];
+                        temp["iJaB"] += Eeps2["iJaB"] * temp2["iJaB"];
                     }
                     BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hHpP"}, true);
                     temp_1["iJaB"] += Kappa["iJaB"] * Delta2["iJaB"];
