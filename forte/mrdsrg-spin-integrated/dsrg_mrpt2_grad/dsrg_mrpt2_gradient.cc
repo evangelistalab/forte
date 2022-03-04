@@ -24,7 +24,6 @@ namespace forte {
 SharedMatrix DSRG_MRPT2::compute_gradient() {
     // NOTICE: compute the DSRG_MRPT2 gradient
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
-    BTF_->print_memory_info();// for test only
     set_global_variables();
     set_tensor();
     set_multiplier();

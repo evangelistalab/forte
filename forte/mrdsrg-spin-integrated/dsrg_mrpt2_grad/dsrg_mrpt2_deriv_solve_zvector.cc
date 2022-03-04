@@ -513,7 +513,9 @@ void DSRG_MRPT2::set_z_diag() {
                     value = dsrg_source_->compute_regularized_denominator_derivR(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);        
                 });
                 if (eri_df_) {
-                    T2OverDelta["ijab"] = 2.0 * B["gai"] * B["gbj"] * Eeps2_m2["ijab"];
+                    BlockedTensor temp1 = BTF_->build(CoreTensor, "temp1", {"pphh"}, true);
+                    temp1["abij"] = B["gai"] * B["gbj"];
+                    T2OverDelta["ijab"] = 2.0 * temp1["abij"] * Eeps2_m2["ijab"];
                 } else {
                     T2OverDelta["ijab"] = V["abij"] * Eeps2_m2["ijab"];
                 }
@@ -530,7 +532,9 @@ void DSRG_MRPT2::set_z_diag() {
                     value = dsrg_source_->compute_regularized_denominator_derivR(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);        
                 });
                 if (eri_df_) {
-                    T2OverDelta["iJaB"] = B["gai"] * B["gBJ"] * Eeps2_m2["iJaB"];
+                    BlockedTensor temp1 = BTF_->build(CoreTensor, "temp1", {"pPhH"}, true);
+                    temp1["aBiJ"] = B["gai"] * B["gBJ"];
+                    T2OverDelta["iJaB"] = temp1["aBiJ"] * Eeps2_m2["iJaB"];
                 } else {
                     T2OverDelta["iJaB"] = V["aBiJ"] * Eeps2_m2["iJaB"];
                 }
@@ -555,8 +559,12 @@ void DSRG_MRPT2::set_z_diag() {
                             value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];
                     });
                     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
+                    {
+                        BlockedTensor temp2 = BTF_->build(CoreTensor, "temp2", {"hhpp"}, true);
+                        temp2["ijab"] = B["gai"] * B["gbj"];
+                        temp["ijab"] += 2.0 * Eeps2["ijab"] * temp2["ijab"];
+                    }
                     BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hhpp"}, true);
-                    temp["ijab"] += 2.0 * Eeps2["ijab"] * B["gai"] * B["gbj"];
                     temp_1["ijab"] += Kappa["ijab"] * Delta2["ijab"];
                     val["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
                     val["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
@@ -579,8 +587,12 @@ void DSRG_MRPT2::set_z_diag() {
                             value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];
                     });
                     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hHpP"}, true);
+                    {
+                        BlockedTensor temp2 = BTF_->build(CoreTensor, "temp2", {"hHpP"}, true);
+                        temp2["iJaB"] = B["gai"] * B["gBJ"];
+                        temp["iJaB"] += 2.0 * Eeps2["iJaB"] * temp2["iJaB"];
+                    }
                     BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hHpP"}, true);
-                    temp["iJaB"] += Eeps2["iJaB"] * B["gai"] * B["gBJ"];
                     temp_1["iJaB"] += Kappa["iJaB"] * Delta2["iJaB"];
                     val["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
                     val["m"] -= 8.0 * s_ * temp["mLcD"] * temp_1["mLcD"];
