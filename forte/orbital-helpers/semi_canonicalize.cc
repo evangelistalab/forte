@@ -256,6 +256,7 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
 
     if (semi) {
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
+        Ua_->print();
         return;
     }
 

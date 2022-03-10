@@ -231,6 +231,8 @@ class RDMs {
     void _test_rdm_dims(const ambit::Tensor& T, const std::string& name) const;
     /// Test if a function is asked for the correct level of RDMs
     void _test_rdm_level(const size_t& level, const std::string& name) const;
+    /// Bypass RDMs rotation because Ua and Ub are identity matrices
+    bool _bypass_rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) const;
 };
 
 class RDMsSpinDependent : public RDMs {

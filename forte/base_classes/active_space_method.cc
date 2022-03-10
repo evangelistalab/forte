@@ -86,10 +86,10 @@ void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
 
 std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
     const std::vector<std::pair<size_t, size_t>>& root_list,
-    std::shared_ptr<ActiveSpaceMethod> method2) {
+    std::shared_ptr<ActiveSpaceMethod> method2, const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
 
     // compute transition dipole moments
-    auto trans_dipoles = compute_transition_dipole_same_orbs(root_list, method2);
+    auto trans_dipoles = compute_transition_dipole_same_orbs(root_list, method2, Ua, Ub);
 
     const auto& state2 = method2->state();
     std::string title = state_.str_minimum() + " -> " + state2.str_minimum();
@@ -147,7 +147,7 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
 
 std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_same_orbs(
     const std::vector<std::pair<size_t, size_t>>& root_list,
-    std::shared_ptr<ActiveSpaceMethod> method2) {
+    std::shared_ptr<ActiveSpaceMethod> method2, const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
 
     const auto& state2 = method2->state();
     std::string title = state_.str_minimum() + " -> " + state2.str_minimum();
@@ -186,6 +186,7 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         auto root2 = root_list[i].second;
 
         std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
+        rdms[i]->rotate(Ua, Ub); // need to make 1-TRDM and dipole in the same orbital basis
         auto Dt = rdms[i]->SF_G1();
 
         std::vector<double> dipole(4, 0.0);
@@ -268,7 +269,8 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else if (type == "DMRG") {
 #ifdef HAVE_CHEMPS2
-        method = std::make_unique<DMRGSolver>(state, nroot, scf_info, options, mo_space_info, as_ints);
+        method =
+            std::make_unique<DMRGSolver>(state, nroot, scf_info, options, mo_space_info, as_ints);
 #else
         throw std::runtime_error("DMRG is not available! Please compile with ENABLE_CHEMPS2=ON.");
 #endif

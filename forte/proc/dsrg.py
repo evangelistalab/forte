@@ -219,6 +219,7 @@ class ProcedureDSRG:
 
             # Solve active space using dressed integrals
             self.active_space_solver.set_active_space_integrals(ints_dressed)
+            self.active_space_solver.set_Uactv(self.Ua, self.Ub)
             state_energies_list = self.active_space_solver.compute_energy()
 
             # Reorder weights if needed

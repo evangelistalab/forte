@@ -144,6 +144,12 @@ class ActiveSpaceSolver {
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
+    /// Set the orbital rotation matrix for RDMs
+    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
+        Ua_actv_ = Ua;
+        Ub_actv_ = Ub;
+    }
+
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
@@ -198,6 +204,10 @@ class ActiveSpaceSolver {
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
+
+    /// Unitary matrix for orbital rotations
+    ambit::Tensor Ua_actv_;
+    ambit::Tensor Ub_actv_;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

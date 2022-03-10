@@ -62,6 +62,16 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
+
+    auto nactv = mo_space_info_->size("ACTIVE");
+    Ua_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nactv, nactv});
+    Ub_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nactv, nactv});
+    auto& Ua_data = Ua_actv_.data();
+    auto& Ub_data = Ub_actv_.data();
+    for (size_t i = 0; i < nactv; ++i) {
+        Ua_data[i * nactv + i] = 1.0;
+        Ub_data[i * nactv + i] = 1.0;
+    }
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -209,7 +219,7 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
                 continue;
 
             // compute oscillator strength
-            method1->compute_oscillator_strength_same_orbs(state_ids, method2);
+            method1->compute_oscillator_strength_same_orbs(state_ids, method2, Ua_actv_, Ub_actv_);
         }
     }
 }
