@@ -17,7 +17,7 @@ H  0.34    0.45     -0.11
 }
 
 set {
-  basis                 cc-pvdz
+  basis                 cc-pcvdz
   reference             rhf
   scf_type              df
   e_convergence         10

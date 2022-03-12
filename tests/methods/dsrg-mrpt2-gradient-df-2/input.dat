@@ -1,8 +1,8 @@
 # DF-DSRG-MRPT2 gradient on HF with c2v symmetry
 import forte
 ref_grad = psi4.Matrix.from_list([
-       [0.000000000000,     0.000000000000,     0.016772937469],
-       [0.000000000000,     0.000000000000,    -0.016772937469]
+       [0.000000000000,     0.000000000000,     0.016574554507],
+       [0.000000000000,     0.000000000000,    -0.016574554507]
        ])
 
 molecule {
@@ -12,7 +12,7 @@ F 1 0.9
 }
 
 set {
-  basis                cc-pvdz
+  basis                cc-pcvdz
   reference            rhf
   scf_type             df
   e_convergence        10

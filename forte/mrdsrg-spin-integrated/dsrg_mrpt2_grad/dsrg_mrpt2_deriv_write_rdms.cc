@@ -11,6 +11,9 @@
 #include "gradient_tpdm/backtransform_tpdm.h"
 #include "psi4/lib3index/3index.h"
 #include "psi4/libmints/mintshelper.h"
+#include "base_classes/mo_space_info.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/vector.h"
 
 using namespace ambit;
 using namespace psi;
@@ -60,121 +63,82 @@ void DSRG_MRPT2::write_lagrangian() {
 void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // NOTICE: write spin_dependent one-RDMs coefficients.
     outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
+
+    auto blocklabel = {"cc", "aa", "vv", "ca", "ac", "av", "va", "vc", "cv"};
+    std::map<char, std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>> idxmap_re;
+    idxmap_re = {{'c', core_mos_relative},
+              {'a', actv_mos_relative},
+              {'v', virt_mos_relative}};
     SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep, irrep_vec, irrep_vec));
+    BlockedTensor D1_temp = BTF_->build(CoreTensor, "D1_temp", {"gg"}, true);
 
-    (Z.block("vc")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (virt_mos_relative[i[0]].first == core_mos_relative[i[1]].first) {
-            D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
-                    core_mos_relative[i[1]].second, value);
-            D1->set(virt_mos_relative[i[0]].first, core_mos_relative[i[1]].second,
-                    virt_mos_relative[i[0]].second, value);
-        }
-    });
-
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"ca"}, true);
-    temp["nu"] = Z["un"];
-    temp["nv"] -= Z["un"] * Gamma1_["uv"];
-
-    (temp.block("ca")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (core_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
-            D1->set(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                    actv_mos_relative[i[1]].second, value);
-            D1->set(core_mos_relative[i[0]].first, actv_mos_relative[i[1]].second,
-                    core_mos_relative[i[0]].second, value);
-        }
-    });
-
-    temp = BTF_->build(CoreTensor, "temporal tensor", {"va"}, true);
-    temp["ev"] = Z["eu"] * Gamma1_["uv"];
-
-    (temp.block("va")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (virt_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
-            D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
-                    actv_mos_relative[i[1]].second, value);
-            D1->set(virt_mos_relative[i[0]].first, actv_mos_relative[i[1]].second,
-                    virt_mos_relative[i[0]].second, value);
-        }
-    });
-
-    (Z.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (core_mos_relative[i[0]].first == core_mos_relative[i[1]].first) {
-            D1->set(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                    core_mos_relative[i[1]].second, value);
-        }
-    });
-
-    (Z.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
-            D1->set(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
-                    actv_mos_relative[i[1]].second, value);
-        }
-    });
-
-    (Z.block("vv")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (virt_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
-            D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
-                    virt_mos_relative[i[1]].second, value);
-        }
-    });
-
-    // <[F, T2]> and <[V, T1]>
-    (sigma3_xi3.block("ca")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (core_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
-            D1->add(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                    actv_mos_relative[i[1]].second, 0.5 * value);
-            D1->add(core_mos_relative[i[0]].first, actv_mos_relative[i[1]].second,
-                    core_mos_relative[i[0]].second, 0.5 * value);
-        }
-    });
-
-    (sigma3_xi3.block("cv")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (core_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
-            D1->add(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                    virt_mos_relative[i[1]].second, 0.5 * value);
-            D1->add(core_mos_relative[i[0]].first, virt_mos_relative[i[1]].second,
-                    core_mos_relative[i[0]].second, 0.5 * value);
-        }
-    });
-
-    (sigma3_xi3.block("av")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (actv_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
-            D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
-                    virt_mos_relative[i[1]].second, 0.5 * value);
-            D1->add(actv_mos_relative[i[0]].first, virt_mos_relative[i[1]].second,
-                    actv_mos_relative[i[0]].second, 0.5 * value);
-        }
-    });
-
-    // CASSCF reference
-    for (size_t i = 0, size_c = core_mos_relative.size(); i < size_c; ++i) {
-        D1->add(core_mos_relative[i].first, core_mos_relative[i].second,
-                core_mos_relative[i].second, 1.0);
+    D1_temp["em"] += Z["em"];
+    D1_temp["em"] += 0.5 * sigma3_xi3["me"];
+    D1_temp["me"] += Z["em"];
+    D1_temp["me"] += 0.5 * sigma3_xi3["me"];
+    D1_temp["nu"] += Z["un"];
+    D1_temp["nu"] += 0.5 * sigma3_xi3["nu"];
+    D1_temp["nv"] -= Z["un"] * Gamma1_["uv"];
+    D1_temp["un"] += Z["un"];
+    D1_temp["un"] += 0.5 * sigma3_xi3["nu"];
+    D1_temp["vn"] -= Z["un"] * Gamma1_["uv"];
+    D1_temp["ev"] += Z["eu"] * Gamma1_["uv"];
+    D1_temp["ev"] += 0.5 * sigma3_xi3["ve"];
+    D1_temp["ve"] += Z["eu"] * Gamma1_["uv"];
+    D1_temp["ve"] += 0.5 * sigma3_xi3["ve"];
+    D1_temp["mn"] += I["mn"];
+    D1_temp["mn"] += Z["mn"];
+    D1_temp["uv"] += Gamma1_["uv"];
+    D1_temp["uv"] += 0.5 * Gamma1_tilde["uv"];
+    D1_temp["uv"] += Z["uv"];
+    D1_temp["ef"] += Z["ef"];
+    for (const std::string& block : blocklabel) {
+        auto label1 = block[0];
+        auto label2 = block[1];
+        (D1_temp.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (idxmap_re[label1][i[0]].first == idxmap_re[label2][i[1]].first) {
+                D1->add(idxmap_re[label1][i[0]].first, idxmap_re[label1][i[0]].second,
+                        idxmap_re[label2][i[1]].second, value);
+            }
+        });
     }
-
-    (Gamma1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
-            D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
-                    actv_mos_relative[i[1]].second, value);
-        }
-    });
-
-    // CI contribution
-    auto tp = ambit::Tensor::build(ambit::CoreTensor, "temporal tensor", {na, na});
-
-    tp("uv") = 0.5 * Gamma1_tilde.block("aa")("uv");
-
-    (tp).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
-            D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
-                    actv_mos_relative[i[1]].second, value);
-        }
-    });
-
     D1->back_transform(ints_->Ca());
     ints_->wfn()->Da()->copy(D1);
     ints_->wfn()->Db()->copy(D1);
-
     outfile->Printf("Done");
+
+    // DSRG-MRPT2 dipole moment
+    auto mo_dipole_ints = ints_->mo_dipole_ints(true, true); // just take alpha spin
+    std::map<char, std::vector<size_t>> idxmap_abs;
+    idxmap_abs = {{'c', core_all},
+                  {'a', actv_all},
+                  {'v', virt_all}};
+    std::vector<double> dipole(4, 0.0);
+    Vector3 dm_nuc =
+        psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+
+    for (int i = 0; i < 3; ++i) {
+        auto dm_ints = mo_dipole_ints[i];
+        BlockedTensor dipole_ints = BTF_->build(CoreTensor, "dipole_ints", {"gg"}, true);
+        for (const std::string& block : blocklabel) {
+            auto label1 = block[0];
+            auto label2 = block[1];
+            (dipole_ints.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+                value = dm_ints->get(idxmap_abs[label1][i[0]], idxmap_abs[label2][i[1]]);
+            });
+        }
+        dipole[i] = 2.0 * D1_temp["pq"] * dipole_ints["pq"];
+        dipole[i] += dm_nuc[i];
+        dipole[3] += dipole[i] * dipole[i];
+    }
+    dipole[3] = std::sqrt(dipole[3]);
+    if (eri_df_) {
+        outfile->Printf("\n\n    DF-DSRG-MRPT2 dipole moment:");
+    } else {
+        outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
+    }
+    outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", dipole[0], dipole[1], dipole[2], dipole[3]);
 }
 
 void DSRG_MRPT2::write_2rdm_spin_dependent() {
