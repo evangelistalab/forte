@@ -138,7 +138,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     } else {
         outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     }
-    outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", dipole[0], dipole[1], dipole[2], dipole[3]);
+    outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total Dipole Moment: %10.6f\n", dipole[0], dipole[1], dipole[2], dipole[3]);
 }
 
 void DSRG_MRPT2::write_2rdm_spin_dependent() {
