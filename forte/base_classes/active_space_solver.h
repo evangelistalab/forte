@@ -84,6 +84,9 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
+    /// Compute permanent dipole moments
+    void compute_dipole_moment();
+
     /// Compute the oscillator strengths assuming same orbitals
     void compute_fosc_same_orbs();
 
