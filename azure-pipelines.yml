@@ -27,7 +27,7 @@ jobs:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.7'
+        PYTHON_VER: '3.8'
         BUILD_TYPE: 'RelWithDebInfo'
         PSI_BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 128
