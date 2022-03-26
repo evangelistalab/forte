@@ -1442,10 +1442,11 @@ void DSRG_MRPT2::print_dm_pt2() {
     outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
 
-    psi::Process::environment.globals["UNRELAXED DIPOLE X"] = x;
-    psi::Process::environment.globals["UNRELAXED DIPOLE Y"] = y;
-    psi::Process::environment.globals["UNRELAXED DIPOLE Z"] = z;
-    psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
+    auto dipole_array = std::make_shared<Matrix>(1, 3);
+    dipole_array->set(0, 0, x);
+    dipole_array->set(0, 1, y);
+    dipole_array->set(0, 2, z);
+    psi::Process::environment.arrays["UNRELAXED DIPOLE"] = dipole_array;
 }
 
 void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,

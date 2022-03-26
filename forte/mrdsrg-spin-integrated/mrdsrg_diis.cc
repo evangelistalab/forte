@@ -104,90 +104,20 @@ void MRDSRG::diis_manager_init() {
                                                   DIISManager::RemovalPolicy::LargestError,
                                                   DIISManager::StoragePolicy::OnDisk);
 
-    amp_ptrs_.clear();
-    res_ptrs_.clear();
+    diis_manager_->set_error_vector_size(DT1_, DT2_);
 
-    std::vector<std::string> blocks{
-        "ca",   "cv",   "av",   "CA",   "CV",   "AV",   "ccaa", "ccav", "ccva", "ccvv", "caaa",
-        "caav", "cava", "cavv", "acaa", "acav", "acva", "acvv", "aaav", "aava", "aavv", "cCaA",
-        "cCaV", "cCvA", "cCvV", "cAaA", "cAaV", "cAvA", "cAvV", "aCaA", "aCaV", "aCvA", "aCvV",
-        "aAaV", "aAvA", "aAvV", "CCAA", "CCAV", "CCVA", "CCVV", "CAAA", "CAAV", "CAVA", "CAVV",
-        "ACAA", "ACAV", "ACVA", "ACVV", "AAAV", "AAVA", "AAVV"};
-
-    std::vector<size_t> sizes(51);
-    for (int i = 0; i < 51; ++i) {
-        auto block = blocks[i];
-        if (block.size() == 2) {
-            sizes[i] = T1_.block(block).numel();
-            amp_ptrs_.push_back(T1_.block(block).data().data());
-            res_ptrs_.push_back(DT1_.block(block).data().data());
-        } else {
-            sizes[i] = T2_.block(block).numel();
-            amp_ptrs_.push_back(T2_.block(block).data().data());
-            res_ptrs_.push_back(DT2_.block(block).data().data());
-        }
-    }
-
-    diis_manager_->set_error_vector_size(
-        sizes[0], sizes[1], sizes[2], sizes[3], sizes[4], sizes[5],
-        sizes[6], sizes[7], sizes[8], sizes[9], sizes[10], sizes[11],
-        sizes[12], sizes[13], sizes[14], sizes[15], sizes[16], sizes[17],
-        sizes[18], sizes[19], sizes[20], sizes[21], sizes[22], sizes[23],
-        sizes[24], sizes[25], sizes[26], sizes[27], sizes[28], sizes[29],
-        sizes[30], sizes[31], sizes[32], sizes[33], sizes[34], sizes[35],
-        sizes[36], sizes[37], sizes[38], sizes[39], sizes[40], sizes[41],
-        sizes[42], sizes[43], sizes[44], sizes[45], sizes[46], sizes[47],
-        sizes[48], sizes[49], sizes[50]);
-
-    diis_manager_->set_vector_size(
-        sizes[0], sizes[1], sizes[2], sizes[3], sizes[4], sizes[5],
-        sizes[6], sizes[7], sizes[8], sizes[9], sizes[10], sizes[11],
-        sizes[12], sizes[13], sizes[14], sizes[15], sizes[16], sizes[17],
-        sizes[18], sizes[19], sizes[20], sizes[21], sizes[22], sizes[23],
-        sizes[24], sizes[25], sizes[26], sizes[27], sizes[28], sizes[29],
-        sizes[30], sizes[31], sizes[32], sizes[33], sizes[34], sizes[35],
-        sizes[36], sizes[37], sizes[38], sizes[39], sizes[40], sizes[41],
-        sizes[42], sizes[43], sizes[44], sizes[45], sizes[46], sizes[47],
-        sizes[48], sizes[49], sizes[50]);
+    diis_manager_->set_vector_size(T1_, T2_);
 }
 
 void MRDSRG::diis_manager_add_entry() {
-    diis_manager_->add_entry(
-        res_ptrs_[0], res_ptrs_[1], res_ptrs_[2], res_ptrs_[3], res_ptrs_[4], res_ptrs_[5],
-        res_ptrs_[6], res_ptrs_[7], res_ptrs_[8], res_ptrs_[9], res_ptrs_[10], res_ptrs_[11],
-        res_ptrs_[12], res_ptrs_[13], res_ptrs_[14], res_ptrs_[15], res_ptrs_[16], res_ptrs_[17],
-        res_ptrs_[18], res_ptrs_[19], res_ptrs_[20], res_ptrs_[21], res_ptrs_[22], res_ptrs_[23],
-        res_ptrs_[24], res_ptrs_[25], res_ptrs_[26], res_ptrs_[27], res_ptrs_[28], res_ptrs_[29],
-        res_ptrs_[30], res_ptrs_[31], res_ptrs_[32], res_ptrs_[33], res_ptrs_[34], res_ptrs_[35],
-        res_ptrs_[36], res_ptrs_[37], res_ptrs_[38], res_ptrs_[39], res_ptrs_[40], res_ptrs_[41],
-        res_ptrs_[42], res_ptrs_[43], res_ptrs_[44], res_ptrs_[45], res_ptrs_[46], res_ptrs_[47],
-        res_ptrs_[48], res_ptrs_[49], res_ptrs_[50], amp_ptrs_[0], amp_ptrs_[1], amp_ptrs_[2],
-        amp_ptrs_[3], amp_ptrs_[4], amp_ptrs_[5], amp_ptrs_[6], amp_ptrs_[7], amp_ptrs_[8],
-        amp_ptrs_[9], amp_ptrs_[10], amp_ptrs_[11], amp_ptrs_[12], amp_ptrs_[13], amp_ptrs_[14],
-        amp_ptrs_[15], amp_ptrs_[16], amp_ptrs_[17], amp_ptrs_[18], amp_ptrs_[19], amp_ptrs_[20],
-        amp_ptrs_[21], amp_ptrs_[22], amp_ptrs_[23], amp_ptrs_[24], amp_ptrs_[25], amp_ptrs_[26],
-        amp_ptrs_[27], amp_ptrs_[28], amp_ptrs_[29], amp_ptrs_[30], amp_ptrs_[31], amp_ptrs_[32],
-        amp_ptrs_[33], amp_ptrs_[34], amp_ptrs_[35], amp_ptrs_[36], amp_ptrs_[37], amp_ptrs_[38],
-        amp_ptrs_[39], amp_ptrs_[40], amp_ptrs_[41], amp_ptrs_[42], amp_ptrs_[43], amp_ptrs_[44],
-        amp_ptrs_[45], amp_ptrs_[46], amp_ptrs_[47], amp_ptrs_[48], amp_ptrs_[49], amp_ptrs_[50]);
+    _manager_->add_entry(DT1_, DT2_, T1_, T2_);
 }
 
 void MRDSRG::diis_manager_extrapolate() {
-    diis_manager_->extrapolate(
-        amp_ptrs_[0], amp_ptrs_[1], amp_ptrs_[2], amp_ptrs_[3], amp_ptrs_[4], amp_ptrs_[5],
-        amp_ptrs_[6], amp_ptrs_[7], amp_ptrs_[8], amp_ptrs_[9], amp_ptrs_[10], amp_ptrs_[11],
-        amp_ptrs_[12], amp_ptrs_[13], amp_ptrs_[14], amp_ptrs_[15], amp_ptrs_[16], amp_ptrs_[17],
-        amp_ptrs_[18], amp_ptrs_[19], amp_ptrs_[20], amp_ptrs_[21], amp_ptrs_[22], amp_ptrs_[23],
-        amp_ptrs_[24], amp_ptrs_[25], amp_ptrs_[26], amp_ptrs_[27], amp_ptrs_[28], amp_ptrs_[29],
-        amp_ptrs_[30], amp_ptrs_[31], amp_ptrs_[32], amp_ptrs_[33], amp_ptrs_[34], amp_ptrs_[35],
-        amp_ptrs_[36], amp_ptrs_[37], amp_ptrs_[38], amp_ptrs_[39], amp_ptrs_[40], amp_ptrs_[41],
-        amp_ptrs_[42], amp_ptrs_[43], amp_ptrs_[44], amp_ptrs_[45], amp_ptrs_[46], amp_ptrs_[47],
-        amp_ptrs_[48], amp_ptrs_[49], amp_ptrs_[50]);
+    diis_manager_->extrapolate(T1_, T2_);
 }
 
 void MRDSRG::diis_manager_cleanup() {
-    amp_ptrs_.clear();
-    res_ptrs_.clear();
     diis_manager_->reset_subspace();
     diis_manager_->delete_diis_file();
 }

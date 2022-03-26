@@ -300,11 +300,8 @@ class ProcedureDSRG:
     @staticmethod
     def grab_dipole_unrelaxed():
         """ Grab dipole moment from C++ results. """
-        x = psi4.core.variable('UNRELAXED DIPOLE X')
-        y = psi4.core.variable('UNRELAXED DIPOLE Y')
-        z = psi4.core.variable('UNRELAXED DIPOLE Z')
-        t = psi4.core.variable('UNRELAXED DIPOLE')
-        return x, y, z, t
+        dipole = psi4.core.variable('UNRELAXED DIPOLE')
+        return dipole[0], dipole[1], dipole[2], np.linalg.norm(dipole)
 
     def test_relaxation_convergence(self, n):
         """

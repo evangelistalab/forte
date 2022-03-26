@@ -1531,16 +1531,16 @@ void MRDSRG::dump_amps_to_disk() {
     // dump to psi4 scratch directory for reference relaxation
     if (restart_amps_ and (relax_ref_ != "NONE")) {
         outfile->Printf("\n    Dumping amplitudes to scratch directory ...");
-        ambit::save(T1_, t1_file_chk_);
-        ambit::save(T2_, t2_file_chk_);
+        T1_.save(t1_file_chk_);
+        T2_.save(t2_file_chk_);
         outfile->Printf(" Done.");
     }
 
     // dump amplitudes to the current directory
     if (dump_amps_cwd_) {
         outfile->Printf("\n    Dumping amplitudes to current directory ...");
-        ambit::save(T1_, t1_file_cwd_);
-        ambit::save(T2_, t2_file_cwd_);
+        T1_.save( t1_file_cwd_);
+        T2_.save(t2_file_cwd_);
         outfile->Printf(" Done.");
     }
 }

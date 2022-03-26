@@ -70,7 +70,6 @@ using namespace pybind11::literals;
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
-void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
@@ -153,6 +152,11 @@ void export_Symmetry(py::module& m) {
 
 // TODO: export more classes using the function above
 PYBIND11_MODULE(_forte, m) {
+
+    // This line is how pb11 knows what pieces of ambit have already been exposed,
+    // and can be sent Py-side by Forte.
+    py::module::import("ambit");
+
     m.doc() = "pybind11 Forte module"; // module docstring
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
@@ -245,8 +249,6 @@ PYBIND11_MODULE(_forte, m) {
         },
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
-
-    export_ambit(m);
 
     export_ForteOptions(m);
 

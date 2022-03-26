@@ -423,8 +423,8 @@ void SA_MRDSRG::dump_amps_to_disk() {
     if (restart_amps_ and (relax_ref_ != "NONE")) {
         local_timer lt;
         print_contents("Dumping amplitudes to scratch dir");
-        ambit::save(T1_, t1_file_chk_);
-        ambit::save(T2_, t2_file_chk_);
+        T1_.save(t1_file_chk_);
+        T2_.save(t2_file_chk_);
         print_done(lt.get());
     }
 
@@ -432,8 +432,8 @@ void SA_MRDSRG::dump_amps_to_disk() {
     if (dump_amps_cwd_) {
         local_timer lt;
         print_contents("Dumping amplitudes to current dir");
-        ambit::save(T1_, t1_file_cwd_);
-        ambit::save(T2_, t2_file_cwd_);
+        T1_.save(t1_file_cwd_);
+        T2_.save(t2_file_cwd_);
         print_done(lt.get());
     }
 }
