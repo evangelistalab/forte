@@ -61,10 +61,10 @@ void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) 
     struct stat buf;
     if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
         print_contents("Reading T2 from current dir");
-        ambit::load(T2, t2_file_cwd_);
+        T2.load(t2_file_cwd_);
     } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
         print_contents("Reading previous T2 from scratch dir");
-        ambit::load(T2, t2_file_chk_);
+        T2.load(t2_file_chk_);
     } else {
         print_contents("Computing T2 amplitudes from PT2");
         if (eri_df_) {
@@ -132,10 +132,10 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
     struct stat buf;
     if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
         print_contents("Reading T1 from current dir");
-        ambit::load(T1, t1_file_cwd_);
+        T1.load(t1_file_cwd_);
     } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
         print_contents("Reading previous T1 from scratch dir");
-        ambit::load(T1, t1_file_chk_);
+        T1.load(t1_file_chk_);
     } else {
         if (t1_guess_ == "ZERO") {
             print_contents("Zeroing T1 amplitudes as requested");

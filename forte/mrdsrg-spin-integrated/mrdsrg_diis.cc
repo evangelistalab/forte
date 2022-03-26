@@ -110,7 +110,7 @@ void MRDSRG::diis_manager_init() {
 }
 
 void MRDSRG::diis_manager_add_entry() {
-    _manager_->add_entry(DT1_, DT2_, T1_, T2_);
+    diis_manager_->add_entry(DT1_, DT2_, T1_, T2_);
 }
 
 void MRDSRG::diis_manager_extrapolate() {
