@@ -166,7 +166,7 @@ jobs:
   - bash: |
       STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
       echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
-      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build/forte:{PYTHONPATH}"
+      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build/forte:$(Build.SourcesDirectory)/build/ambit-bin/lib:${PYTHONPATH}"
       echo "##vso[task.setvariable variable=PATH]${PSI4BIN_DIR}/bin:${PATH}"
     displayName: 'Add Psi4 to PATH and PYTHONPATH'
 
