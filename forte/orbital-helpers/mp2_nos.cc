@@ -478,7 +478,9 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
             }
             size_t ij_pairs_size = ij_pairs.size();
 
-#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, na_Qv, Jab, JKab, Da) reduction(+ : e_aa)
+// TODO: On adding default(none) shared(...), we observe symbol not found error on some OSX builds. Investigate and restore.
+//#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, na_Qv, Jab, JKab, Da) reduction(+ : e_aa)
+#pragma omp parallel for reduction(+ : e_aa)
             for (size_t p = 0; p < ij_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
@@ -529,7 +531,8 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
             Bj("iag") = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, b_vir_mos_)("gia");
             auto& Bj_vec = Bj.data();
 
-#pragma omp parallel for default(none) shared(i_batch_occ_mos, i_naocc, Bi_vec, j_batch_occ_mos, j_nbocc, Bj_vec, na_Qv, nb_Qv, Jab, JKab, Da, Db) reduction(+ : e_ab)
+//#pragma omp parallel for default(none) shared(i_batch_occ_mos, i_naocc, Bi_vec, j_batch_occ_mos, j_nbocc, Bj_vec, na_Qv, nb_Qv, Jab, JKab, Da, Db) reduction(+ : e_ab)
+#pragma omp parallel for reduction(+ : e_ab)
             for (size_t p = 0; p < i_naocc * j_nbocc; ++p) {
                 int thread = omp_get_thread_num();
                 size_t i = p / j_nbocc;
@@ -601,7 +604,8 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
             }
             size_t ij_pairs_size = ij_pairs.size();
 
-#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, nb_Qv, Jab, JKab, Db) reduction(+ : e_bb)
+//#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, nb_Qv, Jab, JKab, Db) reduction(+ : e_bb)
+#pragma omp parallel for reduction(+ : e_bb)
             for (size_t p = 0; p < ij_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
@@ -730,8 +734,9 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
             }
             size_t cd_pairs_size = cd_pairs.size();
 
-#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
-                                              cd_pairs, Bc_vec, Bd_vec, na_Qo, Jmn, JKmn, Da)
+//#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
+//                                              cd_pairs, Bc_vec, Bd_vec, na_Qo, Jmn, JKmn, Da)
+#pragma omp parallel for
             for (size_t p = 0; p < cd_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
@@ -778,8 +783,9 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
             Bd("aig") = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, b_occ_mos_)("gai");
             auto& Bd_vec = Bd.data();
 
-#pragma omp parallel for default(none) shared(c_batch_vir_mos, c_navir, d_batch_vir_mos, d_nbvir,  \
-                                              Bc_vec, Bd_vec, na_Qo, nb_Qo, Jmn, Da, Db)
+//#pragma omp parallel for default(none) shared(c_batch_vir_mos, c_navir, d_batch_vir_mos, d_nbvir,  \
+//                                              Bc_vec, Bd_vec, na_Qo, nb_Qo, Jmn, Da, Db)
+#pragma omp parallel for
             for (size_t p = 0; p < c_navir * d_nbvir; ++p) {
                 int thread = omp_get_thread_num();
                 size_t c = p / d_nbvir;
@@ -848,8 +854,9 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
             }
             size_t cd_pairs_size = cd_pairs.size();
 
-#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
-                                              cd_pairs, Bc_vec, Bd_vec, nb_Qo, Jmn, JKmn, Db)
+//#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
+//                                              cd_pairs, Bc_vec, Bd_vec, nb_Qo, Jmn, JKmn, Db)
+#pragma omp parallel for
             for (size_t p = 0; p < cd_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
@@ -958,7 +965,8 @@ void MP2_NOS::compute_df_rmp2_1rdm_vv(ambit::BlockedTensor& D1) {
             }
             size_t ij_pairs_size = ij_pairs.size();
 
-#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, n_Qv, Jab, JKab, Da) reduction(+ : e_corr)
+//#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, n_Qv, Jab, JKab, Da) reduction(+ : e_corr)
+#pragma omp parallel for reduction(+ : e_corr)
             for (size_t p = 0; p < ij_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
@@ -1076,8 +1084,9 @@ void MP2_NOS::compute_df_rmp2_1rdm_oo(ambit::BlockedTensor& D1) {
             }
             size_t cd_pairs_size = cd_pairs.size();
 
-#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
-                                              cd_pairs, Bc_vec, Bd_vec, n_Qo, Jmn, JKmn, Da)
+//#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
+//                                              cd_pairs, Bc_vec, Bd_vec, n_Qo, Jmn, JKmn, Da)
+#pragma omp parallel for
             for (size_t p = 0; p < cd_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
