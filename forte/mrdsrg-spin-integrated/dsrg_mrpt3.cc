@@ -1655,10 +1655,11 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     double t = print_vector4("DSRG-MRPT3", Mbar0_);
 
-    psi::Process::environment.globals["UNRELAXED DIPOLE X"] = Mbar0_[0] + dm_nuc_[0];
-    psi::Process::environment.globals["UNRELAXED DIPOLE Y"] = Mbar0_[1] + dm_nuc_[1];
-    psi::Process::environment.globals["UNRELAXED DIPOLE Z"] = Mbar0_[2] + dm_nuc_[2];
-    psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
+    auto dipole_array = std::make_shared<Matrix>(1, 3);
+    dipole_array->set(0, 0, Mbar0_[0] + dm_nuc_[0]);
+    dipole_array->set(0, 1, Mbar0_[1] + dm_nuc_[1]);
+    dipole_array->set(0, 2, Mbar0_[2] + dm_nuc_[2]);
+    psi::Process::environment.arrays["UNRELAXED DIPOLE"] = dipole_array;
 }
 
 void DSRG_MRPT3::compute_dm1d_pt3_1(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,

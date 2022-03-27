@@ -266,8 +266,8 @@ class ProcedureDSRG:
                     psi4.core.print_out("\n  DSRG checkpoint files removed due to the unsuccessful"
                                         " attempt to fix orbital phase and order.")
                     self.dsrg_solver.clean_checkpoints()
-            self.Ua = forte.ambit_doublet(self.Ua, self.semi.Ua_t(), ["ij", "jk", "ik"])
-            self.Ub = forte.ambit_doublet(self.Ub, self.semi.Ub_t(), ["ij", "jk", "ik"])
+            self.Ua["ik"] = self.Ua["ij"] * self.semi.Ua_t()["jk"]
+            self.Ub["ik"] = self.Ub["ij"] * self.semi.Ub_t()["jk"]
 
             # - Compute DSRG energy
             self.make_dsrg_solver()
@@ -300,11 +300,8 @@ class ProcedureDSRG:
     @staticmethod
     def grab_dipole_unrelaxed():
         """ Grab dipole moment from C++ results. """
-        x = psi4.core.variable('UNRELAXED DIPOLE X')
-        y = psi4.core.variable('UNRELAXED DIPOLE Y')
-        z = psi4.core.variable('UNRELAXED DIPOLE Z')
-        t = psi4.core.variable('UNRELAXED DIPOLE')
-        return x, y, z, t
+        dipole = psi4.core.variable('UNRELAXED DIPOLE')
+        return dipole[0], dipole[1], dipole[2], np.linalg.norm(dipole)
 
     def test_relaxation_convergence(self, n):
         """

@@ -98,6 +98,8 @@ class CMakeBuild(build_ext):
         cmake_args += [f'-DMAX_DET_ORB={self.max_det_orb}']
         cmake_args += [f'-DENABLE_CODECOV={str(self.enable_codecov).upper()}']
         cmake_args += [f'-DENABLE_ForteTests=TRUE']
+        # The below line is needed in some OSX cases.
+        #cmake_args += ['-DCMAKE_OSX_SYSROOT=' + os.environ["CONDA_BUILD_SYSROOT"]]
         cmake_args += self.split_options(self.cmake_config_options)
 
         # define build arguments
