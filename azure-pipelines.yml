@@ -232,6 +232,7 @@ jobs:
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
         -DENABLE_CODECOV=ON \
+        -DEIGEN3_INCLUDE_DIR=$CONDA_PREFIX/include \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
 
