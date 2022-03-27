@@ -93,17 +93,6 @@ jobs:
         psi4/label/dev::libxc \
         psi4/label/dev::chemps2 \
         psi4/label/dev::dkh \
-        psi4/label/dev::gdma \
-        psi4/label/dev::pcmsolver \
-        psi4/label/dev::simint \
-        psi4/label/dev::dftd3 \
-        psi4/label/dev::gcp \
-        psi4/label/dev::resp \
-        psi4/label/dev::pycppe \
-        psi4/label/dev::pylibefp \
-        psi4/label/dev::snsmp2 \
-        psi4/label/dev::fockci \
-        psi4/label/dev::mp2d \
         blas=*=mkl \
         mkl-include \
         networkx \
@@ -112,9 +101,7 @@ jobs:
         mpfr \
         pytest-xdist \
         conda-forge::qcelemental \
-        conda-forge::qcengine \
-        conda-forge::pymdi \
-        adcc::adcc
+        conda-forge::qcengine
       source activate p4env
       conda install -c conda-forge \
         hdf5 \
@@ -128,7 +115,6 @@ jobs:
         codecov \
         lcov
       which python
-      pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
     displayName: 'Configure Environment'
 
@@ -232,7 +218,7 @@ jobs:
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
         -DENABLE_CODECOV=ON \
-        -DEIGEN3_INCLUDE_DIR=$CONDA_PREFIX/include \
+        -DEIGEN3_INCLUDE_DIR=$CONDA_PREFIX/include/eigen3 \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
 
