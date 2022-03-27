@@ -112,6 +112,7 @@ jobs:
         pytest-cov \
         pytest-xdist \
         pytest-shutil \
+        scipy \
         codecov \
         lcov
       which python
