@@ -89,45 +89,56 @@ def write_external_active_space_file(as_ints, state_map, mo_space_info, json_fil
         with open(json_file, 'w+') as f:
             json.dump(file, f, sort_keys=True, indent=2)
 
-#        make_hamiltonian(as_ints,state)
+        # make_hamiltonian(as_ints,state)
 
-def make_hamiltonian(as_ints,state):
+def make_hamiltonian(as_ints, state_map):
     import itertools
 
-    dets = []
+    for state, nroots in state_map.items():
+        print(f'\nstate: {state}, nroots: {nroots}')
+        dets = []
 
-    na = state.na()
-    nb = state.nb()
+        na = state.na()
+        nb = state.nb()
 
-    orbs = [i for i in range(as_ints.nmo())]
+        orbs = [i for i in range(as_ints.nmo())]
 
-    # generate all the alpha strings
-    for astr in itertools.combinations(orbs, na):
-        # generate all the beta strings
-        for bstr in itertools.combinations(orbs, nb):
-            d = forte.Determinant()
-            for i in astr: d.set_alfa_bit(i, True)
-            for i in bstr: d.set_beta_bit(i, True)
-            dets.append(d)
+        # generate all the alpha strings
+        for astr in itertools.combinations(orbs, na):
+            # generate all the beta strings
+            for bstr in itertools.combinations(orbs, nb):
+                d = forte.Determinant()
+                for i in astr: d.set_alfa_bit(i, True)
+                for i in bstr: d.set_beta_bit(i, True)
+                dets.append(d)
 
-    print(f'==> List of FCI determinants <==')
-    for d in dets:
-        print(f'{d.str(4)}')
+        print(f'\n\n==> List of FCI determinants <==')
+        for d in dets:
+            print(f'{d.str(4)}')
 
-    import numpy as np
+        import numpy as np
 
-    ndets = len(dets)
-    H = np.ndarray((ndets,ndets))
-    for I, detI in enumerate(dets):
-        for J, detJ in enumerate(dets):
-            H[I][J] = as_ints.slater_rules(detI,detJ)
+        ndets = len(dets)
+        H = np.ndarray((ndets,ndets))
+        for I, detI in enumerate(dets):
+            for J, detJ in enumerate(dets):
+                H[I][J] = as_ints.slater_rules(detI,detJ)
+                          
+        print(f'\n==> Active Space Hamiltonian <==\n')
+        print(f'\n{H}')
+        
+        evals, evecs = np.linalg.eigh(H)
+        e_casci = evals[0] + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy() + as_ints.frozen_core_energy()
+        print(f'\nCASCI Energy = {e_casci}')
 
-    print(H)
-    evals, evecs = np.linalg.eigh(H)
+        dets_str = [d.str(4) for d in dets]
+        as_ham = {'dets_list': dets_str,
+                  'hamiltonian': H.tolist(),
+                  'e_ci': e_casci, }
 
-
-    print(f'FCI Energy = {evals[0] + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy()}')
-
+        import json
+        with open(f'as_ham.json', 'w') as file:
+            json.dump(as_ham, file, indent=4)
 
 def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level):
     rdm = active_space_solver.compute_average_rdms(state_weights_map, max_rdm_level)
@@ -215,7 +226,7 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
         file['gamma3'] = {"data" : gamma3,
                           "description" : "three-body density matrix as a list of tuples (i,j,k,l,m,n <i^ j^ k^ n m l>)"}
 
-    with open('rdms.json','w+') as f:
+    with open('ref_rdms.json','w+') as f:
         json.dump(file,f, sort_keys=True, indent=2)
 
 #import functools

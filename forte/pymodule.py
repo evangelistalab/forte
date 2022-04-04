@@ -42,7 +42,7 @@ import forte.proc.fcidump
 from forte.proc.dsrg import ProcedureDSRG
 from forte.proc.orbital_helpers import ortho_orbs_forte, orbital_projection
 from forte.proc.orbital_helpers import read_orbitals, dump_orbitals
-from forte.proc.external_active_space_solver import write_external_active_space_file, write_external_rdm_file, write_wavefunction, read_wavefunction
+from forte.proc.external_active_space_solver import write_external_active_space_file, write_external_rdm_file, write_wavefunction, read_wavefunction, make_hamiltonian
 
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
@@ -445,15 +445,17 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver = forte.make_active_space_solver(
         active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
     )
+    if options.get_bool("WRITE_AS_H"):
+        make_hamiltonian(as_ints, state_map)
 
     if active_space_solver_type == 'EXTERNAL':
         write_external_active_space_file(as_ints, state_map, mo_space_info)
         if not os.path.isfile('rdms.json'):
-            print('External solver wrote integrals to disk')
-            psi4.core.print_out('External solver wrote integrals to disk')
+            print('\nExternal solver wrote integrals to disk')
+            psi4.core.print_out('\nExternal solver wrote integrals to disk')
             # finish the computation
             exit()
-
+    # if rdms.json exists, then run "external" as_solver to compute energy
     state_energies_list = active_space_solver.compute_energy()
 
     if options.get_bool("WRITE_RDM"):

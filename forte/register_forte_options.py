@@ -81,6 +81,8 @@ def register_driver_options(options):
 
     options.add_bool("SPIN_AVG_DENSITY", False, "Form spin-averaged density if true")
 
+    options.add_bool("WRITE_AS_H", False,
+                     "Write active-space Hamiltonian matrix to as_ham.json for external computations")
     options.add_bool("WRITE_RDM", False, "Write RDMs to rdms.json for external computations")
 
     options.add_bool("WRITE_WFN", False, "Write ref_wfn.Ca() to Ca.json for external computations")
