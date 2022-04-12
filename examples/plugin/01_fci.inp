@@ -1,0 +1,22 @@
+import forte
+
+# Example of a FCI computation on singlet lithium dimer using RHF orbitals
+
+molecule {
+0 1
+Li 0.0 0.0 0.0
+Li 0.0 0.0 3.0
+units bohr
+}
+
+set {
+  basis sto-3g
+  scf_type pk
+  e_convergence 10
+}
+
+set forte {
+  active_space_solver fci
+}
+
+energy('forte')

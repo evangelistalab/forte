@@ -1,0 +1,249 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+jobs:
+- job: 'linux_build'
+  displayName: 'Linux Builds'
+  pool:
+    vmImage: 'ubuntu-latest'
+  timeoutInMinutes: 90
+  cancelTimeoutInMinutes: 10
+  strategy:
+    maxParallel: 4
+    matrix:
+      gcc_py39_orb64_dmrg:
+        F_COMPILER: 'gfortran'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
+        PYTHON_VER: '3.9'
+        BUILD_TYPE: 'RelWithDebInfo'
+        PSI_BUILD_TYPE: 'Debug'
+        MAX_DET_ORB: 64
+        APT_INSTALL: 'gfortran'
+        ENABLE_CHEMPS2: 'ON'
+
+      gcc_py37_orb128:
+        F_COMPILER: 'gfortran'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
+        PYTHON_VER: '3.8'
+        BUILD_TYPE: 'RelWithDebInfo'
+        PSI_BUILD_TYPE: 'Debug'
+        MAX_DET_ORB: 128
+        APT_INSTALL: 'gfortran'
+        ENABLE_CHEMPS2: 'OFF'
+
+  steps:
+  - bash: |
+      [[ "${APT_REPOSITORY}" ]] && echo "Add Repo ${APT_REPOSITORY}" && sudo add-apt-repository "${APT_REPOSITORY}"
+      sudo apt-get update
+      sudo apt-get install ${APT_INSTALL}
+    displayName: "Apt-Get Packages"
+
+  - bash: |
+      echo "" && echo "Ubuntu"
+      lsb_release -a
+
+      echo "" && echo "Uname:"
+      uname -a
+
+      echo "" && echo "Free:"
+      free -m
+
+      echo "" && echo "df:"
+      df -h
+
+      echo "" && echo "Ulimit:"
+      ulimit -a
+
+      echo "" && echo "Nprocs:"
+      getconf _NPROCESSORS_ONLN
+
+      echo "C Ver:"
+      ${C_COMPILER} --version
+
+      echo "CXX Ver:"
+      ${CXX_COMPILER} --version
+
+      echo "F Ver:"
+      ${F_COMPILER} --version
+    displayName: 'Setup Information'
+
+  - bash: |
+      echo "Current directory: $PWD"
+      echo "Agent.BuildDirectory:" $(Agent.BuildDirectory)
+      echo "Build.SourcesDirectory:" $(Build.SourcesDirectory)
+      mkdir -p build/forte
+      cp -R * build/forte/
+      ls build/forte/
+    displayName: 'Copy Forte Source'
+
+  - bash: |
+      echo "##vso[task.prependpath]$CONDA/bin"
+      conda config --set always_yes yes
+    displayName: 'Add Conda to PATH'
+
+  - bash: |
+      conda create -q \
+        -n p4env \
+        python=$PYTHON_VER \
+        psi4/label/dev::gau2grid=2 \
+        psi4/label/dev::libint2 \
+        psi4/label/dev::libxc \
+        psi4/label/dev::chemps2 \
+        psi4/label/dev::dkh \
+        blas=*=mkl \
+        mkl-include \
+        networkx \
+        pytest \
+        eigen \
+        mpfr \
+        pytest-xdist \
+        conda-forge::qcelemental \
+        conda-forge::qcengine
+      source activate p4env
+      conda install -c conda-forge \
+        hdf5 \
+        boost \
+        mkl-devel \
+        pybind11 \
+        pytest \
+        pytest-cov \
+        pytest-xdist \
+        pytest-shutil \
+        scipy \
+        codecov \
+        lcov
+      which python
+      conda list
+    displayName: 'Configure Environment'
+
+  - bash: |
+      which cmake
+      cmake --version
+      cd build
+      echo "Now at directory: $PWD"
+      git clone https://github.com/psi4/psi4.git psi4
+    displayName: 'Clone Psi4 Source'
+
+  - bash: |
+      source activate p4env
+      cd build
+      mkdir psi4bin
+      PSI4BIN_DIR=$(Build.SourcesDirectory)/build/psi4bin
+      echo "##vso[task.setvariable variable=PSI4BIN_DIR]${PSI4BIN_DIR}"
+      echo "Psi4 bin directory: $PSI4BIN_DIR"
+      mkdir psi4obj
+      cd psi4obj
+      cmake -H. -B$(Build.SourcesDirectory)/build/psi4obj \
+        -DCMAKE_INSTALL_PREFIX=${PSI4BIN_DIR} \
+        -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
+        -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+        -DCMAKE_C_COMPILER=${C_COMPILER} \
+        -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
+        -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
+        -DCMAKE_BUILD_TYPE=${PSI_BUILD_TYPE} \
+        -Dpsi4_CXX_STANDARD=17 \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
+        $(Build.SourcesDirectory)/build/psi4
+    displayName: 'Configure Psi4 Build'
+
+  - bash: |
+      source activate p4env
+      cd build/psi4obj
+      echo "Now at directory (Psi4 objdir): $PWD"
+      make -j2 VERBOSE=1
+      echo "Now install Psi4 at: $(PSI4BIN_DIR)"
+      make install
+      cd $(PSI4BIN_DIR)
+      file lib/psi4/core*.so
+      ldd lib/psi4/core*.so
+      readelf -d lib/psi4/core*.so
+    displayName: 'Build Psi4'
+
+  - bash: |
+      STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
+      echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
+      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build/forte:$(Build.SourcesDirectory)/build/ambit-bin/lib:${PYTHONPATH}"
+      echo "##vso[task.setvariable variable=PATH]${PSI4BIN_DIR}/bin:${PATH}"
+    displayName: 'Add Psi4 to PATH and PYTHONPATH'
+
+  - bash: |
+      cd build
+      git clone https://github.com/jturney/ambit.git
+    displayName: 'Clone Ambit Source'
+
+  - bash: |
+      source activate p4env
+      cd build
+      mkdir ambit-bin
+      AMBIT_BIN_DIR=$(Build.SourcesDirectory)/build/ambit-bin
+      echo "##vso[task.setvariable variable=AMBIT_BIN_DIR]${AMBIT_BIN_DIR}"
+      cmake -Sambit -Bambitobj \
+        -DCMAKE_INSTALL_PREFIX=${AMBIT_BIN_DIR} \
+        -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+        -DCMAKE_C_COMPILER=${C_COMPILER} \
+        -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
+        -DCMAKE_CXX_STANDARD=17
+    displayName: 'Configure Ambit Build'
+
+  - bash: |
+      source activate p4env
+      cd build/ambitobj
+      make -j2 VERBOSE=1
+      make install
+    displayName: 'Build Ambit'
+
+  - bash: |
+      source activate p4env
+      echo "Conda path: ${CONDA_PREFIX}"
+      echo "$(python -V): $(which python)"
+      echo "Psi4 staging directory: $(STAGED_INSTALL_PREFIX)"
+      echo "Psi4 version: $(psi4 --version)"
+      echo "Psi4 plugin compile command: $(psi4 --plugin-compile)"
+      cd build/forte
+      cmake -S. -B. \
+        -C$(PSI4BIN_DIR)/share/cmake/psi4/psi4PluginCache.cmake \
+        -DCMAKE_PREFIX_PATH=$(PSI4BIN_DIR) \
+        -Dambit_DIR=$(AMBIT_BIN_DIR)/share/cmake/ambit \
+        -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+        -DCMAKE_C_COMPILER=${C_COMPILER} \
+        -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
+        -DENABLE_CODECOV=ON \
+        -DEIGEN3_INCLUDE_DIR=$CONDA_PREFIX/include/eigen3 \
+        -DMAX_DET_ORB=${MAX_DET_ORB}
+    displayName: 'Configure Forte Build'
+
+  - bash: |
+      source activate p4env
+      cd build/forte
+      make -j2 VERBOSE=1
+      file forte/_forte*.so
+      ldd forte/_forte*.so
+      readelf -d forte/_forte*.so
+    displayName: 'Build Forte'
+
+  - bash: |
+      source activate p4env
+      echo "PATH: $PATH"
+      echo "PYTHONPATH: $PYTHONPATH"
+      cd build
+      echo "Psi4 Python path:"
+      python -c "import psi4; print(psi4.__path__)"
+      echo "Forte Python path:"
+      python -c "import forte; print(forte.__path__)"
+      echo "Forte banner test:"
+      python -c "import forte; forte.banner()"
+
+      cd forte
+      bash tools/forte_codecov $MAX_DET_ORB $ENABLE_CHEMPS2
+    displayName: 'Run Forte tests'

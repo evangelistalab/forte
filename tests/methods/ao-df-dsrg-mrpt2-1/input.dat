@@ -15,8 +15,8 @@ molecule {
 set globals{
    reference    RHF
    scf_type     df
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    df_basis_mp2            cc-pvdz-ri
    df_basis_scf            cc-pvdz-ri
    basis                   6-31g

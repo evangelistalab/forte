@@ -1,11 +1,12 @@
-#! Generated using commit GITCOMMIT
-# Tests mp2_nos with spin projected system for multiple roots
-
 import forte
 
 refscf = -75.0525898286472284
-refaci = -75.383717530874
-refacipt2  = -75.433623094732
+refaci = -75.39336807459 
+refacipt2  = -75.443308209354
+
+refaci_root0 = -75.393368074586
+refaci_root1 = -75.284127920602
+refaci_root2 = -75.275875975134
 
 molecule C2{
 C
@@ -45,4 +46,6 @@ compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #TEST
-
+compare_values(refaci_root0, variable("ENERGY ROOT 0 1AG"),10, "ACI energy root 0") #TEST
+compare_values(refaci_root1, variable("ENERGY ROOT 1 1AG"),10, "ACI energy root 1") #TEST
+compare_values(refaci_root2, variable("ENERGY ROOT 2 1AG"),10, "ACI energy root 2") #TEST

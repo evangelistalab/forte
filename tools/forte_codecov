@@ -1,5 +1,6 @@
-#! usr/bin/env bash
+#!/usr/bin/env bash
 
+export KMP_DUPLICATE_LIB_OK=TRUE
 export CODECOV_TOKEN="f2ca5872-66d7-48dc-8464-e286452dd05b"
 
 
@@ -10,12 +11,25 @@ cd tests/methods
 python run_forte_tests.py --type short --failed_dump --bw
 test1=$?
 
+if [ "$1" -ge "128" ]; then
+  cd ../large_det
+  python run_forte_tests.py --bw --failed_dump
+  testlarge=$?
+  if [ $testlarge -ne 0 ]; then
+    test1=$testlarge
+  fi
+fi
+
+if [ "$2" = "ON" ]; then
+  cd ../chemps2
+  python run_forte_tests.py --type short --bw --failed_dump
+  testdmrg=$?
+  if [ $testdmrg -ne 0 ]; then
+    test1=$testdmrg
+  fi
+fi
+
 cd ../..
-# Gather data
-lcov --directory . --capture --output-file coverage.info
-lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system-files
-lcov --list coverage.info #debug info
-bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
 
 ./forte_tests
 test2=$?
@@ -27,17 +41,28 @@ cd tests/pytest
 pytest
 test4=$?
 
+cd ../../tests/pytest-methods
+pytest
+test5=$?
 
-if [ $test1 -eq 0 ] && [ $test2 -eq 0 ] && [ $test3 -eq 0 ] && [ $test4 -eq 0 ];
+cd ../..
+
+# Gather data
+lcov --directory . --capture --output-file coverage.info
+lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system-files
+lcov --list coverage.info #debug info
+bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+
+if [ $test1 -eq 0 ] && [ $test2 -eq 0 ] && [ $test3 -eq 0 ] && [ $test4 -eq 0 ]  && [ $test5 -eq 0 ];
 then
   echo "All tests were successful"
-  exit 0
 else
   echo "Some test(s) failed"
-  echo $test1
-  echo $test2
-  echo $test3
-  echo $test4
+  echo "Forte methods exit with $test1"
+  echo "Forte determinants exit with $test2"
+  echo "Forte speed benchmark exit with $test3"
+  echo "Forte pytest exit with $test4"
+  echo "Forte pytest-methods exit with $test5"
   exit 1
 fi
 

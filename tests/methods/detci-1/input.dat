@@ -1,0 +1,41 @@
+# Test DOCI of Forte DETCI
+# TCSCF of Psi4 returns natural orbital by default
+# and subsequent DOCI should be equivalent to CAS(2,2)
+import forte
+
+refmcscf     =  -99.939316382624
+
+molecule HF{
+0 1
+F
+H 1 1.5
+}
+
+set globals{
+  basis                   cc-pvdz
+  reference               twocon
+  scf_type                pk
+  d_convergence           8
+  e_convergence           12
+}
+
+set mcscf{
+  docc                    [2,0,1,1]
+  socc                    [2,0,0,0]
+  maxiter                 1000
+  level_shift             1.0
+}
+
+set forte{
+  active_space_solver     detci
+  active_ref_type         doci
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+}
+
+Emcscf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "Psi4 MCSCF energy")
+
+energy('forte', ref_wfn=wfn)
+compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "Forte DOCI energy")

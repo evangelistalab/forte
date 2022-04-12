@@ -1,0 +1,44 @@
+# GAS CI calculation with multi-gas algorithm
+
+import forte
+
+refscf = -76.0172965561
+refgas = -65.93594498028247131
+ref0   = -55.841944166803
+ref1   = -76.029945793736
+
+molecule h2o{
+O
+H 1 1.00
+H 1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  scf_type pk
+  reference rhf
+}
+escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
+
+set forte {
+  active_space_solver detci
+  e_convergence 10
+  charge 0
+  active_ref_type gas
+  GAS1 [1,0,0,0]
+  GAS2 [3,0,1,2]
+  GAS1MAX [2,1]
+  GAS1MIN [0,0]
+  avg_state [[0,1,1],[0,1,1]] #For same symmetry and different GAS
+}
+
+egas = energy('forte', ref_wfn=wfn)
+
+psi4.core.print_variables()
+compare_values(refgas, egas, 8, "Averaged GASCI energy")
+compare_values(ref0, variable("ENERGY ROOT 0 1A1 ENTRY 0"), 8, "GASCI energy for state entry 0")
+compare_values(ref1, variable("ENERGY ROOT 0 1A1 ENTRY 1"), 8, "GASCI energy for state entry 1")

@@ -1,9 +1,11 @@
-#! Generated using commit GITCOMMIT
-
+# MR-LDSRG(2) test on reading previous amplitudes files
+# The number of commutators in the BCH expansion
+# is truncated to speed up the test.
 import forte
 
 refrhf  = -108.867618373021401
-refdsrg = -109.100877299246122
+refdsrg = -109.100877299246122 # default dsrg_rsc_ncomm
+refdsrg = -109.100837616506638 # keep only 4-nested commutator
 
 memory 500 mb
 
@@ -33,6 +35,7 @@ set forte{
   r_convergence          7
   dsrg_read_amps         true
   dsrg_diis_start        1
+  dsrg_rsc_ncomm         4
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

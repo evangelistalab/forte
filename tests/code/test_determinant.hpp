@@ -95,7 +95,7 @@ template <size_t N> void test_determinantimpl_init() {
     size_t Nhalf = N / 2;
     forte::DeterminantImpl<N> d;
 
-    REQUIRE(d.get_nbits_half() == Nhalf);
+    REQUIRE(d.norb() == Nhalf);
 
     for (size_t i = 0; i < N; i++) {
         REQUIRE(d.get_bit(i) == 0);

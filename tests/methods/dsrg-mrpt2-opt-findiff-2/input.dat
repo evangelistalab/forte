@@ -17,8 +17,8 @@ molecule HF{
 set globals{
   basis                   cc-pvdz
   reference               rhf
-  d_convergence           12
-  e_convergence           15
+  d_convergence           10
+  e_convergence           12
   g_convergence           gau_verytight
   docc                    [3,0,1,1]
   restricted_docc         [2,0,1,1]

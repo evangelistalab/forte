@@ -38,9 +38,8 @@ set forte {
   root_sym               0
   nroot                  1
   dsrg_s                 0.5
-  e_convergence          15
+  e_convergence          12
   fci_maxiter            100
-# relax_ref              iterate
   relax_ref              once
   ntrial_per_root        10
 }

@@ -1,0 +1,32 @@
+# DMRG-DSRG-MRPT2 on ground-state LiH
+
+import forte
+
+molecule LiH {
+Li
+H  1 1.4
+}
+
+set basis cc-pvdz
+set scf_type  pk
+Escf, wfn = energy('scf', return_wfn=True)
+
+set forte {
+  frozen_docc               [0,0,0,0]
+  active                    [3,0,0,0]
+  active_space_solver       fci
+  correlation_solver        dsrg-mrpt2
+}
+dsrg_ref = energy('forte', ref_wfn=wfn)
+
+set forte {
+  dmrg_sweep_states         [  200,  500, 1000, 1000 ]
+  dmrg_sweep_energy_conv    [ 1e-8, 1e-8, 1e-8, 1e-8 ]
+  dmrg_sweep_max_sweeps     [    5,    5,    5,  100 ]
+  dmrg_sweep_noise_prefac   [ 0.03, 0.03, 0.03,  0.0 ]
+  dmrg_sweep_dvdson_rtol    [ 1e-6, 1e-6, 1e-6, 1e-6 ]
+  active_space_solver       dmrg
+  correlation_solver        dsrg-mrpt2
+}
+dsrg_dmrg = energy('forte', ref_wfn=wfn)
+compare_values(dsrg_ref - dsrg_dmrg, 0.0, 8, "DSRG(CASCI) - DSRG(DMRG)")

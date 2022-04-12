@@ -54,6 +54,7 @@ set forte {
   GAS1MAX [1]
   GAS1MIN [0]
   root_sym 2
+  multiplicity 3
 }
 
 energy('forte',ref_wfn = wfn)

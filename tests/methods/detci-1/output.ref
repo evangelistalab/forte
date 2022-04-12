@@ -1,0 +1,582 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 undefined 
+
+                         Git: Rev {master} 52df5f0 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, and M. H. Lechner
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Tuesday, 16 February 2021 01:09AM
+
+    Process ID: 77872
+    Host:       Yorks-Mac.local
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte
+
+refmcscf     =  -99.939316382624
+
+molecule HF{
+0 1
+F
+H 1 1.5
+}
+
+set globals{
+  basis                   cc-pvdz
+  reference               twocon
+  scf_type                pk
+  d_convergence           8
+  e_convergence           12
+}
+
+set mcscf{
+  docc                    [2,0,1,1]
+  socc                    [2,0,0,0]
+  maxiter                 1000
+  level_shift             1.0
+}
+
+set forte{
+  active_space_solver     detci
+  active_ref_type         doci
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+}
+
+Emcscf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "MCSCF energy")
+
+# TCSCF code of Psi4 returns natural orbital by default
+# and subsequent DOCI should be equivalent to CAS(2,2)
+energy('forte', ref_wfn=wfn)
+compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "DOCI energy")
+--------------------------------------------------------------------------
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   228 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry H          line    22 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+
+
+*** tstart() called on Yorks-Mac.local
+*** at Tue Feb 16 01:09:40 2021
+
+
+         ------------------------------------------
+           MCSCF: a self-consistent field program
+            written by Francesco A. Evangelista
+         ------------------------------------------
+
+  MOs per irrep:                                      A1  A2  B1  B2 Total
+  ----------------------------------------------------------------------------
+  Total                                               10    1    4    4    19
+  Doubly Occupied                                      2    0    1    1     4
+  Active/Singly Occupied                               2    0    0    0     2
+  ----------------------------------------------------------------------------
+
+  Running an SCF calculation
+  TWOCON MOs = [2 (A1),3 (A1)]
+
+  Generated 190 pairs
+  Distributed as [76 A1][26 A2][44 B1][44 B2]
+  batch   0 pq = [       0,      76] index = [               0,            2926]
+
+  Allocated the PK matrix (2926 elements) 
+  Allocated the  K matrix (2926 elements) 
+  Reading the two-electron integrals to form PK and K ... 
+  batch   0 ... done.
+
+
+  =========================================================================================
+         Cycle          Energy               D(Energy)            D(Density)            DIIS
+  ===========================================================================================
+  Setting level shift to 1.000 S
+  @SCF    0      -93.745779861830     -93.745779861830       0.147704439122
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S
+  @SCF    1      -99.351077508388      -5.605297646558       0.133311794885
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S
+  @SCF    2      -99.620406918138      -0.269329409749       0.008351867727
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S
+  @SCF    3      -99.654963314989      -0.034556396852       0.002499066020
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S
+  @SCF    4      -99.671045171076      -0.016081856087       0.001027452450
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S
+  @SCF    5      -99.669199700442       0.001845470634       0.000559363313
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S
+  @SCF    6      -99.672673699034      -0.003473998592       0.000349728305
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S/E
+  @SCF    7      -99.670950000182       0.001723698851       0.000270540194
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S/E
+  @SCF    8      -99.671894071304      -0.000944071122       0.000115222125
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S/E
+  @SCF    9      -99.671913548483      -0.000019477179       0.000001846099
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S/E
+  @SCF   10      -99.671913943377      -0.000000394894       0.000000375559
+    ci      = [-0.95174821, 0.30688000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 1.000 S/E
+  @SCF   11      -99.671912789790       0.000001153587       0.000000154821
+    ci      = [-0.95174800, 0.30688068]
+    ci_grad = [-0.00000124,-0.00000008]
+  Setting level shift to 1.000 S/E
+  @SCF   12      -99.671913909061      -0.000001119271       0.000000059752
+    ci      = [-0.95174805, 0.30688053]
+    ci_grad = [ 0.00000110,-0.00000025]
+  Setting level shift to 1.000 S/E
+  @SCF   13      -99.671914625887      -0.000000716826       0.000000031311
+    ci      = [-0.95174808, 0.30688042]
+    ci_grad = [ 0.00000070,-0.00000016]
+  Setting level shift to 1.000 S/E
+  @SCF   14      -99.671916357974      -0.000001732087       0.000000115552
+    ci      = [-0.95174826, 0.30687986]
+    ci_grad = [ 0.00000176,-0.00000017]
+  Setting level shift to 1.000 S/E
+  @SCF   15      -99.671916295738       0.000000062236       0.000000138752
+    ci      = [-0.95174821, 0.30688002]
+    ci_grad = [-0.00000009,-0.00000008]
+  Setting level shift to 1.000 S/E
+  @SCF   16      -99.671915023784       0.000001271954       0.000000064844
+    ci      = [-0.95174810, 0.30688035]
+    ci_grad = [-0.00000128, 0.00000018]
+  Setting level shift to 1.000 S/E
+  @SCF   17      -99.671916671148      -0.000001647364       0.000000158819
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.00000147,-0.00000081]
+  Setting level shift to 1.000 S/E
+  @SCF   18      -99.911089322979      -0.239172651831       0.023016564595
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.23998033,-0.02585869]
+  Setting level shift to 1.000 S/E
+  @SCF   19      -99.927747952424      -0.016658629445       0.006182266052
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.02242928, 0.01744931]
+  Setting level shift to 1.000 S/E
+  @SCF   20      -99.931949443160      -0.004201490736       0.002885890341
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.01071088, 0.02177509]
+  Setting level shift to 1.000 S/E
+  @SCF   21      -99.933545535649      -0.001596092489       0.001651984398
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.00694124, 0.01774170]
+  Setting level shift to 1.000 S/E
+  @SCF   22      -99.935890034647      -0.002344498998       0.002814440970
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.00677716, 0.01434703]
+  Setting level shift to 1.000 S/E
+  @SCF   23      -99.938354901580      -0.002464866933       0.004731625132
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.00532562, 0.00888133]
+  Setting level shift to 1.000 S/E
+  @SCF   24      -99.939138075803      -0.000783174223       0.003147591018
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.00362636, 0.00906183]
+  Setting level shift to 1.000 S/E
+  @SCF   25      -99.939220615127      -0.000082539325       0.000662908452
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.00272664, 0.00849603]
+  Setting level shift to 1.000 S/E
+  @SCF   26      -99.939276827565      -0.000056212437       0.000646580708
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.00264412, 0.00831237]
+  Setting level shift to 1.000 S/E
+  @SCF   27      -99.939297148439      -0.000020320874       0.000344236913
+    ci      = [-0.95174795, 0.30688083]
+    ci_grad = [ 0.00247652, 0.00787966]
+  Setting level shift to 1.000 S/E
+  @SCF   28      -99.939304027831      -0.000006879392       0.000290411635
+    ci      = [-0.95453499, 0.29809889]
+    ci_grad = [ 0.00230083, 0.00734437]
+  Setting level shift to 1.000 S/E
+  @SCF   29      -99.939304972536      -0.000000944705       0.000227401655
+    ci      = [-0.95441457, 0.29848421]
+    ci_grad = [-0.00009952,-0.00032140]
+  Setting level shift to 1.000 S/E
+  @SCF   30      -99.939307538364      -0.000002565828       0.000034659694
+    ci      = [-0.95447614, 0.29828727]
+    ci_grad = [ 0.00005377, 0.00016344]
+  Setting level shift to 1.000 S/E
+  @SCF   31      -99.939307476829       0.000000061535       0.000048447736
+    ci      = [-0.95448810, 0.29824900]
+    ci_grad = [ 0.00000991, 0.00003193]
+  Setting level shift to 1.000 S/E
+  @SCF   32      -99.939313401947      -0.000005925118       0.000107386750
+    ci      = [-0.95471576, 0.29751943]
+    ci_grad = [ 0.00019549, 0.00060740]
+  Setting level shift to 1.000 S/E
+  @SCF   33      -99.939314616242      -0.000001214295       0.000043432487
+    ci      = [-0.95479121, 0.29727721]
+    ci_grad = [ 0.00006416, 0.00020197]
+  Setting level shift to 1.000 S/E
+  @SCF   34      -99.939316097435      -0.000001481193       0.000139551077
+    ci      = [-0.95483683, 0.29713066]
+    ci_grad = [ 0.00003953, 0.00012205]
+  Setting level shift to 1.000 S/E
+  @SCF   35      -99.939316272983      -0.000000175548       0.000043470866
+    ci      = [-0.95486110, 0.29705264]
+    ci_grad = [ 0.00002046, 0.00006518]
+  Setting level shift to 1.000 S/E
+  @SCF   36      -99.939316338923      -0.000000065940       0.000014218774
+    ci      = [-0.95487937, 0.29699391]
+    ci_grad = [ 0.00001534, 0.00004910]
+  Setting level shift to 1.000 S/E
+  @SCF   37      -99.939316367641      -0.000000028719       0.000011907339
+    ci      = [-0.95488919, 0.29696235]
+    ci_grad = [ 0.00000824, 0.00002639]
+  Setting level shift to 1.000 S/E
+  @SCF   38      -99.939316380420      -0.000000012779       0.000009774306
+    ci      = [-0.95489889, 0.29693115]
+    ci_grad = [ 0.00000813, 0.00002609]
+  Setting level shift to 1.000 S/E
+  @SCF   39      -99.939316381161      -0.000000000741       0.000003102008
+    ci      = [-0.95489802, 0.29693394]
+    ci_grad = [-0.00000072,-0.00000233]
+  Setting level shift to 1.000 S/E
+  @SCF   40      -99.939316382303      -0.000000001142       0.000001785695
+    ci      = [-0.95490050, 0.29692598]
+    ci_grad = [ 0.00000207, 0.00000666]
+  Setting level shift to 1.000 S/E
+  @SCF   41      -99.939316382477      -0.000000000174       0.000000825181
+    ci      = [-0.95490115, 0.29692387]
+    ci_grad = [ 0.00000055, 0.00000176]
+  Setting level shift to 1.000 S/E
+  @SCF   42      -99.939316382556      -0.000000000079       0.000000620996
+    ci      = [-0.95490154, 0.29692265]
+    ci_grad = [ 0.00000032, 0.00000103]
+  Setting level shift to 1.000 S/E
+  @SCF   43      -99.939316382592      -0.000000000036       0.000000612458
+    ci      = [-0.95490162, 0.29692238]
+    ci_grad = [ 0.00000007, 0.00000022]
+  Setting level shift to 1.000 S/E
+  @SCF   44      -99.939316382606      -0.000000000013       0.000000357327
+    ci      = [-0.95490155, 0.29692260]
+    ci_grad = [-0.00000006,-0.00000019]
+  Setting level shift to 1.000 S/E
+  @SCF   45      -99.939316382616      -0.000000000010       0.000000252949
+    ci      = [-0.95490167, 0.29692222]
+    ci_grad = [ 0.00000010, 0.00000032]
+  Setting level shift to 1.000 S/E
+  @SCF   46      -99.939316382623      -0.000000000007       0.000000287900
+    ci      = [-0.95490171, 0.29692207]
+    ci_grad = [ 0.00000004, 0.00000012]
+  Setting level shift to 1.000 S/E
+  @SCF   47      -99.939316382624      -0.000000000001       0.000000084227
+    ci      = [-0.95490172, 0.29692206]
+    ci_grad = [ 0.00000000, 0.00000001]
+  Setting level shift to 1.000 S/E
+  @SCF   48      -99.939316382624      -0.000000000000       0.000000020696
+    ci      = [-0.95490171, 0.29692207]
+    ci_grad = [-0.00000000,-0.00000001]
+  Setting level shift to 1.000 S/E
+  @SCF   49      -99.939316382624       0.000000000000       0.000000023501
+    ci      = [-0.95490171, 0.29692209]
+    ci_grad = [-0.00000000,-0.00000001]
+  Setting level shift to 1.000 S/E
+  @SCF   50      -99.939316382624      -0.000000000000       0.000000015052
+    ci      = [-0.95490170, 0.29692210]
+    ci_grad = [-0.00000000,-0.00000001]
+  Setting level shift to 1.000 S/E
+  @SCF   51      -99.939316382624       0.000000000000       0.000000007052
+    ci      = [-0.95490171, 0.29692210]
+    ci_grad = [ 0.00000000, 0.00000000]
+  =========================================================================================
+
+      * SCF total energy   =     -99.939316382624
+
+
+      CI coefficients  = [-0.954901706, 0.296922099]
+
+  End of SCF
+  MOs orthonormality check passed.
+
+  Orbitals are canonicalized as:
+  inactive (docc + uocc) : Fock(core)
+  active   (actv)        : Fock(core)
+
+  =========================================================================
+  Eigenvalues (Eh)
+  -------------------------------------------------------------------------
+  Doubly occupied orbitals
+      1    -26.322903  A1      2     -1.519005  A1      3     -0.638631  B1
+      4     -0.638631  B2
+  Active orbitals
+      5     -0.537968  A1      6      0.087068  A1
+  Unoccupied orbitals
+      7      1.558369  A1      8      2.324242  B1      9      2.324242  B2
+     10      2.444927  A1     11      2.586079  A1     12      2.602014  B1
+     13      2.602014  B2     14      3.287527  A1     15      4.991409  B1
+     16      4.991409  B2     17      4.995163  A1     18      4.995163  A2
+     19      5.177516  A1
+  =========================================================================
+
+
+  MCSCF Execution Completed.
+
+
+*** tstop() called on Yorks-Mac.local at Tue Feb 16 01:09:40 2021
+Module time:
+	user time   =       0.04 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.04 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+    MCSCF energy..........................................................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: detci - git commit: f2be3a21
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     2     0     1     1     4
+    GAS1                2     0     0     0     2
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     6     1     3     3    13
+    FROZEN_UOCC         0     0     0     0     0
+    Total              10     1     4     4    19
+  -------------------------------------------------
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   228 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry H          line    22 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 9
+    Number of basis function: 19
+    Number of Cartesian functions: 20
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               9
+      Number of primitives:             27
+      Number of atomic orbitals:        20
+      Number of basis functions:        19
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 36290 doubles for integral storage.
+  We computed 1035 shell quartets total.
+  Whereas there are 1035 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         19
+  Number of correlated molecular orbitals:              19
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01046091 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.002913 GB
+  Timing for conventional integral transformation:            0.031 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.031 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+                -----------------------------------------------
+                  Determinant-Based Configuration Interaction
+                                  Chenyang Li
+                -----------------------------------------------
+
+  Number of active orbitals: 2
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (DOCI): 2
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 2 roots with 2S+1 = 1 *
+
+  Done diagonalizing Hamiltonian, 1.203e-04 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          7.187e-06 seconds
+        β          3.656e-06 seconds
+  Time spent building 1-rdm: 2.233e-06 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+     A1    Coefficients
+    -------------------
+     20    0.9549017068
+     02   -0.2969220946
+    -------------------
+
+    Occupation Numbers:
+        1A1   1.82367454    2A1   0.17632546
+
+    Total Energy:  -99.939316382623957
+
+  ==> Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+      0 ->   0:  X:   0.00000  Y:   0.00000  Z:   0.65454  Total:   0.65454
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316382624
+    ---------------------------------------------
+
+  Time to prepare integrals:        0.064 seconds
+  Time to run job          :        0.001 seconds
+  Total                    :        0.065 seconds    DOCI energy...........................................................................PASSED
+
+    Psi4 stopped on: Tuesday, 16 February 2021 01:09AM
+    Psi4 wall time for execution: 0:00:00.24
+
+*** Psi4 exiting successfully. Buy a developer a beer!

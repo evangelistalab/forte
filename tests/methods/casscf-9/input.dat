@@ -19,13 +19,13 @@ set {
   scf_type               df
   maxiter                300
   e_convergence          10
-  d_convergence          8
+  d_convergence          7
   docc                   [3,0,1,1]
   restricted_docc        [0,0,0,0]
   active                 [4,0,1,1]
   mcscf_maxiter          100
   mcscf_type             df
-  mcscf_r_convergence    8
+  mcscf_r_convergence    5
   mcscf_e_convergence    10
   mcscf_diis_start       6
 }

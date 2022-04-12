@@ -1,0 +1,113 @@
+# An example of how AVAS can be used to select the π orbitals of the C20 fullerene.
+# We use the nearest and second nearest neighbors of each atom to determine the 12 planes forming the C20 cage.
+
+import forte
+
+refscf = -756.50604655444420
+
+molecule C20{
+# grabed from https://nanotube.msu.edu/fullerene/fullerene.php?C=20
+# C1 symmetry due to Jahn-Teller distortion, not Ih point group!
+C        1.5691000000     -0.6566000000     -0.9364000000
+C        1.7669000000      0.6431000000     -0.4720000000
+C        0.4705000000     -0.6652000000     -1.7927000000
+C        0.0116000000      0.6478000000     -1.8255000000
+C        0.7930000000      1.4673000000     -1.0284000000
+C       -0.4874000000     -1.4818000000     -1.2157000000
+C       -1.5635000000     -0.6572000000     -0.8952000000
+C       -1.2694000000      0.6490000000     -1.2767000000
+C       -0.0023000000     -1.9618000000     -0.0072000000
+C       -0.7698000000     -1.4532000000      1.0359000000
+C       -1.7576000000     -0.6380000000      0.4742000000
+C        1.2878000000     -1.4503000000      0.1629000000
+C        1.2896000000     -0.6595000000      1.3047000000
+C        0.0115000000     -0.6460000000      1.8533000000
+C        1.5830000000      0.6454000000      0.8984000000
+C        0.4848000000      1.4383000000      1.1937000000
+C       -0.5032000000      0.6469000000      1.7753000000
+C       -1.6062000000      0.6715000000      0.9231000000
+C       -1.2959000000      1.4891000000     -0.1655000000
+C       -0.0102000000      1.9727000000     -0.0063000000
+}
+
+set {
+  basis         cc-pvdz
+  df_basis_scf  cc-pvdz-jkfit
+  reference     rhf
+  scf_type      df
+  d_convergence 10
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 8, "SCF energy")
+
+# figure out the 12 planes of C20 fullerene
+import numpy as np
+from collections import defaultdict
+from itertools import combinations
+
+# grab molecule xyz
+xyz = np.array(C20.geometry())  # in Bohr
+n_atoms = xyz.shape[0]
+
+# compute bond vectors
+bond_vectors = {}
+for i in range(n_atoms):
+    for j in range(i + 1, n_atoms):
+        bond = xyz[i] - xyz[j]
+        bond_vectors[(i, j)] = bond
+        bond_vectors[(j, i)] = bond
+
+# compute bond lengths
+bond_lengths = defaultdict(dict)
+for p, b in bond_vectors.items():
+    i, j = p
+    r = np.linalg.norm(b)
+    bond_lengths[i][j] = r
+    bond_lengths[j][i] = r
+
+# keep only the nearest and second nearest neighbors
+neighbors = {i: sorted(p.keys(), key=lambda x: p[x])[:9] for i, p in bond_lengths.items()}
+
+# find the planes
+planes = []
+for i in range(n_atoms):
+    nearest1 = neighbors[i][:3]
+    nearest2 = neighbors[i][3:]
+    for j, k in combinations(nearest1, 2):
+        if j < i or k < i:
+            continue
+        j_nearest = [m for m in neighbors[j][:3] if m != i and m in neighbors[k][3:]][0]
+        k_nearest = [m for m in neighbors[k][:3] if m != i and m in neighbors[j][3:]][0]
+        plane = [f"C{m + 1}" for m in [i, j, k, j_nearest, k_nearest]]
+        planes.append(plane)
+
+set forte {
+  job_type           none
+  subspace           ["C(2p)"]  # must include all p orbitals
+  subspace_pi_planes $planes  # the list of planes forming the C20 cage
+  avas               true
+  avas_diagonalize   true
+  avas_cutoff        0.5
+}
+Ezero, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+
+# fix orbital phase
+Ca = wfn.Ca()
+for i in range(Ca.cols()):
+    if Ca.get(0, i) < 0:
+        Ca.scale_column(0, i, -1.0)
+
+# test only the core and active orbitals
+Ca_np = Ca.to_array()[:, : 70]
+Ca = psi4.core.Matrix.from_array(Ca_np)
+
+# save to disk
+#Ca_list = [Ca_np]
+#with open('Ca_ref.npz', 'wb') as f:
+#    np.savez_compressed(f, *Ca_list)
+
+# read reference Ca values from disk
+Ca_ref = psi4.core.Matrix.from_array([np.load('Ca_ref.npz')['arr_0']])
+
+# compare computed values from the reference ones
+compare_matrices(Ca_ref, Ca, 6, "AVAS orbitals")

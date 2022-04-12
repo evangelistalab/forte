@@ -1,5 +1,5 @@
-#! Generated using commit GITCOMMIT
-#! Perform a DF-DSRG-MRPT2 on N2
+# Perform a DF-DSRG-MRPT2 on N2
+# Test semicanonical orbitals with mixed frozen and restricted docc
 import forte
 
 refrhf    = -108.953488378960373
@@ -21,24 +21,23 @@ set globals{
    df_basis_scf            cc-pvdz-jkfit
    reference               rhf
    scf_type                df
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
 }
 
 set forte {
-   correlation_solver      three-dsrg-mrpt2
-   int_type                diskdf
-   frozen_docc             [1,0,0,0,0,1,0,0]
-   restricted_docc         [1,0,0,0,0,1,0,0]
-   active                  [1,0,1,1,0,1,1,1]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   ntrial_per_root         100
-   active_space_solver     cas
-   relax_ref               once
-   semi_canonical          true
-   semi_canonical_mix_inactive true
+  correlation_solver          three-dsrg-mrpt2
+  int_type                    diskdf
+  frozen_docc                 [1,0,0,0,0,1,0,0]
+  restricted_docc             [1,0,0,0,0,1,0,0]
+  active                      [1,0,1,1,0,1,1,1]
+  root_sym                    0
+  nroot                       1
+  dsrg_s                      1.0
+  ntrial_per_root             100
+  active_space_solver         cas
+  relax_ref                   once
+  semi_canonical_mix_inactive true
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

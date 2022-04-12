@@ -6,7 +6,7 @@ Makefile.*
 Makefile
 timer.dat
 *~
-src/version.h
+forte/version.h
 
 # Qt Creator project files
 *.config
@@ -14,6 +14,9 @@ src/version.h
 *.creator.user
 *.files
 *.includes
+
+forte_tests
+forte_benchmarks
 
 # All outputs and clean files in test cases
 /tests/*/output.dat
@@ -38,5 +41,6 @@ docs/sphinx/_*
 
 CMakeCache.txt
 CMakeFiles/
+forte/CMakeFiles
 cmake_install.cmake
 *.DS_Store

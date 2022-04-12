@@ -16,8 +16,8 @@ set globals{
    basis                   cc-pvdz
    reference               rhf
    scf_type                pk
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    docc                    [3,0,1,1]
 }
 

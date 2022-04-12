@@ -2,7 +2,7 @@ import forte
 
 memory 2 gb
 
-escf = -304.905779550494
+escf = -304.905779549494
 efix = -305.390029652734
 eaci = -305.3981015635
 
@@ -39,9 +39,8 @@ set {
   scf_type df
   guess sad
   maxiter 500
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
+  e_convergence 11
+  d_convergence 11
   reference rhf
   ints_tolerance 0.0
 }
@@ -58,6 +57,7 @@ set forte {
   diag_algorithm dynamic
   sci_direct_rdms true
   aci_screen_alg batch_vec
+  dsrg_s 1.0e10
   aci_nbatch 4
   nroot 1
   root_sym 0
@@ -70,7 +70,7 @@ set_num_threads(8)
 
 e, scf_wfn = energy('scf', return_wfn=True)
 
-compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy")
+compare_values(escf,variable("CURRENT ENERGY"), 8, "SCF energy")
 
 ea, awfn = energy('forte', ref_wfn=scf_wfn, return_wfn=True)
 compare_values(efix,variable("UNRELAXED ENERGY"), 8, "ACI-DSRG-MRPT2 fixed energy")

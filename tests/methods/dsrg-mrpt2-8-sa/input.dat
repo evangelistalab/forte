@@ -1,11 +1,15 @@
-#! Generated using commit GITCOMMIT
+# Test state-averaged DSRG-PT2c and DSRG-PT2 energies
+# and transition dipole moments for LiF
 
 import forte
 
 refmcscf    = -106.752885060580013
-#refpt2sub   = -106.929958783667061
 refpt2sub   = -106.929958806835
 refpt2full  = -106.929958810967
+
+ref_dipole00 = -9.101448026212
+ref_dipole01 = -2.818818336692
+ref_dipole11 = -0.841111628135
 
 molecule {
   0 1
@@ -95,7 +99,21 @@ energy('forte',ref_wfn=wfn)
 compare_values(refpt2sub,variable("ENERGY ROOT 0 1A1"),9,"SA-DSRG-MRPT2 SUB energy root 0")
 
 set forte{
-  dsrg_multi_state   sa_full
+  dsrg_multi_state    sa_full
+  active_space_solver detci
+  transition_dipoles  true
 }
 energy('forte',ref_wfn=wfn)
 compare_values(refpt2full,variable("ENERGY ROOT 0 1A1"),9,"SA-DSRG-MRPT2 FULL energy root 0")
+
+# print all Psi4 environment variables
+psi4.core.print_variables()
+
+dipole00 = variable("SINGLET <0A1|DM_Z|0A1>")
+compare_values(ref_dipole00, dipole00, 6, "SA-DSRG-PT2/DETCI <0|DM_Z|0> DIPOLE")
+
+dipole11 = variable("SINGLET <1A1|DM_Z|1A1>")
+compare_values(ref_dipole11, dipole11, 6, "SA-DSRG-PT2/DETCI <1|DM_Z|1> DIPOLE")
+
+dipole01 = variable("TRANS SINGLET <0A1|DM_Z|1A1>")
+compare_values(ref_dipole01, dipole01, 6, "SA-DSRG-PT2/DETCI <0|DM_Z|1> DIPOLE")

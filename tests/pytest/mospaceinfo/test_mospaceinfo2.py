@@ -79,4 +79,5 @@ def test_mospaceinfo2():
     for name, val in zip(ref_spaces_non_frozen,ref_corr_absolute_mo_non_frozen):
         assert mo_space_info.pos_in_space(name,'CORRELATED') == val
 
-test_mospaceinfo2()
+if __name__ == '__main__':
+    test_mospaceinfo2()
