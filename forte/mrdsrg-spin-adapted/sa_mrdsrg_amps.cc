@@ -183,9 +183,6 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
                 tempX["jb"] = U_["ij"] * T1["ia"] * U_["ab"];
                 T1["ia"] = tempX["ia"];
             }
-
-            // zero internal amplitudes
-            internal_amps_T1(T1);
         }
     }
 

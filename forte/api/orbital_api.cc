@@ -31,7 +31,6 @@
 
 #include "psi4/libmints/matrix.h"
 
-#include "orbital-helpers/semi_canonicalize.h"
 #include "base_classes/orbital_transform.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"

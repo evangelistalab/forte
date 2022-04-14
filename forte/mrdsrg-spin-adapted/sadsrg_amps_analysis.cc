@@ -37,6 +37,9 @@ using namespace psi;
 namespace forte {
 
 void SADSRG::internal_amps_T1(BlockedTensor& T1) {
+    if (not T1.is_block("aa"))
+        return;
+
     if (t1_internals_.empty()) {
         T1.block("aa").zero();
     } else {
@@ -76,6 +79,9 @@ void SADSRG::internal_amps_T1(BlockedTensor& T1) {
 }
 
 void SADSRG::internal_amps_T2(BlockedTensor& T2) {
+    if (!T2.is_block("aaaa"))
+        return;
+
     if (t2_internals_.empty()) {
         T2.block("aaaa").zero();
     } else {

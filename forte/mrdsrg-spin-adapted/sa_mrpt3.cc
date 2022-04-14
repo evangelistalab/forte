@@ -283,7 +283,7 @@ double SA_MRPT3::compute_energy_pt3_2() {
     local_timer t1;
     print_contents("Preparing 2nd-order amplitudes");
 
-    bool include_actv = t1_internals_.size() or t2_internals_.size();
+    bool include_actv = !t1_internals_.empty() or !t2_internals_.empty();
 
     // compute 2nd-order amplitudes
     // Step 1: compute 0.5 * [H1st + Hbar1st, A1st] = [H1st, A1st] + 0.5 * [[H0th, A1st], A1st]
