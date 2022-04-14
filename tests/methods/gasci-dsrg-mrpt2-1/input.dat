@@ -31,7 +31,7 @@ set forte{
 frozen_docc               [1,0,0,0,0,1,0,0]
 restricted_docc           [1,0,0,1,0,1,1,0]
 dsrg_s                    0.5
-active_space_solver       aci
+active_space_solver       detci
 sigma                     0.00
 sci_enforce_spin_complete true
 active_ref_type           gas

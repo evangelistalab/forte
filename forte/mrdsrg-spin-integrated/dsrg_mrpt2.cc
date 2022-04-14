@@ -258,15 +258,15 @@ void DSRG_MRPT2::print_options_summary() {
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {
-        calculation_info_string.push_back({"state_type", "MULTI-STATE"});
-        calculation_info_string.push_back({"multi-state type", multi_state_algorithm_});
+        calculation_info_string.emplace_back("state_type", "MULTI-STATE");
+        calculation_info_string.emplace_back("multi-state type", multi_state_algorithm_);
     } else {
-        calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
+        calculation_info_string.emplace_back("state_type", "STATE-SPECIFIC");
     }
 
-    calculation_info_string.push_back({"internal_amp", internal_amp_});
+    calculation_info_string.emplace_back("internal_amp", internal_amp_);
     if (internal_amp_ != "NONE") {
-        calculation_info_string.push_back({"internal_amp_select", internal_amp_select_});
+        calculation_info_string.emplace_back("internal_amp_select", internal_amp_select_);
     }
 
     std::vector<std::pair<std::string, bool>> calculation_info_bool{
@@ -324,35 +324,35 @@ double DSRG_MRPT2::compute_energy() {
     double Ecorr = 0.0;
     double Etotal = 0.0;
     std::vector<std::pair<std::string, double>> energy;
-    energy.push_back({"E0 (reference)", Eref_});
+    energy.emplace_back("E0 (reference)", Eref_);
 
     Etemp = E_FT1();
     Ecorr += Etemp;
-    energy.push_back({"<[F, T1]>", Etemp});
+    energy.emplace_back("<[F, T1]>", Etemp);
 
     Etemp = E_FT2();
     Ecorr += Etemp;
-    energy.push_back({"<[F, T2]>", Etemp});
+    energy.emplace_back("<[F, T2]>", Etemp);
 
     Etemp = E_VT1();
     Ecorr += Etemp;
-    energy.push_back({"<[V, T1]>", Etemp});
+    energy.emplace_back("<[V, T1]>", Etemp);
 
     Etemp = E_VT2_2();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> (C_2)^4", Etemp});
+    energy.emplace_back("<[V, T2]> (C_2)^4", Etemp);
 
     Etemp = E_VT2_4HH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 HH", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 HH", Etemp);
 
     Etemp = E_VT2_4PP();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PP", Etemp);
 
     Etemp = E_VT2_4PH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PH", Etemp);
 
     if (do_cu3_) {
         Etemp = E_VT2_6();
@@ -360,13 +360,13 @@ double DSRG_MRPT2::compute_energy() {
         Etemp = 0.0;
     }
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
+    energy.emplace_back("<[V, T2]> C_6 C_2", Etemp);
 
     Ecorr += EVT2;
     Etotal = Ecorr + Eref_;
-    energy.push_back({"<[V, T2]>", EVT2});
-    energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
-    energy.push_back({"DSRG-MRPT2 total energy", Etotal});
+    energy.emplace_back("<[V, T2]>", EVT2);
+    energy.emplace_back("DSRG-MRPT2 correlation energy", Ecorr);
+    energy.emplace_back("DSRG-MRPT2 total energy", Etotal);
     Hbar0_ = Ecorr;
 
     // Analyze T1 and T2
@@ -380,10 +380,10 @@ double DSRG_MRPT2::compute_energy() {
     }
     check_t1();
     check_t2();
-    energy.push_back({"max(T1)", T1max_});
-    energy.push_back({"max(T2)", T2max_});
-    energy.push_back({"||T1||", T1norm_});
-    energy.push_back({"||T2||", T2norm_});
+    energy.emplace_back("max(T1)", T1max_);
+    energy.emplace_back("max(T2)", T2max_);
+    energy.emplace_back("||T1||", T1norm_);
+    energy.emplace_back("||T2||", T2norm_);
 
     print_h2("Possible Intruders");
     print_intruder("A", lt1a_);
@@ -780,7 +780,7 @@ double DSRG_MRPT2::E_FT1() {
     E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
     E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
-    if (t1_internals_.size()) {
+    if (!t1_internals_.empty()) {
         E += F_["ux"] * T1_["yv"] * Gamma1_["xy"] * Eta1_["vu"];
         E += F_["UX"] * T1_["YV"] * Gamma1_["XY"] * Eta1_["VU"];
     }
@@ -813,7 +813,7 @@ double DSRG_MRPT2::E_VT1() {
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (t1_internals_.size()) {
+    if (!t1_internals_.empty()) {
         temp.zero();
 
         temp["uvxy"] += V_["wvxy"] * T1_["uw"];
@@ -860,7 +860,7 @@ double DSRG_MRPT2::E_FT2() {
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp.zero();
 
         temp["uvxy"] += F_["wx"] * T2_["uvwy"];
@@ -952,7 +952,7 @@ double DSRG_MRPT2::E_VT2_2() {
     temp["YVXU"] += Eta1_["wz"] * V_["zVmX"] * T2_["mYwU"];
     E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp.zero();
 
         temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
@@ -985,7 +985,7 @@ double DSRG_MRPT2::E_VT2_4HH() {
     temp["UVXY"] += 0.125 * V_["UVMN"] * T2_["MNXY"];
     temp["UVXY"] += 0.25 * Gamma1_["WZ"] * V_["UVMW"] * T2_["MZXY"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp["uvxy"] += 0.125 * V_["u,v,w,a1"] * T2_["z,a3,x,y"] * Gamma1_["wz"] * Gamma1_["a1,a3"];
         temp["uVxY"] += V_["u,V,w,A1"] * T2_["z,A3,x,Y"] * Gamma1_["wz"] * Gamma1_["A1,A3"];
         temp["UVXY"] += 0.125 * V_["U,V,W,A1"] * T2_["Z,A3,X,Y"] * Gamma1_["WZ"] * Gamma1_["A1,A3"];
@@ -1016,7 +1016,7 @@ double DSRG_MRPT2::E_VT2_4PP() {
     temp["UVXY"] += 0.125 * V_["EFXY"] * T2_["UVEF"];
     temp["UVXY"] += 0.25 * Eta1_["WZ"] * T2_["UVEW"] * V_["EZXY"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp["uvxy"] += 0.125 * V_["w,a0,x,y"] * T2_["u,v,z,a1"] * Eta1_["zw"] * Eta1_["a1,a0"];
         temp["uVxY"] += V_["w,A0,x,Y"] * T2_["u,V,z,A1"] * Eta1_["zw"] * Eta1_["A1,A0"];
         temp["UVXY"] += 0.125 * V_["W,A0,X,Y"] * T2_["U,V,Z,A1"] * Eta1_["ZW"] * Eta1_["A1,A0"];
@@ -1077,7 +1077,7 @@ double DSRG_MRPT2::E_VT2_4PH() {
     temp["uVxY"] += Eta1_["ZW"] * V_["WVMY"] * T2_["uMxZ"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp.zero();
         temp["uvxy"] -= V_["v,a3,x,a1"] * T2_["a0,u,a2,y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
         temp["uvxy"] -= V_["v,A3,x,A1"] * T2_["u,A0,y,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
@@ -1114,7 +1114,7 @@ double DSRG_MRPT2::E_VT2_6() {
     temp["uvwxyz"] += V_["uvmz"] * T2_["mwxy"];
     temp["uvwxyz"] += V_["wexy"] * T2_["uvez"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
         temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
     }
@@ -1125,7 +1125,7 @@ double DSRG_MRPT2::E_VT2_6() {
     temp["UVWXYZ"] += V_["UVMZ"] * T2_["MWXY"];
     temp["UVWXYZ"] += V_["WEXY"] * T2_["UVEZ"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
         temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
     }
@@ -1141,7 +1141,7 @@ double DSRG_MRPT2::E_VT2_6() {
     temp["uvWxyZ"] -= V_["vexy"] * T2_["uWeZ"];
     temp["uvWxyZ"] -= 2.0 * V_["vExZ"] * T2_["uWyE"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp["uvWxyZ"] -= V_["uv1y"] * T2_["1WxZ"];
         temp["uvWxyZ"] -= V_["uW1Z"] * T2_["1vxy"];
         temp["uvWxyZ"] += 2.0 * V_["uWy!"] * T2_["v!xZ"];
@@ -1162,7 +1162,7 @@ double DSRG_MRPT2::E_VT2_6() {
     temp["uVWxYZ"] -= V_["WEYZ"] * T2_["uVxE"];
     temp["uVWxYZ"] -= 2.0 * V_["eWxY"] * T2_["uVeZ"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp["uVWxYZ"] -= V_["VW!Z"] * T2_["u!xY"];
         temp["uVWxYZ"] -= V_["uVx!"] * T2_["!WYZ"];
         temp["uVWxYZ"] += 2.0 * V_["uV1Z"] * T2_["1WxY"];

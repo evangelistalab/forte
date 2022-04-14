@@ -119,8 +119,8 @@ void MASTER_DSRG::read_options() {
         outfile->Printf("\n  Changed SOURCE option to STANDARD");
         source_ = "STANDARD";
 
-        warnings_.push_back(std::make_tuple("Unsupported SOURCE", "Change to STANDARD",
-                                            "Change options in input.dat"));
+        warnings_.emplace_back("Unsupported SOURCE", "Change to STANDARD",
+                               "Change options in input.dat");
     }
     if (source_ == "STANDARD") {
         dsrg_source_ = std::make_shared<STD_SOURCE>(s_, taylor_threshold_);
@@ -697,9 +697,7 @@ void MASTER_DSRG::prune_t1_internals(BlockedTensor& T1) {
             std::vector<double> T1copy(T1data.size());
 
             for (const auto& t : t1_internals_) {
-                std::string gas1, gas2;
-                bool pure;
-                std::tie(gas1, gas2, pure) = t;
+                const auto& [gas1, gas2, pure] = t;
 
                 auto mos_o = gas_actv_rel_mos_[gas1];
                 auto mos_v = gas_actv_rel_mos_[gas2];
@@ -743,9 +741,7 @@ void MASTER_DSRG::prune_t2_internals(BlockedTensor& T2) {
             std::vector<double> T2copy(T2data.size());
 
             for (const auto& t : t2_internals_) {
-                std::string gas1, gas2, gas3, gas4;
-                bool pure;
-                std::tie(gas1, gas2, gas3, gas4, pure) = t;
+                const auto& [gas1, gas2, gas3, gas4, pure] = t;
 
                 auto mos_o1 = gas_actv_rel_mos_[gas1];
                 auto mos_o2 = gas_actv_rel_mos_[gas2];
@@ -947,6 +943,11 @@ void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& a
     E += H1["EX"] * T1["YE"] * Gamma1_["XY"];
     E += H1["XM"] * T1["MY"] * Eta1_["YX"];
 
+    if (!t1_internals_.empty()) {
+        E += H1["ux"] * T1["yv"] * Gamma1_["xy"] * Eta1_["vu"];
+        E += H1["UX"] * T1["YV"] * Gamma1_["XY"] * Eta1_["VU"];
+    }
+
     E *= alpha;
     C0 += E;
 
@@ -958,24 +959,35 @@ void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& a
 
 void MASTER_DSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
     local_timer timer;
-    BlockedTensor temp;
     double E = 0.0;
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aaaa"}));
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
     temp["uvxy"] += H1["ex"] * T2["uvey"];
     temp["uvxy"] -= H1["vm"] * T2["umxy"];
-    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"});
     temp["UVXY"] += H1["EX"] * T2["UVEY"];
     temp["UVXY"] -= H1["VM"] * T2["UMXY"];
-    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"});
     temp["uVxY"] += H1["ex"] * T2["uVeY"];
     temp["uVxY"] += H1["EY"] * T2["uVxE"];
     temp["uVxY"] -= H1["VM"] * T2["uMxY"];
     temp["uVxY"] -= H1["um"] * T2["mVxY"];
+
+    if (!t2_internals_.empty()) {
+        temp["uvxy"] += H1["wx"] * T2["uvwy"];
+        temp["uvxy"] -= H1["vw"] * T2["uwxy"];
+
+        temp["UVXY"] += H1["WX"] * T2["UVWY"];
+        temp["UVXY"] -= H1["VW"] * T2["UWXY"];
+
+        temp["uVxY"] += H1["wx"] * T2["uVwY"];
+        temp["uVxY"] += H1["WY"] * T2["uVxW"];
+        temp["uVxY"] -= H1["VW"] * T2["uWxY"];
+        temp["uVxY"] -= H1["uw"] * T2["wVxY"];
+    }
+
+    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
+    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     E *= alpha;
@@ -989,24 +1001,35 @@ void MASTER_DSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& a
 
 void MASTER_DSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
     local_timer timer;
-    BlockedTensor temp;
     double E = 0.0;
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aaaa"}));
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
     temp["uvxy"] += H2["evxy"] * T1["ue"];
     temp["uvxy"] -= H2["uvmy"] * T1["mx"];
-    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"});
     temp["UVXY"] += H2["EVXY"] * T1["UE"];
     temp["UVXY"] -= H2["UVMY"] * T1["MX"];
-    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"});
     temp["uVxY"] += H2["eVxY"] * T1["ue"];
     temp["uVxY"] += H2["uExY"] * T1["VE"];
     temp["uVxY"] -= H2["uVmY"] * T1["mx"];
     temp["uVxY"] -= H2["uVxM"] * T1["MY"];
+
+    if (!t1_internals_.empty()) {
+        temp["uvxy"] += H2["wvxy"] * T1["uw"];
+        temp["uvxy"] -= H2["uvwy"] * T1["wx"];
+
+        temp["UVXY"] += H2["WVXY"] * T1["UW"];
+        temp["UVXY"] -= H2["UVWY"] * T1["WX"];
+
+        temp["uVxY"] += H2["wVxY"] * T1["uw"];
+        temp["uVxY"] += H2["uWxY"] * T1["VW"];
+        temp["uVxY"] -= H2["uVwY"] * T1["wx"];
+        temp["uVxY"] -= H2["uVxW"] * T1["WY"];
+    }
+
+    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
+    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     E *= alpha;
@@ -1083,6 +1106,18 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     temp["YVXU"] += Eta1_["wz"] * H2["zVmX"] * T2["mYwU"];
     E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
 
+    if (!t2_internals_.empty()) {
+        temp.zero();
+
+        temp["uvxy"] += 0.25 * H2["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
+        temp["uVxY"] += H2["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
+        temp["UVXY"] += 0.25 * H2["UVWZ"] * Gamma1_["WX"] * Gamma1_["ZY"];
+
+        E += temp["uvxy"] * T2["xywz"] * Eta1_["wu"] * Eta1_["zv"];
+        E += temp["uVxY"] * T2["xYwZ"] * Eta1_["wu"] * Eta1_["ZV"];
+        E += temp["UVXY"] * T2["XYWZ"] * Eta1_["WU"] * Eta1_["ZV"];
+    }
+
     // <[Hbar2, T2]> C_4 (C_2)^2 HH -- combined with PH
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aaaa"}));
     temp["uvxy"] += 0.125 * H2["uvmn"] * T2["mnxy"];
@@ -1109,7 +1144,6 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     temp["uvxy"] += Gamma1_["WZ"] * H2["uExW"] * T2["vZyE"];
     temp["uvxy"] += Eta1_["zw"] * H2["wumx"] * T2["mvzy"];
     temp["uvxy"] += Eta1_["ZW"] * T2["vMyZ"] * H2["uWxM"];
-    E += temp["uvxy"] * Lambda2_["xyuv"];
 
     temp["UVXY"] += H2["eUmX"] * T2["mVeY"];
     temp["UVXY"] += H2["EUMX"] * T2["MVEY"];
@@ -1117,7 +1151,6 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     temp["UVXY"] += Gamma1_["WZ"] * T2["ZVEY"] * H2["EUWX"];
     temp["UVXY"] += Eta1_["zw"] * H2["wUmX"] * T2["mVzY"];
     temp["UVXY"] += Eta1_["ZW"] * H2["WUMX"] * T2["MVZY"];
-    E += temp["UVXY"] * Lambda2_["XYUV"];
 
     temp["uVxY"] += H2["uexm"] * T2["mVeY"];
     temp["uVxY"] += H2["uExM"] * T2["MVEY"];
@@ -1139,6 +1172,33 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     temp["uVxY"] -= Eta1_["ZW"] * T2["mVxZ"] * H2["uWmY"];
     temp["uVxY"] += Eta1_["zw"] * T2["umxz"] * H2["wVmY"];
     temp["uVxY"] += Eta1_["ZW"] * H2["WVMY"] * T2["uMxZ"];
+
+    if (!t2_internals_.empty()) {
+        temp["uvxy"] += 0.125 * H2["u,v,w,a1"] * T2["z,a3,x,y"] * Gamma1_["wz"] * Gamma1_["a1,a3"];
+        temp["uVxY"] += H2["u,V,w,A1"] * T2["z,A3,x,Y"] * Gamma1_["wz"] * Gamma1_["A1,A3"];
+        temp["UVXY"] += 0.125 * H2["U,V,W,A1"] * T2["Z,A3,X,Y"] * Gamma1_["WZ"] * Gamma1_["A1,A3"];
+
+        temp["uvxy"] += 0.125 * H2["w,a0,x,y"] * T2["u,v,z,a1"] * Eta1_["zw"] * Eta1_["a1,a0"];
+        temp["uVxY"] += H2["w,A0,x,Y"] * T2["u,V,z,A1"] * Eta1_["zw"] * Eta1_["A1,A0"];
+        temp["UVXY"] += 0.125 * H2["W,A0,X,Y"] * T2["U,V,Z,A1"] * Eta1_["ZW"] * Eta1_["A1,A0"];
+
+        temp["uvxy"] -= H2["v,a3,x,a1"] * T2["a0,u,a2,y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uvxy"] -= H2["v,A3,x,A1"] * T2["u,A0,y,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+
+        temp["UVXY"] -= H2["a3,V,a1,X"] * T2["a0,U,a2,Y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["UVXY"] -= H2["V,A3,X,A1"] * T2["A0,U,A2,Y"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+
+        temp["uVxY"] += H2["u,a3,x,a1"] * T2["a0,V,a2,Y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uVxY"] += H2["u,A3,x,A1"] * T2["A0,V,A2,Y"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+        temp["uVxY"] += H2["a3,V,a1,Y"] * T2["a0,u,a2,x"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uVxY"] += H2["A3,V,A1,Y"] * T2["u,A0,x,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+
+        temp["uVxY"] -= H2["a3,V,x,A1"] * T2["u,A0,a2,Y"] * Gamma1_["A1,A0"] * Eta1_["a2,a3"];
+        temp["uVxY"] -= H2["u,A3,a1,Y"] * T2["a0,V,x,A2"] * Gamma1_["a1,a0"] * Eta1_["A2,A3"];
+    }
+
+    E += temp["uvxy"] * Lambda2_["xyuv"];
+    E += temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
@@ -1656,7 +1716,7 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
     std::set_intersection(temp_blocks.begin(), temp_blocks.end(), C2_blocks.begin(),
                           C2_blocks.end(), std::back_inserter(blocks));
     BlockedTensor temp;
-    if (blocks.size() != 0) {
+    if (!blocks.empty()) {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
         temp["qjsb"] += alpha * H2["aqms"] * T2["mjab"];
         temp["qjsb"] += alpha * H2["qAsM"] * T2["jMbA"];
@@ -1685,7 +1745,7 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
     blocks.clear();
     std::set_intersection(temp_blocks.begin(), temp_blocks.end(), C2_blocks.begin(),
                           C2_blocks.end(), std::back_inserter(blocks));
-    if (blocks.size() != 0) {
+    if (!blocks.empty()) {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
         temp["QJSB"] += alpha * H2["AQMS"] * T2["MJAB"];
         temp["QJSB"] += alpha * H2["aQmS"] * T2["mJaB"];

@@ -46,7 +46,7 @@ double SADSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alph
     temp["uv"] += H1["ev"] * T1["ue"];
     temp["uv"] -= H1["um"] * T1["mv"];
 
-    if (t1_internals_.size()) {
+    if (!t1_internals_.empty()) {
         temp["uv"] += 0.5 * H1["xv"] * T1["uy"] * Eta1_["yx"];
     }
 
@@ -70,7 +70,7 @@ double SADSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alph
     temp["uvxy"] += H1["ex"] * T2["uvey"];
     temp["uvxy"] -= H1["vm"] * T2["muyx"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp["uvxy"] += H1["zx"] * T2["uvzy"];
         temp["uvxy"] -= H1["vz"] * T2["zuyx"];
     }
@@ -96,7 +96,7 @@ double SADSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alph
     temp["uvxy"] += H2["evxy"] * T1["ue"];
     temp["uvxy"] -= H2["uvmy"] * T1["mx"];
 
-    if (t1_internals_.size()) {
+    if (!t1_internals_.empty()) {
         temp["uvxy"] += H2["zvxy"] * T1["uz"];
         temp["uvxy"] -= H2["uvzy"] * T1["zx"];
     }
@@ -307,7 +307,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         }
     }
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         // [H2, T2] L1 from aaaa
         temp.set_name("temp_aaaa");
         temp["wzxy"] = 0.25 * S2["uvxy"] * L1_["wu"] * L1_["zv"];
@@ -334,7 +334,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                 E3 += H2.block("aaaa")("ewxy") * T2.block("aaaa")("uvez") * L3_("xyzuwv");
                 E3 -= H2.block("aaaa")("uvmz") * T2.block("aaaa")("mwxy") * L3_("xyzuwv");
             } else {
-                // TODO: need to implement
+                // TODO: need to implement (copy and paste would suffice but should be avoided)
                 throw std::runtime_error("Not yet implemented!");
             }
         }
@@ -392,7 +392,7 @@ void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     C1["qp"] -= alpha * temp["mv"] * H2["qvpm"];
     C1["qp"] += 0.5 * alpha * temp["mv"] * H2["vqpm"];
 
-    if (t1_internals_.size()) {
+    if (!t1_internals_.empty()) {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp_aa", {"aa"});
         temp["yw"] = T1["xw"] * L1_["yx"];
         C1["qp"] += alpha * temp["yw"] * H2["qwpy"];
@@ -468,7 +468,7 @@ void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
     C1["qs"] -= alpha * H2["uqms"] * temp["um"];
     C1["qs"] += 0.5 * alpha * H2["uqsm"] * temp["um"];
 
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp_aa", {"aa"});
         temp["xz"] = T2["uvzy"] * L2_["xyuv"];
         C1["qs"] += alpha * H2["zqxs"] * temp["xz"];
@@ -584,7 +584,7 @@ void SADSRG::V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     temp["gux"] += B["gex"] * T1["ue"];
     temp["gux"] -= B["gum"] * T1["mx"];
 
-    if (t1_internals_.size()) {
+    if (!t1_internals_.empty()) {
         temp["gux"] += B["gzx"] * T1["uz"];
         temp["gux"] -= B["guz"] * T1["zx"];
     }
@@ -617,8 +617,8 @@ std::vector<double> SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, Bloc
 
     // form H2 for other blocks that fits memory
     std::vector<std::string> blocks{"aacc", "aaca", "vvaa", "vaaa", "avac", "avca"};
-    if (t2_internals_.size()) {
-        blocks.push_back("aaaa");
+    if (!t2_internals_.empty()) {
+        blocks.emplace_back("aaaa");
     }
     auto H2 = ambit::BlockedTensor::build(tensor_type_, "temp_H2", blocks);
     H2["abij"] = B["gai"] * B["gbj"];
@@ -649,7 +649,7 @@ void SADSRG::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     temp["g"] += 2.0 * T1["ma"] * B["gam"];
     temp["g"] += T1["xe"] * L1_["yx"] * B["gey"];
     temp["g"] -= T1["mu"] * L1_["uv"] * B["gvm"];
-    if (t1_internals_.size()) {
+    if (!t1_internals_.empty()) {
         temp["g"] += T1["xw"] * L1_["yx"] * B["gwy"];
         temp["g"] -= T1["wu"] * L1_["uv"] * B["gvw"];
 
@@ -732,7 +732,7 @@ void SADSRG::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp221", {"L"});
     temp["g"] += B["gex"] * T2["uvey"] * L2_["xyuv"];
     temp["g"] -= B["gum"] * T2["mvxy"] * L2_["xyuv"];
-    if (t2_internals_.size()) {
+    if (!t2_internals_.empty()) {
         temp["g"] += B["gzx"] * T2["uvzy"] * L2_["xyuv"];
         temp["g"] -= B["guz"] * T2["zvxy"] * L2_["xyuv"];
 
@@ -903,8 +903,8 @@ void SADSRG::H_A_Ca(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, Blo
                     BlockedTensor& S2, const double& alpha, BlockedTensor& C1, BlockedTensor& C2) {
     // set up G2["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
     std::vector<std::string> blocks{"avac", "aaac", "avaa"};
-    if (t1_internals_.size() or t2_internals_.size()) {
-        blocks.push_back("aaaa");
+    if (!t1_internals_.empty() or !t2_internals_.empty()) {
+        blocks.emplace_back("aaaa");
     }
     auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", blocks);
     G2["pqrs"] = 2.0 * H2["pqrs"] - H2["pqsr"];

@@ -37,7 +37,7 @@ using namespace psi;
 namespace forte {
 
 void SADSRG::internal_amps_T1(BlockedTensor& T1) {
-    if (t1_internals_.size() == 0) {
+    if (t1_internals_.empty()) {
         T1.block("aa").zero();
     } else {
         int nactv = actv_mos_.size();
@@ -76,7 +76,7 @@ void SADSRG::internal_amps_T1(BlockedTensor& T1) {
 }
 
 void SADSRG::internal_amps_T2(BlockedTensor& T2) {
-    if (t2_internals_.size() == 0) {
+    if (t2_internals_.empty()) {
         T2.block("aaaa").zero();
     } else {
         auto& T2data = T2.block("aaaa").data();
@@ -221,7 +221,7 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
     std::sort(lt2.begin(), lt2.end(), sort_pair_second_descend);
 
     // print summary
-    if (t2.size())
+    if (!t2.empty())
         print_t2_summary(t2, T2.norm(), nonzero);
 
     return lt2;
@@ -266,7 +266,7 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t1(BlockedTens
     std::sort(lt1.begin(), lt1.end(), sort_pair_second_descend);
 
     // print summary
-    if (t1.size())
+    if (!t1.empty())
         print_t1_summary(t1, T1.norm(), nonzero);
 
     return lt1;

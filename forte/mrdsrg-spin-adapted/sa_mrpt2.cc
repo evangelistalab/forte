@@ -1231,8 +1231,8 @@ void SA_MRPT2::compute_hbar() {
     } else {
         // set up G2["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
         std::vector<std::string> blocks{"avac", "aaac", "avaa"};
-        if (t1_internals_.size() or t2_internals_.size()) {
-            blocks.push_back("aaaa");
+        if (!t1_internals_.empty() or !t2_internals_.empty()) {
+            blocks.emplace_back("aaaa");
         }
         auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", blocks);
         G2["uevm"] += 2.0 * V_["uevm"] - V_["uemv"];

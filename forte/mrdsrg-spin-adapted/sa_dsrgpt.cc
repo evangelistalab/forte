@@ -59,7 +59,7 @@ void SA_DSRGPT::print_options() {
 
     if (ints_->integral_type() == Cholesky) {
         auto cholesky_threshold = foptions_->get_double("CHOLESKY_TOLERANCE");
-        calculation_info_double.push_back({"Cholesky tolerance", cholesky_threshold});
+        calculation_info_double.emplace_back("Cholesky tolerance", cholesky_threshold);
     }
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
@@ -67,19 +67,18 @@ void SA_DSRGPT::print_options() {
         {"Source operator", source_},
         {"Core-Virtual source type", ccvv_source_},
         {"Reference relaxation", relax_ref_},
-        {"3RDM algorithm", L3_algorithm_},
-        {"Internal amplitudes", internal_amp_}};
+        {"3RDM algorithm", L3_algorithm_}};
 
     if (multi_state_) {
-        calculation_info_string.push_back({"State type", "MULTIPLE STATES"});
-        calculation_info_string.push_back({"Multi-state type", multi_state_algorithm_});
+        calculation_info_string.emplace_back("State type", "MULTIPLE STATES");
+        calculation_info_string.emplace_back("Multi-state type", multi_state_algorithm_);
     } else {
-        calculation_info_string.push_back({"State type", "SINGLE STATE"});
+        calculation_info_string.emplace_back("State type", "SINGLE STATE");
     }
 
-    calculation_info_string.push_back({"Internal amplitudes levels", internal_amp_});
+    calculation_info_string.emplace_back("Internal amplitudes levels", internal_amp_);
     if (internal_amp_ != "NONE") {
-        calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
+        calculation_info_string.emplace_back("Internal amplitudes selection", internal_amp_select_);
     }
 
     // Print some information

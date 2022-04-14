@@ -311,7 +311,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      */
     void fill_three_index_ints(ambit::BlockedTensor T);
 
-    // ==> internal amplitdes <==
+    // ==> internal amplitudes <==
 
     /// Prune internal amplitudes for T1
     void prune_t1_internals(BlockedTensor& T1);

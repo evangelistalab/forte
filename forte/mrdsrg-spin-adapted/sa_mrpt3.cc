@@ -152,14 +152,14 @@ double SA_MRPT3::compute_energy() {
 
     // printing
     std::vector<std::pair<std::string, double>> energy;
-    energy.push_back({"Reference energy", Eref_});
-    energy.push_back({"2nd-order correlation energy", Ept2});
-    energy.push_back({"3rd-order correlation energy part 1", Ept3_1});
-    energy.push_back({"3rd-order correlation energy part 2", Ept3_2});
-    energy.push_back({"3rd-order correlation energy part 3", Ept3_3});
-    energy.push_back({"3rd-order correlation energy", Ept3});
-    energy.push_back({"DSRG-MRPT3 correlation energy", Hbar0_});
-    energy.push_back({"DSRG-MRPT3 total energy", Etotal});
+    energy.emplace_back("Reference energy", Eref_);
+    energy.emplace_back("2nd-order correlation energy", Ept2);
+    energy.emplace_back("3rd-order correlation energy part 1", Ept3_1);
+    energy.emplace_back("3rd-order correlation energy part 2", Ept3_2);
+    energy.emplace_back("3rd-order correlation energy part 3", Ept3_3);
+    energy.emplace_back("3rd-order correlation energy", Ept3);
+    energy.emplace_back("DSRG-MRPT3 correlation energy", Hbar0_);
+    energy.emplace_back("DSRG-MRPT3 total energy", Etotal);
 
     print_h2("DSRG-MRPT3 Energy Summary");
     for (const auto& str_dim : energy) {
@@ -209,7 +209,7 @@ double SA_MRPT3::compute_energy_pt3_1() {
     local_timer t1;
     print_contents("Computing 3rd-order energy (1/3)");
 
-    bool include_actv = t1_internals_.size() or t2_internals_.size();
+    bool include_actv = !t1_internals_.empty() or !t2_internals_.empty();
 
     // 1- and 2-body -[[H0th,A1st],A1st]
     O1_ = BTF_->build(tensor_type_, "O1 PT3 1/3", od_one_labels_ph(include_actv));

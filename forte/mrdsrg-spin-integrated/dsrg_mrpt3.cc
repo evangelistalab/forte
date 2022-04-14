@@ -112,18 +112,18 @@ void DSRG_MRPT3::startup() {
 
         size_t sL = aux_mos_.size();
         nelement += sL * sg * sg;
-        mem_info.push_back({"Memory used before DSRG", to_XB(nelement, sizeof(double))});
-        mem_info.push_back({"Tensor B (3 index)", to_XB(2 * sL * sg * sg, sizeof(double))});
+        mem_info.emplace_back("Memory used before DSRG", to_XB(nelement, sizeof(double)));
+        mem_info.emplace_back("Tensor B (3 index)", to_XB(2 * sL * sg * sg, sizeof(double)));
         mem_total_ -= 2 * sL * sg * sg * sizeof(double);
     } else {
         nelement += 3 * sg * sg * sg * sg;
-        mem_info.push_back({"Memory used before DSRG", to_XB(nelement, sizeof(double))});
+        mem_info.emplace_back("Memory used before DSRG", to_XB(nelement, sizeof(double)));
     }
     mem_total_ -= nelement * sizeof(double);
 
     // size of density cumulants (Lambda3 is only stored in RDMs object)
     nelement = 4 * sa * sa + 3 * sa * sa * sa * sa;
-    mem_info.push_back({"Density Cumulants (1, 2)", to_XB(nelement, sizeof(double))});
+    mem_info.emplace_back("Density Cumulants (1, 2)", to_XB(nelement, sizeof(double)));
     mem_total_ -= nelement * sizeof(double);
 
     // prepare integrals
@@ -131,7 +131,7 @@ void DSRG_MRPT3::startup() {
     build_tei(V_);
 
     nelement = 3 * sp * sp * sh * sh;
-    mem_info.push_back({"Asym MO tei (hhpp)", to_XB(nelement, sizeof(double))});
+    mem_info.emplace_back("Asym MO tei (hhpp)", to_XB(nelement, sizeof(double)));
     mem_total_ -= nelement * sizeof(double);
 
     // copy Fock matrix from master_dsrg
@@ -154,7 +154,7 @@ void DSRG_MRPT3::startup() {
     F1st_["IA"] = F_["AI"];
 
     nelement = 4 * sg * sg + 2 * sg;
-    mem_info.push_back({"Fock matrix", to_XB(nelement, sizeof(double))});
+    mem_info.emplace_back("Fock matrix", to_XB(nelement, sizeof(double)));
     mem_total_ -= nelement * sizeof(double);
 
     // Prepare Hbar
@@ -168,7 +168,7 @@ void DSRG_MRPT3::startup() {
         Hbar2_["UVXY"] = V_["UVXY"];
 
         nelement = 2 * sa * sa + 3 * sa * sa * sa * sa;
-        mem_info.push_back({"Hbar active (aa, aaaa)", to_XB(nelement, sizeof(double))});
+        mem_info.emplace_back("Hbar active (aa, aaaa)", to_XB(nelement, sizeof(double)));
         mem_total_ -= nelement * sizeof(double);
     }
 
@@ -179,8 +179,8 @@ void DSRG_MRPT3::startup() {
             outfile->Printf("\n             Set DSRG_MULTI_STATE back to default SA_FULL.");
             multi_state_algorithm_ = "SA_FULL";
 
-            warnings_.push_back(std::make_tuple("Unsupported DSRG_MULTI_STATE", "Change to SA_FULL",
-                                                "Change options in input.dat"));
+            warnings_.emplace_back("Unsupported DSRG_MULTI_STATE", "Change to SA_FULL",
+                                   "Change options in input.dat");
         }
     }
 
@@ -200,23 +200,23 @@ void DSRG_MRPT3::startup() {
 
     // other memory usage
     nelement = 3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 2 * (sh * sp - sa * sa);
-    mem_info.push_back({"Amplitudes (hp, hhpp)", to_XB(nelement, sizeof(double))});
-    mem_info.push_back({"O intermediates (hp, hhpp)", to_XB(nelement, sizeof(double))});
+    mem_info.emplace_back("Amplitudes (hp, hhpp)", to_XB(nelement, sizeof(double)));
+    mem_info.emplace_back("O intermediates (hp, hhpp)", to_XB(nelement, sizeof(double)));
     mem_total_ -= 2 * nelement * sizeof(double);
-    mem_info.push_back({"Memory remaining", to_XB(mem_total_, 1)});
+    mem_info.emplace_back("Memory remaining", to_XB(mem_total_, 1));
 
     nelement = 3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 6 * (sh * sp - sa * sa);
     size_t nele_larger = nelement;
-    mem_info.push_back({"Energy part 1 min", to_XB(nelement, sizeof(double))});
+    mem_info.emplace_back("Energy part 1 min", to_XB(nelement, sizeof(double)));
 
     if (!eri_df_) {
         nelement = 3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 2 * (sh * sp - sa * sa) +
                    sg * sg * sg * sg;
-        mem_info.push_back({"Energy part 2 min", to_XB(nelement, sizeof(double))});
+        mem_info.emplace_back("Energy part 2 min", to_XB(nelement, sizeof(double)));
     } else {
         nelement =
             3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 2 * (sh * sp - sa * sa) + sv * sv * sc;
-        mem_info.push_back({"Energy part 2 min", to_XB(nelement, sizeof(double))});
+        mem_info.emplace_back("Energy part 2 min", to_XB(nelement, sizeof(double)));
     }
     if (nelement > nele_larger) {
         nele_larger = nelement;
@@ -244,18 +244,18 @@ void DSRG_MRPT3::startup() {
         outfile->Printf("\n  Minimum memory required: %s\n", to_XB(mem_dipole, 1).c_str());
         throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 dipole.");
     }
-
-    // Warning for internal ampliltudes
-    if (internal_amp_ != "NONE") {
-        outfile->Printf("\n    Warning: DSRG-MRPT3 doesn't supported internal amplitudes for now.");
-        outfile->Printf("\n             Set INTERNAL_AMP back to default NONE.");
-        internal_amp_ = "NONE";
-        t1_internals_.clear();
-        t2_internals_.clear();
-
-        warnings_.push_back(std::make_tuple("Unsupported INTERNAL_AMP", "Change to NONE",
-                                            "Change options in input.dat"));
-    }
+//
+//    // Warning for internal amplitudes
+//    if (internal_amp_ != "NONE") {
+//        outfile->Printf("\n    Warning: DSRG-MRPT3 doesn't supported internal amplitudes for now.");
+//        outfile->Printf("\n             Set INTERNAL_AMP back to default NONE.");
+//        internal_amp_ = "NONE";
+//        t1_internals_.clear();
+//        t2_internals_.clear();
+//
+//        warnings_.emplace_back("Unsupported INTERNAL_AMP", "Change to NONE",
+//                               "Change options in input.dat");
+//    }
 }
 
 void DSRG_MRPT3::build_tei(BlockedTensor& V) {
@@ -295,10 +295,10 @@ void DSRG_MRPT3::print_options_summary() {
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {
-        calculation_info_string.push_back({"state_type", "MULTI-STATE"});
-        calculation_info_string.push_back({"multi-state type", multi_state_algorithm_});
+        calculation_info_string.emplace_back("state_type", "MULTI-STATE");
+        calculation_info_string.emplace_back("multi-state type", multi_state_algorithm_);
     } else {
-        calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
+        calculation_info_string.emplace_back("state_type", "STATE-SPECIFIC");
     }
 
     // print information
@@ -380,14 +380,14 @@ double DSRG_MRPT3::compute_energy() {
 
     // print energy summary
     std::vector<std::pair<std::string, double>> energy;
-    energy.push_back({"E0 (reference)", Eref_});
-    energy.push_back({"2nd-order corr. energy", Ept2});
-    energy.push_back({"3rd-order corr. energy part 1", Ept3_1});
-    energy.push_back({"3rd-order corr. energy part 2", Ept3_2});
-    energy.push_back({"3rd-order corr. energy part 3", Ept3_3});
-    energy.push_back({"3rd-order corr. energy", Ept3});
-    energy.push_back({"DSRG-MRPT3 corr. energy", Hbar0_});
-    energy.push_back({"DSRG-MRPT3 total energy", Etotal});
+    energy.emplace_back("E0 (reference)", Eref_);
+    energy.emplace_back("2nd-order corr. energy", Ept2);
+    energy.emplace_back("3rd-order corr. energy part 1", Ept3_1);
+    energy.emplace_back("3rd-order corr. energy part 2", Ept3_2);
+    energy.emplace_back("3rd-order corr. energy part 3", Ept3_3);
+    energy.emplace_back("3rd-order corr. energy", Ept3);
+    energy.emplace_back("DSRG-MRPT3 corr. energy", Hbar0_);
+    energy.emplace_back("DSRG-MRPT3 total energy", Etotal);
 
     print_h2("DSRG-MRPT3 Energy Summary");
     for (auto& str_dim : energy) {

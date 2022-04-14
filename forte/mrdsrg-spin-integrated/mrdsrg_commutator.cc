@@ -255,31 +255,31 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     C1["jb"] -= alpha * temp["XI"] * T2["jIbX"];
     C1["JB"] -= alpha * temp["XI"] * T2["IJXB"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"av"});
-    temp["xe"] += 0.5 * T2["uvey"] * Lambda2_["xyuv"];
-    temp["xe"] += T2["uVeY"] * Lambda2_["xYuV"];
-    C1["qs"] += alpha * temp["xe"] * B["gex"] * B["gqs"];
-    C1["qs"] -= alpha * temp["xe"] * B["ges"] * B["gqx"];
-    C1["QS"] += alpha * temp["xe"] * B["gex"] * B["gQS"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AV"});
-    temp["XE"] += 0.5 * T2["UVEY"] * Lambda2_["XYUV"];
-    temp["XE"] += T2["uVyE"] * Lambda2_["yXuV"];
-    C1["qs"] += alpha * temp["XE"] * B["gqs"] * B["gEX"];
-    C1["QS"] += alpha * temp["XE"] * B["gEX"] * B["gQS"];
-    C1["QS"] -= alpha * temp["XE"] * B["gES"] * B["gQX"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ap"});
+    temp["xa"] += 0.5 * T2["uvay"] * Lambda2_["xyuv"];
+    temp["xa"] += T2["uVaY"] * Lambda2_["xYuV"];
+    C1["qs"] += alpha * temp["xa"] * B["gex"] * B["gqs"];
+    C1["qs"] -= alpha * temp["xa"] * B["ges"] * B["gqx"];
+    C1["QS"] += alpha * temp["xa"] * B["gex"] * B["gQS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AP"});
+    temp["XA"] += 0.5 * T2["UVAY"] * Lambda2_["XYUV"];
+    temp["XA"] += T2["uVyA"] * Lambda2_["yXuV"];
+    C1["qs"] += alpha * temp["XA"] * B["gqs"] * B["gEX"];
+    C1["QS"] += alpha * temp["XA"] * B["gEX"] * B["gQS"];
+    C1["QS"] -= alpha * temp["XA"] * B["gES"] * B["gQX"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
-    temp["mu"] += 0.5 * T2["mvxy"] * Lambda2_["xyuv"];
-    temp["mu"] += T2["mVxY"] * Lambda2_["xYuV"];
-    C1["qs"] -= alpha * temp["mu"] * B["gum"] * B["gqs"];
-    C1["qs"] += alpha * temp["mu"] * B["gus"] * B["gqm"];
-    C1["QS"] -= alpha * temp["mu"] * B["gum"] * B["gQS"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"CA"});
-    temp["MU"] += 0.5 * T2["MVXY"] * Lambda2_["XYUV"];
-    temp["MU"] += T2["vMxY"] * Lambda2_["xYvU"];
-    C1["qs"] -= alpha * temp["MU"] * B["gqs"] * B["gUM"];
-    C1["QS"] -= alpha * temp["MU"] * B["gUM"] * B["gQS"];
-    C1["QS"] += alpha * temp["MU"] * B["gUS"] * B["gQM"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ha"});
+    temp["iu"] += 0.5 * T2["ivxy"] * Lambda2_["xyuv"];
+    temp["iu"] += T2["iVxY"] * Lambda2_["xYuV"];
+    C1["qs"] -= alpha * temp["iu"] * B["gum"] * B["gqs"];
+    C1["qs"] += alpha * temp["iu"] * B["gus"] * B["gqm"];
+    C1["QS"] -= alpha * temp["iu"] * B["gum"] * B["gQS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HA"});
+    temp["IU"] += 0.5 * T2["IVXY"] * Lambda2_["XYUV"];
+    temp["IU"] += T2["vIxY"] * Lambda2_["xYvU"];
+    C1["qs"] -= alpha * temp["IU"] * B["gqs"] * B["gUM"];
+    C1["QS"] -= alpha * temp["IU"] * B["gUM"] * B["gQS"];
+    C1["QS"] += alpha * temp["IU"] * B["gUS"] * B["gQM"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
@@ -293,24 +293,24 @@ void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     double E = 0.0;
 
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
-    temp["uvxy"] += B["gex"] * B["gvy"] * T1["ue"];
-    temp["uvxy"] -= B["gey"] * B["gvx"] * T1["ue"];
-    temp["uvxy"] -= B["gum"] * B["gvy"] * T1["mx"];
-    temp["uvxy"] += B["guy"] * B["gvm"] * T1["mx"];
+    temp["uvxy"] += B["gax"] * B["gvy"] * T1["ua"];
+    temp["uvxy"] -= B["gay"] * B["gvx"] * T1["us"];
+    temp["uvxy"] -= B["gui"] * B["gvy"] * T1["ix"];
+    temp["uvxy"] += B["guy"] * B["gvi"] * T1["ix"];
     E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
 
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"});
-    temp["UVXY"] += B["gEX"] * B["gVY"] * T1["UE"];
-    temp["UVXY"] -= B["gEY"] * B["gVX"] * T1["UE"];
-    temp["UVXY"] -= B["gUM"] * B["gVY"] * T1["MX"];
-    temp["UVXY"] += B["gUY"] * B["gVM"] * T1["MX"];
+    temp["UVXY"] += B["gAX"] * B["gVY"] * T1["UA"];
+    temp["UVXY"] -= B["gAY"] * B["gVX"] * T1["UA"];
+    temp["UVXY"] -= B["gUI"] * B["gVY"] * T1["IX"];
+    temp["UVXY"] += B["gUY"] * B["gVI"] * T1["IX"];
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
 
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"});
-    temp["uVxY"] += B["gex"] * B["gVY"] * T1["ue"];
-    temp["uVxY"] += B["gux"] * B["gEY"] * T1["VE"];
-    temp["uVxY"] -= B["gum"] * B["gVY"] * T1["mx"];
-    temp["uVxY"] -= B["gux"] * B["gVM"] * T1["MY"];
+    temp["uVxY"] += B["gax"] * B["gVY"] * T1["ua"];
+    temp["uVxY"] += B["gux"] * B["gAY"] * T1["VA"];
+    temp["uVxY"] -= B["gui"] * B["gVY"] * T1["ix"];
+    temp["uVxY"] -= B["gux"] * B["gVI"] * T1["IY"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     E *= alpha;
@@ -328,23 +328,23 @@ void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
 
     C1["qp"] += alpha * T1["ma"] * B["gqp"] * B["gam"];
     C1["qp"] -= alpha * T1["ma"] * B["gqm"] * B["gap"];
-    C1["qp"] += alpha * T1["xe"] * Gamma1_["yx"] * B["gqp"] * B["gey"];
-    C1["qp"] -= alpha * T1["xe"] * Gamma1_["yx"] * B["gqy"] * B["gep"];
-    C1["qp"] -= alpha * T1["mu"] * Gamma1_["uv"] * B["gqp"] * B["gvm"];
-    C1["qp"] += alpha * T1["mu"] * Gamma1_["uv"] * B["gqm"] * B["gvp"];
+    C1["qp"] += alpha * T1["xa"] * Gamma1_["yx"] * B["gqp"] * B["gay"];
+    C1["qp"] -= alpha * T1["xa"] * Gamma1_["yx"] * B["gqy"] * B["gap"];
+    C1["qp"] -= alpha * T1["iu"] * Gamma1_["uv"] * B["gqp"] * B["gvi"];
+    C1["qp"] += alpha * T1["iu"] * Gamma1_["uv"] * B["gqi"] * B["gvp"];
     C1["qp"] += alpha * T1["MA"] * B["gqp"] * B["gAM"];
-    C1["qp"] += alpha * T1["XE"] * Gamma1_["YX"] * B["gqp"] * B["gEY"];
-    C1["qp"] -= alpha * T1["MU"] * Gamma1_["UV"] * B["gqp"] * B["gVM"];
+    C1["qp"] += alpha * T1["XA"] * Gamma1_["YX"] * B["gqp"] * B["gAY"];
+    C1["qp"] -= alpha * T1["IU"] * Gamma1_["UV"] * B["gqp"] * B["gVI"];
 
     C1["QP"] += alpha * T1["ma"] * B["gam"] * B["gQP"];
-    C1["QP"] += alpha * T1["xe"] * Gamma1_["yx"] * B["gey"] * B["gQP"];
-    C1["QP"] -= alpha * T1["mu"] * Gamma1_["uv"] * B["gvm"] * B["gQP"];
+    C1["QP"] += alpha * T1["xa"] * Gamma1_["yx"] * B["gay"] * B["gQP"];
+    C1["QP"] -= alpha * T1["iu"] * Gamma1_["uv"] * B["gvi"] * B["gQP"];
     C1["QP"] += alpha * T1["MA"] * B["gQP"] * B["gAM"];
     C1["QP"] -= alpha * T1["MA"] * B["gQM"] * B["gAP"];
-    C1["QP"] += alpha * T1["XE"] * Gamma1_["YX"] * B["gQP"] * B["gEY"];
-    C1["QP"] -= alpha * T1["XE"] * Gamma1_["YX"] * B["gQY"] * B["gEP"];
-    C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * B["gQP"] * B["gVM"];
-    C1["QP"] += alpha * T1["MU"] * Gamma1_["UV"] * B["gQM"] * B["gVP"];
+    C1["QP"] += alpha * T1["XA"] * Gamma1_["YX"] * B["gQP"] * B["gAY"];
+    C1["QP"] -= alpha * T1["XA"] * Gamma1_["YX"] * B["gQY"] * B["gAP"];
+    C1["QP"] -= alpha * T1["IU"] * Gamma1_["UV"] * B["gQP"] * B["gVI"];
+    C1["QP"] += alpha * T1["IU"] * Gamma1_["UV"] * B["gQI"] * B["gVP"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
@@ -583,6 +583,52 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
         temp["uVWxYZ"] += B["gWZ"] * B["gAY"] * T2["uVxA"];       //  aAAaAA from particle
         temp["uVWxYZ"] -= 2.0 * B["gax"] * B["gWY"] * T2["uVaZ"]; //  aAAaAA from particle
         E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * L3abb_("xYZuVW");
+    }
+
+    if (!t2_internals_.empty()) {
+        auto H2 = ambit::BlockedTensor::build(tensor_type_, "H2", spin_cases({"aaaa"}));
+        H2["uvxy"] = B["gux"] * B["gvy"];
+        H2["uvxy"] -= B["guy"] * B["gvx"];
+        H2["uVxY"] = B["gux"] * B["gVY"];
+        H2["UVXY"] = B["gUX"] * B["gVY"];
+        H2["UVXY"] -= B["gUY"] * B["gVX"];
+
+        temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}));
+        temp["uvxy"] += 0.25 * H2["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
+        temp["uVxY"] += H2["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
+        temp["UVXY"] += 0.25 * H2["UVWZ"] * Gamma1_["WX"] * Gamma1_["ZY"];
+
+        E += temp["uvxy"] * T2["xywz"] * Eta1_["wu"] * Eta1_["zv"];
+        E += temp["uVxY"] * T2["xYwZ"] * Eta1_["wu"] * Eta1_["ZV"];
+        E += temp["UVXY"] * T2["XYWZ"] * Eta1_["WU"] * Eta1_["ZV"];
+
+        temp.zero();
+
+        temp["uvxy"] += 0.125 * H2["u,v,w,a1"] * T2["z,a3,x,y"] * Gamma1_["wz"] * Gamma1_["a1,a3"];
+        temp["uVxY"] += H2["u,V,w,A1"] * T2["z,A3,x,Y"] * Gamma1_["wz"] * Gamma1_["A1,A3"];
+        temp["UVXY"] += 0.125 * H2["U,V,W,A1"] * T2["Z,A3,X,Y"] * Gamma1_["WZ"] * Gamma1_["A1,A3"];
+
+        temp["uvxy"] += 0.125 * H2["w,a0,x,y"] * T2["u,v,z,a1"] * Eta1_["zw"] * Eta1_["a1,a0"];
+        temp["uVxY"] += H2["w,A0,x,Y"] * T2["u,V,z,A1"] * Eta1_["zw"] * Eta1_["A1,A0"];
+        temp["UVXY"] += 0.125 * H2["W,A0,X,Y"] * T2["U,V,Z,A1"] * Eta1_["ZW"] * Eta1_["A1,A0"];
+
+        temp["uvxy"] -= H2["v,a3,x,a1"] * T2["a0,u,a2,y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uvxy"] -= H2["v,A3,x,A1"] * T2["u,A0,y,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+
+        temp["UVXY"] -= H2["a3,V,a1,X"] * T2["a0,U,a2,Y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["UVXY"] -= H2["V,A3,X,A1"] * T2["A0,U,A2,Y"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+
+        temp["uVxY"] += H2["u,a3,x,a1"] * T2["a0,V,a2,Y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uVxY"] += H2["u,A3,x,A1"] * T2["A0,V,A2,Y"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+        temp["uVxY"] += H2["a3,V,a1,Y"] * T2["a0,u,a2,x"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uVxY"] += H2["A3,V,A1,Y"] * T2["u,A0,x,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+
+        temp["uVxY"] -= H2["a3,V,x,A1"] * T2["u,A0,a2,Y"] * Gamma1_["A1,A0"] * Eta1_["a2,a3"];
+        temp["uVxY"] -= H2["u,A3,a1,Y"] * T2["a0,V,x,A2"] * Gamma1_["a1,a0"] * Eta1_["A2,A3"];
+
+        E += temp["uvxy"] * Lambda2_["xyuv"];
+        E += temp["UVXY"] * Lambda2_["XYUV"];
+        E += temp["uVxY"] * Lambda2_["xYuV"];
     }
 
     // multiply prefactor and copy to C0

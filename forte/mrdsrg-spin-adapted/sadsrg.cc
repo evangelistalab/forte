@@ -67,7 +67,7 @@ SADSRG::SADSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
 SADSRG::~SADSRG() {
     dsrg_time_.print_comm_time();
 
-    if (warnings_.size() != 0) {
+    if (!warnings_.empty()) {
         print_h2("DSRG Warnings");
 
         outfile->Printf("\n  %32s  %32s  %32s", "Description", "This Run", "Solution");
@@ -156,8 +156,8 @@ void SADSRG::read_options() {
         outfile->Printf("\n  Warning: SOURCE option %s is not implemented.", source_.c_str());
         outfile->Printf("\n  Changed SOURCE option to STANDARD");
         source_ = "STANDARD";
-        warnings_.push_back(std::make_tuple("Unsupported SOURCE", "Change to STANDARD",
-                                            "Change options in input.dat"));
+        warnings_.emplace_back("Unsupported SOURCE", "Change to STANDARD",
+                               "Change options in input.dat");
     }
     if (source_ == "STANDARD") {
         dsrg_source_ = std::make_shared<STD_SOURCE>(s_, taylor_threshold_);
@@ -180,7 +180,7 @@ void SADSRG::read_options() {
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
-    multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
+    multi_state_ = !foptions_->get_gen_list("AVG_STATE").empty();
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 
     print_done(lt.get());
@@ -198,8 +198,7 @@ void SADSRG::read_MOSpaceInfo() {
     }
 
     if (internal_amp_ != "NONE") {
-        auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
-        for (const std::string& gas_name : gas_spaces) {
+        for (const std::string& gas_name : mo_space_info_->nonzero_gas_spaces()) {
             gas_actv_rel_mos_[gas_name] = mo_space_info_->pos_in_space(gas_name, "ACTIVE");
         }
     }
@@ -657,9 +656,8 @@ bool SADSRG::check_semi_orbs() {
     }
 
     auto nactv = actv_mos_.size();
-    auto active_space_names = mo_space_info_->nonzero_gas_spaces();
-    for (const std::string& space : active_space_names) {
-        auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");
+    for (const std::string& gas_space : mo_space_info_->nonzero_gas_spaces()) {
+        auto rel_indices = mo_space_info_->pos_in_space(gas_space, "ACTIVE");
         auto size = rel_indices.size();
         double fmax = 0.0, fmean = 0.0;
 
@@ -675,9 +673,9 @@ bool SADSRG::check_semi_orbs() {
         }
         fmean /= size * size * 0.5; // roughly correct
 
-        semi_checked_results_[space] = fmax <= threshold_max and fmean <= e_conv;
+        semi_checked_results_[gas_space] = fmax <= threshold_max and fmean <= e_conv;
 
-        Fcheck.emplace_back(space, fmax, fmean);
+        Fcheck.emplace_back(gas_space, fmax, fmean);
     }
 
     std::string dash(8 + 32, '-');
@@ -692,7 +690,7 @@ bool SADSRG::check_semi_orbs() {
     outfile->Printf("\n    %s", dash.c_str());
 
     for (const auto& pair : semi_checked_results_) {
-        if (pair.second == false) {
+        if (!pair.second) {
             semi = false;
             break;
         }
@@ -710,24 +708,30 @@ bool SADSRG::check_semi_orbs() {
 void SADSRG::print_cumulant_summary() {
     print_h2("Density Cumulant Summary");
 
-    std::vector<double> maxes(2), norms(2);
+    double cu2_max = L2_.norm(0);
+    double cu2_norm = L2_.norm(2);
 
-    maxes[0] = L2_.norm(0);
-    norms[0] = L2_.norm(2);
+    if (do_cu3_ and !store_cu3_) {
+        std::string dash(6 + 13 + 14, '-');
+        outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
+        outfile->Printf("\n    %s", dash.c_str());
+        outfile->Printf("\n    %-6s %12.6f %13s", "max", cu2_max, "Not Available");
+        outfile->Printf("\n    %-6s %12.6f %13s", "2-norm", cu2_norm, "Not Available");
+        outfile->Printf("\n    %s", dash.c_str());
+        return;
+    }
 
-    if (store_cu3_) {
-        maxes[1] = L3_.norm(0);
-        norms[1] = L3_.norm(2);
-    } else {
-        maxes[1] = 0.0;
-        norms[1] = 0.0;
+    double cu3_max = 0.0, cu3_norm = 0.0;
+    if (do_cu3_) {
+        cu3_max = L3_.norm(0);
+        cu3_norm = L3_.norm(2);
     }
 
     std::string dash(6 + 13 * 2, '-');
     outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
     outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
-    outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "max", cu2_max, cu3_max);
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", cu2_norm, cu3_norm);
     outfile->Printf("\n    %s", dash.c_str());
 }
 
