@@ -89,8 +89,6 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_r_convergence(r_convergence_);
         state_method_map_[state] = method;
 
-        int twice_ms = state.twice_ms();
-
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();
             method->set_read_wfn_guess(read_initial_guess_);
@@ -107,9 +105,11 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     }
     print_energies();
 
-    compute_dipole_moment();
-    if (options_->get_bool("TRANSITION_DIPOLES")) {
-        compute_fosc_same_orbs();
+    if (as_ints_->ints()->integral_type() != Custom) {
+        compute_dipole_moment();
+        if (options_->get_bool("TRANSITION_DIPOLES")) {
+            compute_fosc_same_orbs();
+        }
     }
 
     return state_energies_map_;

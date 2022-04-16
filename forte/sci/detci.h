@@ -153,8 +153,8 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Printing for CI_RDMs
     bool print_ci_rdms_ = true;
-    /// Compute permanent dipole moments
-    void compute_permanent_dipole();
+//    /// Compute permanent dipole moments
+//    void compute_permanent_dipole();
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess(const std::string& filename);
