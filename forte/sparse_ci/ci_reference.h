@@ -89,8 +89,6 @@ class CI_Reference {
 
     std::string ref_type_;
 
-    void build_ci_reference(std::vector<Determinant>& ref_space);
-
     Determinant get_occupation();
 
     void get_gas_occupation();
@@ -149,6 +147,9 @@ class CI_Reference {
 
     /// Build the doubly occupied CI reference
     void build_doci_reference(std::vector<Determinant>& ref_space);
+
+    /// Build active-space CIS/CID/CISD reference
+    void build_ci_reference(std::vector<Determinant>& ref_space, bool include_rhf = true);
 
     /// Build the complete GAS reference
     void build_gas_reference(std::vector<Determinant>& ref_space);

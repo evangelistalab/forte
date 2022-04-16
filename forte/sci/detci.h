@@ -82,8 +82,10 @@ class DETCI : public ActiveSpaceMethod {
     /// Number of active orbitals per irrep
     psi::Dimension actv_dim_;
 
-    /// Active space type (CAS, GAS, DOCI)
+    /// Active space type (CAS, GAS, DOCI, CIS/CID/CISD)
     std::string actv_space_type_;
+    /// Exclude HF determinant in CID/CISD
+    bool exclude_hf_in_cid_;
 
     /// The determinant space
     DeterminantHashVec p_space_;

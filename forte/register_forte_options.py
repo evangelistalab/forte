@@ -546,6 +546,7 @@ def register_detci_options(options):
     options.set_group("DETCI")
 
     options.add_double("DETCI_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors")
+    options.add_bool("DETCI_CISD_NO_HF", False, "Exclude HF determinant in active CID/CISD space")
 
 
 def register_integral_options(options):

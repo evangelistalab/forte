@@ -258,7 +258,7 @@ CI_Reference::gas_double_criterion() {
     return std::make_tuple(aa_criterion, bb_criterion, ab_criterion);
 }
 
-void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool include_rhf) {
     // Special case. If there are no active orbitals return an empty determinant
     if (nact_ == 0) {
         Determinant det;
@@ -269,7 +269,8 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
     Determinant det(get_occupation());
     outfile->Printf("\n  %s", str(det, nact_).c_str());
 
-    ref_space.push_back(det);
+    if (include_rhf)
+        ref_space.push_back(det);
 
     if ((ref_type_ == "CIS") or (ref_type_ == "CISD")) {
         std::vector<int> aocc = det.get_alfa_occ(nact_);

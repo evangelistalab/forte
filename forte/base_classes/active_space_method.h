@@ -149,6 +149,11 @@ class ActiveSpaceMethod {
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
+    /// Compute permanent dipole moments
+    std::vector<std::vector<double>>
+    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
     /// Compute transition dipole moments assuming same orbitals
     std::vector<std::vector<double>>
     compute_transition_dipole_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,

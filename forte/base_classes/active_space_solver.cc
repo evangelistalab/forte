@@ -183,6 +183,14 @@ void ActiveSpaceSolver::compute_dipole_moment() {
     for (const auto& state_nroots : state_nroots_map_) {
         const auto& [state, nroots] = state_nroots;
         const auto& method = state_method_map_[state];
+
+        // prepare root list
+        std::vector<std::pair<size_t, size_t>> root_list;
+        for (size_t i = 0; i < nroots; ++i) {
+            root_list.emplace_back(i, i);
+        }
+
+        method->compute_permanent_dipole(root_list, Ua_actv_, Ub_actv_);
     }
 }
 
@@ -213,17 +221,17 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
             if (M == N) {
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = i + 1; j < nroot2; ++j) {
-                        state_ids.push_back({i, j});
+                        state_ids.emplace_back(i, j);
                     }
                 }
             } else {
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = 0; j < nroot2; ++j) {
-                        state_ids.push_back({i, j});
+                        state_ids.emplace_back(i, j);
                     }
                 }
             }
-            if (state_ids.size() == 0)
+            if (state_ids.empty())
                 continue;
 
             // compute oscillator strength

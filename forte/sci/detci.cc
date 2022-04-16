@@ -44,6 +44,7 @@ void DETCI::startup() {
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     actv_space_type_ = options->get_str("ACTIVE_REF_TYPE");
+    exclude_hf_in_cid_ = options->get_bool("DETCI_CISD_NO_HF");
 
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
@@ -68,7 +69,7 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
 DETCI::~DETCI() {
     // remove wave function file
     if (not dump_wfn_) {
-        if (wfn_filename_.size() != 0 and std::remove(wfn_filename_.c_str()) != 0) {
+        if (!wfn_filename_.empty() and std::remove(wfn_filename_.c_str()) != 0) {
             outfile->Printf("\n  DETCI wave function %s not available.", state_.str().c_str());
             std::perror("Error when deleting DETCI wave function. See output file.");
         }
@@ -114,8 +115,10 @@ void DETCI::build_determinant_space() {
         ci_ref.build_gas_reference(dets);
     } else if (actv_space_type_ == "DOCI") {
         ci_ref.build_doci_reference(dets);
-    } else {
+    } else if (actv_space_type_ == "CAS") {
         ci_ref.build_cas_reference_full(dets);
+    } else {
+        ci_ref.build_ci_reference(dets, !exclude_hf_in_cid_);
     }
 
     auto size = dets.size();
