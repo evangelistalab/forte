@@ -208,7 +208,9 @@ class ActiveSpaceSolver {
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
 
-    /// Unitary matrix for orbital rotations
+    /// Unitary matrices for orbital rotations used to compute dipole moments
+    /// The issue is dipole integrals are transformed to semi-canonical orbital basis,
+    /// while active-space integrals are in the original orbital basis
     ambit::Tensor Ua_actv_;
     ambit::Tensor Ub_actv_;
 

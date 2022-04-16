@@ -179,10 +179,6 @@ class SA_MRDSRG : public SADSRG {
 
     /// Shared pointer of DIISManager object from Psi4
     std::shared_ptr<psi::DIISManager> diis_manager_;
-    /// Amplitudes pointers
-    std::vector<double*> amp_ptrs_;
-    /// Residual pointers
-    std::vector<double*> res_ptrs_;
     /// Initialize DIISManager
     void diis_manager_init();
     /// Add entry for DIISManager

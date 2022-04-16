@@ -317,7 +317,8 @@ void RDMs::_test_rdm_dims(const ambit::Tensor& T, const std::string& name) const
     }
 }
 
-bool RDMs::_bypass_rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) const {
+bool RDMs::_bypass_rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub,
+                          const double& zero_threshold) const {
     if (max_rdm_ < 1)
         return true;
 
@@ -327,15 +328,15 @@ bool RDMs::_bypass_rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) cons
     auto threshold = 1.0e-12;
 
     for (size_t i = 0; i < nactv; ++i) {
-        auto va_ii = 1.0 - std::fabs(Ua_data[i * nactv + i]);
-        auto vb_ii = 1.0 - std::fabs(Ub_data[i * nactv + i]);
-        if (va_ii > threshold or vb_ii > threshold)
+        auto va_ii = std::fabs(1.0 - std::fabs(Ua_data[i * nactv + i]));
+        auto vb_ii = std::fabs(1.0 - std::fabs(Ub_data[i * nactv + i]));
+        if (va_ii > zero_threshold or vb_ii > zero_threshold)
             return false;
 
         for (size_t j = i + 1; j < nactv; ++j) {
             auto va_ij = std::fabs(Ua_data[i * nactv + j]);
             auto vb_ij = std::fabs(Ub_data[i * nactv + j]);
-            if (va_ij > threshold or vb_ij > threshold) {
+            if (va_ij > zero_threshold or vb_ij > zero_threshold) {
                 return false;
             }
         }

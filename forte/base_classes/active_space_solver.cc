@@ -180,10 +180,9 @@ void ActiveSpaceSolver::print_energies() {
 }
 
 void ActiveSpaceSolver::compute_dipole_moment() {
-    for (const auto& state_nroots: state_nroots_map_) {
+    for (const auto& state_nroots : state_nroots_map_) {
         const auto& [state, nroots] = state_nroots;
         const auto& method = state_method_map_[state];
-
     }
 }
 
