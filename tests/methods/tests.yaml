@@ -233,6 +233,7 @@ gasci:
       - gasci-1
       - gasaci-1
       - gasaci-4
+      - gasci-dsrg-mrpt2-2
    medium:
       - gasci-2
       - gasci-3
