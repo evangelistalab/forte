@@ -93,9 +93,6 @@ double DETCI::compute_energy() {
         print_ci_wfn();
     }
 
-//    // compute dipole moments
-//    compute_permanent_dipole();
-
     // save wave functions by default
     dump_wave_function(wfn_filename_);
 
@@ -583,112 +580,6 @@ std::vector<ambit::Tensor> DETCI::compute_trans_3rdms_sosd(int root1, int root2)
 
     return {aaa, aab, abb, bbb};
 }
-//
-//void DETCI::compute_permanent_dipole() {
-//    std::string dash(68, '-');
-//    if (not quiet_) {
-//        print_h2("Permanent Dipole Moments [e a0] for " + state_label_);
-//        psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z",
-//                             "|DM|");
-//        psi::outfile->Printf("\n    %s", dash.c_str());
-//    }
-//
-//    auto ints = as_ints_->ints();
-//    auto wfn = ints->wfn();
-//    auto nmopi = mo_space_info_->dimension("ALL");
-//    auto doccpi = mo_space_info_->dimension("INACTIVE_DOCC");
-//
-//    // obtain AO dipole from ForteIntegrals
-//    auto aodipole_ints = ints->ao_dipole_ints();
-//
-//    // Nuclear dipole contribution
-//    auto ndip = wfn->molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
-//
-//    // SO to AO transformer
-//    auto sotoao(wfn->aotoso()->transpose());
-//    int nao = sotoao->coldim();
-//
-//    // loop over states
-//    for (size_t A = 0; A < nroot_; ++A) {
-//        // transform 1-RDM to SO basis
-//        auto Dt_so = std::make_shared<psi::Matrix>("Dt_SO " + std::to_string(A), nmopi, nmopi);
-//        for (int h = 0; h < nirrep_; ++h) {
-//            for (int i = 0; i < doccpi[h]; ++i) {
-//                Dt_so->set(h, i, i, 2.0);
-//            }
-//        }
-//
-//        auto Da = opdm_a_[A];
-//        auto Db = opdm_a_[A];
-//        for (size_t h = 0; h < size_t(nirrep_); ++h) {
-//            size_t offset_m = doccpi[h];
-//            for (int u = 0; u < actv_dim_[h]; ++u) {
-//                size_t u_m = u + offset_m;
-//                for (int v = 0; v < actv_dim_[h]; ++v) {
-//                    Dt_so->set(h, u_m, v + offset_m, Da->get(h, u, v) + Db->get(h, u, v));
-//                }
-//            }
-//        }
-//        Dt_so->back_transform(ints->Ca());
-//
-//        // transform 1-RDM to AO basis
-//        auto Dt_ao = std::make_shared<psi::Matrix>("Dt_AO " + std::to_string(A), nao, nao);
-//        Dt_ao->remove_symmetry(Dt_so, sotoao);
-//
-//        // compute dipole moments
-//        std::vector<double> dipole(4, 0.0);
-//        for (int i = 0; i < 3; ++i) {
-//            dipole[i] = ndip[i] + Dt_ao->vector_dot(aodipole_ints[i]);
-//            dipole[3] += dipole[i] * dipole[i];
-//        }
-//        dipole[3] = std::sqrt(dipole[3]);
-//
-//        // printing
-//        std::string name = std::to_string(A) + upper_string(state_.irrep_label());
-//
-//        if (not quiet_) {
-//            psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dipole[0],
-//                                 dipole[1], dipole[2], dipole[3]);
-//        }
-//
-//        // push to Psi4 global environment
-//        auto& globals = psi::Process::environment.globals;
-//
-//        std::vector<std::string> keys{
-//            " <" + name + "|DM_X|" + name + ">", " <" + name + "|DM_Y|" + name + ">",
-//            " <" + name + "|DM_Z|" + name + ">", " |<" + name + "|DM|" + name + ">|"};
-//
-//        std::string multi_label = upper_string(state_.multiplicity_label());
-//        std::string label = multi_label + keys[3];
-//
-//        // try to fix states with different gas_min and gas_max
-//        if (globals.find(label) != globals.end()) {
-//            if (globals.find(label + " ENTRY 0") == globals.end()) {
-//                std::string suffix = " ENTRY 0";
-//                for (int i = 0; i < 4; ++i) {
-//                    globals[multi_label + keys[i] + suffix] = globals[multi_label + keys[i]];
-//                }
-//            }
-//
-//            int n = 1;
-//            std::string suffix = " ENTRY 1";
-//            while (globals.find(label + suffix) != globals.end()) {
-//                suffix = " ENTRY " + std::to_string(++n);
-//            }
-//
-//            for (int i = 0; i < 4; ++i) {
-//                globals[multi_label + keys[i] + suffix] = dipole[i];
-//            }
-//        }
-//
-//        for (int i = 0; i < 4; ++i) {
-//            globals[multi_label + keys[i]] = dipole[i];
-//        }
-//    }
-//    if (not quiet_) {
-//        psi::outfile->Printf("\n    %s", dash.c_str());
-//    }
-//}
 
 std::vector<std::shared_ptr<RDMs>>
 DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
