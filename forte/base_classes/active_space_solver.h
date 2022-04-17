@@ -147,7 +147,7 @@ class ActiveSpaceSolver {
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
-    /// Set the orbital rotation matrix for RDMs
+    /// Set unitary matrices for changing orbital basis in RDMs when computing dipole moments
     void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
         Ua_actv_ = Ua;
         Ub_actv_ = Ub;
