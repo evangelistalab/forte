@@ -67,6 +67,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& U);
 
+//    /// Return the unitary matrix for orbital updates due to dynamical correlation
+//    psi::SharedMatrix orbital_update_matrix();
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -163,11 +166,11 @@ class SADSRG : public DynamicCorrelationSolver {
     std::vector<size_t> virt_mos_;
     /// List of the symmetry of the active MOs
     std::vector<int> actv_mos_sym_;
-
-    /// List of active active occupied MOs (relative to active)
-    std::vector<size_t> actv_occ_mos_;
-    /// List of active active unoccupied MOs (relative to active)
-    std::vector<size_t> actv_uocc_mos_;
+//
+//    /// List of active active occupied MOs (relative to active)
+//    std::vector<size_t> actv_occ_mos_;
+//    /// List of active active unoccupied MOs (relative to active)
+//    std::vector<size_t> actv_uocc_mos_;
 
     /// List of auxiliary MOs when DF/CD
     std::vector<size_t> aux_mos_;

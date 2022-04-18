@@ -584,7 +584,7 @@ def register_dsrg_options(options):
 
     options.add_str(
         "CORR_LEVEL", "PT2",
-        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2", "LDSRG2_P3", "QDSRG2_P3"],
+        ["PT2", "PT3", "CC2", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2", "LDSRG2_P3", "QDSRG2_P3"],
         "Correlation level of MR-DSRG (used in mrdsrg code, "
         "LDSRG2_P3 and QDSRG2_P3 not implemented)"
     )
