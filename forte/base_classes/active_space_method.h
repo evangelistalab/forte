@@ -149,15 +149,22 @@ class ActiveSpaceMethod {
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
+    /// Compute permanent dipole moments
+    std::vector<std::vector<double>>
+    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
     /// Compute transition dipole moments assuming same orbitals
     std::vector<std::vector<double>>
     compute_transition_dipole_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                        std::shared_ptr<ActiveSpaceMethod> method2);
+                                        std::shared_ptr<ActiveSpaceMethod> method2,
+                                        const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Compute oscillator strength assuming same orbitals
     std::vector<double>
     compute_oscillator_strength_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2);
+                                          std::shared_ptr<ActiveSpaceMethod> method2,
+                                          const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Dump the wave function to file
     /// @param file name

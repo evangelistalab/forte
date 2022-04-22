@@ -402,7 +402,7 @@ Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::Shar
     }
 
     if (resort) {
-        // figure out the correspondance between C1 and Pitzer
+        // figure out the correspondence between C1 and Pitzer
         std::vector<std::tuple<double, int, int>> order;
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < nmopi_[h]; ++i) {

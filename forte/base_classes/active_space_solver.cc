@@ -62,6 +62,16 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
+
+    auto nactv = mo_space_info_->size("ACTIVE");
+    Ua_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nactv, nactv});
+    Ub_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nactv, nactv});
+    auto& Ua_data = Ua_actv_.data();
+    auto& Ub_data = Ub_actv_.data();
+    for (size_t i = 0; i < nactv; ++i) {
+        Ua_data[i * nactv + i] = 1.0;
+        Ub_data[i * nactv + i] = 1.0;
+    }
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -79,8 +89,6 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_r_convergence(r_convergence_);
         state_method_map_[state] = method;
 
-        int twice_ms = state.twice_ms();
-
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();
             method->set_read_wfn_guess(read_initial_guess_);
@@ -97,8 +105,11 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     }
     print_energies();
 
-    if (options_->get_bool("TRANSITION_DIPOLES")) {
-        compute_fosc_same_orbs();
+    if (as_ints_->ints()->integral_type() != Custom) {
+        compute_dipole_moment();
+        if (options_->get_bool("TRANSITION_DIPOLES")) {
+            compute_fosc_same_orbs();
+        }
     }
 
     return state_energies_map_;
@@ -168,6 +179,21 @@ void ActiveSpaceSolver::print_energies() {
     }
 }
 
+void ActiveSpaceSolver::compute_dipole_moment() {
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& [state, nroots] = state_nroots;
+        const auto& method = state_method_map_[state];
+
+        // prepare root list
+        std::vector<std::pair<size_t, size_t>> root_list;
+        for (size_t i = 0; i < nroots; ++i) {
+            root_list.emplace_back(i, i);
+        }
+
+        method->compute_permanent_dipole(root_list, Ua_actv_, Ub_actv_);
+    }
+}
+
 void ActiveSpaceSolver::compute_fosc_same_orbs() {
     // assume SAME set of orbitals!!!
 
@@ -195,21 +221,21 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
             if (M == N) {
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = i + 1; j < nroot2; ++j) {
-                        state_ids.push_back({i, j});
+                        state_ids.emplace_back(i, j);
                     }
                 }
             } else {
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = 0; j < nroot2; ++j) {
-                        state_ids.push_back({i, j});
+                        state_ids.emplace_back(i, j);
                     }
                 }
             }
-            if (state_ids.size() == 0)
+            if (state_ids.empty())
                 continue;
 
             // compute oscillator strength
-            method1->compute_oscillator_strength_same_orbs(state_ids, method2);
+            method1->compute_oscillator_strength_same_orbs(state_ids, method2, Ua_actv_, Ub_actv_);
         }
     }
 }

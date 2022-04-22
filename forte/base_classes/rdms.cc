@@ -317,6 +317,34 @@ void RDMs::_test_rdm_dims(const ambit::Tensor& T, const std::string& name) const
     }
 }
 
+bool RDMs::_bypass_rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub,
+                          const double& zero_threshold) const {
+    if (max_rdm_ < 1)
+        return true;
+
+    auto nactv = Ua.dim(0);
+    const auto& Ua_data = Ua.data();
+    const auto& Ub_data = Ub.data();
+    auto threshold = 1.0e-12;
+
+    for (size_t i = 0; i < nactv; ++i) {
+        auto va_ii = std::fabs(1.0 - std::fabs(Ua_data[i * nactv + i]));
+        auto vb_ii = std::fabs(1.0 - std::fabs(Ub_data[i * nactv + i]));
+        if (va_ii > zero_threshold or vb_ii > zero_threshold)
+            return false;
+
+        for (size_t j = i + 1; j < nactv; ++j) {
+            auto va_ij = std::fabs(Ua_data[i * nactv + j]);
+            auto vb_ij = std::fabs(Ub_data[i * nactv + j]);
+            if (va_ij > zero_threshold or vb_ij > zero_threshold) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 RDMsSpinDependent::RDMsSpinDependent() {
     max_rdm_ = 0;
     type_ = RDMsType::spin_dependent;
@@ -561,7 +589,7 @@ void RDMsSpinDependent::axpy(std::shared_ptr<RDMs> rhs, double a) {
 }
 
 void RDMsSpinDependent::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
-    if (max_rdm_ < 1)
+    if (_bypass_rotate(Ua, Ub))
         return;
 
     psi::outfile->Printf("\n  Orbital rotations on spin-dependent RDMs ...");
@@ -822,7 +850,7 @@ void RDMsSpinFree::axpy(std::shared_ptr<RDMs> rhs, double a) {
 }
 
 void RDMsSpinFree::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
-    if (max_rdm_ < 1)
+    if (_bypass_rotate(Ua, Ub))
         return;
 
     psi::outfile->Printf("\n  Orbital rotations on spin-free RDMs ...");

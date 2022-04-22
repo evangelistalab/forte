@@ -219,6 +219,10 @@ class ProcedureDSRG:
 
             # Solve active space using dressed integrals
             self.active_space_solver.set_active_space_integrals(ints_dressed)
+            # ints_dressed in original basis so that the CI vectors are comparable before/after DSRG
+            # however, forte integrals and thus dipole integrals are in semi-canonical basis
+            # to make dipole computed correctly, we need to make the orbital basis consistent
+            self.active_space_solver.set_Uactv(self.Ua, self.Ub)
             state_energies_list = self.active_space_solver.compute_energy()
 
             # Reorder weights if needed
