@@ -36,6 +36,23 @@ using namespace psi;
 
 namespace forte {
 
+psi::SharedMatrix SADSRG::expA1() {
+    ambit::BlockedTensor A1;
+    A1 = BTF_->build(tensor_type_, "A1 Amplitudes", {"gg"}, true);
+    A1["ia"] = T1_["ia"];
+    A1["ai"] -= T1_["ia"];
+
+    size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
+
+    psi::SharedMatrix A1_m(new psi::Matrix("A1 matrix", ncmo, ncmo));
+    A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        A1_m->set(i[0], i[1], value);
+    });
+
+    A1_m->expm(3); // >=3 is required for high energy convergence
+    return A1_m;
+}
+
 void SADSRG::internal_amps_T1(BlockedTensor& T1) {
     if (internal_amp_.find("SINGLES") != std::string::npos) {
         // TODO: to be filled

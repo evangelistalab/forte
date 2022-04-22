@@ -53,15 +53,15 @@ SA_MRDSRG::SA_MRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_in
 
 void SA_MRDSRG::read_options() {
     corrlv_string_ = foptions_->get_str("CORR_LEVEL");
-    std::vector<std::string> available{"LDSRG2", "LDSRG2_QC"};
+    std::vector<std::string> available{"LDSRG2", "LDSRG2_QC", "CC2"};
     if (std::find(available.begin(), available.end(), corrlv_string_) == available.end()) {
         outfile->Printf("\n  Warning: CORR_LEVEL option %s is not implemented.",
                         corrlv_string_.c_str());
         outfile->Printf("\n  Changed CORR_LEVEL option to LDSRG2_QC");
 
         corrlv_string_ = "LDSRG2_QC";
-        warnings_.push_back(std::make_tuple("Unsupported CORR_LEVEL", "Change to LDSRG2_QC",
-                                            "Change options in input.dat"));
+        warnings_.emplace_back("Unsupported CORR_LEVEL", "Change to LDSRG2_QC",
+                               "Change options in input.dat");
     }
 
     sequential_Hbar_ = foptions_->get_bool("DSRG_HBAR_SEQ");
@@ -150,6 +150,11 @@ void SA_MRDSRG::print_options() {
     // print information
     print_selected_options("Computation Information", calculation_info_string,
                            calculation_info_bool, calculation_info_double, calculation_info_int);
+
+    // stop if there are some conflicts
+    if (corrlv_string_ == "LDSRG2_QC" and !eri_df_ and sequential_Hbar_) {
+        throw std::runtime_error("Sequential LDSRG2_QC only available with DF/CD integrals!");
+    }
 }
 
 void SA_MRDSRG::check_memory() {
@@ -220,7 +225,7 @@ void SA_MRDSRG::build_ints() {
 
 double SA_MRDSRG::compute_energy() {
     // build initial amplitudes
-    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+//    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
     guess_t(V_, T2_, F_, T1_, B_);
 

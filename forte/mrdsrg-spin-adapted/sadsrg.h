@@ -245,9 +245,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Fill in diagonal elements of Fock matrix to Fdiag
     void fill_Fdiag(BlockedTensor& F, std::vector<double>& Fdiag);
 
-    /// Check orbitals if semicanonical
+    /// Check orbitals if semi-canonical
     bool check_semi_orbs();
-    /// Are orbitals semi-canonicalized?
+    /// Are orbitals semi-canonical?
     bool semi_canonical_;
     /// Checked results of each block of Fock matrix
     std::map<std::string, bool> semi_checked_results_;
@@ -383,6 +383,14 @@ class SADSRG : public DynamicCorrelationSolver {
     void print_done(double t);
 
     // ==> common amplitudes analysis and printing <==
+
+    /// Single excitation amplitudes
+    ambit::BlockedTensor T1_;
+    /// Double excitation amplitudes
+    ambit::BlockedTensor T2_;
+
+    /// Compute the exponential of exp(T1 - T1^+) and return a SharedMatrix of size ncmo x ncmo
+    psi::SharedMatrix expA1();
 
     /// Prune internal amplitudes for T1
     void internal_amps_T1(BlockedTensor& T1);

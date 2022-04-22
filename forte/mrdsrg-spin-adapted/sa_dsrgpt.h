@@ -66,10 +66,10 @@ class SA_DSRGPT : public SADSRG {
     ambit::BlockedTensor F0th_;
     /// Generalized Fock matrix (bare off-diagonal blocks)
     ambit::BlockedTensor F1st_;
-    /// Single excitation amplitude
-    ambit::BlockedTensor T1_;
-    /// Double excitation amplitude
-    ambit::BlockedTensor T2_;
+//    /// Single excitation amplitude
+//    ambit::BlockedTensor T1_;
+//    /// Double excitation amplitude
+//    ambit::BlockedTensor T2_;
     /// Double excitation amplitude (2 * J - K)
     ambit::BlockedTensor S2_;
 

@@ -123,6 +123,9 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
+
+    // all methods need T1 amplitudes
+    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
 }
 
 void SADSRG::build_fock_from_ints() {
@@ -782,6 +785,8 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
         auto Usub = std::make_shared<psi::Matrix>("U " + space, dim, dim);
         auto evals = std::make_shared<psi::Vector>("evals " + space, dim);
         Fd->diagonalize(Usub, evals);
+        outfile->Printf("\n  space: %s\n", space.c_str());
+        evals->print();
 
         auto& Udata = U.block(block).data();
         auto corr_abs_indices = mo_space_info_->corr_absolute_mo(space);

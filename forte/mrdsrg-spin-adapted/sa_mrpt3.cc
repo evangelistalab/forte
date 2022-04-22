@@ -100,7 +100,7 @@ void SA_MRPT3::build_ints() {
 void SA_MRPT3::init_amps() {
     timer t("Initialize T1 and T2");
     print_contents("Allocating amplitudes");
-    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+//    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
     S2_ = BTF_->build(tensor_type_, "S2 Amplitudes", {"hhpp"});
     print_done(t.stop());

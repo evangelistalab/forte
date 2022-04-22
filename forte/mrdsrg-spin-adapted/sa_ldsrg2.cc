@@ -93,13 +93,15 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         local_timer t_hbar;
         timer hbar("Compute Hbar");
         if (corrlv_string_ == "LDSRG2_QC") {
-            compute_hbar_qc();
+            if (sequential_Hbar_)
+                compute_hbar_qc_sequential();
+            else
+                compute_hbar_qc();
         } else {
-            if (sequential_Hbar_) {
+            if (sequential_Hbar_)
                 compute_hbar_sequential();
-            } else {
+            else
                 compute_hbar();
-            }
         }
         hbar.stop();
         double Edelta = Hbar0_ - Ecorr;
@@ -162,9 +164,9 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     outfile->Printf("\n    %s", dash.c_str());
     outfile->Printf("\n\n  ==> MR-LDSRG(2)%s Energy Summary <==\n", level.c_str());
     std::vector<std::pair<std::string, double>> energy;
-    energy.push_back({"E0 (reference)", Eref_});
-    energy.push_back({"MR-LDSRG(2) correlation energy", Ecorr});
-    energy.push_back({"MR-LDSRG(2) total energy", Eref_ + Ecorr});
+    energy.emplace_back("E0 (reference)", Eref_);
+    energy.emplace_back("MR-LDSRG(2) correlation energy", Ecorr);
+    energy.emplace_back("MR-LDSRG(2) total energy", Eref_ + Ecorr);
     for (auto& str_dim : energy) {
         outfile->Printf("\n    %-30s = %23.15f", str_dim.first.c_str(), str_dim.second);
     }
@@ -304,20 +306,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
 
     timer rotation("Hbar T1 rotation");
 
-    ambit::BlockedTensor A1;
-    A1 = BTF_->build(tensor_type_, "A1 Amplitudes", {"gg"}, true);
-    A1["ia"] = T1_["ia"];
-    A1["ai"] -= T1_["ia"];
-
-    size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
-
-    psi::SharedMatrix A1_m(new psi::Matrix("A1 alpha", ncmo, ncmo));
-    A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        A1_m->set(i[0], i[1], value);
-    });
-
-    // >=3 is required for high energy convergence
-    A1_m->expm(3);
+    auto A1_m = expA1();
 
     ambit::BlockedTensor U1;
     U1 = BTF_->build(tensor_type_, "Transformer", {"gg"}, true);
@@ -568,6 +557,138 @@ void SA_MRDSRG::compute_hbar_qc() {
     H2_T1_C1(S2, T1_, 1.0, temp);
     H2_T2_C1(S2, T2_, DT2_, 1.0, temp);
     Hbar1_["ia"] += temp["ai"];
+}
+
+void SA_MRDSRG::compute_hbar_qc_sequential() {
+    if (!eri_df_)
+        throw std::runtime_error("Not available for conventional integrals!");
+
+    timer rotation("Hbar T1 rotation");
+
+    auto A1_m = expA1();
+
+    auto U1 = BTF_->build(tensor_type_, "Transformer", {"gg"}, true);
+    U1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = A1_m->get(i[0], i[1]);
+    });
+
+    /// Recompute Hbar0 (ref. energy + T1 correlation) and F (Fock)
+    /// E = 0.5 * ( H["ji"] + F["ji] ) * D1["ij"] + 0.25 * V["xyuv"] * L2["uvxy"]
+
+    // F is now "bare H1"
+    auto F = BTF_->build(tensor_type_, "Fock (A1 dressed)", {"gg"});
+    F["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
+
+    Hbar0_ = 0.0;
+    F.block("cc").iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1])
+            Hbar0_ += value;
+    });
+    Hbar0_ += 0.5 * F["uv"] * L1_["vu"];
+
+    // for simplicity, create a core-core density matrix
+    auto D1c = BTF_->build(tensor_type_, "L1 core", {"cc"});
+    for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+        D1c.block("cc").data()[m * nc + m] = 2.0;
+    }
+
+    // F becomes "Fock"
+    auto B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg"}, true);
+    B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
+
+    auto temp = BTF_->build(tensor_type_, "B temp", {"L"}, true);
+    temp["g"] = B["gmn"] * D1c["mn"];
+    temp["g"] += B["guv"] * L1_["uv"];
+    F["pq"] += temp["g"] * B["gpq"];
+
+    F["pq"] -= 0.5 * B["gpm"] * B["gnq"] * D1c["mn"];
+    F["pq"] -= 0.5 * B["gpu"] * B["gvq"] * L1_["uv"];
+
+    // compute fully contracted term from T1
+    F.block("cc").iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1])
+            Hbar0_ += value;
+    });
+    Hbar0_ += 0.5 * F["uv"] * L1_["vu"];
+
+    Hbar0_ += 0.5 * B["gux"] * B["gvy"] * L2_["xyuv"];
+
+    Hbar0_ += Efrzc_ + Enuc_ - Eref_;
+
+    rotation.stop();
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    // iteration variables
+    timer comm("Hbar T2 commutator");
+
+    Hbar1_["ia"] = F["ia"];
+    Hbar2_["ijab"] = B["gia"] * B["gjb"];
+
+    // diagonal blocks of fock
+    auto fock = ambit::BlockedTensor::build(tensor_type_, "fock diag", {"cc", "aa", "vv"});
+    fock["pq"] = F_["pq"];
+
+    // final second-order Hbar in the active space
+    auto hbar2 = ambit::BlockedTensor::build(tensor_type_, "hbar2", {"aaaa"});
+    hbar2["pqrs"] = Hbar2_["pqrs"];
+
+    // compute S1 = H + 0.5 * [H0th, A]
+    auto S1 = BTF_->build(tensor_type_, "S1", {"gg"}, true);
+    H1_T2_C1(fock, T2_, 0.5, S1);
+//    V_T2_C1_DF(B, T2_, DT2_, 0.5, S1);
+
+    temp = BTF_->build(tensor_type_, "temp", {"gg"}, true);
+    temp["pq"] = S1["pq"];
+    S1["pq"] += temp["qp"];
+
+    S1["pq"] += F["pq"];
+
+    // compute Hbar = [S1, A]
+    //   Step 1: [S1, T]_{ab}^{ij}
+    H1_T2_C0(S1, T2_, 2.0, Hbar0_);
+    H1_T2_C1(S1, T2_, 1.0, Hbar1_);
+    H1_T2_C2(S1, T2_, 1.0, hbar2);
+
+    //   Step 2: [S1, T]_{ij}^{ab}
+    temp = BTF_->build(tensor_type_, "temp", {"ph"}, true);
+    H1_T2_C1(S1, T2_, 1.0, temp);
+    Hbar1_["ia"] += temp["ai"];
+
+    temp = BTF_->build(tensor_type_, "temp", {"aaaa"}, true);
+    H1_T2_C2(S1, T2_, 1.0, temp);
+    hbar2["ijab"] += temp["abij"];
+
+    // compute S2 = H + 0.5 * [H, A]
+    // 0.5 * [H, T]
+    BlockedTensor S2 = BTF_->build(tensor_type_, "S2", {"gggg"}, true);
+    H1_T2_C2(fock, T2_, 0.5, S2);
+//    V_T2_C2_DF(B, T2_, DT2_, 0.5, S2);
+
+    // 0.5 * [H, T]^+
+    add_hermitian_conjugate(S2);
+
+    Hbar2_["pqrs"] += 2.0 * S2["pqrs"];
+
+    // add bare Hamiltonian contribution
+    S2["pqrs"] += B["gpr"] * B["gqs"];
+
+    // compute Hbar = [S2, A]
+    //   Step 1: [S2, T]_{ab}^{ij}
+    H2_T2_C0(S2, T2_, DT2_, 2.0, Hbar0_);
+    H2_T2_C1(S2, T2_, DT2_, 1.0, Hbar1_);
+    H2_T2_C2(S2, T2_, DT2_, 1.0, hbar2);
+
+    //   Step 2: [S2, T]_{ij}^{ab}
+    temp.zero();
+    H2_T2_C2(S2, T2_, DT2_, 1.0, temp);
+    hbar2["ijab"] += temp["abij"];
+
+    temp = BTF_->build(tensor_type_, "temp", {"ph"}, true);
+    H2_T2_C1(S2, T2_, DT2_, 1.0, temp);
+    Hbar1_["ia"] += temp["ai"];
+
+    Hbar2_["uvxy"] = hbar2["uvxy"];
 }
 
 void SA_MRDSRG::setup_ldsrg2_tensors() {

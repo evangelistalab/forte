@@ -113,10 +113,10 @@ class SA_MRDSRG : public SADSRG {
     ambit::BlockedTensor B_;
     /// Generalized Fock matrix
     ambit::BlockedTensor F_;
-    /// Single excitation amplitude
-    ambit::BlockedTensor T1_;
-    /// Double excitation amplitude
-    ambit::BlockedTensor T2_;
+//    /// Single excitation amplitude
+//    ambit::BlockedTensor T1_;
+//    /// Double excitation amplitude
+//    ambit::BlockedTensor T2_;
     /// Difference of consecutive singles
     ambit::BlockedTensor DT1_;
     /// Difference of consecutive doubles
@@ -156,10 +156,12 @@ class SA_MRDSRG : public SADSRG {
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
-    /// Compute DSRG-transformed Hamiltonian Hbar sequentially
+    /// Compute DSRG-transformed Hamiltonian sequentially
     void compute_hbar_sequential();
     /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator
     void compute_hbar_qc();
+    /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator sequentially
+    void compute_hbar_qc_sequential();
 
     /// Add H2's Hermitian conjugate to itself, H2 need to contain gGgG block
     void add_hermitian_conjugate(BlockedTensor& H2);
