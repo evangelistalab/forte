@@ -650,6 +650,8 @@ void SA_MRDSRG::compute_hbar_qc_sequential() {
     S2["pqrs"] += tmp2["rspq"];
     Hbar2_["pqrs"] += S2["pqrs"];
 
+    S2["pqrs"] += 2.0 * B["gpr"] * B["gqs"];
+
     tmp1.zero();
     tmp2 = BTF_->build(tensor_type_, "tmp2", {"aaaa"}, true);
 
@@ -658,15 +660,19 @@ void SA_MRDSRG::compute_hbar_qc_sequential() {
     H1_T2_C1(S1, T2_, 0.5, tmp1);
     H1_T2_C2(S1, T2_, 0.5, tmp2);
 
-    // 0.5 * [S2, A2]_0,1,2
+    // 0.5 * [S2 + H2, A2]_0,1,2
     H2_T2_C0(S2, T2_, DT2_, 1.0, Hbar0_);
-    H2_T2_C1(S2, T2_, DT2_, 0.5, tmp1);
     H2_T2_C2(S2, T2_, DT2_, 0.5, tmp2);
+    H2_T2_C1(S2, T2_, DT2_, 0.5, tmp1);
+
+    S2 = BTF_->build(tensor_type_, "S2", diag_two_labels(), true);
+    S2["pqrs"] += B["gpr"] * B["gqs"];
+    H2_T2_C1(S2, T2_, DT2_, 1.0, tmp1);
 
     // [H2, A2]_0,1,2
-    V_T2_C0_DF(B, T2_, DT2_, 2.0, Hbar0_);
-    V_T2_C1_DF(B, T2_, DT2_, 1.0, tmp1);
-    V_T2_C2_DF(B, T2_, DT2_, 1.0, tmp2);
+//    V_T2_C0_DF(B, T2_, DT2_, 2.0, Hbar0_);
+//    V_T2_C1_DF(B, T2_, DT2_, 1.0, tmp1);
+//    V_T2_C2_DF(B, T2_, DT2_, 1.0, tmp2);
 
     Hbar1_["pq"] += tmp1["pq"];
     Hbar1_["pq"] += tmp1["qp"];
