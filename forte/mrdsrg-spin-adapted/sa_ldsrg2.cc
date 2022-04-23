@@ -633,60 +633,45 @@ void SA_MRDSRG::compute_hbar_qc_sequential() {
     auto hbar2 = ambit::BlockedTensor::build(tensor_type_, "hbar2", {"aaaa"});
     hbar2["pqrs"] = Hbar2_["pqrs"];
 
-    // compute S1 = H + 0.5 * [H0th, A]
+    // S1 = [H0th, A2]_1
     auto S1 = BTF_->build(tensor_type_, "S1", {"gg"}, true);
-    H1_T2_C1(fock, T2_, 0.5, S1);
-//    V_T2_C1_DF(B, T2_, DT2_, 0.5, S1);
+    auto tmp1 = BTF_->build(tensor_type_, "tmp1", {"gg"}, true);
+    H1_T2_C1(fock, T2_, 1.0, tmp1);
+    S1["pq"] += tmp1["pq"];
+    S1["pq"] += tmp1["qp"];
 
-    temp = BTF_->build(tensor_type_, "temp", {"gg"}, true);
-    temp["pq"] = S1["pq"];
-    S1["pq"] += temp["qp"];
+    S1["pq"] += 2.0 * F["pq"];
 
-    S1["pq"] += F["pq"];
+    // S2 = [H0th, A2]_2
+    auto S2 = BTF_->build(tensor_type_, "S2", od_two_labels(), true);
+    auto tmp2 = BTF_->build(tensor_type_, "tmp2", {"hhpp"}, true);
+    H1_T2_C2(fock, T2_, 1.0, tmp2);
+    S2["pqrs"] += tmp2["pqrs"];
+    S2["pqrs"] += tmp2["rspq"];
+    Hbar2_["pqrs"] += S2["pqrs"];
 
-    // compute Hbar = [S1, A]
-    //   Step 1: [S1, T]_{ab}^{ij}
-    H1_T2_C0(S1, T2_, 2.0, Hbar0_);
-    H1_T2_C1(S1, T2_, 1.0, Hbar1_);
-    H1_T2_C2(S1, T2_, 1.0, hbar2);
+    tmp1.zero();
+    tmp2 = BTF_->build(tensor_type_, "tmp2", {"aaaa"}, true);
 
-    //   Step 2: [S1, T]_{ij}^{ab}
-    temp = BTF_->build(tensor_type_, "temp", {"ph"}, true);
-    H1_T2_C1(S1, T2_, 1.0, temp);
-    Hbar1_["ia"] += temp["ai"];
+    // 0.5 * [S1 + H1, A2]_0,1,2
+    H1_T2_C0(S1, T2_, 1.0, Hbar0_);
+    H1_T2_C1(S1, T2_, 0.5, tmp1);
+    H1_T2_C2(S1, T2_, 0.5, tmp2);
 
-    temp = BTF_->build(tensor_type_, "temp", {"aaaa"}, true);
-    H1_T2_C2(S1, T2_, 1.0, temp);
-    hbar2["ijab"] += temp["abij"];
+    // 0.5 * [S2, A2]_0,1,2
+    H2_T2_C0(S2, T2_, DT2_, 1.0, Hbar0_);
+    H2_T2_C1(S2, T2_, DT2_, 0.5, tmp1);
+    H2_T2_C2(S2, T2_, DT2_, 0.5, tmp2);
 
-    // compute S2 = H + 0.5 * [H, A]
-    // 0.5 * [H, T]
-    BlockedTensor S2 = BTF_->build(tensor_type_, "S2", {"gggg"}, true);
-    H1_T2_C2(fock, T2_, 0.5, S2);
-//    V_T2_C2_DF(B, T2_, DT2_, 0.5, S2);
+    // [H2, A2]_0,1,2
+    V_T2_C0_DF(B, T2_, DT2_, 2.0, Hbar0_);
+    V_T2_C1_DF(B, T2_, DT2_, 1.0, tmp1);
+    V_T2_C2_DF(B, T2_, DT2_, 1.0, tmp2);
 
-    // 0.5 * [H, T]^+
-    add_hermitian_conjugate(S2);
-
-    Hbar2_["pqrs"] += 2.0 * S2["pqrs"];
-
-    // add bare Hamiltonian contribution
-    S2["pqrs"] += B["gpr"] * B["gqs"];
-
-    // compute Hbar = [S2, A]
-    //   Step 1: [S2, T]_{ab}^{ij}
-    H2_T2_C0(S2, T2_, DT2_, 2.0, Hbar0_);
-    H2_T2_C1(S2, T2_, DT2_, 1.0, Hbar1_);
-    H2_T2_C2(S2, T2_, DT2_, 1.0, hbar2);
-
-    //   Step 2: [S2, T]_{ij}^{ab}
-    temp.zero();
-    H2_T2_C2(S2, T2_, DT2_, 1.0, temp);
-    hbar2["ijab"] += temp["abij"];
-
-    temp = BTF_->build(tensor_type_, "temp", {"ph"}, true);
-    H2_T2_C1(S2, T2_, DT2_, 1.0, temp);
-    Hbar1_["ia"] += temp["ai"];
+    Hbar1_["pq"] += tmp1["pq"];
+    Hbar1_["pq"] += tmp1["qp"];
+    hbar2["uvxy"] += tmp2["uvxy"];
+    hbar2["uvxy"] += tmp2["xyuv"];
 
     Hbar2_["uvxy"] = hbar2["uvxy"];
 }

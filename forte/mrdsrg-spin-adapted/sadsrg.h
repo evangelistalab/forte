@@ -334,7 +334,7 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Compute zero-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [V, T2], V is constructed from B (DF/CD)
-    std::vector<double> V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T1, BlockedTensor& S2,
+    std::vector<double> V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2,
                                    const double& alpha, double& C0);
 
     /// Compute one-body term of commutator [V, T1], V is constructed from B (DF/CD)
