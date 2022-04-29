@@ -31,6 +31,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/physconst.h"
+#include "psi4/libqt/qt.h"
 
 #include "base_classes/active_space_method.h"
 #include "base_classes/mo_space_info.h"
@@ -310,15 +311,11 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
         std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
         std::shared_ptr<psi::Vector> WORK(new psi::Vector("WORK", lwork));
-        std::shared_ptr<psi::Vector> IWORK(new psi::Vector("IWORK", 8 * nactv));
+        std::vector<int> IWORK(8 * nactv);
         int info;
-        psi::C_DGESDD("A", nactv, nactv, Dt_matrix->pointer(0)[0], nactv, S->pointer(0)[0],
-                      U->pointer(0)[0], nactv, VT->pointer(0)[0], nactv, WORK->pointer(0)[0], lwork,
-                      IWORK->pointer(0)[0]);
-        // Dt_matrix->print();
-        S->print();
-        U->print();
-        VT->print();
+        psi::C_DGESDD('A', nactv, nactv, Dt_matrix->pointer()[0], nactv, &S->pointer()[0],
+                      U->pointer()[0], nactv, VT->pointer()[0], nactv, &WORK->pointer()[0], lwork,
+                      &IWORK[0]);
 
         std::vector<double> dipole(4, 0.0);
         for (int z = 0; z < 3; ++z) {
