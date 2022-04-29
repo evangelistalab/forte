@@ -304,6 +304,21 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
 
         std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
         auto Dt = rdms[i]->SF_G1();
+        auto Dt_matrix = tensor_to_matrix(Dt);
+        auto lwork = 4 * nactv * nactv + 6 * nactv + nactv;
+        std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
+        std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
+        std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
+        std::shared_ptr<psi::Vector> WORK(new psi::Vector("WORK", lwork));
+        std::shared_ptr<psi::Vector> IWORK(new psi::Vector("IWORK", 8 * nactv));
+        int info;
+        psi::C_DGESDD("A", nactv, nactv, Dt_matrix->pointer(0)[0], nactv, S->pointer(0)[0],
+                      U->pointer(0)[0], nactv, VT->pointer(0)[0], nactv, WORK->pointer(0)[0], lwork,
+                      IWORK->pointer(0)[0]);
+        // Dt_matrix->print();
+        S->print();
+        U->print();
+        VT->print();
 
         std::vector<double> dipole(4, 0.0);
         for (int z = 0; z < 3; ++z) {
