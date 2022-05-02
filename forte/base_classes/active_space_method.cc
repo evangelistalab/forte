@@ -305,17 +305,6 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
 
         std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
         auto Dt = rdms[i]->SF_G1();
-        auto Dt_matrix = tensor_to_matrix(Dt);
-        auto lwork = 4 * nactv * nactv + 6 * nactv + nactv;
-        std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
-        std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
-        std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
-        std::shared_ptr<psi::Vector> WORK(new psi::Vector("WORK", lwork));
-        std::vector<int> IWORK(8 * nactv);
-        int info;
-        psi::C_DGESDD('A', nactv, nactv, Dt_matrix->pointer()[0], nactv, &S->pointer()[0],
-                      U->pointer()[0], nactv, VT->pointer()[0], nactv, &WORK->pointer()[0], lwork,
-                      &IWORK[0]);
 
         std::vector<double> dipole(4, 0.0);
         for (int z = 0; z < 3; ++z) {
@@ -367,6 +356,50 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         }
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
+
+    auto lwork = 4 * nactv * nactv + 6 * nactv + nactv;
+    std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
+    std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
+    std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
+    std::shared_ptr<psi::Vector> WORK(new psi::Vector("WORK", lwork));
+    std::vector<int> IWORK(8 * nactv);
+
+    print_h2("Transition Reduced Density Matrix Analysis for " + title);
+    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+        auto root1 = root_list[i].first;
+        auto root2 = root_list[i].second;
+        std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
+        auto Dt = rdms[i]->SF_G1();
+        auto Dt_matrix = tensor_to_matrix(Dt);
+        psi::C_DGESDD('A', nactv, nactv, Dt_matrix->pointer()[0], nactv, &S->pointer()[0],
+                      U->pointer()[0], nactv, VT->pointer()[0], nactv, &WORK->pointer()[0], lwork,
+                      &IWORK[0]);
+
+        // printing
+        std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
+        std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
+        psi::outfile->Printf("\n    Transition from State %4s  to State %4s :", name1.c_str(),
+                             name2.c_str());
+        double maxS = S->get(0);
+        for (int comp = 0; comp < nactv; comp++) {
+            double Svalue = S->get(comp);
+            if (Svalue / maxS > 0.1) {
+                psi::outfile->Printf("\n      Component %2d ", comp + 1);
+                psi::outfile->Printf("with value of W = %6.4f", Svalue);
+                for (int j = 0; j < nactv; j++) {
+                    for (int i = 0; i < nactv; i++) {
+                        double coeff_i = VT->get(j, comp);
+                        double coeff_f = U->get(comp, i);
+                        double coeff = coeff_i * coeff_i * coeff_f * coeff_f;
+                        if (coeff > 0.10) {
+                            psi::outfile->Printf("\n        Orbital%3d -> Orbital%3d : %6.4f", j, i,
+                                                 coeff);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     return dipoles_out;
 }
