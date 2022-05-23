@@ -234,15 +234,8 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
         std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
         std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
 
-        // if energy is a negative number, reverse the order of printing, and print the absolute
-        // value
-        if (e_diff >= 0) {
-            psi::outfile->Printf("\n    %6s %6s", name1.c_str(), name2.c_str());
-            psi::outfile->Printf("%15.8f%15.8f%15.8f", e_diff, e_diff * pc_hartree2ev, osc);
-        } else {
-            psi::outfile->Printf("\n    %6s %6s", name2.c_str(), name1.c_str());
-            psi::outfile->Printf("%15.8f%15.8f%15.8f", -e_diff, -e_diff * pc_hartree2ev, osc);
-        }
+        psi::outfile->Printf("\n    %6s %6s", name1.c_str(), name2.c_str());
+        psi::outfile->Printf("%15.8f%15.8f%15.8f", e_diff, e_diff * pc_hartree2ev, osc);
 
         // push to Psi4 environment
         std::string name = "OSC. " + multi_label + " " + name1 + " -> " + name2;
