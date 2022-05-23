@@ -78,6 +78,8 @@ void ActiveSpaceMethod::set_read_wfn_guess(bool read) { read_wfn_guess_ = read; 
 
 void ActiveSpaceMethod::set_dump_wfn(bool dump) { dump_wfn_ = dump; }
 
+void ActiveSpaceMethod::set_dump_trdm(bool dump) { dump_trdm_ = dump; }
+
 void ActiveSpaceMethod::set_wfn_filename(const std::string& name) { wfn_filename_ = name; }
 
 void ActiveSpaceMethod::set_root(int value) { root_ = value; }
@@ -232,8 +234,15 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
         std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
         std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
 
-        psi::outfile->Printf("\n    %6s %6s", name1.c_str(), name2.c_str());
-        psi::outfile->Printf("%15.8f%15.8f%15.8f", e_diff, e_diff * pc_hartree2ev, osc);
+        // if energy is a negative number, reverse the order of printing, and print the absolute
+        // value
+        if (e_diff >= 0) {
+            psi::outfile->Printf("\n    %6s %6s", name1.c_str(), name2.c_str());
+            psi::outfile->Printf("%15.8f%15.8f%15.8f", e_diff, e_diff * pc_hartree2ev, osc);
+        } else {
+            psi::outfile->Printf("\n    %6s %6s", name2.c_str(), name1.c_str());
+            psi::outfile->Printf("%15.8f%15.8f%15.8f", -e_diff, -e_diff * pc_hartree2ev, osc);
+        }
 
         // push to Psi4 environment
         std::string name = "OSC. " + multi_label + " " + name1 + " -> " + name2;
@@ -265,6 +274,7 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     std::shared_ptr<ActiveSpaceMethod> method2, const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
 
     const auto& state2 = method2->state();
+
     std::string title = state_.str_minimum() + " -> " + state2.str_minimum();
     print_h2("Transition Dipole Moments [e a0] for " + title);
 
@@ -273,7 +283,6 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         rdms[i]->rotate(Ua, Ub); // need to make 1-TRDM and dipole in the same orbital basis
     }
-
     auto ints = as_ints_->ints();
     auto nactv = mo_space_info_->size("ACTIVE");
     auto actv_in_mo = mo_space_info_->pos_in_space("ACTIVE", "ALL");
@@ -317,7 +326,6 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         // printing
         std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
         std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
-
         psi::outfile->Printf("\n    %6s %6s", name1.c_str(), name2.c_str());
         psi::outfile->Printf("%15.8f%15.8f%15.8f%15.8f", dipole[0], dipole[1], dipole[2],
                              dipole[3]);
@@ -357,13 +365,15 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
 
+    // Doing SVD for transition reduced density matrix
+
+    // Several necessary matrix and constants for LAPACK SVD
     auto lwork = 4 * nactv * nactv + 6 * nactv + nactv;
     std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
     std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
     std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
     std::shared_ptr<psi::Vector> WORK(new psi::Vector("WORK", lwork));
     std::vector<int> IWORK(8 * nactv);
-
     print_h2("Transition Reduced Density Matrix Analysis for " + title);
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         auto root1 = root_list[i].first;
@@ -371,11 +381,23 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
         auto Dt = rdms[i]->SF_G1();
         auto Dt_matrix = tensor_to_matrix(Dt);
+
+        // Dump transition reduced matrices for each transition
+        if (dump_trdm_) {
+            // Change name that contains GAS info so it does not duplicate
+            std::string gas_name1 = std::to_string(root1) + upper_string(state_.irrep_label()) +
+                                    "_" + std::to_string(state_.gas_max()[0]);
+            std::string gas_name2 = std::to_string(root2) + upper_string(state2.irrep_label()) +
+                                    "_" + std::to_string(state2.gas_max()[0]);
+            std::string dt_filename = "trdm_" + gas_name1 + "_" + gas_name2 + ".txt";
+            Dt_matrix->save(dt_filename, false, false, true);
+        }
+
         psi::C_DGESDD('A', nactv, nactv, Dt_matrix->pointer()[0], nactv, &S->pointer()[0],
                       U->pointer()[0], nactv, VT->pointer()[0], nactv, &WORK->pointer()[0], lwork,
                       &IWORK[0]);
-
-        // printing
+        // Printing out the major components of transitions and major components to the natural
+        // transition orbitals in active space
         std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
         std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
         psi::outfile->Printf("\n    Transition from State %4s  to State %4s :", name1.c_str(),
@@ -384,21 +406,28 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         for (int comp = 0; comp < nactv; comp++) {
             double Svalue = S->get(comp);
             if (Svalue / maxS > 0.1) {
+                // Print the components larger than 10 percent of the strongest occupation
                 psi::outfile->Printf("\n      Component %2d ", comp + 1);
                 psi::outfile->Printf("with value of W = %6.4f", Svalue);
+                psi::outfile->Printf("\n        Init. Orbital:");
                 for (int j = 0; j < nactv; j++) {
-                    for (int i = 0; i < nactv; i++) {
-                        double coeff_i = VT->get(j, comp);
-                        double coeff_f = U->get(comp, i);
-                        double coeff = coeff_i * coeff_i * coeff_f * coeff_f;
-                        if (coeff > 0.10) {
-                            psi::outfile->Printf("\n        Orbital%3d -> Orbital%3d : %6.4f", j, i,
-                                                 coeff);
-                        }
+                    double coeff_i = VT->get(j, comp);
+                    if (coeff_i * coeff_i > 0.10) {
+                        // Print the compoents with more than 0.1 amplitude form original orbitals
+                        psi::outfile->Printf(" %6.4f Orb. %2d", coeff_i * coeff_i, j);
+                    }
+                }
+                psi::outfile->Printf("\n        Final Orbital:");
+                for (int j = 0; j < nactv; j++) {
+                    double coeff_f = U->get(comp, j);
+                    if (coeff_f * coeff_f > 0.10) {
+                        // Print the compoents with more than 0.1 amplitude form original orbitals
+                        psi::outfile->Printf(" %6.4f Orb. %2d", coeff_f * coeff_f, j);
                     }
                 }
             }
         }
+        psi::outfile->Printf("\n        ");
     }
 
     return dipoles_out;

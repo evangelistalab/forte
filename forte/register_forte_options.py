@@ -253,6 +253,9 @@ def register_active_space_solver_options(options):
 
     options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole moments and oscillator strengths")
 
+    options.add_bool("PRINT_DIFFERENT_GAS_ONLY", False, "Only calculate the transition dipole between states with different GAS occupations?")
+
+    options.add_bool("DUMP_TRANSITION_RDM", False, "Dump transition reduced matrix into disk?")
 
 def register_pt2_options(options):
     options.set_group("PT2")
