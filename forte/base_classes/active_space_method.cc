@@ -361,12 +361,9 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     // Doing SVD for transition reduced density matrix
 
     // Several necessary matrix and constants for LAPACK SVD
-    auto lwork = 4 * nactv * nactv + 6 * nactv + nactv;
     std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
     std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
     std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
-    std::shared_ptr<psi::Vector> WORK(new psi::Vector("WORK", lwork));
-    std::vector<int> IWORK(8 * nactv);
     print_h2("Transition Reduced Density Matrix Analysis for " + title);
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         auto root1 = root_list[i].first;
@@ -386,11 +383,13 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
             Dt_matrix->save(dt_filename, false, false, true);
         }
 
-        psi::C_DGESDD('A', nactv, nactv, Dt_matrix->pointer()[0], nactv, &S->pointer()[0],
-                      U->pointer()[0], nactv, VT->pointer()[0], nactv, &WORK->pointer()[0], lwork,
-                      &IWORK[0]);
-        // Printing out the major components of transitions and major components to the natural
-        // transition orbitals in active space
+        // psi::C_DGESDD('A', nactv, nactv, Dt_matrix->pointer()[0], nactv, &S->pointer()[0],
+        //             U->pointer()[0], nactv, VT->pointer()[0], nactv, &WORK->pointer()[0], lwork,
+        //            &IWORK[0]);
+        Dt_matrix->svd_a(U, S, VT);
+
+        // Printing out the major components of transitions and major components to
+        // the natural transition orbitals in active space
         std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
         std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
         psi::outfile->Printf("\n    Transition from State %4s  to State %4s :", name1.c_str(),
@@ -399,22 +398,25 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         for (int comp = 0; comp < nactv; comp++) {
             double Svalue = S->get(comp);
             if (Svalue / maxS > 0.1) {
-                // Print the components larger than 10 percent of the strongest occupation
+                // Print the components larger than 10 percent of the strongest
+                // occupation
                 psi::outfile->Printf("\n      Component %2d ", comp + 1);
                 psi::outfile->Printf("with value of W = %6.4f", Svalue);
                 psi::outfile->Printf("\n        Init. Orbital:");
                 for (int j = 0; j < nactv; j++) {
-                    double coeff_i = VT->get(j, comp);
+                    double coeff_i = U->get(comp, j);
                     if (coeff_i * coeff_i > 0.10) {
-                        // Print the compoents with more than 0.1 amplitude form original orbitals
+                        // Print the compoents with more than 0.1 amplitude form
+                        // original orbitals
                         psi::outfile->Printf(" %6.4f Orb. %2d", coeff_i * coeff_i, j);
                     }
                 }
                 psi::outfile->Printf("\n        Final Orbital:");
                 for (int j = 0; j < nactv; j++) {
-                    double coeff_f = U->get(comp, j);
+                    double coeff_f = VT->get(comp, j);
                     if (coeff_f * coeff_f > 0.10) {
-                        // Print the compoents with more than 0.1 amplitude form original orbitals
+                        // Print the compoents with more than 0.1 amplitude form
+                        // original orbitals
                         psi::outfile->Printf(" %6.4f Orb. %2d", coeff_f * coeff_f, j);
                     }
                 }
