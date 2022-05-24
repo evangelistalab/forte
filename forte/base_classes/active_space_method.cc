@@ -395,6 +395,28 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         psi::outfile->Printf("\n    Transition from State %4s  to State %4s :", name1.c_str(),
                              name2.c_str());
         double maxS = S->get(0);
+
+        // push to Psi4 environment
+        auto& globals = psi::Process::environment.globals;
+        std::string prefix = "TRANS " + upper_string(state_.multiplicity_label());
+        std::string key = " S_MAX " + name1 + " -> " + name2;
+
+        // try to fix states with different gas_min and gas_max
+        std::string label = prefix + key;
+        if (globals.find(label) != globals.end()) {
+            if (globals.find(label + " ENTRY 0") == globals.end()) {
+                std::string suffix = " ENTRY 0";
+                globals[prefix + key + suffix] = globals[prefix + key];
+            }
+            int n = 1;
+            std::string suffix = " ENTRY 1";
+            while (globals.find(label + suffix) != globals.end()) {
+                suffix = " ENTRY " + std::to_string(++n);
+            }
+            globals[prefix + key + suffix] = maxS;
+        }
+        globals[prefix + key] = maxS;
+
         for (int comp = 0; comp < nactv; comp++) {
             double Svalue = S->get(comp);
             if (Svalue / maxS > 0.1) {

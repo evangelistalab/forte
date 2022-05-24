@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.4a3.dev225 
+                               Psi4 1.6a1.dev154 
 
-                         Git: Rev {HEAD} 7105e37 
+                         Git: Rev {HEAD} 3bd8ef0 dirty
 
 
     D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
@@ -19,7 +19,7 @@
                             Additional Code Authors
     E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
     J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
-    P. Verma, and M. H. Lechner
+    P. Verma, M. H. Lechner, and A. Jiang
 
              Previous Authors, Complete List of Code Contributors,
                        and Citations for Specific Modules
@@ -30,9 +30,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 20 September 2021 04:22PM
+    Psi4 started on: Wednesday, 25 May 2022 04:48AM
 
-    Process ID: 4083
+    Process ID: 6001
     Host:       DESKTOP-SQPD2D3
     PSIDATADIR: /home/mhuang/psi4_install/share/psi4
     Memory:     500.0 MiB
@@ -50,6 +50,7 @@ refscf = -76.0172965561
 refaci = -65.52803723267440716
 refacipt2 = -55.02612867161270316
 refosc_0a1_0b1 =  0.00000307 
+s_max_0a1_0b1 = 0.00986351
 
 memory 6000mb
 molecule h2o{
@@ -96,6 +97,7 @@ eaci = energy('forte', ref_wfn=wfn)
 compare_values(refaci, eaci, 8, "Averaged ACI energy")
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"), 6, "ACI+PT2 energy")
 compare_values(refosc_0a1_0b1, variable("OSC. SINGLET 0A1 -> 0B1"), 6, "Oscillator strength singlet 0A1 -> 0B1")
+compare_values(s_max_0a1_0b1, variable("TRANS SINGLET S_MAX 0A1 -> 0B1"), 6, "S_MAX singlet 0A1 -> 0B1")
 --------------------------------------------------------------------------
 
   Memory set to   5.588 GiB by Python driver.
@@ -103,7 +105,7 @@ compare_values(refosc_0a1_0b1, variable("OSC. SINGLET 0A1 -> 0B1"), 6, "Oscillat
 Scratch directory: /tmp/
 
 *** tstart() called on DESKTOP-SQPD2D3
-*** at Mon Sep 20 16:22:51 2021
+*** at Wed May 25 04:48:44 2022
 
    => Loading Basis Set <=
 
@@ -210,7 +212,7 @@ Scratch directory: /tmp/
 
   ==> Pre-Iterations <==
 
-  SCF Guess: Generalized Wolfsberg-Helmholtz.
+  SCF Guess: Generalized Wolfsberg-Helmholtz applied to core Hamiltonian.
 
    -------------------------------------------------------
     Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
@@ -227,19 +229,19 @@ Scratch directory: /tmp/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter   1:   -74.69502194331272   -7.46950e+01   1.19380e-01 DIIS
-   @DF-RHF iter   2:   -75.63883488359937   -9.43813e-01   7.21524e-02 DIIS
-   @DF-RHF iter   3:   -76.01065330024090   -3.71818e-01   7.66497e-03 DIIS
-   @DF-RHF iter   4:   -76.01705150838671   -6.39821e-03   1.07848e-03 DIIS
-   @DF-RHF iter   5:   -76.01724771497813   -1.96207e-04   2.45196e-04 DIIS
-   @DF-RHF iter   6:   -76.01725930217430   -1.15872e-05   5.17439e-05 DIIS
-   @DF-RHF iter   7:   -76.01725996692369   -6.64749e-07   8.86755e-06 DIIS
-   @DF-RHF iter   8:   -76.01725998300695   -1.60833e-08   1.68546e-06 DIIS
-   @DF-RHF iter   9:   -76.01725998411048   -1.10353e-09   3.99731e-07 DIIS
-   @DF-RHF iter  10:   -76.01725998416127   -5.07896e-11   4.32937e-08 DIIS
-   @DF-RHF iter  11:   -76.01725998416163   -3.55271e-13   4.33252e-09 DIIS
-   @DF-RHF iter  12:   -76.01725998416163    0.00000e+00   4.75419e-10 DIIS
-   @DF-RHF iter  13:   -76.01725998416161    1.42109e-14   4.32044e-11 DIIS
+   @DF-RHF iter   1:   -74.69502194331825   -7.46950e+01   1.19380e-01 ADIIS
+   @DF-RHF iter   2:   -75.63883488360376   -9.43813e-01   7.21524e-02 ADIIS/DIIS
+   @DF-RHF iter   3:   -75.93342927299864   -2.94594e-01   3.35851e-02 ADIIS/DIIS
+   @DF-RHF iter   4:   -76.01430516301492   -8.08759e-02   6.34354e-03 ADIIS/DIIS
+   @DF-RHF iter   5:   -76.01724291942013   -2.93776e-03   2.66323e-04 ADIIS/DIIS
+   @DF-RHF iter   6:   -76.01725899680022   -1.60774e-05   5.79129e-05 DIIS
+   @DF-RHF iter   7:   -76.01725995997064   -9.63170e-07   9.69416e-06 DIIS
+   @DF-RHF iter   8:   -76.01725998251328   -2.25426e-08   2.06478e-06 DIIS
+   @DF-RHF iter   9:   -76.01725998413247   -1.61918e-09   5.25388e-07 DIIS
+   @DF-RHF iter  10:   -76.01725998416441   -3.19460e-11   3.67583e-08 DIIS
+   @DF-RHF iter  11:   -76.01725998416450   -8.52651e-14   3.41540e-09 DIIS
+   @DF-RHF iter  12:   -76.01725998416455   -5.68434e-14   5.26149e-10 DIIS
+   @DF-RHF iter  13:   -76.01725998416455    0.00000e+00   4.86459e-11 DIIS
 
   DF guess converged.
 
@@ -249,17 +251,20 @@ Scratch directory: /tmp/
     K tasked:                  Yes
     wK tasked:                  No
     Integrals threads:           1
-    Schwarz Cutoff:          1E-12
+    Screening Type:           CSAM
+    Screening Cutoff:        1E-12
+    Incremental Fock:           No
+    LinK:                       No
 
-   @RHF iter  14:   -76.01729654450102   -7.60173e+01   1.19915e-05 DIIS
-   @RHF iter  15:   -76.01729655577877   -1.12777e-08   1.64017e-06 DIIS
-   @RHF iter  16:   -76.01729655606734   -2.88566e-10   4.89639e-07 DIIS
-   @RHF iter  17:   -76.01729655608837   -2.10321e-11   1.68507e-07 DIIS
-   @RHF iter  18:   -76.01729655609128   -2.91323e-12   4.58642e-08 DIIS
-   @RHF iter  19:   -76.01729655609164   -3.55271e-13   5.21060e-09 DIIS
-   @RHF iter  20:   -76.01729655609159    4.26326e-14   7.84812e-10 DIIS
-   @RHF iter  21:   -76.01729655609161   -1.42109e-14   1.27029e-10 DIIS
-   @RHF iter  22:   -76.01729655609158    2.84217e-14   2.82300e-11 DIIS
+   @RHF iter  14:   -76.01729654450092   -7.60173e+01   1.19915e-05 DIIS
+   @RHF iter  15:   -76.01729655577867   -1.12777e-08   1.64017e-06 DIIS
+   @RHF iter  16:   -76.01729655606725   -2.88580e-10   4.89637e-07 DIIS
+   @RHF iter  17:   -76.01729655608825   -2.10036e-11   1.68506e-07 DIIS
+   @RHF iter  18:   -76.01729655609122   -2.97007e-12   4.58642e-08 DIIS
+   @RHF iter  19:   -76.01729655609149   -2.70006e-13   5.21058e-09 DIIS
+   @RHF iter  20:   -76.01729655609154   -4.26326e-14   7.84807e-10 DIIS
+   @RHF iter  21:   -76.01729655609149    4.26326e-14   1.27027e-10 DIIS
+   @RHF iter  22:   -76.01729655609152   -2.84217e-14   2.82297e-11 DIIS
   Energy and wave function converged.
 
 
@@ -287,14 +292,14 @@ Scratch directory: /tmp/
              A1    A2    B1    B2 
     DOCC [     3,    0,    1,    1 ]
 
-  @RHF Final Energy:   -76.01729655609158
+  @RHF Final Energy:   -76.01729655609152
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              8.8046866532470247
-    One-Electron Energy =                -122.3894315645719217
-    Two-Electron Energy =                  37.5674483552333101
-    Total Energy =                        -76.0172965560915799
+    One-Electron Energy =                -122.3894315645718365
+    Two-Electron Energy =                  37.5674483552332816
+    Total Energy =                        -76.0172965560915230
 
 Computation Completed
 
@@ -303,28 +308,30 @@ Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
 
 Properties computed using the SCF density matrix
 
-  Nuclear Dipole Moment: [e a0]
-     X:     0.0000      Y:     0.0000      Z:     1.0351
 
-  Electronic Dipole Moment: [e a0]
-     X:     0.0000      Y:     0.0000      Z:    -0.1532
+ Multipole Moments:
 
-  Dipole Moment: [e a0]
-     X:     0.0000      Y:     0.0000      Z:     0.8819     Total:     0.8819
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
 
-  Dipole Moment: [D]
-     X:     0.0000      Y:     0.0000      Z:     2.2414     Total:     2.2414
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.1532271            1.0350805            0.8818534
+ Magnitude           :                                                    0.8818534
 
+ ------------------------------------------------------------------------------------
 
-*** tstop() called on DESKTOP-SQPD2D3 at Mon Sep 20 16:22:52 2021
+*** tstop() called on DESKTOP-SQPD2D3 at Wed May 25 04:48:44 2022
 Module time:
-	user time   =       0.36 seconds =       0.01 minutes
-	system time =       0.00 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       1.07 seconds =       0.02 minutes
+	system time =       1.12 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.36 seconds =       0.01 minutes
-	system time =       0.00 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       1.07 seconds =       0.02 minutes
+	system time =       1.12 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
     SCF energy............................................................................PASSED
 
 Scratch directory: /tmp/
@@ -335,7 +342,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: HEAD - git commit: e2f35227
+    git branch: origin/trrdm - git commit: b6aff9de
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -386,8 +393,6 @@ Scratch directory: /tmp/
     atoms 1   entry O          line    81 file /home/mhuang/psi4_install/share/psi4/basis/sto-3g.gbs 
     atoms 2-3 entry H          line    19 file /home/mhuang/psi4_install/share/psi4/basis/sto-3g.gbs 
 
-
-  ==> List of Planes Requested <==
 
   Forte will use psi4 integrals
 
@@ -449,12 +454,12 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.04637880 s
+  Integral transformation done. 0.04238440 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.008731 GB
-  Timing for conventional integral transformation:            0.085 s.
+  Timing for conventional integral transformation:            0.091 s.
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing conventional integrals:                0.085 s.
+  Timing for computing conventional integrals:                0.091 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -556,12 +561,12 @@ Scratch directory: /tmp/
 
     Config.  #Determinants     Time/s
     ---------------------------------
-         1              65  1.053e-04
-         2              27  3.960e-05
-         3              27  3.430e-05
-         4              14  2.900e-05
+         1              65  1.783e-04
+         2              27  7.070e-05
+         3              27  6.440e-05
+         4              14  5.390e-05
     ---------------------------------
-    Total:             133  2.849e-04
+    Total:             133  4.928e-04
     ---------------------------------
 
   ==> Diagonalizing the Hamiltonian in the P + Q space <==
@@ -570,14 +575,14 @@ Scratch directory: /tmp/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.693e-04 seconds
-        β          2.206e-04 seconds
+        α          2.743e-04 seconds
+        β          2.477e-04 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         2.420e-04 seconds
-        ββ         2.969e-04 seconds
-        αβ         7.304e-04 seconds
+        αα         4.112e-04 seconds
+        ββ         4.130e-04 seconds
+        αβ         1.103e-03 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
@@ -585,7 +590,7 @@ Scratch directory: /tmp/
   Found 70 roots with 2S+1 = 1 *
   Found 56 roots with 2S+1 = 3
   Found 7 roots with 2S+1 = 5
-  Total time spent diagonalizing H:   0.006764 s
+  Total time spent diagonalizing H:   0.011668 s
 
     PQ-space CI Energy Root   0        = -76.029945793736 Eh =   0.0000 eV, S^2 = 0.000000
     PQ-space CI Energy + EPT2 Root   0 = -76.029945793736 Eh =   0.0000 eV
@@ -724,11 +729,11 @@ Scratch directory: /tmp/
 
     Config.  #Determinants     Time/s
     ---------------------------------
-         1              17  6.200e-05
-         2              17  3.670e-05
-         3               6  2.890e-05
+         1              17  1.114e-04
+         2              17  8.880e-05
+         3               6  5.970e-05
     ---------------------------------
-    Total:              40  1.898e-04
+    Total:              40  3.655e-04
     ---------------------------------
 
   ==> Diagonalizing the Hamiltonian in the P + Q space <==
@@ -737,14 +742,14 @@ Scratch directory: /tmp/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          9.330e-05 seconds
-        β          8.690e-05 seconds
+        α          9.560e-05 seconds
+        β          7.270e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         9.340e-05 seconds
-        ββ         7.810e-05 seconds
-        αβ         2.195e-04 seconds
+        αα         1.392e-04 seconds
+        ββ         1.501e-04 seconds
+        αβ         3.012e-04 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
@@ -752,10 +757,10 @@ Scratch directory: /tmp/
   Found 16 roots with 2S+1 = 1 *
   Found 20 roots with 2S+1 = 3
   Found 4 roots with 2S+1 = 5
-  Total time spent diagonalizing H:   0.001456 s
+  Total time spent diagonalizing H:   0.002299 s
 
-    PQ-space CI Energy Root   0        = -55.026128671613 Eh =   0.0000 eV, S^2 = 0.000000
-    PQ-space CI Energy + EPT2 Root   0 = -55.026128671613 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -55.026128671599 Eh =   0.0000 eV, S^2 = 0.000000
+    PQ-space CI Energy + EPT2 Root   0 = -55.026128671599 Eh =   0.0000 eV
 
 
   ==> GAS Contribution Analysis <==
@@ -784,22 +789,22 @@ Scratch directory: /tmp/
   Iterations required:                         0
   Dimension of optimized determinant space:    40
 
-  * Selected-CI Energy Root   0        = -55.026128671613 Eh =   0.0000 eV
-  * Selected-CI Energy Root   0 + EPT2 = -55.026128671613 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0        = -55.026128671599 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0 + EPT2 = -55.026128671599 Eh =   0.0000 eV
 
   ==> Wavefunction Information <==
 
   Most important contributions to root   0:
-    0   0.579098 0.335354658          16 |+222-20>
-    1   0.579098 0.335354658          24 |-222+20>
+    0   0.579098 0.335354658          24 |-222+20>
+    1   0.579098 0.335354658          16 |+222-20>
     2   0.301190 0.090715187          33 |-220+22>
     3   0.301190 0.090715187           8 |+220-22>
-    4   0.171603 0.029447502          14 |+222--+>
-    5   0.171603 0.029447502          23 |-222++->
-    6   0.170226 0.028977025          22 |-222+-+>
-    7   0.170226 0.028977025          15 |+222-+->
-    8  -0.065603 0.004303708           5 |+2-+-22>
-    9  -0.065603 0.004303708          32 |-2+-+22>
+    4   0.171603 0.029447502          23 |-222++->
+    5   0.171603 0.029447502          14 |+222--+>
+    6   0.170226 0.028977025          15 |+222-+->
+    7   0.170226 0.028977025          22 |-222+-+>
+    8  -0.065603 0.004303708          32 |-2+-+22>
+    9  -0.065603 0.004303708           5 |+2-+-22>
 
   Saving information for root: 0
 
@@ -809,16 +814,61 @@ Scratch directory: /tmp/
     --------------------------------------------------------
        1  (  0)    A1     0      -76.029945793736   0.000000
     --------------------------------------------------------
-       1  (  0)    B1     0      -55.026128671613   0.000000
+       1  (  0)    B1     0      -55.026128671599   0.000000
     --------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          7.100e-06 seconds
+        β          6.600e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         6.400e-06 seconds
+        ββ         6.500e-06 seconds
+        αβ         6.600e-06 seconds
+  1-RDM  took 0.000430 s (determinant)
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.82078282     0.82078282
+    --------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          7.300e-06 seconds
+        β          6.500e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         6.400e-06 seconds
+        ββ         6.400e-06 seconds
+        αβ         6.900e-06 seconds
+  1-RDM  took 0.000187 s (determinant)
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) B1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0B1     0.00000000    -0.00000000    -1.59791946     1.59791946
+    --------------------------------------------------------------------
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
 
- Reading file! 
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0A1    0B1    -0.00046855     0.00000000     0.00000000     0.00046855
     -------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
+
+    Transition from State  0A1  to State  0B1 :
+      Component  1 with value of W = 0.0099
+        Init. Orbital: 1.0000 Orb.  0
+        Final Orbital: 1.0000 Orb.  4
+        
 
   ==> Transitions for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
 
@@ -827,14 +877,15 @@ Scratch directory: /tmp/
        0A1    0B1    21.00381712   571.54297560     0.00000307
     ----------------------------------------------------------
 
-  Time to prepare integrals:        0.119 seconds
-  Time to run job          :        0.025 seconds
-  Total                    :        0.144 seconds
+  Time to prepare integrals:        0.140 seconds
+  Time to run job          :        0.525 seconds
+  Total                    :        0.664 seconds
     Averaged ACI energy...................................................................PASSED
     ACI+PT2 energy........................................................................PASSED
     Oscillator strength singlet 0A1 -> 0B1................................................PASSED
+    S_MAX singlet 0A1 -> 0B1..............................................................PASSED
 
-    Psi4 stopped on: Monday, 20 September 2021 04:22PM
-    Psi4 wall time for execution: 0:00:00.62
+    Psi4 stopped on: Wednesday, 25 May 2022 04:48AM
+    Psi4 wall time for execution: 0:00:01.81
 
 *** Psi4 exiting successfully. Buy a developer a beer!
