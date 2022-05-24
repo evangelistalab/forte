@@ -31,7 +31,6 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/physconst.h"
-#include "psi4/libqt/qt.h"
 
 #include "base_classes/active_space_method.h"
 #include "base_classes/mo_space_info.h"
