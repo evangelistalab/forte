@@ -96,6 +96,7 @@ jobs:
         blas=*=mkl \
         mkl-include \
         networkx \
+        eigen \
         pytest \
         pytest-xdist \
         conda-forge::qcelemental \
