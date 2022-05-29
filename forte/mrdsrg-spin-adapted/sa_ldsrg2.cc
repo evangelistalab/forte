@@ -306,7 +306,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
 
     timer rotation("Hbar T1 rotation");
 
-    auto A1_m = expA1();
+    auto A1_m = expA1(T1_, false);
 
     ambit::BlockedTensor U1;
     U1 = BTF_->build(tensor_type_, "Transformer", {"gg"}, true);
@@ -565,7 +565,7 @@ void SA_MRDSRG::compute_hbar_qc_sequential() {
 
     timer rotation("Hbar T1 rotation");
 
-    auto A1_m = expA1();
+    auto A1_m = expA1(T1_, false);
 
     auto U1 = BTF_->build(tensor_type_, "Transformer", {"gg"}, true);
     U1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {

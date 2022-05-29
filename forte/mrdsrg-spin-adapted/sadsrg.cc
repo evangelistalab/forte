@@ -187,6 +187,11 @@ void SADSRG::read_options() {
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
+    brueckner_ = foptions_->get_bool("DSRG_BRUECKNER");
+    brueckner_conv_ = foptions_->get_double("BRUECKNER_CONVERGENCE");
+
+    t1_type_ = foptions_->get_str("DSRG_T1_AMPS_TYPE");
+
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 

@@ -89,6 +89,10 @@ class ProcedureDSRG:
 
         self.save_relax_energies = options.get_bool("DSRG_DUMP_RELAXED_ENERGIES")
 
+        # Orbital rotations
+        self.do_brueckner = options.get_bool("DSRG_BRUECKNER")
+        self.brueckner_maxiter = options.get_int("BRUECKNER_MAXITER")
+
         # Filter out some ms-dsrg algorithms
         ms_dsrg_algorithm = options.get_str("DSRG_MULTI_STATE")
         if self.do_multi_state and ("SA" not in ms_dsrg_algorithm):
@@ -193,8 +197,11 @@ class ProcedureDSRG:
         self.make_dsrg_solver()
         self.dsrg_setup()
         e_dsrg = self.dsrg_solver.compute_energy()
-        psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
+        if self.do_brueckner:
+            e_dsrg = self.compute_brueckner_iterations()
+
+        psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
         self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items()
                                         if 'ROOT' in k}
 
@@ -350,7 +357,7 @@ class ProcedureDSRG:
             overlap_np = np.abs(overlap.to_array())
             max_values = np.max(overlap_np, axis=1)
             permutation = np.argmax(overlap_np, axis=1)
-            check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.5)
+            check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.8)
 
             if not check_pass:
                 msg = "Relaxed states are likely wrong. Please increase the number of roots."
@@ -453,3 +460,38 @@ class ProcedureDSRG:
 
                     if self.do_dipole and (not self.do_multi_state):
                         psi4.core.set_scalar_variable('FULLY RELAXED DIPOLE', self.dipoles[-1][1][-1])
+
+    def compute_brueckner_iterations(self):
+        """ Iterations to obtain DSRG Brueckner orbitals. """
+        e_dsrg = 0.0
+        converged = False
+
+        for i in range(self.brueckner_maxiter):
+            # form new active-space integrals using rotated ForteIntegrals
+            as_ints = forte.make_active_space_ints(self.mo_space_info, self.ints, "ACTIVE", ["RESTRICTED_DOCC"])
+
+            # solve for active space
+            self.active_space_solver.set_active_space_integrals(as_ints)
+            state_energies_list = self.active_space_solver.compute_energy()
+            forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
+            self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
+                                                                      self.rdm_type)
+
+            # semi-canonicalize orbitals
+            if self.do_semicanonical:
+                self.semi.semicanonicalize(self.rdms)
+
+            # solve for DSRG
+            self.make_dsrg_solver()
+            self.dsrg_setup()
+            e_dsrg = self.dsrg_solver.compute_energy()
+
+            if self.dsrg_solver.is_brueckner_converged():
+                psi4.core.print_out("\n  DSRG orbital update converged.")
+                converged = True
+                break
+
+        if not converged:
+            raise psi4.p4util.PsiException(f"DSRG orbital update did not converge in {self.brueckner_maxiter} cycles!")
+
+        return e_dsrg

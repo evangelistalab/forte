@@ -67,8 +67,8 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& U);
 
-//    /// Return the unitary matrix for orbital updates due to dynamical correlation
-//    psi::SharedMatrix orbital_update_matrix();
+    /// Return if DSRG Brueckner orbitals are converged
+    bool is_brueckner_converged() { return brueckner_absmax_ < brueckner_conv_; }
 
   protected:
     /// Startup function called in constructor
@@ -166,11 +166,6 @@ class SADSRG : public DynamicCorrelationSolver {
     std::vector<size_t> virt_mos_;
     /// List of the symmetry of the active MOs
     std::vector<int> actv_mos_sym_;
-//
-//    /// List of active active occupied MOs (relative to active)
-//    std::vector<size_t> actv_occ_mos_;
-//    /// List of active active unoccupied MOs (relative to active)
-//    std::vector<size_t> actv_uocc_mos_;
 
     /// List of auxiliary MOs when DF/CD
     std::vector<size_t> aux_mos_;
@@ -382,15 +377,32 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Print done and timing
     void print_done(double t);
 
+    // ==> orbital rotations <==
+
+    /// Perform orbital rotations using an unitary matrix
+    void brueckner_orbital_rotation(ambit::BlockedTensor T1);
+
+    /// Whether perform orbital rotation to make T1 vanishing
+    bool brueckner_;
+    /// Convergence threshold for Brueckner orbitals
+    double brueckner_conv_;
+    /// Max element of T1 to compare against Brueckner convergence threshold
+    double brueckner_absmax_;
+
+    /// Compute the exponential of exp(T1 - T1^+) and return a Psi4 SharedMatrix
+    /// @param T1 the T1 matrix
+    /// @param with_symmetry if in blocked form for the returned SharedMatrix
+    psi::SharedMatrix expA1(ambit::BlockedTensor T1, bool with_symmetry);
+
     // ==> common amplitudes analysis and printing <==
+
+    /// Condition for T1 amplitudes
+    std::string t1_type_;
 
     /// Single excitation amplitudes
     ambit::BlockedTensor T1_;
     /// Double excitation amplitudes
     ambit::BlockedTensor T2_;
-
-    /// Compute the exponential of exp(T1 - T1^+) and return a SharedMatrix of size ncmo x ncmo
-    psi::SharedMatrix expA1();
 
     /// Prune internal amplitudes for T1
     void internal_amps_T1(BlockedTensor& T1);

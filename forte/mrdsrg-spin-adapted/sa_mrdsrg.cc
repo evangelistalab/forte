@@ -133,7 +133,8 @@ void SA_MRDSRG::print_options() {
         {"Reference relaxation", relax_ref_},
         {"3RDM algorithm", L3_algorithm_},
         {"Core-Virtual source type", ccvv_source_},
-        {"T1 amplitudes initial guess", t1_guess_}};
+        {"T1 amplitudes initial guess", t1_guess_},
+        {"T1 amplitudes type", t1_type_}};
 
     if (internal_amp_ != "NONE") {
         calculation_info_string.emplace_back("Internal amplitudes levels", internal_amp_);
@@ -146,6 +147,11 @@ void SA_MRDSRG::print_options() {
         {"Omit blocks of >= 3 virtual indices", nivo_},
         {"Read amplitudes from current dir", read_amps_cwd_},
         {"Write amplitudes to current dir", dump_amps_cwd_}};
+
+    if (brueckner_) {
+        calculation_info_bool.emplace_back("DSRG Brueckner orbitals", brueckner_);
+        calculation_info_double.emplace_back("Brueckner convergence", brueckner_conv_);
+    }
 
     // print information
     print_selected_options("Computation Information", calculation_info_string,
@@ -241,6 +247,10 @@ double SA_MRDSRG::compute_energy() {
     //    }
     //    default: { Etotal += compute_energy_ldsrg2_qc(); }
     //    }
+
+    if (brueckner_) {
+        brueckner_orbital_rotation(T1_);
+    }
 
     return Etotal;
 }
