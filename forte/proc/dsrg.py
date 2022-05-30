@@ -204,9 +204,12 @@ class ProcedureDSRG:
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
-            # Grab effective Hamiltonian in the active space
-            # These active integrals are in the original basis (before semi-canonicalize in the init function),
-            # so that the CI coefficients are comparable before and after DSRG dressing.
+            # Grab the effective Hamiltonian in the active space
+            # Note: The active integrals (ints_dressed) are in the original basis
+            #       (before semi-canonicalization in the init function),
+            #       so that the CI vectors are comparable before and after DSRG dressing.
+            #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
+            #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
 
             # Spit out contracted SA-DSRG energy
@@ -217,12 +220,11 @@ class ProcedureDSRG:
                 self.energies.append((e_dsrg, e_relax))
                 break
 
-            # Solve active space using dressed integrals
+            # Call the active space solver using the dressed integrals
             self.active_space_solver.set_active_space_integrals(ints_dressed)
-            # ints_dressed in original basis so that the CI vectors are comparable before/after DSRG
-            # however, forte integrals and thus dipole integrals are in semi-canonical basis
-            # to make dipole computed correctly, we need to make the orbital basis consistent
-            self.active_space_solver.set_Uactv(self.Ua, self.Ub)
+            # pass to the active space solver the unitary transformation between the original basis
+            # and the current semi-canonical basis
+            self.active_space_solver.set_Uactv(self.Ua, self.Ub)            
             state_energies_list = self.active_space_solver.compute_energy()
 
             # Reorder weights if needed
@@ -254,26 +256,34 @@ class ProcedureDSRG:
 
             # Continue to solve DSRG equations
 
-            # - Compute RDMs (RDMs available if done relaxed dipole)
+            # - Compute RDMs from the active space solver (the RDMs are already available if we computed the relaxed dipole)
+            #   These RDMs are computed in the original basis
             if self.do_multi_state or (not self.do_dipole):
                 self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
                                                                           self.rdm_type)
 
-            # - Transform RDMs to the semi-canonical orbitals of last step (because of integrals)
+            # - Transform RDMs to the semi-canonical basis used in the last step (stored in self.Ua/self.Ub)
+            #   We do this because the integrals and amplitudes are all expressed in the previous semi-canonical basis
             self.rdms.rotate(self.Ua, self.Ub)
 
             # - Semi-canonicalize RDMs and orbitals
             if self.do_semicanonical:
                 self.semi.semicanonicalize(self.rdms)
-                # NOT read previous orbitals if fixing orbital ordering and phases failed
+                # Do NOT read previous orbitals if fixing orbital ordering and phases failed
                 if (not self.semi.fix_orbital_success()) and self.Heff_implemented:
                     psi4.core.print_out("\n  DSRG checkpoint files removed due to the unsuccessful"
                                         " attempt to fix orbital phase and order.")
                     self.dsrg_solver.clean_checkpoints()
-            self.Ua["ik"] = self.Ua["ij"] * self.semi.Ua_t()["jk"]
-            self.Ub["ik"] = self.Ub["ij"] * self.semi.Ub_t()["jk"]
 
-            # - Compute DSRG energy
+                # update the orbital transformation matrix that connects the original orbitals
+                # to the current semi-canonical ones. We do this only if we did a semi-canonicalization
+                temp = self.Ua.clone()
+                temp["ik"] = self.Ua["ij"] * self.semi.Ua_t()["jk"]
+                self.Ua.copy(temp)
+                temp["ik"] = self.Ub["ij"] * self.semi.Ub_t()["jk"]
+                self.Ub.copy(temp)
+
+            # - Compute the DSRG energy
             self.make_dsrg_solver()
             self.dsrg_setup()
             self.dsrg_solver.set_read_cwd_amps(not self.restart_amps)  # don't read from cwd if checkpoint available
