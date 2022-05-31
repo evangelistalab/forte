@@ -1,4 +1,4 @@
-#! Generated using commit GITCOMMIT
+# Test DSRG-MRPT3 batching algorithm
 
 import forte
 
@@ -35,7 +35,6 @@ compare_values(refmcscf,variable("CURRENT ENERGY"),9,"MCSCF energy")
 set forte{
 active_space_solver    fci
 correlation_solver     dsrg-mrpt3
-dsrg_mrpt3_batched     true
 int_type               df
 frozen_docc            [1,0,0,0]
 restricted_docc        [1,0,1,1]
@@ -48,6 +47,12 @@ maxiter                100
 e_convergence          8
 semi_canonical         false
 }
+
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt3,variable("CURRENT ENERGY"),8,"DSRG-MRPT3 relaxed energy")
+
+memory 1 gb
+set forte dsrg_mrpt3_batched true
 
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt3,variable("CURRENT ENERGY"),8,"DSRG-MRPT3 relaxed energy")
