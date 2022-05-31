@@ -195,8 +195,7 @@ class ProcedureDSRG:
         e_dsrg = self.dsrg_solver.compute_energy()
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
-        self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items()
-                                        if 'ROOT' in k}
+        self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items() if 'ROOT' in k}
 
         # Spit out energy if reference relaxation not implemented
         if not self.Heff_implemented:
@@ -224,7 +223,7 @@ class ProcedureDSRG:
             self.active_space_solver.set_active_space_integrals(ints_dressed)
             # pass to the active space solver the unitary transformation between the original basis
             # and the current semi-canonical basis
-            self.active_space_solver.set_Uactv(self.Ua, self.Ub)            
+            self.active_space_solver.set_Uactv(self.Ua, self.Ub)
             state_energies_list = self.active_space_solver.compute_energy()
 
             # Reorder weights if needed
@@ -238,15 +237,15 @@ class ProcedureDSRG:
 
             # Compute relaxed dipole
             if self.do_dipole:
-                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
-                                                                          self.rdm_type)
+                self.rdms = self.active_space_solver.compute_average_rdms(
+                    self.state_weights_map, self.max_rdm_level, self.rdm_type
+                )
                 dm_u = ProcedureDSRG.grab_dipole_unrelaxed()
                 dm_r = self.compute_dipole_relaxed()
                 self.dipoles.append((dm_u, dm_r))
 
             # Save energies that have been pushed to Psi4 environment
-            self.energies_environment[n + 1] = {k: v for k, v in psi4.core.variables().items()
-                                                if 'ROOT' in k}
+            self.energies_environment[n + 1] = {k: v for k, v in psi4.core.variables().items() if 'ROOT' in k}
             self.energies_environment[n + 1]["DSRG FIXED"] = e_dsrg
             self.energies_environment[n + 1]["DSRG RELAXED"] = e_relax
 
@@ -259,8 +258,9 @@ class ProcedureDSRG:
             # - Compute RDMs from the active space solver (the RDMs are already available if we computed the relaxed dipole)
             #   These RDMs are computed in the original basis
             if self.do_multi_state or (not self.do_dipole):
-                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
-                                                                          self.rdm_type)
+                self.rdms = self.active_space_solver.compute_average_rdms(
+                    self.state_weights_map, self.max_rdm_level, self.rdm_type
+                )
 
             # - Transform RDMs to the semi-canonical basis used in the last step (stored in self.Ua/self.Ub)
             #   We do this because the integrals and amplitudes are all expressed in the previous semi-canonical basis
@@ -271,17 +271,18 @@ class ProcedureDSRG:
                 self.semi.semicanonicalize(self.rdms)
                 # Do NOT read previous orbitals if fixing orbital ordering and phases failed
                 if (not self.semi.fix_orbital_success()) and self.Heff_implemented:
-                    psi4.core.print_out("\n  DSRG checkpoint files removed due to the unsuccessful"
-                                        " attempt to fix orbital phase and order.")
+                    psi4.core.print_out(
+                        "\n  DSRG checkpoint files removed due to the unsuccessful"
+                        " attempt to fix orbital phase and order."
+                    )
                     self.dsrg_solver.clean_checkpoints()
 
                 # update the orbital transformation matrix that connects the original orbitals
                 # to the current semi-canonical ones. We do this only if we did a semi-canonicalization
                 temp = self.Ua.clone()
-                temp["ik"] = self.Ua["ij"] * self.semi.Ua_t()["jk"]
-                self.Ua.copy(temp)
-                temp["ik"] = self.Ub["ij"] * self.semi.Ub_t()["jk"]
-                self.Ub.copy(temp)
+                self.Ua["ik"] = temp["ij"] * self.semi.Ua_t()["jk"]
+                temp.copy(self.Ub)
+                self.Ub["ik"] = temp["ij"] * self.semi.Ub_t()["jk"]
 
             # - Compute the DSRG energy
             self.make_dsrg_solver()
@@ -389,10 +390,10 @@ class ProcedureDSRG:
 
                 # try to fix ms < 0
                 if twice_ms > 0:
-                    state_spin = forte.StateInfo(state.nb(), state.na(),
-                                                 state.multiplicity(), -twice_ms,
-                                                 state.irrep(), state.irrep_label(),
-                                                 state.gas_min(), state.gas_max())
+                    state_spin = forte.StateInfo(
+                        state.nb(), state.na(), state.multiplicity(), -twice_ms, state.irrep(), state.irrep_label(),
+                        state.gas_min(), state.gas_max()
+                    )
                     if state_spin in self.state_weights_map:
                         self.state_weights_map[state_spin] = weights_new
 
