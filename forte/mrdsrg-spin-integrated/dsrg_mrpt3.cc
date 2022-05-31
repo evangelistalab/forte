@@ -71,6 +71,8 @@ DSRG_MRPT3::DSRG_MRPT3(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_
 DSRG_MRPT3::~DSRG_MRPT3() { cleanup(); }
 
 void DSRG_MRPT3::startup() {
+    enforce_batching_ = foptions_->get_bool("DSRG_MRPT3_BATCHED");
+
     // lambda to print memory in good-looking unit
     auto to_XB = [](size_t nele, size_t type_size) {
         auto p = to_xb(nele, type_size);
@@ -92,10 +94,6 @@ void DSRG_MRPT3::startup() {
     // memory usage
     mem_total_ = static_cast<int64_t>(0.98 * psi::Process::environment.get_memory());
 
-    if (foptions_->get_bool("DSRG_MRPT3_BATCHED")) {
-        mem_total_ = 0;
-    }
-
     std::vector<std::pair<std::string, std::string>> mem_info{
         {"Memory asigned", to_XB(mem_total_, 1)}};
 
@@ -109,11 +107,6 @@ void DSRG_MRPT3::startup() {
     if (eri_df_) {
         B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
         fill_three_index_ints(B_);
-
-        ///        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-        ///        double& value) {
-        ////            value = ints_->three_integral(i[0], i[1], i[2]);
-        //        });
 
         size_t sL = aux_mos_.size();
         nelement += sL * sg * sg;
@@ -2645,7 +2638,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     }
 
     // particle-particle contractions
-    if (static_cast<int64_t>(nele_pp_max * sizeof(double)) < mem_total_) {
+    if (static_cast<int64_t>(nele_pp_max * sizeof(double)) < mem_total_ and !enforce_batching_) {
 
         // set timer
         start_ = std::chrono::system_clock::now();
@@ -2938,7 +2931,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     }
 
     // compute exchange part
-    if (static_cast<int64_t>(nele_ph_max * sizeof(double)) < mem_total_) {
+    if (static_cast<int64_t>(nele_ph_max * sizeof(double)) < mem_total_ and !enforce_batching_) {
         start_ = std::chrono::system_clock::now();
         tt1_ = std::chrono::system_clock::to_time_t(start_);
         if (profile_print_) {
