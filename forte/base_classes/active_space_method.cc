@@ -425,7 +425,7 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
                 psi::outfile->Printf("with value of W = %6.4f", Svalue);
                 psi::outfile->Printf("\n        Init. Orbital:");
                 for (int j = 0; j < nactv; j++) {
-                    double coeff_i = U->get(comp, j);
+                    double coeff_i = U->get(j, comp);
                     if (coeff_i * coeff_i > 0.10) {
                         // Print the compoents with more than 0.1 amplitude form
                         // original orbitals
