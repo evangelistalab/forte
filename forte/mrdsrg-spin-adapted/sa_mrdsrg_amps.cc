@@ -52,7 +52,10 @@ void SA_MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, B
 
 void SA_MRDSRG::update_t() {
     update_t2();
-    update_t1();
+    if (t1_type_ == "PROJECT")
+        update_t1_proj();
+    else
+        update_t1();
 }
 
 void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) {
@@ -384,6 +387,8 @@ void SA_MRDSRG::update_t1() {
             size_t i0 = label_to_spacemo_[block[0]][i[0]];
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
             double denom = Fdiag_[i0] - Fdiag_[i1];
+            if (block == "ca")
+                outfile->Printf("\n  %20.15f %20.15f %20.15f", Fdiag_[i0], Fdiag_[i1], denom);
             value *= dsrg_source_->compute_renormalized(denom);
         });
     }
@@ -416,6 +421,85 @@ void SA_MRDSRG::update_t1() {
 
     // reset the active part of Hbar2
     Hbar1_["uv"] = Hbar1copy["uv"];
+
+    // test numerator
+    auto Nca = ambit::BlockedTensor::build(tensor_type_, "Nca", {"ca"});
+    Nca["mz"] += 0.5 * Hbar1_["mu"] * Eta1_["uz"];
+    Nca["mz"] -= 0.5 * Hbar2_["xmuv"] * L2_["uvxz"];
+
+    auto Nav = ambit::BlockedTensor::build(tensor_type_, "Nav", {"av"});
+    Nav["ze"] += 0.5 * Hbar1_["ue"] * L1_["zu"];
+    Nav["ze"] += 0.5 * Hbar2_["uvex"] * L2_["zxuv"];
+
+    // test denominator
+    auto Dccaa = ambit::BlockedTensor::build(tensor_type_, "Dccaa", {"ccaa"});
+    auto Icc = ambit::BlockedTensor::build(tensor_type_, "Icc", {"cc"});
+    Icc.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
+    Dccaa["mnuv"] += 0.5 * F_["vx"] * Eta1_["xu"] * Icc["nm"];
+    Dccaa["mnuv"] -= 0.5 * F_["nm"] * Eta1_["vu"];
+    Dccaa["mnuv"] += 0.25 * V_["xnmy"] * Eta1_["vx"] * Eta1_["yu"];
+    Dccaa["mnuv"] -= 0.25 * V_["nxmy"] * Eta1_["vx"] * Eta1_["yu"];
+    Dccaa["mnuv"] += 0.25 * V_["mnxy"] * Eta1_["xv"] * Eta1_["yu"];
+    Dccaa["mnuv"] -= 0.25 * V_["nmxy"] * Eta1_["xv"] * Eta1_["yu"];
+    Dccaa["mnuv"] -= 0.5 * V_["vwxy"] * L2_["xyuw"] * Icc["mn"];
+    Dccaa["mnuv"] -= (1.0 / 6.0) * V_["mnxy"] * L2_["xyuv"];
+    Dccaa["mnuv"] += (1.0 / 6.0) * V_["mnxy"] * L2_["xyvu"];
+    Dccaa["mnuv"] += 0.5 * V_["nxmy"] * L2_["vyux"];
+    Dccaa["mnuv"] -= (1.0 / 6.0) * V_["xnmy"] * L2_["vyux"];
+    Dccaa["mnuv"] += (1.0 / 6.0) * V_["xnmy"] * L2_["yvux"];
+    Dccaa.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
+            if (i[0] == i[1] and i[2] == i[3]) {
+                outfile->Printf("\n  %30.15f", value);
+            }
+        });
+
+    auto ncore = core_mos_.size();
+    auto nactv = actv_mos_.size();
+    auto Dcaa = ambit::Tensor::build(tensor_type_, "Dcaa", {ncore, nactv, nactv});
+    Dcaa.iterate([&](const std::vector<size_t>& i, double& value) {
+        value =
+            Dccaa.block("ccaa")
+                .data()[i[0] * nactv * nactv * ncore + i[0] * nactv * nactv + i[1] * nactv + i[2]];
+    });
+    auto nactv_h = Xca_.dim(1);
+    auto Dcaa_h = ambit::Tensor::build(tensor_type_, "Dcaa_h", {ncore, nactv_h, nactv_h});
+    Dcaa_h("mxy") = Dcaa("muv") * Xca_("ux") * Xca_("vy");
+    auto Dca = ambit::Tensor::build(tensor_type_, "Dca", {ncore, nactv_h});
+    Dca.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = Dcaa_h.data()[i[0] * nactv * nactv + i[1] * nactv + i[1]];
+        outfile->Printf("\n  %20.15f", value);
+    });
+
+    auto update_ca = ambit::Tensor::build(tensor_type_, "Nca", {ncore, nactv_h});
+    update_ca("mx") = Nca.block("ca")("mu") * Xca_("ux");
+    update_ca.iterate([&](const std::vector<size_t>& i, double& value) {
+        outfile->Printf("\n  %40.15f", value);
+        value /= Dca.data()[i[0] * nactv_h + i[1]];
+        outfile->Printf("\n  %45.15f", value);
+    });
+}
+
+void SA_MRDSRG::update_t1_proj() {
+    /// update T1 according to <{a^i_a} Hbar^a_i> = 0
+
+    // core-virt block
+    const auto& Hbar1cv_data = Hbar1_.block("cv").data();
+    auto dim_v = Hbar1_.block("cv").dim(1);
+    T1_.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
+        size_t i0 = label_to_spacemo_['c'][i[0]];
+        size_t i1 = label_to_spacemo_['v'][i[1]];
+        double denom = Fdiag_[i0] - Fdiag_[i1];
+        value += Hbar1cv_data[i[0] * dim_v + i[1]] / denom;
+    });
+
+    // core-actv block
+
+    // actv-virt block
 }
 
 void SA_MRDSRG::dump_amps_to_disk() {

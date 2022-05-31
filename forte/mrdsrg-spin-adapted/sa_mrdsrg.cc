@@ -34,6 +34,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "sa_mrdsrg.h"
 
@@ -105,6 +106,66 @@ void SA_MRDSRG::startup() {
 
     t1_file_cwd_ = "forte.mrdsrg.adapted.t1.bin";
     t2_file_cwd_ = "forte.mrdsrg.adapted.t2.bin";
+
+    // build transformation matrix to orthogonalize T1 excited basis
+    if (t1_type_ == "MANY_BODY") { // TODO: NEED TO CHANGE
+        auto nirrep = mo_space_info_->nirrep();
+        auto nactv = mo_space_info_->size("ACTIVE");
+
+        auto& G1data = L1_.block("aa").data();
+        auto& E1data = Eta1_.block("aa").data();
+
+        auto dim_actv = mo_space_info_->dimension("ACTIVE");
+        auto P1 = std::make_shared<psi::Matrix>("1PRDM", dim_actv, dim_actv);
+        auto H1 = std::make_shared<psi::Matrix>("1HRDM", dim_actv, dim_actv);
+
+        for (size_t h = 0, offset = 0; h < nirrep; ++h) {
+            for (size_t p = 0; p < dim_actv[h]; ++p) {
+                for (size_t q = 0; q < dim_actv[h]; ++q) {
+                    P1->set(h, p, q, 0.5 * G1data[(p + offset) * nactv + q + offset]);
+                    H1->set(h, p, q, 0.5 * E1data[(p + offset) * nactv + q + offset]);
+                }
+            }
+            offset += dim_actv[h];
+        }
+
+        double threshold = 5.0e-5;
+
+        auto Uh = std::make_shared<psi::Matrix>("UP NO", dim_actv, dim_actv);
+        auto Xh = H1->canonical_orthogonalization(threshold, Uh);
+
+        auto Up = std::make_shared<psi::Matrix>("UP NO", dim_actv, dim_actv);
+        auto Xp = P1->canonical_orthogonalization(threshold, Up);
+
+        // put in ambit tensor form
+        auto dim_h = Xh->colspi();
+        size_t hsize = static_cast<size_t>(dim_h.sum());
+        Xca_ = ambit::Tensor::build(tensor_type_, "X ca", {nactv, hsize});
+        auto& Xca_data = Xca_.data();
+        for (size_t h = 0, offset_p = 0, offset_q = 0; h < nirrep; ++h) {
+            for (size_t p = 0; p < dim_actv[h]; ++p) {
+                for (size_t q = 0; q < dim_h[h]; ++q) {
+                    Xca_data[(p + offset_p) * hsize + q + offset_q] = Xh->get(h, p, q);
+                }
+            }
+            offset_p += dim_actv[h];
+            offset_q += dim_h[h];
+        }
+
+        auto dim_p = Xp->colspi();
+        size_t psize = static_cast<size_t>(dim_p.sum());
+        Xav_ = ambit::Tensor::build(tensor_type_, "X av", {nactv, psize});
+        auto& Xav_data = Xav_.data();
+        for (size_t h = 0, offset_p = 0, offset_q = 0; h < nirrep; ++h) {
+            for (size_t p = 0; p < dim_actv[h]; ++p) {
+                for (size_t q = 0; q < dim_p[h]; ++q) {
+                    Xav_data[(p + offset_p) * psize + q + offset_q] = Xp->get(h, p, q);
+                }
+            }
+            offset_p += dim_actv[h];
+            offset_q += dim_p[h];
+        }
+    }
 }
 
 void SA_MRDSRG::print_options() {
@@ -231,7 +292,7 @@ void SA_MRDSRG::build_ints() {
 
 double SA_MRDSRG::compute_energy() {
     // build initial amplitudes
-//    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+    //    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
     guess_t(V_, T2_, F_, T1_, B_);
 

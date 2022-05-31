@@ -113,10 +113,6 @@ class SA_MRDSRG : public SADSRG {
     ambit::BlockedTensor B_;
     /// Generalized Fock matrix
     ambit::BlockedTensor F_;
-//    /// Single excitation amplitude
-//    ambit::BlockedTensor T1_;
-//    /// Double excitation amplitude
-//    ambit::BlockedTensor T2_;
     /// Difference of consecutive singles
     ambit::BlockedTensor DT1_;
     /// Difference of consecutive doubles
@@ -153,6 +149,13 @@ class SA_MRDSRG : public SADSRG {
     void guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Update T1 in every iteration
     void update_t1();
+    /// Update T1 using projective conditions
+    void update_t1_proj();
+
+    /// Transformation matrix to orthogonalize T1 (core-actv)
+    ambit::Tensor Xca_;
+    /// Transformation matrix to orthogonalize T1 (actv-virt)
+    ambit::Tensor Xav_;
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
