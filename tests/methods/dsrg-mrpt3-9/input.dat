@@ -1,9 +1,9 @@
-#! Generated using commit GITCOMMIT
+# Test DSRG-MRPT3 batching algorithm
 
 import forte
 
-refmcscf     = -99.406065223639
-refdsrgpt3   = -99.498903267935276
+refmcscf     =  -99.981029411803
+refdsrgpt3   = -100.246555424489
 
 molecule HF{
   0 1
@@ -13,44 +13,46 @@ molecule HF{
 }
 
 set globals{
-   basis                   3-21g
-   reference               twocon
-   scf_type                pk
-   e_convergence           8
-   maxiter                 100
-   docc                   [3,0,1,1]
+reference           rhf
+scf_type            df
+basis               cc-pvqz
+df_basis_scf        cc-pvqz-jkfit
+df_basis_mp2        cc-pvqz-jkfit
+e_convergence       8
+maxiter             100
+docc                [3,0,1,1]
+mcscf_type          df
+restricted_docc     [2,0,1,1]
+active              [2,0,0,0]
+mcscf_diis_start    20
+mcscf_maxiter       60
+mcscf_e_convergence 10
 }
 
-set mcscf{
-   docc                   [2,0,1,1]
-   socc                   [2,0,0,0]
-   maxiter                 1000
-   level_shift             0.5
-   d_convergence           10
-   e_convergence           12
-}
+Emcscf, wfn = energy('casscf', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),9,"MCSCF energy")
 
 set forte{
-   active_space_solver    fci
-   correlation_solver     dsrg-mrpt3
-   dsrg_mrpt3_batched     true
-   ignore_memory_warnings true
-   int_type               cholesky
-   cholesky_tolerance     1e-12
-   frozen_docc            [1,0,0,0]
-   restricted_docc        [1,0,1,1]
-   active                 [2,0,0,0]
-   root_sym               0
-   nroot                  1
-   dsrg_s                 1.0
-   relax_ref              once
-   maxiter                100
-   e_convergence          8
-   semi_canonical         false
+active_space_solver    fci
+correlation_solver     dsrg-mrpt3
+int_type               df
+frozen_docc            [1,0,0,0]
+restricted_docc        [1,0,1,1]
+active                 [2,0,0,0]
+root_sym               0
+nroot                  1
+dsrg_s                 1.0
+relax_ref              once
+maxiter                100
+e_convergence          8
+semi_canonical         false
 }
 
-Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt3,variable("CURRENT ENERGY"),8,"DSRG-MRPT3 relaxed energy")
+
+memory 1 gb
+set forte dsrg_mrpt3_batched true
 
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt3,variable("CURRENT ENERGY"),8,"DSRG-MRPT3 relaxed energy") #TEST
+compare_values(refdsrgpt3,variable("CURRENT ENERGY"),8,"DSRG-MRPT3 relaxed energy")
