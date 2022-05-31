@@ -72,6 +72,7 @@ DSRG_MRPT3::~DSRG_MRPT3() { cleanup(); }
 
 void DSRG_MRPT3::startup() {
     enforce_batching_ = foptions_->get_bool("DSRG_MRPT3_BATCHED");
+    ignore_memory_errors_ = foptions_->get_bool("IGNORE_MEMORY_ERRORS");
 
     // lambda to print memory in good-looking unit
     auto to_XB = [](size_t nele, size_t type_size) {
@@ -225,22 +226,23 @@ void DSRG_MRPT3::startup() {
         outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
 
-    if (mem_total_ < static_cast<int64_t>(nele_larger * sizeof(double)) and
-        (not foptions_->get_bool("IGNORE_MEMORY_WARNINGS"))) {
+    if (mem_total_ < static_cast<int64_t>(nele_larger * sizeof(double))) {
         outfile->Printf("\n\n  Error: Not enough memory to compute DSRG-MRPT3 energy.");
         outfile->Printf("\n  Minimum memory required: %s\n",
                         to_XB(nele_larger, sizeof(double)).c_str());
-        throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 energy.");
+        if (!ignore_memory_errors_)
+            throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 energy.");
     }
 
     // Check memory for dipole moment
     size_t shp = sh * sp;
     size_t saa = sa * sa;
     int64_t mem_dipole = sizeof(double) * (6 * (sg * sg) + 9 * (shp * shp - saa * saa));
-    if (mem_total_ < mem_dipole && do_dm_) {
+    if (mem_total_ < mem_dipole and do_dm_) {
         outfile->Printf("\n\n  Error: Not enough memory to compute DSRG-MRPT3 dipole.");
         outfile->Printf("\n  Minimum memory required: %s\n", to_XB(mem_dipole, 1).c_str());
-        throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 dipole.");
+        if (!ignore_memory_errors_)
+            throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 dipole.");
     }
 }
 
@@ -585,7 +587,7 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
     int64_t mem_max = sizeof(double) * (6 * (shp - saa) + 9 * (shp * shp - saa * saa));
     int64_t mem_min = sizeof(double) * (6 * (shp - saa) + 3 * (shp * shp - saa * saa));
 
-    if (mem_total_ < mem_min and (not foptions_->get_bool("IGNORE_MEMORY_WARNINGS"))) {
+    if (mem_total_ < mem_min and !ignore_memory_errors_) {
         throw psi::PSIEXCEPTION("Not enough memory for compute_energy_pt3_1 in DSRG-MRPT3.");
     } else if (mem_total_ >= mem_max) {
 
@@ -2485,8 +2487,8 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         sizeof(double) *
         (2 * (p * h - a * a) + 3 * (p * p * h * h - a * a * a * a)); // local memory used in pt3_2
     if (mem_total_ < 0 or static_cast<size_t>(mem_total_) < v * v * sizeof(double)) {
-        if (not foptions_->get_bool("IGNORE_MEMORY_WARNINGS")) {
-            outfile->Printf("\n    Not enough memory for batching.");
+        outfile->Printf("\n    Not enough memory for batching.");
+        if (!ignore_memory_errors_) {
             throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF.");
         }
     }
@@ -3544,8 +3546,9 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
                 outfile->Printf("\n    Not enough memory for batching tensor "
                                 "H2(%zu * %zu * %zu * %zu).",
                                 sh0, sh1, sv, sv);
-                throw psi::PSIEXCEPTION("Not enough memory for batching at "
-                                        "DSRG-MRPT3 V_T2_C2_DF_VV.");
+                if (!ignore_memory_errors_)
+                    throw psi::PSIEXCEPTION("Not enough memory for batching at "
+                                            "DSRG-MRPT3 V_T2_C2_DF_VV.");
             }
 
             // 1st virtual index
@@ -3926,8 +3929,9 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
             outfile->Printf("\n    Not enough memory for batching tensor "
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sc, sv);
-            throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
-                                    "V_T2_C2_DF_VC_EX.");
+            if (!ignore_memory_errors_)
+                throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
+                                        "V_T2_C2_DF_VC_EX.");
         }
 
         // fill the indices of sub virtuals
@@ -4254,8 +4258,9 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
             outfile->Printf("\n    Not enough memory for batching tensor "
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sa, sv);
-            throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
-                                    "V_T2_C2_DF_VA_EX.");
+            if (!ignore_memory_errors_)
+                throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
+                                        "V_T2_C2_DF_VA_EX.");
         }
 
         // fill the indices of sub virtuals
