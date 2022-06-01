@@ -157,7 +157,7 @@ dsrg-mrpt2:
    - dsrg-mrpt2-5
    - dsrg-mrpt2-6
    - dsrg-mrpt2-7-casscf-natorbs
-#  - dsrg-mrpt2-9-xms
+   #  - dsrg-mrpt2-9-xms
    - dsrg-mrpt2-11-sa-C2H4
    - aci-dsrg-mrpt2-1
    - aci-dsrg-mrpt2-2
@@ -176,34 +176,34 @@ dsrg-mrpt2:
    - dsrg-mrpt2-gradient-df-3
   unused:
    - dsrg-mrpt2-uno
-   short:
-      - dsrg-mrpt2-8-sa
-      - dsrg-mrpt2-10-CO
-      - dsrg-mrpt2-13
-      - aci-dsrg-mrpt2-3
-      - dsrg-mrpt2-fcidump-1
-      # - dsrg-mrpt2-grad-findiff-1
-   medium:
-      - dsrg-mrpt2-1
-      - dsrg-mrpt2-2
-      - dsrg-mrpt2-5
-      - dsrg-mrpt2-6
-      - dsrg-mrpt2-7-casscf-natorbs
-      #  - dsrg-mrpt2-9-xms
-      - dsrg-mrpt2-11-sa-C2H4
-      - aci-dsrg-mrpt2-1
-      - aci-dsrg-mrpt2-2
-      - aci-dsrg-mrpt2-4
-      - dsrg-mrpt2-10-CO-fcidump
-      # - dsrg-mrpt2-opt-findiff-1
-   long:
-      - dsrg-mrpt2-3
-      - dsrg-mrpt2-4
-      - dsrg-mrpt2-12-localized-actv
-      - aci-dsrg-mrpt2-5
-      # - dsrg-mrpt2-opt-findiff-2
-   unused:
-      - dsrg-mrpt2-uno
+  short:
+   - dsrg-mrpt2-8-sa
+   - dsrg-mrpt2-10-CO
+   - dsrg-mrpt2-13
+   - aci-dsrg-mrpt2-3
+   - dsrg-mrpt2-fcidump-1
+   # - dsrg-mrpt2-grad-findiff-1
+  medium:
+   - dsrg-mrpt2-1
+   - dsrg-mrpt2-2
+   - dsrg-mrpt2-5
+   - dsrg-mrpt2-6
+   - dsrg-mrpt2-7-casscf-natorbs
+   #  - dsrg-mrpt2-9-xms
+   - dsrg-mrpt2-11-sa-C2H4
+   - aci-dsrg-mrpt2-1
+   - aci-dsrg-mrpt2-2
+   - aci-dsrg-mrpt2-4
+   - dsrg-mrpt2-10-CO-fcidump
+   # - dsrg-mrpt2-opt-findiff-1
+  long:
+   - dsrg-mrpt2-3
+   - dsrg-mrpt2-4
+   - dsrg-mrpt2-12-localized-actv
+   - aci-dsrg-mrpt2-5
+   # - dsrg-mrpt2-opt-findiff-2
+  unused:
+   - dsrg-mrpt2-uno
 dsrg-mrpt3:
    short:
       - dsrg-mrpt3-7-CO
@@ -389,7 +389,7 @@ pci:
       - pci-6
       #   - pci-7
       - pci-8
-#   - pci-9
+      #   - pci-9
 read-orbitals:
    short:
       - read-orbitals-1

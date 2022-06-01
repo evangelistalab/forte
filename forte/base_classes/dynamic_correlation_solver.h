@@ -101,15 +101,12 @@ class DynamicCorrelationSolver {
     /// The ForteOptions
     std::shared_ptr<ForteOptions> foptions_;
 
-<<<<<<< HEAD
     /// The CI coefficients
     std::vector<ambit::Tensor> ci_vectors_;
-=======
     /// Active space solver
     std::shared_ptr<ActiveSpaceSolver> as_solver_ = nullptr;
     /// State to weights map
     std::map<StateInfo, std::vector<double>> state_to_weights_;
->>>>>>> master
 
     /// Common settings
     void startup();

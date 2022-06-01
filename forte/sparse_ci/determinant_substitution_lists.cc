@@ -298,12 +298,12 @@ void DeterminantSubstitutionLists::lists_2aa(const DeterminantHashVec& wfn) {
             if (!vec.empty()) {
                 aa_list_.push_back(vec);
             }
-        }
-        auto s = vec.size();
-        if (vec_size.find(s) == vec_size.end()) {
-            vec_size[s] = 1;
-        } else {
-            vec_size[s] += 1;
+            auto s = vec.size();
+            if (vec_size.find(s) == vec_size.end()) {
+                vec_size[s] = 1;
+            } else {
+                vec_size[s] += 1;
+            }
         }
     }
     outfile->Printf("\n  (N-2) aa lists size counts");

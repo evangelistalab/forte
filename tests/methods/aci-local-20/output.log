@@ -1,6 +1,0 @@
-2022-05-31:17:32:57,104 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
-2022-05-31:17:32:57,106 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=def2-svp, molecule=butadiene, nre=103.516094180281
-2022-05-31:17:32:57,826 INFO     [psi4.driver.driver:502] Return energy(): -154.8092014588087
-2022-05-31:17:32:57,839 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
-2022-05-31:17:32:57,841 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=def2-svp, molecule=butadiene, nre=103.516094180281
-2022-05-31:17:33:01,687 INFO     [psi4.driver.driver:502] Return energy(): -154.8470060962865

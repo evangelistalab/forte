@@ -152,12 +152,8 @@ class DWMS_DSRGPT2 {
                    ambit::Tensor& H3bbb);
 
     /// contract H with transition densities
-<<<<<<< HEAD
-    double contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, RDMs& TrD, bool transpose);
-=======
     double contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, std::shared_ptr<RDMs> TrD,
                                bool transpose);
->>>>>>> master
     double contract_Heff_2TrDM(ambit::Tensor& H2aa, ambit::Tensor& H2ab, ambit::Tensor& H2bb,
                                std::shared_ptr<RDMs> TrD, bool transpose);
     double contract_Heff_3TrDM(ambit::Tensor& H3aaa, ambit::Tensor& H3aab, ambit::Tensor& H3abb,

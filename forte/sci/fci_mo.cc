@@ -2124,33 +2124,576 @@ void FCI_MO::generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) {
     sigma_vector_->compute_sigma(sigma, x);
 }
 
-[[deprecated]] std::vector<RDMs>
+void FCI_MO::build_dets321() {
+    if (built_dets321_)
+        return;
+
+    timer timer_dets("Build z^+ v u |I> determinants");
+
+    dets321_a_.clear();
+    dets321_b_.clear();
+    size_t na = 0, nb = 0;
+
+    for (const auto& detI : determinant_) {
+        // regular (N-1)-electron
+        for (auto u : detI.get_alfa_occ(nactv_)) {
+            Determinant detI_u(detI);
+            detI_u.set_alfa_bit(u, false);
+            if (dets321_a_.find(detI_u) == dets321_a_.end())
+                dets321_a_[detI_u] = na++;
+        }
+        for (auto u : detI.get_beta_occ(nactv_)) {
+            Determinant detI_u(detI);
+            detI_u.set_beta_bit(u, false);
+            if (dets321_b_.find(detI_u) == dets321_b_.end())
+                dets321_b_[detI_u] = nb++;
+        }
+
+        // (N-2)-electron -> (N-1)-electron
+        const auto& aocc = detI.get_alfa_occ(nactv_);
+        const auto& bocc = detI.get_beta_occ(nactv_);
+        const auto& avir = detI.get_alfa_vir(nactv_);
+        const auto& bvir = detI.get_beta_vir(nactv_);
+        auto naocc = aocc.size();
+        auto nbocc = bocc.size();
+        auto navir = avir.size();
+        auto nbvir = bvir.size();
+
+        // u alpha
+        for (size_t _u = 0; _u < naocc; ++_u) {
+            auto u = aocc[_u];
+
+            // alpha (v, z)
+            for (size_t _v = _u + 1; _v < naocc; ++_v) {
+                auto v = aocc[_v];
+                for (auto z : avir) {
+                    Determinant detJ(detI);
+                    detJ.set_alfa_bit(u, false);
+                    detJ.set_alfa_bit(v, false);
+                    detJ.set_alfa_bit(z, true);
+                    if (dets321_a_.find(detJ) == dets321_a_.end())
+                        dets321_a_[detJ] = na++;
+                }
+            }
+
+            // beta (v, z)
+            for (auto v : bocc) {
+                for (auto z : bvir) {
+                    Determinant detJ(detI);
+                    detJ.set_alfa_bit(u, false);
+                    detJ.set_beta_bit(v, false);
+                    detJ.set_beta_bit(z, true);
+                    if (dets321_a_.find(detJ) == dets321_a_.end())
+                        dets321_a_[detJ] = na++;
+                }
+            }
+        }
+
+        // u beta
+        for (size_t _u = 0; _u < nbocc; ++_u) {
+            auto u = bocc[_u];
+
+            // beta (v, z)
+            for (size_t _v = _u + 1; _v < nbocc; ++_v) {
+                auto v = bocc[_v];
+                for (auto z : bvir) {
+                    Determinant detJ(detI);
+                    detJ.set_beta_bit(u, false);
+                    detJ.set_beta_bit(v, false);
+                    detJ.set_beta_bit(z, true);
+                    if (dets321_b_.find(detJ) == dets321_b_.end())
+                        dets321_b_[detJ] = nb++;
+                }
+            }
+
+            // alpha (v, z)
+            for (auto v : aocc) {
+                for (auto z : avir) {
+                    Determinant detJ(detI);
+                    detJ.set_beta_bit(u, false);
+                    detJ.set_alfa_bit(v, false);
+                    detJ.set_alfa_bit(z, true);
+                    if (dets321_b_.find(detJ) == dets321_b_.end())
+                        dets321_b_[detJ] = nb++;
+                }
+            }
+        }
+    }
+    if (print_ > 2)
+        outfile->Printf("\n  dets321 sizes: a = %zu, b = %zu", dets321_a_.size(),
+                        dets321_b_.size());
+
+    built_dets321_ = true;
+}
+
+void FCI_MO::build_nm1_string_dets_map() {
+    am1_string_to_dets_.clear();
+    bm1_string_to_dets_.clear();
+
+    auto ndets = determinant_.size();
+    det_hash a_hash, b_hash;
+    size_t na = 0, nb = 0;
+
+    timer timer("Build (N-1)-e string map");
+
+    for (size_t I = 0; I < ndets; ++I) {
+        // (N-1)-electron alpha string
+        Determinant detIa(determinant_[I]);
+        detIa.zero_beta();
+        for (const auto& i : detIa.get_alfa_occ(nactv_)) {
+            Determinant detJ(detIa);
+            detJ.set_alfa_bit(i, false);
+
+            size_t address = 0;
+            auto iter = a_hash.find(detJ);
+            if (iter == a_hash.end()) {
+                address = na;
+                a_hash[detJ] = na++;
+            } else {
+                address = iter->second;
+            }
+            am1_string_to_dets_.resize(na);
+            am1_string_to_dets_[address].emplace_back(i, I);
+        }
+
+        // (N-1)-electron beta string
+        Determinant detIb(determinant_[I]);
+        detIb.zero_alfa();
+        for (const auto& i : detIb.get_beta_occ(nactv_)) {
+            Determinant detJ(detIb);
+            detJ.set_beta_bit(i, false);
+
+            size_t address = 0;
+            auto iter = b_hash.find(detJ);
+            if (iter == b_hash.end()) {
+                address = nb;
+                b_hash[detJ] = nb++;
+            } else {
+                address = iter->second;
+            }
+            bm1_string_to_dets_.resize(nb);
+            bm1_string_to_dets_[address].emplace_back(i, I);
+        }
+    }
+}
+
+void FCI_MO::build_lists321() {
+    if (built_lists321_)
+        return;
+
+    build_dets321();
+
+    auto Ja_size = dets321_a_.size();
+    auto Jb_size = dets321_b_.size();
+
+    list321_aaa_.clear();
+    list321_abb_.clear();
+    list321_baa_.clear();
+    list321_bbb_.clear();
+
+    list321_aaa_.resize(Ja_size);
+    list321_abb_.resize(Ja_size);
+    list321_baa_.resize(Jb_size);
+    list321_bbb_.resize(Jb_size);
+
+    timer timer_lists("Build z^+ v u |0> sub. lists new");
+
+    // build (N-1)-electron lists
+    build_nm1_string_dets_map();
+
+    // build three lists
+    for (const auto& vec_string_to_dets : am1_string_to_dets_) {
+        for (const auto& idx_pair : vec_string_to_dets) {
+            const auto [i, I] = idx_pair;
+            Determinant detIa(determinant_[I]);
+            detIa.set_alfa_bit(i, false);
+            auto sign_i = detIa.slater_sign_a(i);
+
+            // aa
+            for (const auto j : detIa.get_alfa_occ(nactv_)) {
+                // j = k
+                auto address_Ia = dets321_a_.find(detIa)->second;
+                list321_aaa_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+
+                // j != k
+                for (const auto k : detIa.get_alfa_vir(nactv_)) {
+                    Determinant detIaac(detIa);
+                    detIaac.set_alfa_bit(j, false);
+                    detIaac.set_alfa_bit(k, true);
+                    auto sign_jk = detIaac.slater_sign_aa(j, k);
+                    auto address_Iaac = dets321_a_.find(detIaac)->second;
+                    list321_aaa_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                }
+            }
+
+            // bb
+            for (const auto j : detIa.get_beta_occ(nactv_)) {
+                // j = k
+                auto address_Ia = dets321_a_.find(detIa)->second;
+                list321_abb_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+
+                // j != k
+                for (const auto k : detIa.get_beta_vir(nactv_)) {
+                    Determinant detIaac(detIa);
+                    detIaac.set_beta_bit(j, false);
+                    detIaac.set_beta_bit(k, true);
+                    auto sign_jk = detIaac.slater_sign_bb(j, k);
+                    auto address_Iaac = dets321_a_.find(detIaac)->second;
+                    list321_abb_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                }
+            }
+        }
+    }
+
+    for (const auto& vec_string_to_dets : bm1_string_to_dets_) {
+        for (const auto& idx_pair : vec_string_to_dets) {
+            const auto [i, I] = idx_pair;
+            Determinant detIa(determinant_[I]);
+            detIa.set_beta_bit(i, false);
+            auto sign_i = detIa.slater_sign_b(i);
+
+            // aa
+            for (const auto j : detIa.get_alfa_occ(nactv_)) {
+                // j = k
+                auto address_Ia = dets321_b_.find(detIa)->second;
+                list321_baa_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+
+                // j != k
+                for (const auto k : detIa.get_alfa_vir(nactv_)) {
+                    Determinant detIaac(detIa);
+                    detIaac.set_alfa_bit(j, false);
+                    detIaac.set_alfa_bit(k, true);
+                    auto sign_jk = detIaac.slater_sign_aa(j, k);
+                    auto address_Iaac = dets321_b_.find(detIaac)->second;
+                    list321_baa_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                }
+            }
+
+            // bb
+            for (const auto j : detIa.get_beta_occ(nactv_)) {
+                // j = k
+                auto address_Ia = dets321_b_.find(detIa)->second;
+                list321_bbb_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+
+                // j != k
+                for (const auto k : detIa.get_beta_vir(nactv_)) {
+                    Determinant detIaac(detIa);
+                    detIaac.set_beta_bit(j, false);
+                    detIaac.set_beta_bit(k, true);
+                    auto sign_jk = detIaac.slater_sign_bb(j, k);
+                    auto address_Iaac = dets321_b_.find(detIaac)->second;
+                    list321_bbb_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                }
+            }
+        }
+    }
+
+    if (print_ > 2) {
+        outfile->Printf("\n  list aaa size = %zu", list321_aaa_.size());
+        outfile->Printf("\n  list abb size = %zu", list321_abb_.size());
+        outfile->Printf("\n  list baa size = %zu", list321_baa_.size());
+        outfile->Printf("\n  list bbb size = %zu", list321_bbb_.size());
+    }
+
+    built_lists321_ = true;
+}
+
+// [[deprecated]] std::vector<RDMs>
+// FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
+//     std::vector<RDMs> refs;
+//     // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
+//     //     Reference ref;
+//     //     compute_sa_ref(max_rdm_);
+//     //     ref.set_Eref(Eref_);
+
+//     //     if (max_rdm_ > 0) {
+//     //         ref.set_L1a(L1a_);
+//     //         ref.set_L1b(L1b_);
+//     //     }
+
+//     //     if (max_rdm_ > 1) {
+//     //         ref.set_L2aa(L2aa_);
+//     //         ref.set_L2ab(L2ab_);
+//     //         ref.set_L2bb(L2bb_);
+//     //     }
+
+//     //     if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
+//     //         ref.set_L3aaa(L3aaa_);
+//     //         ref.set_L3aab(L3aab_);
+//     //         ref.set_L3abb(L3abb_);
+//     //         ref.set_L3bbb(L3bbb_);
+//     //     }
+//     //     refs.push_back(ref);
+//     // } else {
+
+//     // actual computation: parallel (N-1)-electron determinants
+//     for (size_t n = 0; n < nroots; ++n) {
+//         auto evec = eigen_[roots[n]].first;
+//         std::vector<double> results(nthreads, 0.0);
+
+//         // alpha (N-1)-electron determinants
+// #pragma omp parallel for default(none) num_threads(nthreads) \
+//     shared(non_actv, dim1, dim2k, dim3k, dim2b, dim3b, Ja_size, pbra, pket, p_add, evec, results)
+//         for (size_t J = 0; J < Ja_size; ++J) {
+//             auto thread = omp_get_thread_num();
+
+//             pbra[thread].zero();
+//             pket[thread].zero();
+//             auto& pbra_data = pbra[thread].data();
+//             auto& pket_data = pket[thread].data();
+
+//             p_add(list321_aaa_[J], evec, pbra_data, pket_data); // z_α^+ v_α u_α |I>
+//             p_add(list321_abb_[J], evec, pbra_data, pket_data); // z_β^+ v_β u_α |I>
+//             results[thread] += pbra[thread]("p") * pket[thread]("p");
+//         }
+
+//         // beta (N-1)-electron determinants
+// #pragma omp parallel for default(none) num_threads(nthreads) \
+//     shared(non_actv, dim1, dim2k, dim3k, dim2b, dim3b, Jb_size, pbra, pket, p_add, evec, results)
+//         for (size_t J = 0; J < Jb_size; ++J) {
+//             auto thread = omp_get_thread_num();
+
+//             pbra[thread].zero();
+//             pket[thread].zero();
+//             auto& pbra_data = pbra[thread].data();
+//             auto& pket_data = pket[thread].data();
+
+//             p_add(list321_baa_[J], evec, pbra_data, pket_data); // z_α^+ v_α u_β |I>
+//             p_add(list321_bbb_[J], evec, pbra_data, pket_data); // z_β^+ v_β u_β |I>
+//             results[thread] += pbra[thread]("p") * pket[thread]("p");
+//         }
+
+//         for (size_t i = 0; i < nthreads; ++i) {
+//             out[n] += results[i];
+//         }
+//     }
+
+//     return out;
+// }
+
+[[deprecated]] std::vector<std::shared_ptr<RDMs>>
 FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
-    std::vector<RDMs> refs;
-    // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-    //     Reference ref;
-    //     compute_sa_ref(max_rdm_);
-    //     ref.set_Eref(Eref_);
+    std::vector<std::shared_ptr<RDMs>> refs;
+    for (auto& roots : root_list) {
+        compute_ref(max_rdm_level, roots.first, roots.second);
 
-    //     if (max_rdm_ > 0) {
-    //         ref.set_L1a(L1a_);
-    //         ref.set_L1b(L1b_);
-    //     }
+        if (max_rdm_level == 1) {
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_));
+        }
 
-    //     if (max_rdm_ > 1) {
-    //         ref.set_L2aa(L2aa_);
-    //         ref.set_L2ab(L2ab_);
-    //         ref.set_L2bb(L2bb_);
-    //     }
+        if (max_rdm_level == 2) {
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_, L2aa_, L2ab_, L2bb_));
+        }
 
-    //     if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
-    //         ref.set_L3aaa(L3aaa_);
-    //         ref.set_L3aab(L3aab_);
-    //         ref.set_L3abb(L3abb_);
-    //         ref.set_L3bbb(L3bbb_);
-    //     }
-    //     refs.push_back(ref);
-    // } else {
+        if (max_rdm_level == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_, L2aa_, L2ab_, L2bb_,
+                                                                  L3aaa_, L3aab_, L3abb_, L3bbb_));
+        }
+    }
+    return refs;
+}
+
+std::vector<double> FCI_MO::compute_complementary_H2caa_overlap(const std::vector<size_t>& roots,
+                                                                ambit::Tensor Tbra,
+                                                                ambit::Tensor Tket) {
+    // check tensors
+    auto dims_bra = Tbra.dims();
+    auto dims_ket = Tket.dims();
+
+    if (dims_bra.size() != 4)
+        throw std::runtime_error("Invalid Tensor for bra: Dimension must be 4!");
+    if (dims_ket.size() != 4)
+        throw std::runtime_error("Invalid Tensor for ket: Dimension must be 4!");
+    if ((dims_bra[1] != nactv_) or (dims_bra[2] != nactv_) or (dims_bra[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for bra: Too many non-active indices");
+    if ((dims_ket[0] != nactv_) or (dims_ket[1] != nactv_) or (dims_ket[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for ket: Too many non-active indices");
+    if (dims_bra[0] != dims_ket[2])
+        throw std::runtime_error("Invalid contracted index for bra and ket Tensors");
+
+    // decide what to do
+    // - by default, we batch and parallelize over the (N-1)-electron determinants
+    // - if the number of non-active orbitals is small, we batch over MO indices
+    if (omp_get_num_threads() != 1 or dims_bra[0] < 15)
+        return compute_complementary_H2caa_overlap_mo_driven(roots, Tbra, Tket);
+    return compute_complementary_H2caa_overlap_ci_driven(roots, Tbra, Tket);
+}
+
+std::vector<double>
+FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>& roots,
+                                                      ambit::Tensor Tbra, ambit::Tensor Tket) {
+    auto dims_bra = Tbra.dims();
+    auto dims_ket = Tket.dims();
+
+    if (dims_bra.size() != 4)
+        throw std::runtime_error("Invalid Tensor for bra: Dimension must be 4!");
+    if (dims_ket.size() != 4)
+        throw std::runtime_error("Invalid Tensor for ket: Dimension must be 4!");
+    if ((dims_bra[1] != nactv_) or (dims_bra[2] != nactv_) or (dims_bra[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for bra: Too many non-active indices");
+    if ((dims_ket[0] != nactv_) or (dims_ket[1] != nactv_) or (dims_ket[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for ket: Too many non-active indices");
+    if (dims_bra[0] != dims_ket[2])
+        throw std::runtime_error("Invalid contracted index for bra and ket Tensors");
+
+    auto nroots = roots.size();
+    auto non_actv = dims_bra[0];
+
+    std::vector<double> out(nroots, 0.0);
+    if (non_actv == 0)
+        return out;
+
+    build_lists321();
+
+    timer timer_mo("Compute complementary MO driven");
+
+    const auto& data_bra = Tbra.data();
+    const auto& data_ket = Tket.data();
+    auto dim1 = nactv_;
+    auto dim2k = non_actv * dim1;
+    auto dim3k = nactv_ * dim2k;
+    auto dim2b = nactv_ * dim1;
+    auto dim3b = nactv_ * dim2b;
+
+    // prepare for OpenMP
+    size_t nthreads = omp_get_max_threads();
+    nthreads = (non_actv < nthreads) ? non_actv : nthreads;
+
+    size_t ndets_a = dets321_a_.size();
+    size_t ndets_b = dets321_b_.size();
+    std::vector<ambit::Tensor> bra_Ja, ket_Ja, bra_Jb, ket_Jb;
+    for (size_t i = 0; i < nthreads; ++i) {
+        bra_Ja.push_back(ambit::Tensor::build(ambit::CoreTensor, "Ja bra", {ndets_a}));
+        ket_Ja.push_back(ambit::Tensor::build(ambit::CoreTensor, "Ja ket", {ndets_a}));
+        bra_Jb.push_back(ambit::Tensor::build(ambit::CoreTensor, "Jb bra", {ndets_b}));
+        ket_Jb.push_back(ambit::Tensor::build(ambit::CoreTensor, "Jb ket", {ndets_b}));
+    }
+
+    for (size_t n = 0; n < nroots; ++n) {
+        auto evec = eigen_[roots[n]].first;
+        std::vector<double> results(nthreads);
+
+#pragma omp parallel for default(none) num_threads(nthreads)                                       \
+    shared(non_actv, data_bra, data_ket, dim1, dim2k, dim3k, dim2b, dim3b, bra_Ja, bra_Jb, ket_Ja, \
+           ket_Jb, evec, results, ndets_a, ndets_b)
+        for (size_t p = 0; p < non_actv; ++p) {
+            int thread = omp_get_thread_num();
+
+            bra_Ja[thread].zero();
+            bra_Jb[thread].zero();
+            ket_Ja[thread].zero();
+            ket_Jb[thread].zero();
+
+            auto& bra_Ja_data = (bra_Ja[thread]).data();
+            auto& bra_Jb_data = (bra_Jb[thread]).data();
+            auto& ket_Ja_data = (ket_Ja[thread]).data();
+            auto& ket_Jb_data = (ket_Jb[thread]).data();
+
+            for (size_t J = 0; J < ndets_a; ++J) {
+                for (const auto& coupled_dets : list321_aaa_[J]) {
+                    const auto [I, u, v, z, sign] = coupled_dets;
+                    auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                    ket_Ja_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                    bra_Ja_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                }
+                for (const auto& coupled_dets : list321_abb_[J]) {
+                    const auto [I, u, v, z, sign] = coupled_dets;
+                    auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                    ket_Ja_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                    bra_Ja_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                }
+            }
+
+            for (size_t J = 0; J < ndets_b; ++J) {
+                for (const auto& coupled_dets : list321_baa_[J]) {
+                    const auto [I, u, v, z, sign] = coupled_dets;
+                    auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                    ket_Jb_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                    bra_Jb_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                }
+                for (const auto& coupled_dets : list321_bbb_[J]) {
+                    const auto [I, u, v, z, sign] = coupled_dets;
+                    auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                    ket_Jb_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                    bra_Jb_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                }
+            }
+
+            results[thread] += bra_Ja[thread]("I") * ket_Ja[thread]("I");
+            results[thread] += bra_Jb[thread]("I") * ket_Jb[thread]("I");
+        }
+
+        for (size_t i = 0; i < nthreads; ++i) {
+            out[n] += results[i];
+        }
+    }
+
+    return out;
+}
+
+std::vector<double>
+FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>& roots,
+                                                      ambit::Tensor Tbra, ambit::Tensor Tket) {
+    auto dims_bra = Tbra.dims();
+    auto dims_ket = Tket.dims();
+
+    if (dims_bra.size() != 4)
+        throw std::runtime_error("Invalid Tensor for bra: Dimension must be 4!");
+    if (dims_ket.size() != 4)
+        throw std::runtime_error("Invalid Tensor for ket: Dimension must be 4!");
+    if ((dims_bra[1] != nactv_) or (dims_bra[2] != nactv_) or (dims_bra[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for bra: Too many non-active indices");
+    if ((dims_ket[0] != nactv_) or (dims_ket[1] != nactv_) or (dims_ket[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for ket: Too many non-active indices");
+    if (dims_bra[0] != dims_ket[2])
+        throw std::runtime_error("Invalid contracted index for bra and ket Tensors");
+
+    auto nroots = roots.size();
+    auto non_actv = dims_bra[0];
+
+    std::vector<double> out(nroots, 0.0);
+    if (non_actv == 0)
+        return out;
+
+    build_lists321();
+
+    timer timer_mo("Compute complementary CI driven");
+
+    auto Ja_size = dets321_a_.size();
+    auto Jb_size = dets321_b_.size();
+
+    const auto& data_bra = Tbra.data();
+    const auto& data_ket = Tket.data();
+    auto dim1 = nactv_;
+    auto dim2k = non_actv * dim1;
+    auto dim3k = nactv_ * dim2k;
+    auto dim2b = nactv_ * dim1;
+    auto dim3b = nactv_ * dim2b;
+
+    // prepare for OpenMP
+    size_t nthreads = omp_get_max_threads();
+    nthreads = (non_actv < nthreads) ? non_actv : nthreads;
+
+    std::vector<ambit::Tensor> pbra, pket;
+    for (size_t i = 0; i < nthreads; ++i) {
+        pbra.push_back(ambit::Tensor::build(ambit::CoreTensor, "p bra", {non_actv}));
+        pket.push_back(ambit::Tensor::build(ambit::CoreTensor, "p ket", {non_actv}));
+    }
+
+    // core function for loop
+    auto p_add =
+        [&](const std::vector<
+                std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>& J2I_lists,
+            SharedVector evec, std::vector<double>& pbra_data, std::vector<double>& pket_data) {
+            for (const auto& coupled_dets : J2I_lists) {
+                const auto [I, u, v, z, sign] = coupled_dets;
+                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                for (size_t p = 0; p < non_actv; ++p) {
+                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                }
+            }
+        };
 
     // actual computation: parallel (N-1)-electron determinants
     for (size_t n = 0; n < nroots; ++n) {
@@ -2197,27 +2740,30 @@ FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int m
     return out;
 }
 
-[[deprecated]] std::vector<std::shared_ptr<RDMs>>
-FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
-    std::vector<std::shared_ptr<RDMs>> refs;
-    for (auto& roots : root_list) {
-        compute_ref(max_rdm_level, roots.first, roots.second);
+// [[deprecated]] std::vector<std::shared_ptr<RDMs>>
+// FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
+//     std::vector<std::shared_ptr<RDMs>> refs;
+//     for (auto& roots : root_list) {
+//         compute_ref(max_rdm_level, roots.first, roots.second);
 
-        if (max_rdm_level == 1) {
-            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_));
-        }
+//         if (max_rdm_level == 1) {
+//             refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_));
+//         }
 
-        if (max_rdm_level == 2) {
-            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_, L2aa_, L2ab_, L2bb_));
-        }
+//         if (max_rdm_level == 2) {
+//             refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_, L2aa_, L2ab_,
+//             L2bb_));
+//         }
 
-        if (max_rdm_level == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
-            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_, L2aa_, L2ab_, L2bb_,
-                                                                  L3aaa_, L3aab_, L3abb_, L3bbb_));
-        }
-    }
-    return refs;
-}
+//         if (max_rdm_level == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
+//             refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_, L2aa_, L2ab_,
+//             L2bb_,
+//                                                                   L3aaa_, L3aab_, L3abb_,
+//                                                                   L3bbb_));
+//         }
+//     }
+//     return refs;
+// }
 
 void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
     timer_on("Compute Ref");

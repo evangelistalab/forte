@@ -1,9 +1,0 @@
-2022-05-31:17:34:56,491 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CUBEPROP_ORBITALS': [14, 15, 16, 17], 'DF_BASIS_MP2': 'DEF2-UNIVERSAL-JKFIT', 'DF_BASIS_SCF': 'DEF2-UNIVERSAL-JKFIT', 'D_CONVERGENCE': 1e-12, 'E_CONVERGENCE': 1e-10, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
-2022-05-31:17:34:56,493 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=def2-tzvp, molecule=butadiene, nre=103.516094180281
-2022-05-31:17:34:57,321 INFO     [psi4.driver.driver:502] Return energy(): -154.97926325611436
-2022-05-31:17:34:57,335 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CUBEPROP_ORBITALS': [14, 15, 16, 17], 'DF_BASIS_MP2': 'DEF2-UNIVERSAL-JKFIT', 'DF_BASIS_SCF': 'DEF2-UNIVERSAL-JKFIT', 'D_CONVERGENCE': 1e-12, 'E_CONVERGENCE': 1e-10, 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
-2022-05-31:17:34:57,337 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=def2-tzvp, molecule=butadiene, nre=103.516094180281
-2022-05-31:17:34:59,868 INFO     [psi4.driver.driver:502] Return energy(): -154.745701428352
-2022-05-31:17:34:59,882 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CUBEPROP_ORBITALS': [14, 15, 16, 17], 'DF_BASIS_MP2': 'DEF2-UNIVERSAL-JKFIT', 'DF_BASIS_SCF': 'DEF2-UNIVERSAL-JKFIT', 'D_CONVERGENCE': 1e-12, 'E_CONVERGENCE': 1e-10, 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
-2022-05-31:17:34:59,883 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=def2-tzvp, molecule=butadiene, nre=103.516094180281
-2022-05-31:17:35:03,810 INFO     [psi4.driver.driver:502] Return energy(): -155.37737221994303

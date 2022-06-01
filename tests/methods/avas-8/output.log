@@ -1,6 +1,0 @@
-2022-05-31:17:33:39,830 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_BASIS_SCF': 'CC-PVDZ-JKFIT', 'D_CONVERGENCE': 1e-10, 'REFERENCE': 'RHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
-2022-05-31:17:33:39,832 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=cc-pvdz, molecule=C20, nre=1483.3634889509708
-2022-05-31:17:34:01,630 INFO     [psi4.driver.driver:502] Return energy(): -756.5060465503186
-2022-05-31:17:34:01,645 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_BASIS_SCF': 'CC-PVDZ-JKFIT', 'D_CONVERGENCE': 1e-10, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'RHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
-2022-05-31:17:34:01,646 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=cc-pvdz, molecule=C20, nre=1483.3634889509708
-2022-05-31:17:34:01,813 INFO     [psi4.driver.driver:502] Return energy(): 0.0

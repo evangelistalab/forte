@@ -1,6 +1,0 @@
-2022-05-31:17:37:45,811 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [40, 7], 'D_CONVERGENCE': 1e-06, 'MAXITER': 100, 'SCF_TYPE': 'DF', 'function_kwargs': {}}
-2022-05-31:17:37:45,813 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=def2-svp, molecule=anthracene, nre=768.2489730203436
-2022-05-31:17:37:49,273 INFO     [psi4.driver.driver:502] Return energy(): -535.602348840942
-2022-05-31:17:37:49,287 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [40, 7], 'D_CONVERGENCE': 1e-06, 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 100, 'SCF_TYPE': 'DF', 'function_kwargs': {}}
-2022-05-31:17:37:49,288 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=def2-svp, molecule=anthracene, nre=768.2489730203436
-2022-05-31:17:37:53,103 INFO     [psi4.driver.driver:502] Return energy(): 0.0

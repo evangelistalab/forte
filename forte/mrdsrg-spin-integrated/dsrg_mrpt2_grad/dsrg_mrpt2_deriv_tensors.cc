@@ -24,9 +24,9 @@ void DSRG_MRPT2::set_ci_ints() {
 void DSRG_MRPT2::set_density() {
     Gamma2_ = BTF_->build(CoreTensor, "Gamma2_", spin_cases({"aaaa"}));
 
-    Gamma2_.block("aaaa")("pqrs") = rdms_.g2aa()("pqrs");
-    Gamma2_.block("aAaA")("pqrs") = rdms_.g2ab()("pqrs");
-    Gamma2_.block("AAAA")("pqrs") = rdms_.g2bb()("pqrs");
+    Gamma2_.block("aaaa")("pqrs") = rdms_->g2aa()("pqrs");
+    Gamma2_.block("aAaA")("pqrs") = rdms_->g2ab()("pqrs");
+    Gamma2_.block("AAAA")("pqrs") = rdms_->g2bb()("pqrs");
 }
 
 void DSRG_MRPT2::set_h() {
@@ -40,7 +40,7 @@ void DSRG_MRPT2::set_h() {
     });
 }
 
-void DSRG_MRPT2::set_j() {  
+void DSRG_MRPT2::set_j() {
     Jm12 = BTF_->build(tensor_type_, "Jm12", {"LL"});
     std::shared_ptr<BasisSet> auxiliary_ = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     auto metric = std::make_shared<FittingMetric>(auxiliary_, true);
@@ -53,40 +53,42 @@ void DSRG_MRPT2::set_j() {
     });
 }
 
-void DSRG_MRPT2::set_v() {   
+void DSRG_MRPT2::set_v() {
     if (eri_df_) {
         B = BTF_->build(tensor_type_, "B", {"Lgg", "LGG"});
         V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"pphh"}));
         for (const std::string& block : B.block_labels()) {
             std::vector<size_t> iaux = label_to_spacemo_[block[0]];
-            std::vector<size_t> ip   = label_to_spacemo_[block[1]];
-            std::vector<size_t> ih   = label_to_spacemo_[block[2]];
+            std::vector<size_t> ip = label_to_spacemo_[block[1]];
+            std::vector<size_t> ih = label_to_spacemo_[block[2]];
             ambit::Tensor Bblock = ints_->three_integral_block(iaux, ip, ih);
             B.block(block).copy(Bblock);
         }
-        V["abij"] =  B["gai"] * B["gbj"];
+        V["abij"] = B["gai"] * B["gbj"];
         V["abij"] -= B["gaj"] * B["gbi"];
-        V["aBiJ"] =  B["gai"] * B["gBJ"];
-        V["ABIJ"] =  B["gAI"] * B["gBJ"];
+        V["aBiJ"] = B["gai"] * B["gBJ"];
+        V["ABIJ"] = B["gAI"] * B["gBJ"];
         V["ABIJ"] -= B["gAJ"] * B["gBI"];
     } else {
-        V = BTF_->build(CoreTensor, "Electron Repulsion Integral",
-                spin_cases({"gphh", "pghh", "ppgh", "pphg", "gchc", "pghc", "pcgc", "pchg",
-                            "gcpc", "hgpc", "hcgc", "hcpg", "gccc", "cgcc", "ccgc", "cccg",
-                            "gcvc", "vgvc", "vcgc", "vcvg", "cgch", "gpch", "cpcg", "cpgh",
-                            "cgcp", "ghcp", "chcg", "chgp", "cgcv", "gvcv", "cvcg", "cvgv"}));
+        V = BTF_->build(
+            CoreTensor, "Electron Repulsion Integral",
+            spin_cases({"gphh", "pghh", "ppgh", "pphg", "gchc", "pghc", "pcgc", "pchg",
+                        "gcpc", "hgpc", "hcgc", "hcpg", "gccc", "cgcc", "ccgc", "cccg",
+                        "gcvc", "vgvc", "vcgc", "vcvg", "cgch", "gpch", "cpcg", "cpgh",
+                        "cgcp", "ghcp", "chcg", "chgp", "cgcv", "gvcv", "cvcg", "cvgv"}));
 
-        V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) {
-                if (spin[1] == AlphaSpin) {
-                    value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-                } else {
-                    value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+        V.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                if (spin[0] == AlphaSpin) {
+                    if (spin[1] == AlphaSpin) {
+                        value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+                    } else {
+                        value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+                    }
+                } else if (spin[1] == BetaSpin) {
+                    value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
                 }
-            } else if (spin[1] == BetaSpin) {
-                value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
-            }
-        });
+            });
     }
 
     V_sumA_Alpha = BTF_->build(
@@ -100,14 +102,14 @@ void DSRG_MRPT2::set_v() {
 
     if (eri_df_) {
         // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
-        V_sumA_Alpha["pq"]  = B["gpq"] * B["gmn"] * I["mn"];
+        V_sumA_Alpha["pq"] = B["gpq"] * B["gmn"] * I["mn"];
         V_sumA_Alpha["pq"] -= B["gpm"] * B["gmq"];
         // Summation of V["pMqM"] over index "M"
         V_sumB_Alpha["pq"] = B["gpq"] * B["gMN"] * I["MN"];
         // Summation of V["mPmQ"] over index "m"
-        V_sumA_Beta["PQ"] =  B["gmn"] * B["gPQ"] * I["mn"];
+        V_sumA_Beta["PQ"] = B["gmn"] * B["gPQ"] * I["mn"];
         // Summation of V["PMQM"] over index "M"
-        V_sumB_Beta["PQ"] =  B["gPQ"] * B["gMN"] * I["MN"];
+        V_sumB_Beta["PQ"] = B["gPQ"] * B["gMN"] * I["MN"];
         V_sumB_Beta["PQ"] -= B["gPM"] * B["gMQ"];
     } else {
         // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
@@ -136,7 +138,7 @@ void DSRG_MRPT2::set_active_fock() {
 }
 
 void DSRG_MRPT2::set_dsrg_tensor() {
-    fdiag = BTF_->build(CoreTensor, "fock_diag", {"g","G"});
+    fdiag = BTF_->build(CoreTensor, "fock_diag", {"g", "G"});
     Eeps1 = BTF_->build(CoreTensor, "e^[-s*(Delta1)^2]", spin_cases({"hp"}));
     Eeps1_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)", spin_cases({"hp"}));
     Eeps1_m2 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)^2", spin_cases({"hp"}));

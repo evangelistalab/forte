@@ -1,3 +1,0 @@
-2022-05-31:17:34:19,570 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'ACTIVE': [1, 0, 0, 0, 0, 0, 1, 0], 'DF_BASIS_MP2': 'CC-PVDZ-RI', 'DF_BASIS_SCF': 'CC-PVDZ-JKFIT', 'D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-12, 'FROZEN_DOCC': [2, 1, 0, 0, 0, 0, 2, 1], 'GUESS': 'CORE', 'MAXITER': 500, 'REFERENCE': 'ROHF', 'RESTRICTED_DOCC': [3, 2, 1, 1, 0, 1, 2, 3], 'S': 0.0, 'SCF_TYPE': 'DIRECT', 'function_kwargs': {}}
-2022-05-31:17:34:19,572 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=sto-3g, molecule=mbenzyne, nre=186.02264032518056
-2022-05-31:17:34:20,442 INFO     [psi4.driver.driver:502] Return energy(): -226.5750169473509

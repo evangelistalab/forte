@@ -1,6 +1,0 @@
-2022-05-31:17:41:17,708 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CHOLESKY_TOLERANCE': 0.0001, 'DOCC': [3, 0, 1, 1], 'MCSCF__DOCC': [2, 0, 1, 1], 'MCSCF__D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-08, 'MCSCF__E_CONVERGENCE': 1e-12, 'MCSCF__LEVEL_SHIFT': 0.5, 'MAXITER': 100, 'MCSCF__MAXITER': 1000, 'REFERENCE': 'TWOCON', 'SCF_TYPE': 'CD', 'MCSCF__SOCC': [2, 0, 0, 0], 'function_kwargs': {}}
-2022-05-31:17:41:17,710 INFO     [psi4.driver.driver:499] Compute energy(): method=mcscf, basis=3-21g, molecule=HF, nre=3.1750632640200003
-2022-05-31:17:41:17,736 INFO     [psi4.driver.driver:502] Return energy(): -99.40606522363957
-2022-05-31:17:41:17,750 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CHOLESKY_TOLERANCE': 0.0001, 'DOCC': [3, 0, 1, 1], 'MCSCF__DOCC': [2, 0, 1, 1], 'MCSCF__D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-08, 'MCSCF__E_CONVERGENCE': 1e-12, 'MCSCF__LEVEL_SHIFT': 0.5, 'MAXITER': 100, 'MCSCF__MAXITER': 1000, 'REFERENCE': 'TWOCON', 'SCF_TYPE': 'CD', 'MCSCF__SOCC': [2, 0, 0, 0], 'function_kwargs': {}}
-2022-05-31:17:41:17,752 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=3-21g, molecule=HF, nre=3.1750632640200003
-2022-05-31:17:42:21,542 INFO     [psi4.driver.driver:502] Return energy(): -99.50010524991264

@@ -1,6 +1,0 @@
-2022-05-31:17:33:08,820 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'E_CONVERGENCE': 1e-10, 'SCF_TYPE': 'PK', 'function_kwargs': {}}
-2022-05-31:17:33:08,822 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=6-31g, molecule=C2, nre=14.968123312972903
-2022-05-31:17:33:09,7 INFO     [psi4.driver.driver:502] Return energy(): -75.34896498316286
-2022-05-31:17:33:09,20 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'E_CONVERGENCE': 1e-10, 'SCF__INTS_TOLERANCE': 1e-12, 'SCF_TYPE': 'PK', 'function_kwargs': {}}
-2022-05-31:17:33:09,22 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=6-31g, molecule=C2, nre=14.968123312972903
-2022-05-31:17:33:09,233 INFO     [psi4.driver.driver:502] Return energy(): -75.5507400336849

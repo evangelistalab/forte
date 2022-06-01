@@ -405,10 +405,6 @@ double MCSCF_2STEP::compute_energy() {
     return energy_;
 }
 
-<<<<<<< HEAD
-std::tuple<std::shared_ptr<ActiveSpaceSolver>, double>
-MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-=======
 bool MCSCF_2STEP::is_single_reference() {
     auto nactv = mo_space_info_->size("ACTIVE");
     auto nclosed_electrons = 2 * mo_space_info_->size("INACTIVE_DOCC");
@@ -439,7 +435,6 @@ bool MCSCF_2STEP::is_single_reference() {
 double
 MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
                                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
->>>>>>> master
                                      const std::tuple<int, double, double, bool, bool>& params) {
     auto state_nroots_map = to_state_nroots_map(state_weights_map_);
     as_solver = make_active_space_solver(ci_type_, state_nroots_map, scf_info_, mo_space_info_,
@@ -507,12 +502,7 @@ bool MCSCF_2STEP::test_history(const std::vector<CASSCF_HISTORY>& history, const
         if (e_trap_count < more_than_half and g_trap_count < more_than_half)
             return true;
     }
-
-<<<<<<< HEAD
-    return {active_space_solver, e};
-=======
     return false;
->>>>>>> master
 }
 
 void MCSCF_2STEP::print_macro_iteration(const std::vector<CASSCF_HISTORY>& history) {

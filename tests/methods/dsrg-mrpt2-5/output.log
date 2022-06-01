@@ -1,6 +1,0 @@
-2022-05-31:17:35:29,165 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'MCSCF__DOCC': [5, 3, 1, 1, 0, 1, 4, 4], 'D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-12, 'MCSCF__MAXITER': 500, 'REFERENCE': 'TWOCON', 'SCF_TYPE': 'PK', 'MCSCF__SOCC': [1, 0, 0, 0, 0, 0, 1, 0], 'function_kwargs': {}}
-2022-05-31:17:35:29,167 INFO     [psi4.driver.driver:499] Compute energy(): method=mcscf, basis=sto-3g, molecule=mbenzyne, nre=186.02264032518056
-2022-05-31:17:35:29,255 INFO     [psi4.driver.driver:502] Return energy(): -226.5750819966027
-2022-05-31:17:35:29,269 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'MCSCF__DOCC': [5, 3, 1, 1, 0, 1, 4, 4], 'D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-12, 'MCSCF__MAXITER': 500, 'REFERENCE': 'TWOCON', 'SCF_TYPE': 'PK', 'MCSCF__SOCC': [1, 0, 0, 0, 0, 0, 1, 0], 'function_kwargs': {}}
-2022-05-31:17:35:29,271 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=sto-3g, molecule=mbenzyne, nre=186.02264032518056
-2022-05-31:17:35:29,508 INFO     [psi4.driver.driver:502] Return energy(): -226.88302672873326

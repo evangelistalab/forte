@@ -1,3 +1,0 @@
-2022-05-31:17:37:41,375 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'function_kwargs': {}}
-2022-05-31:17:37:41,376 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=(auto), molecule=blank_molecule_psi4_yo, nre=0.7151043387432433
-2022-05-31:17:37:41,534 INFO     [psi4.driver.driver:502] Return energy(): -112.74446815366589

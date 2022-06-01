@@ -1,6 +1,0 @@
-2022-05-31:17:34:11,37 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'ACTIVE': [1, 0, 0, 1], 'MAXITER': 100, 'MCSCF_DIIS_START': 20, 'MCSCF_E_CONVERGENCE': 1e-08, 'MCSCF_MAXITER': 100, 'MCSCF_R_CONVERGENCE': 1e-06, 'MCSCF_TYPE': 'CONV', 'FINDIF__POINTS': 5, 'REFERENCE': 'RHF', 'RESTRICTED_DOCC': [2, 0, 0, 0], 'SCF_TYPE': 'DIRECT', 'function_kwargs': {}}
-2022-05-31:17:34:11,39 INFO     [psi4.driver.driver:617] Compute gradient(): method=forte, basis=3-21g, molecule=default, nre=3.1674267162667284
-2022-05-31:17:34:11,303 INFO     [psi4.driver.driver:620] Return gradient(): -15.671209159752873
-2022-05-31:17:34:11,303 INFO     [psi4.driver.driver:621] [[-0.          0.         -0.02617679]
- [-0.          0.01737308  0.0130884 ]
- [ 0.         -0.01737308  0.0130884 ]]

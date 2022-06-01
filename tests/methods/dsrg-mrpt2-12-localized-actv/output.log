@@ -1,6 +1,0 @@
-2022-05-31:17:35:44,270 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CUBEPROP_ORBITALS': [14, 15, 16, 17], 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
-2022-05-31:17:35:44,271 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=def2-svp, molecule=butadiene, nre=103.516094180281
-2022-05-31:17:35:44,954 INFO     [psi4.driver.driver:502] Return energy(): -154.80920145880896
-2022-05-31:17:35:44,968 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CUBEPROP_ORBITALS': [14, 15, 16, 17], 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
-2022-05-31:17:35:44,969 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=def2-svp, molecule=butadiene, nre=103.516094180281
-2022-05-31:17:35:50,104 INFO     [psi4.driver.driver:502] Return energy(): -155.06722026953986

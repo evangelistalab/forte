@@ -1,3 +1,0 @@
-2022-05-31:17:34:46,833 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_BASIS_MP2': 'CC-PVDZ-RI', 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-12, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
-2022-05-31:17:34:46,835 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=anonymous55afb563, molecule=default, nre=3.156487659063052
-2022-05-31:17:34:47,33 INFO     [psi4.driver.driver:502] Return energy(): -15.613389000091116

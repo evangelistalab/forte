@@ -1,3 +1,0 @@
-2022-05-31:17:37:26,854 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-08, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
-2022-05-31:17:37:26,856 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=cc-pvdz, molecule=c10h8, nre=460.68388806177677
-2022-05-31:17:37:32,332 INFO     [psi4.driver.driver:502] Return energy(): -372.2554839160258
