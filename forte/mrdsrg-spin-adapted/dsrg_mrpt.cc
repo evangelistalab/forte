@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -40,7 +40,7 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT::DSRG_MRPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+DSRG_MRPT::DSRG_MRPT(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
@@ -135,7 +135,7 @@ void DSRG_MRPT::startup() {
     frozen_core_energy_ = ints_->frozen_core_energy();
 
     // reference energy
-    Eref_ = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
+    Eref_ = compute_reference_energy();
 
     // orbital spaces
     core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
@@ -241,72 +241,25 @@ void DSRG_MRPT::build_ints() {
 }
 
 void DSRG_MRPT::build_density() {
-    //    // test OPDC
-    //    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", rdms_.g1a().dims());
-    //    diff("pq") = rdms_.g1a()("pq") - rdms_.g1b()("pq");
-    //    if (diff.norm() > 1.0e-8) {
-    //        outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
-    //        outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
-    //        throw psi::PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
-    //    }
-
     // fill spin-summed OPDC
     ambit::Tensor L1aa = L1_.block("aa");
-    //    L1aa("pq") = rdms_.g1a()("pq") + rdms_.g1b()("pq");
-    L1aa("pq") = rdms_.SF_L1()("pq");
+    //    L1aa("pq") = rdms_->g1a()("pq") + rdms_->g1b()("pq");
+    L1aa("pq") = rdms_->SF_L1()("pq");
 
     ambit::Tensor E1aa = Eta1_.block("aa");
     E1aa.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
     E1aa("pq") -= L1aa("pq");
 
-    //    // test T2PDC
-    //    diff = ambit::Tensor::build(tensor_type_, "diff_L2", rdms_.L2aa().dims());
-    //    diff("pqrs") = rdms_.L2aa()("pqrs") - rdms_.L2ab()("pqrs") + rdms_.L2ab()("pqsr");
-    //    if (diff.norm() > 1.0e-8) {
-    //        outfile->Printf("\n  Error: two-particle density cumulant cannot be spin-adapted!");
-    //        outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
-    //                        "This should be 0.0.",
-    //                        diff.norm());
-    //        throw psi::PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
-    //    }
-
     // fill spin-summed T2PDC
     ambit::Tensor L2aa = L2_.block("aaaa");
-    //    L2aa("pqrs") += 4.0 * rdms_.L2ab()("pqrs");
-    //    L2aa("pqrs") -= 2.0 * rdms_.L2ab()("pqsr");
-    L2aa("pqrs") = rdms_.SF_L2()("pqrs");
+    L2aa("pqrs") = rdms_->SF_L2()("pqrs");
 
     // T3PDC
     if (foptions_->get_str("THREEPDC") != "ZERO") {
-        //        // test spin adaptation
-        //        diff = ambit::Tensor::build(tensor_type_, "diff_L3", rdms_.L3aaa().dims());
-        //        diff("pqrstu") +=
-        //            rdms_.L3aab()("pqrstu") - rdms_.L3aab()("pqrsut") + rdms_.L3aab()("pqrtus");
-        //        diff("pqrstu") -=
-        //            rdms_.L3aab()("prqstu") - rdms_.L3aab()("prqsut") + rdms_.L3aab()("prqtus");
-        //        diff("pqrstu") +=
-        //            rdms_.L3aab()("qrpstu") - rdms_.L3aab()("qrpsut") + rdms_.L3aab()("qrptus");
-        //        diff.scale(1.0 / 3.0);
-        //        diff("pqrstu") -= rdms_.L3aaa()("pqrstu");
-        //        if (diff.norm() > 1.0e-8) {
-        //            outfile->Printf("\n  Error: three-particle density cumulant cannot "
-        //                            "be spin-adapted!");
-        //            outfile->Printf("\n  |L3aaa - 1/3 * P(L3aab)| = %20.15f  <== This "
-        //                            "should be 0.0.",
-        //                            diff.norm());
-        //            throw psi::PSIEXCEPTION("Three-particle density cumulant cannot be
-        //            spin-adapted!");
-        //        }
-
         // fill spin-summed T3PDC
         ambit::Tensor L3aaa = L3_.block("aaaaaa");
-        //        L3aaa("pqrstu") += rdms_.L3aaa()("pqrstu");
-        //        L3aaa("pqrstu") += rdms_.L3aab()("pqrstu");
-        //        L3aaa("pqrstu") += rdms_.L3aab()("prqsut");
-        //        L3aaa("pqrstu") += rdms_.L3aab()("qrptus");
-        //        L3aaa.scale(2.0);
-        L3aaa("pqrstu") = rdms_.SF_L3()("pqrstu");
+        L3aaa("pqrstu") = rdms_->SF_L3()("pqrstu");
     }
 }
 

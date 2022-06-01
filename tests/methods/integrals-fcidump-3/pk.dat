@@ -1,0 +1,25 @@
+import forte
+
+molecule {
+0 1
+H 0.0 0.0 0.0
+H 0.0 0.0 1.0
+H 0.0 2.0 0.0
+H 0.0 2.0 1.0
+units bohr
+symmetry c1
+}
+
+set {
+  basis sto-3g
+  scf_type pk
+  e_convergence 14
+}
+
+set forte {
+  active_space_solver fci
+  int_type conventional
+  e_convergence 12
+}
+
+energy('forte')

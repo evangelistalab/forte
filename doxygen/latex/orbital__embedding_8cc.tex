@@ -1,0 +1,39 @@
+\hypertarget{orbital__embedding_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/orbital\+\_\+embedding.cc File Reference}
+\label{orbital__embedding_8cc}\index{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/orbital\+\_\+embedding.\+cc@{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/orbital\+\_\+embedding.\+cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/psi4-\/dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/molecule.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/pointgrp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/wavefunction.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/helpers.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/printing.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}orbital\+\_\+embedding.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}pao\+\_\+builder.\+h\char`\"{}}\newline
+Include dependency graph for orbital\+\_\+embedding.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{orbital__embedding_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{namespaceforte_a135cc774f883a8e56a83f234822014a2}{forte\+::semicanonicalize\+\_\+block}} (psi\+::\+Shared\+Wavefunction ref\+\_\+wfn, psi\+::\+Shared\+Matrix C\+\_\+tilde, std\+::vector$<$ int $>$ \&mos, int offset, bool prevent\+\_\+rotate=false)
+\item 
+void \mbox{\hyperlink{namespaceforte_a41dc83a8ab6d22cadbbdcace0b8a1faa}{forte\+::make\+\_\+avas}} (psi\+::\+Shared\+Wavefunction ref\+\_\+wfn, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options, psi\+::\+Shared\+Matrix Ps)
+\item 
+std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ \mbox{\hyperlink{namespaceforte_abcac95a44be04c33b4b69adf43ee06c9}{forte\+::make\+\_\+embedding}} (psi\+::\+Shared\+Wavefunction ref\+\_\+wfn, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options, psi\+::\+Shared\+Matrix Pf, int nbf\+\_\+A, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info)
+\end{DoxyCompactItemize}

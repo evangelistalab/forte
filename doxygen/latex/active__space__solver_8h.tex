@@ -1,0 +1,43 @@
+\hypertarget{active__space__solver_8h}{}\section{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/active\+\_\+space\+\_\+solver.h File Reference}
+\label{active__space__solver_8h}\index{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/active\+\_\+space\+\_\+solver.\+h@{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/active\+\_\+space\+\_\+solver.\+h}}
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/state\+\_\+info.\+h\char`\"{}}\newline
+Include dependency graph for active\+\_\+space\+\_\+solver.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=340pt]{active__space__solver_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{active__space__solver_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classforte_1_1_active_space_solver}{forte\+::\+Active\+Space\+Solver}}
+\begin{DoxyCompactList}\small\item\em General class for a multi-\/state active space solver. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::unique\+\_\+ptr$<$ Active\+Space\+Solver $>$ \mbox{\hyperlink{namespaceforte_ab5b7864e2cd53284dc4743a626f1f060}{forte\+::make\+\_\+active\+\_\+space\+\_\+solver}} (const std\+::string \&method, const std\+::map$<$ State\+Info, size\+\_\+t $>$ \&state\+\_\+nroots\+\_\+map, std\+::shared\+\_\+ptr$<$ S\+C\+F\+Info $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ Active\+Space\+Integrals $>$ as\+\_\+ints, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options)
+\begin{DoxyCompactList}\small\item\em Make an active space solver object. \end{DoxyCompactList}\item 
+std\+::map$<$ State\+Info, size\+\_\+t $>$ \mbox{\hyperlink{namespaceforte_a7139c6265e27741495337b429560626d}{forte\+::to\+\_\+state\+\_\+nroots\+\_\+map}} (const std\+::map$<$ State\+Info, std\+::vector$<$ double $>$$>$ \&state\+\_\+weights\+\_\+map)
+\begin{DoxyCompactList}\small\item\em Convert a map of \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} to weight lists to a map of \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} to number of roots. \end{DoxyCompactList}\item 
+std\+::map$<$ State\+Info, std\+::vector$<$ double $>$ $>$ \mbox{\hyperlink{namespaceforte_a60e6d8ce86b74af883bf44cc4ba7b91d}{forte\+::make\+\_\+state\+\_\+weights\+\_\+map}} (std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{forte\+::\+M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info)
+\begin{DoxyCompactList}\small\item\em Make a list of states and weights. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{namespaceforte_a0d65a13f4c1bf6fdbd3a78dd92268c75}{forte\+::compute\+\_\+average\+\_\+state\+\_\+energy}} (const std\+::map$<$ State\+Info, std\+::vector$<$ double $>$$>$ \&state\+\_\+energies\+\_\+map, const std\+::map$<$ State\+Info, std\+::vector$<$ double $>$$>$ \&state\+\_\+weight\+\_\+map)
+\begin{DoxyCompactList}\small\item\em Compute the average energy for a set of states. \end{DoxyCompactList}\end{DoxyCompactItemize}

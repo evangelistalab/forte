@@ -1,0 +1,42 @@
+\hypertarget{rdms_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/rdms.cc File Reference}
+\label{rdms_8cc}\index{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/rdms.\+cc@{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/rdms.\+cc}}
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/rdms.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}integrals/integrals.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+Include dependency graph for rdms.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rdms_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+ambit\+::\+Tensor \mbox{\hyperlink{namespaceforte_a19b0aa2bb4490c7cc7127962c5b5929f}{forte\+::make\+\_\+g2\+\_\+high\+\_\+spin\+\_\+case}} (const ambit\+::\+Tensor \&g2ab)
+\begin{DoxyCompactList}\small\item\em make\+\_\+g2\+\_\+high\+\_\+spin\+\_\+case Make the alpha-\/alpha or beta-\/beta 2-\/\+R\+DM from alpha-\/beta 2-\/\+R\+DM. This function returns the aa or bb 2-\/\+R\+DM using the ab 2-\/\+R\+DM assuming ms averaging. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{namespaceforte_a629eb691ceead9d02c24f704129e4843}{forte\+::make\+\_\+g3\+\_\+high\+\_\+spin\+\_\+case}} (const ambit\+::\+Tensor \&g3aab)
+\begin{DoxyCompactList}\small\item\em make\+\_\+g3\+\_\+high\+\_\+spin\+\_\+case Make the aaa or bbb 3-\/\+R\+DM from aab 3-\/\+R\+DM. This function returns the aaa or bbb 3-\/\+R\+DM using the aab 3-\/\+R\+DM assuming ms averaging. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_aabd2ba38057938d7d8697982bca86f96}{forte\+::make\+\_\+cumulant\+\_\+\+L2aa\+\_\+in\+\_\+place}} (const ambit\+::\+Tensor \&L1a, ambit\+::\+Tensor \&L2aa)
+\begin{DoxyCompactList}\small\item\em make\+\_\+cumulant\+\_\+\+L2aa\+\_\+in\+\_\+place Make the alpha-\/alpha 2-\/body cumulant. This function replaces the tensor passed in (L2aa) containing the aa 2-\/\+R\+DM with the cumulant. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a357c8ca1ef9821eebfa674188d7bf987}{forte\+::make\+\_\+cumulant\+\_\+\+L2ab\+\_\+in\+\_\+place}} (const ambit\+::\+Tensor \&L1a, const ambit\+::\+Tensor \&L1b, ambit\+::\+Tensor \&L2ab)
+\begin{DoxyCompactList}\small\item\em make\+\_\+cumulant\+\_\+\+L2ab\+\_\+in\+\_\+place Make the alpha-\/beta 2-\/body cumulant. This function replaces the tensor passed in (L2ab) containing the ab 2-\/\+R\+DM with the cumulant. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a8657967a7c9d90fbe9056067f672546a}{forte\+::make\+\_\+cumulant\+\_\+\+L2bb\+\_\+in\+\_\+place}} (const ambit\+::\+Tensor \&L1b, ambit\+::\+Tensor \&L2bb)
+\begin{DoxyCompactList}\small\item\em make\+\_\+cumulant\+\_\+\+L2bb\+\_\+in\+\_\+place Make the beta-\/beta 2-\/body cumulant. This function replaces the tensor passed in (L2bb) containing the bb 2-\/\+R\+DM with the cumulant. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_acd7d78b19b65ba13722d9cd5dd292be9}{forte\+::make\+\_\+cumulant\+\_\+\+L3aaa\+\_\+in\+\_\+place}} (const ambit\+::\+Tensor \&g1a, const ambit\+::\+Tensor \&L2aa, ambit\+::\+Tensor \&L3aaa)
+\begin{DoxyCompactList}\small\item\em make\+\_\+cumulant\+\_\+\+L3aaa\+\_\+in\+\_\+place Make the aaa 3-\/body cumulant. This function replaces the tensor passed in (L3aaa) containing the aaa 3-\/\+R\+DM with the cumulant. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a6bf78e96babcbc283e246f0616a88119}{forte\+::make\+\_\+cumulant\+\_\+\+L3aab\+\_\+in\+\_\+place}} (const ambit\+::\+Tensor \&g1a, const ambit\+::\+Tensor \&g1b, const ambit\+::\+Tensor \&L2aa, const ambit\+::\+Tensor \&L2ab, ambit\+::\+Tensor \&L3aab)
+\begin{DoxyCompactList}\small\item\em make\+\_\+cumulant\+\_\+\+L3aab\+\_\+in\+\_\+place Make the aab 3-\/body cumulant. This function replaces the tensor passed in (L3aab) containing the aab 3-\/\+R\+DM with the cumulant. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a367476fc819cd7ea73ba1fd3f30bc745}{forte\+::make\+\_\+cumulant\+\_\+\+L3abb\+\_\+in\+\_\+place}} (const ambit\+::\+Tensor \&g1a, const ambit\+::\+Tensor \&g1b, const ambit\+::\+Tensor \&L2ab, const ambit\+::\+Tensor \&L2bb, ambit\+::\+Tensor \&L3abb)
+\begin{DoxyCompactList}\small\item\em make\+\_\+cumulant\+\_\+\+L3abb\+\_\+in\+\_\+place Make the abb 3-\/body cumulant. This function replaces the tensor passed in (L3abb) containing the abb 3-\/\+R\+DM with the cumulant. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a47be37c109808d6ae1339603464fc744}{forte\+::make\+\_\+cumulant\+\_\+\+L3bbb\+\_\+in\+\_\+place}} (const ambit\+::\+Tensor \&g1b, const ambit\+::\+Tensor \&L2bb, ambit\+::\+Tensor \&L3bbb)
+\begin{DoxyCompactList}\small\item\em make\+\_\+cumulant\+\_\+\+L3bbb\+\_\+in\+\_\+place Make the bbb 3-\/body cumulant. This function replaces the tensor passed in (L3bbb) containing the bbb 3-\/\+R\+DM with the cumulant. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{namespaceforte_aff4e1844004f1660d16175bf399d1c33}{forte\+::compute\+\_\+\+Eref\+\_\+from\+\_\+rdms}} (R\+D\+Ms \&ref, std\+::shared\+\_\+ptr$<$ Forte\+Integrals $>$ ints, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info)
+\begin{DoxyCompactList}\small\item\em compute\+\_\+\+Eref\+\_\+from\+\_\+rdms Compute the energy of a wave function from its density matrices stored in the \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} object \end{DoxyCompactList}\end{DoxyCompactItemize}

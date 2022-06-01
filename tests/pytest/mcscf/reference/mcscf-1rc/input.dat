@@ -1,0 +1,39 @@
+import forte
+
+molecule h2o{
+   O
+   H  1 1.00
+   H  1 1.00 2 104.5
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+  scf_type pk
+  reference rhf
+}
+
+set scf_type direct
+set forte {
+#  active_space_solver detci
+  ms 0.0
+  multiplicity 1
+  root_sym 0
+  charge 0
+  active_ref_type cas
+  restricted_docc [1,0,0,0]
+  active [3,0,1,2]
+  job_type mcscf_two_step
+#  casscf_ci_solver detci
+#  casscf_maxiter 100
+#  casscf_e_convergence 10
+#  casscf_g_convergence 8
+#  casscf_micro_maxiter 4
+#  casscf_active_frozen_orbital [0]
+}
+
+escf, wfn = energy('scf', return_wfn=True)
+egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)

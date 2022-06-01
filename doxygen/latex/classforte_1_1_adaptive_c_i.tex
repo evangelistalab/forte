@@ -1,0 +1,364 @@
+\hypertarget{classforte_1_1_adaptive_c_i}{}\section{forte\+:\+:Adaptive\+CI Class Reference}
+\label{classforte_1_1_adaptive_c_i}\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+
+
+The \mbox{\hyperlink{classforte_1_1_adaptive_c_i}{Adaptive\+CI}} class This class implements an adaptive CI algorithm.  
+
+
+
+
+{\ttfamily \#include $<$aci.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Adaptive\+CI\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=204pt]{classforte_1_1_adaptive_c_i__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Adaptive\+CI\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=204pt]{classforte_1_1_adaptive_c_i__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_adaptive_c_i_ab283830208d19b0a7684a985cc81c629}{Adaptive\+CI}} (\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} state, size\+\_\+t nroot, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints)
+\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a5f23c673c9c66b9b07de115a5992ae3f}{set\+\_\+options}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a849ad578ee7ab5e78532a77df9b3ce9b}{print\+\_\+info}} () override
+\begin{DoxyCompactList}\small\item\em Print the banner and starting information. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_afe7882564768985b90d3b3fd21c20a5f}{pre\+\_\+iter\+\_\+preparation}} () override
+\begin{DoxyCompactList}\small\item\em Pre-\/iter preparation, usually includes preparing an initial reference. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a3673ea1f26ce6b24e35def54b14fe62f}{diagonalize\+\_\+\+P\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Step 1. Diagonalize the Hamiltonian in the P space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a84c2bbf2fd0dbcfe3732c0fb6a383bd8}{find\+\_\+q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Step 2. Find determinants in the Q space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a307427ce58102e4a818b2e97583e2ac1}{diagonalize\+\_\+\+P\+Q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Step 3. Diagonalize the Hamiltonian in the P + Q space. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a2682a80aa48f7cd49c295efb826f30ca}{check\+\_\+convergence}} () override
+\begin{DoxyCompactList}\small\item\em Step 4. Check convergence. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_abb5fb23e0c3d2575b9a5c9785bdc9f75}{prune\+\_\+\+P\+Q\+\_\+to\+\_\+P}} () override
+\begin{DoxyCompactList}\small\item\em Step 5. Prune the P + Q space to get an updated P space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_aebb7aa6e06ce5b45c4c5b2da1b1703c1}{post\+\_\+iter\+\_\+process}} () override
+\begin{DoxyCompactList}\small\item\em Post-\/iter process. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a3cb865ccab03a377e0ac3a0d65cda9f5}{full\+\_\+mrpt2}} ()
+\begin{DoxyCompactList}\small\item\em Full P\+T2 correction. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a74874a321e8077f0af18967e9e2ebfd4}{set\+\_\+method\+\_\+variables}} (std\+::string ex\+\_\+alg, size\+\_\+t nroot\+\_\+method, size\+\_\+t root, const std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, double $>$$>$$>$ \&old\+\_\+roots) override
+\begin{DoxyCompactList}\small\item\em Set the class variable. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \mbox{\hyperlink{classforte_1_1_adaptive_c_i_af7e800fcfe0d1c2b674cf8cd2c4f41d0}{get\+\_\+\+P\+Q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Getters. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_adaptive_c_i_ab96222faf4f633fac906b24c7b68d288}{get\+\_\+\+P\+Q\+\_\+evecs}} () override
+\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_adaptive_c_i_ada31e72d787a94730002e80f0f93deca}{get\+\_\+\+P\+Q\+\_\+evals}} () override
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a770022fec5ed4819e58670155e7fd5fc}{get\+\_\+ref\+\_\+root}} () override
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a56cd790d0780b1af0136341663204e41}{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}} () override
+\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_ab0d3dddc9c0f86906150f2f2bfef4937}{set\+\_\+quiet}} (bool quiet)
+\begin{DoxyCompactList}\small\item\em Set the printing level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_ae0264299d3ab2f38c68026ef91a8a5b6}{print\+\_\+nos}} ()
+\begin{DoxyCompactList}\small\item\em Compute the A\+C\+I-\/\+N\+Os. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_ade019bc7c61b1817f68127cc0013066d}{semi\+\_\+canonicalize}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_a85d46f659801c5b3f9b558c265c90fa7}{set\+\_\+fci\+\_\+ints}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints)
+\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_ae4d307b8c98ae205056da0ab40585317}{upcast\+\_\+reference}} (\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&ref)
+\item 
+void \mbox{\hyperlink{classforte_1_1_adaptive_c_i_aa41514cfd2b49b8978196fc6991f6e3a}{update\+\_\+sigma}} ()
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_adaptive_c_i}{Adaptive\+CI}} class This class implements an adaptive CI algorithm. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_ab283830208d19b0a7684a985cc81c629}\label{classforte_1_1_adaptive_c_i_ab283830208d19b0a7684a985cc81c629}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!Adaptive\+CI@{Adaptive\+CI}}
+\index{Adaptive\+CI@{Adaptive\+CI}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{Adaptive\+C\+I()}{AdaptiveCI()}}
+{\footnotesize\ttfamily forte\+::\+Adaptive\+C\+I\+::\+Adaptive\+CI (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}}]{state,  }\item[{size\+\_\+t}]{nroot,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints }\end{DoxyParamCaption})}
+
+Constructor 
+\begin{DoxyParams}{Parameters}
+{\em ref\+\_\+wfn} & The reference wavefunction object \\
+\hline
+{\em options} & The main options object \\
+\hline
+{\em ints} & A pointer to an allocated integral object \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & A pointer to the \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a2682a80aa48f7cd49c295efb826f30ca}\label{classforte_1_1_adaptive_c_i_a2682a80aa48f7cd49c295efb826f30ca}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!check\+\_\+convergence@{check\+\_\+convergence}}
+\index{check\+\_\+convergence@{check\+\_\+convergence}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{check\+\_\+convergence()}{check\_convergence()}}
+{\footnotesize\ttfamily bool forte\+::\+Adaptive\+C\+I\+::check\+\_\+convergence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 4. Check convergence. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_acc10aa488c79c2abec46a9093ecf5a52}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a3673ea1f26ce6b24e35def54b14fe62f}\label{classforte_1_1_adaptive_c_i_a3673ea1f26ce6b24e35def54b14fe62f}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!diagonalize\+\_\+\+P\+\_\+space@{diagonalize\+\_\+\+P\+\_\+space}}
+\index{diagonalize\+\_\+\+P\+\_\+space@{diagonalize\+\_\+\+P\+\_\+space}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+\+P\+\_\+space()}{diagonalize\_P\_space()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::diagonalize\+\_\+\+P\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 1. Diagonalize the Hamiltonian in the P space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a7b2b41da889659f03361f625c6df44d2}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a307427ce58102e4a818b2e97583e2ac1}\label{classforte_1_1_adaptive_c_i_a307427ce58102e4a818b2e97583e2ac1}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!diagonalize\+\_\+\+P\+Q\+\_\+space@{diagonalize\+\_\+\+P\+Q\+\_\+space}}
+\index{diagonalize\+\_\+\+P\+Q\+\_\+space@{diagonalize\+\_\+\+P\+Q\+\_\+space}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+\+P\+Q\+\_\+space()}{diagonalize\_PQ\_space()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::diagonalize\+\_\+\+P\+Q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 3. Diagonalize the Hamiltonian in the P + Q space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a9f01588d22401cd2631a09940ea7db50}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a84c2bbf2fd0dbcfe3732c0fb6a383bd8}\label{classforte_1_1_adaptive_c_i_a84c2bbf2fd0dbcfe3732c0fb6a383bd8}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!find\+\_\+q\+\_\+space@{find\+\_\+q\+\_\+space}}
+\index{find\+\_\+q\+\_\+space@{find\+\_\+q\+\_\+space}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{find\+\_\+q\+\_\+space()}{find\_q\_space()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::find\+\_\+q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 2. Find determinants in the Q space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_aff521efa08edfafb479f32e03a70c118}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a3cb865ccab03a377e0ac3a0d65cda9f5}\label{classforte_1_1_adaptive_c_i_a3cb865ccab03a377e0ac3a0d65cda9f5}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!full\+\_\+mrpt2@{full\+\_\+mrpt2}}
+\index{full\+\_\+mrpt2@{full\+\_\+mrpt2}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{full\+\_\+mrpt2()}{full\_mrpt2()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::full\+\_\+mrpt2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Full P\+T2 correction. 
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a56cd790d0780b1af0136341663204e41}\label{classforte_1_1_adaptive_c_i_a56cd790d0780b1af0136341663204e41}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction@{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}}
+\index{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction@{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction()}{get\_multistate\_pt2\_energy\_correction()}}
+{\footnotesize\ttfamily std\+::vector$<$ double $>$ forte\+::\+Adaptive\+C\+I\+::get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_abbe18ea3e5f1a77df13a38764aeef62c}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_ada31e72d787a94730002e80f0f93deca}\label{classforte_1_1_adaptive_c_i_ada31e72d787a94730002e80f0f93deca}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!get\+\_\+\+P\+Q\+\_\+evals@{get\+\_\+\+P\+Q\+\_\+evals}}
+\index{get\+\_\+\+P\+Q\+\_\+evals@{get\+\_\+\+P\+Q\+\_\+evals}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+evals()}{get\_PQ\_evals()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+Adaptive\+C\+I\+::get\+\_\+\+P\+Q\+\_\+evals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a675d28ae66341b8cfabb2953c936621c}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_ab96222faf4f633fac906b24c7b68d288}\label{classforte_1_1_adaptive_c_i_ab96222faf4f633fac906b24c7b68d288}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!get\+\_\+\+P\+Q\+\_\+evecs@{get\+\_\+\+P\+Q\+\_\+evecs}}
+\index{get\+\_\+\+P\+Q\+\_\+evecs@{get\+\_\+\+P\+Q\+\_\+evecs}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+evecs()}{get\_PQ\_evecs()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Adaptive\+C\+I\+::get\+\_\+\+P\+Q\+\_\+evecs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a5e5212836aa0dc35f98238d1f426abed}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_af7e800fcfe0d1c2b674cf8cd2c4f41d0}\label{classforte_1_1_adaptive_c_i_af7e800fcfe0d1c2b674cf8cd2c4f41d0}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!get\+\_\+\+P\+Q\+\_\+space@{get\+\_\+\+P\+Q\+\_\+space}}
+\index{get\+\_\+\+P\+Q\+\_\+space@{get\+\_\+\+P\+Q\+\_\+space}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+space()}{get\_PQ\_space()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} forte\+::\+Adaptive\+C\+I\+::get\+\_\+\+P\+Q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Getters. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a2c29d8700d6887860850f77b9246ec9f}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a770022fec5ed4819e58670155e7fd5fc}\label{classforte_1_1_adaptive_c_i_a770022fec5ed4819e58670155e7fd5fc}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!get\+\_\+ref\+\_\+root@{get\+\_\+ref\+\_\+root}}
+\index{get\+\_\+ref\+\_\+root@{get\+\_\+ref\+\_\+root}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+ref\+\_\+root()}{get\_ref\_root()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Adaptive\+C\+I\+::get\+\_\+ref\+\_\+root (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_aa95ed581568b2d580c17ab166e85a11a}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_aebb7aa6e06ce5b45c4c5b2da1b1703c1}\label{classforte_1_1_adaptive_c_i_aebb7aa6e06ce5b45c4c5b2da1b1703c1}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!post\+\_\+iter\+\_\+process@{post\+\_\+iter\+\_\+process}}
+\index{post\+\_\+iter\+\_\+process@{post\+\_\+iter\+\_\+process}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{post\+\_\+iter\+\_\+process()}{post\_iter\_process()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::post\+\_\+iter\+\_\+process (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Post-\/iter process. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a23ea3389ac1c62dee811decc5bea507f}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_afe7882564768985b90d3b3fd21c20a5f}\label{classforte_1_1_adaptive_c_i_afe7882564768985b90d3b3fd21c20a5f}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!pre\+\_\+iter\+\_\+preparation@{pre\+\_\+iter\+\_\+preparation}}
+\index{pre\+\_\+iter\+\_\+preparation@{pre\+\_\+iter\+\_\+preparation}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{pre\+\_\+iter\+\_\+preparation()}{pre\_iter\_preparation()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::pre\+\_\+iter\+\_\+preparation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Pre-\/iter preparation, usually includes preparing an initial reference. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_af92b210415034874fcf2faac8b00eca9}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a849ad578ee7ab5e78532a77df9b3ce9b}\label{classforte_1_1_adaptive_c_i_a849ad578ee7ab5e78532a77df9b3ce9b}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!print\+\_\+info@{print\+\_\+info}}
+\index{print\+\_\+info@{print\+\_\+info}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{print\+\_\+info()}{print\_info()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::print\+\_\+info (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Print the banner and starting information. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a95680d60059b29c763b5f87f9add48e2}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_ae0264299d3ab2f38c68026ef91a8a5b6}\label{classforte_1_1_adaptive_c_i_ae0264299d3ab2f38c68026ef91a8a5b6}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!print\+\_\+nos@{print\+\_\+nos}}
+\index{print\+\_\+nos@{print\+\_\+nos}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{print\+\_\+nos()}{print\_nos()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::print\+\_\+nos (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the A\+C\+I-\/\+N\+Os. 
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_abb5fb23e0c3d2575b9a5c9785bdc9f75}\label{classforte_1_1_adaptive_c_i_abb5fb23e0c3d2575b9a5c9785bdc9f75}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!prune\+\_\+\+P\+Q\+\_\+to\+\_\+P@{prune\+\_\+\+P\+Q\+\_\+to\+\_\+P}}
+\index{prune\+\_\+\+P\+Q\+\_\+to\+\_\+P@{prune\+\_\+\+P\+Q\+\_\+to\+\_\+P}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{prune\+\_\+\+P\+Q\+\_\+to\+\_\+\+P()}{prune\_PQ\_to\_P()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::prune\+\_\+\+P\+Q\+\_\+to\+\_\+P (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 5. Prune the P + Q space to get an updated P space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a245f5fcd64ee44acf7b065981380f8dd}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_ade019bc7c61b1817f68127cc0013066d}\label{classforte_1_1_adaptive_c_i_ade019bc7c61b1817f68127cc0013066d}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!semi\+\_\+canonicalize@{semi\+\_\+canonicalize}}
+\index{semi\+\_\+canonicalize@{semi\+\_\+canonicalize}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{semi\+\_\+canonicalize()}{semi\_canonicalize()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::semi\+\_\+canonicalize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a85d46f659801c5b3f9b558c265c90fa7}\label{classforte_1_1_adaptive_c_i_a85d46f659801c5b3f9b558c265c90fa7}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!set\+\_\+fci\+\_\+ints@{set\+\_\+fci\+\_\+ints}}
+\index{set\+\_\+fci\+\_\+ints@{set\+\_\+fci\+\_\+ints}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+fci\+\_\+ints()}{set\_fci\_ints()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::set\+\_\+fci\+\_\+ints (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a74874a321e8077f0af18967e9e2ebfd4}\label{classforte_1_1_adaptive_c_i_a74874a321e8077f0af18967e9e2ebfd4}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!set\+\_\+method\+\_\+variables@{set\+\_\+method\+\_\+variables}}
+\index{set\+\_\+method\+\_\+variables@{set\+\_\+method\+\_\+variables}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+method\+\_\+variables()}{set\_method\_variables()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::set\+\_\+method\+\_\+variables (\begin{DoxyParamCaption}\item[{std\+::string}]{ex\+\_\+alg,  }\item[{size\+\_\+t}]{nroot\+\_\+method,  }\item[{size\+\_\+t}]{root,  }\item[{const std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, double $>$$>$$>$ \&}]{old\+\_\+roots }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Set the class variable. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a37f95503d0241387195dc7d412fc6e78}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_a5f23c673c9c66b9b07de115a5992ae3f}\label{classforte_1_1_adaptive_c_i_a5f23c673c9c66b9b07de115a5992ae3f}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!set\+\_\+options@{set\+\_\+options}}
+\index{set\+\_\+options@{set\+\_\+options}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+options()}{set\_options()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::set\+\_\+options (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Set options from an option object 
+\begin{DoxyParams}{Parameters}
+{\em options} & the options passed in \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_ad03bbde3a0443ca9b01ff9605f2e06e0}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_ab0d3dddc9c0f86906150f2f2bfef4937}\label{classforte_1_1_adaptive_c_i_ab0d3dddc9c0f86906150f2f2bfef4937}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!set\+\_\+quiet@{set\+\_\+quiet}}
+\index{set\+\_\+quiet@{set\+\_\+quiet}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+quiet()}{set\_quiet()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::set\+\_\+quiet (\begin{DoxyParamCaption}\item[{bool}]{quiet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set the printing level. 
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_ae4d307b8c98ae205056da0ab40585317}\label{classforte_1_1_adaptive_c_i_ae4d307b8c98ae205056da0ab40585317}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!upcast\+\_\+reference@{upcast\+\_\+reference}}
+\index{upcast\+\_\+reference@{upcast\+\_\+reference}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{upcast\+\_\+reference()}{upcast\_reference()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::upcast\+\_\+reference (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{ref }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_adaptive_c_i_aa41514cfd2b49b8978196fc6991f6e3a}\label{classforte_1_1_adaptive_c_i_aa41514cfd2b49b8978196fc6991f6e3a}} 
+\index{forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}!update\+\_\+sigma@{update\+\_\+sigma}}
+\index{update\+\_\+sigma@{update\+\_\+sigma}!forte\+::\+Adaptive\+CI@{forte\+::\+Adaptive\+CI}}
+\subsubsection{\texorpdfstring{update\+\_\+sigma()}{update\_sigma()}}
+{\footnotesize\ttfamily void forte\+::\+Adaptive\+C\+I\+::update\+\_\+sigma (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sci/\mbox{\hyperlink{aci_8h}{aci.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/sci/\mbox{\hyperlink{aci_8cc}{aci.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/sci/\mbox{\hyperlink{aci__build___f_8cc}{aci\+\_\+build\+\_\+\+F.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/sci/\mbox{\hyperlink{gasaci__build___f_8cc}{gasaci\+\_\+build\+\_\+\+F.\+cc}}\end{DoxyCompactItemize}

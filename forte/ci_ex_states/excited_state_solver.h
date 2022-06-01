@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -48,8 +48,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                        std::unique_ptr<SelectedCIMethod> sci);
 
-    /// Virtual destructor to enable deletion of a Derived* through a Base*
-    virtual ~ExcitedStateSolver() = default;
+    /// Define a destructor to remove wfn
+    ~ExcitedStateSolver();
 
     // ==> Class Interface <==
 
@@ -57,14 +57,15 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     virtual double compute_energy() override;
 
     /// Returns the reduced density matrices up to a given level (max_rdm_level)
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            int max_rdm_level, RDMsType rdm_type) override;
 
     /// Returns the transition reduced density matrices between roots of different symmetry up to a
     /// given level (max_rdm_level)
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType rdm_type) override;
 
     /// Set options from an option object
     /// @param options the options passed in
@@ -80,6 +81,14 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
     /// Set the printing level
     void set_quiet(bool quiet);
+
+    /// Dump temporary wave function to disk
+    void dump_wave_function(const std::string& filename) override;
+
+    /// Read temporary ave function from disk
+    /// Return the number of active orbitals, set of determinants, CI coefficients
+    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    read_wave_function(const std::string& filename) override;
 
   protected:
     DeterminantHashVec final_wfn_;
@@ -110,6 +119,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     bool first_iter_roots_ = false;
     /// Do full EN-MRPT2 correction?
     bool full_pt2_ = false;
+    /// Calculate transition dipole?
+    bool transition_dipole_ = false;
 
   private:
     /// Print information about this calculation
@@ -129,9 +140,10 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     void print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs, int nroot);
 
     /// Compute the RDMs
-    RDMs compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      std::shared_ptr<psi::Matrix>& PQ_evecs, int root1, int root2,
-                      int max_rdm_level);
+    std::shared_ptr<RDMs> compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                       DeterminantHashVec& dets,
+                                       std::shared_ptr<psi::Matrix>& PQ_evecs, int root1, int root2,
+                                       int max_rdm_level, RDMsType rdm_type);
 };
 } // namespace forte
 #endif // _excited_state_solver_h_

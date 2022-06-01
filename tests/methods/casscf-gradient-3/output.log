@@ -1,0 +1,13 @@
+2022-05-31:17:34:11,595 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [7, 1, 1, 6], 'D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-12, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:17:34:11,596 INFO     [psi4.driver.driver:617] Compute gradient(): method=forte, basis=dz, molecule=butadiene, nre=103.516094180281
+2022-05-31:17:34:15,534 INFO     [psi4.driver.driver:620] Return gradient(): -154.9371725686459
+2022-05-31:17:34:15,534 INFO     [psi4.driver.driver:621] [[-0.00097433 -0.00821371  0.        ]
+ [ 0.00097433  0.00821371  0.        ]
+ [ 0.00686838  0.00437162  0.        ]
+ [-0.00686838 -0.00437162  0.        ]
+ [-0.0085047  -0.00439948  0.        ]
+ [ 0.0085047   0.00439948  0.        ]
+ [-0.01864988 -0.00522279  0.        ]
+ [ 0.01864988  0.00522279  0.        ]
+ [-0.01909297  0.01416364  0.        ]
+ [ 0.01909297 -0.01416364  0.        ]]

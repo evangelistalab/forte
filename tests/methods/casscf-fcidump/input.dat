@@ -1,0 +1,29 @@
+#! Generated using commit GITCOMMIT
+#! CASSCF on HF with no symmetry
+
+import forte
+
+refscf          = -99.87285247289
+refcasscf       = -99.939316381644
+
+memory 500 mb
+
+set forte{
+   REFERENCE               RHF
+   job_type                casscf
+   CASSCF_REFERENCE        true
+   int_type                fcidump
+   CASSCF_MAXITER           36
+   frozen_docc             [0]
+   restricted_docc         [4]
+   active                  [2]
+   multiplicity             1
+   CASSCF_G_CONVERGENCE     1e-5
+   CASSCF_E_CONVERGENCE     1e-6
+   CASSCF_DO_DIIS           false
+   CASSCF_MAXITER        40
+}
+
+e_casscf = energy('forte')
+compare_values(refcasscf, e_casscf, 4, "CASSCF_ENERGY")
+

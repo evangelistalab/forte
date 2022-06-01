@@ -1,0 +1,157 @@
+\hypertarget{classforte_1_1_psi4_integrals}{}\section{forte\+:\+:Psi4\+Integrals Class Reference}
+\label{classforte_1_1_psi4_integrals}\index{forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}}
+
+
+Interface to integrals read from psi4.  
+
+
+
+
+{\ttfamily \#include $<$integrals.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Psi4\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_psi4_integrals__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Psi4\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=184pt]{classforte_1_1_psi4_integrals__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_psi4_integrals_a5c8007878380052c9128bd0ed78229b3}{Psi4\+Integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$ ref\+\_\+wfn, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, \mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} \mbox{\hyperlink{classforte_1_1_forte_integrals_af62c129aee5c995d15a95136a89faada}{integral\+\_\+type}}, \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} restricted)
+\item 
+void \mbox{\hyperlink{classforte_1_1_psi4_integrals_abfd1e7a105ef05bfe50d175fbe766c36}{make\+\_\+fock\+\_\+matrix}} (ambit\+::\+Tensor Da, ambit\+::\+Tensor Db) override
+\begin{DoxyCompactList}\small\item\em Make the generalized Fock matrix using Psi4 JK object. \end{DoxyCompactList}\item 
+std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix, double $>$ \mbox{\hyperlink{classforte_1_1_psi4_integrals_ac867cd8004611a1fe93c31f1068ad81c}{make\+\_\+fock\+\_\+inactive}} (psi\+::\+Dimension dim\+\_\+start, psi\+::\+Dimension dim\+\_\+end) override
+\begin{DoxyCompactList}\small\item\em Make the closed-\/shell Fock matrix using Psi4 JK object. \end{DoxyCompactList}\item 
+std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_psi4_integrals_a0f33ab6a5df70095c58e662b6ebc3725}{make\+\_\+fock\+\_\+active}} (ambit\+::\+Tensor Da, ambit\+::\+Tensor Db) override
+\begin{DoxyCompactList}\small\item\em Make the active Fock matrix using Psi4 JK object. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_psi4_integrals_a37dd630ef0a774d76aadcc73a920cd7f}{make\+\_\+fock\+\_\+active\+\_\+restricted}} (psi\+::\+Shared\+Matrix D) override
+\begin{DoxyCompactList}\small\item\em Make the active Fock matrix using restricted equation. \end{DoxyCompactList}\item 
+std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_psi4_integrals_a42f39301293e0b8048412cb833420797}{make\+\_\+fock\+\_\+active\+\_\+unrestricted}} (psi\+::\+Shared\+Matrix Da, psi\+::\+Shared\+Matrix Db) override
+\begin{DoxyCompactList}\small\item\em Make the active Fock matrix using unrestricted equation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_psi4_integrals_ae547d05a2ada31f05a5e3dc58c9630c3}{freeze\+\_\+core\+\_\+orbitals}} () override
+\begin{DoxyCompactList}\small\item\em This function manages freezing core and virtual orbitals. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+Interface to integrals read from psi4. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_psi4_integrals_a5c8007878380052c9128bd0ed78229b3}\label{classforte_1_1_psi4_integrals_a5c8007878380052c9128bd0ed78229b3}} 
+\index{forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}!Psi4\+Integrals@{Psi4\+Integrals}}
+\index{Psi4\+Integrals@{Psi4\+Integrals}!forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}}
+\subsubsection{\texorpdfstring{Psi4\+Integrals()}{Psi4Integrals()}}
+{\footnotesize\ttfamily forte\+::\+Psi4\+Integrals\+::\+Psi4\+Integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$}]{ref\+\_\+wfn,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}}}]{integral\+\_\+type,  }\item[{\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}}}]{restricted }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_psi4_integrals_ae547d05a2ada31f05a5e3dc58c9630c3}\label{classforte_1_1_psi4_integrals_ae547d05a2ada31f05a5e3dc58c9630c3}} 
+\index{forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}!freeze\+\_\+core\+\_\+orbitals@{freeze\+\_\+core\+\_\+orbitals}}
+\index{freeze\+\_\+core\+\_\+orbitals@{freeze\+\_\+core\+\_\+orbitals}!forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}}
+\subsubsection{\texorpdfstring{freeze\+\_\+core\+\_\+orbitals()}{freeze\_core\_orbitals()}}
+{\footnotesize\ttfamily void forte\+::\+Psi4\+Integrals\+::freeze\+\_\+core\+\_\+orbitals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+This function manages freezing core and virtual orbitals. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classforte_1_1_forte_integrals_a0736cf358a7f4376ddf437da981a6a83}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_psi4_integrals_a0f33ab6a5df70095c58e662b6ebc3725}\label{classforte_1_1_psi4_integrals_a0f33ab6a5df70095c58e662b6ebc3725}} 
+\index{forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}!make\+\_\+fock\+\_\+active@{make\+\_\+fock\+\_\+active}}
+\index{make\+\_\+fock\+\_\+active@{make\+\_\+fock\+\_\+active}!forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active()}{make\_fock\_active()}}
+{\footnotesize\ttfamily std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ forte\+::\+Psi4\+Integrals\+::make\+\_\+fock\+\_\+active (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor}]{Da,  }\item[{ambit\+::\+Tensor}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the active Fock matrix using Psi4 JK object. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a1dda7858e1766c9869b58eeda81d5a21}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_psi4_integrals_a37dd630ef0a774d76aadcc73a920cd7f}\label{classforte_1_1_psi4_integrals_a37dd630ef0a774d76aadcc73a920cd7f}} 
+\index{forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}!make\+\_\+fock\+\_\+active\+\_\+restricted@{make\+\_\+fock\+\_\+active\+\_\+restricted}}
+\index{make\+\_\+fock\+\_\+active\+\_\+restricted@{make\+\_\+fock\+\_\+active\+\_\+restricted}!forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active\+\_\+restricted()}{make\_fock\_active\_restricted()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Psi4\+Integrals\+::make\+\_\+fock\+\_\+active\+\_\+restricted (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{D }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the active Fock matrix using restricted equation. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a9e2f6f24d734aa04784dfc46d3f031ae}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_psi4_integrals_a42f39301293e0b8048412cb833420797}\label{classforte_1_1_psi4_integrals_a42f39301293e0b8048412cb833420797}} 
+\index{forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}!make\+\_\+fock\+\_\+active\+\_\+unrestricted@{make\+\_\+fock\+\_\+active\+\_\+unrestricted}}
+\index{make\+\_\+fock\+\_\+active\+\_\+unrestricted@{make\+\_\+fock\+\_\+active\+\_\+unrestricted}!forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active\+\_\+unrestricted()}{make\_fock\_active\_unrestricted()}}
+{\footnotesize\ttfamily std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ forte\+::\+Psi4\+Integrals\+::make\+\_\+fock\+\_\+active\+\_\+unrestricted (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{Da,  }\item[{psi\+::\+Shared\+Matrix}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the active Fock matrix using unrestricted equation. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a3bc94f56104d72581629d9d6a6a3a74c}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_psi4_integrals_ac867cd8004611a1fe93c31f1068ad81c}\label{classforte_1_1_psi4_integrals_ac867cd8004611a1fe93c31f1068ad81c}} 
+\index{forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}!make\+\_\+fock\+\_\+inactive@{make\+\_\+fock\+\_\+inactive}}
+\index{make\+\_\+fock\+\_\+inactive@{make\+\_\+fock\+\_\+inactive}!forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+inactive()}{make\_fock\_inactive()}}
+{\footnotesize\ttfamily std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix, double $>$ forte\+::\+Psi4\+Integrals\+::make\+\_\+fock\+\_\+inactive (\begin{DoxyParamCaption}\item[{psi\+::\+Dimension}]{dim\+\_\+start,  }\item[{psi\+::\+Dimension}]{dim\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the closed-\/shell Fock matrix using Psi4 JK object. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a4cdca0a7587cad9d830ed3b333ec78cf}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_psi4_integrals_abfd1e7a105ef05bfe50d175fbe766c36}\label{classforte_1_1_psi4_integrals_abfd1e7a105ef05bfe50d175fbe766c36}} 
+\index{forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}!make\+\_\+fock\+\_\+matrix@{make\+\_\+fock\+\_\+matrix}}
+\index{make\+\_\+fock\+\_\+matrix@{make\+\_\+fock\+\_\+matrix}!forte\+::\+Psi4\+Integrals@{forte\+::\+Psi4\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+matrix()}{make\_fock\_matrix()}}
+{\footnotesize\ttfamily void forte\+::\+Psi4\+Integrals\+::make\+\_\+fock\+\_\+matrix (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor}]{Da,  }\item[{ambit\+::\+Tensor}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the generalized Fock matrix using Psi4 JK object. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_aadd195fbc0c7f7b659ab9280457568e0}{forte\+::\+Forte\+Integrals}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{integrals_8h}{integrals.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{integrals__psi4__interface_8cc}{integrals\+\_\+psi4\+\_\+interface.\+cc}}\end{DoxyCompactItemize}

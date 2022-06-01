@@ -1,0 +1,664 @@
+\hypertarget{classforte_1_1_forte_options}{}\section{forte\+:\+:Forte\+Options Class Reference}
+\label{classforte_1_1_forte_options}\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+
+
+The \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} class.  
+
+
+
+
+{\ttfamily \#include $<$forte\+\_\+options.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_forte_options_a0dc45f01fa34915601a959ee2da03fa3}{Forte\+Options}} ()
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a56aa020531457ca53a94da2fb5695618}{set\+\_\+group}} (const std\+::string \&group=\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em Set the group to which options are added. \end{DoxyCompactList}\item 
+const std\+::string \& \mbox{\hyperlink{classforte_1_1_forte_options_a4fd3d46c0072331c9d7f1bf5782201ea}{get\+\_\+group}} ()
+\begin{DoxyCompactList}\small\item\em Get the group to which options are added. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_aa38bbfe45dbc347dacd46df005534f2a}{add}} (const std\+::string \&label, const std\+::string \&type, pybind11\+::object default\+\_\+value, const std\+::string \&description)
+\begin{DoxyCompactList}\small\item\em Add a python object option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a85fb97b8a8f426fb29f8de7e3a40d50e}{add}} (const std\+::string \&label, const std\+::string \&type, pybind11\+::object default\+\_\+value, pybind11\+::list allowed\+\_\+values, const std\+::string \&description)
+\begin{DoxyCompactList}\small\item\em Add a python object option. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_forte_options_ab29512318f351d9ae5a1fb386aaa829f}{exists}} (const std\+::string \&label) const
+\begin{DoxyCompactList}\small\item\em Check if an options exists. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_forte_options_aaabb27801a162d6a5eddd14bd1acb40a}{is\+\_\+none}} (const std\+::string \&label) const
+\begin{DoxyCompactList}\small\item\em Check if an options is set to None. \end{DoxyCompactList}\item 
+std\+::pair$<$ py\+::object, std\+::string $>$ \mbox{\hyperlink{classforte_1_1_forte_options_a4c5964f66003ea681399fd60256443a0}{get}} (const std\+::string \&label) const
+\begin{DoxyCompactList}\small\item\em Get a python object option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_aed9ba828204eb3e0650a79542c1127bf}{set}} (const std\+::string \&label, const py\+::object val)
+\begin{DoxyCompactList}\small\item\em Set a python object option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a092e24b04792bb14b066e07463fb66a3}{add\+\_\+bool}} (const std\+::string \&label, py\+::object default\+\_\+value, const std\+::string \&description=\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em Add a boolean option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a90ea17b4ef419b95c73e69eb6cf07fdc}{add\+\_\+int}} (const std\+::string \&label, py\+::object default\+\_\+value, const std\+::string \&description=\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em Add a integer option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a02b721aef2f89ac6bee8827b8c093ab9}{add\+\_\+double}} (const std\+::string \&label, py\+::object default\+\_\+value, const std\+::string \&description=\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em Add a double option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a516c1ed4379461d33fe2ce89c8ee319a}{add\+\_\+str}} (const std\+::string \&label, py\+::object default\+\_\+value, const std\+::string \&description=\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em Add a string option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_ad5a9b605229b95b67113af8875e11ca6}{add\+\_\+str}} (const std\+::string \&label, py\+::object default\+\_\+value, const std\+::vector$<$ std\+::string $>$ \&allowed\+\_\+values, const std\+::string \&description=\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em Add a string option and provide a list of allowed option values. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_aa00fd802399c85b9e9f94744c5fda551}{add\+\_\+array}} (const std\+::string \&label, const std\+::string \&description=\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em Add an array option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_af8b0cea9c4dd2c2d072417b02321c974}{add\+\_\+int\+\_\+array}} (const std\+::string \&label, const std\+::string \&description=\char`\"{}\char`\"{})
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a3be674c56cd6efec24f1ca5fa1ccd02d}{add\+\_\+double\+\_\+array}} (const std\+::string \&label, const std\+::string \&description=\char`\"{}\char`\"{})
+\item 
+bool \mbox{\hyperlink{classforte_1_1_forte_options_a0cc337e09077f5abad7170342aafbae0}{get\+\_\+bool}} (const std\+::string \&label)
+\begin{DoxyCompactList}\small\item\em Get a boolean option. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_forte_options_afc7de0007819e021d3f7461535cda476}{get\+\_\+int}} (const std\+::string \&label)
+\begin{DoxyCompactList}\small\item\em Get a integer option. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_options_a40f154eb54ccc9ad7654009d327c7b9a}{get\+\_\+double}} (const std\+::string \&label)
+\begin{DoxyCompactList}\small\item\em Get a double option. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_forte_options_a4442d17f7a49bb6d85ee20accfa88c9e}{get\+\_\+str}} (const std\+::string \&label)
+\begin{DoxyCompactList}\small\item\em Get a string option. \end{DoxyCompactList}\item 
+py\+::list \mbox{\hyperlink{classforte_1_1_forte_options_adfc4856975eff33632ea936f8e58f394}{get\+\_\+gen\+\_\+list}} (const std\+::string \&label)
+\begin{DoxyCompactList}\small\item\em Get a general python list. \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_forte_options_a4bdd63f32f4c0a81d23ab46bbec5a38c}{get\+\_\+int\+\_\+vec}} (const std\+::string \&label)
+\begin{DoxyCompactList}\small\item\em Get a vector of int option. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_forte_options_ab0470ac133ac57968be2c4ac780bc91c}{get\+\_\+double\+\_\+vec}} (const std\+::string \&label)
+\begin{DoxyCompactList}\small\item\em Get a vector of int option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a9290bcf94eb833ede825568bc30208e5}{set\+\_\+bool}} (const std\+::string \&label, bool val)
+\begin{DoxyCompactList}\small\item\em Set a boolean option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a07cd921fa0a9b1705083e01f9251e860}{set\+\_\+int}} (const std\+::string \&label, int val)
+\begin{DoxyCompactList}\small\item\em Set a integer option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_aca265f33fa854251491eb37e7be9dd93}{set\+\_\+double}} (const std\+::string \&label, double val)
+\begin{DoxyCompactList}\small\item\em Set a double option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a6f71291bb82d61dad15bda789e3a09e7}{set\+\_\+str}} (const std\+::string \&label, const std\+::string \&val)
+\begin{DoxyCompactList}\small\item\em Set a string option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a20ac5982e5360de3ff5d527358ed0892}{set\+\_\+gen\+\_\+list}} (const std\+::string \&label, py\+::list val)
+\begin{DoxyCompactList}\small\item\em Set a general python list. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a2bb791d7d4f713d339d4f42a40ef6cb5}{set\+\_\+int\+\_\+vec}} (const std\+::string \&label, const std\+::vector$<$ int $>$ \&val)
+\begin{DoxyCompactList}\small\item\em Set a vector of int option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a201555973acf31010e6a897f83baa7cd}{set\+\_\+double\+\_\+vec}} (const std\+::string \&label, const std\+::vector$<$ double $>$ \&val)
+\begin{DoxyCompactList}\small\item\em Set a vector of int option. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_af177038deb74406fa41ac29a024edde2}{push\+\_\+options\+\_\+to\+\_\+psi4}} (psi\+::\+Options \&options)
+\begin{DoxyCompactList}\small\item\em Register the options with Psi4\textquotesingle{}s options object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_a9e02372d36c9460f222769365ea44ac1}{get\+\_\+options\+\_\+from\+\_\+psi4}} (psi\+::\+Options \&options)
+\begin{DoxyCompactList}\small\item\em Read options from a Psi4\textquotesingle{}s options object. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_forte_options_a05b9f51a5169801e089c1cfed97d0f64}{generate\+\_\+documentation}} () const
+\begin{DoxyCompactList}\small\item\em Generate documentation for the options registered with this object. \end{DoxyCompactList}\item 
+pybind11\+::dict \mbox{\hyperlink{classforte_1_1_forte_options_a5674dbf2b9a7236c32b77e8c6534baad}{dict}} ()
+\begin{DoxyCompactList}\small\item\em Return a python dictionary with all the options registered. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_options_acb7f135b08d1ca37633b6a7aa29917cf}{set\+\_\+dict}} (pybind11\+::dict \mbox{\hyperlink{classforte_1_1_forte_options_a5674dbf2b9a7236c32b77e8c6534baad}{dict}})
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} class. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a0dc45f01fa34915601a959ee2da03fa3}\label{classforte_1_1_forte_options_a0dc45f01fa34915601a959ee2da03fa3}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!Forte\+Options@{Forte\+Options}}
+\index{Forte\+Options@{Forte\+Options}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{Forte\+Options()}{ForteOptions()}}
+{\footnotesize\ttfamily forte\+::\+Forte\+Options\+::\+Forte\+Options (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_forte_options_aa38bbfe45dbc347dacd46df005534f2a}\label{classforte_1_1_forte_options_aa38bbfe45dbc347dacd46df005534f2a}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add@{add}}
+\index{add@{add}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const std\+::string \&}]{type,  }\item[{pybind11\+::object}]{default\+\_\+value,  }\item[{const std\+::string \&}]{description }\end{DoxyParamCaption})}
+
+
+
+Add a python object option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em type} & the option type \\
+\hline
+{\em default\+\_\+value} & default value of the option \\
+\hline
+{\em description} & description of the option \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a85fb97b8a8f426fb29f8de7e3a40d50e}\label{classforte_1_1_forte_options_a85fb97b8a8f426fb29f8de7e3a40d50e}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add@{add}}
+\index{add@{add}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const std\+::string \&}]{type,  }\item[{pybind11\+::object}]{default\+\_\+value,  }\item[{pybind11\+::list}]{allowed\+\_\+values,  }\item[{const std\+::string \&}]{description }\end{DoxyParamCaption})}
+
+
+
+Add a python object option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em type} & the option type \\
+\hline
+{\em default\+\_\+value} & default value of the option \\
+\hline
+{\em description} & description of the option \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_aa00fd802399c85b9e9f94744c5fda551}\label{classforte_1_1_forte_options_aa00fd802399c85b9e9f94744c5fda551}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add\+\_\+array@{add\+\_\+array}}
+\index{add\+\_\+array@{add\+\_\+array}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add\+\_\+array()}{add\_array()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add\+\_\+array (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const std\+::string \&}]{description = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+
+
+Add an array option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em description} & Description of the option \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a092e24b04792bb14b066e07463fb66a3}\label{classforte_1_1_forte_options_a092e24b04792bb14b066e07463fb66a3}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add\+\_\+bool@{add\+\_\+bool}}
+\index{add\+\_\+bool@{add\+\_\+bool}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add\+\_\+bool()}{add\_bool()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add\+\_\+bool (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{py\+::object}]{default\+\_\+value,  }\item[{const std\+::string \&}]{description = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+
+
+Add a boolean option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em value} & Default value of the option \\
+\hline
+{\em description} & Description of the option \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a02b721aef2f89ac6bee8827b8c093ab9}\label{classforte_1_1_forte_options_a02b721aef2f89ac6bee8827b8c093ab9}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add\+\_\+double@{add\+\_\+double}}
+\index{add\+\_\+double@{add\+\_\+double}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add\+\_\+double()}{add\_double()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add\+\_\+double (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{py\+::object}]{default\+\_\+value,  }\item[{const std\+::string \&}]{description = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+
+
+Add a double option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em value} & Default value of the option \\
+\hline
+{\em description} & Description of the option \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a3be674c56cd6efec24f1ca5fa1ccd02d}\label{classforte_1_1_forte_options_a3be674c56cd6efec24f1ca5fa1ccd02d}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add\+\_\+double\+\_\+array@{add\+\_\+double\+\_\+array}}
+\index{add\+\_\+double\+\_\+array@{add\+\_\+double\+\_\+array}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add\+\_\+double\+\_\+array()}{add\_double\_array()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add\+\_\+double\+\_\+array (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const std\+::string \&}]{description = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_forte_options_a90ea17b4ef419b95c73e69eb6cf07fdc}\label{classforte_1_1_forte_options_a90ea17b4ef419b95c73e69eb6cf07fdc}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add\+\_\+int@{add\+\_\+int}}
+\index{add\+\_\+int@{add\+\_\+int}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add\+\_\+int()}{add\_int()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add\+\_\+int (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{py\+::object}]{default\+\_\+value,  }\item[{const std\+::string \&}]{description = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+
+
+Add a integer option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em value} & Default value of the option \\
+\hline
+{\em description} & Description of the option \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_af8b0cea9c4dd2c2d072417b02321c974}\label{classforte_1_1_forte_options_af8b0cea9c4dd2c2d072417b02321c974}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add\+\_\+int\+\_\+array@{add\+\_\+int\+\_\+array}}
+\index{add\+\_\+int\+\_\+array@{add\+\_\+int\+\_\+array}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add\+\_\+int\+\_\+array()}{add\_int\_array()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add\+\_\+int\+\_\+array (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const std\+::string \&}]{description = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_forte_options_a516c1ed4379461d33fe2ce89c8ee319a}\label{classforte_1_1_forte_options_a516c1ed4379461d33fe2ce89c8ee319a}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add\+\_\+str@{add\+\_\+str}}
+\index{add\+\_\+str@{add\+\_\+str}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add\+\_\+str()}{add\_str()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add\+\_\+str (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{py\+::object}]{default\+\_\+value,  }\item[{const std\+::string \&}]{description = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+
+
+Add a string option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em value} & Default value of the option \\
+\hline
+{\em description} & Description of the option \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_ad5a9b605229b95b67113af8875e11ca6}\label{classforte_1_1_forte_options_ad5a9b605229b95b67113af8875e11ca6}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!add\+\_\+str@{add\+\_\+str}}
+\index{add\+\_\+str@{add\+\_\+str}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{add\+\_\+str()}{add\_str()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::add\+\_\+str (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{py\+::object}]{default\+\_\+value,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{allowed\+\_\+values,  }\item[{const std\+::string \&}]{description = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+
+
+Add a string option and provide a list of allowed option values. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em value} & Default value of the option \\
+\hline
+{\em description} & Description of the option \\
+\hline
+{\em allowed\+\_\+values} & An array of allowed option values \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a5674dbf2b9a7236c32b77e8c6534baad}\label{classforte_1_1_forte_options_a5674dbf2b9a7236c32b77e8c6534baad}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!dict@{dict}}
+\index{dict@{dict}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{dict()}{dict()}}
+{\footnotesize\ttfamily pybind11\+::dict forte\+::\+Forte\+Options\+::dict (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Return a python dictionary with all the options registered. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_options_ab29512318f351d9ae5a1fb386aaa829f}\label{classforte_1_1_forte_options_ab29512318f351d9ae5a1fb386aaa829f}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!exists@{exists}}
+\index{exists@{exists}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{exists()}{exists()}}
+{\footnotesize\ttfamily bool forte\+::\+Forte\+Options\+::exists (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption}) const}
+
+
+
+Check if an options exists. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+does this option exist? 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a05b9f51a5169801e089c1cfed97d0f64}\label{classforte_1_1_forte_options_a05b9f51a5169801e089c1cfed97d0f64}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!generate\+\_\+documentation@{generate\+\_\+documentation}}
+\index{generate\+\_\+documentation@{generate\+\_\+documentation}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{generate\+\_\+documentation()}{generate\_documentation()}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Forte\+Options\+::generate\+\_\+documentation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Generate documentation for the options registered with this object. 
+
+\begin{DoxyReturn}{Returns}
+A string with a list of options 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a4c5964f66003ea681399fd60256443a0}\label{classforte_1_1_forte_options_a4c5964f66003ea681399fd60256443a0}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get@{get}}
+\index{get@{get}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get()}{get()}}
+{\footnotesize\ttfamily std\+::pair$<$ py\+::object, std\+::string $>$ forte\+::\+Forte\+Options\+::get (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption}) const}
+
+
+
+Get a python object option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a py\+::object containing the result 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a0cc337e09077f5abad7170342aafbae0}\label{classforte_1_1_forte_options_a0cc337e09077f5abad7170342aafbae0}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+bool@{get\+\_\+bool}}
+\index{get\+\_\+bool@{get\+\_\+bool}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+bool()}{get\_bool()}}
+{\footnotesize\ttfamily bool forte\+::\+Forte\+Options\+::get\+\_\+bool (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption})}
+
+
+
+Get a boolean option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a40f154eb54ccc9ad7654009d327c7b9a}\label{classforte_1_1_forte_options_a40f154eb54ccc9ad7654009d327c7b9a}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+double@{get\+\_\+double}}
+\index{get\+\_\+double@{get\+\_\+double}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+double()}{get\_double()}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Options\+::get\+\_\+double (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption})}
+
+
+
+Get a double option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_ab0470ac133ac57968be2c4ac780bc91c}\label{classforte_1_1_forte_options_ab0470ac133ac57968be2c4ac780bc91c}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+double\+\_\+vec@{get\+\_\+double\+\_\+vec}}
+\index{get\+\_\+double\+\_\+vec@{get\+\_\+double\+\_\+vec}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+double\+\_\+vec()}{get\_double\_vec()}}
+{\footnotesize\ttfamily std\+::vector$<$ double $>$ forte\+::\+Forte\+Options\+::get\+\_\+double\+\_\+vec (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption})}
+
+
+
+Get a vector of int option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_adfc4856975eff33632ea936f8e58f394}\label{classforte_1_1_forte_options_adfc4856975eff33632ea936f8e58f394}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+gen\+\_\+list@{get\+\_\+gen\+\_\+list}}
+\index{get\+\_\+gen\+\_\+list@{get\+\_\+gen\+\_\+list}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+gen\+\_\+list()}{get\_gen\_list()}}
+{\footnotesize\ttfamily py\+::list forte\+::\+Forte\+Options\+::get\+\_\+gen\+\_\+list (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption})}
+
+
+
+Get a general python list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a py list 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a4fd3d46c0072331c9d7f1bf5782201ea}\label{classforte_1_1_forte_options_a4fd3d46c0072331c9d7f1bf5782201ea}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+group@{get\+\_\+group}}
+\index{get\+\_\+group@{get\+\_\+group}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+group()}{get\_group()}}
+{\footnotesize\ttfamily const std\+::string \& forte\+::\+Forte\+Options\+::get\+\_\+group (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get the group to which options are added. 
+
+\begin{DoxyReturn}{Returns}
+the group name 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_options_afc7de0007819e021d3f7461535cda476}\label{classforte_1_1_forte_options_afc7de0007819e021d3f7461535cda476}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+int@{get\+\_\+int}}
+\index{get\+\_\+int@{get\+\_\+int}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+int()}{get\_int()}}
+{\footnotesize\ttfamily int forte\+::\+Forte\+Options\+::get\+\_\+int (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption})}
+
+
+
+Get a integer option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a4bdd63f32f4c0a81d23ab46bbec5a38c}\label{classforte_1_1_forte_options_a4bdd63f32f4c0a81d23ab46bbec5a38c}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+int\+\_\+vec@{get\+\_\+int\+\_\+vec}}
+\index{get\+\_\+int\+\_\+vec@{get\+\_\+int\+\_\+vec}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+int\+\_\+vec()}{get\_int\_vec()}}
+{\footnotesize\ttfamily std\+::vector$<$ int $>$ forte\+::\+Forte\+Options\+::get\+\_\+int\+\_\+vec (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption})}
+
+
+
+Get a vector of int option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a9e02372d36c9460f222769365ea44ac1}\label{classforte_1_1_forte_options_a9e02372d36c9460f222769365ea44ac1}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+options\+\_\+from\+\_\+psi4@{get\+\_\+options\+\_\+from\+\_\+psi4}}
+\index{get\+\_\+options\+\_\+from\+\_\+psi4@{get\+\_\+options\+\_\+from\+\_\+psi4}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+options\+\_\+from\+\_\+psi4()}{get\_options\_from\_psi4()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::get\+\_\+options\+\_\+from\+\_\+psi4 (\begin{DoxyParamCaption}\item[{psi\+::\+Options \&}]{options }\end{DoxyParamCaption})}
+
+
+
+Read options from a Psi4\textquotesingle{}s options object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em options} & a Psi4 option object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a4442d17f7a49bb6d85ee20accfa88c9e}\label{classforte_1_1_forte_options_a4442d17f7a49bb6d85ee20accfa88c9e}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!get\+\_\+str@{get\+\_\+str}}
+\index{get\+\_\+str@{get\+\_\+str}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{get\+\_\+str()}{get\_str()}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Forte\+Options\+::get\+\_\+str (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption})}
+
+
+
+Get a string option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_aaabb27801a162d6a5eddd14bd1acb40a}\label{classforte_1_1_forte_options_aaabb27801a162d6a5eddd14bd1acb40a}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!is\+\_\+none@{is\+\_\+none}}
+\index{is\+\_\+none@{is\+\_\+none}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{is\+\_\+none()}{is\_none()}}
+{\footnotesize\ttfamily bool forte\+::\+Forte\+Options\+::is\+\_\+none (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label }\end{DoxyParamCaption}) const}
+
+
+
+Check if an options is set to None. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+is the option equal to None? 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_options_af177038deb74406fa41ac29a024edde2}\label{classforte_1_1_forte_options_af177038deb74406fa41ac29a024edde2}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!push\+\_\+options\+\_\+to\+\_\+psi4@{push\+\_\+options\+\_\+to\+\_\+psi4}}
+\index{push\+\_\+options\+\_\+to\+\_\+psi4@{push\+\_\+options\+\_\+to\+\_\+psi4}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{push\+\_\+options\+\_\+to\+\_\+psi4()}{push\_options\_to\_psi4()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::push\+\_\+options\+\_\+to\+\_\+psi4 (\begin{DoxyParamCaption}\item[{psi\+::\+Options \&}]{options }\end{DoxyParamCaption})}
+
+
+
+Register the options with Psi4\textquotesingle{}s options object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em options} & a Psi4 option object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_aed9ba828204eb3e0650a79542c1127bf}\label{classforte_1_1_forte_options_aed9ba828204eb3e0650a79542c1127bf}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set@{set}}
+\index{set@{set}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set()}{set()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const py\+::object}]{val }\end{DoxyParamCaption})}
+
+
+
+Set a python object option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em a} & py\+::object containing the value to be set \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a9290bcf94eb833ede825568bc30208e5}\label{classforte_1_1_forte_options_a9290bcf94eb833ede825568bc30208e5}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+bool@{set\+\_\+bool}}
+\index{set\+\_\+bool@{set\+\_\+bool}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+bool()}{set\_bool()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+bool (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{bool}]{val }\end{DoxyParamCaption})}
+
+
+
+Set a boolean option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em val} & Option value \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_acb7f135b08d1ca37633b6a7aa29917cf}\label{classforte_1_1_forte_options_acb7f135b08d1ca37633b6a7aa29917cf}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+dict@{set\+\_\+dict}}
+\index{set\+\_\+dict@{set\+\_\+dict}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+dict()}{set\_dict()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+dict (\begin{DoxyParamCaption}\item[{pybind11\+::dict}]{dict }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_options_aca265f33fa854251491eb37e7be9dd93}\label{classforte_1_1_forte_options_aca265f33fa854251491eb37e7be9dd93}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+double@{set\+\_\+double}}
+\index{set\+\_\+double@{set\+\_\+double}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+double()}{set\_double()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+double (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{double}]{val }\end{DoxyParamCaption})}
+
+
+
+Set a double option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em val} & Option value \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a201555973acf31010e6a897f83baa7cd}\label{classforte_1_1_forte_options_a201555973acf31010e6a897f83baa7cd}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+double\+\_\+vec@{set\+\_\+double\+\_\+vec}}
+\index{set\+\_\+double\+\_\+vec@{set\+\_\+double\+\_\+vec}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+double\+\_\+vec()}{set\_double\_vec()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+double\+\_\+vec (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const std\+::vector$<$ double $>$ \&}]{val }\end{DoxyParamCaption})}
+
+
+
+Set a vector of int option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em val} & Option value \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a20ac5982e5360de3ff5d527358ed0892}\label{classforte_1_1_forte_options_a20ac5982e5360de3ff5d527358ed0892}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+gen\+\_\+list@{set\+\_\+gen\+\_\+list}}
+\index{set\+\_\+gen\+\_\+list@{set\+\_\+gen\+\_\+list}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+gen\+\_\+list()}{set\_gen\_list()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+gen\+\_\+list (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{py\+::list}]{val }\end{DoxyParamCaption})}
+
+
+
+Set a general python list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em val} & Option value (a python list) \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a56aa020531457ca53a94da2fb5695618}\label{classforte_1_1_forte_options_a56aa020531457ca53a94da2fb5695618}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+group@{set\+\_\+group}}
+\index{set\+\_\+group@{set\+\_\+group}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+group()}{set\_group()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+group (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{group = {\ttfamily \char`\"{}\char`\"{}} }\end{DoxyParamCaption})}
+
+
+
+Set the group to which options are added. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em group} & a string with the group name (default = \char`\"{}\char`\"{}) \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a07cd921fa0a9b1705083e01f9251e860}\label{classforte_1_1_forte_options_a07cd921fa0a9b1705083e01f9251e860}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+int@{set\+\_\+int}}
+\index{set\+\_\+int@{set\+\_\+int}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+int()}{set\_int()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+int (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{int}]{val }\end{DoxyParamCaption})}
+
+
+
+Set a integer option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em val} & Option value \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a2bb791d7d4f713d339d4f42a40ef6cb5}\label{classforte_1_1_forte_options_a2bb791d7d4f713d339d4f42a40ef6cb5}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+int\+\_\+vec@{set\+\_\+int\+\_\+vec}}
+\index{set\+\_\+int\+\_\+vec@{set\+\_\+int\+\_\+vec}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+int\+\_\+vec()}{set\_int\_vec()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+int\+\_\+vec (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const std\+::vector$<$ int $>$ \&}]{val }\end{DoxyParamCaption})}
+
+
+
+Set a vector of int option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em val} & Option value \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_options_a6f71291bb82d61dad15bda789e3a09e7}\label{classforte_1_1_forte_options_a6f71291bb82d61dad15bda789e3a09e7}} 
+\index{forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}!set\+\_\+str@{set\+\_\+str}}
+\index{set\+\_\+str@{set\+\_\+str}!forte\+::\+Forte\+Options@{forte\+::\+Forte\+Options}}
+\subsubsection{\texorpdfstring{set\+\_\+str()}{set\_str()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Options\+::set\+\_\+str (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{label,  }\item[{const std\+::string \&}]{val }\end{DoxyParamCaption})}
+
+
+
+Set a string option. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em label} & Option label \\
+\hline
+{\em val} & Option value \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{forte__options_8h}{forte\+\_\+options.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{forte__options_8cc}{forte\+\_\+options.\+cc}}\end{DoxyCompactItemize}

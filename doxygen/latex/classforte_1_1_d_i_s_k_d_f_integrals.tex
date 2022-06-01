@@ -1,0 +1,245 @@
+\hypertarget{classforte_1_1_d_i_s_k_d_f_integrals}{}\section{forte\+:\+:D\+I\+S\+K\+D\+F\+Integrals Class Reference}
+\label{classforte_1_1_d_i_s_k_d_f_integrals}\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+
+
+{\ttfamily \#include $<$diskdf\+\_\+integrals.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:D\+I\+S\+K\+D\+F\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=197pt]{classforte_1_1_d_i_s_k_d_f_integrals__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:D\+I\+S\+K\+D\+F\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=197pt]{classforte_1_1_d_i_s_k_d_f_integrals__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a2415c0e724a0baf1bd0e1f10190fbeed}{D\+I\+S\+K\+D\+F\+Integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$ ref\+\_\+wfn, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} restricted)
+\begin{DoxyCompactList}\small\item\em Contructor of \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals}{D\+I\+S\+K\+D\+F\+Integrals}}. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a3205b9dc431a7104969132b1f4bc206f}{initialize}} () override
+\item 
+double \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a3a815a39bc2f01a1cb5398e857f56285}{aptei\+\_\+aa}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em aptei\+\_\+xy functions are slow. try to use three\+\_\+integral\+\_\+block \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_aa0ab48ce47dab83c35bf3b9433273f59}{aptei\+\_\+ab}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed alpha-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$rs$>$ \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a84224ddc5210cad49b63e74bdd1d4342}{aptei\+\_\+bb}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed beta-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a2709b0116f0e44fc1eb8038a2b7afd54}{aptei\+\_\+aa\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\begin{DoxyCompactList}\small\item\em Return the antisymmetrized alpha-\/alpha chunck as an ambit\+::\+Tensor. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a3512219937aa98d2f0b6ee680254317a}{aptei\+\_\+ab\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\begin{DoxyCompactList}\small\item\em Return the antisymmetrized alpha-\/beta chunck as an ambit\+::\+Tensor. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a4b78b82f7bb76de677a476d5982e9f89}{aptei\+\_\+bb\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\begin{DoxyCompactList}\small\item\em Return the antisymmetrized beta-\/beta chunck as an ambit\+::\+Tensor. \end{DoxyCompactList}\item 
+double $\ast$$\ast$ \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a43f80b9c9e3b67223a11049c3e2f52e2}{three\+\_\+integral\+\_\+pointer}} () override
+\begin{DoxyCompactList}\small\item\em Expert Option\+: just try and use three\+\_\+integral. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_aa36e8484286f58bcb2b57a7c8fb08a36}{three\+\_\+integral\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&A, const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q) override
+\begin{DoxyCompactList}\small\item\em Read a block of the \mbox{\hyperlink{classforte_1_1_d_f_integrals}{D\+F\+Integrals}} and return an Ambit tensor of size A by p by q. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a754ec30830dd51627a3608dfca9f5f4d}{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index}} (const std\+::vector$<$ size\+\_\+t $>$ \&A, size\+\_\+t p, const std\+::vector$<$ size\+\_\+t $>$ \&q) override
+\begin{DoxyCompactList}\small\item\em return ambit tensor of size A by q \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_aceee5961cd70cfc7fc9b7799675f8fb6}{set\+\_\+tei}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s, double value, bool alpha1, bool alpha2) override
+\begin{DoxyCompactList}\small\item\em Set the value of the two-\/electron integrals. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a56b38fd57064c9d6464f2173127835bd}{nthree}} () const override
+\begin{DoxyCompactList}\small\item\em Make a Fock matrix computed with respect to a given determinant. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+A Disk\+D\+F\+Integrals class for avoiding the storage of the Three\+Integral tensor Assumes that the \mbox{\hyperlink{classforte_1_1_d_f_integrals}{D\+F\+Integrals}} are stored in a binary file generated by D\+F\+\_\+\+Helper Aptei\+\_\+xy are extremely slow -\/$>$ Try to use three\+\_\+electron\+\_\+block. Much faster Reading individual elements is slow 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a2415c0e724a0baf1bd0e1f10190fbeed}\label{classforte_1_1_d_i_s_k_d_f_integrals_a2415c0e724a0baf1bd0e1f10190fbeed}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!D\+I\+S\+K\+D\+F\+Integrals@{D\+I\+S\+K\+D\+F\+Integrals}}
+\index{D\+I\+S\+K\+D\+F\+Integrals@{D\+I\+S\+K\+D\+F\+Integrals}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{D\+I\+S\+K\+D\+F\+Integrals()}{DISKDFIntegrals()}}
+{\footnotesize\ttfamily forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::\+D\+I\+S\+K\+D\+F\+Integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$}]{ref\+\_\+wfn,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}}}]{restricted }\end{DoxyParamCaption})}
+
+
+
+Contructor of \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals}{D\+I\+S\+K\+D\+F\+Integrals}}. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a3a815a39bc2f01a1cb5398e857f56285}\label{classforte_1_1_d_i_s_k_d_f_integrals_a3a815a39bc2f01a1cb5398e857f56285}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!aptei\+\_\+aa@{aptei\+\_\+aa}}
+\index{aptei\+\_\+aa@{aptei\+\_\+aa}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+aa()}{aptei\_aa()}}
+{\footnotesize\ttfamily double forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::aptei\+\_\+aa (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+aptei\+\_\+xy functions are slow. try to use three\+\_\+integral\+\_\+block 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_afc84c157025b56ee0f8e3b1abe1c0a5f}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a2709b0116f0e44fc1eb8038a2b7afd54}\label{classforte_1_1_d_i_s_k_d_f_integrals_a2709b0116f0e44fc1eb8038a2b7afd54}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!aptei\+\_\+aa\+\_\+block@{aptei\+\_\+aa\+\_\+block}}
+\index{aptei\+\_\+aa\+\_\+block@{aptei\+\_\+aa\+\_\+block}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+aa\+\_\+block()}{aptei\_aa\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::aptei\+\_\+aa\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Return the antisymmetrized alpha-\/alpha chunck as an ambit\+::\+Tensor. 
+
+If p != q != r !=s need to form the Exchange part separately 
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_ac20ae649b8cfe116f8583d676e43da27}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_aa0ab48ce47dab83c35bf3b9433273f59}\label{classforte_1_1_d_i_s_k_d_f_integrals_aa0ab48ce47dab83c35bf3b9433273f59}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!aptei\+\_\+ab@{aptei\+\_\+ab}}
+\index{aptei\+\_\+ab@{aptei\+\_\+ab}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+ab()}{aptei\_ab()}}
+{\footnotesize\ttfamily double forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::aptei\+\_\+ab (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+The antisymmetrixed alpha-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$rs$>$ 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a45efc2329cdfc7e4690cbe85688b947e}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a3512219937aa98d2f0b6ee680254317a}\label{classforte_1_1_d_i_s_k_d_f_integrals_a3512219937aa98d2f0b6ee680254317a}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!aptei\+\_\+ab\+\_\+block@{aptei\+\_\+ab\+\_\+block}}
+\index{aptei\+\_\+ab\+\_\+block@{aptei\+\_\+ab\+\_\+block}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+ab\+\_\+block()}{aptei\_ab\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::aptei\+\_\+ab\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Return the antisymmetrized alpha-\/beta chunck as an ambit\+::\+Tensor. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_acd40e350dc861baf8adf6a3b47c74023}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a84224ddc5210cad49b63e74bdd1d4342}\label{classforte_1_1_d_i_s_k_d_f_integrals_a84224ddc5210cad49b63e74bdd1d4342}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!aptei\+\_\+bb@{aptei\+\_\+bb}}
+\index{aptei\+\_\+bb@{aptei\+\_\+bb}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+bb()}{aptei\_bb()}}
+{\footnotesize\ttfamily double forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::aptei\+\_\+bb (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+The antisymmetrixed beta-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a246225031c3799dc446f94e0e732c3ac}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a4b78b82f7bb76de677a476d5982e9f89}\label{classforte_1_1_d_i_s_k_d_f_integrals_a4b78b82f7bb76de677a476d5982e9f89}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!aptei\+\_\+bb\+\_\+block@{aptei\+\_\+bb\+\_\+block}}
+\index{aptei\+\_\+bb\+\_\+block@{aptei\+\_\+bb\+\_\+block}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+bb\+\_\+block()}{aptei\_bb\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::aptei\+\_\+bb\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Return the antisymmetrized beta-\/beta chunck as an ambit\+::\+Tensor. 
+
+If p != q != r !=s need to form the Exchane part separately 
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_ae2799dc7cbfd456603a2b841b26582ab}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a3205b9dc431a7104969132b1f4bc206f}\label{classforte_1_1_d_i_s_k_d_f_integrals_a3205b9dc431a7104969132b1f4bc206f}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!initialize@{initialize}}
+\index{initialize@{initialize}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{initialize()}{initialize()}}
+{\footnotesize\ttfamily void forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::initialize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a7862835fa0f5f9abe13dfcd6730fa4be}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a56b38fd57064c9d6464f2173127835bd}\label{classforte_1_1_d_i_s_k_d_f_integrals_a56b38fd57064c9d6464f2173127835bd}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!nthree@{nthree}}
+\index{nthree@{nthree}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{nthree()}{nthree()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::nthree (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make a Fock matrix computed with respect to a given determinant. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classforte_1_1_forte_integrals_af04858e7813556747745f90ffbda81a4}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_aceee5961cd70cfc7fc9b7799675f8fb6}\label{classforte_1_1_d_i_s_k_d_f_integrals_aceee5961cd70cfc7fc9b7799675f8fb6}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!set\+\_\+tei@{set\+\_\+tei}}
+\index{set\+\_\+tei@{set\+\_\+tei}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+tei()}{set\_tei()}}
+{\footnotesize\ttfamily void forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::set\+\_\+tei (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s,  }\item[{double}]{value,  }\item[{bool}]{alpha1,  }\item[{bool}]{alpha2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Set the value of the two-\/electron integrals. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_aaccd56e90bbc3c423158efb154336b9c}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_aa36e8484286f58bcb2b57a7c8fb08a36}\label{classforte_1_1_d_i_s_k_d_f_integrals_aa36e8484286f58bcb2b57a7c8fb08a36}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!three\+\_\+integral\+\_\+block@{three\+\_\+integral\+\_\+block}}
+\index{three\+\_\+integral\+\_\+block@{three\+\_\+integral\+\_\+block}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{three\+\_\+integral\+\_\+block()}{three\_integral\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::three\+\_\+integral\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{A,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Read a block of the \mbox{\hyperlink{classforte_1_1_d_f_integrals}{D\+F\+Integrals}} and return an Ambit tensor of size A by p by q. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classforte_1_1_forte_integrals_aa1d259ae97b5a9c96ccb20599543b126}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a754ec30830dd51627a3608dfca9f5f4d}\label{classforte_1_1_d_i_s_k_d_f_integrals_a754ec30830dd51627a3608dfca9f5f4d}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index@{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index}}
+\index{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index@{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index()}{three\_integral\_block\_two\_index()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{A,  }\item[{size\+\_\+t}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+return ambit tensor of size A by q 
+
+
+
+Reimplemented from \mbox{\hyperlink{classforte_1_1_forte_integrals_aab51824020dc3588c026b5b7740f55a9}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_i_s_k_d_f_integrals_a43f80b9c9e3b67223a11049c3e2f52e2}\label{classforte_1_1_d_i_s_k_d_f_integrals_a43f80b9c9e3b67223a11049c3e2f52e2}} 
+\index{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}!three\+\_\+integral\+\_\+pointer@{three\+\_\+integral\+\_\+pointer}}
+\index{three\+\_\+integral\+\_\+pointer@{three\+\_\+integral\+\_\+pointer}!forte\+::\+D\+I\+S\+K\+D\+F\+Integrals@{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}
+\subsubsection{\texorpdfstring{three\+\_\+integral\+\_\+pointer()}{three\_integral\_pointer()}}
+{\footnotesize\ttfamily double $\ast$$\ast$ forte\+::\+D\+I\+S\+K\+D\+F\+Integrals\+::three\+\_\+integral\+\_\+pointer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Expert Option\+: just try and use three\+\_\+integral. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classforte_1_1_forte_integrals_a69292bc8e42a76e344cd01c4e3dd48d5}{forte\+::\+Forte\+Integrals}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{diskdf__integrals_8h}{diskdf\+\_\+integrals.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{diskdf__integrals_8cc}{diskdf\+\_\+integrals.\+cc}}\end{DoxyCompactItemize}

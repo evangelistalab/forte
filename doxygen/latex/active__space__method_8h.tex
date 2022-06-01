@@ -1,0 +1,39 @@
+\hypertarget{active__space__method_8h}{}\section{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/active\+\_\+space\+\_\+method.h File Reference}
+\label{active__space__method_8h}\index{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/active\+\_\+space\+\_\+method.\+h@{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/active\+\_\+space\+\_\+method.\+h}}
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$unordered\+\_\+set$>$}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/state\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/vector.\+h\char`\"{}}\newline
+Include dependency graph for active\+\_\+space\+\_\+method.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{active__space__method_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{active__space__method_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classforte_1_1_active_space_method}{forte\+::\+Active\+Space\+Method}}
+\begin{DoxyCompactList}\small\item\em Base class for methods that solve the Schrodinger equation in an active space. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::unique\+\_\+ptr$<$ Active\+Space\+Method $>$ \mbox{\hyperlink{namespaceforte_a7238bba7df981303b148d8cb693547f8}{forte\+::make\+\_\+active\+\_\+space\+\_\+method}} (const std\+::string \&type, State\+Info state, size\+\_\+t nroot, std\+::shared\+\_\+ptr$<$ S\+C\+F\+Info $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ Active\+Space\+Integrals $>$ as\+\_\+ints, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options)
+\begin{DoxyCompactList}\small\item\em make\+\_\+active\+\_\+space\+\_\+method Make an active space method object \end{DoxyCompactList}\item 
+std\+::vector$<$ R\+D\+Ms $>$ \mbox{\hyperlink{namespaceforte_af6e74dbb13765642ce142840ee088140}{forte\+::transition\+\_\+rdms}} (std\+::shared\+\_\+ptr$<$ Active\+Space\+Method $>$ m1, std\+::shared\+\_\+ptr$<$ Active\+Space\+Method $>$ m2, std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$, int max\+\_\+rdm\+\_\+level)
+\end{DoxyCompactItemize}

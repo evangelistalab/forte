@@ -1,0 +1,6 @@
+2022-05-31:17:37:35,591 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-10, 'GUESS': 'GWH', 'REFERENCE': 'RHF', 'R_CONVERGENCE': 1e-10, 'SCF_TYPE': 'DIRECT', 'function_kwargs': {}}
+2022-05-31:17:37:35,593 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=6-31g**, molecule=h2o, nre=8.804686653247025
+2022-05-31:17:37:35,759 INFO     [psi4.driver.driver:502] Return energy(): -76.01729655609167
+2022-05-31:17:37:35,773 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-10, 'GUESS': 'GWH', 'REFERENCE': 'RHF', 'R_CONVERGENCE': 1e-10, 'SCF_TYPE': 'DIRECT', 'function_kwargs': {}}
+2022-05-31:17:37:35,774 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=6-31g**, molecule=h2o, nre=8.804686653247023
+2022-05-31:17:37:36,91 INFO     [psi4.driver.driver:502] Return energy(): -66.12966484124362

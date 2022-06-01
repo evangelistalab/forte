@@ -1,0 +1,404 @@
+\hypertarget{classforte_1_1_s_a___m_r_p_t2}{}\section{forte\+:\+:S\+A\+\_\+\+M\+R\+P\+T2 Class Reference}
+\label{classforte_1_1_s_a___m_r_p_t2}\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+
+
+{\ttfamily \#include $<$sa\+\_\+mrpt2.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:S\+A\+\_\+\+M\+R\+P\+T2\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=210pt]{classforte_1_1_s_a___m_r_p_t2__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:S\+A\+\_\+\+M\+R\+P\+T2\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_s_a___m_r_p_t2__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a14395e3547bb4ada71c71d0ed0ffe7ae}{S\+A\+\_\+\+M\+R\+P\+T2}} (\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} rdms, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info)
+\item 
+double \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_ac9a4af8ba06295c2918dbc2640caab85}{compute\+\_\+energy}} () override
+\begin{DoxyCompactList}\small\item\em Compute the corr\+\_\+level energy with fixed reference. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a9ada26865f0d7ee12f277e6ceea12b6b}{startup}} ()
+\begin{DoxyCompactList}\small\item\em Start-\/up function called in the constructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a901e36603b40dad78913fc3b7079f23a}{build\+\_\+ints}} ()
+\begin{DoxyCompactList}\small\item\em Fill up integrals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a7efd7c05e4c8771ce232d2e0929173af}{build\+\_\+minimal\+\_\+V}} ()
+\begin{DoxyCompactList}\small\item\em Build minimal blocks of V from 3-\/index B. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a2e566cf0e0e0f3337ce78d94b2acf011}{init\+\_\+amps}} ()
+\begin{DoxyCompactList}\small\item\em Initialize amplitude tensors. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_afd536054c75f83ca5f33ec81f85f2e7f}{check\+\_\+memory}} ()
+\begin{DoxyCompactList}\small\item\em Check memory. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a483a994948cb525c0d524a16599df962}{compute\+\_\+t2}} ()
+\begin{DoxyCompactList}\small\item\em Compute 1st-\/order T2 amplitudes. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_ab325a9658616f40f8f8326a9ed4cd18d}{compute\+\_\+t2\+\_\+df\+\_\+minimal}} ()
+\begin{DoxyCompactList}\small\item\em Compute 1st-\/order T2 amplitudes with at least two active indices. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a6821491254ad4ddb30df2dead9d6b8b0}{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+VV}} ()
+\begin{DoxyCompactList}\small\item\em Energy contribution from C\+C\+VV block. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a3b074461c6935fa9716386da886d0858}{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+A\+VV}} ()
+\begin{DoxyCompactList}\small\item\em Energy contribution from C\+A\+VV block. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_af02065b0d7e59a7ff6dfc3afe55e7383}{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+AV}} ()
+\begin{DoxyCompactList}\small\item\em Energy contribution from C\+C\+AV block. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_ae880649a8c0717cf7f0edcebec9c4198}{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+\+DF}} ()
+\begin{DoxyCompactList}\small\item\em Energy contribution from C\+C\+VV block using DF integrals. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a2589c3f7a1ba682ede3ce1e4251503af}{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+disk\+DF}} ()
+\begin{DoxyCompactList}\small\item\em Energy contribution from C\+C\+VV block using Disk\+DF integrals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_ad129f5985d7f9d66fbc3f0d69a0f61ff}{compute\+\_\+hbar}} ()
+\begin{DoxyCompactList}\small\item\em Compute D\+S\+R\+G-\/transformed Hamiltonian. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a085abee58e89aa1ee5bb3c74938ec129}{compute\+\_\+\+Hbar1\+C\+\_\+\+DF}} (ambit\+::\+Tensor \&Hbar1, bool Vr=true)
+\begin{DoxyCompactList}\small\item\em Compute Hbar1 from core contraction, renormalize V if Vr is true. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a0f64bc015ef779f89f4f2c4ae5a52b57}{compute\+\_\+\+Hbar1\+V\+\_\+\+DF}} (ambit\+::\+Tensor \&Hbar1, bool Vr=true)
+\begin{DoxyCompactList}\small\item\em Compute Hbar1 from virtual contraction, renormalize V if Vr is true. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_aa47effe7dce7d3101785027d4f2f7b9e}{compute\+\_\+\+Hbar1\+C\+\_\+disk\+DF}} (ambit\+::\+Tensor \&Hbar1, bool Vr=true)
+\begin{DoxyCompactList}\small\item\em Compute Hbar1 from core contraction, renormalize V if Vr is true. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_ac8391bf7b03228fa77b77ab7a6cfd00e}{compute\+\_\+\+Hbar1\+V\+\_\+disk\+DF}} (ambit\+::\+Tensor \&Hbar1, bool Vr=true)
+\begin{DoxyCompactList}\small\item\em Compute Hbar1 from virtual contraction, renormalize V if Vr is true. \end{DoxyCompactList}\item 
+std\+::vector$<$ ambit\+::\+Tensor $>$ \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_abe83ad82ae14b4d1d57ec1f6f24f580f}{init\+\_\+tensor\+\_\+vecs}} (int number\+\_\+of\+\_\+tensors)
+\begin{DoxyCompactList}\small\item\em Return a vector of empty ambit Tensor objects. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::vector$<$ size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a34195dd921dbce47b56deec123515d7e}{split\+\_\+indices\+\_\+to\+\_\+batches}} (const std\+::vector$<$ size\+\_\+t $>$ \&indices, size\+\_\+t max\+\_\+size)
+\begin{DoxyCompactList}\small\item\em Separate indices into batches of indices. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::map$<$ std\+::string, size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a922e808c913fb674508daafdf0b0bb18}{mem\+\_\+batched\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Memory requirements for the three batched energy terms. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_a72e288b885b616f20db146c6ffbbfd07}{C1\+\_\+\+V\+T2\+\_\+\+C\+A\+V\+V\+\_\+}}
+\begin{DoxyCompactList}\small\item\em C1 = \mbox{[}Vr, T2\mbox{]} C\+A\+VV from compute\+\_\+\+Hbar1\+V\+\_\+disk\+DF. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_ac07fc9e6ea15bcab5e232ff72ed6f7d9}{C1\+\_\+\+V\+T2\+\_\+\+C\+C\+A\+V\+\_\+}}
+\begin{DoxyCompactList}\small\item\em C1 = \mbox{[}Vr, T2\mbox{]} C\+C\+AV from compute\+\_\+\+Hbar1\+C\+\_\+disk\+DF. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a14395e3547bb4ada71c71d0ed0ffe7ae}\label{classforte_1_1_s_a___m_r_p_t2_a14395e3547bb4ada71c71d0ed0ffe7ae}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!S\+A\+\_\+\+M\+R\+P\+T2@{S\+A\+\_\+\+M\+R\+P\+T2}}
+\index{S\+A\+\_\+\+M\+R\+P\+T2@{S\+A\+\_\+\+M\+R\+P\+T2}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{S\+A\+\_\+\+M\+R\+P\+T2()}{SA\_MRPT2()}}
+{\footnotesize\ttfamily forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::\+S\+A\+\_\+\+M\+R\+P\+T2 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}}]{rdms,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info }\end{DoxyParamCaption})}
+
+\mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2}{S\+A\+\_\+\+M\+R\+P\+T2}} Constructor 
+\begin{DoxyParams}{Parameters}
+{\em scf\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} \\
+\hline
+{\em options} & The Forte\+Option \\
+\hline
+{\em ints} & A pointer to an allocated integral object \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a901e36603b40dad78913fc3b7079f23a}\label{classforte_1_1_s_a___m_r_p_t2_a901e36603b40dad78913fc3b7079f23a}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!build\+\_\+ints@{build\+\_\+ints}}
+\index{build\+\_\+ints@{build\+\_\+ints}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{build\+\_\+ints()}{build\_ints()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::build\+\_\+ints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fill up integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a7efd7c05e4c8771ce232d2e0929173af}\label{classforte_1_1_s_a___m_r_p_t2_a7efd7c05e4c8771ce232d2e0929173af}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!build\+\_\+minimal\+\_\+V@{build\+\_\+minimal\+\_\+V}}
+\index{build\+\_\+minimal\+\_\+V@{build\+\_\+minimal\+\_\+V}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{build\+\_\+minimal\+\_\+\+V()}{build\_minimal\_V()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::build\+\_\+minimal\+\_\+V (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Build minimal blocks of V from 3-\/index B. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_afd536054c75f83ca5f33ec81f85f2e7f}\label{classforte_1_1_s_a___m_r_p_t2_afd536054c75f83ca5f33ec81f85f2e7f}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!check\+\_\+memory@{check\+\_\+memory}}
+\index{check\+\_\+memory@{check\+\_\+memory}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{check\+\_\+memory()}{check\_memory()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::check\+\_\+memory (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Check memory. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_ac9a4af8ba06295c2918dbc2640caab85}\label{classforte_1_1_s_a___m_r_p_t2_ac9a4af8ba06295c2918dbc2640caab85}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Compute the corr\+\_\+level energy with fixed reference. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_s_a_d_s_r_g_aa3716848c396b296b99fff8d48751fd8}{forte\+::\+S\+A\+D\+S\+RG}}.
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_ad129f5985d7f9d66fbc3f0d69a0f61ff}\label{classforte_1_1_s_a___m_r_p_t2_ad129f5985d7f9d66fbc3f0d69a0f61ff}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+hbar@{compute\+\_\+hbar}}
+\index{compute\+\_\+hbar@{compute\+\_\+hbar}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+hbar()}{compute\_hbar()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+hbar (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute D\+S\+R\+G-\/transformed Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_ae880649a8c0717cf7f0edcebec9c4198}\label{classforte_1_1_s_a___m_r_p_t2_ae880649a8c0717cf7f0edcebec9c4198}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+\+DF@{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+\+DF}}
+\index{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+\+DF@{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+\+DF}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+\+D\+F()}{compute\_Hbar0\_CCVV\_DF()}}
+{\footnotesize\ttfamily double forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+\+DF (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Energy contribution from C\+C\+VV block using DF integrals. 
+
+Compute $<$\mbox{[}V, T2\mbox{]}$>$ (C\+\_\+2)$^\wedge$4 ccvv term E = (em$\vert$fn) $\ast$ \mbox{[} 2 $\ast$ (me$\vert$nf) -\/ (mf$\vert$ne)\mbox{]} $\ast$ \mbox{[}1 -\/ exp(-\/2 $\ast$ s $\ast$ D$^\wedge$2)\mbox{]} / D
+
+Batching\+: for a given m and n, form J(ef) = Bm(L$\vert$e) $\ast$ Bn(L$\vert$f)\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a2589c3f7a1ba682ede3ce1e4251503af}\label{classforte_1_1_s_a___m_r_p_t2_a2589c3f7a1ba682ede3ce1e4251503af}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+disk\+DF@{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+disk\+DF}}
+\index{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+disk\+DF@{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+disk\+DF}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+disk\+D\+F()}{compute\_Hbar0\_CCVV\_diskDF()}}
+{\footnotesize\ttfamily double forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+disk\+DF (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Energy contribution from C\+C\+VV block using Disk\+DF integrals. 
+
+Compute $<$\mbox{[}V, T2\mbox{]}$>$ (C\+\_\+2)$^\wedge$4 ccvv term E = (em$\vert$fn) $\ast$ \mbox{[} 2 $\ast$ (me$\vert$nf) -\/ (mf$\vert$ne)\mbox{]} $\ast$ \mbox{[}1 -\/ exp(-\/2 $\ast$ s $\ast$ D$^\wedge$2)\mbox{]} / D
+
+Batching\+: for a given m and n, form J(ef) = Bm(L$\vert$e) $\ast$ Bn(L$\vert$f)
+
+To minimize the number of calls of ints\+\_\+-\/$>$three\+\_\+integral\+\_\+block, we store as many B(L$\vert$em) and B(L$\vert$fn) as possible in memory. Modified from function compute\+\_\+\+Hbar0\+\_\+\+C\+C\+V\+V\+\_\+\+DF.\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a085abee58e89aa1ee5bb3c74938ec129}\label{classforte_1_1_s_a___m_r_p_t2_a085abee58e89aa1ee5bb3c74938ec129}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+\+Hbar1\+C\+\_\+\+DF@{compute\+\_\+\+Hbar1\+C\+\_\+\+DF}}
+\index{compute\+\_\+\+Hbar1\+C\+\_\+\+DF@{compute\+\_\+\+Hbar1\+C\+\_\+\+DF}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Hbar1\+C\+\_\+\+D\+F()}{compute\_Hbar1C\_DF()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+\+Hbar1\+C\+\_\+\+DF (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor \&}]{Hbar1,  }\item[{bool}]{Vr = {\ttfamily true} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute Hbar1 from core contraction, renormalize V if Vr is true. 
+
+Compute Hbar1\mbox{[}\char`\"{}vu\char`\"{}\mbox{]} += V\mbox{[}\char`\"{}vemn\char`\"{}\mbox{]} $\ast$ S\mbox{[}\char`\"{}mnue\char`\"{}\mbox{]}
+
+
+\begin{DoxyItemize}
+\item if Vr is false\+: V\mbox{[}\char`\"{}vemn\char`\"{}\mbox{]} = B(L$\vert$vm) $\ast$ B(L$\vert$en)
+\item if Vr is true\+: V\mbox{[}\char`\"{}vemn\char`\"{}\mbox{]} = B(L$\vert$vm) $\ast$ B(L$\vert$en) $\ast$ \mbox{[}1 + exp(-\/s $\ast$ D1$^\wedge$2)\mbox{]}
+\item S\mbox{[}\char`\"{}mnue\char`\"{}\mbox{]} = \mbox{[}2 $\ast$ (mu$\vert$ne) -\/ (mu$\vert$en)\mbox{]} $\ast$ \mbox{[}1 -\/ exp(-\/s $\ast$ D2$^\wedge$2)\mbox{]} / D2
+\end{DoxyItemize}
+
+where the two denominators are\+: D1 = F\+\_\+m + F\+\_\+n -\/ F\+\_\+e -\/ F\+\_\+v D2 = F\+\_\+m + F\+\_\+n -\/ F\+\_\+e -\/ F\+\_\+v
+
+Batching\+: for a given e, form V(vmn) and S(umn)\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_aa47effe7dce7d3101785027d4f2f7b9e}\label{classforte_1_1_s_a___m_r_p_t2_aa47effe7dce7d3101785027d4f2f7b9e}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+\+Hbar1\+C\+\_\+disk\+DF@{compute\+\_\+\+Hbar1\+C\+\_\+disk\+DF}}
+\index{compute\+\_\+\+Hbar1\+C\+\_\+disk\+DF@{compute\+\_\+\+Hbar1\+C\+\_\+disk\+DF}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Hbar1\+C\+\_\+disk\+D\+F()}{compute\_Hbar1C\_diskDF()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+\+Hbar1\+C\+\_\+disk\+DF (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor \&}]{Hbar1,  }\item[{bool}]{Vr = {\ttfamily true} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute Hbar1 from core contraction, renormalize V if Vr is true. 
+
+Compute Hbar1\mbox{[}\char`\"{}vu\char`\"{}\mbox{]} += V\mbox{[}\char`\"{}vemn\char`\"{}\mbox{]} $\ast$ S\mbox{[}\char`\"{}mnue\char`\"{}\mbox{]}
+
+
+\begin{DoxyItemize}
+\item if Vr is false\+: V\mbox{[}\char`\"{}vemn\char`\"{}\mbox{]} = B(L$\vert$vm) $\ast$ B(L$\vert$en)
+\item if Vr is true\+: V\mbox{[}\char`\"{}vemn\char`\"{}\mbox{]} = B(L$\vert$vm) $\ast$ B(L$\vert$en) $\ast$ \mbox{[}1 + exp(-\/s $\ast$ D1$^\wedge$2)\mbox{]}
+\item S\mbox{[}\char`\"{}mnue\char`\"{}\mbox{]} = \mbox{[}2 $\ast$ (mu$\vert$ne) -\/ (mu$\vert$en)\mbox{]} $\ast$ \mbox{[}1 -\/ exp(-\/s $\ast$ D2$^\wedge$2)\mbox{]} / D2
+\end{DoxyItemize}
+
+where the two denominators are\+: D1 = F\+\_\+m + F\+\_\+n -\/ F\+\_\+e -\/ F\+\_\+v D2 = F\+\_\+m + F\+\_\+n -\/ F\+\_\+e -\/ F\+\_\+v
+
+Batching\+: for a given e, form V(vmn) and S(umn)
+
+To minimize the number of calls of ints\+\_\+-\/$>$three\+\_\+integral\+\_\+block, we store as many B(L$\vert$en) as possible in memory. Modified from function compute\+\_\+\+Hbar1\+C\+\_\+\+DF.\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a0f64bc015ef779f89f4f2c4ae5a52b57}\label{classforte_1_1_s_a___m_r_p_t2_a0f64bc015ef779f89f4f2c4ae5a52b57}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+\+Hbar1\+V\+\_\+\+DF@{compute\+\_\+\+Hbar1\+V\+\_\+\+DF}}
+\index{compute\+\_\+\+Hbar1\+V\+\_\+\+DF@{compute\+\_\+\+Hbar1\+V\+\_\+\+DF}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Hbar1\+V\+\_\+\+D\+F()}{compute\_Hbar1V\_DF()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+\+Hbar1\+V\+\_\+\+DF (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor \&}]{Hbar1,  }\item[{bool}]{Vr = {\ttfamily true} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute Hbar1 from virtual contraction, renormalize V if Vr is true. 
+
+Compute Hbar1\mbox{[}\char`\"{}vu\char`\"{}\mbox{]} += V\mbox{[}\char`\"{}efmu\char`\"{}\mbox{]} $\ast$ S\mbox{[}\char`\"{}mvef\char`\"{}\mbox{]}
+
+
+\begin{DoxyItemize}
+\item if Vr is false\+: V\mbox{[}\char`\"{}efmu\char`\"{}\mbox{]} = B(L$\vert$em) $\ast$ B(L$\vert$fu)
+\item if Vr is true\+: V\mbox{[}\char`\"{}efmu\char`\"{}\mbox{]} = B(L$\vert$em) $\ast$ B(L$\vert$fu) $\ast$ \mbox{[}1 + exp(-\/s $\ast$ D1$^\wedge$2)\mbox{]}
+\item S\mbox{[}\char`\"{}mvef\char`\"{}\mbox{]} = \mbox{[}2 $\ast$ (me$\vert$vf) -\/ (mf$\vert$ve)\mbox{]} $\ast$ \mbox{[}1 -\/ exp(-\/s $\ast$ D2$^\wedge$2)\mbox{]} / D2
+\end{DoxyItemize}
+
+where the two denominators are\+: D1 = F\+\_\+m + F\+\_\+u -\/ F\+\_\+e -\/ F\+\_\+f D2 = F\+\_\+m + F\+\_\+v -\/ F\+\_\+e -\/ F\+\_\+f
+
+Batching\+: for a given m, form V(efu) and S(efv)\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_ac8391bf7b03228fa77b77ab7a6cfd00e}\label{classforte_1_1_s_a___m_r_p_t2_ac8391bf7b03228fa77b77ab7a6cfd00e}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+\+Hbar1\+V\+\_\+disk\+DF@{compute\+\_\+\+Hbar1\+V\+\_\+disk\+DF}}
+\index{compute\+\_\+\+Hbar1\+V\+\_\+disk\+DF@{compute\+\_\+\+Hbar1\+V\+\_\+disk\+DF}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Hbar1\+V\+\_\+disk\+D\+F()}{compute\_Hbar1V\_diskDF()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+\+Hbar1\+V\+\_\+disk\+DF (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor \&}]{Hbar1,  }\item[{bool}]{Vr = {\ttfamily true} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute Hbar1 from virtual contraction, renormalize V if Vr is true. 
+
+Compute Hbar1\mbox{[}\char`\"{}vu\char`\"{}\mbox{]} += V\mbox{[}\char`\"{}efmu\char`\"{}\mbox{]} $\ast$ S\mbox{[}\char`\"{}mvef\char`\"{}\mbox{]}
+
+
+\begin{DoxyItemize}
+\item if Vr is false\+: V\mbox{[}\char`\"{}efmu\char`\"{}\mbox{]} = B(L$\vert$em) $\ast$ B(L$\vert$fu)
+\item if Vr is true\+: V\mbox{[}\char`\"{}efmu\char`\"{}\mbox{]} = B(L$\vert$em) $\ast$ B(L$\vert$fu) $\ast$ \mbox{[}1 + exp(-\/s $\ast$ D1$^\wedge$2)\mbox{]}
+\item S\mbox{[}\char`\"{}mvef\char`\"{}\mbox{]} = \mbox{[}2 $\ast$ (me$\vert$vf) -\/ (mf$\vert$ve)\mbox{]} $\ast$ \mbox{[}1 -\/ exp(-\/s $\ast$ D2$^\wedge$2)\mbox{]} / D2
+\end{DoxyItemize}
+
+where the two denominators are\+: D1 = F\+\_\+m + F\+\_\+u -\/ F\+\_\+e -\/ F\+\_\+f D2 = F\+\_\+m + F\+\_\+v -\/ F\+\_\+e -\/ F\+\_\+f
+
+Batching\+: for a given m, form V(efu) and S(efv)
+
+To minimize the number of calls of ints\+\_\+-\/$>$three\+\_\+integral\+\_\+block, we store as many B(L$\vert$em) as possible in memory. Modified from function compute\+\_\+\+Hbar1\+V\+\_\+\+DF.\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a483a994948cb525c0d524a16599df962}\label{classforte_1_1_s_a___m_r_p_t2_a483a994948cb525c0d524a16599df962}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+t2@{compute\+\_\+t2}}
+\index{compute\+\_\+t2@{compute\+\_\+t2}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+t2()}{compute\_t2()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+t2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute 1st-\/order T2 amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_ab325a9658616f40f8f8326a9ed4cd18d}\label{classforte_1_1_s_a___m_r_p_t2_ab325a9658616f40f8f8326a9ed4cd18d}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!compute\+\_\+t2\+\_\+df\+\_\+minimal@{compute\+\_\+t2\+\_\+df\+\_\+minimal}}
+\index{compute\+\_\+t2\+\_\+df\+\_\+minimal@{compute\+\_\+t2\+\_\+df\+\_\+minimal}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{compute\+\_\+t2\+\_\+df\+\_\+minimal()}{compute\_t2\_df\_minimal()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::compute\+\_\+t2\+\_\+df\+\_\+minimal (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute 1st-\/order T2 amplitudes with at least two active indices. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a3b074461c6935fa9716386da886d0858}\label{classforte_1_1_s_a___m_r_p_t2_a3b074461c6935fa9716386da886d0858}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+A\+VV@{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+A\+VV}}
+\index{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+A\+VV@{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+A\+VV}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+A\+V\+V()}{E\_V\_T2\_CAVV()}}
+{\footnotesize\ttfamily double forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::\+E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+A\+VV (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Energy contribution from C\+A\+VV block. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_af02065b0d7e59a7ff6dfc3afe55e7383}\label{classforte_1_1_s_a___m_r_p_t2_af02065b0d7e59a7ff6dfc3afe55e7383}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+AV@{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+AV}}
+\index{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+AV@{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+AV}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+A\+V()}{E\_V\_T2\_CCAV()}}
+{\footnotesize\ttfamily double forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::\+E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+AV (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Energy contribution from C\+C\+AV block. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a6821491254ad4ddb30df2dead9d6b8b0}\label{classforte_1_1_s_a___m_r_p_t2_a6821491254ad4ddb30df2dead9d6b8b0}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+VV@{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+VV}}
+\index{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+VV@{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+VV}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+V\+V()}{E\_V\_T2\_CCVV()}}
+{\footnotesize\ttfamily double forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::\+E\+\_\+\+V\+\_\+\+T2\+\_\+\+C\+C\+VV (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Energy contribution from C\+C\+VV block. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a2e566cf0e0e0f3337ce78d94b2acf011}\label{classforte_1_1_s_a___m_r_p_t2_a2e566cf0e0e0f3337ce78d94b2acf011}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!init\+\_\+amps@{init\+\_\+amps}}
+\index{init\+\_\+amps@{init\+\_\+amps}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{init\+\_\+amps()}{init\_amps()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::init\+\_\+amps (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Initialize amplitude tensors. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_abe83ad82ae14b4d1d57ec1f6f24f580f}\label{classforte_1_1_s_a___m_r_p_t2_abe83ad82ae14b4d1d57ec1f6f24f580f}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!init\+\_\+tensor\+\_\+vecs@{init\+\_\+tensor\+\_\+vecs}}
+\index{init\+\_\+tensor\+\_\+vecs@{init\+\_\+tensor\+\_\+vecs}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{init\+\_\+tensor\+\_\+vecs()}{init\_tensor\_vecs()}}
+{\footnotesize\ttfamily std\+::vector$<$ ambit\+::\+Tensor $>$ forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::init\+\_\+tensor\+\_\+vecs (\begin{DoxyParamCaption}\item[{int}]{number\+\_\+of\+\_\+tensors }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Return a vector of empty ambit Tensor objects. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a34195dd921dbce47b56deec123515d7e}\label{classforte_1_1_s_a___m_r_p_t2_a34195dd921dbce47b56deec123515d7e}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!split\+\_\+indices\+\_\+to\+\_\+batches@{split\+\_\+indices\+\_\+to\+\_\+batches}}
+\index{split\+\_\+indices\+\_\+to\+\_\+batches@{split\+\_\+indices\+\_\+to\+\_\+batches}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{split\+\_\+indices\+\_\+to\+\_\+batches()}{split\_indices\_to\_batches()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::vector$<$ size\+\_\+t $>$ $>$ forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::split\+\_\+indices\+\_\+to\+\_\+batches (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{indices,  }\item[{size\+\_\+t}]{max\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Separate indices into batches of indices. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a9ada26865f0d7ee12f277e6ceea12b6b}\label{classforte_1_1_s_a___m_r_p_t2_a9ada26865f0d7ee12f277e6ceea12b6b}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!startup@{startup}}
+\index{startup@{startup}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{startup()}{startup()}}
+{\footnotesize\ttfamily void forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::startup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Start-\/up function called in the constructor. 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a72e288b885b616f20db146c6ffbbfd07}\label{classforte_1_1_s_a___m_r_p_t2_a72e288b885b616f20db146c6ffbbfd07}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!C1\+\_\+\+V\+T2\+\_\+\+C\+A\+V\+V\+\_\+@{C1\+\_\+\+V\+T2\+\_\+\+C\+A\+V\+V\+\_\+}}
+\index{C1\+\_\+\+V\+T2\+\_\+\+C\+A\+V\+V\+\_\+@{C1\+\_\+\+V\+T2\+\_\+\+C\+A\+V\+V\+\_\+}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{C1\+\_\+\+V\+T2\+\_\+\+C\+A\+V\+V\+\_\+}{C1\_VT2\_CAVV\_}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::\+C1\+\_\+\+V\+T2\+\_\+\+C\+A\+V\+V\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+C1 = \mbox{[}Vr, T2\mbox{]} C\+A\+VV from compute\+\_\+\+Hbar1\+V\+\_\+disk\+DF. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_ac07fc9e6ea15bcab5e232ff72ed6f7d9}\label{classforte_1_1_s_a___m_r_p_t2_ac07fc9e6ea15bcab5e232ff72ed6f7d9}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!C1\+\_\+\+V\+T2\+\_\+\+C\+C\+A\+V\+\_\+@{C1\+\_\+\+V\+T2\+\_\+\+C\+C\+A\+V\+\_\+}}
+\index{C1\+\_\+\+V\+T2\+\_\+\+C\+C\+A\+V\+\_\+@{C1\+\_\+\+V\+T2\+\_\+\+C\+C\+A\+V\+\_\+}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{C1\+\_\+\+V\+T2\+\_\+\+C\+C\+A\+V\+\_\+}{C1\_VT2\_CCAV\_}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::\+C1\+\_\+\+V\+T2\+\_\+\+C\+C\+A\+V\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+C1 = \mbox{[}Vr, T2\mbox{]} C\+C\+AV from compute\+\_\+\+Hbar1\+C\+\_\+disk\+DF. 
+
+\mbox{\Hypertarget{classforte_1_1_s_a___m_r_p_t2_a922e808c913fb674508daafdf0b0bb18}\label{classforte_1_1_s_a___m_r_p_t2_a922e808c913fb674508daafdf0b0bb18}} 
+\index{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}!mem\+\_\+batched\+\_\+@{mem\+\_\+batched\+\_\+}}
+\index{mem\+\_\+batched\+\_\+@{mem\+\_\+batched\+\_\+}!forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2@{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}
+\subsubsection{\texorpdfstring{mem\+\_\+batched\+\_\+}{mem\_batched\_}}
+{\footnotesize\ttfamily std\+::map$<$std\+::string, size\+\_\+t$>$ forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2\+::mem\+\_\+batched\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Memory requirements for the three batched energy terms. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/spin-\/adapted/\mbox{\hyperlink{sa__mrpt2_8h}{sa\+\_\+mrpt2.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/spin-\/adapted/\mbox{\hyperlink{sa__mrpt2_8cc}{sa\+\_\+mrpt2.\+cc}}\end{DoxyCompactItemize}

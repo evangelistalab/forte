@@ -1,0 +1,73 @@
+\hypertarget{classforte_1_1_p_a_obuilder}{}\section{forte\+:\+:P\+A\+Obuilder Class Reference}
+\label{classforte_1_1_p_a_obuilder}\index{forte\+::\+P\+A\+Obuilder@{forte\+::\+P\+A\+Obuilder}}
+
+
+The \mbox{\hyperlink{classforte_1_1_p_a_obuilder}{P\+A\+Obuilder}} class.  
+
+
+
+
+{\ttfamily \#include $<$pao\+\_\+builder.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_p_a_obuilder_a969c35cc76f3cd82e92b863cf24bf666}{P\+A\+Obuilder}} (psi\+::\+Shared\+Matrix C, psi\+::\+Dimension noccpi, std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ basis)
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_p_a_obuilder_a00baa0b6dad033c7e05be344077e3982}{build\+\_\+\+A\+\_\+virtual}} (int nbf\+\_\+A, double pao\+\_\+threshold)
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_p_a_obuilder_a516283c1ab351c927424b476fdf77f2a}{build\+\_\+\+B\+\_\+virtual}} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_p_a_obuilder}{P\+A\+Obuilder}} class. 
+
+A class to build projected atomic orbitals for virtual space.
+
+The P\+AO builder will build the P\+A\+Os by\+:
+
+
+\begin{DoxyEnumerate}
+\item Build density (D\+\_\+) and AO overlap (S\+\_\+)
+\item Build P\+A\+Os using C\+\_\+pao = I -\/ D\+\_\+ $\ast$ S\+\_\+(truncated according to nbf\+\_\+\+A)
+\item Orthogonalize P\+A\+Os, truncate the number of P\+A\+Os to n\+\_\+pao, according to P\+A\+O\+\_\+\+T\+H\+R\+E\+S\+H\+O\+LD
+\item Return a rectangle matrix C with size nmo$\ast$n\+\_\+pao
+\end{DoxyEnumerate}
+
+Typical usage\+:
+
+// Build projected atomic orbitals for fragment virtual space double tau = options.\+get\+\_\+double(\char`\"{}\+P\+A\+O\+\_\+\+T\+H\+R\+E\+S\+H\+O\+L\+D\char`\"{}); // set a P\+AO threshold
+
+\mbox{\hyperlink{classforte_1_1_p_a_obuilder}{P\+A\+Obuilder}} pao(ref\+\_\+wfn-\/$>$Ca(), dimension\+\_\+of\+\_\+occupied\+\_\+orbital, ref\+\_\+wfn-\/$>$basisset()); Shared\+Matrix C\+\_\+pao = pao.\+build\+\_\+\+A\+\_\+virtual(nbf\+\_\+\+A, tau); // nbf\+\_\+A\+: number of fragment AO basis
+
+// Replace the original virtual orbitals with P\+A\+Os ref\+\_\+wfn-\/$>$Ca()-\/$>$set\+\_\+block(nmopi, dimension\+\_\+of\+\_\+fragment\+\_\+virtual, C\+\_\+pao); 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_p_a_obuilder_a969c35cc76f3cd82e92b863cf24bf666}\label{classforte_1_1_p_a_obuilder_a969c35cc76f3cd82e92b863cf24bf666}} 
+\index{forte\+::\+P\+A\+Obuilder@{forte\+::\+P\+A\+Obuilder}!P\+A\+Obuilder@{P\+A\+Obuilder}}
+\index{P\+A\+Obuilder@{P\+A\+Obuilder}!forte\+::\+P\+A\+Obuilder@{forte\+::\+P\+A\+Obuilder}}
+\subsubsection{\texorpdfstring{P\+A\+Obuilder()}{PAObuilder()}}
+{\footnotesize\ttfamily forte\+::\+P\+A\+Obuilder\+::\+P\+A\+Obuilder (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{C,  }\item[{psi\+::\+Dimension}]{noccpi,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{basis }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_p_a_obuilder_a00baa0b6dad033c7e05be344077e3982}\label{classforte_1_1_p_a_obuilder_a00baa0b6dad033c7e05be344077e3982}} 
+\index{forte\+::\+P\+A\+Obuilder@{forte\+::\+P\+A\+Obuilder}!build\+\_\+\+A\+\_\+virtual@{build\+\_\+\+A\+\_\+virtual}}
+\index{build\+\_\+\+A\+\_\+virtual@{build\+\_\+\+A\+\_\+virtual}!forte\+::\+P\+A\+Obuilder@{forte\+::\+P\+A\+Obuilder}}
+\subsubsection{\texorpdfstring{build\+\_\+\+A\+\_\+virtual()}{build\_A\_virtual()}}
+{\footnotesize\ttfamily Shared\+Matrix forte\+::\+P\+A\+Obuilder\+::build\+\_\+\+A\+\_\+virtual (\begin{DoxyParamCaption}\item[{int}]{nbf\+\_\+A,  }\item[{double}]{pao\+\_\+threshold }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_p_a_obuilder_a516283c1ab351c927424b476fdf77f2a}\label{classforte_1_1_p_a_obuilder_a516283c1ab351c927424b476fdf77f2a}} 
+\index{forte\+::\+P\+A\+Obuilder@{forte\+::\+P\+A\+Obuilder}!build\+\_\+\+B\+\_\+virtual@{build\+\_\+\+B\+\_\+virtual}}
+\index{build\+\_\+\+B\+\_\+virtual@{build\+\_\+\+B\+\_\+virtual}!forte\+::\+P\+A\+Obuilder@{forte\+::\+P\+A\+Obuilder}}
+\subsubsection{\texorpdfstring{build\+\_\+\+B\+\_\+virtual()}{build\_B\_virtual()}}
+{\footnotesize\ttfamily Shared\+Matrix forte\+::\+P\+A\+Obuilder\+::build\+\_\+\+B\+\_\+virtual (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{pao__builder_8h}{pao\+\_\+builder.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{pao__builder_8cc}{pao\+\_\+builder.\+cc}}\end{DoxyCompactItemize}

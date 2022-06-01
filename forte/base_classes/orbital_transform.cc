@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -50,7 +50,7 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
     if (type == "LOCAL") {
         orb_t = std::make_unique<Localize>(options, ints, mo_space_info);
     }
-    if (type == "MP2_NOS") {
+    if (type == "MP2NO") {
         orb_t = std::make_unique<MP2_NOS>(scf_info, options, ints, mo_space_info);
     }
     if (type == "CINO") {
@@ -59,6 +59,9 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
     if (type == "MRCINO") {
         orb_t = std::make_unique<MRCINO>(scf_info, options, ints, mo_space_info);
     }
+
+    if (!orb_t)
+        throw std::runtime_error("Orbital type " + type + " is not supported!");
 
     return orb_t;
 }

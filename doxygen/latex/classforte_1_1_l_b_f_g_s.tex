@@ -1,0 +1,111 @@
+\hypertarget{classforte_1_1_l_b_f_g_s}{}\section{forte\+:\+:L\+B\+F\+GS Class Reference}
+\label{classforte_1_1_l_b_f_g_s}\index{forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}}
+
+
+{\ttfamily \#include $<$lbfgs.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_l_b_f_g_s_ad3372e79915de6ac76aa5367a3d744e6}{L\+B\+F\+GS}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_l_b_f_g_s___p_a_r_a_m}{L\+B\+F\+G\+S\+\_\+\+P\+A\+R\+AM}} $>$ param)
+\begin{DoxyCompactList}\small\item\em Constructor of the Limited-\/\+B\+F\+GS class. \end{DoxyCompactList}\item 
+{\footnotesize template$<$class Foo $>$ }\\double \mbox{\hyperlink{classforte_1_1_l_b_f_g_s_a2e1e9e0d39664cb70a631317d3eeea09}{minimize}} (Foo \&foo, psi\+::\+Shared\+Vector x)
+\begin{DoxyCompactList}\small\item\em The minimization for the target function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_l_b_f_g_s_ae1925cb32a7963640d6f0b07d4a4e8c0}{reset}} ()
+\begin{DoxyCompactList}\small\item\em Reset the L-\/\+B\+F\+GS space. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_l_b_f_g_s_ac92f946ad0a620b0fef33b96619b0b75}{g}} ()
+\begin{DoxyCompactList}\small\item\em Return the current / final gradient vector. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_l_b_f_g_s_a90ca8b4968b604d3215c0ea4ce6275d4}{iter}} ()
+\begin{DoxyCompactList}\small\item\em Return the final number of iterations. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_l_b_f_g_s_ab42bf7fe9e2a7eafd004773f9b606b65}{converged}} ()
+\begin{DoxyCompactList}\small\item\em Return true if minimization converged. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_l_b_f_g_s_ad3372e79915de6ac76aa5367a3d744e6}\label{classforte_1_1_l_b_f_g_s_ad3372e79915de6ac76aa5367a3d744e6}} 
+\index{forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}!L\+B\+F\+GS@{L\+B\+F\+GS}}
+\index{L\+B\+F\+GS@{L\+B\+F\+GS}!forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}}
+\subsubsection{\texorpdfstring{L\+B\+F\+G\+S()}{LBFGS()}}
+{\footnotesize\ttfamily forte\+::\+L\+B\+F\+G\+S\+::\+L\+B\+F\+GS (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_l_b_f_g_s___p_a_r_a_m}{L\+B\+F\+G\+S\+\_\+\+P\+A\+R\+AM}} $>$}]{param }\end{DoxyParamCaption})}
+
+
+
+Constructor of the Limited-\/\+B\+F\+GS class. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em dim} & The dimension of the problem \\
+\hline
+{\em param} & The \mbox{\hyperlink{classforte_1_1_l_b_f_g_s___p_a_r_a_m}{L\+B\+F\+G\+S\+\_\+\+P\+A\+R\+AM}} object for L-\/\+B\+F\+GS parameters\\
+\hline
+\end{DoxyParams}
+Implementation notes\+: See Wikipedia \href{https://en.wikipedia.org/wiki/Limited-memory_BFGS}{\tt https\+://en.\+wikipedia.\+org/wiki/\+Limited-\/memory\+\_\+\+B\+F\+GS} and $<$\+Numerical optimization$>$=\char`\"{}\char`\"{}$>$ 2nd Ed. by Jorge Nocedal and Stephen J. Wright 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_l_b_f_g_s_ab42bf7fe9e2a7eafd004773f9b606b65}\label{classforte_1_1_l_b_f_g_s_ab42bf7fe9e2a7eafd004773f9b606b65}} 
+\index{forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}!converged@{converged}}
+\index{converged@{converged}!forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}}
+\subsubsection{\texorpdfstring{converged()}{converged()}}
+{\footnotesize\ttfamily bool forte\+::\+L\+B\+F\+G\+S\+::converged (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return true if minimization converged. 
+
+\mbox{\Hypertarget{classforte_1_1_l_b_f_g_s_ac92f946ad0a620b0fef33b96619b0b75}\label{classforte_1_1_l_b_f_g_s_ac92f946ad0a620b0fef33b96619b0b75}} 
+\index{forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}!g@{g}}
+\index{g@{g}!forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}}
+\subsubsection{\texorpdfstring{g()}{g()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+L\+B\+F\+G\+S\+::g (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the current / final gradient vector. 
+
+\mbox{\Hypertarget{classforte_1_1_l_b_f_g_s_a90ca8b4968b604d3215c0ea4ce6275d4}\label{classforte_1_1_l_b_f_g_s_a90ca8b4968b604d3215c0ea4ce6275d4}} 
+\index{forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}!iter@{iter}}
+\index{iter@{iter}!forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}}
+\subsubsection{\texorpdfstring{iter()}{iter()}}
+{\footnotesize\ttfamily int forte\+::\+L\+B\+F\+G\+S\+::iter (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the final number of iterations. 
+
+\mbox{\Hypertarget{classforte_1_1_l_b_f_g_s_a2e1e9e0d39664cb70a631317d3eeea09}\label{classforte_1_1_l_b_f_g_s_a2e1e9e0d39664cb70a631317d3eeea09}} 
+\index{forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}!minimize@{minimize}}
+\index{minimize@{minimize}!forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}}
+\subsubsection{\texorpdfstring{minimize()}{minimize()}}
+{\footnotesize\ttfamily template$<$class Foo $>$ \\
+template double forte\+::\+L\+B\+F\+G\+S\+::minimize (\begin{DoxyParamCaption}\item[{Foo \&}]{foo,  }\item[{psi\+::\+Shared\+Vector}]{x }\end{DoxyParamCaption})}
+
+
+
+The minimization for the target function. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em foo} & Target class that should have the following methods\+: fx = foo.\+evaluate(x, g, do\+\_\+g=true) where gradient g is modified by the function, fx is the function return value, and g is computed when do\+\_\+g is true. If diagonal Hessian is specified, foo.\+hess\+\_\+diag(x, h0) should be available. \\
+\hline
+{\em x} & The initial value of x as input, the final value of x as output.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the function value of at optimized x 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_l_b_f_g_s_ae1925cb32a7963640d6f0b07d4a4e8c0}\label{classforte_1_1_l_b_f_g_s_ae1925cb32a7963640d6f0b07d4a4e8c0}} 
+\index{forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}!reset@{reset}}
+\index{reset@{reset}!forte\+::\+L\+B\+F\+GS@{forte\+::\+L\+B\+F\+GS}}
+\subsubsection{\texorpdfstring{reset()}{reset()}}
+{\footnotesize\ttfamily void forte\+::\+L\+B\+F\+G\+S\+::reset (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Reset the L-\/\+B\+F\+GS space. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/helpers/lbfgs/\mbox{\hyperlink{lbfgs_8h}{lbfgs.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/helpers/lbfgs/\mbox{\hyperlink{lbfgs_8cc}{lbfgs.\+cc}}\end{DoxyCompactItemize}

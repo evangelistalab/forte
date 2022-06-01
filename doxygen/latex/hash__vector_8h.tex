@@ -1,0 +1,144 @@
+\hypertarget{hash__vector_8h}{}\section{/\+Users/fevange/\+Source/forte/src/helpers/hash\+\_\+vector.h File Reference}
+\label{hash__vector_8h}\index{/\+Users/fevange/\+Source/forte/src/helpers/hash\+\_\+vector.\+h@{/\+Users/fevange/\+Source/forte/src/helpers/hash\+\_\+vector.\+h}}
+{\ttfamily \#include $<$cstdint$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$unordered\+\_\+set$>$}\newline
+{\ttfamily \#include $<$unordered\+\_\+map$>$}\newline
+{\ttfamily \#include $<$tuple$>$}\newline
+{\ttfamily \#include $<$functional$>$}\newline
+Include dependency graph for hash\+\_\+vector.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hash__vector_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hash__vector_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{class_hash_vector}{Hash\+Vector$<$ Key, Hash $>$}}
+\item 
+class \mbox{\hyperlink{class_hash_vector_1_1iterator}{Hash\+Vector$<$ Key, Hash $>$\+::iterator}}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespacestd}{std}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$class Key , class Hash $>$ }\\void \mbox{\hyperlink{namespacestd_ac70f28fd42170cf32871bd027855fd78}{std\+::swap}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&a, \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&b)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \mbox{\hyperlink{hash__vector_8h_adf2fde89ec385c10d72186de5ede5450}{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map}} (const std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \&umap)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \mbox{\hyperlink{hash__vector_8h_aaeacc8d5e410bfcfa8a2c0ea75f00b0d}{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map}} (const std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \&umap, std\+::vector$<$ Value $>$ \&values)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \mbox{\hyperlink{hash__vector_8h_ade5b0289a732e6010a65cc563ef5a404}{unordered\+\_\+map\+\_\+from\+\_\+hash\+Vector}} (const \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, const std\+::vector$<$ Value $>$ \&values)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\void \mbox{\hyperlink{hash__vector_8h_a5a9cde230352dc1d4d69d518a7003528}{merge}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, std\+::vector$<$ Value $>$ \&values, const \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&source, const std\+::vector$<$ Value $>$ \&src\+\_\+values)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\void \mbox{\hyperlink{hash__vector_8h_ade5d46cc53365f113de86ee7f8c4ba29}{merge}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, std\+::vector$<$ Value $>$ \&values, const \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&source, const std\+::vector$<$ Value $>$ \&src\+\_\+values, const std\+::function$<$ Value(Value, Value)$>$ \&f, const Value \&default\+\_\+value, bool change\+\_\+this)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\void \mbox{\hyperlink{hash__vector_8h_a236d42bf16347d0caadc1fa72fd0e41c}{merge}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, std\+::vector$<$ Value $>$ \&values, const std\+::vector$<$ Key $>$ \&source, const std\+::vector$<$ Value $>$ \&src\+\_\+values)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\void \mbox{\hyperlink{hash__vector_8h_af6c61d5f7fb6ced2d6fd671fc8e10147}{merge}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, std\+::vector$<$ Value $>$ \&values, const std\+::vector$<$ Key $>$ \&source, const std\+::vector$<$ Value $>$ \&src\+\_\+values, const std\+::function$<$ Value(Value, Value)$>$ \&f, const Value \&default\+\_\+value, bool change\+\_\+this)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\void \mbox{\hyperlink{hash__vector_8h_ae928bc20c918eeea59316d773c870b80}{merge}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, std\+::vector$<$ Value $>$ \&values, const std\+::vector$<$ std\+::pair$<$ Key, Value $>$$>$ \&source)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\void \mbox{\hyperlink{hash__vector_8h_ac97d1124cff3ee8613370a07d2efca11}{merge}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, std\+::vector$<$ Value $>$ \&values, const std\+::vector$<$ std\+::pair$<$ Key, Value $>$$>$ \&source, const std\+::function$<$ Value(Value, Value)$>$ \&f, const Value \&default\+\_\+value, bool change\+\_\+this)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\void \mbox{\hyperlink{hash__vector_8h_a888e2c9a275a5ff03e827bb8342b4ade}{merge}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, std\+::vector$<$ Value $>$ \&values, const std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \&source)
+\item 
+{\footnotesize template$<$class Key , class Hash , class Value $>$ }\\void \mbox{\hyperlink{hash__vector_8h_a41a10c31723d6ba97bba1a66fd455c59}{merge}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&hvec, std\+::vector$<$ Value $>$ \&values, const std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \&source, const std\+::function$<$ Value(Value, Value)$>$ \&f, const Value \&default\+\_\+value, bool change\+\_\+this)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hash__vector_8h_adf2fde89ec385c10d72186de5ede5450}\label{hash__vector_8h_adf2fde89ec385c10d72186de5ede5450}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map@{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map}}
+\index{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map@{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map()}{hashVector\_from\_unordered\_map()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$Key, Hash$>$ hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map (\begin{DoxyParamCaption}\item[{const std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \&}]{umap }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_aaeacc8d5e410bfcfa8a2c0ea75f00b0d}\label{hash__vector_8h_aaeacc8d5e410bfcfa8a2c0ea75f00b0d}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map@{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map}}
+\index{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map@{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map()}{hashVector\_from\_unordered\_map()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$Key, Hash$>$ hash\+Vector\+\_\+from\+\_\+unordered\+\_\+map (\begin{DoxyParamCaption}\item[{const std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \&}]{umap,  }\item[{std\+::vector$<$ Value $>$ \&}]{values }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_a5a9cde230352dc1d4d69d518a7003528}\label{hash__vector_8h_a5a9cde230352dc1d4d69d518a7003528}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!merge@{merge}}
+\index{merge@{merge}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [1/8]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+void merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{std\+::vector$<$ Value $>$ \&}]{values,  }\item[{const \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{source,  }\item[{const std\+::vector$<$ Value $>$ \&}]{src\+\_\+values }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_ade5d46cc53365f113de86ee7f8c4ba29}\label{hash__vector_8h_ade5d46cc53365f113de86ee7f8c4ba29}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!merge@{merge}}
+\index{merge@{merge}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [2/8]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+void merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{std\+::vector$<$ Value $>$ \&}]{values,  }\item[{const \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{source,  }\item[{const std\+::vector$<$ Value $>$ \&}]{src\+\_\+values,  }\item[{const std\+::function$<$ Value(Value, Value)$>$ \&}]{f,  }\item[{const Value \&}]{default\+\_\+value,  }\item[{bool}]{change\+\_\+this }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_a236d42bf16347d0caadc1fa72fd0e41c}\label{hash__vector_8h_a236d42bf16347d0caadc1fa72fd0e41c}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!merge@{merge}}
+\index{merge@{merge}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [3/8]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+void merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{std\+::vector$<$ Value $>$ \&}]{values,  }\item[{const std\+::vector$<$ Key $>$ \&}]{source,  }\item[{const std\+::vector$<$ Value $>$ \&}]{src\+\_\+values }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_af6c61d5f7fb6ced2d6fd671fc8e10147}\label{hash__vector_8h_af6c61d5f7fb6ced2d6fd671fc8e10147}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!merge@{merge}}
+\index{merge@{merge}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [4/8]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+void merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{std\+::vector$<$ Value $>$ \&}]{values,  }\item[{const std\+::vector$<$ Key $>$ \&}]{source,  }\item[{const std\+::vector$<$ Value $>$ \&}]{src\+\_\+values,  }\item[{const std\+::function$<$ Value(Value, Value)$>$ \&}]{f,  }\item[{const Value \&}]{default\+\_\+value,  }\item[{bool}]{change\+\_\+this }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_ae928bc20c918eeea59316d773c870b80}\label{hash__vector_8h_ae928bc20c918eeea59316d773c870b80}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!merge@{merge}}
+\index{merge@{merge}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [5/8]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+void merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{std\+::vector$<$ Value $>$ \&}]{values,  }\item[{const std\+::vector$<$ std\+::pair$<$ Key, Value $>$$>$ \&}]{source }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_ac97d1124cff3ee8613370a07d2efca11}\label{hash__vector_8h_ac97d1124cff3ee8613370a07d2efca11}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!merge@{merge}}
+\index{merge@{merge}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [6/8]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+void merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{std\+::vector$<$ Value $>$ \&}]{values,  }\item[{const std\+::vector$<$ std\+::pair$<$ Key, Value $>$$>$ \&}]{source,  }\item[{const std\+::function$<$ Value(Value, Value)$>$ \&}]{f,  }\item[{const Value \&}]{default\+\_\+value,  }\item[{bool}]{change\+\_\+this }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_a888e2c9a275a5ff03e827bb8342b4ade}\label{hash__vector_8h_a888e2c9a275a5ff03e827bb8342b4ade}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!merge@{merge}}
+\index{merge@{merge}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [7/8]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+void merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{std\+::vector$<$ Value $>$ \&}]{values,  }\item[{const std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \&}]{source }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_a41a10c31723d6ba97bba1a66fd455c59}\label{hash__vector_8h_a41a10c31723d6ba97bba1a66fd455c59}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!merge@{merge}}
+\index{merge@{merge}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [8/8]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+void merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{std\+::vector$<$ Value $>$ \&}]{values,  }\item[{const std\+::unordered\+\_\+map$<$ Key, Value, Hash $>$ \&}]{source,  }\item[{const std\+::function$<$ Value(Value, Value)$>$ \&}]{f,  }\item[{const Value \&}]{default\+\_\+value,  }\item[{bool}]{change\+\_\+this }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hash__vector_8h_ade5b0289a732e6010a65cc563ef5a404}\label{hash__vector_8h_ade5b0289a732e6010a65cc563ef5a404}} 
+\index{hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}!unordered\+\_\+map\+\_\+from\+\_\+hash\+Vector@{unordered\+\_\+map\+\_\+from\+\_\+hash\+Vector}}
+\index{unordered\+\_\+map\+\_\+from\+\_\+hash\+Vector@{unordered\+\_\+map\+\_\+from\+\_\+hash\+Vector}!hash\+\_\+vector.\+h@{hash\+\_\+vector.\+h}}
+\subsubsection{\texorpdfstring{unordered\+\_\+map\+\_\+from\+\_\+hash\+Vector()}{unordered\_map\_from\_hashVector()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash , class Value $>$ \\
+std\+::unordered\+\_\+map$<$Key, Value, Hash$>$ unordered\+\_\+map\+\_\+from\+\_\+hash\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{hvec,  }\item[{const std\+::vector$<$ Value $>$ \&}]{values }\end{DoxyParamCaption})}
+

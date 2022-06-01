@@ -1,0 +1,3 @@
+2022-05-31:17:36:47,272 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_SCF_GUESS': 0, 'D_CONVERGENCE': 1e-10, 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:17:36:47,273 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=lanl2dz, molecule=arwater, nre=41.186803720473115
+2022-05-31:17:36:47,534 INFO     [psi4.driver.driver:502] Return energy(): -96.68319150429103

@@ -1,0 +1,153 @@
+\hypertarget{classforte_1_1_parallel_d_f_m_o}{}\section{forte\+:\+:Parallel\+D\+F\+MO Class Reference}
+\label{classforte_1_1_parallel_d_f_m_o}\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+
+
+{\ttfamily \#include $<$paralleldfmo.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a647bad30b94da4ab861517eb7fe2fbb9}{Parallel\+D\+F\+MO}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ primary, std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ auxiliary)
+\item 
+void \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_abba809ee0432d7fa6432d87b5dda5164}{set\+\_\+C}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ C)
+\item 
+void \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a30e08d02f18b1015ce306228aab04ec3}{compute\+\_\+integrals}} ()
+\item 
+int \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_ad565d4270690471f1c6777c245b4917b}{Q\+\_\+\+PQ}} ()
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a629322edbef4052935334ae9a5171da9}{J\+\_\+one\+\_\+half}} ()
+\begin{DoxyCompactList}\small\item\em (A $\vert$ Q)$^\wedge$\{-\/1/2\} \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a61aa38462ee04b1c9fa0539a65008f22}{transform\+\_\+integrals}} ()
+\begin{DoxyCompactList}\small\item\em Compute (A$\vert$mn) integrals (distribute via mn indices) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a79505e06bd3d8c932fe1f48f744806aa}{Ca\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_ae125d481accd93974e190846f7397e79}{primary\+\_\+}}
+\begin{DoxyCompactList}\small\item\em (A $\vert$ pq) (A $\vert$ Q)$^\wedge$\{-\/1/2\} \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a2b50bed9bf7fabe0b7e0caad5a64029f}{auxiliary\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_aa17c89b3602023f1a5b10f8ebe1e34eb}{G\+A\+\_\+\+Q\+\_\+\+P\+Q\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Distributed DF (Q $\vert$ pq) integrals. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a913dea54d2a195ce847c03d49e7dd5a8}{G\+A\+\_\+\+J\+\_\+onehalf\+\_\+}}
+\begin{DoxyCompactList}\small\item\em GA for J$^\wedge$\{-\/1/2\}. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a72d911652db05c267a38d87a24dc7399}{memory\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_parallel_d_f_m_o_a19e4a831cf05474a5b6d7ec71f618260}{nmo\+\_\+}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a647bad30b94da4ab861517eb7fe2fbb9}\label{classforte_1_1_parallel_d_f_m_o_a647bad30b94da4ab861517eb7fe2fbb9}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!Parallel\+D\+F\+MO@{Parallel\+D\+F\+MO}}
+\index{Parallel\+D\+F\+MO@{Parallel\+D\+F\+MO}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{Parallel\+D\+F\+M\+O()}{ParallelDFMO()}}
+{\footnotesize\ttfamily forte\+::\+Parallel\+D\+F\+M\+O\+::\+Parallel\+D\+F\+MO (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{primary,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{auxiliary }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a30e08d02f18b1015ce306228aab04ec3}\label{classforte_1_1_parallel_d_f_m_o_a30e08d02f18b1015ce306228aab04ec3}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!compute\+\_\+integrals@{compute\+\_\+integrals}}
+\index{compute\+\_\+integrals@{compute\+\_\+integrals}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{compute\+\_\+integrals()}{compute\_integrals()}}
+{\footnotesize\ttfamily void forte\+::\+Parallel\+D\+F\+M\+O\+::compute\+\_\+integrals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a629322edbef4052935334ae9a5171da9}\label{classforte_1_1_parallel_d_f_m_o_a629322edbef4052935334ae9a5171da9}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!J\+\_\+one\+\_\+half@{J\+\_\+one\+\_\+half}}
+\index{J\+\_\+one\+\_\+half@{J\+\_\+one\+\_\+half}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{J\+\_\+one\+\_\+half()}{J\_one\_half()}}
+{\footnotesize\ttfamily void forte\+::\+Parallel\+D\+F\+M\+O\+::\+J\+\_\+one\+\_\+half (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+(A $\vert$ Q)$^\wedge$\{-\/1/2\} 
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_ad565d4270690471f1c6777c245b4917b}\label{classforte_1_1_parallel_d_f_m_o_ad565d4270690471f1c6777c245b4917b}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!Q\+\_\+\+PQ@{Q\+\_\+\+PQ}}
+\index{Q\+\_\+\+PQ@{Q\+\_\+\+PQ}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{Q\+\_\+\+P\+Q()}{Q\_PQ()}}
+{\footnotesize\ttfamily int forte\+::\+Parallel\+D\+F\+M\+O\+::\+Q\+\_\+\+PQ (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_abba809ee0432d7fa6432d87b5dda5164}\label{classforte_1_1_parallel_d_f_m_o_abba809ee0432d7fa6432d87b5dda5164}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!set\+\_\+C@{set\+\_\+C}}
+\index{set\+\_\+C@{set\+\_\+C}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{set\+\_\+\+C()}{set\_C()}}
+{\footnotesize\ttfamily void forte\+::\+Parallel\+D\+F\+M\+O\+::set\+\_\+C (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{C }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a61aa38462ee04b1c9fa0539a65008f22}\label{classforte_1_1_parallel_d_f_m_o_a61aa38462ee04b1c9fa0539a65008f22}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!transform\+\_\+integrals@{transform\+\_\+integrals}}
+\index{transform\+\_\+integrals@{transform\+\_\+integrals}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{transform\+\_\+integrals()}{transform\_integrals()}}
+{\footnotesize\ttfamily void forte\+::\+Parallel\+D\+F\+M\+O\+::transform\+\_\+integrals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute (A$\vert$mn) integrals (distribute via mn indices) 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a2b50bed9bf7fabe0b7e0caad5a64029f}\label{classforte_1_1_parallel_d_f_m_o_a2b50bed9bf7fabe0b7e0caad5a64029f}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!auxiliary\+\_\+@{auxiliary\+\_\+}}
+\index{auxiliary\+\_\+@{auxiliary\+\_\+}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{auxiliary\+\_\+}{auxiliary\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Basis\+Set$>$ forte\+::\+Parallel\+D\+F\+M\+O\+::auxiliary\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a79505e06bd3d8c932fe1f48f744806aa}\label{classforte_1_1_parallel_d_f_m_o_a79505e06bd3d8c932fe1f48f744806aa}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!Ca\+\_\+@{Ca\+\_\+}}
+\index{Ca\+\_\+@{Ca\+\_\+}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{Ca\+\_\+}{Ca\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ forte\+::\+Parallel\+D\+F\+M\+O\+::\+Ca\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a913dea54d2a195ce847c03d49e7dd5a8}\label{classforte_1_1_parallel_d_f_m_o_a913dea54d2a195ce847c03d49e7dd5a8}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!G\+A\+\_\+\+J\+\_\+onehalf\+\_\+@{G\+A\+\_\+\+J\+\_\+onehalf\+\_\+}}
+\index{G\+A\+\_\+\+J\+\_\+onehalf\+\_\+@{G\+A\+\_\+\+J\+\_\+onehalf\+\_\+}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{G\+A\+\_\+\+J\+\_\+onehalf\+\_\+}{GA\_J\_onehalf\_}}
+{\footnotesize\ttfamily int forte\+::\+Parallel\+D\+F\+M\+O\+::\+G\+A\+\_\+\+J\+\_\+onehalf\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+GA for J$^\wedge$\{-\/1/2\}. 
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_aa17c89b3602023f1a5b10f8ebe1e34eb}\label{classforte_1_1_parallel_d_f_m_o_aa17c89b3602023f1a5b10f8ebe1e34eb}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!G\+A\+\_\+\+Q\+\_\+\+P\+Q\+\_\+@{G\+A\+\_\+\+Q\+\_\+\+P\+Q\+\_\+}}
+\index{G\+A\+\_\+\+Q\+\_\+\+P\+Q\+\_\+@{G\+A\+\_\+\+Q\+\_\+\+P\+Q\+\_\+}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{G\+A\+\_\+\+Q\+\_\+\+P\+Q\+\_\+}{GA\_Q\_PQ\_}}
+{\footnotesize\ttfamily int forte\+::\+Parallel\+D\+F\+M\+O\+::\+G\+A\+\_\+\+Q\+\_\+\+P\+Q\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Distributed DF (Q $\vert$ pq) integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a72d911652db05c267a38d87a24dc7399}\label{classforte_1_1_parallel_d_f_m_o_a72d911652db05c267a38d87a24dc7399}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!memory\+\_\+@{memory\+\_\+}}
+\index{memory\+\_\+@{memory\+\_\+}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{memory\+\_\+}{memory\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Parallel\+D\+F\+M\+O\+::memory\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_a19e4a831cf05474a5b6d7ec71f618260}\label{classforte_1_1_parallel_d_f_m_o_a19e4a831cf05474a5b6d7ec71f618260}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!nmo\+\_\+@{nmo\+\_\+}}
+\index{nmo\+\_\+@{nmo\+\_\+}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{nmo\+\_\+}{nmo\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Parallel\+D\+F\+M\+O\+::nmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_parallel_d_f_m_o_ae125d481accd93974e190846f7397e79}\label{classforte_1_1_parallel_d_f_m_o_ae125d481accd93974e190846f7397e79}} 
+\index{forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}!primary\+\_\+@{primary\+\_\+}}
+\index{primary\+\_\+@{primary\+\_\+}!forte\+::\+Parallel\+D\+F\+MO@{forte\+::\+Parallel\+D\+F\+MO}}
+\subsubsection{\texorpdfstring{primary\+\_\+}{primary\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Basis\+Set$>$ forte\+::\+Parallel\+D\+F\+M\+O\+::primary\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+(A $\vert$ pq) (A $\vert$ Q)$^\wedge$\{-\/1/2\} 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{paralleldfmo_8h}{paralleldfmo.\+h}}\end{DoxyCompactItemize}

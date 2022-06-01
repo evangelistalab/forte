@@ -1,0 +1,81 @@
+\hypertarget{string__lists_8h}{}\section{/\+Users/fevange/\+Source/forte/src/fci/string\+\_\+lists.h File Reference}
+\label{string__lists_8h}\index{/\+Users/fevange/\+Source/forte/src/fci/string\+\_\+lists.\+h@{/\+Users/fevange/\+Source/forte/src/fci/string\+\_\+lists.\+h}}
+{\ttfamily \#include \char`\"{}psi4/libmints/dimension.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$map$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$utility$>$}\newline
+{\ttfamily \#include $<$bitset$>$}\newline
+{\ttfamily \#include \char`\"{}binary\+\_\+graph.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sparse\+\_\+ci/determinant.\+h\char`\"{}}\newline
+Include dependency graph for string\+\_\+lists.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{string__lists_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{string__lists_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structforte_1_1_det_address}{forte\+::\+Det\+Address}}
+\item 
+struct \mbox{\hyperlink{structforte_1_1_string_substitution}{forte\+::\+String\+Substitution}}
+\item 
+struct \mbox{\hyperlink{structforte_1_1_h1_string_substitution}{forte\+::\+H1\+String\+Substitution}}
+\begin{DoxyCompactList}\small\item\em 1-\/hole string substitution \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{structforte_1_1_h2_string_substitution}{forte\+::\+H2\+String\+Substitution}}
+\begin{DoxyCompactList}\small\item\em 2-\/hole string substitution \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{structforte_1_1_h3_string_substitution}{forte\+::\+H3\+String\+Substitution}}
+\begin{DoxyCompactList}\small\item\em 3-\/hole string substitution \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classforte_1_1_string_lists}{forte\+::\+String\+Lists}}
+\begin{DoxyCompactList}\small\item\em The \mbox{\hyperlink{classforte_1_1_string_lists}{String\+Lists}} class. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef std\+::shared\+\_\+ptr$<$ Binary\+Graph $>$ \mbox{\hyperlink{namespaceforte_a4669cbddcd761bcaee151bc7cff6c444}{forte\+::\+Graph\+Ptr}}
+\item 
+typedef std\+::vector$<$ std\+::vector$<$ std\+::bitset$<$ Determinant\+::nbits\+\_\+half $>$ $>$ $>$ \mbox{\hyperlink{namespaceforte_aca998efba411157767fc84335aaa3abc}{forte\+::\+String\+List}}
+\item 
+typedef std\+::map$<$ std\+::tuple$<$ size\+\_\+t, size\+\_\+t, int $>$, std\+::vector$<$ String\+Substitution $>$ $>$ \mbox{\hyperlink{namespaceforte_a06d02b08c65b4a59d056aa83839110d3}{forte\+::\+V\+O\+List}}
+\item 
+typedef std\+::map$<$ std\+::tuple$<$ size\+\_\+t, size\+\_\+t, size\+\_\+t, size\+\_\+t, int $>$, std\+::vector$<$ String\+Substitution $>$ $>$ \mbox{\hyperlink{namespaceforte_a1d7711c26aa3c0c41f36ca87c42aad43}{forte\+::\+V\+O\+V\+O\+List}}
+\item 
+typedef std\+::map$<$ std\+::tuple$<$ size\+\_\+t, size\+\_\+t, size\+\_\+t, size\+\_\+t, int $>$, std\+::vector$<$ String\+Substitution $>$ $>$ \mbox{\hyperlink{namespaceforte_a2554bbadd74253084e41d64216f6da95}{forte\+::\+V\+V\+O\+O\+List}}
+\item 
+typedef std\+::map$<$ std\+::tuple$<$ int, size\+\_\+t, int $>$, std\+::vector$<$ String\+Substitution $>$ $>$ \mbox{\hyperlink{namespaceforte_a2b4fd5e252f6e15214db23a259203983}{forte\+::\+O\+O\+List}}
+\item 
+typedef std\+::map$<$ std\+::tuple$<$ int, size\+\_\+t, int $>$, std\+::vector$<$ H1\+String\+Substitution $>$ $>$ \mbox{\hyperlink{namespaceforte_a963024d9b602794c861da15d743aba5f}{forte\+::\+H1\+List}}
+\begin{DoxyCompactList}\small\item\em 1-\/hole list \end{DoxyCompactList}\item 
+typedef std\+::map$<$ std\+::tuple$<$ int, size\+\_\+t, int $>$, std\+::vector$<$ H2\+String\+Substitution $>$ $>$ \mbox{\hyperlink{namespaceforte_a27f0055671465d64abd83c86dfcccc5c}{forte\+::\+H2\+List}}
+\begin{DoxyCompactList}\small\item\em 2-\/hole list \end{DoxyCompactList}\item 
+typedef std\+::map$<$ std\+::tuple$<$ int, size\+\_\+t, int $>$, std\+::vector$<$ H3\+String\+Substitution $>$ $>$ \mbox{\hyperlink{namespaceforte_a14d2a6006ea5c335d7258709b58702cb}{forte\+::\+H3\+List}}
+\begin{DoxyCompactList}\small\item\em 3-\/hole list \end{DoxyCompactList}\item 
+typedef std\+::pair$<$ int, int $>$ \mbox{\hyperlink{namespaceforte_adfa942eeeeb54ae31f5d6f4d1e4e0641}{forte\+::\+Pair}}
+\item 
+typedef std\+::vector$<$ Pair $>$ \mbox{\hyperlink{namespaceforte_a3aa026a4f915fc1877b007cc1aab0e3b}{forte\+::\+Pair\+List}}
+\item 
+typedef std\+::vector$<$ Pair\+List $>$ \mbox{\hyperlink{namespaceforte_a5bff522f8c16d63f7b9d500362f6ed28}{forte\+::\+N\+N\+List}}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{namespaceforte_a0adc3919f741515031673b80ab77f2c7}{forte\+::\+Required\+Lists}} \{ \mbox{\hyperlink{namespaceforte_a0adc3919f741515031673b80ab77f2c7a6efb0f8402c14bd51934b9293b088af2}{forte\+::one\+Substituition}}, 
+\mbox{\hyperlink{namespaceforte_a0adc3919f741515031673b80ab77f2c7adf1c9cc277cafc326cbf8cb607212d2a}{forte\+::two\+Substituition\+V\+V\+OO}}, 
+\mbox{\hyperlink{namespaceforte_a0adc3919f741515031673b80ab77f2c7a76d70cc3dc9f9b142c74864f45672900}{forte\+::two\+Substituition\+V\+O\+VO}}
+ \}
+\end{DoxyCompactItemize}

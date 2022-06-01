@@ -1,0 +1,328 @@
+\hypertarget{classforte_1_1_f_c_i_vector}{}\section{forte\+:\+:F\+C\+I\+Vector Class Reference}
+\label{classforte_1_1_f_c_i_vector}\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+
+
+{\ttfamily \#include $<$fci\+\_\+vector.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_f_c_i_vector_ac11c68d1754586cf203dad0b95a07b86}{F\+C\+I\+Vector}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_string_lists}{String\+Lists}} $>$ lists, size\+\_\+t symmetry)
+\item 
+\mbox{\hyperlink{classforte_1_1_f_c_i_vector_a84a8cb8bb781300b63f904bea8a38a60}{$\sim$\+F\+C\+I\+Vector}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_aefc1a1762450009031c196c96bae636e}{print}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_abc76153c77025417cebb1a58d5382ae1}{zero}} ()
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a47e6063b6b07af86a2e6f439bcb2037f}{size}} () const
+\begin{DoxyCompactList}\small\item\em The size of the CI basis. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a4c1591f17c9b23b29730a2f1d76c5785}{copy}} (\mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} \&wfn)
+\begin{DoxyCompactList}\small\item\em Copy the wave function object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a131ea2c22528308ec890b45c9fed78a3}{copy}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ vec)
+\begin{DoxyCompactList}\small\item\em Copy the coefficient from a Vector object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_af77aa0955826ad3c3588ee4f9a93bad9}{copy\+\_\+to}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ vec)
+\begin{DoxyCompactList}\small\item\em Copy the wave function object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_afdfc26aaf2b21ea6b5cfdec40c71cf22}{form\+\_\+\+H\+\_\+diagonal}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints)
+\begin{DoxyCompactList}\small\item\em Form the diagonal part of the Hamiltonian. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_abe8cd93a76079285466cddff46961760}{set}} (std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, size\+\_\+t, size\+\_\+t, double $>$$>$ \&sparse\+\_\+vec)
+\item 
+double \mbox{\hyperlink{classforte_1_1_f_c_i_vector_aa3a4006628555ede48afd56c284c911a}{norm}} (double power=2.\+0)
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_ad477a8c333a440f3b5f59e980f443484}{normalize}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a1cccfb3c677d313ba9bb278adc5d8dba}{dot}} (\mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} \&wfn)
+\item 
+double \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a5a80e78715a46d5edf2771e225dc8bcc}{dot}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} $>$ \&wfn)
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a6d0c2dafcf9e13600685db7f7a27cae6}{opdm\+\_\+a}} ()
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a345012bafb002400635091f98018589d}{opdm\+\_\+b}} ()
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_ab85a2b7900a540e1c8ba6f7cd4447ab6}{tpdm\+\_\+aa}} ()
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a4a953a96657455eedcd54749dea82d08}{tpdm\+\_\+ab}} ()
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a9f8152bb2df645b7d48c8e1304dff05f}{tpdm\+\_\+bb}} ()
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_ac5aaf83f7d7f51c5bc86cd3d02604452}{tpdm\+\_\+aaa}} ()
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a5fd074490be763669f7dadc573a4b9a2}{tpdm\+\_\+aab}} ()
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_afba490fcaae3e4c1bc8bac2e732c3b00}{tpdm\+\_\+abb}} ()
+\item 
+std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a7c588ba35e588c6e87d0214f7a586504}{tpdm\+\_\+bbb}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a7fe418805ec6a6f43c7eea53a3f905a4}{Hamiltonian}} (\mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} \&result, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints)
+\item 
+double \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a9c3afbd8ad81b943a19bb1cefbc50c2d}{energy\+\_\+from\+\_\+rdms}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints)
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a3d1f90f4570df5b367dd8b356d2afb0a}{compute\+\_\+rdms}} (int max\+\_\+order=2)
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a1c3bfabd91f5a538e18c69f4a04f5fc0}{rdm\+\_\+test}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a21aab8b6dd3d6e3805352025f8b90c59}{print\+\_\+natural\+\_\+orbitals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$)
+\item 
+std\+::vector$<$ std\+::tuple$<$ double, size\+\_\+t, size\+\_\+t, size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_f_c_i_vector_ab0ee83d2f650fb39eb17e163f3191eca}{min\+\_\+elements}} (size\+\_\+t num\+\_\+dets)
+\item 
+std\+::vector$<$ std\+::tuple$<$ double, double, size\+\_\+t, size\+\_\+t, size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_f_c_i_vector_afee2d3025d99c222d84d9a0c8b3b236d}{max\+\_\+abs\+\_\+elements}} (size\+\_\+t num\+\_\+dets)
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_adf48739d8b0af1cf8a17fe8b68d30d23}{set\+\_\+print}} (int \mbox{\hyperlink{classforte_1_1_f_c_i_vector_aefc1a1762450009031c196c96bae636e}{print}})
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_ad3aed0f04ae2cb88c0f77c02197f6d02}{allocate\+\_\+temp\+\_\+space}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_string_lists}{String\+Lists}} $>$ lists\+\_\+, int print\+\_\+)
+\item 
+static void \mbox{\hyperlink{classforte_1_1_f_c_i_vector_a31d51c8fda52541784e15b06ca9ebd45}{release\+\_\+temp\+\_\+space}} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_ac11c68d1754586cf203dad0b95a07b86}\label{classforte_1_1_f_c_i_vector_ac11c68d1754586cf203dad0b95a07b86}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!F\+C\+I\+Vector@{F\+C\+I\+Vector}}
+\index{F\+C\+I\+Vector@{F\+C\+I\+Vector}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{F\+C\+I\+Vector()}{FCIVector()}}
+{\footnotesize\ttfamily forte\+::\+F\+C\+I\+Vector\+::\+F\+C\+I\+Vector (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_string_lists}{String\+Lists}} $>$}]{lists,  }\item[{size\+\_\+t}]{symmetry }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a84a8cb8bb781300b63f904bea8a38a60}\label{classforte_1_1_f_c_i_vector_a84a8cb8bb781300b63f904bea8a38a60}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!````~F\+C\+I\+Vector@{$\sim$\+F\+C\+I\+Vector}}
+\index{````~F\+C\+I\+Vector@{$\sim$\+F\+C\+I\+Vector}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{$\sim$\+F\+C\+I\+Vector()}{~FCIVector()}}
+{\footnotesize\ttfamily forte\+::\+F\+C\+I\+Vector\+::$\sim$\+F\+C\+I\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_ad3aed0f04ae2cb88c0f77c02197f6d02}\label{classforte_1_1_f_c_i_vector_ad3aed0f04ae2cb88c0f77c02197f6d02}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!allocate\+\_\+temp\+\_\+space@{allocate\+\_\+temp\+\_\+space}}
+\index{allocate\+\_\+temp\+\_\+space@{allocate\+\_\+temp\+\_\+space}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{allocate\+\_\+temp\+\_\+space()}{allocate\_temp\_space()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::allocate\+\_\+temp\+\_\+space (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_string_lists}{String\+Lists}} $>$}]{lists\+\_\+,  }\item[{int}]{print\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a3d1f90f4570df5b367dd8b356d2afb0a}\label{classforte_1_1_f_c_i_vector_a3d1f90f4570df5b367dd8b356d2afb0a}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!compute\+\_\+rdms@{compute\+\_\+rdms}}
+\index{compute\+\_\+rdms@{compute\+\_\+rdms}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{compute\+\_\+rdms()}{compute\_rdms()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::compute\+\_\+rdms (\begin{DoxyParamCaption}\item[{int}]{max\+\_\+order = {\ttfamily 2} }\end{DoxyParamCaption})}
+
+Compute the one-\/particle density matrix for a given wave function 
+\begin{DoxyParams}{Parameters}
+{\em alfa} & flag for alfa or beta component, true = alfa, false = beta \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a4c1591f17c9b23b29730a2f1d76c5785}\label{classforte_1_1_f_c_i_vector_a4c1591f17c9b23b29730a2f1d76c5785}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!copy@{copy}}
+\index{copy@{copy}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{copy()}{copy()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::copy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} \&}]{wfn }\end{DoxyParamCaption})}
+
+
+
+Copy the wave function object. 
+
+Set the wave function to a single Slater determinant Get the coefficient of a single Slater determinant Set the wave function to another wave function \mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a131ea2c22528308ec890b45c9fed78a3}\label{classforte_1_1_f_c_i_vector_a131ea2c22528308ec890b45c9fed78a3}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!copy@{copy}}
+\index{copy@{copy}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{copy()}{copy()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::copy (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{vec }\end{DoxyParamCaption})}
+
+
+
+Copy the coefficient from a Vector object. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_af77aa0955826ad3c3588ee4f9a93bad9}\label{classforte_1_1_f_c_i_vector_af77aa0955826ad3c3588ee4f9a93bad9}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!copy\+\_\+to@{copy\+\_\+to}}
+\index{copy\+\_\+to@{copy\+\_\+to}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{copy\+\_\+to()}{copy\_to()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::copy\+\_\+to (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{vec }\end{DoxyParamCaption})}
+
+
+
+Copy the wave function object. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a1cccfb3c677d313ba9bb278adc5d8dba}\label{classforte_1_1_f_c_i_vector_a1cccfb3c677d313ba9bb278adc5d8dba}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!dot@{dot}}
+\index{dot@{dot}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{dot()}{dot()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double forte\+::\+F\+C\+I\+Vector\+::dot (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} \&}]{wfn }\end{DoxyParamCaption})}
+
+Compute the dot product with another wave function \mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a5a80e78715a46d5edf2771e225dc8bcc}\label{classforte_1_1_f_c_i_vector_a5a80e78715a46d5edf2771e225dc8bcc}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!dot@{dot}}
+\index{dot@{dot}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{dot()}{dot()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily double forte\+::\+F\+C\+I\+Vector\+::dot (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} $>$ \&}]{wfn }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a9c3afbd8ad81b943a19bb1cefbc50c2d}\label{classforte_1_1_f_c_i_vector_a9c3afbd8ad81b943a19bb1cefbc50c2d}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!energy\+\_\+from\+\_\+rdms@{energy\+\_\+from\+\_\+rdms}}
+\index{energy\+\_\+from\+\_\+rdms@{energy\+\_\+from\+\_\+rdms}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{energy\+\_\+from\+\_\+rdms()}{energy\_from\_rdms()}}
+{\footnotesize\ttfamily double forte\+::\+F\+C\+I\+Vector\+::energy\+\_\+from\+\_\+rdms (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_afdfc26aaf2b21ea6b5cfdec40c71cf22}\label{classforte_1_1_f_c_i_vector_afdfc26aaf2b21ea6b5cfdec40c71cf22}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!form\+\_\+\+H\+\_\+diagonal@{form\+\_\+\+H\+\_\+diagonal}}
+\index{form\+\_\+\+H\+\_\+diagonal@{form\+\_\+\+H\+\_\+diagonal}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{form\+\_\+\+H\+\_\+diagonal()}{form\_H\_diagonal()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::form\+\_\+\+H\+\_\+diagonal (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints }\end{DoxyParamCaption})}
+
+
+
+Form the diagonal part of the Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a7fe418805ec6a6f43c7eea53a3f905a4}\label{classforte_1_1_f_c_i_vector_a7fe418805ec6a6f43c7eea53a3f905a4}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!Hamiltonian@{Hamiltonian}}
+\index{Hamiltonian@{Hamiltonian}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{Hamiltonian()}{Hamiltonian()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::\+Hamiltonian (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} \&}]{result,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints }\end{DoxyParamCaption})}
+
+Apply the Hamiltonian to the wave function 
+\begin{DoxyParams}{Parameters}
+{\em result} & Wave function object which stores the resulting vector \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_afee2d3025d99c222d84d9a0c8b3b236d}\label{classforte_1_1_f_c_i_vector_afee2d3025d99c222d84d9a0c8b3b236d}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!max\+\_\+abs\+\_\+elements@{max\+\_\+abs\+\_\+elements}}
+\index{max\+\_\+abs\+\_\+elements@{max\+\_\+abs\+\_\+elements}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{max\+\_\+abs\+\_\+elements()}{max\_abs\_elements()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::tuple$<$ double, double, size\+\_\+t, size\+\_\+t, size\+\_\+t $>$ $>$ forte\+::\+F\+C\+I\+Vector\+::max\+\_\+abs\+\_\+elements (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{num\+\_\+dets }\end{DoxyParamCaption})}
+
+Return the elements with the largest absolute value This function returns the tuple ($\vert$\+C\+\_\+\+I$\vert$,C\+\_\+I,irrep,Ia,Ib) \mbox{\Hypertarget{classforte_1_1_f_c_i_vector_ab0ee83d2f650fb39eb17e163f3191eca}\label{classforte_1_1_f_c_i_vector_ab0ee83d2f650fb39eb17e163f3191eca}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!min\+\_\+elements@{min\+\_\+elements}}
+\index{min\+\_\+elements@{min\+\_\+elements}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{min\+\_\+elements()}{min\_elements()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::tuple$<$ double, size\+\_\+t, size\+\_\+t, size\+\_\+t $>$ $>$ forte\+::\+F\+C\+I\+Vector\+::min\+\_\+elements (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{num\+\_\+dets }\end{DoxyParamCaption})}
+
+Return the elements with the smallest value This function returns the tuple (C\+\_\+I,irrep,Ia,Ib) \mbox{\Hypertarget{classforte_1_1_f_c_i_vector_aa3a4006628555ede48afd56c284c911a}\label{classforte_1_1_f_c_i_vector_aa3a4006628555ede48afd56c284c911a}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!norm@{norm}}
+\index{norm@{norm}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{norm()}{norm()}}
+{\footnotesize\ttfamily double forte\+::\+F\+C\+I\+Vector\+::norm (\begin{DoxyParamCaption}\item[{double}]{power = {\ttfamily 2.0} }\end{DoxyParamCaption})}
+
+Zero a symmetry block of the wave function 
+\begin{DoxyParams}{Parameters}
+{\em h} & symmetry of the alpha strings of the block to zero Transpose a block of the matrix (Works only for total symmetric wfns!) \\
+\hline
+{\em h} & symmetry of the alpha strings of the block to zero Compute the 2-\/norm of the wave function \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_ad477a8c333a440f3b5f59e980f443484}\label{classforte_1_1_f_c_i_vector_ad477a8c333a440f3b5f59e980f443484}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!normalize@{normalize}}
+\index{normalize@{normalize}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{normalize()}{normalize()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::normalize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Set the wave function to the nth determinant in the list Get the coefficient of the nth determinant in the list Get a vector of the determinants with weight greather than alpha Normalize the wave function without changing the phase \mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a6d0c2dafcf9e13600685db7f7a27cae6}\label{classforte_1_1_f_c_i_vector_a6d0c2dafcf9e13600685db7f7a27cae6}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!opdm\+\_\+a@{opdm\+\_\+a}}
+\index{opdm\+\_\+a@{opdm\+\_\+a}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{opdm\+\_\+a()}{opdm\_a()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::opdm\+\_\+a (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a345012bafb002400635091f98018589d}\label{classforte_1_1_f_c_i_vector_a345012bafb002400635091f98018589d}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!opdm\+\_\+b@{opdm\+\_\+b}}
+\index{opdm\+\_\+b@{opdm\+\_\+b}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{opdm\+\_\+b()}{opdm\_b()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::opdm\+\_\+b (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_aefc1a1762450009031c196c96bae636e}\label{classforte_1_1_f_c_i_vector_aefc1a1762450009031c196c96bae636e}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!print@{print}}
+\index{print@{print}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{print()}{print()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::print (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Find the largest element in the wave function Find the smallest element in the wave function Implements the update method of Bendazzoli and Evangelisti modified Implements the update method of Bendazzoli and Evangelisti Implements the update method of Davidson and Liu Add a scaled amount of another wave function Add a scaled amount of another wave function Print the non-\/zero contributions to the wave function \mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a21aab8b6dd3d6e3805352025f8b90c59}\label{classforte_1_1_f_c_i_vector_a21aab8b6dd3d6e3805352025f8b90c59}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!print\+\_\+natural\+\_\+orbitals@{print\+\_\+natural\+\_\+orbitals}}
+\index{print\+\_\+natural\+\_\+orbitals@{print\+\_\+natural\+\_\+orbitals}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{print\+\_\+natural\+\_\+orbitals()}{print\_natural\_orbitals()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::print\+\_\+natural\+\_\+orbitals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info }\end{DoxyParamCaption})}
+
+Print the natural\+\_\+orbitals from F\+C\+I\+W\+FN Assume user specifed active space \mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a1c3bfabd91f5a538e18c69f4a04f5fc0}\label{classforte_1_1_f_c_i_vector_a1c3bfabd91f5a538e18c69f4a04f5fc0}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!rdm\+\_\+test@{rdm\+\_\+test}}
+\index{rdm\+\_\+test@{rdm\+\_\+test}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{rdm\+\_\+test()}{rdm\_test()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::rdm\+\_\+test (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a31d51c8fda52541784e15b06ca9ebd45}\label{classforte_1_1_f_c_i_vector_a31d51c8fda52541784e15b06ca9ebd45}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!release\+\_\+temp\+\_\+space@{release\+\_\+temp\+\_\+space}}
+\index{release\+\_\+temp\+\_\+space@{release\+\_\+temp\+\_\+space}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{release\+\_\+temp\+\_\+space()}{release\_temp\_space()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::release\+\_\+temp\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_abe8cd93a76079285466cddff46961760}\label{classforte_1_1_f_c_i_vector_abe8cd93a76079285466cddff46961760}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!set@{set}}
+\index{set@{set}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{set()}{set()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::set (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, size\+\_\+t, size\+\_\+t, double $>$$>$ \&}]{sparse\+\_\+vec }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_adf48739d8b0af1cf8a17fe8b68d30d23}\label{classforte_1_1_f_c_i_vector_adf48739d8b0af1cf8a17fe8b68d30d23}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!set\+\_\+print@{set\+\_\+print}}
+\index{set\+\_\+print@{set\+\_\+print}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{set\+\_\+print()}{set\_print()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::set\+\_\+print (\begin{DoxyParamCaption}\item[{int}]{print }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a47e6063b6b07af86a2e6f439bcb2037f}\label{classforte_1_1_f_c_i_vector_a47e6063b6b07af86a2e6f439bcb2037f}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!size@{size}}
+\index{size@{size}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+F\+C\+I\+Vector\+::size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The size of the CI basis. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_ab85a2b7900a540e1c8ba6f7cd4447ab6}\label{classforte_1_1_f_c_i_vector_ab85a2b7900a540e1c8ba6f7cd4447ab6}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!tpdm\+\_\+aa@{tpdm\+\_\+aa}}
+\index{tpdm\+\_\+aa@{tpdm\+\_\+aa}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{tpdm\+\_\+aa()}{tpdm\_aa()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::tpdm\+\_\+aa (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_ac5aaf83f7d7f51c5bc86cd3d02604452}\label{classforte_1_1_f_c_i_vector_ac5aaf83f7d7f51c5bc86cd3d02604452}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!tpdm\+\_\+aaa@{tpdm\+\_\+aaa}}
+\index{tpdm\+\_\+aaa@{tpdm\+\_\+aaa}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{tpdm\+\_\+aaa()}{tpdm\_aaa()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::tpdm\+\_\+aaa (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a5fd074490be763669f7dadc573a4b9a2}\label{classforte_1_1_f_c_i_vector_a5fd074490be763669f7dadc573a4b9a2}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!tpdm\+\_\+aab@{tpdm\+\_\+aab}}
+\index{tpdm\+\_\+aab@{tpdm\+\_\+aab}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{tpdm\+\_\+aab()}{tpdm\_aab()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::tpdm\+\_\+aab (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a4a953a96657455eedcd54749dea82d08}\label{classforte_1_1_f_c_i_vector_a4a953a96657455eedcd54749dea82d08}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!tpdm\+\_\+ab@{tpdm\+\_\+ab}}
+\index{tpdm\+\_\+ab@{tpdm\+\_\+ab}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{tpdm\+\_\+ab()}{tpdm\_ab()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::tpdm\+\_\+ab (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_afba490fcaae3e4c1bc8bac2e732c3b00}\label{classforte_1_1_f_c_i_vector_afba490fcaae3e4c1bc8bac2e732c3b00}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!tpdm\+\_\+abb@{tpdm\+\_\+abb}}
+\index{tpdm\+\_\+abb@{tpdm\+\_\+abb}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{tpdm\+\_\+abb()}{tpdm\_abb()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::tpdm\+\_\+abb (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a9f8152bb2df645b7d48c8e1304dff05f}\label{classforte_1_1_f_c_i_vector_a9f8152bb2df645b7d48c8e1304dff05f}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!tpdm\+\_\+bb@{tpdm\+\_\+bb}}
+\index{tpdm\+\_\+bb@{tpdm\+\_\+bb}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{tpdm\+\_\+bb()}{tpdm\_bb()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::tpdm\+\_\+bb (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_a7c588ba35e588c6e87d0214f7a586504}\label{classforte_1_1_f_c_i_vector_a7c588ba35e588c6e87d0214f7a586504}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!tpdm\+\_\+bbb@{tpdm\+\_\+bbb}}
+\index{tpdm\+\_\+bbb@{tpdm\+\_\+bbb}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{tpdm\+\_\+bbb()}{tpdm\_bbb()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$\& forte\+::\+F\+C\+I\+Vector\+::tpdm\+\_\+bbb (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_vector_abc76153c77025417cebb1a58d5382ae1}\label{classforte_1_1_f_c_i_vector_abc76153c77025417cebb1a58d5382ae1}} 
+\index{forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}!zero@{zero}}
+\index{zero@{zero}!forte\+::\+F\+C\+I\+Vector@{forte\+::\+F\+C\+I\+Vector}}
+\subsubsection{\texorpdfstring{zero()}{zero()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Vector\+::zero (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Normalize the wave function wrt to a single Slater determinant Zero the wave function 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/fci/\mbox{\hyperlink{fci__vector_8h}{fci\+\_\+vector.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/fci/\mbox{\hyperlink{fci__vector_8cc}{fci\+\_\+vector.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/fci/\mbox{\hyperlink{fci__vector__h__diag_8cc}{fci\+\_\+vector\+\_\+h\+\_\+diag.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/fci/\mbox{\hyperlink{fci__vector__hamiltonian_8cc}{fci\+\_\+vector\+\_\+hamiltonian.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/fci/\mbox{\hyperlink{fci__vector__rdm_8cc}{fci\+\_\+vector\+\_\+rdm.\+cc}}\end{DoxyCompactItemize}

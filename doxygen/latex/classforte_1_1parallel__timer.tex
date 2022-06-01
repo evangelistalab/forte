@@ -1,0 +1,58 @@
+\hypertarget{classforte_1_1parallel__timer}{}\section{forte\+:\+:parallel\+\_\+timer Class Reference}
+\label{classforte_1_1parallel__timer}\index{forte\+::parallel\+\_\+timer@{forte\+::parallel\+\_\+timer}}
+
+
+A timer class for parallel functions that prints timing to a file (timer.\+dat)  
+
+
+
+
+{\ttfamily \#include $<$timer.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1parallel__timer_a94679c406fc0e1cb5e964b3d1c4128b5}{parallel\+\_\+timer}} (const std\+::string \&name, int rank)
+\item 
+\mbox{\hyperlink{classforte_1_1parallel__timer_abf4df15d53481277b7134fc74a7f1db3}{$\sim$parallel\+\_\+timer}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1parallel__timer_abacc218012f9ecd9a6f709dc40949948}{stop}} ()
+\begin{DoxyCompactList}\small\item\em Return the elapsed time in seconds. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A timer class for parallel functions that prints timing to a file (timer.\+dat) 
+
+This class uses the psi4 functions parallel\+\_\+timer\+\_\+on/parallel\+\_\+timer\+\_\+off to track time. The function \mbox{\hyperlink{classforte_1_1parallel__timer_abacc218012f9ecd9a6f709dc40949948}{stop()}} will return the elapsed time and stop the psi4 timer. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1parallel__timer_a94679c406fc0e1cb5e964b3d1c4128b5}\label{classforte_1_1parallel__timer_a94679c406fc0e1cb5e964b3d1c4128b5}} 
+\index{forte\+::parallel\+\_\+timer@{forte\+::parallel\+\_\+timer}!parallel\+\_\+timer@{parallel\+\_\+timer}}
+\index{parallel\+\_\+timer@{parallel\+\_\+timer}!forte\+::parallel\+\_\+timer@{forte\+::parallel\+\_\+timer}}
+\subsubsection{\texorpdfstring{parallel\+\_\+timer()}{parallel\_timer()}}
+{\footnotesize\ttfamily forte\+::parallel\+\_\+timer\+::parallel\+\_\+timer (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{int}]{rank }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1parallel__timer_abf4df15d53481277b7134fc74a7f1db3}\label{classforte_1_1parallel__timer_abf4df15d53481277b7134fc74a7f1db3}} 
+\index{forte\+::parallel\+\_\+timer@{forte\+::parallel\+\_\+timer}!````~parallel\+\_\+timer@{$\sim$parallel\+\_\+timer}}
+\index{````~parallel\+\_\+timer@{$\sim$parallel\+\_\+timer}!forte\+::parallel\+\_\+timer@{forte\+::parallel\+\_\+timer}}
+\subsubsection{\texorpdfstring{$\sim$parallel\+\_\+timer()}{~parallel\_timer()}}
+{\footnotesize\ttfamily forte\+::parallel\+\_\+timer\+::$\sim$parallel\+\_\+timer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1parallel__timer_abacc218012f9ecd9a6f709dc40949948}\label{classforte_1_1parallel__timer_abacc218012f9ecd9a6f709dc40949948}} 
+\index{forte\+::parallel\+\_\+timer@{forte\+::parallel\+\_\+timer}!stop@{stop}}
+\index{stop@{stop}!forte\+::parallel\+\_\+timer@{forte\+::parallel\+\_\+timer}}
+\subsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily void forte\+::parallel\+\_\+timer\+::stop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the elapsed time in seconds. 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/helpers/\mbox{\hyperlink{timer_8h}{timer.\+h}}\end{DoxyCompactItemize}

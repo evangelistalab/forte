@@ -1,0 +1,76 @@
+\hypertarget{three__dsrg__mrpt2_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/spin-\/integrated/three\+\_\+dsrg\+\_\+mrpt2.cc File Reference}
+\label{three__dsrg__mrpt2_8cc}\index{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/spin-\/integrated/three\+\_\+dsrg\+\_\+mrpt2.\+cc@{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/spin-\/integrated/three\+\_\+dsrg\+\_\+mrpt2.\+cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$numeric$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include $<$sstream$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/lib3index/dftensor.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/molecule.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libqt/qt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}orbital-\/helpers/ao\+\_\+helper.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/blockedtensorfactory.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/printing.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fci/fci\+\_\+solver.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fci/fci\+\_\+vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sci/fci\+\_\+mo.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sci/aci.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}three\+\_\+dsrg\+\_\+mrpt2.\+h\char`\"{}}\newline
+Include dependency graph for three\+\_\+dsrg\+\_\+mrpt2.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{three__dsrg__mrpt2_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{three__dsrg__mrpt2_8cc_a856a80b080f2c7937396d96bd7158f0e}{G\+A\+\_\+\+Nnodes}}()~1
+\item 
+\#define \mbox{\hyperlink{three__dsrg__mrpt2_8cc_a6a0ea5f7457a5e512eeeb4705ed7b9e6}{G\+A\+\_\+\+Nodeid}}()~0
+\item 
+\#define \mbox{\hyperlink{three__dsrg__mrpt2_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{three__dsrg__mrpt2_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{three__dsrg__mrpt2_8cc_a856a80b080f2c7937396d96bd7158f0e}\label{three__dsrg__mrpt2_8cc_a856a80b080f2c7937396d96bd7158f0e}} 
+\index{three\+\_\+dsrg\+\_\+mrpt2.\+cc@{three\+\_\+dsrg\+\_\+mrpt2.\+cc}!G\+A\+\_\+\+Nnodes@{G\+A\+\_\+\+Nnodes}}
+\index{G\+A\+\_\+\+Nnodes@{G\+A\+\_\+\+Nnodes}!three\+\_\+dsrg\+\_\+mrpt2.\+cc@{three\+\_\+dsrg\+\_\+mrpt2.\+cc}}
+\subsubsection{\texorpdfstring{G\+A\+\_\+\+Nnodes}{GA\_Nnodes}}
+{\footnotesize\ttfamily \#define G\+A\+\_\+\+Nnodes(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{three__dsrg__mrpt2_8cc_a6a0ea5f7457a5e512eeeb4705ed7b9e6}\label{three__dsrg__mrpt2_8cc_a6a0ea5f7457a5e512eeeb4705ed7b9e6}} 
+\index{three\+\_\+dsrg\+\_\+mrpt2.\+cc@{three\+\_\+dsrg\+\_\+mrpt2.\+cc}!G\+A\+\_\+\+Nodeid@{G\+A\+\_\+\+Nodeid}}
+\index{G\+A\+\_\+\+Nodeid@{G\+A\+\_\+\+Nodeid}!three\+\_\+dsrg\+\_\+mrpt2.\+cc@{three\+\_\+dsrg\+\_\+mrpt2.\+cc}}
+\subsubsection{\texorpdfstring{G\+A\+\_\+\+Nodeid}{GA\_Nodeid}}
+{\footnotesize\ttfamily \#define G\+A\+\_\+\+Nodeid(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+
+\mbox{\Hypertarget{three__dsrg__mrpt2_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{three__dsrg__mrpt2_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{three\+\_\+dsrg\+\_\+mrpt2.\+cc@{three\+\_\+dsrg\+\_\+mrpt2.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!three\+\_\+dsrg\+\_\+mrpt2.\+cc@{three\+\_\+dsrg\+\_\+mrpt2.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{three__dsrg__mrpt2_8cc_a889ec205c635b219999c761b28cc39ba}\label{three__dsrg__mrpt2_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{three\+\_\+dsrg\+\_\+mrpt2.\+cc@{three\+\_\+dsrg\+\_\+mrpt2.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!three\+\_\+dsrg\+\_\+mrpt2.\+cc@{three\+\_\+dsrg\+\_\+mrpt2.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+

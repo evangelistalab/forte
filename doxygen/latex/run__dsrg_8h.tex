@@ -1,0 +1,49 @@
+\hypertarget{run__dsrg_8h}{}\section{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/run\+\_\+dsrg.h File Reference}
+\label{run__dsrg_8h}\index{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/run\+\_\+dsrg.\+h@{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/run\+\_\+dsrg.\+h}}
+{\ttfamily \#include $<$memory$>$}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/forte\+\_\+options.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sci/fci\+\_\+mo.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/helper/dsrg\+\_\+transformed.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/spin-\/integrated/dsrg\+\_\+mrpt2.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/spin-\/integrated/dsrg\+\_\+mrpt3.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/spin-\/integrated/master\+\_\+mrdsrg.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/spin-\/integrated/three\+\_\+dsrg\+\_\+mrpt2.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/spin-\/integrated/mrdsrg.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/so/mrdsrg\+\_\+so.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/so/so-\/mrdsrg.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/spin-\/adapted/dsrg\+\_\+mrpt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrdsrg-\/spin-\/adapted/sadsrg.\+h\char`\"{}}\newline
+Include dependency graph for run\+\_\+dsrg.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{run__dsrg_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=336pt]{run__dsrg_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::unique\+\_\+ptr$<$ M\+A\+S\+T\+E\+R\+\_\+\+D\+S\+RG $>$ \mbox{\hyperlink{namespaceforte_a0e9db0f66ab09d793a02865a721fa630}{forte\+::make\+\_\+dsrg\+\_\+method}} (R\+D\+Ms rdms, std\+::shared\+\_\+ptr$<$ S\+C\+F\+Info $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options, std\+::shared\+\_\+ptr$<$ Forte\+Integrals $>$ ints, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info)
+\item 
+std\+::unique\+\_\+ptr$<$ M\+R\+D\+S\+R\+G\+\_\+\+SO $>$ \mbox{\hyperlink{namespaceforte_a6aeb5b4097c58f20e18681ab1e98d13d}{forte\+::make\+\_\+dsrg\+\_\+so\+\_\+y}} (R\+D\+Ms rdms, std\+::shared\+\_\+ptr$<$ S\+C\+F\+Info $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options, std\+::shared\+\_\+ptr$<$ Forte\+Integrals $>$ ints, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info)
+\item 
+std\+::unique\+\_\+ptr$<$ S\+O\+M\+R\+D\+S\+RG $>$ \mbox{\hyperlink{namespaceforte_a8edbf3aae3b74d67ff3e6cf117c9eb23}{forte\+::make\+\_\+dsrg\+\_\+so\+\_\+f}} (R\+D\+Ms rdms, std\+::shared\+\_\+ptr$<$ S\+C\+F\+Info $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options, std\+::shared\+\_\+ptr$<$ Forte\+Integrals $>$ ints, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info)
+\item 
+std\+::unique\+\_\+ptr$<$ D\+S\+R\+G\+\_\+\+M\+R\+PT $>$ \mbox{\hyperlink{namespaceforte_a85c9c19919ccd4684ab6fd6eaec52d90}{forte\+::make\+\_\+dsrg\+\_\+spin\+\_\+adapted}} (R\+D\+Ms rdms, std\+::shared\+\_\+ptr$<$ S\+C\+F\+Info $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options, std\+::shared\+\_\+ptr$<$ Forte\+Integrals $>$ ints, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info)
+\item 
+std\+::unique\+\_\+ptr$<$ S\+A\+D\+S\+RG $>$ \mbox{\hyperlink{namespaceforte_a05397ae883351498d2604dec70e235e8}{forte\+::make\+\_\+sadsrg\+\_\+method}} (R\+D\+Ms rdms, std\+::shared\+\_\+ptr$<$ S\+C\+F\+Info $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options, std\+::shared\+\_\+ptr$<$ Forte\+Integrals $>$ ints, std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ mo\+\_\+space\+\_\+info)
+\end{DoxyCompactItemize}

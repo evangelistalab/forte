@@ -1,0 +1,64 @@
+\hypertarget{determinant__functions_8hpp}{}\section{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/determinant\+\_\+functions.hpp File Reference}
+\label{determinant__functions_8hpp}\index{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/determinant\+\_\+functions.\+hpp@{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/determinant\+\_\+functions.\+hpp}}
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include $<$cstddef$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+Include dependency graph for determinant\+\_\+functions.\+hpp\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=324pt]{determinant__functions_8hpp__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{determinant__functions_8hpp__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{determinant__functions_8hpp_aa7c040fa94dc9718470d9c648e380316}{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON}}~0
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{namespaceforte_a5f0ac83cc1c44664be9d04f973790b71}{forte\+::slater\+\_\+rules\+\_\+single\+\_\+alpha}} (String Ib, String Ia, String Ja, const std\+::shared\+\_\+ptr$<$ Active\+Space\+Integrals $>$ \&ints)
+\item 
+double \mbox{\hyperlink{namespaceforte_aa05d7bfcc1000c654a1d40af3332c5d0}{forte\+::slater\+\_\+rules\+\_\+single\+\_\+beta}} (String Ia, String Ib, String Jb, const std\+::shared\+\_\+ptr$<$ Active\+Space\+Integrals $>$ \&ints)
+\item 
+double \mbox{\hyperlink{namespaceforte_ac87709b7860d68506007596e7defdca6}{forte\+::slater\+\_\+rules\+\_\+double\+\_\+alpha\+\_\+alpha}} (String Ia, String Ja, const std\+::shared\+\_\+ptr$<$ Active\+Space\+Integrals $>$ \&ints)
+\item 
+double \mbox{\hyperlink{namespaceforte_a477824ef87cc366861bc98839f9560b4}{forte\+::slater\+\_\+rules\+\_\+double\+\_\+beta\+\_\+beta}} (String Ib, String Jb, const std\+::shared\+\_\+ptr$<$ Active\+Space\+Integrals $>$ \&ints)
+\item 
+double \mbox{\hyperlink{namespaceforte_ac0d23dcdeb2163229bd1a4a9827be06c}{forte\+::slater\+\_\+rules\+\_\+double\+\_\+alpha\+\_\+beta\+\_\+pre}} (int i, int a, String Ib, String Jb, const std\+::shared\+\_\+ptr$<$ Active\+Space\+Integrals $>$ \&ints)
+\item 
+Determinant \mbox{\hyperlink{namespaceforte_a2f094bc34c845c35c77772f8205e69c7}{forte\+::common\+\_\+occupation}} (const Determinant \&lhs, const Determinant \&rhs)
+\item 
+Determinant \mbox{\hyperlink{namespaceforte_aa39b01fa388fa8c08b83dddeeafc624d}{forte\+::different\+\_\+occupation}} (const Determinant \&lhs, const Determinant \&rhs)
+\item 
+Determinant \mbox{\hyperlink{namespaceforte_a352c100ca3c71a8da77245fba7623959}{forte\+::union\+\_\+occupation}} (const Determinant \&lhs, const Determinant \&rhs)
+\begin{DoxyCompactList}\small\item\em Find the spin orbitals that are occupied only one determinant (performs a bitwise OR, $\vert$) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a46b5590d0414ccc26b7e6e83870d12bb}{forte\+::enforce\+\_\+spin\+\_\+completeness}} (std\+::vector$<$ Determinant $>$ \&det\+\_\+space, int nmo)
+\item 
+std\+::vector$<$ Determinant $>$ \mbox{\hyperlink{namespaceforte_aaffb39863f2ec986d99e2fb73ca079f9}{forte\+::find\+\_\+minimum\+\_\+spin\+\_\+complete}} (std\+::vector$<$ Determinant $>$ \&det\+\_\+space, int nmo)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{determinant__functions_8hpp_aa7c040fa94dc9718470d9c648e380316}\label{determinant__functions_8hpp_aa7c040fa94dc9718470d9c648e380316}} 
+\index{determinant\+\_\+functions.\+hpp@{determinant\+\_\+functions.\+hpp}!P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON@{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON}}
+\index{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON@{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON}!determinant\+\_\+functions.\+hpp@{determinant\+\_\+functions.\+hpp}}
+\subsubsection{\texorpdfstring{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON}{PERFORMANCE\_OPTIMIZATION}}
+{\footnotesize\ttfamily \#define P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON~0}
+

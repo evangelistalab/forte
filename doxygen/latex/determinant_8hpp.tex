@@ -1,0 +1,74 @@
+\hypertarget{determinant_8hpp}{}\section{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/determinant.hpp File Reference}
+\label{determinant_8hpp}\index{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/determinant.\+hpp@{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/determinant.\+hpp}}
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}bitarray.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bitwise\+\_\+operations.\+hpp\char`\"{}}\newline
+Include dependency graph for determinant.\+hpp\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{determinant_8hpp__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{determinant_8hpp__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl$<$ N $>$}}
+\begin{DoxyCompactList}\small\item\em A class to represent a Slater determinant with N spin orbitals. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{determinant_8hpp_aa7c040fa94dc9718470d9c648e380316}{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON}}~0
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179}{forte\+::\+Det\+Spin\+Type}} \{ \mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179a6132295fcf5570fb8b0a944ef322a598}{forte\+::\+Det\+Spin\+Type\+::\+Alpha}}, 
+\mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179a0b87d66b88c72957dfea8c9605016442}{forte\+::\+Det\+Spin\+Type\+::\+Beta}}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\std\+::string \mbox{\hyperlink{namespaceforte_ae9cb3efd440a869cfceb01181e4afd29}{forte\+::str\+\_\+bits}} (const Determinant\+Impl$<$ N $>$ \&d, int n=Determinant\+Impl$<$ N $>$\+::nbits)
+\begin{DoxyCompactList}\small\item\em return a string representation of this determinant \end{DoxyCompactList}\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\std\+::string \mbox{\hyperlink{namespaceforte_af0f9481a38ad3ccb1dd258bdfea20492}{forte\+::str}} (const Determinant\+Impl$<$ N $>$ \&d, int n=Determinant\+Impl$<$ N $>$\+::nbits\+\_\+half)
+\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\void \mbox{\hyperlink{namespaceforte_aa628406b6e7b0708538a090f9166cbb1}{forte\+::set\+\_\+str}} (Determinant\+Impl$<$ N $>$ \&d, const std\+::string \&str)
+\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\std\+::vector$<$ std\+::vector$<$ int $>$ $>$ \mbox{\hyperlink{namespaceforte_a177f0d5cfbb142fd54bd517ee85b1b63}{forte\+::get\+\_\+asym\+\_\+occ}} (const Determinant\+Impl$<$ N $>$ \&d, const std\+::vector$<$ int $>$ \&act\+\_\+mo)
+\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\std\+::vector$<$ std\+::vector$<$ int $>$ $>$ \mbox{\hyperlink{namespaceforte_adaf5d0dec572bff69cf7fefe72327e8f}{forte\+::get\+\_\+bsym\+\_\+occ}} (const Determinant\+Impl$<$ N $>$ \&d, const std\+::vector$<$ int $>$ \&act\+\_\+mo)
+\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\std\+::vector$<$ std\+::vector$<$ int $>$ $>$ \mbox{\hyperlink{namespaceforte_a039fabf20208c1cf5f63ec8d8a73634a}{forte\+::get\+\_\+asym\+\_\+vir}} (const Determinant\+Impl$<$ N $>$ \&d, const std\+::vector$<$ int $>$ \&act\+\_\+mo)
+\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\std\+::vector$<$ std\+::vector$<$ int $>$ $>$ \mbox{\hyperlink{namespaceforte_a640a9cd6aa580336f205e27e080e4115}{forte\+::get\+\_\+bsym\+\_\+vir}} (const Determinant\+Impl$<$ N $>$ \&d, const std\+::vector$<$ int $>$ \&act\+\_\+mo)
+\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\double \mbox{\hyperlink{namespaceforte_a423b1beaf03ffb9646cf5c7ea3f4eb48}{forte\+::gen\+\_\+excitation}} (Determinant\+Impl$<$ N $>$ \&d, const std\+::vector$<$ int $>$ \&aann, const std\+::vector$<$ int $>$ \&acre, const std\+::vector$<$ int $>$ \&bann, const std\+::vector$<$ int $>$ \&bcre)
+\begin{DoxyCompactList}\small\item\em Apply a general excitation operator to this determinant Details\+: (bc)\+\_\+n ... (bc)\+\_\+1 (ba)\+\_\+n ... (ba)\+\_\+1 (ac)\+\_\+n ... (ac)\+\_\+1 (aa)\+\_\+n ... (aa)\+\_\+1 $\vert$det$>$ where aa = alpha annihilation operator where ac = alpha creation operator where ba = alpha annihilation operator where bc = alpha creation operator. \end{DoxyCompactList}\item 
+{\footnotesize template$<$size\+\_\+t N$>$ }\\double \mbox{\hyperlink{namespaceforte_ac9198f621cd3197e86a298b0284e3b68}{forte\+::spin2}} (const Determinant\+Impl$<$ N $>$ \&lhs, const Determinant\+Impl$<$ N $>$ \&rhs)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{determinant_8hpp_aa7c040fa94dc9718470d9c648e380316}\label{determinant_8hpp_aa7c040fa94dc9718470d9c648e380316}} 
+\index{determinant.\+hpp@{determinant.\+hpp}!P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON@{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON}}
+\index{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON@{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON}!determinant.\+hpp@{determinant.\+hpp}}
+\subsubsection{\texorpdfstring{P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON}{PERFORMANCE\_OPTIMIZATION}}
+{\footnotesize\ttfamily \#define P\+E\+R\+F\+O\+R\+M\+A\+N\+C\+E\+\_\+\+O\+P\+T\+I\+M\+I\+Z\+A\+T\+I\+ON~0}
+

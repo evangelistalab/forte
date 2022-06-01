@@ -1,0 +1,286 @@
+\hypertarget{classforte_1_1_davidson_liu_solver}{}\section{forte\+:\+:Davidson\+Liu\+Solver Class Reference}
+\label{classforte_1_1_davidson_liu_solver}\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+
+
+The \mbox{\hyperlink{classforte_1_1_davidson_liu_solver}{Davidson\+Liu\+Solver}} class This class diagonalizes the Hamiltonian in a basis of determinants.  
+
+
+
+
+{\ttfamily \#include $<$iterative\+\_\+solvers.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a1b843c1999b520d6bd65e68db087a78d}{Davidson\+Liu\+Solver}} (size\+\_\+t size, size\+\_\+t nroot)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_davidson_liu_solver_ac8e1ff5995ed726339cb5500de75fb3e}{$\sim$\+Davidson\+Liu\+Solver}} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a833b7e36f2e1b45e0e1ebe656a2eb826}{set\+\_\+print\+\_\+level}} (size\+\_\+t n)
+\begin{DoxyCompactList}\small\item\em Set the print level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a24cacf196136a1003e1867bf5de0ff7b}{set\+\_\+e\+\_\+convergence}} (double value)
+\begin{DoxyCompactList}\small\item\em Set the energy convergence. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_aecc764a37729a8ecf814f44bac9fb60e}{set\+\_\+r\+\_\+convergence}} (double value)
+\begin{DoxyCompactList}\small\item\em Set the residual convergence. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a7575f9ba87e5acf32af334f88fa5acf3}{get\+\_\+e\+\_\+convergence}} () const
+\begin{DoxyCompactList}\small\item\em Get the energy convergence. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a0dc38a4a9e09c92568d97049c9cd193a}{get\+\_\+r\+\_\+convergence}} () const
+\begin{DoxyCompactList}\small\item\em Get the residual convergence. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a7423d12c5300f050e6c0f09f314b08d1}{set\+\_\+collapse\+\_\+per\+\_\+root}} (int value)
+\begin{DoxyCompactList}\small\item\em Set the number of collapse vectors for each root. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a0b09acd03c81aa259f22368af4ba422d}{set\+\_\+subspace\+\_\+per\+\_\+root}} (int value)
+\begin{DoxyCompactList}\small\item\em Set the maximum subspace size for each root. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_af68b3caa5e37a93261b13cbdd7006ecf}{collapse\+\_\+size}} () const
+\begin{DoxyCompactList}\small\item\em Return the size of the collapse vectors. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a16d9dda8f0ca73840539381caf50601d}{add\+\_\+guess}} (psi\+::\+Shared\+Vector vec)
+\begin{DoxyCompactList}\small\item\em Add a guess basis vector. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_ae3e3b9505b8ced3a1d2f2abeb9c5ba7d}{get\+\_\+b}} (psi\+::\+Shared\+Vector vec)
+\begin{DoxyCompactList}\small\item\em Get a basis vector. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a115e25576e4b15e960de1a7dba553079}{add\+\_\+sigma}} (psi\+::\+Shared\+Vector vec)
+\begin{DoxyCompactList}\small\item\em Add a sigma vector. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a6e41d496aef9fa83c557b513b52e4d6f}{set\+\_\+project\+\_\+out}} (std\+::vector$<$ sparse\+\_\+vec $>$ project\+\_\+out)
+\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_ac35bcdec2a59ab95da00f27453bfb0fe}{eigenvalues}} () const
+\begin{DoxyCompactList}\small\item\em Return the eigenvalues. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a29270144e1b206b5a0cd34875b733566}{eigenvectors}} () const
+\begin{DoxyCompactList}\small\item\em Return the eigenvectors. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a447794af9fa43098ae49a0e338006c88}{eigenvector}} (size\+\_\+t n) const
+\begin{DoxyCompactList}\small\item\em Return the n-\/th eigenvector. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a5ea48ce184951d29d39e710ef1a4dc4b}{startup}} (psi\+::\+Shared\+Vector diagonal)
+\begin{DoxyCompactList}\small\item\em Initialize the object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceforte_a62f3fc3a26f13fb59a89be14ecc8fa07}{Solver\+Status}} \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_a332c9bab147d3a895caf073950e30dd1}{update}} ()
+\begin{DoxyCompactList}\small\item\em Perform an update step. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_ad34514120b781b92c88d6f160d973cb8}{get\+\_\+results}} ()
+\begin{DoxyCompactList}\small\item\em Produce the final eigenvectors and eigenvalues. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_davidson_liu_solver_aa404bd3a84b3eaaf41af45accaad1a67}{residuals}} () const
+\begin{DoxyCompactList}\small\item\em A vector with the 2-\/norm of the residual for each root. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_davidson_liu_solver}{Davidson\+Liu\+Solver}} class This class diagonalizes the Hamiltonian in a basis of determinants. 
+
+Example use\+: \begin{DoxyVerb}DavidsonLiuSolver dls(nbasis,nroots);      // create solver
+dls.startup(diagonal);                     // initialize solver with
+\end{DoxyVerb}
+ diagonal of Matrix size\+\_\+t guess\+\_\+size = dls.\+collapse\+\_\+size(); // get the size of the guess
+
+for (size\+\_\+t n = 0; n $<$ guess\+\_\+size; ++n)\{ dls.\+add\+\_\+b(guess\mbox{[}n\mbox{]}); // add guess vectors \}
+
+bool converged = false; for (int cycle = 0; cycle $<$ max\+\_\+cycle; ++cycle)\{ do\{ dls.\+get\+\_\+b(b); // solver provides a vector b ... // code to compute sigma = Hb add\+\_\+sigma = dls.\+add\+\_\+sigma(sigma); // return sigma vector to solver \} while (add\+\_\+sigma); converged = dls.\+update(); // check convergence if (converged == Converged) break; \} 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a1b843c1999b520d6bd65e68db087a78d}\label{classforte_1_1_davidson_liu_solver_a1b843c1999b520d6bd65e68db087a78d}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!Davidson\+Liu\+Solver@{Davidson\+Liu\+Solver}}
+\index{Davidson\+Liu\+Solver@{Davidson\+Liu\+Solver}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{Davidson\+Liu\+Solver()}{DavidsonLiuSolver()}}
+{\footnotesize\ttfamily forte\+::\+Davidson\+Liu\+Solver\+::\+Davidson\+Liu\+Solver (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{size,  }\item[{size\+\_\+t}]{nroot }\end{DoxyParamCaption})}
+
+
+
+Constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_ac8e1ff5995ed726339cb5500de75fb3e}\label{classforte_1_1_davidson_liu_solver_ac8e1ff5995ed726339cb5500de75fb3e}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!````~Davidson\+Liu\+Solver@{$\sim$\+Davidson\+Liu\+Solver}}
+\index{````~Davidson\+Liu\+Solver@{$\sim$\+Davidson\+Liu\+Solver}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{$\sim$\+Davidson\+Liu\+Solver()}{~DavidsonLiuSolver()}}
+{\footnotesize\ttfamily forte\+::\+Davidson\+Liu\+Solver\+::$\sim$\+Davidson\+Liu\+Solver (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a16d9dda8f0ca73840539381caf50601d}\label{classforte_1_1_davidson_liu_solver_a16d9dda8f0ca73840539381caf50601d}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!add\+\_\+guess@{add\+\_\+guess}}
+\index{add\+\_\+guess@{add\+\_\+guess}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{add\+\_\+guess()}{add\_guess()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::add\+\_\+guess (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{vec }\end{DoxyParamCaption})}
+
+
+
+Add a guess basis vector. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a115e25576e4b15e960de1a7dba553079}\label{classforte_1_1_davidson_liu_solver_a115e25576e4b15e960de1a7dba553079}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!add\+\_\+sigma@{add\+\_\+sigma}}
+\index{add\+\_\+sigma@{add\+\_\+sigma}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{add\+\_\+sigma()}{add\_sigma()}}
+{\footnotesize\ttfamily bool forte\+::\+Davidson\+Liu\+Solver\+::add\+\_\+sigma (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{vec }\end{DoxyParamCaption})}
+
+
+
+Add a sigma vector. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_af68b3caa5e37a93261b13cbdd7006ecf}\label{classforte_1_1_davidson_liu_solver_af68b3caa5e37a93261b13cbdd7006ecf}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!collapse\+\_\+size@{collapse\+\_\+size}}
+\index{collapse\+\_\+size@{collapse\+\_\+size}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{collapse\+\_\+size()}{collapse\_size()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Davidson\+Liu\+Solver\+::collapse\+\_\+size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the size of the collapse vectors. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_ac35bcdec2a59ab95da00f27453bfb0fe}\label{classforte_1_1_davidson_liu_solver_ac35bcdec2a59ab95da00f27453bfb0fe}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!eigenvalues@{eigenvalues}}
+\index{eigenvalues@{eigenvalues}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{eigenvalues()}{eigenvalues()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+Davidson\+Liu\+Solver\+::eigenvalues (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the eigenvalues. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a447794af9fa43098ae49a0e338006c88}\label{classforte_1_1_davidson_liu_solver_a447794af9fa43098ae49a0e338006c88}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!eigenvector@{eigenvector}}
+\index{eigenvector@{eigenvector}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{eigenvector()}{eigenvector()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+Davidson\+Liu\+Solver\+::eigenvector (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{n }\end{DoxyParamCaption}) const}
+
+
+
+Return the n-\/th eigenvector. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a29270144e1b206b5a0cd34875b733566}\label{classforte_1_1_davidson_liu_solver_a29270144e1b206b5a0cd34875b733566}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!eigenvectors@{eigenvectors}}
+\index{eigenvectors@{eigenvectors}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{eigenvectors()}{eigenvectors()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Davidson\+Liu\+Solver\+::eigenvectors (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the eigenvectors. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_ae3e3b9505b8ced3a1d2f2abeb9c5ba7d}\label{classforte_1_1_davidson_liu_solver_ae3e3b9505b8ced3a1d2f2abeb9c5ba7d}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!get\+\_\+b@{get\+\_\+b}}
+\index{get\+\_\+b@{get\+\_\+b}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{get\+\_\+b()}{get\_b()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::get\+\_\+b (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{vec }\end{DoxyParamCaption})}
+
+
+
+Get a basis vector. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a7575f9ba87e5acf32af334f88fa5acf3}\label{classforte_1_1_davidson_liu_solver_a7575f9ba87e5acf32af334f88fa5acf3}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!get\+\_\+e\+\_\+convergence@{get\+\_\+e\+\_\+convergence}}
+\index{get\+\_\+e\+\_\+convergence@{get\+\_\+e\+\_\+convergence}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{get\+\_\+e\+\_\+convergence()}{get\_e\_convergence()}}
+{\footnotesize\ttfamily double forte\+::\+Davidson\+Liu\+Solver\+::get\+\_\+e\+\_\+convergence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the energy convergence. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a0dc38a4a9e09c92568d97049c9cd193a}\label{classforte_1_1_davidson_liu_solver_a0dc38a4a9e09c92568d97049c9cd193a}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!get\+\_\+r\+\_\+convergence@{get\+\_\+r\+\_\+convergence}}
+\index{get\+\_\+r\+\_\+convergence@{get\+\_\+r\+\_\+convergence}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{get\+\_\+r\+\_\+convergence()}{get\_r\_convergence()}}
+{\footnotesize\ttfamily double forte\+::\+Davidson\+Liu\+Solver\+::get\+\_\+r\+\_\+convergence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the residual convergence. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_ad34514120b781b92c88d6f160d973cb8}\label{classforte_1_1_davidson_liu_solver_ad34514120b781b92c88d6f160d973cb8}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!get\+\_\+results@{get\+\_\+results}}
+\index{get\+\_\+results@{get\+\_\+results}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{get\+\_\+results()}{get\_results()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::get\+\_\+results (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Produce the final eigenvectors and eigenvalues. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_aa404bd3a84b3eaaf41af45accaad1a67}\label{classforte_1_1_davidson_liu_solver_aa404bd3a84b3eaaf41af45accaad1a67}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!residuals@{residuals}}
+\index{residuals@{residuals}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{residuals()}{residuals()}}
+{\footnotesize\ttfamily std\+::vector$<$ double $>$ forte\+::\+Davidson\+Liu\+Solver\+::residuals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+A vector with the 2-\/norm of the residual for each root. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a7423d12c5300f050e6c0f09f314b08d1}\label{classforte_1_1_davidson_liu_solver_a7423d12c5300f050e6c0f09f314b08d1}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!set\+\_\+collapse\+\_\+per\+\_\+root@{set\+\_\+collapse\+\_\+per\+\_\+root}}
+\index{set\+\_\+collapse\+\_\+per\+\_\+root@{set\+\_\+collapse\+\_\+per\+\_\+root}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+collapse\+\_\+per\+\_\+root()}{set\_collapse\_per\_root()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::set\+\_\+collapse\+\_\+per\+\_\+root (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the number of collapse vectors for each root. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a24cacf196136a1003e1867bf5de0ff7b}\label{classforte_1_1_davidson_liu_solver_a24cacf196136a1003e1867bf5de0ff7b}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!set\+\_\+e\+\_\+convergence@{set\+\_\+e\+\_\+convergence}}
+\index{set\+\_\+e\+\_\+convergence@{set\+\_\+e\+\_\+convergence}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+e\+\_\+convergence()}{set\_e\_convergence()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::set\+\_\+e\+\_\+convergence (\begin{DoxyParamCaption}\item[{double}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the energy convergence. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a833b7e36f2e1b45e0e1ebe656a2eb826}\label{classforte_1_1_davidson_liu_solver_a833b7e36f2e1b45e0e1ebe656a2eb826}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!set\+\_\+print\+\_\+level@{set\+\_\+print\+\_\+level}}
+\index{set\+\_\+print\+\_\+level@{set\+\_\+print\+\_\+level}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+print\+\_\+level()}{set\_print\_level()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::set\+\_\+print\+\_\+level (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{n }\end{DoxyParamCaption})}
+
+
+
+Set the print level. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a6e41d496aef9fa83c557b513b52e4d6f}\label{classforte_1_1_davidson_liu_solver_a6e41d496aef9fa83c557b513b52e4d6f}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!set\+\_\+project\+\_\+out@{set\+\_\+project\+\_\+out}}
+\index{set\+\_\+project\+\_\+out@{set\+\_\+project\+\_\+out}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+project\+\_\+out()}{set\_project\_out()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::set\+\_\+project\+\_\+out (\begin{DoxyParamCaption}\item[{std\+::vector$<$ sparse\+\_\+vec $>$}]{project\+\_\+out }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_aecc764a37729a8ecf814f44bac9fb60e}\label{classforte_1_1_davidson_liu_solver_aecc764a37729a8ecf814f44bac9fb60e}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!set\+\_\+r\+\_\+convergence@{set\+\_\+r\+\_\+convergence}}
+\index{set\+\_\+r\+\_\+convergence@{set\+\_\+r\+\_\+convergence}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+r\+\_\+convergence()}{set\_r\_convergence()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::set\+\_\+r\+\_\+convergence (\begin{DoxyParamCaption}\item[{double}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the residual convergence. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a0b09acd03c81aa259f22368af4ba422d}\label{classforte_1_1_davidson_liu_solver_a0b09acd03c81aa259f22368af4ba422d}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!set\+\_\+subspace\+\_\+per\+\_\+root@{set\+\_\+subspace\+\_\+per\+\_\+root}}
+\index{set\+\_\+subspace\+\_\+per\+\_\+root@{set\+\_\+subspace\+\_\+per\+\_\+root}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+subspace\+\_\+per\+\_\+root()}{set\_subspace\_per\_root()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::set\+\_\+subspace\+\_\+per\+\_\+root (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the maximum subspace size for each root. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a5ea48ce184951d29d39e710ef1a4dc4b}\label{classforte_1_1_davidson_liu_solver_a5ea48ce184951d29d39e710ef1a4dc4b}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!startup@{startup}}
+\index{startup@{startup}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{startup()}{startup()}}
+{\footnotesize\ttfamily void forte\+::\+Davidson\+Liu\+Solver\+::startup (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{diagonal }\end{DoxyParamCaption})}
+
+
+
+Initialize the object. 
+
+\mbox{\Hypertarget{classforte_1_1_davidson_liu_solver_a332c9bab147d3a895caf073950e30dd1}\label{classforte_1_1_davidson_liu_solver_a332c9bab147d3a895caf073950e30dd1}} 
+\index{forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}!update@{update}}
+\index{update@{update}!forte\+::\+Davidson\+Liu\+Solver@{forte\+::\+Davidson\+Liu\+Solver}}
+\subsubsection{\texorpdfstring{update()}{update()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_a62f3fc3a26f13fb59a89be14ecc8fa07}{Solver\+Status}} forte\+::\+Davidson\+Liu\+Solver\+::update (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Perform an update step. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/helpers/\mbox{\hyperlink{iterative__solvers_8h}{iterative\+\_\+solvers.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/helpers/\mbox{\hyperlink{iterative__solvers_8cc}{iterative\+\_\+solvers.\+cc}}\end{DoxyCompactItemize}

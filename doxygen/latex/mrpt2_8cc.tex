@@ -1,0 +1,52 @@
+\hypertarget{mrpt2_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/sci/mrpt2.cc File Reference}
+\label{mrpt2_8cc}\index{/\+Users/fevange/\+Source/forte/src/sci/mrpt2.\+cc@{/\+Users/fevange/\+Source/forte/src/sci/mrpt2.\+cc}}
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/forte\+\_\+options.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mrpt2.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+Include dependency graph for mrpt2.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mrpt2_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{mrpt2_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{mrpt2_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\item 
+\#define \mbox{\hyperlink{mrpt2_8cc_a4353281743925f182316dba7cda58fee}{omp\+\_\+get\+\_\+num\+\_\+threads}}()~1
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{mrpt2_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{mrpt2_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{mrpt2.\+cc@{mrpt2.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!mrpt2.\+cc@{mrpt2.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{mrpt2_8cc_a4353281743925f182316dba7cda58fee}\label{mrpt2_8cc_a4353281743925f182316dba7cda58fee}} 
+\index{mrpt2.\+cc@{mrpt2.\+cc}!omp\+\_\+get\+\_\+num\+\_\+threads@{omp\+\_\+get\+\_\+num\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+num\+\_\+threads@{omp\+\_\+get\+\_\+num\+\_\+threads}!mrpt2.\+cc@{mrpt2.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+num\+\_\+threads}{omp\_get\_num\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+num\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{mrpt2_8cc_a889ec205c635b219999c761b28cc39ba}\label{mrpt2_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{mrpt2.\+cc@{mrpt2.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!mrpt2.\+cc@{mrpt2.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+

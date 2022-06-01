@@ -1,0 +1,55 @@
+\hypertarget{integrals_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/integrals/integrals.cc File Reference}
+\label{integrals_8cc}\index{/\+Users/fevange/\+Source/forte/src/integrals/integrals.\+cc@{/\+Users/fevange/\+Source/forte/src/integrals/integrals.\+cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$numeric$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/wavefunction.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/blockedtensorfactory.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/forte\+\_\+options.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/printing.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}integrals.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}memory.\+h\char`\"{}}\newline
+Include dependency graph for integrals.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{integrals_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{integrals_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{integrals_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+std\+::map$<$ Integral\+Type, std\+::string $>$ \mbox{\hyperlink{namespaceforte_a87090cb003e318d4d0032b7f25f077a0}{forte\+::int\+\_\+type\+\_\+label}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{integrals_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{integrals_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{integrals.\+cc@{integrals.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!integrals.\+cc@{integrals.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{integrals_8cc_a889ec205c635b219999c761b28cc39ba}\label{integrals_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{integrals.\+cc@{integrals.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!integrals.\+cc@{integrals.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+

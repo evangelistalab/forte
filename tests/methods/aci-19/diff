@@ -1,0 +1,1372 @@
+
+    ---------------------------------------------------------	    ---------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure	          Psi4: An Open-Source Ab Initio Electronic Structure
+                               Psi4 undefined 			                               Psi4 undefined 
+
+                         Git: Rev {master} e512d40 		                         Git: Rev {master} e512d40 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmone	    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmone
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. 	    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. 
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James	    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pr	    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pr
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E	    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D	    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).		    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)				    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by		                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. 	    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. 
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J	    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J
+
+    ---------------------------------------------------------	    ---------------------------------------------------------
+
+
+    Psi4 started on: Tuesday, 30 July 2019 03:54PM	      |	    Psi4 started on: Tuesday, 30 July 2019 07:28PM
+
+    Process ID: 2984					      |	    Process ID: 7732
+    Host:       CHE-FEVANGE-01I (2)				    Host:       CHE-FEVANGE-01I (2)
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage	    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage
+    Memory:     500.0 MiB					    Memory:     500.0 MiB
+    Threads:    1						    Threads:    1
+    								    
+  ==> Input File <==						  ==> Input File <==
+
+-------------------------------------------------------------	-------------------------------------------------------------
+#! Generated using commit GITCOMMIT				#! Generated using commit GITCOMMIT
+#! Perform aci on benzyne 					#! Perform aci on benzyne 
+
+import forte							import forte
+
+memory 500 mb							memory 500 mb
+
+refscf    = -229.20378006852584 				refscf    = -229.20378006852584 
+refaci    = -229.359450812283					refaci    = -229.359450812283
+refacipt2 = -229.360444943286					refacipt2 = -229.360444943286
+
+molecule mbenzyne{						molecule mbenzyne{
+  0 1								  0 1
+   C   0.0000000000  -2.5451795941   0.0000000000		   C   0.0000000000  -2.5451795941   0.0000000000
+   C   0.0000000000   2.5451795941   0.0000000000		   C   0.0000000000   2.5451795941   0.0000000000
+   C  -2.2828001669  -1.3508352528   0.0000000000		   C  -2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669  -1.3508352528   0.0000000000		   C   2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669   1.3508352528   0.0000000000		   C   2.2828001669   1.3508352528   0.0000000000
+   C  -2.2828001669   1.3508352528   0.0000000000		   C  -2.2828001669   1.3508352528   0.0000000000
+   H  -4.0782187459  -2.3208602146   0.0000000000		   H  -4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459  -2.3208602146   0.0000000000		   H   4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459   2.3208602146   0.0000000000		   H   4.0782187459   2.3208602146   0.0000000000
+   H  -4.0782187459   2.3208602146   0.0000000000		   H  -4.0782187459   2.3208602146   0.0000000000
+
+  units bohr							  units bohr
+}								}
+
+set globals{							set globals{
+   basis                   DZ					   basis                   DZ
+   df_basis_mp2            cc-pvdz-ri				   df_basis_mp2            cc-pvdz-ri
+   reference               uhf 					   reference               uhf 
+   scf_type                pk					   scf_type                pk
+   d_convergence           10					   d_convergence           10
+   e_convergence           12					   e_convergence           12
+   guess gwh							   guess gwh
+}								}
+
+set forte {							set forte {
+  multiplicity 1						  multiplicity 1
+  frozen_docc                       [2,1,0,0,0,0,2,1]		  frozen_docc                       [2,1,0,0,0,0,2,1]
+  restricted_docc	                  [3,2,0,0,0,0,2,3]	  restricted_docc	                  [3,2,0,0,0,0,2,3]
+  active                            [1,0,1,2,1,2,1,0]		  active                            [1,0,1,2,1,2,1,0]
+  root_sym                          0				  root_sym                          0
+  nroot                             1			      |	  nroot                         1
+  active_space_solver               aci				  active_space_solver               aci
+  sigma	                            0.001			  sigma	                            0.001
+  aci_add_aimed_degenerate          false			  aci_add_aimed_degenerate          false
+  sci_project_out_spin_contaminants false			  sci_project_out_spin_contaminants false
+  diag_algorithm                    full			  diag_algorithm                    full
+  aci_batched_screening             true			  aci_batched_screening             true
+  aci_nbatch                        8				  aci_nbatch                        8
+  active_guess_size                 100				  active_guess_size                 100
+}								}
+set_num_threads(4)						set_num_threads(4)
+
+scf = energy('scf')						scf = energy('scf')
+compare_values(refscf, scf,10,"SCF Energy")			compare_values(refscf, scf,10,"SCF Energy")
+
+energy('forte')							energy('forte')
+compare_values(refaci, variable("ACI ENERGY"),10,"ACI energy"	compare_values(refaci, variable("ACI ENERGY"),10,"ACI energy"
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"ACI+P	compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"ACI+P
+
+
+-------------------------------------------------------------	-------------------------------------------------------------
+
+  Memory set to 476.837 MiB by Python driver.			  Memory set to 476.837 MiB by Python driver.
+  Python driver attempted to set threads to 4.			  Python driver attempted to set threads to 4.
+  Psi4 was compiled without OpenMP, setting threads to 1.	  Psi4 was compiled without OpenMP, setting threads to 1.
+
+*** tstart() called on CHE-FEVANGE-01I (2)			*** tstart() called on CHE-FEVANGE-01I (2)
+*** at Tue Jul 30 15:54:24 2019				      |	*** at Tue Jul 30 19:28:43 2019
+
+   => Loading Basis Set <=					   => Loading Basis Set <=
+
+    Name: DZ							    Name: DZ
+    Role: ORBITAL						    Role: ORBITAL
+    Keyword: BASIS						    Keyword: BASIS
+    atoms 1-6  entry C          line    63 file /Users/fevang	    atoms 1-6  entry C          line    63 file /Users/fevang
+    atoms 7-10 entry H          line    12 file /Users/fevang	    atoms 7-10 entry H          line    12 file /Users/fevang
+
+
+         ----------------------------------------------------	         ----------------------------------------------------
+                                   SCF				                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett	               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith		                          and Daniel G. A. Smith
+                              UHF Reference			                              UHF Reference
+                        1 Threads,    476 MiB Core		                        1 Threads,    476 MiB Core
+         ----------------------------------------------------	         ----------------------------------------------------
+
+  ==> Geometry <==						  ==> Geometry <==
+
+    Molecular point group: d2h					    Molecular point group: d2h
+    Full point group: D2h					    Full point group: D2h
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:		    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y              	       Center              X                  Y              
+    ------------   -----------------  -----------------  ----	    ------------   -----------------  -----------------  ----
+         C            0.000000000000    -2.545179594100     0	         C            0.000000000000    -2.545179594100     0
+         C           -0.000000000000     2.545179594100     0	         C           -0.000000000000     2.545179594100     0
+         C           -2.282800166900    -1.350835252800     0	         C           -2.282800166900    -1.350835252800     0
+         C            2.282800166900    -1.350835252800     0	         C            2.282800166900    -1.350835252800     0
+         C            2.282800166900     1.350835252800     0	         C            2.282800166900     1.350835252800     0
+         C           -2.282800166900     1.350835252800     0	         C           -2.282800166900     1.350835252800     0
+         H           -4.078218745900    -2.320860214600     0	         H           -4.078218745900    -2.320860214600     0
+         H            4.078218745900    -2.320860214600     0	         H            4.078218745900    -2.320860214600     0
+         H            4.078218745900     2.320860214600     0	         H            4.078218745900     2.320860214600     0
+         H           -4.078218745900     2.320860214600     0	         H           -4.078218745900     2.320860214600     0
+
+  Running in d2h symmetry.					  Running in d2h symmetry.
+
+  Rotational constants: A =      0.22736  B =      0.18979  C	  Rotational constants: A =      0.22736  B =      0.18979  C
+  Rotational constants: A =   6816.18331  B =   5689.87778  C	  Rotational constants: A =   6816.18331  B =   5689.87778  C
+  Nuclear repulsion =  186.022640325180561			  Nuclear repulsion =  186.022640325180561
+
+  Charge       = 0						  Charge       = 0
+  Multiplicity = 1						  Multiplicity = 1
+  Electrons    = 40						  Electrons    = 40
+  Nalpha       = 20						  Nalpha       = 20
+  Nbeta        = 20						  Nbeta        = 20
+
+  ==> Algorithm <==						  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.					  SCF Algorithm Type is PK.
+  DIIS enabled.							  DIIS enabled.
+  MOM disabled.							  MOM disabled.
+  Fractional occupation disabled.				  Fractional occupation disabled.
+  Guess Type is GWH.						  Guess Type is GWH.
+  Energy threshold   = 1.00e-12					  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-10					  Density threshold  = 1.00e-10
+  Integral threshold = 0.00e+00					  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==						  ==> Primary Basis <==
+
+  Basis Set: DZ							  Basis Set: DZ
+    Blend: DZ							    Blend: DZ
+    Number of shells: 44					    Number of shells: 44
+    Number of basis function: 68				    Number of basis function: 68
+    Number of Cartesian functions: 68				    Number of Cartesian functions: 68
+    Spherical Harmonics?: false					    Spherical Harmonics?: false
+    Max angular momentum: 1					    Max angular momentum: 1
+
+  ==> Pre-Iterations <==					  ==> Pre-Iterations <==
+
+   -------------------------------------------------------	   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc	    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------	   -------------------------------------------------------
+     Ag        16      16       0       0       0       0	     Ag        16      16       0       0       0       0
+     B1g       12      12       0       0       0       0	     B1g       12      12       0       0       0       0
+     B2g        2       2       0       0       0       0	     B2g        2       2       0       0       0       0
+     B3g        4       4       0       0       0       0	     B3g        4       4       0       0       0       0
+     Au         2       2       0       0       0       0	     Au         2       2       0       0       0       0
+     B1u        4       4       0       0       0       0	     B1u        4       4       0       0       0       0
+     B2u       16      16       0       0       0       0	     B2u       16      16       0       0       0       0
+     B3u       12      12       0       0       0       0	     B3u       12      12       0       0       0       0
+   -------------------------------------------------------	   -------------------------------------------------------
+    Total      68      68      20      20      20       0	    Total      68      68      20      20      20       0
+   -------------------------------------------------------	   -------------------------------------------------------
+
+  ==> Integral Setup <==					  ==> Integral Setup <==
+
+  Using in-core PK algorithm.					  Using in-core PK algorithm.
+   Calculation information:					   Calculation information:
+      Number of atoms:                  10			      Number of atoms:                  10
+      Number of AO shells:              44			      Number of AO shells:              44
+      Number of primitives:            100			      Number of primitives:            100
+      Number of atomic orbitals:        68			      Number of atomic orbitals:        68
+      Number of basis functions:        68			      Number of basis functions:        68
+
+      Integral cutoff                 1.00e-12			      Integral cutoff                 1.00e-12
+      Number of threads:                 1			      Number of threads:                 1
+
+  Performing in-core PK						  Performing in-core PK
+  Using 5506062 doubles for integral storage.			  Using 5506062 doubles for integral storage.
+  We computed 444486 shell quartets total.			  We computed 444486 shell quartets total.
+  Whereas there are 490545 unique shell quartets.		  Whereas there are 490545 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==			  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes				    J tasked:                  Yes
+    K tasked:                  Yes				    K tasked:                  Yes
+    wK tasked:                  No				    wK tasked:                  No
+    Memory [MiB]:              357				    Memory [MiB]:              357
+    Schwarz Cutoff:          1E-12				    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1				    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 1.2357549023E-0	  Minimum eigenvalue in the overlap matrix is 1.2357549023E-0
+  Using Symmetric Orthogonalization.				  Using Symmetric Orthogonalization.
+
+  SCF Guess: Generalized Wolfsberg-Helmholtz.			  SCF Guess: Generalized Wolfsberg-Helmholtz.
+
+  ==> Iterations <==						  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |	                        Total Energy        Delta E     RMS |
+
+    Occupation by irrep:					    Occupation by irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 	             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]	    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]
+    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]	    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]
+
+   @UHF iter   1:  -222.73886988260335   -2.22739e+02   1.512 |	   @UHF iter   1:  -222.73886988260188   -2.22739e+02   1.512
+   @UHF iter   2:  -228.94916670333717   -6.21030e+00   1.963 |	   @UHF iter   2:  -228.94916670333743   -6.21030e+00   1.963
+   @UHF iter   3:  -229.17461926724087   -2.25453e-01   7.450 |	   @UHF iter   3:  -229.17461926724053   -2.25453e-01   7.450
+   @UHF iter   4:  -229.20266252706182   -2.80433e-02   1.258 |	   @UHF iter   4:  -229.20266252706190   -2.80433e-02   1.258
+   @UHF iter   5:  -229.20361131103832   -9.48784e-04   4.999	   @UHF iter   5:  -229.20361131103832   -9.48784e-04   4.999
+   @UHF iter   6:  -229.20376929432882   -1.57983e-04   9.569 |	   @UHF iter   6:  -229.20376929432902   -1.57983e-04   9.569
+   @UHF iter   7:  -229.20377943149134   -1.01372e-05   1.834 |	   @UHF iter   7:  -229.20377943149185   -1.01372e-05   1.834
+   @UHF iter   8:  -229.20378004040938   -6.08918e-07   3.762 |	   @UHF iter   8:  -229.20378004040919   -6.08917e-07   3.762
+   @UHF iter   9:  -229.20378006754032   -2.71309e-08   7.975 |	   @UHF iter   9:  -229.20378006754038   -2.71312e-08   7.975
+   @UHF iter  10:  -229.20378006850009   -9.59773e-10   1.590 |	   @UHF iter  10:  -229.20378006849995   -9.59574e-10   1.590
+   @UHF iter  11:  -229.20378006852499   -2.48974e-11   1.890 |	   @UHF iter  11:  -229.20378006852513   -2.51816e-11   1.890
+   @UHF iter  12:  -229.20378006852550   -5.11591e-13   2.047 |	   @UHF iter  12:  -229.20378006852530   -1.70530e-13   2.047
+   @UHF iter  13:  -229.20378006852525    2.55795e-13   3.050 |	   @UHF iter  13:  -229.20378006852539   -8.52651e-14   3.050
+   @UHF iter  14:  -229.20378006852539   -1.42109e-13   5.384 |	   @UHF iter  14:  -229.20378006852548   -8.52651e-14   5.384
+  Energy and wave function converged.				  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==					  ==> Post-Iterations <==
+
+   @Spin Contamination Metric:   4.263256415E-14		   @Spin Contamination Metric:   4.263256415E-14
+   @S^2 Expected:                0.000000000E+00		   @S^2 Expected:                0.000000000E+00
+   @S^2 Observed:                4.263256415E-14		   @S^2 Observed:                4.263256415E-14
+   @S   Expected:                0.000000000E+00		   @S   Expected:                0.000000000E+00
+   @S   Observed:                0.000000000E+00		   @S   Observed:                0.000000000E+00
+
+    Orbital Energies [Eh]					    Orbital Energies [Eh]
+    ---------------------					    ---------------------
+
+    Alpha Occupied:                                          	    Alpha Occupied:                                          
+
+       1Ag   -11.287300     1B2u  -11.286763     1B3u  -11.28	       1Ag   -11.287300     1B2u  -11.286763     1B3u  -11.28
+       1B1g  -11.285798     2Ag   -11.285074     2B2u  -11.28	       1B1g  -11.285798     2Ag   -11.285074     2B2u  -11.28
+       3Ag    -1.192405     2B3u   -1.051895     3B2u   -1.02	       3Ag    -1.192405     2B3u   -1.051895     3B2u   -1.02
+       2B1g   -0.858677     4Ag    -0.815933     5Ag    -0.67	       2B1g   -0.858677     4Ag    -0.815933     5Ag    -0.67
+       4B2u   -0.660452     3B3u   -0.656412     4B3u   -0.60	       4B2u   -0.660452     3B3u   -0.656412     4B3u   -0.60
+       3B1g   -0.544475     1B1u   -0.533875     1B2g   -0.36	       3B1g   -0.544475     1B1u   -0.533875     1B2g   -0.36
+       1B3g   -0.363792     5B2u   -0.275375  			       1B3g   -0.363792     5B2u   -0.275375  
+
+    Alpha Virtual:                                           	    Alpha Virtual:                                           
+
+       6Ag    -0.043625     1Au     0.091850     2B1u    0.13	       6Ag    -0.043625     1Au     0.091850     2B1u    0.13
+       4B1g    0.279898     7Ag     0.280901     5B3u    0.30	       4B1g    0.279898     7Ag     0.280901     5B3u    0.30
+       6B2u    0.320966     2B3g    0.321911     8Ag     0.33	       6B2u    0.320966     2B3g    0.321911     8Ag     0.33
+       7B2u    0.368408     6B3u    0.394878     7B3u    0.42	       7B2u    0.368408     6B3u    0.394878     7B3u    0.42
+       3B1u    0.456784     5B1g    0.460077     8B2u    0.47	       3B1u    0.456784     5B1g    0.460077     8B2u    0.47
+       2B2g    0.516968     3B3g    0.518047     6B1g    0.52	       2B2g    0.516968     3B3g    0.518047     6B1g    0.52
+       9Ag     0.542824    10Ag     0.573895     2Au     0.60	       9Ag     0.542824    10Ag     0.573895     2Au     0.60
+       4B1u    0.622181     9B2u    0.631390    11Ag     0.67	       4B1u    0.622181     9B2u    0.631390    11Ag     0.67
+       7B1g    0.685754     8B3u    0.693033     4B3g    0.70	       7B1g    0.685754     8B3u    0.693033     4B3g    0.70
+      10B2u    0.724636    12Ag     0.828521     8B1g    0.83	      10B2u    0.724636    12Ag     0.828521     8B1g    0.83
+       9B3u    0.926991    11B2u    0.983757     9B1g    1.08	       9B3u    0.926991    11B2u    0.983757     9B1g    1.08
+      10B1g    1.167689    12B2u    1.174943    13Ag     1.18	      10B1g    1.167689    12B2u    1.174943    13Ag     1.18
+      10B3u    1.242380    13B2u    1.248216    14Ag     1.43	      10B3u    1.242380    13B2u    1.248216    14Ag     1.43
+      11B3u    1.446256    11B1g    1.565632    14B2u    1.68	      11B3u    1.446256    11B1g    1.565632    14B2u    1.68
+      15Ag    23.619164    15B2u   23.860114    12B3u   23.92	      15Ag    23.619164    15B2u   23.860114    12B3u   23.92
+      12B1g   24.002140    16Ag    24.028964    16B2u   24.15	      12B1g   24.002140    16Ag    24.028964    16B2u   24.15
+
+    Beta Occupied:                                           	    Beta Occupied:                                           
+
+       1Ag   -11.287300     1B2u  -11.286763     1B3u  -11.28	       1Ag   -11.287300     1B2u  -11.286763     1B3u  -11.28
+       1B1g  -11.285798     2Ag   -11.285074     2B2u  -11.28	       1B1g  -11.285798     2Ag   -11.285074     2B2u  -11.28
+       3Ag    -1.192405     2B3u   -1.051895     3B2u   -1.02	       3Ag    -1.192405     2B3u   -1.051895     3B2u   -1.02
+       2B1g   -0.858677     4Ag    -0.815933     5Ag    -0.67	       2B1g   -0.858677     4Ag    -0.815933     5Ag    -0.67
+       4B2u   -0.660452     3B3u   -0.656412     4B3u   -0.60	       4B2u   -0.660452     3B3u   -0.656412     4B3u   -0.60
+       3B1g   -0.544475     1B1u   -0.533875     1B2g   -0.36	       3B1g   -0.544475     1B1u   -0.533875     1B2g   -0.36
+       1B3g   -0.363792     5B2u   -0.275375  			       1B3g   -0.363792     5B2u   -0.275375  
+
+    Beta Virtual:                                            	    Beta Virtual:                                            
+
+       6Ag    -0.043625     1Au     0.091850     2B1u    0.13	       6Ag    -0.043625     1Au     0.091850     2B1u    0.13
+       4B1g    0.279898     7Ag     0.280901     5B3u    0.30	       4B1g    0.279898     7Ag     0.280901     5B3u    0.30
+       6B2u    0.320966     2B3g    0.321911     8Ag     0.33	       6B2u    0.320966     2B3g    0.321911     8Ag     0.33
+       7B2u    0.368408     6B3u    0.394878     7B3u    0.42	       7B2u    0.368408     6B3u    0.394878     7B3u    0.42
+       3B1u    0.456784     5B1g    0.460077     8B2u    0.47	       3B1u    0.456784     5B1g    0.460077     8B2u    0.47
+       2B2g    0.516968     3B3g    0.518047     6B1g    0.52	       2B2g    0.516968     3B3g    0.518047     6B1g    0.52
+       9Ag     0.542824    10Ag     0.573895     2Au     0.60	       9Ag     0.542824    10Ag     0.573895     2Au     0.60
+       4B1u    0.622181     9B2u    0.631390    11Ag     0.67	       4B1u    0.622181     9B2u    0.631390    11Ag     0.67
+       7B1g    0.685754     8B3u    0.693033     4B3g    0.70	       7B1g    0.685754     8B3u    0.693033     4B3g    0.70
+      10B2u    0.724636    12Ag     0.828521     8B1g    0.83	      10B2u    0.724636    12Ag     0.828521     8B1g    0.83
+       9B3u    0.926991    11B2u    0.983757     9B1g    1.08	       9B3u    0.926991    11B2u    0.983757     9B1g    1.08
+      10B1g    1.167689    12B2u    1.174943    13Ag     1.18	      10B1g    1.167689    12B2u    1.174943    13Ag     1.18
+      10B3u    1.242380    13B2u    1.248216    14Ag     1.43	      10B3u    1.242380    13B2u    1.248216    14Ag     1.43
+      11B3u    1.446256    11B1g    1.565632    14B2u    1.68	      11B3u    1.446256    11B1g    1.565632    14B2u    1.68
+      15Ag    23.619164    15B2u   23.860114    12B3u   23.92	      15Ag    23.619164    15B2u   23.860114    12B3u   23.92
+      12B1g   24.002140    16Ag    24.028964    16B2u   24.15	      12B1g   24.002140    16Ag    24.028964    16B2u   24.15
+
+    Final Occupation by Irrep:					    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 	             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]	    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]
+    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]	    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]
+
+  @UHF Final Energy:  -229.20378006852539		      |	  @UHF Final Energy:  -229.20378006852548
+
+   => Energetics <=						   => Energetics <=
+
+    Nuclear Repulsion Energy =            186.022640325180560	    Nuclear Repulsion Energy =            186.022640325180560
+    One-Electron Energy =                -675.779370448633017 |	    One-Electron Energy =                -675.779370448632335
+    Two-Electron Energy =                 260.552950054927066 |	    Two-Electron Energy =                 260.552950054926327
+    Total Energy =                       -229.203780068525418 |	    Total Energy =                       -229.203780068525475
+
+  UHF NO Occupations:						  UHF NO Occupations:
+  HONO-2 :    4B3u 2.0000000				      |	  HONO-2 :    3 Ag 2.0000000
+  HONO-1 :    4 Ag 2.0000000					  HONO-1 :    4 Ag 2.0000000
+  HONO-0 :    5 Ag 2.0000000					  HONO-0 :    5 Ag 2.0000000
+  LUNO+0 :    6B2u 0.0000000				      |	  LUNO+0 :    6 Ag 0.0000000
+  LUNO+1 :    6 Ag 0.0000000				      |	  LUNO+1 :    5B3u 0.0000000
+  LUNO+2 :    4B1g 0.0000000				      |	  LUNO+2 :    7 Ag 0.0000000
+  LUNO+3 :    5B3u 0.0000000				      |	  LUNO+3 :    6B3u 0.0000000
+
+
+Computation Completed						Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.0	Properties will be evaluated at   0.000000,   0.000000,   0.0
+
+Properties computed using the SCF density matrix		Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]					  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000	     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]				  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000	     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]						  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     	     X:     0.0000      Y:     0.0000      Z:     0.0000     
+
+  Dipole Moment: [D]						  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     	     X:     0.0000      Y:     0.0000      Z:     0.0000     
+
+
+*** tstop() called on CHE-FEVANGE-01I (2) at Tue Jul 30 15:54 |	*** tstop() called on CHE-FEVANGE-01I (2) at Tue Jul 30 19:28
+Module time:							Module time:
+	user time   =       3.76 seconds =       0.06 minutes |		user time   =       3.35 seconds =       0.06 minutes
+	system time =       0.08 seconds =       0.00 minutes |		system time =       0.04 seconds =       0.00 minutes
+	total time  =          4 seconds =       0.07 minutes		total time  =          4 seconds =       0.07 minutes
+Total time:							Total time:
+	user time   =       3.76 seconds =       0.06 minutes |		user time   =       3.35 seconds =       0.06 minutes
+	system time =       0.08 seconds =       0.00 minutes |		system time =       0.04 seconds =       0.00 minutes
+	total time  =          4 seconds =       0.07 minutes		total time  =          4 seconds =       0.07 minutes
+    SCF Energy...............................................	    SCF Energy...............................................
+
+*** tstart() called on CHE-FEVANGE-01I (2)			*** tstart() called on CHE-FEVANGE-01I (2)
+*** at Tue Jul 30 15:54:28 2019				      |	*** at Tue Jul 30 19:28:47 2019
+
+   => Loading Basis Set <=					   => Loading Basis Set <=
+
+    Name: DZ							    Name: DZ
+    Role: ORBITAL						    Role: ORBITAL
+    Keyword: BASIS						    Keyword: BASIS
+    atoms 1-6  entry C          line    63 file /Users/fevang	    atoms 1-6  entry C          line    63 file /Users/fevang
+    atoms 7-10 entry H          line    12 file /Users/fevang	    atoms 7-10 entry H          line    12 file /Users/fevang
+
+
+         ----------------------------------------------------	         ----------------------------------------------------
+                                   SCF				                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett	               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith		                          and Daniel G. A. Smith
+                              UHF Reference			                              UHF Reference
+                        1 Threads,    476 MiB Core		                        1 Threads,    476 MiB Core
+         ----------------------------------------------------	         ----------------------------------------------------
+
+  ==> Geometry <==						  ==> Geometry <==
+
+    Molecular point group: d2h					    Molecular point group: d2h
+    Full point group: D2h					    Full point group: D2h
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:		    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y              	       Center              X                  Y              
+    ------------   -----------------  -----------------  ----	    ------------   -----------------  -----------------  ----
+         C            0.000000000000    -2.545179594100     0	         C            0.000000000000    -2.545179594100     0
+         C           -0.000000000000     2.545179594100     0	         C           -0.000000000000     2.545179594100     0
+         C           -2.282800166900    -1.350835252800     0	         C           -2.282800166900    -1.350835252800     0
+         C            2.282800166900    -1.350835252800     0	         C            2.282800166900    -1.350835252800     0
+         C            2.282800166900     1.350835252800     0	         C            2.282800166900     1.350835252800     0
+         C           -2.282800166900     1.350835252800     0	         C           -2.282800166900     1.350835252800     0
+         H           -4.078218745900    -2.320860214600     0	         H           -4.078218745900    -2.320860214600     0
+         H            4.078218745900    -2.320860214600     0	         H            4.078218745900    -2.320860214600     0
+         H            4.078218745900     2.320860214600     0	         H            4.078218745900     2.320860214600     0
+         H           -4.078218745900     2.320860214600     0	         H           -4.078218745900     2.320860214600     0
+
+  Running in d2h symmetry.					  Running in d2h symmetry.
+
+  Rotational constants: A =      0.22736  B =      0.18979  C	  Rotational constants: A =      0.22736  B =      0.18979  C
+  Rotational constants: A =   6816.18331  B =   5689.87778  C	  Rotational constants: A =   6816.18331  B =   5689.87778  C
+  Nuclear repulsion =  186.022640325180561			  Nuclear repulsion =  186.022640325180561
+
+  Charge       = 0						  Charge       = 0
+  Multiplicity = 1						  Multiplicity = 1
+  Electrons    = 40						  Electrons    = 40
+  Nalpha       = 20						  Nalpha       = 20
+  Nbeta        = 20						  Nbeta        = 20
+
+  ==> Algorithm <==						  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.					  SCF Algorithm Type is PK.
+  DIIS enabled.							  DIIS enabled.
+  MOM disabled.							  MOM disabled.
+  Fractional occupation disabled.				  Fractional occupation disabled.
+  Guess Type is GWH.						  Guess Type is GWH.
+  Energy threshold   = 1.00e-12					  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-10					  Density threshold  = 1.00e-10
+  Integral threshold = 0.00e+00					  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==						  ==> Primary Basis <==
+
+  Basis Set: DZ							  Basis Set: DZ
+    Blend: DZ							    Blend: DZ
+    Number of shells: 44					    Number of shells: 44
+    Number of basis function: 68				    Number of basis function: 68
+    Number of Cartesian functions: 68				    Number of Cartesian functions: 68
+    Spherical Harmonics?: false					    Spherical Harmonics?: false
+    Max angular momentum: 1					    Max angular momentum: 1
+
+  ==> Pre-Iterations <==					  ==> Pre-Iterations <==
+
+   -------------------------------------------------------	   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc	    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------	   -------------------------------------------------------
+     Ag        16      16       0       0       0       0	     Ag        16      16       0       0       0       0
+     B1g       12      12       0       0       0       0	     B1g       12      12       0       0       0       0
+     B2g        2       2       0       0       0       0	     B2g        2       2       0       0       0       0
+     B3g        4       4       0       0       0       0	     B3g        4       4       0       0       0       0
+     Au         2       2       0       0       0       0	     Au         2       2       0       0       0       0
+     B1u        4       4       0       0       0       0	     B1u        4       4       0       0       0       0
+     B2u       16      16       0       0       0       0	     B2u       16      16       0       0       0       0
+     B3u       12      12       0       0       0       0	     B3u       12      12       0       0       0       0
+   -------------------------------------------------------	   -------------------------------------------------------
+    Total      68      68      20      20      20       0	    Total      68      68      20      20      20       0
+   -------------------------------------------------------	   -------------------------------------------------------
+
+  ==> Integral Setup <==					  ==> Integral Setup <==
+
+  Using in-core PK algorithm.					  Using in-core PK algorithm.
+   Calculation information:					   Calculation information:
+      Number of atoms:                  10			      Number of atoms:                  10
+      Number of AO shells:              44			      Number of AO shells:              44
+      Number of primitives:            100			      Number of primitives:            100
+      Number of atomic orbitals:        68			      Number of atomic orbitals:        68
+      Number of basis functions:        68			      Number of basis functions:        68
+
+      Integral cutoff                 1.00e-12			      Integral cutoff                 1.00e-12
+      Number of threads:                 1			      Number of threads:                 1
+
+  Performing in-core PK						  Performing in-core PK
+  Using 5506062 doubles for integral storage.			  Using 5506062 doubles for integral storage.
+  We computed 444486 shell quartets total.			  We computed 444486 shell quartets total.
+  Whereas there are 490545 unique shell quartets.		  Whereas there are 490545 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==			  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes				    J tasked:                  Yes
+    K tasked:                  Yes				    K tasked:                  Yes
+    wK tasked:                  No				    wK tasked:                  No
+    Memory [MiB]:              357				    Memory [MiB]:              357
+    Schwarz Cutoff:          1E-12				    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1				    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 1.2357549023E-0	  Minimum eigenvalue in the overlap matrix is 1.2357549023E-0
+  Using Symmetric Orthogonalization.				  Using Symmetric Orthogonalization.
+
+  SCF Guess: Generalized Wolfsberg-Helmholtz.			  SCF Guess: Generalized Wolfsberg-Helmholtz.
+
+  ==> Iterations <==						  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |	                        Total Energy        Delta E     RMS |
+
+    Occupation by irrep:					    Occupation by irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 	             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]	    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]
+    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]	    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]
+
+   @UHF iter   1:  -222.73886988260290   -2.22739e+02   1.512 |	   @UHF iter   1:  -222.73886988260392   -2.22739e+02   1.512
+   @UHF iter   2:  -228.94916670333751   -6.21030e+00   1.963 |	   @UHF iter   2:  -228.94916670333728   -6.21030e+00   1.963
+   @UHF iter   3:  -229.17461926724079   -2.25453e-01   7.450 |	   @UHF iter   3:  -229.17461926724093   -2.25453e-01   7.450
+   @UHF iter   4:  -229.20266252706207   -2.80433e-02   1.258 |	   @UHF iter   4:  -229.20266252706188   -2.80433e-02   1.258
+   @UHF iter   5:  -229.20361131103834   -9.48784e-04   4.999 |	   @UHF iter   5:  -229.20361131103817   -9.48784e-04   4.999
+   @UHF iter   6:  -229.20376929432919   -1.57983e-04   9.569 |	   @UHF iter   6:  -229.20376929432902   -1.57983e-04   9.569
+   @UHF iter   7:  -229.20377943149168   -1.01372e-05   1.834 |	   @UHF iter   7:  -229.20377943149148   -1.01372e-05   1.834
+   @UHF iter   8:  -229.20378004040930   -6.08918e-07   3.762 |	   @UHF iter   8:  -229.20378004040936   -6.08918e-07   3.762
+   @UHF iter   9:  -229.20378006754055   -2.71313e-08   7.975 |	   @UHF iter   9:  -229.20378006754021   -2.71309e-08   7.975
+   @UHF iter  10:  -229.20378006850041   -9.59858e-10   1.590 |	   @UHF iter  10:  -229.20378006850015   -9.59943e-10   1.590
+   @UHF iter  11:  -229.20378006852530   -2.48974e-11   1.890 |	   @UHF iter  11:  -229.20378006852485   -2.46985e-11   1.890
+   @UHF iter  12:  -229.20378006852565   -3.41061e-13   2.047 |	   @UHF iter  12:  -229.20378006852536   -5.11591e-13   2.047
+   @UHF iter  13:  -229.20378006852559    5.68434e-14   3.050 |	   @UHF iter  13:  -229.20378006852530    5.68434e-14   3.050
+   @UHF iter  14:  -229.20378006852542    1.70530e-13   5.383 |	   @UHF iter  14:  -229.20378006852556   -2.55795e-13   5.383
+  Energy and wave function converged.				  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==					  ==> Post-Iterations <==
+
+   @Spin Contamination Metric:   1.065814104E-14	      |	   @Spin Contamination Metric:   3.197442311E-14
+   @S^2 Expected:                0.000000000E+00		   @S^2 Expected:                0.000000000E+00
+   @S^2 Observed:                1.065814104E-14	      |	   @S^2 Observed:                3.197442311E-14
+   @S   Expected:                0.000000000E+00		   @S   Expected:                0.000000000E+00
+   @S   Observed:                0.000000000E+00		   @S   Observed:                0.000000000E+00
+
+    Orbital Energies [Eh]					    Orbital Energies [Eh]
+    ---------------------					    ---------------------
+
+    Alpha Occupied:                                          	    Alpha Occupied:                                          
+
+       1Ag   -11.287300     1B2u  -11.286763     1B3u  -11.28	       1Ag   -11.287300     1B2u  -11.286763     1B3u  -11.28
+       1B1g  -11.285798     2Ag   -11.285074     2B2u  -11.28	       1B1g  -11.285798     2Ag   -11.285074     2B2u  -11.28
+       3Ag    -1.192405     2B3u   -1.051895     3B2u   -1.02	       3Ag    -1.192405     2B3u   -1.051895     3B2u   -1.02
+       2B1g   -0.858677     4Ag    -0.815933     5Ag    -0.67	       2B1g   -0.858677     4Ag    -0.815933     5Ag    -0.67
+       4B2u   -0.660452     3B3u   -0.656412     4B3u   -0.60	       4B2u   -0.660452     3B3u   -0.656412     4B3u   -0.60
+       3B1g   -0.544475     1B1u   -0.533875     1B2g   -0.36	       3B1g   -0.544475     1B1u   -0.533875     1B2g   -0.36
+       1B3g   -0.363792     5B2u   -0.275375  			       1B3g   -0.363792     5B2u   -0.275375  
+
+    Alpha Virtual:                                           	    Alpha Virtual:                                           
+
+       6Ag    -0.043625     1Au     0.091850     2B1u    0.13	       6Ag    -0.043625     1Au     0.091850     2B1u    0.13
+       4B1g    0.279898     7Ag     0.280901     5B3u    0.30	       4B1g    0.279898     7Ag     0.280901     5B3u    0.30
+       6B2u    0.320966     2B3g    0.321911     8Ag     0.33	       6B2u    0.320966     2B3g    0.321911     8Ag     0.33
+       7B2u    0.368408     6B3u    0.394878     7B3u    0.42	       7B2u    0.368408     6B3u    0.394878     7B3u    0.42
+       3B1u    0.456784     5B1g    0.460077     8B2u    0.47	       3B1u    0.456784     5B1g    0.460077     8B2u    0.47
+       2B2g    0.516968     3B3g    0.518047     6B1g    0.52	       2B2g    0.516968     3B3g    0.518047     6B1g    0.52
+       9Ag     0.542824    10Ag     0.573895     2Au     0.60	       9Ag     0.542824    10Ag     0.573895     2Au     0.60
+       4B1u    0.622181     9B2u    0.631390    11Ag     0.67	       4B1u    0.622181     9B2u    0.631390    11Ag     0.67
+       7B1g    0.685754     8B3u    0.693033     4B3g    0.70	       7B1g    0.685754     8B3u    0.693033     4B3g    0.70
+      10B2u    0.724636    12Ag     0.828521     8B1g    0.83	      10B2u    0.724636    12Ag     0.828521     8B1g    0.83
+       9B3u    0.926991    11B2u    0.983757     9B1g    1.08	       9B3u    0.926991    11B2u    0.983757     9B1g    1.08
+      10B1g    1.167689    12B2u    1.174943    13Ag     1.18	      10B1g    1.167689    12B2u    1.174943    13Ag     1.18
+      10B3u    1.242380    13B2u    1.248216    14Ag     1.43	      10B3u    1.242380    13B2u    1.248216    14Ag     1.43
+      11B3u    1.446256    11B1g    1.565632    14B2u    1.68	      11B3u    1.446256    11B1g    1.565632    14B2u    1.68
+      15Ag    23.619164    15B2u   23.860114    12B3u   23.92	      15Ag    23.619164    15B2u   23.860114    12B3u   23.92
+      12B1g   24.002140    16Ag    24.028964    16B2u   24.15	      12B1g   24.002140    16Ag    24.028964    16B2u   24.15
+
+    Beta Occupied:                                           	    Beta Occupied:                                           
+
+       1Ag   -11.287300     1B2u  -11.286763     1B3u  -11.28	       1Ag   -11.287300     1B2u  -11.286763     1B3u  -11.28
+       1B1g  -11.285798     2Ag   -11.285074     2B2u  -11.28	       1B1g  -11.285798     2Ag   -11.285074     2B2u  -11.28
+       3Ag    -1.192405     2B3u   -1.051895     3B2u   -1.02	       3Ag    -1.192405     2B3u   -1.051895     3B2u   -1.02
+       2B1g   -0.858677     4Ag    -0.815933     5Ag    -0.67	       2B1g   -0.858677     4Ag    -0.815933     5Ag    -0.67
+       4B2u   -0.660452     3B3u   -0.656412     4B3u   -0.60	       4B2u   -0.660452     3B3u   -0.656412     4B3u   -0.60
+       3B1g   -0.544475     1B1u   -0.533875     1B2g   -0.36	       3B1g   -0.544475     1B1u   -0.533875     1B2g   -0.36
+       1B3g   -0.363792     5B2u   -0.275375  			       1B3g   -0.363792     5B2u   -0.275375  
+
+    Beta Virtual:                                            	    Beta Virtual:                                            
+
+       6Ag    -0.043625     1Au     0.091850     2B1u    0.13	       6Ag    -0.043625     1Au     0.091850     2B1u    0.13
+       4B1g    0.279898     7Ag     0.280901     5B3u    0.30	       4B1g    0.279898     7Ag     0.280901     5B3u    0.30
+       6B2u    0.320966     2B3g    0.321911     8Ag     0.33	       6B2u    0.320966     2B3g    0.321911     8Ag     0.33
+       7B2u    0.368408     6B3u    0.394878     7B3u    0.42	       7B2u    0.368408     6B3u    0.394878     7B3u    0.42
+       3B1u    0.456784     5B1g    0.460077     8B2u    0.47	       3B1u    0.456784     5B1g    0.460077     8B2u    0.47
+       2B2g    0.516968     3B3g    0.518047     6B1g    0.52	       2B2g    0.516968     3B3g    0.518047     6B1g    0.52
+       9Ag     0.542824    10Ag     0.573895     2Au     0.60	       9Ag     0.542824    10Ag     0.573895     2Au     0.60
+       4B1u    0.622181     9B2u    0.631390    11Ag     0.67	       4B1u    0.622181     9B2u    0.631390    11Ag     0.67
+       7B1g    0.685754     8B3u    0.693033     4B3g    0.70	       7B1g    0.685754     8B3u    0.693033     4B3g    0.70
+      10B2u    0.724636    12Ag     0.828521     8B1g    0.83	      10B2u    0.724636    12Ag     0.828521     8B1g    0.83
+       9B3u    0.926991    11B2u    0.983757     9B1g    1.08	       9B3u    0.926991    11B2u    0.983757     9B1g    1.08
+      10B1g    1.167689    12B2u    1.174943    13Ag     1.18	      10B1g    1.167689    12B2u    1.174943    13Ag     1.18
+      10B3u    1.242380    13B2u    1.248216    14Ag     1.43	      10B3u    1.242380    13B2u    1.248216    14Ag     1.43
+      11B3u    1.446256    11B1g    1.565632    14B2u    1.68	      11B3u    1.446256    11B1g    1.565632    14B2u    1.68
+      15Ag    23.619164    15B2u   23.860114    12B3u   23.92	      15Ag    23.619164    15B2u   23.860114    12B3u   23.92
+      12B1g   24.002140    16Ag    24.028964    16B2u   24.15	      12B1g   24.002140    16Ag    24.028964    16B2u   24.15
+
+    Final Occupation by Irrep:					    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 	             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]	    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]
+    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]	    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]
+
+  @UHF Final Energy:  -229.20378006852542		      |	  @UHF Final Energy:  -229.20378006852556
+
+   => Energetics <=						   => Energetics <=
+
+    Nuclear Repulsion Energy =            186.022640325180560	    Nuclear Repulsion Energy =            186.022640325180560
+    One-Electron Energy =                -675.779370448633244	    One-Electron Energy =                -675.779370448633244
+    Two-Electron Energy =                 260.552950054927293 |	    Two-Electron Energy =                 260.552950054927180
+    Total Energy =                       -229.203780068525418 |	    Total Energy =                       -229.203780068525532
+
+  UHF NO Occupations:						  UHF NO Occupations:
+  HONO-2 :    4B3u 2.0000000				      |	  HONO-2 :    4 Ag 2.0000000
+  HONO-1 :    5 Ag 2.0000000				      |	  HONO-1 :    5B2u 2.0000000
+  HONO-0 :    5B2u 2.0000000				      |	  HONO-0 :    5 Ag 2.0000000
+  LUNO+0 :    5B3u 0.0000000				      |	  LUNO+0 :    6B2u 0.0000000
+  LUNO+1 :    4B1g 0.0000000					  LUNO+1 :    4B1g 0.0000000
+  LUNO+2 :    6 Ag 0.0000000				      |	  LUNO+2 :    5B3u 0.0000000
+  LUNO+3 :    6B2u 0.0000000				      |	  LUNO+3 :    5B1g 0.0000000
+
+
+Computation Completed						Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.0	Properties will be evaluated at   0.000000,   0.000000,   0.0
+
+Properties computed using the SCF density matrix		Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]					  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000	     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]				  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000	     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]						  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     	     X:     0.0000      Y:     0.0000      Z:     0.0000     
+
+  Dipole Moment: [D]						  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     	     X:     0.0000      Y:     0.0000      Z:     0.0000     
+
+
+*** tstop() called on CHE-FEVANGE-01I (2) at Tue Jul 30 15:54 |	*** tstop() called on CHE-FEVANGE-01I (2) at Tue Jul 30 19:28
+Module time:							Module time:
+	user time   =       3.88 seconds =       0.06 minutes |		user time   =       3.33 seconds =       0.06 minutes
+	system time =       0.05 seconds =       0.00 minutes |		system time =       0.03 seconds =       0.00 minutes
+	total time  =          4 seconds =       0.07 minutes |		total time  =          3 seconds =       0.05 minutes
+Total time:							Total time:
+	user time   =       7.66 seconds =       0.13 minutes |		user time   =       6.69 seconds =       0.11 minutes
+	system time =       0.13 seconds =       0.00 minutes |		system time =       0.07 seconds =       0.00 minutes
+	total time  =          8 seconds =       0.13 minutes |		total time  =          7 seconds =       0.12 minutes
+   => Loading Basis Set <=					   => Loading Basis Set <=
+
+    Name: STO-3G						    Name: STO-3G
+    Role: ORBITAL						    Role: ORBITAL
+    Keyword: MINAO_BASIS					    Keyword: MINAO_BASIS
+    atoms 1-6  entry C          line    61 file /Users/fevang	    atoms 1-6  entry C          line    61 file /Users/fevang
+    atoms 7-10 entry H          line    19 file /Users/fevang	    atoms 7-10 entry H          line    19 file /Users/fevang
+
+
+  Forte								  Forte
+  -----------------------------------------------------------	  -----------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlate	  A suite of quantum chemistry methods for strongly correlate
+
+    git branch: onedet - git commit: 97fa2368		      |	    git branch: master - git commit: ac58d243
+
+  Developed by:							  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,	    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,		    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang		    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  -----------------------------------------------------------	  -----------------------------------------------------------
+
+  Size of Determinant class: 32					  Size of Determinant class: 32
+
+  ==> MO Space Information <==					  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC				  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC			  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE					  Read options for space ACTIVE
+  -----------------------------------------------------------	  -----------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u	                       Ag   B1g   B2g   B3g    Au   B1u   B2u
+  -----------------------------------------------------------	  -----------------------------------------------------------
+    FROZEN_DOCC         2     1     0     0     0     0     2	    FROZEN_DOCC         2     1     0     0     0     0     2
+    RESTRICTED_DOCC     3     2     0     0     0     0     2	    RESTRICTED_DOCC     3     2     0     0     0     0     2
+    ACTIVE              1     0     1     2     1     2     1	    ACTIVE              1     0     1     2     1     2     1
+    RESTRICTED_UOCC    10     9     1     2     1     2    11	    RESTRICTED_UOCC    10     9     1     2     1     2    11
+    FROZEN_UOCC         0     0     0     0     0     0     0	    FROZEN_UOCC         0     0     0     0     0     0     0
+    Total              16    12     2     4     2     4    16	    Total              16    12     2     4     2     4    16
+  -----------------------------------------------------------	  -----------------------------------------------------------
+
+  ==> Integral Transformation <==				  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    68		  Number of molecular orbitals:                    68
+  Number of correlated molecular orbitals:         62		  Number of correlated molecular orbitals:         62
+  Number of frozen occupied orbitals:               6		  Number of frozen occupied orbitals:               6
+  Number of frozen unoccupied orbitals:             0		  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional		  Two-electron integral type:              Conventional
+
+
+  Overall Conventional Integrals timings			  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.			Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1			Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and construct		Transforming the one-electron integrals and construct
+	Starting first half-transformation.				Starting first half-transformation.
+	Sorting half-transformed integrals.				Sorting half-transformed integrals.
+	First half integral transformation complete.			First half integral transformation complete.
+	Starting second half-transformation.				Starting second half-transformation.
+	Two-electron integral transformation complete.			Two-electron integral transformation complete.
+
+  Integral transformation done. 0.42158347 s		      |	  Integral transformation done. 0.40633797 s
+  Reading the two-electron integrals from disk			  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.477911 GB  Using in-cor	  Size of two-electron integrals:   0.477911 GB  Using in-cor
+   Calculation information:					   Calculation information:
+      Number of atoms:                  10			      Number of atoms:                  10
+      Number of AO shells:              44			      Number of AO shells:              44
+      Number of primitives:            100			      Number of primitives:            100
+      Number of atomic orbitals:        68			      Number of atomic orbitals:        68
+      Number of basis functions:        68			      Number of basis functions:        68
+
+      Integral cutoff                 1.00e-12			      Integral cutoff                 1.00e-12
+      Number of threads:                 1			      Number of threads:                 1
+
+  Performing in-core PK						  Performing in-core PK
+  Using 5506062 doubles for integral storage.			  Using 5506062 doubles for integral storage.
+  We computed 444486 shell quartets total.			  We computed 444486 shell quartets total.
+  Whereas there are 490545 unique shell quartets.		  Whereas there are 490545 unique shell quartets.
+
+
+  Frozen-core energy           -289.380972996875 a.u.		  Frozen-core energy           -289.380972996875 a.u.
+  Timing for frozen one-body operator:                        |	  Timing for frozen one-body operator:                       
+  Resorting integrals after freezing core.			  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              |	  Timing for freezing core and virtual orbitals:             
+  Conventional integrals take 9.42222466 s		      |	  Conventional integrals take 8.48093014 s
+
+  ==> Summary of Active Space Solver Input <==			  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.  Nstates					    Irrep.  Multi.  Nstates
+    -------------------------					    -------------------------
+      Ag       1        1					      Ag       1        1
+    -------------------------					    -------------------------
+    Total number of states: 1					    Total number of states: 1
+    -------------------------					    -------------------------
+
+
+-------------------------------------------------------------	-------------------------------------------------------------
+               Selected Configuration Interaction Excited Sta	               Selected Configuration Interaction Excited Sta
+  written by Jeffrey B. Schriber, Tianyuan Zhang and Francesc	  written by Jeffrey B. Schriber, Tianyuan Zhang and Francesc
+-------------------------------------------------------------	-------------------------------------------------------------
+
+  ==> Reference Information <==					  ==> Reference Information <==
+
+  ==> Calculation Information <==				  ==> Calculation Information <==
+
+  -----------------------------------------------------------	  -----------------------------------------------------------
+    Multiplicity                             1    		    Multiplicity                             1    
+    Symmetry                                 0    		    Symmetry                                 0    
+    Number of roots                          1    		    Number of roots                          1    
+    Ms                                       0			    Ms                                       0
+    Excited Algorithm                        NONE		    Excited Algorithm                        NONE
+  -----------------------------------------------------------	  -----------------------------------------------------------
+  Using 1 threads						  Using 1 threads
+  Computing wavefunction for root 0				  Computing wavefunction for root 0
+
+        -----------------------------------------------------	        -----------------------------------------------------
+                      Adaptive Configuration Interaction	                      Adaptive Configuration Interaction
+          written by Jeffrey B. Schriber and Francesco A. Eva	          written by Jeffrey B. Schriber and Francesco A. Eva
+        -----------------------------------------------------	        -----------------------------------------------------
+
+  ==> Reference Information <==					  ==> Reference Information <==
+
+  There are 16 frozen orbitals.					  There are 16 frozen orbitals.
+  There are 8 active orbitals.					  There are 8 active orbitals.
+
+  ==> Calculation Information <==				  ==> Calculation Information <==
+
+  -----------------------------------------------------------	  -----------------------------------------------------------
+    Multiplicity                             1    		    Multiplicity                             1    
+    Symmetry                                 0    		    Symmetry                                 0    
+    Number of roots                          1    		    Number of roots                          1    
+    Root used for properties                 0    		    Root used for properties                 0    
+    Sigma (Eh)                               1.00e-03		    Sigma (Eh)                               1.00e-03
+    Gamma (Eh^(-1))                          1.00e+00		    Gamma (Eh^(-1))                          1.00e+00
+    Convergence threshold                    1.00e-09		    Convergence threshold                    1.00e-09
+    Ms                                       0			    Ms                                       0
+    Diagonalization algorithm                FULL		    Diagonalization algorithm                FULL
+    Determinant selection criterion          Second-order Ene	    Determinant selection criterion          Second-order Ene
+    Selection criterion                      Aimed selection	    Selection criterion                      Aimed selection
+    Excited Algorithm                        NONE		    Excited Algorithm                        NONE
+    Project out spin contaminants            False		    Project out spin contaminants            False
+    Enforce spin completeness of basis       True		    Enforce spin completeness of basis       True
+    Enforce complete aimed selection         False		    Enforce complete aimed selection         False
+  -----------------------------------------------------------	  -----------------------------------------------------------
+  Number of active alpha electrons: 4				  Number of active alpha electrons: 4
+  Number of active beta electrons: 4				  Number of active beta electrons: 4
+  Maximum reference space size: 100				  Maximum reference space size: 100
+  Number of reference determinants: 35				  Number of reference determinants: 35
+  Reference generated from 7 MOs				  Reference generated from 7 MOs
+  Using streamlined Q-space builder.				  Using streamlined Q-space builder.
+
+  ==> Cycle 0 <==						  ==> Cycle 0 <==
+
+  Initial P space dimension: 35					  Initial P space dimension: 35
+  Spin-complete dimension of the P space: 35 determinants	  Spin-complete dimension of the P space: 35 determinants
+
+  ==> Computing Coupling Lists <==				  ==> Computing Coupling Lists <==
+  --------------------------------				  --------------------------------
+        α          0.000257 s				      |	        α          0.000625 s
+        β          0.000239 s				      |	        β          0.000241 s
+        αα         0.000359 s				      |	        αα         0.005989 s
+        ββ         0.000331 s				      |	        ββ         0.000852 s
+        αβ         0.000838 s				      |	        αβ         0.001900 s
+  --------------------------------				  --------------------------------
+  Time spent diagonalizing H:   0.000970 s		      |	  Time spent diagonalizing H:   0.002643 s
+
+    P-space  CI Energy Root   0        = -229.318652507118 Eh	    P-space  CI Energy Root   0        = -229.318652507118 Eh
+
+  Using batched Q_space algorithm				  Using batched Q_space algorithm
+  Setting nbin to 1 based on estimated memory ( 0.408 MB)	  Setting nbin to 1 based on estimated memory ( 0.408 MB)
+  Overwriting nbin to 8 based on user input			  Overwriting nbin to 8 based on user input
+ -----------------------------------------			 -----------------------------------------
+                Bin 0						                Bin 0
+  Build: 0.002263					      |	  Build: 0.008863
+  Merge: 0.000044					      |	  Merge: 0.000145
+    Build F                  0.002335 			      |	    Build F                  0.009121 
+    Build criteria vector    0.000162			      |	    Build criteria vector    0.000601
+    Sort vector              0.000030			      |	    Sort vector              0.000041
+    Screening                0.000011			      |	    Screening                0.000027
+    Added 32 dets of 98 from bin 0			      |	    Added 19 dets of 60 from bin 0
+                Bin 1						                Bin 1
+  Build: 0.002034					      |	  Build: 0.004923
+  Merge: 0.000015					      |	  Merge: 0.000047
+    Build F                  0.002077 			      |	    Build F                  0.004999 
+    Build criteria vector    0.000051			      |	    Build criteria vector    0.000111
+    Sort vector              0.000006			      |	    Sort vector              0.000011
+    Screening                0.000003			      <
+    Added 38 dets of 30 from bin 1			      <
+                Bin 2					      <
+  Build: 0.002214					      <
+  Merge: 0.000025					      <
+    Build F                  0.002286 			      <
+    Build criteria vector    0.000077			      <
+    Sort vector              0.000012			      <
+    Screening                0.000001				    Screening                0.000001
+    Added 46 dets of 44 from bin 2			      |	    Added 23 dets of 42 from bin 1
+							      >	                Bin 2
+							      >	  Build: 0.002637
+							      >	  Merge: 0.000052
+							      >	    Build F                  0.002709 
+							      >	    Build criteria vector    0.000101
+							      >	    Sort vector              0.000013
+							      >	    Screening                0.000003
+							      >	    Added 35 dets of 54 from bin 2
+                Bin 3						                Bin 3
+  Build: 0.002058					      |	  Build: 0.001996
+  Merge: 0.000033					      |	  Merge: 0.000047
+    Build F                  0.002123 			      |	    Build F                  0.002062 
+    Build criteria vector    0.000104			      |	    Build criteria vector    0.000085
+    Sort vector              0.000015			      |	    Sort vector              0.000009
+    Screening                0.000001				    Screening                0.000001
+    Added 58 dets of 68 from bin 3			      |	    Added 46 dets of 54 from bin 3
+                Bin 4						                Bin 4
+  Build: 0.001975					      |	  Build: 0.002080
+  Merge: 0.000012					      |	  Merge: 0.000029
+    Build F                  0.002009 			      |	    Build F                  0.002125 
+    Build criteria vector    0.000038			      |	    Build criteria vector    0.000068
+    Sort vector              0.000004			      |	    Sort vector              0.000007
+    Screening                0.000001				    Screening                0.000001
+    Added 62 dets of 24 from bin 4			      |	    Added 57 dets of 42 from bin 4
+                Bin 5						                Bin 5
+  Build: 0.001949					      |	  Build: 0.002047
+  Merge: 0.000026					      |	  Merge: 0.000028
+    Build F                  0.001994 			      |	    Build F                  0.002100 
+    Build criteria vector    0.000094			      |	    Build criteria vector    0.000067
+    Sort vector              0.000012			      |	    Sort vector              0.000008
+    Screening                0.000003			      |	    Screening                0.000004
+    Added 76 dets of 64 from bin 5			      |	    Added 67 dets of 42 from bin 5
+                Bin 6						                Bin 6
+  Build: 0.001839					      |	  Build: 0.001930
+  Merge: 0.000026					      |	  Merge: 0.000043
+    Build F                  0.001884 			      |	    Build F                  0.001990 
+    Build criteria vector    0.000092			      |	    Build criteria vector    0.000082
+    Sort vector              0.000012			      |	    Sort vector              0.000010
+    Screening                0.000001				    Screening                0.000001
+    Added 85 dets of 66 from bin 6			      |	    Added 82 dets of 54 from bin 6
+                Bin 7						                Bin 7
+  Build: 0.001847					      |	  Build: 0.001846
+  Merge: 0.000014					      |	  Merge: 0.000076
+    Build F                  0.001887 			      |	    Build F                  0.001939 
+    Build criteria vector    0.000044			      |	    Build criteria vector    0.000106
+    Sort vector              0.000005			      |	    Sort vector              0.000013
+    Screening                0.000001				    Screening                0.000001
+    Added 90 dets of 28 from bin 7			      |	    Added 88 dets of 74 from bin 7
+ ------------------------------------				 ------------------------------------
+  Screened out 0.0004298535 Eh of correlation		      |	  Screened out 0.0004260389 Eh of correlation
+  Dimension of the truncated SD space: 90 determinants	      |	  Dimension of the truncated SD space: 88 determinants
+  Time spent building the external space (default): 0.017779  |	  Time spent building the external space (default): 0.035516 
+
+  Time spent sorting: 0.000017				      |	  Time spent sorting: 0.000016
+  Time spent selecting: 0.000026			      |	  Time spent selecting: 0.000029
+  Dimension of the P + Q space: 91 determinants			  Dimension of the P + Q space: 91 determinants
+  Time spent screening the model space: 0.000038 s	      |	  Time spent screening the model space: 0.000039 s
+  Time spent building the model space: 0.017876		      |	  Time spent building the model space: 0.035623
+  Spin-complete dimension of the PQ space: 99			  Spin-complete dimension of the PQ space: 99
+
+  ==> Computing Coupling Lists <==				  ==> Computing Coupling Lists <==
+  --------------------------------				  --------------------------------
+        α          0.000548 s				      |	        α          0.000492 s
+        β          0.000547 s				      |	        β          0.000510 s
+        αα         0.000793 s				      |	        αα         0.000698 s
+        ββ         0.000809 s				      |	        ββ         0.000732 s
+        αβ         0.002073 s				      |	        αβ         0.001915 s
+  --------------------------------				  --------------------------------
+  Total time spent diagonalizing H:   0.004977 s	      |	  Total time spent diagonalizing H:   0.004713 s
+
+    PQ-space CI Energy Root   0        = -229.356624016532 Eh	    PQ-space CI Energy Root   0        = -229.356624016532 Eh
+    PQ-space CI Energy + EPT2 Root   0 = -229.357578060931 Eh	    PQ-space CI Energy + EPT2 Root   0 = -229.357578060931 Eh
+
+
+  Most important contributions to root   0:			  Most important contributions to root   0:
+    0  -0.817270 0.667929891          34 |02200202>		    0  -0.817270 0.667929891          34 |02200202>
+    1   0.496007 0.246023229          31 |22200200>		    1   0.496007 0.246023229          31 |22200200>
+    2   0.105327 0.011093841          90 |00202202>		    2   0.105327 0.011093841          90 |00202202>
+    3   0.081050 0.006569035          17 |02000222>		    3   0.081050 0.006569035          17 |02000222>
+    4  -0.071903 0.005170105          85 |20202200>		    4  -0.071903 0.005170105          85 |20202200>
+    5  -0.063763 0.004065696           9 |22000220>		    5  -0.063763 0.004065696           9 |22000220>
+    6  -0.061977 0.003841162          87 |0-+0-2+2>		    6  -0.061977 0.003841162          87 |0-+0-2+2>
+    7  -0.061977 0.003841162          86 |0+-0+2-2>		    7  -0.061977 0.003841162          86 |0+-0+2-2>
+    8   0.060357 0.003642990          18 |-2-002++>	      |	    8   0.060357 0.003642990          30 |+2+002-->
+    9   0.060357 0.003642990          30 |+2+002-->	      |	    9   0.060357 0.003642990          18 |-2-002++>
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet	  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
+  Cycle 0 took: 0.032247 s				      |	  Cycle 0 took: 0.061710 s
+
+  ==> Cycle 1 <==						  ==> Cycle 1 <==
+
+  Initial P space dimension: 66					  Initial P space dimension: 66
+  Spin-complete dimension of the P space: 79 determinants	  Spin-complete dimension of the P space: 79 determinants
+
+  ==> Computing Coupling Lists <==				  ==> Computing Coupling Lists <==
+  --------------------------------				  --------------------------------
+        α          0.000434 s				      |	        α          0.000475 s
+        β          0.000433 s				      |	        β          0.000452 s
+        αα         0.000938 s				      |	        αα         0.000659 s
+        ββ         0.000726 s				      |	        ββ         0.000721 s
+        αβ         0.001565 s				      |	        αβ         0.001645 s
+  --------------------------------				  --------------------------------
+  Time spent diagonalizing H:   0.003172 s		      |	  Time spent diagonalizing H:   0.003463 s
+
+    P-space  CI Energy Root   0        = -229.356432159433 Eh |	    P-space  CI Energy Root   0        = -229.356432159432 Eh
+
+  Using batched Q_space algorithm				  Using batched Q_space algorithm
+  Setting nbin to 1 based on estimated memory ( 0.920 MB)	  Setting nbin to 1 based on estimated memory ( 0.920 MB)
+  Overwriting nbin to 8 based on user input			  Overwriting nbin to 8 based on user input
+ -----------------------------------------			 -----------------------------------------
+                Bin 0						                Bin 0
+  Build: 0.005381					      |	  Build: 0.005882
+  Merge: 0.000046					      |	  Merge: 0.000064
+    Build F                  0.005480 			      |	    Build F                  0.005969 
+    Build criteria vector    0.000148			      |	    Build criteria vector    0.000110
+    Sort vector              0.000025			      |	    Sort vector              0.000014
+    Screening                0.000006				    Screening                0.000006
+    Added 35 dets of 101 from bin 0			      |	    Added 23 dets of 67 from bin 0
+                Bin 1						                Bin 1
+  Build: 0.004137					      |	  Build: 0.004938
+  Merge: 0.000008					      |	  Merge: 0.000032
+    Build F                  0.004161 			      |	    Build F                  0.005002 
+    Build criteria vector    0.000027			      |	    Build criteria vector    0.000073
+    Sort vector              0.000003			      |	    Sort vector              0.000008
+    Screening                0.000001				    Screening                0.000001
+    Added 40 dets of 18 from bin 1			      |	    Added 32 dets of 42 from bin 1
+                Bin 2						                Bin 2
+  Build: 0.004215					      |	  Build: 0.004697
+  Merge: 0.000027					      |	  Merge: 0.000040
+    Build F                  0.004263 			      |	    Build F                  0.004756 
+    Build criteria vector    0.000096			      |	    Build criteria vector    0.000082
+    Sort vector              0.000013			      |	    Sort vector              0.000009
+    Screening                0.000001			      |	    Screening                0.000004
+    Added 55 dets of 68 from bin 2			      |	    Added 49 dets of 54 from bin 2
+                Bin 3						                Bin 3
+  Build: 0.004283					      |	  Build: 0.004454
+  Merge: 0.000024					      |	  Merge: 0.000030
+    Build F                  0.004346 			      |	    Build F                  0.004510 
+    Build criteria vector    0.000078			      |	    Build criteria vector    0.000068
+    Sort vector              0.000014			      |	    Sort vector              0.000008
+    Screening                0.000001				    Screening                0.000001
+    Added 64 dets of 52 from bin 3			      |	    Added 56 dets of 44 from bin 3
+                Bin 4						                Bin 4
+  Build: 0.004238					      |	  Build: 0.004633
+  Merge: 0.000010					      |	  Merge: 0.000036
+    Build F                  0.004272 			      |	    Build F                  0.004687 
+    Build criteria vector    0.000031			      |	    Build criteria vector    0.000076
+    Sort vector              0.000005			      |	    Sort vector              0.000009
+    Screening                0.000003			      |	    Screening                0.000004
+    Added 71 dets of 20 from bin 4			      |	    Added 71 dets of 50 from bin 4
+                Bin 5						                Bin 5
+  Build: 0.004210					      |	  Build: 0.005002
+  Merge: 0.000027					      |	  Merge: 0.000029
+    Build F                  0.004256 			      |	    Build F                  0.005065 
+    Build criteria vector    0.000099			      |	    Build criteria vector    0.000067
+    Sort vector              0.000017			      |	    Sort vector              0.000008
+    Screening                0.000001				    Screening                0.000001
+    Added 96 dets of 74 from bin 5			      |	    Added 82 dets of 42 from bin 5
+                Bin 6						                Bin 6
+  Build: 0.003795					      |	  Build: 0.004699
+  Merge: 0.000024					      |	  Merge: 0.000041
+    Build F                  0.003837 			      |	    Build F                  0.004762 
+    Build criteria vector    0.000086			      |	    Build criteria vector    0.000084
+    Sort vector              0.000013			      |	    Sort vector              0.000009
+    Screening                0.000001				    Screening                0.000001
+    Added 109 dets of 70 from bin 6			      |	    Added 91 dets of 54 from bin 6
+                Bin 7						                Bin 7
+  Build: 0.004068					      |	  Build: 0.004694
+  Merge: 0.000017					      |	  Merge: 0.000113
+    Build F                  0.004137 			      |	    Build F                  0.004825 
+    Build criteria vector    0.000059			      |	    Build criteria vector    0.000129
+    Sort vector              0.000008			      |	    Sort vector              0.000017
+    Screening                0.000001				    Screening                0.000001
+    Added 115 dets of 40 from bin 7			      |	    Added 116 dets of 90 from bin 7
+ ------------------------------------				 ------------------------------------
+  Screened out 0.0004690814 Eh of correlation		      |	  Screened out 0.0004694181 Eh of correlation
+  Dimension of the truncated SD space: 115 determinants	      |	  Dimension of the truncated SD space: 116 determinants
+  Time spent building the external space (default): 0.035824  |	  Time spent building the external space (default): 0.040675 
+
+  Time spent sorting: 0.000021				      |	  Time spent sorting: 0.000023
+  Time spent selecting: 0.000023			      |	  Time spent selecting: 0.000040
+  Dimension of the P + Q space: 137 determinants		  Dimension of the P + Q space: 137 determinants
+  Time spent screening the model space: 0.000033 s	      |	  Time spent screening the model space: 0.000050 s
+  Time spent building the model space: 0.035909		      |	  Time spent building the model space: 0.040779
+  Spin-complete dimension of the PQ space: 213		      |	  Spin-complete dimension of the PQ space: 193
+
+  ==> Computing Coupling Lists <==				  ==> Computing Coupling Lists <==
+  --------------------------------				  --------------------------------
+        α          0.001100 s				      |	        α          0.000943 s
+        β          0.000990 s				      |	        β          0.001113 s
+        αα         0.001444 s				      |	        αα         0.001402 s
+        ββ         0.001462 s				      |	        ββ         0.001406 s
+        αβ         0.003536 s				      |	        αβ         0.003364 s
+  --------------------------------				  --------------------------------
+  Total time spent diagonalizing H:   0.025914 s	      |	  Total time spent diagonalizing H:   0.020823 s
+
+    PQ-space CI Energy Root   0        = -229.359500053706 Eh |	    PQ-space CI Energy Root   0        = -229.359415882812 Eh
+    PQ-space CI Energy + EPT2 Root   0 = -229.360487448538 Eh |	    PQ-space CI Energy + EPT2 Root   0 = -229.360403147867 Eh
+
+
+  Most important contributions to root   0:			  Most important contributions to root   0:
+    0  -0.813377 0.661581654          65 |02200202>	      |	    0  -0.813414 0.661642292          65 |02200202>
+    1   0.491027 0.241107996          64 |22200200>	      |	    1   0.491236 0.241313092          64 |22200200>
+    2   0.111789 0.012496721          63 |00202202>	      |	    2   0.111860 0.012512548          63 |00202202>
+    3   0.084398 0.007122963          62 |02000222>	      |	    3   0.084499 0.007140091          62 |02000222>
+    4  -0.075014 0.005627038          61 |20202200>	      |	    4  -0.075008 0.005626168          61 |20202200>
+    5  -0.066413 0.004410621          58 |0+-0+2-2>	      |	    5  -0.066344 0.004401523          58 |0+-0+2-2>
+    6  -0.066413 0.004410621          59 |0-+0-2+2>	      |	    6  -0.066344 0.004401523          59 |0-+0-2+2>
+    7  -0.066029 0.004359795          60 |22000220>	      |	    7  -0.065918 0.004345172          60 |22000220>
+    8   0.063057 0.003976139          57 |-2-002++>	      |	    8   0.062620 0.003921310          56 |-2-002++>
+    9   0.063057 0.003976139          56 |+2+002-->	      |	    9   0.062620 0.003921310          57 |+2+002-->
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet	  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
+  Cycle 1 took: 0.079897 s				      |	  Cycle 1 took: 0.080237 s
+
+  ==> Cycle 2 <==						  ==> Cycle 2 <==
+
+  Initial P space dimension: 101			      |	  Initial P space dimension: 97
+  Spin-complete dimension of the P space: 126 determinants    |	  Spin-complete dimension of the P space: 118 determinants
+
+  ==> Computing Coupling Lists <==				  ==> Computing Coupling Lists <==
+  --------------------------------				  --------------------------------
+        α          0.000691 s				      |	        α          0.000578 s
+        β          0.000597 s				      |	        β          0.000602 s
+        αα         0.000838 s				      |	        αα         0.000828 s
+        ββ         0.000936 s				      |	        ββ         0.000919 s
+        αβ         0.002124 s				      |	        αβ         0.002251 s
+  --------------------------------				  --------------------------------
+  Time spent diagonalizing H:   0.007434 s		      |	  Time spent diagonalizing H:   0.006686 s
+
+    P-space  CI Energy Root   0        = -229.358649016457 Eh |	    P-space  CI Energy Root   0        = -229.358528279106 Eh
+
+  Using batched Q_space algorithm				  Using batched Q_space algorithm
+  Setting nbin to 1 based on estimated memory ( 1.468 MB)     |	  Setting nbin to 1 based on estimated memory ( 1.374 MB)
+  Overwriting nbin to 8 based on user input			  Overwriting nbin to 8 based on user input
+ -----------------------------------------			 -----------------------------------------
+                Bin 0						                Bin 0
+  Build: 0.007247					      |	  Build: 0.008036
+  Merge: 0.000044					      |	  Merge: 0.000069
+    Build F                  0.007353 			      |	    Build F                  0.008126 
+    Build criteria vector    0.000150			      |	    Build criteria vector    0.000111
+    Sort vector              0.000021			      |	    Sort vector              0.000015
+    Screening                0.000005			      |	    Screening                0.000004
+    Added 28 dets of 102 from bin 0			      |	    Added 15 dets of 76 from bin 0
+                Bin 1						                Bin 1
+  Build: 0.006672					      |	  Build: 0.006790
+  Merge: 0.000017					      |	  Merge: 0.000088
+    Build F                  0.006722 			      |	    Build F                  0.006913 
+    Build criteria vector    0.000057			      |	    Build criteria vector    0.000109
+    Sort vector              0.000006			      |	    Sort vector              0.000011
+    Screening                0.000000			      |	    Screening                0.000002
+    Added 28 dets of 38 from bin 1			      |	    Added 25 dets of 60 from bin 1
+                Bin 2						                Bin 2
+  Build: 0.006946					      |	  Build: 0.007147
+  Merge: 0.000028					      |	  Merge: 0.000044
+    Build F                  0.007029 			      |	    Build F                  0.007218 
+    Build criteria vector    0.000096			      |	    Build criteria vector    0.000082
+    Sort vector              0.000014			      |	    Sort vector              0.000009
+    Screening                0.000004			      |	    Screening                0.000003
+    Added 40 dets of 64 from bin 2			      |	    Added 36 dets of 54 from bin 2
+                Bin 3						                Bin 3
+  Build: 0.006514					      |	  Build: 0.006820
+  Merge: 0.000025					      |	  Merge: 0.000055
+    Build F                  0.006558 			      |	    Build F                  0.006897 
+    Build criteria vector    0.000090			      |	    Build criteria vector    0.000095
+    Sort vector              0.000013			      |	    Sort vector              0.000012
+    Screening                0.000001				    Screening                0.000001
+    Added 44 dets of 72 from bin 3			      |	    Added 38 dets of 64 from bin 3
+                Bin 4						                Bin 4
+  Build: 0.006377					      |	  Build: 0.006893
+  Merge: 0.000015					      |	  Merge: 0.000032
+    Build F                  0.006437 			      |	    Build F                  0.006942 
+    Build criteria vector    0.000056			      |	    Build criteria vector    0.000066
+    Sort vector              0.000007				    Sort vector              0.000007
+    Screening                0.000001			      |	    Screening                0.000000
+    Added 46 dets of 36 from bin 4			      |	    Added 38 dets of 44 from bin 4
+                Bin 5						                Bin 5
+  Build: 0.006229					      |	  Build: 0.006751
+  Merge: 0.000025					      |	  Merge: 0.000041
+    Build F                  0.006277 			      |	    Build F                  0.006809 
+    Build criteria vector    0.000092			      |	    Build criteria vector    0.000083
+    Sort vector              0.000012			      |	    Sort vector              0.000009
+    Screening                0.000001				    Screening                0.000001
+    Added 64 dets of 72 from bin 5			      |	    Added 42 dets of 54 from bin 5
+                Bin 6						                Bin 6
+  Build: 0.005921					      |	  Build: 0.006990
+  Merge: 0.000028					      |	  Merge: 0.000049
+    Build F                  0.005968 			      |	    Build F                  0.007060 
+    Build criteria vector    0.000103			      |	    Build criteria vector    0.000092
+    Sort vector              0.000015			      |	    Sort vector              0.000010
+    Screening                0.000003			      <
+    Added 73 dets of 84 from bin 6			      <
+                Bin 7					      <
+  Build: 0.006341					      <
+  Merge: 0.000018					      <
+    Build F                  0.006410 			      <
+    Build criteria vector    0.000064			      <
+    Sort vector              0.000012			      <
+    Screening                0.000001				    Screening                0.000001
+    Added 76 dets of 46 from bin 7			      |	    Added 52 dets of 60 from bin 6
+							      >	                Bin 7
+							      >	  Build: 0.007271
+							      >	  Merge: 0.000140
+							      >	    Build F                  0.007442 
+							      >	    Build criteria vector    0.000158
+							      >	    Sort vector              0.000023
+							      >	    Screening                0.000004
+							      >	    Added 80 dets of 110 from bin 7
+ ------------------------------------				 ------------------------------------
+  Screened out 0.0004732699 Eh of correlation		      |	  Screened out 0.0004790183 Eh of correlation
+  Dimension of the truncated SD space: 76 determinants	      |	  Dimension of the truncated SD space: 80 determinants
+  Time spent building the external space (default): 0.053950  |	  Time spent building the external space (default): 0.058616 
+
+  Time spent sorting: 0.000014					  Time spent sorting: 0.000014
+  Time spent selecting: 0.000017			      |	  Time spent selecting: 0.000023
+  Dimension of the P + Q space: 147 determinants	      |	  Dimension of the P + Q space: 142 determinants
+  Time spent screening the model space: 0.000029 s	      |	  Time spent screening the model space: 0.000033 s
+  Time spent building the model space: 0.054025		      |	  Time spent building the model space: 0.058692
+  Spin-complete dimension of the PQ space: 237		      |	  Spin-complete dimension of the PQ space: 232
+
+  ==> Computing Coupling Lists <==				  ==> Computing Coupling Lists <==
+  --------------------------------				  --------------------------------
+        α          0.001105 s				      |	        α          0.001111 s
+        β          0.001164 s				      |	        β          0.001160 s
+        αα         0.001604 s				      |	        αα         0.001588 s
+        ββ         0.001623 s				      |	        ββ         0.001768 s
+        αβ         0.003765 s				      |	        αβ         0.004157 s
+  --------------------------------				  --------------------------------
+  Total time spent diagonalizing H:   0.032364 s	      |	  Total time spent diagonalizing H:   0.033600 s
+
+    PQ-space CI Energy Root   0        = -229.359494492392 Eh |	    PQ-space CI Energy Root   0        = -229.359450812287 Eh
+    PQ-space CI Energy + EPT2 Root   0 = -229.360478867315 Eh |	    PQ-space CI Energy + EPT2 Root   0 = -229.360444943990 Eh
+
+
+  Most important contributions to root   0:			  Most important contributions to root   0:
+    0   0.813239 0.661356861         100 |02200202>	      |	    0  -0.813533 0.661836624          96 |02200202>
+    1  -0.490489 0.240579012          99 |22200200>	      |	    1   0.490236 0.240331776          95 |22200200>
+    2  -0.112154 0.012578445          98 |00202202>	      |	    2   0.112214 0.012591944          94 |00202202>
+    3  -0.084126 0.007077254          97 |02000222>	      |	    3   0.084217 0.007092439          93 |02000222>
+    4   0.074846 0.005601948          96 |20202200>	      |	    4  -0.074859 0.005603927          92 |20202200>
+    5   0.066496 0.004421724          95 |0+-0+2-2>	      |	    5  -0.066299 0.004395584          90 |0-+0-2+2>
+    6   0.066496 0.004421724          94 |0-+0-2+2>	      |	    6  -0.066299 0.004395584          91 |0+-0+2-2>
+    7   0.065804 0.004330119          93 |22000220>	      |	    7  -0.065998 0.004355739          89 |22000220>
+    8  -0.063206 0.003995056          92 |-2-002++>	      |	    8   0.063258 0.004001590          87 |+2+002-->
+    9  -0.063206 0.003995056          91 |+2+002-->	      |	    9   0.063258 0.004001590          88 |-2-002++>
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet	  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
+  Cycle 2 took: 0.111003 s				      |	  Cycle 2 took: 0.117690 s
+
+  ==> Cycle 3 <==						  ==> Cycle 3 <==
+
+  Initial P space dimension: 98				      |	  Initial P space dimension: 97
+  Spin-complete dimension of the P space: 124 determinants    |	  Spin-complete dimension of the P space: 118 determinants
+
+  ==> Computing Coupling Lists <==				  ==> Computing Coupling Lists <==
+  --------------------------------				  --------------------------------
+        α          0.000669 s				      |	        α          0.000580 s
+        β          0.000665 s				      |	        β          0.000601 s
+        αα         0.001022 s				      |	        αα         0.000918 s
+        ββ         0.000837 s				      |	        ββ         0.000919 s
+        αβ         0.002157 s				      |	        αβ         0.002248 s
+  --------------------------------				  --------------------------------
+  Time spent diagonalizing H:   0.007751 s		      |	  Time spent diagonalizing H:   0.008004 s
+
+    P-space  CI Energy Root   0        = -229.358592932768 Eh |	    P-space  CI Energy Root   0        = -229.358528279105 Eh
+
+  Using batched Q_space algorithm				  Using batched Q_space algorithm
+  Setting nbin to 1 based on estimated memory ( 1.444 MB)     |	  Setting nbin to 1 based on estimated memory ( 1.374 MB)
+  Overwriting nbin to 8 based on user input			  Overwriting nbin to 8 based on user input
+ -----------------------------------------			 -----------------------------------------
+                Bin 0						                Bin 0
+  Build: 0.006645					      |	  Build: 0.008233
+  Merge: 0.000045					      |	  Merge: 0.000075
+    Build F                  0.006748 			      |	    Build F                  0.008352 
+    Build criteria vector    0.000142			      |	    Build criteria vector    0.000113
+    Sort vector              0.000024			      |	    Sort vector              0.000016
+    Screening                0.000005			      |	    Screening                0.000004
+    Added 28 dets of 102 from bin 0			      |	    Added 15 dets of 76 from bin 0
+                Bin 1						                Bin 1
+  Build: 0.006184					      |	  Build: 0.006631
+  Merge: 0.000015					      |	  Merge: 0.000047
+    Build F                  0.006219 			      |	    Build F                  0.006696 
+    Build criteria vector    0.000051			      |	    Build criteria vector    0.000091
+    Sort vector              0.000006			      |	    Sort vector              0.000011
+    Screening                0.000000			      |	    Screening                0.000002
+    Added 28 dets of 38 from bin 1			      |	    Added 25 dets of 60 from bin 1
+                Bin 2						                Bin 2
+  Build: 0.006534					      |	  Build: 0.006993
+  Merge: 0.000036					      |	  Merge: 0.000044
+    Build F                  0.006642 			      |	    Build F                  0.007060 
+    Build criteria vector    0.000108			      |	    Build criteria vector    0.000091
+    Sort vector              0.000014			      |	    Sort vector              0.000010
+    Screening                0.000004			      |	    Screening                0.000002
+    Added 39 dets of 64 from bin 2			      |	    Added 36 dets of 54 from bin 2
+                Bin 3						                Bin 3
+  Build: 0.006749					      |	  Build: 0.006709
+  Merge: 0.000029					      |	  Merge: 0.000055
+    Build F                  0.006821 			      |	    Build F                  0.006791 
+    Build criteria vector    0.000101			      |	    Build criteria vector    0.000096
+    Sort vector              0.000015			      |	    Sort vector              0.000011
+    Screening                0.000001				    Screening                0.000001
+    Added 43 dets of 72 from bin 3			      |	    Added 38 dets of 64 from bin 3
+                Bin 4						                Bin 4
+  Build: 0.006506					      |	  Build: 0.007224
+  Merge: 0.000016					      |	  Merge: 0.000049
+    Build F                  0.006549 			      |	    Build F                  0.007318 
+    Build criteria vector    0.000051			      |	    Build criteria vector    0.000082
+    Sort vector              0.000007			      |	    Sort vector              0.000008
+    Screening                0.000001			      |	    Screening                0.000000
+    Added 45 dets of 36 from bin 4			      |	    Added 38 dets of 44 from bin 4
+                Bin 5						                Bin 5
+  Build: 0.007210					      |	  Build: 0.006791
+  Merge: 0.000026					      |	  Merge: 0.000041
+    Build F                  0.007286 			      |	    Build F                  0.006854 
+    Build criteria vector    0.000101			      |	    Build criteria vector    0.000083
+    Sort vector              0.000014			      |	    Sort vector              0.000009
+    Screening                0.000001				    Screening                0.000001
+    Added 63 dets of 72 from bin 5			      |	    Added 42 dets of 54 from bin 5
+                Bin 6						                Bin 6
+  Build: 0.006114					      |	  Build: 0.006907
+  Merge: 0.000029					      |	  Merge: 0.000050
+    Build F                  0.006166 			      |	    Build F                  0.006983 
+    Build criteria vector    0.000105			      |	    Build criteria vector    0.000092
+    Sort vector              0.000017			      |	    Sort vector              0.000010
+    Screening                0.000004			      <
+    Added 74 dets of 86 from bin 6			      <
+                Bin 7					      <
+  Build: 0.006050					      <
+  Merge: 0.000018					      <
+    Build F                  0.006100 			      <
+    Build criteria vector    0.000065			      <
+    Sort vector              0.000008			      <
+    Screening                0.000001				    Screening                0.000001
+    Added 77 dets of 46 from bin 7			      |	    Added 52 dets of 60 from bin 6
+							      >	                Bin 7
+							      >	  Build: 0.007136
+							      >	  Merge: 0.000139
+							      >	    Build F                  0.007297 
+							      >	    Build criteria vector    0.000157
+							      >	    Sort vector              0.000021
+							      >	    Screening                0.000004
+							      >	    Added 80 dets of 110 from bin 7
+ ------------------------------------				 ------------------------------------
+  Screened out 0.0004727106 Eh of correlation		      |	  Screened out 0.0004790183 Eh of correlation
+  Dimension of the truncated SD space: 77 determinants	      |	  Dimension of the truncated SD space: 80 determinants
+  Time spent building the external space (default): 0.053727  |	  Time spent building the external space (default): 0.058576 
+							      |
+  Time spent sorting: 0.000017				      |	  Time spent sorting: 0.000014
+  Time spent selecting: 0.000015			      |	  Time spent selecting: 0.000017
+  Dimension of the P + Q space: 146 determinants	      |	  Dimension of the P + Q space: 142 determinants
+  Time spent screening the model space: 0.000025 s	      |	  Time spent screening the model space: 0.000027 s
+  Time spent building the model space: 0.053800		      |	  Time spent building the model space: 0.058648
+  Spin-complete dimension of the PQ space: 237		      |	  Spin-complete dimension of the PQ space: 232
+
+  ==> Computing Coupling Lists <==				  ==> Computing Coupling Lists <==
+  --------------------------------				  --------------------------------
+        α          0.001312 s				      |	        α          0.001121 s
+        β          0.001133 s				      |	        β          0.001178 s
+        αα         0.001674 s				      |	        αα         0.001594 s
+        ββ         0.001583 s				      |	        ββ         0.001701 s
+        αβ         0.003773 s				      |	        αβ         0.004179 s
+  --------------------------------				  --------------------------------
+  Total time spent diagonalizing H:   0.031608 s	      |	  Total time spent diagonalizing H:   0.032345 s
+
+    PQ-space CI Energy Root   0        = -229.359494492392 Eh |	    PQ-space CI Energy Root   0        = -229.359450812288 Eh
+    PQ-space CI Energy + EPT2 Root   0 = -229.360487802956 Eh |	    PQ-space CI Energy + EPT2 Root   0 = -229.360444943991 Eh
+
+  ***** Calculation Converged *****				  ***** Calculation Converged *****
+
+  ==> Excited state solver summary <==				  ==> Excited state solver summary <==
+
+  Iterations required:                         3		  Iterations required:                         3
+  Dimension of optimized determinant space:    237	      |	  Dimension of optimized determinant space:    232
+
+  * Selected-CI Energy Root   0        = -229.359494492392 Eh |	  * Selected-CI Energy Root   0        = -229.359450812288 Eh
+  * Selected-CI Energy Root   0 + EPT2 = -229.360487802956 Eh |	  * Selected-CI Energy Root   0 + EPT2 = -229.360444943991 Eh
+
+  ==> Wavefunction Information <==				  ==> Wavefunction Information <==
+
+  Most important contributions to root   0:			  Most important contributions to root   0:
+    0  -0.813239 0.661356861          97 |02200202>	      |	    0  -0.813533 0.661836624          96 |02200202>
+    1   0.490489 0.240579012          96 |22200200>	      |	    1   0.490236 0.240331776          95 |22200200>
+    2   0.112154 0.012578445          95 |00202202>	      |	    2   0.112214 0.012591944          94 |00202202>
+    3   0.084126 0.007077254          94 |02000222>	      |	    3   0.084217 0.007092439          93 |02000222>
+    4  -0.074846 0.005601948          93 |20202200>	      |	    4  -0.074859 0.005603927          92 |20202200>
+    5  -0.066496 0.004421724          92 |0+-0+2-2>	      |	    5  -0.066299 0.004395584          91 |0-+0-2+2>
+    6  -0.066496 0.004421724          91 |0-+0-2+2>	      |	    6  -0.066299 0.004395584          90 |0+-0+2-2>
+    7  -0.065804 0.004330119          90 |22000220>	      |	    7  -0.065998 0.004355739          89 |22000220>
+    8   0.063206 0.003995056          89 |-2-002++>	      |	    8   0.063258 0.004001590          87 |-2-002++>
+    9   0.063206 0.003995056          88 |+2+002-->	      |	    9   0.063258 0.004001590          88 |+2+002-->
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet	  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
+
+  Saving information for root: 0				  Saving information for root: 0
+
+  ==> Energy Summary <==					  ==> Energy Summary <==
+
+    Multi.  Irrep.  No.               Energy			    Multi.  Irrep.  No.               Energy
+    -----------------------------------------			    -----------------------------------------
+       1      Ag     0      -229.359494492392		      |	       1      Ag     0      -229.359450812288
+    -----------------------------------------    ACI energy.. |	    -----------------------------------------    ACI energy..
+Traceback (most recent call last):			      |	    ACI+PT2 energy...........................................
+  File "/Users/fevange/Source/psi4/objdir-Debug/stage/bin/psi <
+    exec(content)					      <
+  File "<string>", line 65, in <module>			      <
+  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/psi <
+    return qcel.testing.compare_values(expected, computed, ** <
+  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/qce <
+    return return_handler(allclose, label, message, return_me <
+  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/psi <
+    raise TestComparisonError(message)			      <
+							      <
+psi4.driver.p4util.exceptions.TestComparisonError: 	ACI e <
+							      <
+							      <
+Printing out the relevant lines from the Psithon --> Python p <
+    core.set_local_option("FORTE", "ACTIVE_GUESS_SIZE", 100)  <
+    set_num_threads(4)					      <
+    scf = energy('scf')					      <
+    compare_values(refscf, scf,10,"SCF Energy")		      <
+    energy('forte')					      <
+--> compare_values(refaci, variable("ACI ENERGY"),10,"ACI ene <
+    compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"A <
+
+    Psi4 stopped on: Tuesday, 30 July 2019 03:54PM	      |	    Psi4 stopped on: Tuesday, 30 July 2019 07:28PM
+    Psi4 wall time for execution: 0:00:18.31		      |	    Psi4 wall time for execution: 0:00:16.18
+
+*** Psi4 encountered an error. Buy a developer more coffee!   |	*** Psi4 exiting successfully. Buy a developer a beer!
+*** Resources and help at github.com/psi4/psi4.		      <

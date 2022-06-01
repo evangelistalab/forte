@@ -1,0 +1,164 @@
+\hypertarget{classforte_1_1_c_i___r_d_m_s}{}\section{forte\+:\+:C\+I\+\_\+\+R\+D\+MS Class Reference}
+\label{classforte_1_1_c_i___r_d_m_s}\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+
+
+{\ttfamily \#include $<$ci\+\_\+rdms.\+h$>$}
+
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+using \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a6fe09e4dcfafed624c05462004a9de51}{det\+\_\+hash}} = std\+::unordered\+\_\+map$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, size\+\_\+t, \mbox{\hyperlink{structforte_1_1_bit_array_1_1_hash}{Determinant\+::\+Hash}} $>$
+\item 
+using \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a848538093346b3724b92d39fbbaee36a}{det\+\_\+hash\+\_\+it}} = det\+\_\+hash\+::iterator
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a492dfe2daedba96524e378dff6d8881b}{C\+I\+\_\+\+R\+D\+MS}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints, const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&det\+\_\+space, psi\+::\+Shared\+Matrix evecs, int root1, int root2)
+\item 
+\mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a080710371be0841dd7d412f0107820c2}{C\+I\+\_\+\+R\+D\+MS}} (\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&wfn, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints, psi\+::\+Shared\+Matrix evecs, int root1, int root2)
+\item 
+\mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_ae32becd6a38ea945e795ed78edb5c38d}{$\sim$\+C\+I\+\_\+\+R\+D\+MS}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_ab16c501467a25a727092c89462eeb095}{compute\+\_\+1rdm}} (std\+::vector$<$ double $>$ \&oprdm\+\_\+a, std\+::vector$<$ double $>$ \&oprdm\+\_\+b)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_ad232dbb35aa59e9edcdc86626d3a883d}{compute\+\_\+1rdm\+\_\+op}} (std\+::vector$<$ double $>$ \&oprdm\+\_\+a, std\+::vector$<$ double $>$ \&oprdm\+\_\+b)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_ab881ee2d8f370683a18b6659c542e868}{compute\+\_\+2rdm}} (std\+::vector$<$ double $>$ \&tprdm\+\_\+aa, std\+::vector$<$ double $>$ \&tprdm\+\_\+ab, std\+::vector$<$ double $>$ \&tprdm\+\_\+bb)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a4eba66bbdea6356a9abd92c666e60912}{compute\+\_\+2rdm\+\_\+op}} (std\+::vector$<$ double $>$ \&tprdm\+\_\+aa, std\+::vector$<$ double $>$ \&tprdm\+\_\+ab, std\+::vector$<$ double $>$ \&tprdm\+\_\+bb)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a4c08b96e09691f3ad4b00efc4c38fb94}{compute\+\_\+3rdm}} (std\+::vector$<$ double $>$ \&tprdm\+\_\+aaa, std\+::vector$<$ double $>$ \&tprdm\+\_\+aab, std\+::vector$<$ double $>$ \&tprdm\+\_\+abb, std\+::vector$<$ double $>$ \&tprdm\+\_\+bbb)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_aace0c388b6b00e11261b43360edf3664}{compute\+\_\+3rdm\+\_\+op}} (std\+::vector$<$ double $>$ \&tprdm\+\_\+aaa, std\+::vector$<$ double $>$ \&tprdm\+\_\+aab, std\+::vector$<$ double $>$ \&tprdm\+\_\+abb, std\+::vector$<$ double $>$ \&tprdm\+\_\+bbb)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_abd29572a50f93000b682234ffa832224}{compute\+\_\+rdms\+\_\+dynamic}} (std\+::vector$<$ double $>$ \&oprdm\+\_\+a, std\+::vector$<$ double $>$ \&oprdm\+\_\+b, std\+::vector$<$ double $>$ \&tprdm\+\_\+aa, std\+::vector$<$ double $>$ \&tprdm\+\_\+ab, std\+::vector$<$ double $>$ \&tprdm\+\_\+bb, std\+::vector$<$ double $>$ \&tprdm\+\_\+aaa, std\+::vector$<$ double $>$ \&tprdm\+\_\+aab, std\+::vector$<$ double $>$ \&tprdm\+\_\+abb, std\+::vector$<$ double $>$ \&tprdm\+\_\+bbb)
+\item 
+double \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a51f0d4ac481cf5579b6557ce5359c646}{get\+\_\+energy}} (std\+::vector$<$ double $>$ \&oprdm\+\_\+a, std\+::vector$<$ double $>$ \&oprdm\+\_\+b, std\+::vector$<$ double $>$ \&tprdm\+\_\+aa, std\+::vector$<$ double $>$ \&tprdm\+\_\+bb, std\+::vector$<$ double $>$ \&tprdm\+\_\+ab)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a5060c542b3e43206ee7f5ef8e495f906}{rdm\+\_\+test}} (std\+::vector$<$ double $>$ \&oprdm\+\_\+a, std\+::vector$<$ double $>$ \&oprdm\+\_\+b, std\+::vector$<$ double $>$ \&tprdm\+\_\+aa, std\+::vector$<$ double $>$ \&tprdm\+\_\+bb, std\+::vector$<$ double $>$ \&tprdm\+\_\+ab, std\+::vector$<$ double $>$ \&tprdm\+\_\+aaa, std\+::vector$<$ double $>$ \&tprdm\+\_\+aab, std\+::vector$<$ double $>$ \&tprdm\+\_\+abb, std\+::vector$<$ double $>$ \&tprdm\+\_\+bbb)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_aca80a64f8d50eb8784ad27804881938b}{set\+\_\+print}} (bool print)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_ad3d9e1ffe533bbe89b33be83a84da01d}{set\+\_\+max\+\_\+rdm}} (int rdm)
+\item 
+void \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a88f0699318551cd6012614e06df58b42}{convert\+\_\+to\+\_\+string}} (std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&space)
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a6fe09e4dcfafed624c05462004a9de51}\label{classforte_1_1_c_i___r_d_m_s_a6fe09e4dcfafed624c05462004a9de51}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!det\+\_\+hash@{det\+\_\+hash}}
+\index{det\+\_\+hash@{det\+\_\+hash}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{det\+\_\+hash}{det\_hash}}
+{\footnotesize\ttfamily using \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a6fe09e4dcfafed624c05462004a9de51}{forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::det\+\_\+hash}} =  std\+::unordered\+\_\+map$<$\mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, size\+\_\+t, \mbox{\hyperlink{structforte_1_1_bit_array_1_1_hash}{Determinant\+::\+Hash}}$>$}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a848538093346b3724b92d39fbbaee36a}\label{classforte_1_1_c_i___r_d_m_s_a848538093346b3724b92d39fbbaee36a}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!det\+\_\+hash\+\_\+it@{det\+\_\+hash\+\_\+it}}
+\index{det\+\_\+hash\+\_\+it@{det\+\_\+hash\+\_\+it}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{det\+\_\+hash\+\_\+it}{det\_hash\_it}}
+{\footnotesize\ttfamily using \mbox{\hyperlink{classforte_1_1_c_i___r_d_m_s_a848538093346b3724b92d39fbbaee36a}{forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::det\+\_\+hash\+\_\+it}} =  det\+\_\+hash\+::iterator}
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a492dfe2daedba96524e378dff6d8881b}\label{classforte_1_1_c_i___r_d_m_s_a492dfe2daedba96524e378dff6d8881b}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!C\+I\+\_\+\+R\+D\+MS@{C\+I\+\_\+\+R\+D\+MS}}
+\index{C\+I\+\_\+\+R\+D\+MS@{C\+I\+\_\+\+R\+D\+MS}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{C\+I\+\_\+\+R\+D\+M\+S()}{CI\_RDMS()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::\+C\+I\+\_\+\+R\+D\+MS (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints,  }\item[{const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&}]{det\+\_\+space,  }\item[{psi\+::\+Shared\+Matrix}]{evecs,  }\item[{int}]{root1,  }\item[{int}]{root2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a080710371be0841dd7d412f0107820c2}\label{classforte_1_1_c_i___r_d_m_s_a080710371be0841dd7d412f0107820c2}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!C\+I\+\_\+\+R\+D\+MS@{C\+I\+\_\+\+R\+D\+MS}}
+\index{C\+I\+\_\+\+R\+D\+MS@{C\+I\+\_\+\+R\+D\+MS}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{C\+I\+\_\+\+R\+D\+M\+S()}{CI\_RDMS()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::\+C\+I\+\_\+\+R\+D\+MS (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{wfn,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints,  }\item[{psi\+::\+Shared\+Matrix}]{evecs,  }\item[{int}]{root1,  }\item[{int}]{root2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_ae32becd6a38ea945e795ed78edb5c38d}\label{classforte_1_1_c_i___r_d_m_s_ae32becd6a38ea945e795ed78edb5c38d}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!````~C\+I\+\_\+\+R\+D\+MS@{$\sim$\+C\+I\+\_\+\+R\+D\+MS}}
+\index{````~C\+I\+\_\+\+R\+D\+MS@{$\sim$\+C\+I\+\_\+\+R\+D\+MS}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{$\sim$\+C\+I\+\_\+\+R\+D\+M\+S()}{~CI\_RDMS()}}
+{\footnotesize\ttfamily forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::$\sim$\+C\+I\+\_\+\+R\+D\+MS (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_ab16c501467a25a727092c89462eeb095}\label{classforte_1_1_c_i___r_d_m_s_ab16c501467a25a727092c89462eeb095}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!compute\+\_\+1rdm@{compute\+\_\+1rdm}}
+\index{compute\+\_\+1rdm@{compute\+\_\+1rdm}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{compute\+\_\+1rdm()}{compute\_1rdm()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::compute\+\_\+1rdm (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+a,  }\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+b }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_ad232dbb35aa59e9edcdc86626d3a883d}\label{classforte_1_1_c_i___r_d_m_s_ad232dbb35aa59e9edcdc86626d3a883d}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!compute\+\_\+1rdm\+\_\+op@{compute\+\_\+1rdm\+\_\+op}}
+\index{compute\+\_\+1rdm\+\_\+op@{compute\+\_\+1rdm\+\_\+op}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{compute\+\_\+1rdm\+\_\+op()}{compute\_1rdm\_op()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::compute\+\_\+1rdm\+\_\+op (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+a,  }\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+b }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_ab881ee2d8f370683a18b6659c542e868}\label{classforte_1_1_c_i___r_d_m_s_ab881ee2d8f370683a18b6659c542e868}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!compute\+\_\+2rdm@{compute\+\_\+2rdm}}
+\index{compute\+\_\+2rdm@{compute\+\_\+2rdm}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{compute\+\_\+2rdm()}{compute\_2rdm()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::compute\+\_\+2rdm (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+ab,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bb }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a4eba66bbdea6356a9abd92c666e60912}\label{classforte_1_1_c_i___r_d_m_s_a4eba66bbdea6356a9abd92c666e60912}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!compute\+\_\+2rdm\+\_\+op@{compute\+\_\+2rdm\+\_\+op}}
+\index{compute\+\_\+2rdm\+\_\+op@{compute\+\_\+2rdm\+\_\+op}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{compute\+\_\+2rdm\+\_\+op()}{compute\_2rdm\_op()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::compute\+\_\+2rdm\+\_\+op (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+ab,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bb }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a4c08b96e09691f3ad4b00efc4c38fb94}\label{classforte_1_1_c_i___r_d_m_s_a4c08b96e09691f3ad4b00efc4c38fb94}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!compute\+\_\+3rdm@{compute\+\_\+3rdm}}
+\index{compute\+\_\+3rdm@{compute\+\_\+3rdm}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{compute\+\_\+3rdm()}{compute\_3rdm()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::compute\+\_\+3rdm (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aaa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aab,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+abb,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bbb }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_aace0c388b6b00e11261b43360edf3664}\label{classforte_1_1_c_i___r_d_m_s_aace0c388b6b00e11261b43360edf3664}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!compute\+\_\+3rdm\+\_\+op@{compute\+\_\+3rdm\+\_\+op}}
+\index{compute\+\_\+3rdm\+\_\+op@{compute\+\_\+3rdm\+\_\+op}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{compute\+\_\+3rdm\+\_\+op()}{compute\_3rdm\_op()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::compute\+\_\+3rdm\+\_\+op (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aaa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aab,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+abb,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bbb }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_abd29572a50f93000b682234ffa832224}\label{classforte_1_1_c_i___r_d_m_s_abd29572a50f93000b682234ffa832224}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!compute\+\_\+rdms\+\_\+dynamic@{compute\+\_\+rdms\+\_\+dynamic}}
+\index{compute\+\_\+rdms\+\_\+dynamic@{compute\+\_\+rdms\+\_\+dynamic}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{compute\+\_\+rdms\+\_\+dynamic()}{compute\_rdms\_dynamic()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::compute\+\_\+rdms\+\_\+dynamic (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+a,  }\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+b,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+ab,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bb,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aaa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aab,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+abb,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bbb }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a88f0699318551cd6012614e06df58b42}\label{classforte_1_1_c_i___r_d_m_s_a88f0699318551cd6012614e06df58b42}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!convert\+\_\+to\+\_\+string@{convert\+\_\+to\+\_\+string}}
+\index{convert\+\_\+to\+\_\+string@{convert\+\_\+to\+\_\+string}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{convert\+\_\+to\+\_\+string()}{convert\_to\_string()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::convert\+\_\+to\+\_\+string (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&}]{space }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a51f0d4ac481cf5579b6557ce5359c646}\label{classforte_1_1_c_i___r_d_m_s_a51f0d4ac481cf5579b6557ce5359c646}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!get\+\_\+energy@{get\+\_\+energy}}
+\index{get\+\_\+energy@{get\+\_\+energy}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{get\+\_\+energy()}{get\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::get\+\_\+energy (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+a,  }\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+b,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bb,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+ab }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_a5060c542b3e43206ee7f5ef8e495f906}\label{classforte_1_1_c_i___r_d_m_s_a5060c542b3e43206ee7f5ef8e495f906}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!rdm\+\_\+test@{rdm\+\_\+test}}
+\index{rdm\+\_\+test@{rdm\+\_\+test}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{rdm\+\_\+test()}{rdm\_test()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::rdm\+\_\+test (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+a,  }\item[{std\+::vector$<$ double $>$ \&}]{oprdm\+\_\+b,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bb,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+ab,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aaa,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+aab,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+abb,  }\item[{std\+::vector$<$ double $>$ \&}]{tprdm\+\_\+bbb }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_ad3d9e1ffe533bbe89b33be83a84da01d}\label{classforte_1_1_c_i___r_d_m_s_ad3d9e1ffe533bbe89b33be83a84da01d}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!set\+\_\+max\+\_\+rdm@{set\+\_\+max\+\_\+rdm}}
+\index{set\+\_\+max\+\_\+rdm@{set\+\_\+max\+\_\+rdm}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{set\+\_\+max\+\_\+rdm()}{set\_max\_rdm()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::set\+\_\+max\+\_\+rdm (\begin{DoxyParamCaption}\item[{int}]{rdm }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_c_i___r_d_m_s_aca80a64f8d50eb8784ad27804881938b}\label{classforte_1_1_c_i___r_d_m_s_aca80a64f8d50eb8784ad27804881938b}} 
+\index{forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}!set\+\_\+print@{set\+\_\+print}}
+\index{set\+\_\+print@{set\+\_\+print}!forte\+::\+C\+I\+\_\+\+R\+D\+MS@{forte\+::\+C\+I\+\_\+\+R\+D\+MS}}
+\subsubsection{\texorpdfstring{set\+\_\+print()}{set\_print()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+\_\+\+R\+D\+M\+S\+::set\+\_\+print (\begin{DoxyParamCaption}\item[{bool}]{print }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/ci\+\_\+rdm/\mbox{\hyperlink{ci__rdms_8h}{ci\+\_\+rdms.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/ci\+\_\+rdm/\mbox{\hyperlink{ci__rdms_8cc}{ci\+\_\+rdms.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/ci\+\_\+rdm/\mbox{\hyperlink{ci__rdms__dynamic_8cc}{ci\+\_\+rdms\+\_\+dynamic.\+cc}}\end{DoxyCompactItemize}

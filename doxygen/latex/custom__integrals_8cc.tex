@@ -1,0 +1,59 @@
+\hypertarget{custom__integrals_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/integrals/custom\+\_\+integrals.cc File Reference}
+\label{custom__integrals_8cc}\index{/\+Users/fevange/\+Source/forte/src/integrals/custom\+\_\+integrals.\+cc@{/\+Users/fevange/\+Source/forte/src/integrals/custom\+\_\+integrals.\+cc}}
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libdpd/dpd.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/mintshelper.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/psi4-\/dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/psifiles.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/blockedtensorfactory.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/string\+\_\+algorithms.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/printing.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}custom\+\_\+integrals.\+h\char`\"{}}\newline
+Include dependency graph for custom\+\_\+integrals.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{custom__integrals_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{custom__integrals_8cc_a87e3a85ce6111687a818d9b82ba7c741}{I\+O\+F\+F\+I\+N\+D\+EX}}(i)~(i $\ast$ (i + 1) / 2)
+\item 
+\#define \mbox{\hyperlink{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}{P\+A\+I\+R\+I\+N\+D\+EX}}(i,  j)~((i $>$ j) ? (\mbox{\hyperlink{custom__integrals_8cc_a87e3a85ce6111687a818d9b82ba7c741}{I\+O\+F\+F\+I\+N\+D\+EX}}(i) + (j)) \+: (\mbox{\hyperlink{custom__integrals_8cc_a87e3a85ce6111687a818d9b82ba7c741}{I\+O\+F\+F\+I\+N\+D\+EX}}(j) + (i)))
+\item 
+\#define \mbox{\hyperlink{custom__integrals_8cc_ac9330420f64a1569f38cf6fad0e19d98}{four}}(i,  j,  k,  l)~\mbox{\hyperlink{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}{P\+A\+I\+R\+I\+N\+D\+EX}}(\mbox{\hyperlink{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}{P\+A\+I\+R\+I\+N\+D\+EX}}(i, j), \mbox{\hyperlink{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}{P\+A\+I\+R\+I\+N\+D\+EX}}(k, l))
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{custom__integrals_8cc_ac9330420f64a1569f38cf6fad0e19d98}\label{custom__integrals_8cc_ac9330420f64a1569f38cf6fad0e19d98}} 
+\index{custom\+\_\+integrals.\+cc@{custom\+\_\+integrals.\+cc}!four@{four}}
+\index{four@{four}!custom\+\_\+integrals.\+cc@{custom\+\_\+integrals.\+cc}}
+\subsubsection{\texorpdfstring{four}{four}}
+{\footnotesize\ttfamily \#define four(\begin{DoxyParamCaption}\item[{}]{i,  }\item[{}]{j,  }\item[{}]{k,  }\item[{}]{l }\end{DoxyParamCaption})~\mbox{\hyperlink{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}{P\+A\+I\+R\+I\+N\+D\+EX}}(\mbox{\hyperlink{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}{P\+A\+I\+R\+I\+N\+D\+EX}}(i, j), \mbox{\hyperlink{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}{P\+A\+I\+R\+I\+N\+D\+EX}}(k, l))}
+
+\mbox{\Hypertarget{custom__integrals_8cc_a87e3a85ce6111687a818d9b82ba7c741}\label{custom__integrals_8cc_a87e3a85ce6111687a818d9b82ba7c741}} 
+\index{custom\+\_\+integrals.\+cc@{custom\+\_\+integrals.\+cc}!I\+O\+F\+F\+I\+N\+D\+EX@{I\+O\+F\+F\+I\+N\+D\+EX}}
+\index{I\+O\+F\+F\+I\+N\+D\+EX@{I\+O\+F\+F\+I\+N\+D\+EX}!custom\+\_\+integrals.\+cc@{custom\+\_\+integrals.\+cc}}
+\subsubsection{\texorpdfstring{I\+O\+F\+F\+I\+N\+D\+EX}{IOFFINDEX}}
+{\footnotesize\ttfamily \#define I\+O\+F\+F\+I\+N\+D\+EX(\begin{DoxyParamCaption}\item[{}]{i }\end{DoxyParamCaption})~(i $\ast$ (i + 1) / 2)}
+
+\mbox{\Hypertarget{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}\label{custom__integrals_8cc_ae8a4b1151eb74be386bde26c9a326d40}} 
+\index{custom\+\_\+integrals.\+cc@{custom\+\_\+integrals.\+cc}!P\+A\+I\+R\+I\+N\+D\+EX@{P\+A\+I\+R\+I\+N\+D\+EX}}
+\index{P\+A\+I\+R\+I\+N\+D\+EX@{P\+A\+I\+R\+I\+N\+D\+EX}!custom\+\_\+integrals.\+cc@{custom\+\_\+integrals.\+cc}}
+\subsubsection{\texorpdfstring{P\+A\+I\+R\+I\+N\+D\+EX}{PAIRINDEX}}
+{\footnotesize\ttfamily \#define P\+A\+I\+R\+I\+N\+D\+EX(\begin{DoxyParamCaption}\item[{}]{i,  }\item[{}]{j }\end{DoxyParamCaption})~((i $>$ j) ? (\mbox{\hyperlink{custom__integrals_8cc_a87e3a85ce6111687a818d9b82ba7c741}{I\+O\+F\+F\+I\+N\+D\+EX}}(i) + (j)) \+: (\mbox{\hyperlink{custom__integrals_8cc_a87e3a85ce6111687a818d9b82ba7c741}{I\+O\+F\+F\+I\+N\+D\+EX}}(j) + (i)))}
+

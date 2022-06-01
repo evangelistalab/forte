@@ -1,0 +1,218 @@
+\hypertarget{classforte_1_1_sigma_vector}{}\section{forte\+:\+:Sigma\+Vector Class Reference}
+\label{classforte_1_1_sigma_vector}\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+
+
+The \mbox{\hyperlink{classforte_1_1_sigma_vector}{Sigma\+Vector}} class Base class for a sigma vector object.  
+
+
+
+
+{\ttfamily \#include $<$sigma\+\_\+vector.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Sigma\+Vector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_sigma_vector__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Sigma\+Vector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=217pt]{classforte_1_1_sigma_vector__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_sigma_vector_aea65e2b6b76bd9b79c0c300d44eed183}{Sigma\+Vector}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&space, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints, \mbox{\hyperlink{namespaceforte_a94410e08f0cf9a0cfc5e53c70b6bf485}{Sigma\+Vector\+Type}} \mbox{\hyperlink{classforte_1_1_sigma_vector_a97732026ce8ae60b4852d26405a67997}{sigma\+\_\+vector\+\_\+type}}, std\+::string \mbox{\hyperlink{classforte_1_1_sigma_vector_a24b95b355be4980e8507ba51a891419e}{label}})
+\item 
+virtual \mbox{\hyperlink{classforte_1_1_sigma_vector_a81f8499f67f12c8c51dcfd60c13faee6}{$\sim$\+Sigma\+Vector}} ()=default
+\begin{DoxyCompactList}\small\item\em Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_sigma_vector_a055d903f689b5b503db931e4c903ce01}{size}} ()
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_aa732888f759ba00fa059ad1020425fe9}{as\+\_\+ints}} ()
+\item 
+\mbox{\hyperlink{namespaceforte_a94410e08f0cf9a0cfc5e53c70b6bf485}{Sigma\+Vector\+Type}} \mbox{\hyperlink{classforte_1_1_sigma_vector_a97732026ce8ae60b4852d26405a67997}{sigma\+\_\+vector\+\_\+type}} () const
+\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_sigma_vector_a24b95b355be4980e8507ba51a891419e}{label}} () const
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_sigma_vector_afa184f816a37649a4e2316d62c8b621e}{compute\+\_\+sigma}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ sigma, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ b)=0
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_sigma_vector_a4df4b96c5c24a3560a874eae061a502e}{get\+\_\+diagonal}} (psi\+::\+Vector \&diag)=0
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_sigma_vector_a5cd950852f515bc082ca1df31bd84e3e}{add\+\_\+bad\+\_\+roots}} (std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$$>$ \&bad\+\_\+states)=0
+\item 
+virtual double \mbox{\hyperlink{classforte_1_1_sigma_vector_afe5ac487b5277b86fbe4398ba861773c}{compute\+\_\+spin}} (const std\+::vector$<$ double $>$ \&c)=0
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \& \mbox{\hyperlink{classforte_1_1_sigma_vector_ab7289d3fcf1eb43b62b8b64b86bbf6aa}{space\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_a4e603b0f77c060ccf8b2abb907b7f29a}{fci\+\_\+ints\+\_\+}}
+\begin{DoxyCompactList}\small\item\em the active space integrals \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_a1a78e1fbd0384e26faa0771576a31f32}{diag\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Diagonal elements of the Hamiltonian. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_sigma_vector_a3d02c40d09db96f9779d3e8728704fae}{size\+\_\+}}
+\begin{DoxyCompactList}\small\item\em the length of the C/sigma vector (number of determinants) \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{namespaceforte_a94410e08f0cf9a0cfc5e53c70b6bf485}{Sigma\+Vector\+Type}} \mbox{\hyperlink{classforte_1_1_sigma_vector_a8a9341a860bc6daca2e413a8cfce874d}{sigma\+\_\+vector\+\_\+type\+\_\+}}
+\item 
+const std\+::string \mbox{\hyperlink{classforte_1_1_sigma_vector_ad6ccddea1e2798891db9b90c0db17c79}{label\+\_\+}}
+\begin{DoxyCompactList}\small\item\em the type of sigma vector algorithm \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_sigma_vector}{Sigma\+Vector}} class Base class for a sigma vector object. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_aea65e2b6b76bd9b79c0c300d44eed183}\label{classforte_1_1_sigma_vector_aea65e2b6b76bd9b79c0c300d44eed183}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!Sigma\+Vector@{Sigma\+Vector}}
+\index{Sigma\+Vector@{Sigma\+Vector}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{Sigma\+Vector()}{SigmaVector()}}
+{\footnotesize\ttfamily forte\+::\+Sigma\+Vector\+::\+Sigma\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{space,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints,  }\item[{\mbox{\hyperlink{namespaceforte_a94410e08f0cf9a0cfc5e53c70b6bf485}{Sigma\+Vector\+Type}}}]{sigma\+\_\+vector\+\_\+type,  }\item[{std\+::string}]{label }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a81f8499f67f12c8c51dcfd60c13faee6}\label{classforte_1_1_sigma_vector_a81f8499f67f12c8c51dcfd60c13faee6}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!````~Sigma\+Vector@{$\sim$\+Sigma\+Vector}}
+\index{````~Sigma\+Vector@{$\sim$\+Sigma\+Vector}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{$\sim$\+Sigma\+Vector()}{~SigmaVector()}}
+{\footnotesize\ttfamily virtual forte\+::\+Sigma\+Vector\+::$\sim$\+Sigma\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+
+
+Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a5cd950852f515bc082ca1df31bd84e3e}\label{classforte_1_1_sigma_vector_a5cd950852f515bc082ca1df31bd84e3e}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!add\+\_\+bad\+\_\+roots@{add\+\_\+bad\+\_\+roots}}
+\index{add\+\_\+bad\+\_\+roots@{add\+\_\+bad\+\_\+roots}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{add\+\_\+bad\+\_\+roots()}{add\_bad\_roots()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Sigma\+Vector\+::add\+\_\+bad\+\_\+roots (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$$>$ \&}]{bad\+\_\+states }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_sigma_vector_full_a231cdb205bf558b4270daae212bd9dc6}{forte\+::\+Sigma\+Vector\+Full}}, \mbox{\hyperlink{classforte_1_1_p_c_i_sigma_vector_a4ed2811d6e69abd2b542c7749174c9d3}{forte\+::\+P\+C\+I\+Sigma\+Vector}}, \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a06fa37f7134ca1b1efbfc77ccb8afa01}{forte\+::\+Sigma\+Vector\+Dynamic}}, and \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a1fa83f96983a54077f5982befce39858}{forte\+::\+Sigma\+Vector\+Sparse\+List}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_aa732888f759ba00fa059ad1020425fe9}\label{classforte_1_1_sigma_vector_aa732888f759ba00fa059ad1020425fe9}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!as\+\_\+ints@{as\+\_\+ints}}
+\index{as\+\_\+ints@{as\+\_\+ints}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{as\+\_\+ints()}{as\_ints()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}}$>$ forte\+::\+Sigma\+Vector\+::as\+\_\+ints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_afa184f816a37649a4e2316d62c8b621e}\label{classforte_1_1_sigma_vector_afa184f816a37649a4e2316d62c8b621e}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!compute\+\_\+sigma@{compute\+\_\+sigma}}
+\index{compute\+\_\+sigma@{compute\+\_\+sigma}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{compute\+\_\+sigma()}{compute\_sigma()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Sigma\+Vector\+::compute\+\_\+sigma (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{sigma,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_sigma_vector_full_a23130725bbc872ce9e86340c3fff49e5}{forte\+::\+Sigma\+Vector\+Full}}, \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a04a941c88e4c8a1254e96ad8a8dd5c64}{forte\+::\+Sigma\+Vector\+Dynamic}}, and \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a5f5e4c5457fd9b0511e7c42824dde927}{forte\+::\+Sigma\+Vector\+Sparse\+List}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_afe5ac487b5277b86fbe4398ba861773c}\label{classforte_1_1_sigma_vector_afe5ac487b5277b86fbe4398ba861773c}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!compute\+\_\+spin@{compute\+\_\+spin}}
+\index{compute\+\_\+spin@{compute\+\_\+spin}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{compute\+\_\+spin()}{compute\_spin()}}
+{\footnotesize\ttfamily virtual double forte\+::\+Sigma\+Vector\+::compute\+\_\+spin (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_sigma_vector_full_a7415d04fe0728963ebd1b47871400aff}{forte\+::\+Sigma\+Vector\+Full}}, \mbox{\hyperlink{classforte_1_1_p_c_i_sigma_vector_a6baad8502f7305d0a4047d9092dfbd3b}{forte\+::\+P\+C\+I\+Sigma\+Vector}}, \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ac8aec7cf6d360cfcd391ea90f68c86ba}{forte\+::\+Sigma\+Vector\+Dynamic}}, and \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a9302fb3daf4ec14c3bca274c9757f9f3}{forte\+::\+Sigma\+Vector\+Sparse\+List}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a4df4b96c5c24a3560a874eae061a502e}\label{classforte_1_1_sigma_vector_a4df4b96c5c24a3560a874eae061a502e}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!get\+\_\+diagonal@{get\+\_\+diagonal}}
+\index{get\+\_\+diagonal@{get\+\_\+diagonal}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{get\+\_\+diagonal()}{get\_diagonal()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Sigma\+Vector\+::get\+\_\+diagonal (\begin{DoxyParamCaption}\item[{psi\+::\+Vector \&}]{diag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_sigma_vector_full_acee1551f85b3f744e12a49ed1e93f942}{forte\+::\+Sigma\+Vector\+Full}}, \mbox{\hyperlink{classforte_1_1_p_c_i_sigma_vector_ac6f0cf4d9b1756d07473382871f2a482}{forte\+::\+P\+C\+I\+Sigma\+Vector}}, \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a82c707e8e276ae30fef5d78e473eadc1}{forte\+::\+Sigma\+Vector\+Dynamic}}, and \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a63742825b87a60b9ed9a175372b34fb1}{forte\+::\+Sigma\+Vector\+Sparse\+List}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a24b95b355be4980e8507ba51a891419e}\label{classforte_1_1_sigma_vector_a24b95b355be4980e8507ba51a891419e}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!label@{label}}
+\index{label@{label}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{label()}{label()}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Sigma\+Vector\+::label (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a97732026ce8ae60b4852d26405a67997}\label{classforte_1_1_sigma_vector_a97732026ce8ae60b4852d26405a67997}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!sigma\+\_\+vector\+\_\+type@{sigma\+\_\+vector\+\_\+type}}
+\index{sigma\+\_\+vector\+\_\+type@{sigma\+\_\+vector\+\_\+type}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{sigma\+\_\+vector\+\_\+type()}{sigma\_vector\_type()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_a94410e08f0cf9a0cfc5e53c70b6bf485}{Sigma\+Vector\+Type}} forte\+::\+Sigma\+Vector\+::sigma\+\_\+vector\+\_\+type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a055d903f689b5b503db931e4c903ce01}\label{classforte_1_1_sigma_vector_a055d903f689b5b503db931e4c903ce01}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!size@{size}}
+\index{size@{size}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Sigma\+Vector\+::size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a1a78e1fbd0384e26faa0771576a31f32}\label{classforte_1_1_sigma_vector_a1a78e1fbd0384e26faa0771576a31f32}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!diag\+\_\+@{diag\+\_\+}}
+\index{diag\+\_\+@{diag\+\_\+}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{diag\+\_\+}{diag\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Sigma\+Vector\+::diag\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Diagonal elements of the Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a4e603b0f77c060ccf8b2abb907b7f29a}\label{classforte_1_1_sigma_vector_a4e603b0f77c060ccf8b2abb907b7f29a}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!fci\+\_\+ints\+\_\+@{fci\+\_\+ints\+\_\+}}
+\index{fci\+\_\+ints\+\_\+@{fci\+\_\+ints\+\_\+}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{fci\+\_\+ints\+\_\+}{fci\_ints\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}}$>$ forte\+::\+Sigma\+Vector\+::fci\+\_\+ints\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+the active space integrals 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_ad6ccddea1e2798891db9b90c0db17c79}\label{classforte_1_1_sigma_vector_ad6ccddea1e2798891db9b90c0db17c79}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!label\+\_\+@{label\+\_\+}}
+\index{label\+\_\+@{label\+\_\+}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{label\+\_\+}{label\_}}
+{\footnotesize\ttfamily const std\+::string forte\+::\+Sigma\+Vector\+::label\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+the type of sigma vector algorithm 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a8a9341a860bc6daca2e413a8cfce874d}\label{classforte_1_1_sigma_vector_a8a9341a860bc6daca2e413a8cfce874d}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!sigma\+\_\+vector\+\_\+type\+\_\+@{sigma\+\_\+vector\+\_\+type\+\_\+}}
+\index{sigma\+\_\+vector\+\_\+type\+\_\+@{sigma\+\_\+vector\+\_\+type\+\_\+}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{sigma\+\_\+vector\+\_\+type\+\_\+}{sigma\_vector\_type\_}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{namespaceforte_a94410e08f0cf9a0cfc5e53c70b6bf485}{Sigma\+Vector\+Type}} forte\+::\+Sigma\+Vector\+::sigma\+\_\+vector\+\_\+type\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_a3d02c40d09db96f9779d3e8728704fae}\label{classforte_1_1_sigma_vector_a3d02c40d09db96f9779d3e8728704fae}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!size\+\_\+@{size\+\_\+}}
+\index{size\+\_\+@{size\+\_\+}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{size\+\_\+}{size\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Sigma\+Vector\+::size\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+the length of the C/sigma vector (number of determinants) 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_ab7289d3fcf1eb43b62b8b64b86bbf6aa}\label{classforte_1_1_sigma_vector_ab7289d3fcf1eb43b62b8b64b86bbf6aa}} 
+\index{forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}!space\+\_\+@{space\+\_\+}}
+\index{space\+\_\+@{space\+\_\+}!forte\+::\+Sigma\+Vector@{forte\+::\+Sigma\+Vector}}
+\subsubsection{\texorpdfstring{space\+\_\+}{space\_}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}}\& forte\+::\+Sigma\+Vector\+::space\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sigma__vector_8h}{sigma\+\_\+vector.\+h}}\end{DoxyCompactItemize}

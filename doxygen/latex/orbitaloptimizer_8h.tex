@@ -1,0 +1,37 @@
+\hypertarget{orbitaloptimizer_8h}{}\section{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/orbitaloptimizer.h File Reference}
+\label{orbitaloptimizer_8h}\index{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/orbitaloptimizer.\+h@{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/orbitaloptimizer.\+h}}
+{\ttfamily \#include \char`\"{}ambit/blocked\+\_\+tensor.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/rdms.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/blockedtensorfactory.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libfock/jk.\+h\char`\"{}}\newline
+Include dependency graph for orbitaloptimizer.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{orbitaloptimizer_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{orbitaloptimizer_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classforte_1_1_orbital_optimizer}{forte\+::\+Orbital\+Optimizer}}
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_orbital_optimizer}{Orbital\+Optimizer}} does an orbital optimization given an 1\+R\+DM, 2\+R\+DM, and the integrals Forms an orbital gradient\+: g\+\_\+\{pq\} = \mbox{[} h\+\_\+\{pq\} gamma\+\_\+\{pq\} + Gamma\+\_\+\{pq\}$^\wedge$\{rs\} $<$pq$\vert$$\vert$rs$>$ -\/ A(p-\/$>$q)\mbox{]} Here only form a diagonal hessian of orbitals\+: Look at Hohenstein J. Chem. Phys. 142, 224103. Diagonal Hessian only requires (pu$\vert$xy) integrals (many are built in JK library) Daniel Smith\textquotesingle{}s \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} code in P\+S\+I4 was integral in debugging. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f_orbital_optimizer}{forte\+::\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\item 
+class \mbox{\hyperlink{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer}{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}

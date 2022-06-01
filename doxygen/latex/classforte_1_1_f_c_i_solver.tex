@@ -1,0 +1,269 @@
+\hypertarget{classforte_1_1_f_c_i_solver}{}\section{forte\+:\+:F\+C\+I\+Solver Class Reference}
+\label{classforte_1_1_f_c_i_solver}\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+
+
+The \mbox{\hyperlink{classforte_1_1_f_c_i_solver}{F\+C\+I\+Solver}} class This class performs Full CI calculations.  
+
+
+
+
+{\ttfamily \#include $<$fci\+\_\+solver.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:F\+C\+I\+Solver\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=211pt]{classforte_1_1_f_c_i_solver__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:F\+C\+I\+Solver\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=211pt]{classforte_1_1_f_c_i_solver__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_f_c_i_solver_a5037b1cfcc06a3709a33fa02c9d89d1b}{F\+C\+I\+Solver}} (\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \mbox{\hyperlink{classforte_1_1_active_space_method_a609f005cc7d3a1bc03ae517002eb19dc}{state}}, size\+\_\+t \mbox{\hyperlink{classforte_1_1_active_space_method_aa2bafc732bd7023fd32fbd263ef2e903}{nroot}}, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_f_c_i_solver}{F\+C\+I\+Solver}} A class that performs a F\+CI computation in an active space. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_f_c_i_solver_a6491f1a5c2a79bf9ede2ab863815b8d4}{$\sim$\+F\+C\+I\+Solver}} ()=default
+\item 
+double \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a5ea02e6826ffd8eb01fd25c229517159}{compute\+\_\+energy}} () override
+\begin{DoxyCompactList}\small\item\em Compute the F\+CI energy. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a40d53f62ae73a7baf7560dac37838b8b}{rdms}} (const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&root\+\_\+list, int max\+\_\+rdm\+\_\+level) override
+\begin{DoxyCompactList}\small\item\em Returns the reduced density matrices up to a given rank (max\+\_\+rdm\+\_\+level) \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ \mbox{\hyperlink{classforte_1_1_f_c_i_solver_ad29797ad91b7edb6b3d8a4c66aaf18a0}{transition\+\_\+rdms}} (const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&root\+\_\+list, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} $>$ method2, int max\+\_\+rdm\+\_\+level) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a5bb962ea913122dbcec9319411876b05}{set\+\_\+options}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options) override
+\begin{DoxyCompactList}\small\item\em Set the options. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a36c1bb8d06f2b2b28b5700c861e5acae}{compute\+\_\+rdms\+\_\+root}} (size\+\_\+t root1, size\+\_\+t root2, int max\+\_\+rdm\+\_\+level)
+\begin{DoxyCompactList}\small\item\em Compute \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} on a given root. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_solver_ab65c6c24f4f55007ff06792e444c6605}{set\+\_\+ntrial\+\_\+per\+\_\+root}} (int value)
+\begin{DoxyCompactList}\small\item\em Set the number of trial vectors per root. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_solver_abc0f14fa88b25e521394b0a31b5ea1eb}{set\+\_\+fci\+\_\+iterations}} (int value)
+\begin{DoxyCompactList}\small\item\em Set the convergence for F\+CI. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a68ac8d378e848ce9a058716095ac37d7}{set\+\_\+collapse\+\_\+per\+\_\+root}} (int value)
+\begin{DoxyCompactList}\small\item\em Set the number of collapse vectors for each root. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a412a3fe22b7b6dbacb97d42c37bd07a2}{set\+\_\+subspace\+\_\+per\+\_\+root}} (int value)
+\begin{DoxyCompactList}\small\item\em Set the maximum subspace size for each root. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_solver_acaf6732c243a888374ffe95454ea4273}{set\+\_\+test\+\_\+rdms}} (bool value)
+\item 
+void \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a369b5d6855b896d2d1a743dd3ff2d9a6}{set\+\_\+print\+\_\+no}} (bool value)
+\begin{DoxyCompactList}\small\item\em Print the Natural Orbitals. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}} $>$ \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a4c6a278c51128b2f18ada5e08512deca}{get\+\_\+\+F\+C\+I\+W\+FN}} ()
+\begin{DoxyCompactList}\small\item\em Return a \mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}}. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a4e8a59d87c2c14b3d5a2ac0c0692f8d2}{evecs}} ()
+\begin{DoxyCompactList}\small\item\em Return eigen vectors. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_string_lists}{String\+Lists}} $>$ \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a2a60c41f419e985cc8a4bd454ef0441e}{lists}} ()
+\begin{DoxyCompactList}\small\item\em Return string lists. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a24be33ae6c646782bff0e56ecc97fee9}{symmetry}} ()
+\begin{DoxyCompactList}\small\item\em Return symmetry. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_f_c_i_solver}{F\+C\+I\+Solver}} class This class performs Full CI calculations. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a5037b1cfcc06a3709a33fa02c9d89d1b}\label{classforte_1_1_f_c_i_solver_a5037b1cfcc06a3709a33fa02c9d89d1b}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!F\+C\+I\+Solver@{F\+C\+I\+Solver}}
+\index{F\+C\+I\+Solver@{F\+C\+I\+Solver}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{F\+C\+I\+Solver()}{FCISolver()}}
+{\footnotesize\ttfamily forte\+::\+F\+C\+I\+Solver\+::\+F\+C\+I\+Solver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}}]{state,  }\item[{size\+\_\+t}]{nroot,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints }\end{DoxyParamCaption})}
+
+
+
+\mbox{\hyperlink{classforte_1_1_f_c_i_solver}{F\+C\+I\+Solver}} A class that performs a F\+CI computation in an active space. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state} & the electronic state to compute \\
+\hline
+{\em nroot} & the number of roots \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & a \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object that defines the orbital spaces \\
+\hline
+{\em as\+\_\+ints} & molecular integrals defined only for the active space orbitals \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a6491f1a5c2a79bf9ede2ab863815b8d4}\label{classforte_1_1_f_c_i_solver_a6491f1a5c2a79bf9ede2ab863815b8d4}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!````~F\+C\+I\+Solver@{$\sim$\+F\+C\+I\+Solver}}
+\index{````~F\+C\+I\+Solver@{$\sim$\+F\+C\+I\+Solver}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{$\sim$\+F\+C\+I\+Solver()}{~FCISolver()}}
+{\footnotesize\ttfamily forte\+::\+F\+C\+I\+Solver\+::$\sim$\+F\+C\+I\+Solver (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a5ea02e6826ffd8eb01fd25c229517159}\label{classforte_1_1_f_c_i_solver_a5ea02e6826ffd8eb01fd25c229517159}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+F\+C\+I\+Solver\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Compute the F\+CI energy. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_active_space_method_a99736e2b94405371b224b0750569b077}{forte\+::\+Active\+Space\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a36c1bb8d06f2b2b28b5700c861e5acae}\label{classforte_1_1_f_c_i_solver_a36c1bb8d06f2b2b28b5700c861e5acae}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!compute\+\_\+rdms\+\_\+root@{compute\+\_\+rdms\+\_\+root}}
+\index{compute\+\_\+rdms\+\_\+root@{compute\+\_\+rdms\+\_\+root}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+rdms\+\_\+root()}{compute\_rdms\_root()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Solver\+::compute\+\_\+rdms\+\_\+root (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{root1,  }\item[{size\+\_\+t}]{root2,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})}
+
+
+
+Compute \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} on a given root. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a4e8a59d87c2c14b3d5a2ac0c0692f8d2}\label{classforte_1_1_f_c_i_solver_a4e8a59d87c2c14b3d5a2ac0c0692f8d2}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!evecs@{evecs}}
+\index{evecs@{evecs}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{evecs()}{evecs()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+F\+C\+I\+Solver\+::evecs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return eigen vectors. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a4c6a278c51128b2f18ada5e08512deca}\label{classforte_1_1_f_c_i_solver_a4c6a278c51128b2f18ada5e08512deca}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!get\+\_\+\+F\+C\+I\+W\+FN@{get\+\_\+\+F\+C\+I\+W\+FN}}
+\index{get\+\_\+\+F\+C\+I\+W\+FN@{get\+\_\+\+F\+C\+I\+W\+FN}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{get\+\_\+\+F\+C\+I\+W\+F\+N()}{get\_FCIWFN()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}}$>$ forte\+::\+F\+C\+I\+Solver\+::get\+\_\+\+F\+C\+I\+W\+FN (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a \mbox{\hyperlink{classforte_1_1_f_c_i_vector}{F\+C\+I\+Vector}}. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a2a60c41f419e985cc8a4bd454ef0441e}\label{classforte_1_1_f_c_i_solver_a2a60c41f419e985cc8a4bd454ef0441e}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!lists@{lists}}
+\index{lists@{lists}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{lists()}{lists()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_string_lists}{String\+Lists}}$>$ forte\+::\+F\+C\+I\+Solver\+::lists (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return string lists. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a40d53f62ae73a7baf7560dac37838b8b}\label{classforte_1_1_f_c_i_solver_a40d53f62ae73a7baf7560dac37838b8b}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!rdms@{rdms}}
+\index{rdms@{rdms}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{rdms()}{rdms()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ forte\+::\+F\+C\+I\+Solver\+::rdms (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&}]{root\+\_\+list,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Returns the reduced density matrices up to a given rank (max\+\_\+rdm\+\_\+level) 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_active_space_method_a0b2c4903551a7602db815d67349ba7c9}{forte\+::\+Active\+Space\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a68ac8d378e848ce9a058716095ac37d7}\label{classforte_1_1_f_c_i_solver_a68ac8d378e848ce9a058716095ac37d7}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!set\+\_\+collapse\+\_\+per\+\_\+root@{set\+\_\+collapse\+\_\+per\+\_\+root}}
+\index{set\+\_\+collapse\+\_\+per\+\_\+root@{set\+\_\+collapse\+\_\+per\+\_\+root}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+collapse\+\_\+per\+\_\+root()}{set\_collapse\_per\_root()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Solver\+::set\+\_\+collapse\+\_\+per\+\_\+root (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the number of collapse vectors for each root. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_abc0f14fa88b25e521394b0a31b5ea1eb}\label{classforte_1_1_f_c_i_solver_abc0f14fa88b25e521394b0a31b5ea1eb}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!set\+\_\+fci\+\_\+iterations@{set\+\_\+fci\+\_\+iterations}}
+\index{set\+\_\+fci\+\_\+iterations@{set\+\_\+fci\+\_\+iterations}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+fci\+\_\+iterations()}{set\_fci\_iterations()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Solver\+::set\+\_\+fci\+\_\+iterations (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the convergence for F\+CI. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_ab65c6c24f4f55007ff06792e444c6605}\label{classforte_1_1_f_c_i_solver_ab65c6c24f4f55007ff06792e444c6605}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!set\+\_\+ntrial\+\_\+per\+\_\+root@{set\+\_\+ntrial\+\_\+per\+\_\+root}}
+\index{set\+\_\+ntrial\+\_\+per\+\_\+root@{set\+\_\+ntrial\+\_\+per\+\_\+root}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+ntrial\+\_\+per\+\_\+root()}{set\_ntrial\_per\_root()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Solver\+::set\+\_\+ntrial\+\_\+per\+\_\+root (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the number of trial vectors per root. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a5bb962ea913122dbcec9319411876b05}\label{classforte_1_1_f_c_i_solver_a5bb962ea913122dbcec9319411876b05}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!set\+\_\+options@{set\+\_\+options}}
+\index{set\+\_\+options@{set\+\_\+options}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+options()}{set\_options()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Solver\+::set\+\_\+options (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Set the options. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_active_space_method_a9416a627f550d4d56f6b8ffe7478ed89}{forte\+::\+Active\+Space\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a369b5d6855b896d2d1a743dd3ff2d9a6}\label{classforte_1_1_f_c_i_solver_a369b5d6855b896d2d1a743dd3ff2d9a6}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!set\+\_\+print\+\_\+no@{set\+\_\+print\+\_\+no}}
+\index{set\+\_\+print\+\_\+no@{set\+\_\+print\+\_\+no}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+print\+\_\+no()}{set\_print\_no()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Solver\+::set\+\_\+print\+\_\+no (\begin{DoxyParamCaption}\item[{bool}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Print the Natural Orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a412a3fe22b7b6dbacb97d42c37bd07a2}\label{classforte_1_1_f_c_i_solver_a412a3fe22b7b6dbacb97d42c37bd07a2}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!set\+\_\+subspace\+\_\+per\+\_\+root@{set\+\_\+subspace\+\_\+per\+\_\+root}}
+\index{set\+\_\+subspace\+\_\+per\+\_\+root@{set\+\_\+subspace\+\_\+per\+\_\+root}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+subspace\+\_\+per\+\_\+root()}{set\_subspace\_per\_root()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Solver\+::set\+\_\+subspace\+\_\+per\+\_\+root (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the maximum subspace size for each root. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_acaf6732c243a888374ffe95454ea4273}\label{classforte_1_1_f_c_i_solver_acaf6732c243a888374ffe95454ea4273}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!set\+\_\+test\+\_\+rdms@{set\+\_\+test\+\_\+rdms}}
+\index{set\+\_\+test\+\_\+rdms@{set\+\_\+test\+\_\+rdms}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+test\+\_\+rdms()}{set\_test\_rdms()}}
+{\footnotesize\ttfamily void forte\+::\+F\+C\+I\+Solver\+::set\+\_\+test\+\_\+rdms (\begin{DoxyParamCaption}\item[{bool}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+When set to true before calling \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a5ea02e6826ffd8eb01fd25c229517159}{compute\+\_\+energy()}}, it will test the reduce density matrices. Watch out, this function is very slow! \mbox{\Hypertarget{classforte_1_1_f_c_i_solver_a24be33ae6c646782bff0e56ecc97fee9}\label{classforte_1_1_f_c_i_solver_a24be33ae6c646782bff0e56ecc97fee9}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!symmetry@{symmetry}}
+\index{symmetry@{symmetry}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{symmetry()}{symmetry()}}
+{\footnotesize\ttfamily int forte\+::\+F\+C\+I\+Solver\+::symmetry (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return symmetry. 
+
+\mbox{\Hypertarget{classforte_1_1_f_c_i_solver_ad29797ad91b7edb6b3d8a4c66aaf18a0}\label{classforte_1_1_f_c_i_solver_ad29797ad91b7edb6b3d8a4c66aaf18a0}} 
+\index{forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}!transition\+\_\+rdms@{transition\+\_\+rdms}}
+\index{transition\+\_\+rdms@{transition\+\_\+rdms}!forte\+::\+F\+C\+I\+Solver@{forte\+::\+F\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{transition\+\_\+rdms()}{transition\_rdms()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ forte\+::\+F\+C\+I\+Solver\+::transition\+\_\+rdms (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&}]{root\+\_\+list,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} $>$}]{method2,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Returns the transition reduced density matrices between roots of different symmetry up to a given level (max\+\_\+rdm\+\_\+level) 
+
+Implements \mbox{\hyperlink{classforte_1_1_active_space_method_a4460069915e56a1994d3a4a4e78bdb30}{forte\+::\+Active\+Space\+Method}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/fci/\mbox{\hyperlink{fci__solver_8h}{fci\+\_\+solver.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/fci/\mbox{\hyperlink{fci__solver_8cc}{fci\+\_\+solver.\+cc}}\end{DoxyCompactItemize}

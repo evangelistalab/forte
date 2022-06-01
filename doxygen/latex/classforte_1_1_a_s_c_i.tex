@@ -1,0 +1,306 @@
+\hypertarget{classforte_1_1_a_s_c_i}{}\section{forte\+:\+:A\+S\+CI Class Reference}
+\label{classforte_1_1_a_s_c_i}\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+
+
+The \mbox{\hyperlink{classforte_1_1_a_s_c_i}{A\+S\+CI}} class This class implements the Adaptively Selected CI algorithm.  
+
+
+
+
+{\ttfamily \#include $<$asci.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:A\+S\+CI\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=204pt]{classforte_1_1_a_s_c_i__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:A\+S\+CI\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=204pt]{classforte_1_1_a_s_c_i__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_a_s_c_i_a3640cec78b82f59f8afe187b94900f7d}{A\+S\+CI}} (\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} state, size\+\_\+t nroot, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints)
+\item 
+\mbox{\hyperlink{classforte_1_1_a_s_c_i_ababa5808cb2d4d19ef4cac29eae4657c}{$\sim$\+A\+S\+CI}} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_a7b219391b694de5192f5a467f64f60c4}{set\+\_\+options}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$) override
+\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \mbox{\hyperlink{classforte_1_1_a_s_c_i_a1d1cb0632d2a03f39b421c2628e784fe}{get\+\_\+wavefunction}} ()
+\begin{DoxyCompactList}\small\item\em Get the wavefunction. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_a4a6bbf34863155aa72e7a3128a3fbe00}{compute\+\_\+nos}} ()
+\begin{DoxyCompactList}\small\item\em Compute the A\+C\+I-\/\+N\+Os. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_a59c39bbad1264f8daa3dadb0eeccdbd7}{set\+\_\+fci\+\_\+ints}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints)
+\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_aff9c84376007b8ef5a54d90c3e6a1c52}{pre\+\_\+iter\+\_\+preparation}} () override
+\begin{DoxyCompactList}\small\item\em Pre-\/iter preparation, usually includes preparing an initial reference. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_a25123db39a9f99b446741bc2ec738ee8}{diagonalize\+\_\+\+P\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Step 1. Diagonalize the Hamiltonian in the P space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_aa285dc9063075f23a7a1f4a1513c8aac}{diagonalize\+\_\+\+P\+Q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Step 3. Diagonalize the Hamiltonian in the P + Q space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_a0088675b12258f127476e15226ba822f}{post\+\_\+iter\+\_\+process}} () override
+\begin{DoxyCompactList}\small\item\em Post-\/iter process. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_aaf84a9fa2ec4f80da2cc05ac7ac544f9}{set\+\_\+method\+\_\+variables}} (std\+::string ex\+\_\+alg, size\+\_\+t nroot\+\_\+method, size\+\_\+t root, const std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, double $>$$>$$>$ \&old\+\_\+roots) override
+\begin{DoxyCompactList}\small\item\em Set the class variable. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \mbox{\hyperlink{classforte_1_1_a_s_c_i_abe4f88df4acd5e486cc1e9d43254bc0d}{get\+\_\+\+P\+Q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Getters. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_a_s_c_i_a7b0cff30856eb70d451216e5039e15ee}{get\+\_\+\+P\+Q\+\_\+evecs}} () override
+\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_a_s_c_i_a13310cf1f39f174d298194efea95572f}{get\+\_\+\+P\+Q\+\_\+evals}} () override
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_a_s_c_i_aa81094a460d7922927d4ff9f14929ab8}{get\+\_\+ref\+\_\+root}} () override
+\item 
+bool \mbox{\hyperlink{classforte_1_1_a_s_c_i_a933b12da75f3baa3a824839f7a3f760b}{check\+\_\+convergence}} () override
+\begin{DoxyCompactList}\small\item\em Check if the procedure has converged. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_a_s_c_i_a197192d707eee6c0c6046d3dfdf78162}{find\+\_\+q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Find all the relevant excitations out of the P space. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_a_s_c_i_ac497073adeab7700979678c15dcb475e}{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}} () override
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_a_s_c_i}{A\+S\+CI}} class This class implements the Adaptively Selected CI algorithm. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a3640cec78b82f59f8afe187b94900f7d}\label{classforte_1_1_a_s_c_i_a3640cec78b82f59f8afe187b94900f7d}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!A\+S\+CI@{A\+S\+CI}}
+\index{A\+S\+CI@{A\+S\+CI}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{A\+S\+C\+I()}{ASCI()}}
+{\footnotesize\ttfamily forte\+::\+A\+S\+C\+I\+::\+A\+S\+CI (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}}]{state,  }\item[{size\+\_\+t}]{nroot,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints }\end{DoxyParamCaption})}
+
+Constructor 
+\begin{DoxyParams}{Parameters}
+{\em ref\+\_\+wfn} & The reference wavefunction object \\
+\hline
+{\em options} & The main options object \\
+\hline
+{\em ints} & A pointer to an allocated integral object \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & A pointer to the \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_ababa5808cb2d4d19ef4cac29eae4657c}\label{classforte_1_1_a_s_c_i_ababa5808cb2d4d19ef4cac29eae4657c}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!````~A\+S\+CI@{$\sim$\+A\+S\+CI}}
+\index{````~A\+S\+CI@{$\sim$\+A\+S\+CI}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{$\sim$\+A\+S\+C\+I()}{~ASCI()}}
+{\footnotesize\ttfamily forte\+::\+A\+S\+C\+I\+::$\sim$\+A\+S\+CI (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a933b12da75f3baa3a824839f7a3f760b}\label{classforte_1_1_a_s_c_i_a933b12da75f3baa3a824839f7a3f760b}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!check\+\_\+convergence@{check\+\_\+convergence}}
+\index{check\+\_\+convergence@{check\+\_\+convergence}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{check\+\_\+convergence()}{check\_convergence()}}
+{\footnotesize\ttfamily bool forte\+::\+A\+S\+C\+I\+::check\+\_\+convergence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Check if the procedure has converged. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_acc10aa488c79c2abec46a9093ecf5a52}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a4a6bbf34863155aa72e7a3128a3fbe00}\label{classforte_1_1_a_s_c_i_a4a6bbf34863155aa72e7a3128a3fbe00}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!compute\+\_\+nos@{compute\+\_\+nos}}
+\index{compute\+\_\+nos@{compute\+\_\+nos}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{compute\+\_\+nos()}{compute\_nos()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::compute\+\_\+nos (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the A\+C\+I-\/\+N\+Os. 
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a25123db39a9f99b446741bc2ec738ee8}\label{classforte_1_1_a_s_c_i_a25123db39a9f99b446741bc2ec738ee8}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!diagonalize\+\_\+\+P\+\_\+space@{diagonalize\+\_\+\+P\+\_\+space}}
+\index{diagonalize\+\_\+\+P\+\_\+space@{diagonalize\+\_\+\+P\+\_\+space}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+\+P\+\_\+space()}{diagonalize\_P\_space()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::diagonalize\+\_\+\+P\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 1. Diagonalize the Hamiltonian in the P space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a7b2b41da889659f03361f625c6df44d2}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_aa285dc9063075f23a7a1f4a1513c8aac}\label{classforte_1_1_a_s_c_i_aa285dc9063075f23a7a1f4a1513c8aac}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!diagonalize\+\_\+\+P\+Q\+\_\+space@{diagonalize\+\_\+\+P\+Q\+\_\+space}}
+\index{diagonalize\+\_\+\+P\+Q\+\_\+space@{diagonalize\+\_\+\+P\+Q\+\_\+space}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+\+P\+Q\+\_\+space()}{diagonalize\_PQ\_space()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::diagonalize\+\_\+\+P\+Q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 3. Diagonalize the Hamiltonian in the P + Q space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a9f01588d22401cd2631a09940ea7db50}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a197192d707eee6c0c6046d3dfdf78162}\label{classforte_1_1_a_s_c_i_a197192d707eee6c0c6046d3dfdf78162}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!find\+\_\+q\+\_\+space@{find\+\_\+q\+\_\+space}}
+\index{find\+\_\+q\+\_\+space@{find\+\_\+q\+\_\+space}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{find\+\_\+q\+\_\+space()}{find\_q\_space()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::find\+\_\+q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Find all the relevant excitations out of the P space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_aff521efa08edfafb479f32e03a70c118}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_ac497073adeab7700979678c15dcb475e}\label{classforte_1_1_a_s_c_i_ac497073adeab7700979678c15dcb475e}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction@{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}}
+\index{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction@{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction()}{get\_multistate\_pt2\_energy\_correction()}}
+{\footnotesize\ttfamily std\+::vector$<$ double $>$ forte\+::\+A\+S\+C\+I\+::get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_abbe18ea3e5f1a77df13a38764aeef62c}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a13310cf1f39f174d298194efea95572f}\label{classforte_1_1_a_s_c_i_a13310cf1f39f174d298194efea95572f}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!get\+\_\+\+P\+Q\+\_\+evals@{get\+\_\+\+P\+Q\+\_\+evals}}
+\index{get\+\_\+\+P\+Q\+\_\+evals@{get\+\_\+\+P\+Q\+\_\+evals}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+evals()}{get\_PQ\_evals()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+A\+S\+C\+I\+::get\+\_\+\+P\+Q\+\_\+evals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a675d28ae66341b8cfabb2953c936621c}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a7b0cff30856eb70d451216e5039e15ee}\label{classforte_1_1_a_s_c_i_a7b0cff30856eb70d451216e5039e15ee}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!get\+\_\+\+P\+Q\+\_\+evecs@{get\+\_\+\+P\+Q\+\_\+evecs}}
+\index{get\+\_\+\+P\+Q\+\_\+evecs@{get\+\_\+\+P\+Q\+\_\+evecs}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+evecs()}{get\_PQ\_evecs()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+A\+S\+C\+I\+::get\+\_\+\+P\+Q\+\_\+evecs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a5e5212836aa0dc35f98238d1f426abed}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_abe4f88df4acd5e486cc1e9d43254bc0d}\label{classforte_1_1_a_s_c_i_abe4f88df4acd5e486cc1e9d43254bc0d}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!get\+\_\+\+P\+Q\+\_\+space@{get\+\_\+\+P\+Q\+\_\+space}}
+\index{get\+\_\+\+P\+Q\+\_\+space@{get\+\_\+\+P\+Q\+\_\+space}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+space()}{get\_PQ\_space()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} forte\+::\+A\+S\+C\+I\+::get\+\_\+\+P\+Q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Getters. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a2c29d8700d6887860850f77b9246ec9f}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_aa81094a460d7922927d4ff9f14929ab8}\label{classforte_1_1_a_s_c_i_aa81094a460d7922927d4ff9f14929ab8}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!get\+\_\+ref\+\_\+root@{get\+\_\+ref\+\_\+root}}
+\index{get\+\_\+ref\+\_\+root@{get\+\_\+ref\+\_\+root}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+ref\+\_\+root()}{get\_ref\_root()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+A\+S\+C\+I\+::get\+\_\+ref\+\_\+root (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_aa95ed581568b2d580c17ab166e85a11a}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a1d1cb0632d2a03f39b421c2628e784fe}\label{classforte_1_1_a_s_c_i_a1d1cb0632d2a03f39b421c2628e784fe}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!get\+\_\+wavefunction@{get\+\_\+wavefunction}}
+\index{get\+\_\+wavefunction@{get\+\_\+wavefunction}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+wavefunction()}{get\_wavefunction()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} forte\+::\+A\+S\+C\+I\+::get\+\_\+wavefunction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get the wavefunction. 
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a0088675b12258f127476e15226ba822f}\label{classforte_1_1_a_s_c_i_a0088675b12258f127476e15226ba822f}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!post\+\_\+iter\+\_\+process@{post\+\_\+iter\+\_\+process}}
+\index{post\+\_\+iter\+\_\+process@{post\+\_\+iter\+\_\+process}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{post\+\_\+iter\+\_\+process()}{post\_iter\_process()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::post\+\_\+iter\+\_\+process (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Post-\/iter process. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a23ea3389ac1c62dee811decc5bea507f}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_aff9c84376007b8ef5a54d90c3e6a1c52}\label{classforte_1_1_a_s_c_i_aff9c84376007b8ef5a54d90c3e6a1c52}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!pre\+\_\+iter\+\_\+preparation@{pre\+\_\+iter\+\_\+preparation}}
+\index{pre\+\_\+iter\+\_\+preparation@{pre\+\_\+iter\+\_\+preparation}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{pre\+\_\+iter\+\_\+preparation()}{pre\_iter\_preparation()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::pre\+\_\+iter\+\_\+preparation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Pre-\/iter preparation, usually includes preparing an initial reference. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_af92b210415034874fcf2faac8b00eca9}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a59c39bbad1264f8daa3dadb0eeccdbd7}\label{classforte_1_1_a_s_c_i_a59c39bbad1264f8daa3dadb0eeccdbd7}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!set\+\_\+fci\+\_\+ints@{set\+\_\+fci\+\_\+ints}}
+\index{set\+\_\+fci\+\_\+ints@{set\+\_\+fci\+\_\+ints}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+fci\+\_\+ints()}{set\_fci\_ints()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::set\+\_\+fci\+\_\+ints (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_aaf84a9fa2ec4f80da2cc05ac7ac544f9}\label{classforte_1_1_a_s_c_i_aaf84a9fa2ec4f80da2cc05ac7ac544f9}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!set\+\_\+method\+\_\+variables@{set\+\_\+method\+\_\+variables}}
+\index{set\+\_\+method\+\_\+variables@{set\+\_\+method\+\_\+variables}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+method\+\_\+variables()}{set\_method\_variables()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::set\+\_\+method\+\_\+variables (\begin{DoxyParamCaption}\item[{std\+::string}]{ex\+\_\+alg,  }\item[{size\+\_\+t}]{nroot\+\_\+method,  }\item[{size\+\_\+t}]{root,  }\item[{const std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, double $>$$>$$>$ \&}]{old\+\_\+roots }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Set the class variable. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a37f95503d0241387195dc7d412fc6e78}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_a_s_c_i_a7b219391b694de5192f5a467f64f60c4}\label{classforte_1_1_a_s_c_i_a7b219391b694de5192f5a467f64f60c4}} 
+\index{forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}!set\+\_\+options@{set\+\_\+options}}
+\index{set\+\_\+options@{set\+\_\+options}!forte\+::\+A\+S\+CI@{forte\+::\+A\+S\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+options()}{set\_options()}}
+{\footnotesize\ttfamily void forte\+::\+A\+S\+C\+I\+::set\+\_\+options (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Set options from an option object 
+\begin{DoxyParams}{Parameters}
+{\em options} & the options passed in \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_ad03bbde3a0443ca9b01ff9605f2e06e0}{forte\+::\+Selected\+C\+I\+Method}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sci/\mbox{\hyperlink{asci_8h}{asci.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/sci/\mbox{\hyperlink{asci_8cc}{asci.\+cc}}\end{DoxyCompactItemize}

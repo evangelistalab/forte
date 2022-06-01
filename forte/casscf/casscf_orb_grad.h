@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -67,16 +67,16 @@ class CASSCF_ORB_GRAD {
     double evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g = true);
 
     /// Evaluate the diagonal orbital Hessian
-    void hess_diag(psi::SharedVector x, psi::SharedVector h0);
+    void hess_diag(psi::SharedVector x, const psi::SharedVector& h0);
 
     /// Set RDMs used for orbital optimization
-    void set_rdms(RDMs& rdms);
+    void set_rdms(std::shared_ptr<RDMs> rdms);
 
     /// Return active space integrals for CI
     std::shared_ptr<ActiveSpaceIntegrals> active_space_ints();
 
     /// Return the number of nonredundant orbital rotations
-    size_t nrot() { return nrot_; }
+    size_t nrot() const { return nrot_; }
 
     /// Return the initial (not optimized) MO coefficients
     psi::SharedMatrix Ca_initial() { return C0_; }
@@ -88,7 +88,7 @@ class CASSCF_ORB_GRAD {
     psi::SharedMatrix fock() { return Fock_; }
 
     /// Canonicalize the final orbitals
-    void canonicalize_final(psi::SharedMatrix U);
+    void canonicalize_final(const psi::SharedMatrix& U);
 
     /// Compute nuclear gradient
     void compute_nuclear_gradient();
@@ -181,8 +181,11 @@ class CASSCF_ORB_GRAD {
     /// Enable debug printing or not
     bool debug_print_;
 
-    /// Orbital gradient convergence criteria
-    double g_conv_;
+    /// Algorithm to compute the orbital transformation matrix from orbital rotations
+    /// 1. Cayley: U = (1 + R/2) * (1 - R/2)^-1
+    /// 2. Power: U = exp(R) ~ I + R + 1/2 * R^2 + 1/6 * R^3
+    /// 3. Pade: Psi4 implementation of U = exp(R)
+    std::string ortho_trans_algo_;
 
     /// Keep internal (GASn-GASn) rotations
     bool internal_rot_;
@@ -192,9 +195,6 @@ class CASSCF_ORB_GRAD {
     /// User specified zero rotations
     /// vector of irrep, map from index i to other indices uncoupled with index i
     std::vector<std::unordered_map<size_t, std::unordered_set<size_t>>> zero_rots_;
-
-    /// Orbital type for redundant pairs
-    std::string orb_type_redundant_;
 
     // => Tensors and matrices <=
 
@@ -227,7 +227,7 @@ class CASSCF_ORB_GRAD {
 
     /// The orbital rotation matrix
     psi::SharedMatrix R_;
-    /// The orthogonal transformation matrix U = exp(R)
+    /// The orthogonal transformation matrix
     psi::SharedMatrix U_;
 
     /// The orbital gradients
@@ -280,6 +280,11 @@ class CASSCF_ORB_GRAD {
 
     /// Update orbitals using the given rotation matrix in vector form
     bool update_orbitals(psi::SharedVector x);
+
+    /// Test if new orbitals are significantly different from the beginning orbitals
+    /// Return a tuple of <irrep, old active orbital index, new active orbital index>
+    std::vector<std::tuple<int, int, int>> test_orbital_rotations(const psi::SharedMatrix& U,
+                                                                  const std::string& warning_msg);
 
     // => Nuclear gradient related functions <=
 
@@ -343,13 +348,13 @@ class CASSCF_ORB_GRAD {
     void fill_A_matrix_data(ambit::BlockedTensor A);
 
     /// Reshape the orbital rotation related BlockedTensor to SharedVector
-    void reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv);
-
-    /// Fix redundant orbitals and return the rotation matrix
-    std::shared_ptr<psi::Matrix> canonicalize();
+    void reshape_rot_ambit(ambit::BlockedTensor bt, const psi::SharedVector& sv);
 
     /// Compute the exponential of a skew-symmetric matrix
-    psi::SharedMatrix matrix_exponential(psi::SharedMatrix A, int n);
+    psi::SharedMatrix matrix_exponential(const psi::SharedMatrix& A, int n);
+
+    /// Compute Cayley transformation from skew-symmetric matrix
+    psi::SharedMatrix cayley_trans(const psi::SharedMatrix& A);
 
     /// Grab part of the orbital coefficients
     psi::SharedMatrix C_subset(const std::string& name, psi::SharedMatrix C,

@@ -1,0 +1,222 @@
+\hypertarget{classforte_1_1_state_info}{}\section{forte\+:\+:State\+Info Class Reference}
+\label{classforte_1_1_state_info}\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+
+
+{\ttfamily \#include $<$state\+\_\+info.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_state_info_a7a372828466d8512e7a6a046b0f2c105}{State\+Info}} (int \mbox{\hyperlink{classforte_1_1_state_info_ae4ee75f5eab9ec0eafc0d93f2c275da3}{na}}, int \mbox{\hyperlink{classforte_1_1_state_info_a87ccf3fb2799d0fad2867625d72e2a85}{nb}}, int \mbox{\hyperlink{classforte_1_1_state_info_a3cfa6b9cf9cb9b22ba3c087cf46e8ce1}{multiplicity}}, int \mbox{\hyperlink{classforte_1_1_state_info_aecba70ee7401a519978f6960637175e8}{twice\+\_\+ms}}, int \mbox{\hyperlink{classforte_1_1_state_info_a6fc39a9719c18b179d9ab83992990e31}{irrep}}, const std\+::string \&\mbox{\hyperlink{classforte_1_1_state_info_a8f5882f7c4b51f1bb43da3b4038763a1}{irrep\+\_\+label}}=\char`\"{}\char`\"{}, const std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_state_info_afead0369c4c893b73c1e22c020358f6c}{gas\+\_\+min}}=std\+::vector$<$ size\+\_\+t $>$(), const std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_state_info_a7f87e4ae590b1e723fd2cab3a29673fd}{gas\+\_\+max}}=std\+::vector$<$ size\+\_\+t $>$())
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_state_info_aec2282c090c68fc2acfa2195d038ada4}{State\+Info}} ()=default
+\item 
+int \mbox{\hyperlink{classforte_1_1_state_info_ae4ee75f5eab9ec0eafc0d93f2c275da3}{na}} () const
+\begin{DoxyCompactList}\small\item\em return the number of alpha electrons \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_state_info_a87ccf3fb2799d0fad2867625d72e2a85}{nb}} () const
+\begin{DoxyCompactList}\small\item\em return the number of beta electrons \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_state_info_a3cfa6b9cf9cb9b22ba3c087cf46e8ce1}{multiplicity}} () const
+\begin{DoxyCompactList}\small\item\em return the multiplicity \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_state_info_aecba70ee7401a519978f6960637175e8}{twice\+\_\+ms}} () const
+\begin{DoxyCompactList}\small\item\em return twice Ms \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_state_info_a6fc39a9719c18b179d9ab83992990e31}{irrep}} () const
+\begin{DoxyCompactList}\small\item\em return the irrep \end{DoxyCompactList}\item 
+const std\+::string \& \mbox{\hyperlink{classforte_1_1_state_info_a49928add8977306add867d93df651730}{multiplicity\+\_\+label}} () const
+\begin{DoxyCompactList}\small\item\em return the multiplicity symbol \end{DoxyCompactList}\item 
+const std\+::string \& \mbox{\hyperlink{classforte_1_1_state_info_a8f5882f7c4b51f1bb43da3b4038763a1}{irrep\+\_\+label}} () const
+\begin{DoxyCompactList}\small\item\em return the irrep symbol \end{DoxyCompactList}\item 
+const std\+::vector$<$ size\+\_\+t $>$ \& \mbox{\hyperlink{classforte_1_1_state_info_afead0369c4c893b73c1e22c020358f6c}{gas\+\_\+min}} () const
+\begin{DoxyCompactList}\small\item\em return the minimum occupation of each gas state \end{DoxyCompactList}\item 
+const std\+::vector$<$ size\+\_\+t $>$ \& \mbox{\hyperlink{classforte_1_1_state_info_a7f87e4ae590b1e723fd2cab3a29673fd}{gas\+\_\+max}} () const
+\begin{DoxyCompactList}\small\item\em return the maximum occupation of each gas state \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_state_info_a95242f2ef492eeb6740da98144039329}{operator$<$}} (const \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \&rhs) const
+\begin{DoxyCompactList}\small\item\em Comparison operator for \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} objects. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_state_info_a3be1e8e4f810dcf3de3413ca17e607b5}{operator!=}} (const \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \&rhs) const
+\begin{DoxyCompactList}\small\item\em Comparison operator for \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} objects. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_state_info_a8c20c22bb6cebf7f9c3a1238a4012bda}{operator==}} (const \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \&rhs) const
+\begin{DoxyCompactList}\small\item\em Comparison operator for \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} objects. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_state_info_a50b10a54b40621ef6147a8a1558665b5}{str}} () const
+\begin{DoxyCompactList}\small\item\em string representation of this object \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classforte_1_1_state_info_a435a4361da5759caff8c08fe80a89e54}{multiplicity\+\_\+labels}}
+\begin{DoxyCompactList}\small\item\em multiplicity labels \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_state_info_a7a372828466d8512e7a6a046b0f2c105}\label{classforte_1_1_state_info_a7a372828466d8512e7a6a046b0f2c105}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!State\+Info@{State\+Info}}
+\index{State\+Info@{State\+Info}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{State\+Info()}{StateInfo()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+State\+Info\+::\+State\+Info (\begin{DoxyParamCaption}\item[{int}]{na,  }\item[{int}]{nb,  }\item[{int}]{multiplicity,  }\item[{int}]{twice\+\_\+ms,  }\item[{int}]{irrep,  }\item[{const std\+::string \&}]{irrep\+\_\+label = {\ttfamily \char`\"{}\char`\"{}},  }\item[{const std\+::vector$<$ size\+\_\+t $>$}]{gas\+\_\+min = {\ttfamily std\+:\+:vector$<$size\+\_\+t$>$()},  }\item[{const std\+::vector$<$ size\+\_\+t $>$}]{gas\+\_\+max = {\ttfamily std\+:\+:vector$<$size\+\_\+t$>$()} }\end{DoxyParamCaption})}
+
+
+
+Constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_aec2282c090c68fc2acfa2195d038ada4}\label{classforte_1_1_state_info_aec2282c090c68fc2acfa2195d038ada4}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!State\+Info@{State\+Info}}
+\index{State\+Info@{State\+Info}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{State\+Info()}{StateInfo()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+State\+Info\+::\+State\+Info (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_state_info_a7f87e4ae590b1e723fd2cab3a29673fd}\label{classforte_1_1_state_info_a7f87e4ae590b1e723fd2cab3a29673fd}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!gas\+\_\+max@{gas\+\_\+max}}
+\index{gas\+\_\+max@{gas\+\_\+max}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{gas\+\_\+max()}{gas\_max()}}
+{\footnotesize\ttfamily const std\+::vector$<$ size\+\_\+t $>$ \& forte\+::\+State\+Info\+::gas\+\_\+max (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return the maximum occupation of each gas state 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_afead0369c4c893b73c1e22c020358f6c}\label{classforte_1_1_state_info_afead0369c4c893b73c1e22c020358f6c}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!gas\+\_\+min@{gas\+\_\+min}}
+\index{gas\+\_\+min@{gas\+\_\+min}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{gas\+\_\+min()}{gas\_min()}}
+{\footnotesize\ttfamily const std\+::vector$<$ size\+\_\+t $>$ \& forte\+::\+State\+Info\+::gas\+\_\+min (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return the minimum occupation of each gas state 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a6fc39a9719c18b179d9ab83992990e31}\label{classforte_1_1_state_info_a6fc39a9719c18b179d9ab83992990e31}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!irrep@{irrep}}
+\index{irrep@{irrep}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{irrep()}{irrep()}}
+{\footnotesize\ttfamily int forte\+::\+State\+Info\+::irrep (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return the irrep 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a8f5882f7c4b51f1bb43da3b4038763a1}\label{classforte_1_1_state_info_a8f5882f7c4b51f1bb43da3b4038763a1}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!irrep\+\_\+label@{irrep\+\_\+label}}
+\index{irrep\+\_\+label@{irrep\+\_\+label}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{irrep\+\_\+label()}{irrep\_label()}}
+{\footnotesize\ttfamily const std\+::string \& forte\+::\+State\+Info\+::irrep\+\_\+label (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return the irrep symbol 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a3cfa6b9cf9cb9b22ba3c087cf46e8ce1}\label{classforte_1_1_state_info_a3cfa6b9cf9cb9b22ba3c087cf46e8ce1}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!multiplicity@{multiplicity}}
+\index{multiplicity@{multiplicity}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{multiplicity()}{multiplicity()}}
+{\footnotesize\ttfamily int forte\+::\+State\+Info\+::multiplicity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return the multiplicity 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a49928add8977306add867d93df651730}\label{classforte_1_1_state_info_a49928add8977306add867d93df651730}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!multiplicity\+\_\+label@{multiplicity\+\_\+label}}
+\index{multiplicity\+\_\+label@{multiplicity\+\_\+label}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{multiplicity\+\_\+label()}{multiplicity\_label()}}
+{\footnotesize\ttfamily const std\+::string \& forte\+::\+State\+Info\+::multiplicity\+\_\+label (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return the multiplicity symbol 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_ae4ee75f5eab9ec0eafc0d93f2c275da3}\label{classforte_1_1_state_info_ae4ee75f5eab9ec0eafc0d93f2c275da3}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!na@{na}}
+\index{na@{na}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{na()}{na()}}
+{\footnotesize\ttfamily int forte\+::\+State\+Info\+::na (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return the number of alpha electrons 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a87ccf3fb2799d0fad2867625d72e2a85}\label{classforte_1_1_state_info_a87ccf3fb2799d0fad2867625d72e2a85}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!nb@{nb}}
+\index{nb@{nb}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{nb()}{nb()}}
+{\footnotesize\ttfamily int forte\+::\+State\+Info\+::nb (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return the number of beta electrons 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a3be1e8e4f810dcf3de3413ca17e607b5}\label{classforte_1_1_state_info_a3be1e8e4f810dcf3de3413ca17e607b5}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!operator"!=@{operator"!=}}
+\index{operator"!=@{operator"!=}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{operator"!=()}{operator!=()}}
+{\footnotesize\ttfamily bool forte\+::\+State\+Info\+::operator!= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \&}]{rhs }\end{DoxyParamCaption}) const}
+
+
+
+Comparison operator for \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} objects. 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a95242f2ef492eeb6740da98144039329}\label{classforte_1_1_state_info_a95242f2ef492eeb6740da98144039329}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!operator$<$@{operator$<$}}
+\index{operator$<$@{operator$<$}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{operator$<$()}{operator<()}}
+{\footnotesize\ttfamily bool forte\+::\+State\+Info\+::operator$<$ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \&}]{rhs }\end{DoxyParamCaption}) const}
+
+
+
+Comparison operator for \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} objects. 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a8c20c22bb6cebf7f9c3a1238a4012bda}\label{classforte_1_1_state_info_a8c20c22bb6cebf7f9c3a1238a4012bda}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!operator==@{operator==}}
+\index{operator==@{operator==}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{operator==()}{operator==()}}
+{\footnotesize\ttfamily bool forte\+::\+State\+Info\+::operator== (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \&}]{rhs }\end{DoxyParamCaption}) const}
+
+
+
+Comparison operator for \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} objects. 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_a50b10a54b40621ef6147a8a1558665b5}\label{classforte_1_1_state_info_a50b10a54b40621ef6147a8a1558665b5}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!str@{str}}
+\index{str@{str}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{str()}{str()}}
+{\footnotesize\ttfamily std\+::string forte\+::\+State\+Info\+::str (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+string representation of this object 
+
+\mbox{\Hypertarget{classforte_1_1_state_info_aecba70ee7401a519978f6960637175e8}\label{classforte_1_1_state_info_aecba70ee7401a519978f6960637175e8}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!twice\+\_\+ms@{twice\+\_\+ms}}
+\index{twice\+\_\+ms@{twice\+\_\+ms}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{twice\+\_\+ms()}{twice\_ms()}}
+{\footnotesize\ttfamily int forte\+::\+State\+Info\+::twice\+\_\+ms (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+return twice Ms 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_state_info_a435a4361da5759caff8c08fe80a89e54}\label{classforte_1_1_state_info_a435a4361da5759caff8c08fe80a89e54}} 
+\index{forte\+::\+State\+Info@{forte\+::\+State\+Info}!multiplicity\+\_\+labels@{multiplicity\+\_\+labels}}
+\index{multiplicity\+\_\+labels@{multiplicity\+\_\+labels}!forte\+::\+State\+Info@{forte\+::\+State\+Info}}
+\subsubsection{\texorpdfstring{multiplicity\+\_\+labels}{multiplicity\_labels}}
+{\footnotesize\ttfamily const std\+::vector$<$ std\+::string $>$ forte\+::\+State\+Info\+::multiplicity\+\_\+labels\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+    \textcolor{stringliteral}{"Singlet"}, \textcolor{stringliteral}{"Doublet"}, \textcolor{stringliteral}{"Triplet"}, \textcolor{stringliteral}{"Quartet"}, \textcolor{stringliteral}{"Quintet"}, \textcolor{stringliteral}{"Sextet"}, \textcolor{stringliteral}{"Septet"}, \textcolor{stringliteral}{"Octet"},
+    \textcolor{stringliteral}{"Nonet"},   \textcolor{stringliteral}{"Decaet"},  \textcolor{stringliteral}{"11-et"},   \textcolor{stringliteral}{"12-et"},   \textcolor{stringliteral}{"13-et"},   \textcolor{stringliteral}{"14-et"},  \textcolor{stringliteral}{"15-et"},  \textcolor{stringliteral}{"16-et"},
+    \textcolor{stringliteral}{"17-et"},   \textcolor{stringliteral}{"18-et"},   \textcolor{stringliteral}{"19-et"},   \textcolor{stringliteral}{"20-et"},   \textcolor{stringliteral}{"21-et"},   \textcolor{stringliteral}{"22-et"},  \textcolor{stringliteral}{"23-et"},  \textcolor{stringliteral}{"24-et"}\}
+\end{DoxyCode}
+
+
+multiplicity labels 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{state__info_8h}{state\+\_\+info.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{state__info_8cc}{state\+\_\+info.\+cc}}\end{DoxyCompactItemize}

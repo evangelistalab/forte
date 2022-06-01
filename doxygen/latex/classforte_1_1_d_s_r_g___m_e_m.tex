@@ -1,0 +1,177 @@
+\hypertarget{classforte_1_1_d_s_r_g___m_e_m}{}\section{forte\+:\+:D\+S\+R\+G\+\_\+\+M\+EM Class Reference}
+\label{classforte_1_1_d_s_r_g___m_e_m}\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+
+
+{\ttfamily \#include $<$dsrg\+\_\+mem.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_a7889ef1265286f9e83d4f2e57f2d0184}{D\+S\+R\+G\+\_\+\+M\+EM}} ()
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_aca48bd076cfd1e92573821a857b76e54}{D\+S\+R\+G\+\_\+\+M\+EM}} (int64\+\_\+t mem\+\_\+avai, std\+::map$<$ char, size\+\_\+t $>$ label\+\_\+to\+\_\+size)
+\begin{DoxyCompactList}\small\item\em Constructor using a map from MO labels to their sizes. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_a6385e6f596c51a495f537672f6c86b4e}{set\+\_\+mem\+\_\+avai}} (int64\+\_\+t mem\+\_\+avai)
+\begin{DoxyCompactList}\small\item\em Set memory currently available. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_a6f9be312b939223601bbc870700a5b49}{set\+\_\+label\+\_\+to\+\_\+size}} (std\+::map$<$ char, size\+\_\+t $>$ label\+\_\+to\+\_\+size)
+\begin{DoxyCompactList}\small\item\em Set the map from MO label to the corresponding size. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_a2339785c4d656ff51becb628c9c60926}{available}} ()
+\begin{DoxyCompactList}\small\item\em Return the available memory. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_afe7b7579d767ee201146458caefcd944}{clean\+\_\+local\+\_\+memory}} ()
+\begin{DoxyCompactList}\small\item\em Clean up local memories. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_a1dd2f817f76bda4a890bf15c60664dcf}{max\+\_\+local\+\_\+memory}} ()
+\begin{DoxyCompactList}\small\item\em Max memory usage among the vector of local memories. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_a6b2ef9118482dc897088d28d29cffe2a}{add\+\_\+print\+\_\+entry}} (const std\+::string \&des, const size\+\_\+t \&mem\+\_\+use)
+\begin{DoxyCompactList}\small\item\em Add an innocent entry using description and its number of elements. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_ad985484ea1139ca02fe50024656a9a11}{add\+\_\+entry}} (const std\+::string \&des, const size\+\_\+t \&mem\+\_\+use, bool subtract=true)
+\begin{DoxyCompactList}\small\item\em Add entry using description and its number of elements. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_aa970ba2e3f8577ad44aa32f8d84fe80e}{add\+\_\+entry}} (const std\+::string \&des, const std\+::vector$<$ std\+::string $>$ \&labels\+\_\+vec, int multiple=1, bool subtract=true)
+\begin{DoxyCompactList}\small\item\em Add entry using the description and the block labels. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_ad7377189079c97664a573643259743e3}{compute\+\_\+n\+\_\+elements}} (const std\+::string \&labels)
+\begin{DoxyCompactList}\small\item\em Compute the number of elements of a given labels. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_a43e1ba53bcac873bcec050cf7676751d}{compute\+\_\+memory}} (const std\+::vector$<$ std\+::string $>$ \&labels\+\_\+vec, int multiple=1)
+\begin{DoxyCompactList}\small\item\em Compute the memory requirement of a given labels. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_e_m_a676b78c5a39feea83a2fdaafe87a5e78}{print}} (const std\+::string \&name)
+\begin{DoxyCompactList}\small\item\em Print the current data. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_a7889ef1265286f9e83d4f2e57f2d0184}\label{classforte_1_1_d_s_r_g___m_e_m_a7889ef1265286f9e83d4f2e57f2d0184}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!D\+S\+R\+G\+\_\+\+M\+EM@{D\+S\+R\+G\+\_\+\+M\+EM}}
+\index{D\+S\+R\+G\+\_\+\+M\+EM@{D\+S\+R\+G\+\_\+\+M\+EM}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{D\+S\+R\+G\+\_\+\+M\+E\+M()}{DSRG\_MEM()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::\+D\+S\+R\+G\+\_\+\+M\+EM (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Default constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_aca48bd076cfd1e92573821a857b76e54}\label{classforte_1_1_d_s_r_g___m_e_m_aca48bd076cfd1e92573821a857b76e54}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!D\+S\+R\+G\+\_\+\+M\+EM@{D\+S\+R\+G\+\_\+\+M\+EM}}
+\index{D\+S\+R\+G\+\_\+\+M\+EM@{D\+S\+R\+G\+\_\+\+M\+EM}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{D\+S\+R\+G\+\_\+\+M\+E\+M()}{DSRG\_MEM()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::\+D\+S\+R\+G\+\_\+\+M\+EM (\begin{DoxyParamCaption}\item[{int64\+\_\+t}]{mem\+\_\+avai,  }\item[{std\+::map$<$ char, size\+\_\+t $>$}]{label\+\_\+to\+\_\+size }\end{DoxyParamCaption})}
+
+
+
+Constructor using a map from MO labels to their sizes. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_ad985484ea1139ca02fe50024656a9a11}\label{classforte_1_1_d_s_r_g___m_e_m_ad985484ea1139ca02fe50024656a9a11}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!add\+\_\+entry@{add\+\_\+entry}}
+\index{add\+\_\+entry@{add\+\_\+entry}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{add\+\_\+entry()}{add\_entry()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::add\+\_\+entry (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{des,  }\item[{const size\+\_\+t \&}]{mem\+\_\+use,  }\item[{bool}]{subtract = {\ttfamily true} }\end{DoxyParamCaption})}
+
+
+
+Add entry using description and its number of elements. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_aa970ba2e3f8577ad44aa32f8d84fe80e}\label{classforte_1_1_d_s_r_g___m_e_m_aa970ba2e3f8577ad44aa32f8d84fe80e}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!add\+\_\+entry@{add\+\_\+entry}}
+\index{add\+\_\+entry@{add\+\_\+entry}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{add\+\_\+entry()}{add\_entry()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::add\+\_\+entry (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{des,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{labels\+\_\+vec,  }\item[{int}]{multiple = {\ttfamily 1},  }\item[{bool}]{subtract = {\ttfamily true} }\end{DoxyParamCaption})}
+
+
+
+Add entry using the description and the block labels. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_a6b2ef9118482dc897088d28d29cffe2a}\label{classforte_1_1_d_s_r_g___m_e_m_a6b2ef9118482dc897088d28d29cffe2a}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!add\+\_\+print\+\_\+entry@{add\+\_\+print\+\_\+entry}}
+\index{add\+\_\+print\+\_\+entry@{add\+\_\+print\+\_\+entry}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{add\+\_\+print\+\_\+entry()}{add\_print\_entry()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::add\+\_\+print\+\_\+entry (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{des,  }\item[{const size\+\_\+t \&}]{mem\+\_\+use }\end{DoxyParamCaption})}
+
+
+
+Add an innocent entry using description and its number of elements. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_a2339785c4d656ff51becb628c9c60926}\label{classforte_1_1_d_s_r_g___m_e_m_a2339785c4d656ff51becb628c9c60926}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!available@{available}}
+\index{available@{available}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{available()}{available()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::available (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the available memory. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_afe7b7579d767ee201146458caefcd944}\label{classforte_1_1_d_s_r_g___m_e_m_afe7b7579d767ee201146458caefcd944}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!clean\+\_\+local\+\_\+memory@{clean\+\_\+local\+\_\+memory}}
+\index{clean\+\_\+local\+\_\+memory@{clean\+\_\+local\+\_\+memory}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{clean\+\_\+local\+\_\+memory()}{clean\_local\_memory()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::clean\+\_\+local\+\_\+memory (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Clean up local memories. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_a43e1ba53bcac873bcec050cf7676751d}\label{classforte_1_1_d_s_r_g___m_e_m_a43e1ba53bcac873bcec050cf7676751d}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!compute\+\_\+memory@{compute\+\_\+memory}}
+\index{compute\+\_\+memory@{compute\+\_\+memory}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{compute\+\_\+memory()}{compute\_memory()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::compute\+\_\+memory (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::string $>$ \&}]{labels\+\_\+vec,  }\item[{int}]{multiple = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+
+
+Compute the memory requirement of a given labels. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_ad7377189079c97664a573643259743e3}\label{classforte_1_1_d_s_r_g___m_e_m_ad7377189079c97664a573643259743e3}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!compute\+\_\+n\+\_\+elements@{compute\+\_\+n\+\_\+elements}}
+\index{compute\+\_\+n\+\_\+elements@{compute\+\_\+n\+\_\+elements}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{compute\+\_\+n\+\_\+elements()}{compute\_n\_elements()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::compute\+\_\+n\+\_\+elements (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{labels }\end{DoxyParamCaption})}
+
+
+
+Compute the number of elements of a given labels. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_a1dd2f817f76bda4a890bf15c60664dcf}\label{classforte_1_1_d_s_r_g___m_e_m_a1dd2f817f76bda4a890bf15c60664dcf}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!max\+\_\+local\+\_\+memory@{max\+\_\+local\+\_\+memory}}
+\index{max\+\_\+local\+\_\+memory@{max\+\_\+local\+\_\+memory}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{max\+\_\+local\+\_\+memory()}{max\_local\_memory()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::max\+\_\+local\+\_\+memory (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Max memory usage among the vector of local memories. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_a676b78c5a39feea83a2fdaafe87a5e78}\label{classforte_1_1_d_s_r_g___m_e_m_a676b78c5a39feea83a2fdaafe87a5e78}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!print@{print}}
+\index{print@{print}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{print()}{print()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::print (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})}
+
+
+
+Print the current data. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_a6f9be312b939223601bbc870700a5b49}\label{classforte_1_1_d_s_r_g___m_e_m_a6f9be312b939223601bbc870700a5b49}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!set\+\_\+label\+\_\+to\+\_\+size@{set\+\_\+label\+\_\+to\+\_\+size}}
+\index{set\+\_\+label\+\_\+to\+\_\+size@{set\+\_\+label\+\_\+to\+\_\+size}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{set\+\_\+label\+\_\+to\+\_\+size()}{set\_label\_to\_size()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::set\+\_\+label\+\_\+to\+\_\+size (\begin{DoxyParamCaption}\item[{std\+::map$<$ char, size\+\_\+t $>$}]{label\+\_\+to\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set the map from MO label to the corresponding size. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_e_m_a6385e6f596c51a495f537672f6c86b4e}\label{classforte_1_1_d_s_r_g___m_e_m_a6385e6f596c51a495f537672f6c86b4e}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}!set\+\_\+mem\+\_\+avai@{set\+\_\+mem\+\_\+avai}}
+\index{set\+\_\+mem\+\_\+avai@{set\+\_\+mem\+\_\+avai}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+EM}}
+\subsubsection{\texorpdfstring{set\+\_\+mem\+\_\+avai()}{set\_mem\_avai()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+E\+M\+::set\+\_\+mem\+\_\+avai (\begin{DoxyParamCaption}\item[{int64\+\_\+t}]{mem\+\_\+avai }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set memory currently available. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/\mbox{\hyperlink{dsrg__mem_8h}{dsrg\+\_\+mem.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/\mbox{\hyperlink{dsrg__mem_8cc}{dsrg\+\_\+mem.\+cc}}\end{DoxyCompactItemize}

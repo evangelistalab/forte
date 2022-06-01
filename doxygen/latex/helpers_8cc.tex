@@ -1,0 +1,56 @@
+\hypertarget{helpers_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/helpers/helpers.cc File Reference}
+\label{helpers_8cc}\index{/\+Users/fevange/\+Source/forte/src/helpers/helpers.\+cc@{/\+Users/fevange/\+Source/forte/src/helpers/helpers.\+cc}}
+{\ttfamily \#include $<$numeric$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$sys/stat.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/psi4-\/dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/molecule.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/wavefunction.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/writer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/writer\+\_\+file\+\_\+prefix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/helpers.\+h\char`\"{}}\newline
+Include dependency graph for helpers.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{helpers_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\item 
+ \mbox{\hyperlink{namespaceforte_1_1math}{forte\+::math}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::string \mbox{\hyperlink{namespaceforte_ad34ed14298b7916ff1817d24c6e33cf1}{forte\+::to\+\_\+string}} (const std\+::vector$<$ std\+::string $>$ \&vec\+\_\+str, const std\+::string \&sep)
+\item 
+std\+::string \mbox{\hyperlink{namespaceforte_af1b70f1ea2d9dc797cebd23f7d287820}{forte\+::get\+\_\+ms\+\_\+string}} (double twice\+\_\+ms)
+\item 
+py\+::array\+\_\+t$<$ double $>$ \mbox{\hyperlink{namespaceforte_a77fbad8cdf4c03f9d3179d18d10087e5}{forte\+::ambit\+\_\+to\+\_\+np}} (ambit\+::\+Tensor t)
+\begin{DoxyCompactList}\small\item\em Convert an ambit tensor to a numpy ndarray. The returned tensor is stored according to the C storage convention. \end{DoxyCompactList}\item 
+py\+::array\+\_\+t$<$ double $>$ \mbox{\hyperlink{namespaceforte_aeeb444d5365308c0d78dcaabd81b22ff}{forte\+::vector\+\_\+to\+\_\+np}} (const std\+::vector$<$ double $>$ \&v, const std\+::vector$<$ size\+\_\+t $>$ \&dims)
+\begin{DoxyCompactList}\small\item\em Convert a std\+::vector$<$double$>$ to a numpy ndarray. The returned tensor is stored according to the C storage convention. \end{DoxyCompactList}\item 
+py\+::array\+\_\+t$<$ double $>$ \mbox{\hyperlink{namespaceforte_a1ba1483f6f6e034a111381ea1b0e74ec}{forte\+::vector\+\_\+to\+\_\+np}} (const std\+::vector$<$ double $>$ \&v, const std\+::vector$<$ int $>$ \&dims)
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{namespaceforte_a39774aa3b62c28a0e541f5b1f7b71978}{forte\+::tensor\+\_\+to\+\_\+matrix}} (ambit\+::\+Tensor t)
+\begin{DoxyCompactList}\small\item\em tensor\+\_\+to\+\_\+matrix \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{namespaceforte_ac7a0004529455021b87f71285e5cc19d}{forte\+::tensor\+\_\+to\+\_\+matrix}} (ambit\+::\+Tensor t, psi\+::\+Dimension dims)
+\begin{DoxyCompactList}\small\item\em tensor\+\_\+to\+\_\+matrix \end{DoxyCompactList}\item 
+std\+::pair$<$ double, std\+::string $>$ \mbox{\hyperlink{namespaceforte_aa21124a23161d9425c07b72fc074430d}{forte\+::to\+\_\+xb}} (size\+\_\+t nele, size\+\_\+t type\+\_\+size)
+\begin{DoxyCompactList}\small\item\em Compute the memory requirement. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a69acef5534d7a27cfd60d44654bda93b}{forte\+::view\+\_\+modified\+\_\+orbitals}} (psi\+::\+Shared\+Wavefunction wfn, const std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \&Ca, const std\+::shared\+\_\+ptr$<$ Vector $>$ \&diag\+\_\+F, const std\+::shared\+\_\+ptr$<$ Vector $>$ \&occupation)
+\item 
+std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, std\+::vector$<$ size\+\_\+t $>$ $>$ \mbox{\hyperlink{namespaceforte_ad2a6c9cd252f173af61e29e73d0e9194}{forte\+::split\+\_\+up\+\_\+tasks}} (size\+\_\+t size\+\_\+of\+\_\+tasks, size\+\_\+t nproc)
+\begin{DoxyCompactList}\small\item\em split up a vector into different processors \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{namespaceforte_1_1math_ac8f402cf92ce9d2a3c4f9be0e293118a}{forte\+::math\+::combinations}} (size\+\_\+t n, size\+\_\+t k)
+\begin{DoxyCompactList}\small\item\em Return the number of combinations of n identical objects. \end{DoxyCompactList}\end{DoxyCompactItemize}

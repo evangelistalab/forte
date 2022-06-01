@@ -1,4 +1,4 @@
-#! Generated using commit GITCOMMIT
+# test DSRG-MRPT2 size consistency on N2
 
 import forte
 
@@ -71,7 +71,8 @@ set forte {
   restricted_docc  [1,0,0,0,0,0,0,0]
   active           [0,0,0,0,0,1,1,1]
   root_sym         4
-  spin_avg_density true
+  dsrg_rdm_ms_avg  true
+  ms               1.5
 }
 Eforte1, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
 compare_values(E1_pt2, Eforte1, 7, "DSRG-MRPT2 relaxed energy of N atom")

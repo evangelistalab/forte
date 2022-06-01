@@ -1,0 +1,16 @@
+casscf:
+  short:
+  - casscf-9
+  - df-casscf-1
+df-dsrg-mrpt2:
+  short:
+  - df-dsrg-mrpt2-5
+  - diskdf-dsrg-mrpt2-5
+  - df-aci-dsrg-mrpt2-1
+integrals:
+  short:
+  - integrals-2
+  - integrals-3
+mrdsrg-spin-adapted:
+  short:
+  - mrdsrg-spin-adapted-3

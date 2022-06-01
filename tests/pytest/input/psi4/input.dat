@@ -1,0 +1,16 @@
+
+molecule {
+0 1
+    Li
+    H 1 3.0
+    units bohr
+}
+
+set basis DZ
+set e_convergence 13
+set CALC_S_SQUARED true
+for h in range(4):
+    set REFERENCE_SYM = $h
+    set num_roots 3
+    energy('fci')
+    print_variables()

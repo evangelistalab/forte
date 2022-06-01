@@ -1,0 +1,56 @@
+\hypertarget{sparse__ci__solver_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/sparse\+\_\+ci\+\_\+solver.cc File Reference}
+\label{sparse__ci__solver_8cc}\index{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/sparse\+\_\+ci\+\_\+solver.\+cc@{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/sparse\+\_\+ci\+\_\+solver.\+cc}}
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$numeric$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/psi4-\/dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}forte-\/def.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/iterative\+\_\+solvers.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sparse\+\_\+ci\+\_\+solver.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sigma\+\_\+vector\+\_\+dynamic.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}determinant\+\_\+functions.\+hpp\char`\"{}}\newline
+Include dependency graph for sparse\+\_\+ci\+\_\+solver.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sparse__ci__solver_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{sparse__ci__solver_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{sparse__ci__solver_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\item 
+\#define \mbox{\hyperlink{sparse__ci__solver_8cc_a4353281743925f182316dba7cda58fee}{omp\+\_\+get\+\_\+num\+\_\+threads}}()~1
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{sparse__ci__solver_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{sparse__ci__solver_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{sparse\+\_\+ci\+\_\+solver.\+cc@{sparse\+\_\+ci\+\_\+solver.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!sparse\+\_\+ci\+\_\+solver.\+cc@{sparse\+\_\+ci\+\_\+solver.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{sparse__ci__solver_8cc_a4353281743925f182316dba7cda58fee}\label{sparse__ci__solver_8cc_a4353281743925f182316dba7cda58fee}} 
+\index{sparse\+\_\+ci\+\_\+solver.\+cc@{sparse\+\_\+ci\+\_\+solver.\+cc}!omp\+\_\+get\+\_\+num\+\_\+threads@{omp\+\_\+get\+\_\+num\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+num\+\_\+threads@{omp\+\_\+get\+\_\+num\+\_\+threads}!sparse\+\_\+ci\+\_\+solver.\+cc@{sparse\+\_\+ci\+\_\+solver.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+num\+\_\+threads}{omp\_get\_num\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+num\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{sparse__ci__solver_8cc_a889ec205c635b219999c761b28cc39ba}\label{sparse__ci__solver_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{sparse\+\_\+ci\+\_\+solver.\+cc@{sparse\+\_\+ci\+\_\+solver.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!sparse\+\_\+ci\+\_\+solver.\+cc@{sparse\+\_\+ci\+\_\+solver.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+

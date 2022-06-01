@@ -1,0 +1,147 @@
+\hypertarget{classforte_1_1_sorted_string_list}{}\section{forte\+:\+:Sorted\+String\+List Class Reference}
+\label{classforte_1_1_sorted_string_list}\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+
+
+The \mbox{\hyperlink{classforte_1_1_sorted_string_list}{Sorted\+String\+List}} class Stores determinants as a sorted string list.  
+
+
+
+
+{\ttfamily \#include $<$sorted\+\_\+string\+\_\+list.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_sorted_string_list_aa6c7deb1dcd49cc0cb868ec81bb66a80}{Sorted\+String\+List}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&space, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints, \mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179}{Det\+Spin\+Type}} sorted\+\_\+string\+\_\+spin)
+\item 
+\mbox{\hyperlink{classforte_1_1_sorted_string_list_a9e1f756811df1734ace863fe9edddb78}{Sorted\+String\+List}} ()
+\item 
+\mbox{\hyperlink{classforte_1_1_sorted_string_list_a5587d7d7bcf79b209a85f5dc144672d1}{$\sim$\+Sorted\+String\+List}} ()
+\item 
+const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \& \mbox{\hyperlink{classforte_1_1_sorted_string_list_a62557c1c45fec5ae4e833e7787a8aed5}{sorted\+\_\+dets}} () const
+\item 
+const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} $>$ \& \mbox{\hyperlink{classforte_1_1_sorted_string_list_adaf5d0b2351532d9d722e637909e5f93}{sorted\+\_\+half\+\_\+dets}} () const
+\item 
+const std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ \& \mbox{\hyperlink{classforte_1_1_sorted_string_list_ac46d5fa00476a9525b4cdbdcaa5aa4f8}{range}} (const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&d) const
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_sorted_string_list_af3ddb6fb4047bf4db17911b24c966f7f}{add}} (size\+\_\+t pos) const
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{classforte_1_1_sorted_string_list_a00efebc667b95be7d65dbc530a434c0c}{nmo\+\_\+}} = 0
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_sorted_string_list_a52a84938f4d6cfb53eb15710b4142b22}{num\+\_\+dets\+\_\+}} = 0
+\item 
+\mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179}{Det\+Spin\+Type}} \mbox{\hyperlink{classforte_1_1_sorted_string_list_ab11048510565a3459df8a6f570cd2730}{sorted\+\_\+spin\+\_\+type\+\_\+}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} $>$ \mbox{\hyperlink{classforte_1_1_sorted_string_list_ae1f10c54a9d0c1489c69cb6bbe8fe523}{sorted\+\_\+half\+\_\+dets\+\_\+}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \mbox{\hyperlink{classforte_1_1_sorted_string_list_acfb13ef7139f239b4bd89cab095e80f1}{sorted\+\_\+dets\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sorted_string_list_a78300c31035372e1441d831cb781748c}{map\+\_\+to\+\_\+hashdets\+\_\+}}
+\item 
+std\+::unordered\+\_\+map$<$ \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}}, std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$, \mbox{\hyperlink{structforte_1_1_bit_array_1_1_hash}{String\+::\+Hash}} $>$ \mbox{\hyperlink{classforte_1_1_sorted_string_list_a80a397646c5dc964afc2bc4bf22580a7}{first\+\_\+string\+\_\+range\+\_\+}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_sorted_string_list}{Sorted\+String\+List}} class Stores determinants as a sorted string list. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_aa6c7deb1dcd49cc0cb868ec81bb66a80}\label{classforte_1_1_sorted_string_list_aa6c7deb1dcd49cc0cb868ec81bb66a80}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!Sorted\+String\+List@{Sorted\+String\+List}}
+\index{Sorted\+String\+List@{Sorted\+String\+List}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{Sorted\+String\+List()}{SortedStringList()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+Sorted\+String\+List\+::\+Sorted\+String\+List (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{space,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints,  }\item[{\mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179}{Det\+Spin\+Type}}}]{sorted\+\_\+string\+\_\+spin }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_a9e1f756811df1734ace863fe9edddb78}\label{classforte_1_1_sorted_string_list_a9e1f756811df1734ace863fe9edddb78}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!Sorted\+String\+List@{Sorted\+String\+List}}
+\index{Sorted\+String\+List@{Sorted\+String\+List}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{Sorted\+String\+List()}{SortedStringList()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+Sorted\+String\+List\+::\+Sorted\+String\+List (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_a5587d7d7bcf79b209a85f5dc144672d1}\label{classforte_1_1_sorted_string_list_a5587d7d7bcf79b209a85f5dc144672d1}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!````~Sorted\+String\+List@{$\sim$\+Sorted\+String\+List}}
+\index{````~Sorted\+String\+List@{$\sim$\+Sorted\+String\+List}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{$\sim$\+Sorted\+String\+List()}{~SortedStringList()}}
+{\footnotesize\ttfamily forte\+::\+Sorted\+String\+List\+::$\sim$\+Sorted\+String\+List (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_af3ddb6fb4047bf4db17911b24c966f7f}\label{classforte_1_1_sorted_string_list_af3ddb6fb4047bf4db17911b24c966f7f}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!add@{add}}
+\index{add@{add}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{add()}{add()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Sorted\+String\+List\+::add (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_ac46d5fa00476a9525b4cdbdcaa5aa4f8}\label{classforte_1_1_sorted_string_list_ac46d5fa00476a9525b4cdbdcaa5aa4f8}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!range@{range}}
+\index{range@{range}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{range()}{range()}}
+{\footnotesize\ttfamily const std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ \& forte\+::\+Sorted\+String\+List\+::range (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&}]{d }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_a62557c1c45fec5ae4e833e7787a8aed5}\label{classforte_1_1_sorted_string_list_a62557c1c45fec5ae4e833e7787a8aed5}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!sorted\+\_\+dets@{sorted\+\_\+dets}}
+\index{sorted\+\_\+dets@{sorted\+\_\+dets}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{sorted\+\_\+dets()}{sorted\_dets()}}
+{\footnotesize\ttfamily const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \& forte\+::\+Sorted\+String\+List\+::sorted\+\_\+dets (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_adaf5d0b2351532d9d722e637909e5f93}\label{classforte_1_1_sorted_string_list_adaf5d0b2351532d9d722e637909e5f93}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!sorted\+\_\+half\+\_\+dets@{sorted\+\_\+half\+\_\+dets}}
+\index{sorted\+\_\+half\+\_\+dets@{sorted\+\_\+half\+\_\+dets}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{sorted\+\_\+half\+\_\+dets()}{sorted\_half\_dets()}}
+{\footnotesize\ttfamily const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} $>$ \& forte\+::\+Sorted\+String\+List\+::sorted\+\_\+half\+\_\+dets (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_a80a397646c5dc964afc2bc4bf22580a7}\label{classforte_1_1_sorted_string_list_a80a397646c5dc964afc2bc4bf22580a7}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!first\+\_\+string\+\_\+range\+\_\+@{first\+\_\+string\+\_\+range\+\_\+}}
+\index{first\+\_\+string\+\_\+range\+\_\+@{first\+\_\+string\+\_\+range\+\_\+}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{first\+\_\+string\+\_\+range\+\_\+}{first\_string\_range\_}}
+{\footnotesize\ttfamily std\+::unordered\+\_\+map$<$\mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}}, std\+::pair$<$size\+\_\+t, size\+\_\+t$>$, \mbox{\hyperlink{structforte_1_1_bit_array_1_1_hash}{String\+::\+Hash}}$>$ forte\+::\+Sorted\+String\+List\+::first\+\_\+string\+\_\+range\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_a78300c31035372e1441d831cb781748c}\label{classforte_1_1_sorted_string_list_a78300c31035372e1441d831cb781748c}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!map\+\_\+to\+\_\+hashdets\+\_\+@{map\+\_\+to\+\_\+hashdets\+\_\+}}
+\index{map\+\_\+to\+\_\+hashdets\+\_\+@{map\+\_\+to\+\_\+hashdets\+\_\+}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{map\+\_\+to\+\_\+hashdets\+\_\+}{map\_to\_hashdets\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sorted\+String\+List\+::map\+\_\+to\+\_\+hashdets\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_a00efebc667b95be7d65dbc530a434c0c}\label{classforte_1_1_sorted_string_list_a00efebc667b95be7d65dbc530a434c0c}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!nmo\+\_\+@{nmo\+\_\+}}
+\index{nmo\+\_\+@{nmo\+\_\+}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{nmo\+\_\+}{nmo\_}}
+{\footnotesize\ttfamily int forte\+::\+Sorted\+String\+List\+::nmo\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_a52a84938f4d6cfb53eb15710b4142b22}\label{classforte_1_1_sorted_string_list_a52a84938f4d6cfb53eb15710b4142b22}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!num\+\_\+dets\+\_\+@{num\+\_\+dets\+\_\+}}
+\index{num\+\_\+dets\+\_\+@{num\+\_\+dets\+\_\+}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{num\+\_\+dets\+\_\+}{num\_dets\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Sorted\+String\+List\+::num\+\_\+dets\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_acfb13ef7139f239b4bd89cab095e80f1}\label{classforte_1_1_sorted_string_list_acfb13ef7139f239b4bd89cab095e80f1}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!sorted\+\_\+dets\+\_\+@{sorted\+\_\+dets\+\_\+}}
+\index{sorted\+\_\+dets\+\_\+@{sorted\+\_\+dets\+\_\+}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{sorted\+\_\+dets\+\_\+}{sorted\_dets\_}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}$>$ forte\+::\+Sorted\+String\+List\+::sorted\+\_\+dets\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_ae1f10c54a9d0c1489c69cb6bbe8fe523}\label{classforte_1_1_sorted_string_list_ae1f10c54a9d0c1489c69cb6bbe8fe523}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!sorted\+\_\+half\+\_\+dets\+\_\+@{sorted\+\_\+half\+\_\+dets\+\_\+}}
+\index{sorted\+\_\+half\+\_\+dets\+\_\+@{sorted\+\_\+half\+\_\+dets\+\_\+}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{sorted\+\_\+half\+\_\+dets\+\_\+}{sorted\_half\_dets\_}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}}$>$ forte\+::\+Sorted\+String\+List\+::sorted\+\_\+half\+\_\+dets\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sorted_string_list_ab11048510565a3459df8a6f570cd2730}\label{classforte_1_1_sorted_string_list_ab11048510565a3459df8a6f570cd2730}} 
+\index{forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}!sorted\+\_\+spin\+\_\+type\+\_\+@{sorted\+\_\+spin\+\_\+type\+\_\+}}
+\index{sorted\+\_\+spin\+\_\+type\+\_\+@{sorted\+\_\+spin\+\_\+type\+\_\+}!forte\+::\+Sorted\+String\+List@{forte\+::\+Sorted\+String\+List}}
+\subsubsection{\texorpdfstring{sorted\+\_\+spin\+\_\+type\+\_\+}{sorted\_spin\_type\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179}{Det\+Spin\+Type}} forte\+::\+Sorted\+String\+List\+::sorted\+\_\+spin\+\_\+type\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sorted__string__list_8h}{sorted\+\_\+string\+\_\+list.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sorted__string__list_8cc}{sorted\+\_\+string\+\_\+list.\+cc}}\end{DoxyCompactItemize}

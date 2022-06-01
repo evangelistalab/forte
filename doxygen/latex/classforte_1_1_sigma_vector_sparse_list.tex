@@ -1,0 +1,150 @@
+\hypertarget{classforte_1_1_sigma_vector_sparse_list}{}\section{forte\+:\+:Sigma\+Vector\+Sparse\+List Class Reference}
+\label{classforte_1_1_sigma_vector_sparse_list}\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+
+
+The \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list}{Sigma\+Vector\+Sparse\+List}} class Computes the sigma vector from a creation list sparse Hamiltonian.  
+
+
+
+
+{\ttfamily \#include $<$sigma\+\_\+vector\+\_\+sparse\+\_\+list.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Sigma\+Vector\+Sparse\+List\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=227pt]{classforte_1_1_sigma_vector_sparse_list__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Sigma\+Vector\+Sparse\+List\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=227pt]{classforte_1_1_sigma_vector_sparse_list__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a725dd8c7ac42cd22d445fc17025acb44}{Sigma\+Vector\+Sparse\+List}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&space, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints)
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a5f5e4c5457fd9b0511e7c42824dde927}{compute\+\_\+sigma}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ sigma, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ b) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a63742825b87a60b9ed9a175372b34fb1}{get\+\_\+diagonal}} (psi\+::\+Vector \&diag) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a1fa83f96983a54077f5982befce39858}{add\+\_\+bad\+\_\+roots}} (std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$$>$ \&\mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_ac92bafbe93d7956166ed0d5d3469521f}{bad\+\_\+states\+\_\+}}) override
+\item 
+double \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a9302fb3daf4ec14c3bca274c9757f9f3}{compute\+\_\+spin}} (const std\+::vector$<$ double $>$ \&c) override
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_ac92bafbe93d7956166ed0d5d3469521f}{bad\+\_\+states\+\_\+}}
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a2f4a0e344433f682c646ad784d3bc935}{print\+\_\+}}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a6d3d86b1e74d0425575d6dcf10b8e138}{use\+\_\+disk\+\_\+}} = false
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists}{Determinant\+Substitution\+Lists}} $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list_a9f0acf36369eb61a81614350379ccab3}{op\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Substitutions lists. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_sigma_vector_sparse_list}{Sigma\+Vector\+Sparse\+List}} class Computes the sigma vector from a creation list sparse Hamiltonian. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_a725dd8c7ac42cd22d445fc17025acb44}\label{classforte_1_1_sigma_vector_sparse_list_a725dd8c7ac42cd22d445fc17025acb44}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!Sigma\+Vector\+Sparse\+List@{Sigma\+Vector\+Sparse\+List}}
+\index{Sigma\+Vector\+Sparse\+List@{Sigma\+Vector\+Sparse\+List}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{Sigma\+Vector\+Sparse\+List()}{SigmaVectorSparseList()}}
+{\footnotesize\ttfamily forte\+::\+Sigma\+Vector\+Sparse\+List\+::\+Sigma\+Vector\+Sparse\+List (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{space,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints }\end{DoxyParamCaption})}
+
+Build the coupling lists for 1-\/ and 2-\/particle operators 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_a1fa83f96983a54077f5982befce39858}\label{classforte_1_1_sigma_vector_sparse_list_a1fa83f96983a54077f5982befce39858}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!add\+\_\+bad\+\_\+roots@{add\+\_\+bad\+\_\+roots}}
+\index{add\+\_\+bad\+\_\+roots@{add\+\_\+bad\+\_\+roots}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{add\+\_\+bad\+\_\+roots()}{add\_bad\_roots()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Sparse\+List\+::add\+\_\+bad\+\_\+roots (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$$>$ \&}]{bad\+\_\+states\+\_\+ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_sigma_vector_a5cd950852f515bc082ca1df31bd84e3e}{forte\+::\+Sigma\+Vector}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_a5f5e4c5457fd9b0511e7c42824dde927}\label{classforte_1_1_sigma_vector_sparse_list_a5f5e4c5457fd9b0511e7c42824dde927}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!compute\+\_\+sigma@{compute\+\_\+sigma}}
+\index{compute\+\_\+sigma@{compute\+\_\+sigma}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{compute\+\_\+sigma()}{compute\_sigma()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Sparse\+List\+::compute\+\_\+sigma (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{sigma,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_sigma_vector_afa184f816a37649a4e2316d62c8b621e}{forte\+::\+Sigma\+Vector}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_a9302fb3daf4ec14c3bca274c9757f9f3}\label{classforte_1_1_sigma_vector_sparse_list_a9302fb3daf4ec14c3bca274c9757f9f3}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!compute\+\_\+spin@{compute\+\_\+spin}}
+\index{compute\+\_\+spin@{compute\+\_\+spin}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{compute\+\_\+spin()}{compute\_spin()}}
+{\footnotesize\ttfamily double forte\+::\+Sigma\+Vector\+Sparse\+List\+::compute\+\_\+spin (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_sigma_vector_afe5ac487b5277b86fbe4398ba861773c}{forte\+::\+Sigma\+Vector}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_a63742825b87a60b9ed9a175372b34fb1}\label{classforte_1_1_sigma_vector_sparse_list_a63742825b87a60b9ed9a175372b34fb1}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!get\+\_\+diagonal@{get\+\_\+diagonal}}
+\index{get\+\_\+diagonal@{get\+\_\+diagonal}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{get\+\_\+diagonal()}{get\_diagonal()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Sparse\+List\+::get\+\_\+diagonal (\begin{DoxyParamCaption}\item[{psi\+::\+Vector \&}]{diag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_sigma_vector_a4df4b96c5c24a3560a874eae061a502e}{forte\+::\+Sigma\+Vector}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_ac92bafbe93d7956166ed0d5d3469521f}\label{classforte_1_1_sigma_vector_sparse_list_ac92bafbe93d7956166ed0d5d3469521f}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!bad\+\_\+states\+\_\+@{bad\+\_\+states\+\_\+}}
+\index{bad\+\_\+states\+\_\+@{bad\+\_\+states\+\_\+}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{bad\+\_\+states\+\_\+}{bad\_states\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::pair$<$size\+\_\+t, double$>$ $>$ $>$ forte\+::\+Sigma\+Vector\+Sparse\+List\+::bad\+\_\+states\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_a9f0acf36369eb61a81614350379ccab3}\label{classforte_1_1_sigma_vector_sparse_list_a9f0acf36369eb61a81614350379ccab3}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!op\+\_\+@{op\+\_\+}}
+\index{op\+\_\+@{op\+\_\+}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{op\+\_\+}{op\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_determinant_substitution_lists}{Determinant\+Substitution\+Lists}}$>$ forte\+::\+Sigma\+Vector\+Sparse\+List\+::op\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Substitutions lists. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_a2f4a0e344433f682c646ad784d3bc935}\label{classforte_1_1_sigma_vector_sparse_list_a2f4a0e344433f682c646ad784d3bc935}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!print\+\_\+@{print\+\_\+}}
+\index{print\+\_\+@{print\+\_\+}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{print\+\_\+}{print\_}}
+{\footnotesize\ttfamily bool forte\+::\+Sigma\+Vector\+Sparse\+List\+::print\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_sparse_list_a6d3d86b1e74d0425575d6dcf10b8e138}\label{classforte_1_1_sigma_vector_sparse_list_a6d3d86b1e74d0425575d6dcf10b8e138}} 
+\index{forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}!use\+\_\+disk\+\_\+@{use\+\_\+disk\+\_\+}}
+\index{use\+\_\+disk\+\_\+@{use\+\_\+disk\+\_\+}!forte\+::\+Sigma\+Vector\+Sparse\+List@{forte\+::\+Sigma\+Vector\+Sparse\+List}}
+\subsubsection{\texorpdfstring{use\+\_\+disk\+\_\+}{use\_disk\_}}
+{\footnotesize\ttfamily bool forte\+::\+Sigma\+Vector\+Sparse\+List\+::use\+\_\+disk\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sigma__vector__sparse__list_8h}{sigma\+\_\+vector\+\_\+sparse\+\_\+list.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sigma__vector__sparse__list_8cc}{sigma\+\_\+vector\+\_\+sparse\+\_\+list.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,6 @@
+2022-05-31:17:35:50,431 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_BASIS_MP2': 'CC-PVDZ-RI', 'DF_BASIS_SCF': 'CC-PVDZ-JKFIT', 'D_CONVERGENCE': 1e-11, 'E_CONVERGENCE': 1e-11, 'GUESS': 'SAD', 'MAXITER': 500, 'REFERENCE': 'RHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
+2022-05-31:17:35:50,433 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=sto-3g, molecule=ene2, nre=296.6387135985846
+2022-05-31:17:35:51,201 INFO     [psi4.driver.driver:502] Return energy(): -304.9057795506117
+2022-05-31:17:35:51,215 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_BASIS_MP2': 'CC-PVDZ-RI', 'DF_BASIS_SCF': 'CC-PVDZ-JKFIT', 'D_CONVERGENCE': 1e-11, 'E_CONVERGENCE': 1e-11, 'GUESS': 'SAD', 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 500, 'REFERENCE': 'RHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
+2022-05-31:17:35:51,217 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=sto-3g, molecule=ene2, nre=296.63871359858456
+2022-05-31:17:35:54,682 INFO     [psi4.driver.driver:502] Return energy(): -305.39810156379883

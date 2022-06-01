@@ -1,0 +1,849 @@
+\hypertarget{classforte_1_1_orbital_optimizer}{}\section{forte\+:\+:Orbital\+Optimizer Class Reference}
+\label{classforte_1_1_orbital_optimizer}\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+
+
+\mbox{\hyperlink{classforte_1_1_orbital_optimizer}{Orbital\+Optimizer}} does an orbital optimization given an 1\+R\+DM, 2\+R\+DM, and the integrals Forms an orbital gradient\+: g\+\_\+\{pq\} = \mbox{[} h\+\_\+\{pq\} gamma\+\_\+\{pq\} + Gamma\+\_\+\{pq\}$^\wedge$\{rs\} $<$pq$\vert$$\vert$rs$>$ -\/ A(p-\/$>$q)\mbox{]} Here only form a diagonal hessian of orbitals\+: Look at Hohenstein J. Chem. Phys. 142, 224103. Diagonal Hessian only requires (pu$\vert$xy) integrals (many are built in JK library) Daniel Smith\textquotesingle{}s \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} code in P\+S\+I4 was integral in debugging.  
+
+
+
+
+{\ttfamily \#include $<$orbitaloptimizer.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Orbital\+Optimizer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_orbital_optimizer__inherit__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_orbital_optimizer_a6026a400fc34ad76ebe1d1ddf8999f8e}{Orbital\+Optimizer}} ()
+\item 
+\mbox{\hyperlink{classforte_1_1_orbital_optimizer_a5033f80887f8b72341e522a54216fa97}{Orbital\+Optimizer}} (ambit\+::\+Tensor Gamma1, ambit\+::\+Tensor Gamma2, ambit\+::\+Tensor two\+\_\+body\+\_\+ab, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints)
+\begin{DoxyCompactList}\small\item\em Given 1\+R\+DM, 2\+R\+DM, (pu$\vert$xy) integrals, and space information, do an orbital optimization \mbox{\hyperlink{classforte_1_1_orbital_optimizer}{Orbital\+Optimizer}} returns a orbital rotation parameter that allows you to update your orbitals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ad52632ad818dc34312c7763a6020d74d}{set\+\_\+symmmetry\+\_\+mo}} (psi\+::\+Shared\+Matrix C)
+\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a575a256f93d9c3ca9d8eb388a9f51f79}{update}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a9f998520c061013d80501e85b7b302d5}{approx\+\_\+solve}} ()
+\begin{DoxyCompactList}\small\item\em Solution of g + Hx = 0 (with diagonal H), so x = -\/ g / H. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a98809e4d8fe5a75f5ec20773ae6d4274}{rotate\+\_\+orbitals}} (psi\+::\+Shared\+Matrix C, psi\+::\+Shared\+Matrix S)
+\item 
+double \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a974d61893017eb0baf4c7c73321b75f8}{orbital\+\_\+gradient\+\_\+norm}} ()
+\begin{DoxyCompactList}\small\item\em The norm of the orbital gradient. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a8473b0a13d06e6757eb98b08d0e5ea07}{set\+\_\+frozen\+\_\+one\+\_\+body}} (psi\+::\+Shared\+Matrix F\+\_\+froze)
+\begin{DoxyCompactList}\small\item\em Must compute the frozen\+\_\+one\+\_\+body fock matrix. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a5ca11117fb746c532f964edca9e11483}{one\+\_\+body}} (psi\+::\+Shared\+Matrix H)
+\begin{DoxyCompactList}\small\item\em Give the AO one electron integrals (H = T + V) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a5c8716e0bae31ce5ed43464b612a4648}{set\+\_\+print\+\_\+timings}} (bool timing)
+\begin{DoxyCompactList}\small\item\em Print a summary of timings. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_adfde10cea1c788ab2f3647906447ccfd}{set\+\_\+jk}} (std\+::shared\+\_\+ptr$<$ JK $>$ \&JK)
+\begin{DoxyCompactList}\small\item\em Set the JK object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Types}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02}{M\+A\+T\+R\+I\+X\+\_\+\+E\+XP}} \{ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02aaa88911fe72bdb92ecc6faec6415431c}{P\+S\+I4}}, 
+\mbox{\hyperlink{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02a27d6b1d722fcd3260c4ef85ba48e75e6}{T\+A\+Y\+L\+OR}}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a220ce17cb9737398ce72e1ebb0cc6deb}{form\+\_\+fock\+\_\+intermediates}} ()=0
+\begin{DoxyCompactList}\small\item\em private functions \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a756bc6851ab69b75af50988df8e3c09b}{orbital\+\_\+gradient}} ()
+\begin{DoxyCompactList}\small\item\em Assemble the orbital gradient (10-\/15) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a160f10316ab646946b81b29588c15dd9}{diagonal\+\_\+hessian}} ()
+\begin{DoxyCompactList}\small\item\em Assemble the diagonal Hessian (20-\/22) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ab203be9923d38cc32fcc14dde9c7ee6e}{orbital\+\_\+rotation\+\_\+parameter}} ()
+\begin{DoxyCompactList}\small\item\em check the cas\+\_\+ci energy with spin-\/free R\+DM \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ab23e7cd3a3fb5cf248d6746dfba9aa63}{matrix\+\_\+exp}} (const psi\+::\+Shared\+Matrix \&)
+\begin{DoxyCompactList}\small\item\em Perform the exponential of x. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ab664d52eae4da6b098d40367083c75d2}{fill\+\_\+shared\+\_\+density\+\_\+matrices}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_af3aa08d3914c100e2ac1ac738d462881}{Augmented\+Hessian\+Solve}} ()
+\begin{DoxyCompactList}\small\item\em Diagonalize an augmented Hessian and take lowest eigenvector as solution. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_afb772d5dd6c157b0c210c7bbd20c0e81}{startup}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a7f79e499361da4bc0d4b90187033d38f}{zero\+\_\+redunant}} (psi\+::\+Shared\+Matrix \&matrix)
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ac4e79f71738bfa62f3681e3e12240b67}{scf\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em S\+CF information. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a5b7f6953dfef1cefc76a3ef06e1f5fba}{gamma1\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The 1-\/\+R\+DM (usually of size na\+\_\+$^\wedge$2) \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a9812763f6f70ec990d121946d45d07b4}{gamma1\+M\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The 1-\/\+R\+DM psi\+::\+Shared\+Matrix. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_orbital_optimizer_aa049ad4cf277246ec54a0c2182a9cde5}{gamma2\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The 2-\/\+R\+DM (usually of size na$^\wedge$4) \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_aeb2414ef0595d7afc2136c28235611d8}{gamma2\+M\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The 2-\/\+R\+DM psi\+::\+Shared\+Matrix. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_orbital_optimizer_aad19beb900203fb849891aa8657ccc94}{integral\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a426be7cb09565f97b09c80f6007e975a}{mo\+\_\+space\+\_\+info\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ JK $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a7330289491630846933d424e60e718d7}{J\+K\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ae426c8d5fe9b5942c4a0dc6573fe3c2c}{options\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_addd44581df4959715d650fce7e142547}{Call\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a849bfb63a27b0e75adbf67da8b74d04e}{Ca\+\_\+sym\+\_\+}}
+\begin{DoxyCompactList}\small\item\em C matrix in the SO basis. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a2439f35f33a87f6432b3fd65ee6eadaf}{nmopi\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The dimension for number of molecular orbitals (C\+O\+R\+R\+E\+L\+A\+T\+ED or A\+LL) \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a238376ec9831d97b133d4ea57219b21b}{nmo\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ae6ec0e06528c96c505b877ba139e2091}{na\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of active orbitals. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a9e0f51314c4e208ae3c09a023209494b}{nirrep\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of irreps. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a9eecd789fe5954676698a177d773babd}{nsopi\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of SO (AO for C matrices) \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a086d17877eb4c87547c6caaf7660ec27}{nrdocc\+\_\+}}
+\begin{DoxyCompactList}\small\item\em the number of restricted\+\_\+docc \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a8d53170a8913f34344f9068d65a948f9}{nfrozen\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of frozen\+\_\+docc. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a18aeed651c18e3774ceded5f83b424ec}{nvir\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of virtual orbitals. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a3049d4ffa9016122c75062f30273585d}{all\+\_\+nmo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of N\+MO including frozen core. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ad82c00e627723c1fe086d03783e8cd28}{H\+\_\+}}
+\begin{DoxyCompactList}\small\item\em H = T + V. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a82e9925ea8bd99323035022a23e2268d}{F\+\_\+froze\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The Fock matrix due to Frozen core orbitals. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_aa04f54da75fd34ecf6feddc891d27bcf}{F\+\_\+core\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The core Fock Matrix. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a22131c8803cbc3732911cc6bd8393913}{F\+\_\+act\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a825df85d45912f07d32131818ac783de}{J\+K\+\_\+fock\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The JK object. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a3616eec66dda962613054ce8c792505d}{Y\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Intermediate in forming orbital gradient matrix. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_aabb269507aaeefe6b56f918aa26c1768}{Z\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Z intermediate. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_aeb4e4c1519a3f81859eb56c0d8cf74c5}{g\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The Orbital Gradient. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ada852e8c0a077b6f9b5ad56457d2913c}{d\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The Orbital Hessian. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a897d9d467633875f999de629bf61e433}{S\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Solution of g + HS = 0. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a3631de4de1b872fdbcd93554ec892ba6}{casscf\+\_\+debug\+\_\+print\+\_\+}}
+\begin{DoxyCompactList}\small\item\em D\+E\+B\+UG P\+R\+I\+N\+T\+I\+NG. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a41e43eada47dd7a103cb9439af387c7b}{casscf\+\_\+freeze\+\_\+core\+\_\+}}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ada9eb662cf02e096436f137f622d70d7}{timings\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Print timings. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a14b9be982c03f5e461643d321ba118c2}{frozen\+\_\+docc\+\_\+dim\+\_\+}}
+\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_orbital_optimizer_aca488bd1292993ab8ca2852946ed21b7}{restricted\+\_\+docc\+\_\+dim\+\_\+}}
+\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a2dfc66511a89851c4a37364854202c2e}{active\+\_\+dim\+\_\+}}
+\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a6fc580ff9745c1b34ce10bb402577450}{restricted\+\_\+uocc\+\_\+dim\+\_\+}}
+\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_orbital_optimizer_abc92eec0401d92847dcf26b4fb01fabd}{inactive\+\_\+docc\+\_\+dim\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a5ad02f9d3c927c488b753bbd8bd1ea78}{frozen\+\_\+docc\+\_\+abs\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_af7dcd99d782ebfcaf5a84ed4a0cb8a55}{restricted\+\_\+docc\+\_\+abs\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a09ced43769a9cd379b3ec4a0cd5be430}{active\+\_\+abs\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a58194fef0fcc40972c6f9dff5bf71c0f}{restricted\+\_\+uocc\+\_\+abs\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a91d081aa8a5ca86e16eb69668a4a4a83}{inactive\+\_\+docc\+\_\+abs\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ac809975471748bca6e0ca2f11c0f2795}{nmo\+\_\+abs\+\_\+}}
+\item 
+std\+::map$<$ size\+\_\+t, size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a02903cd2951117b676cc97ee08f0195b}{nhole\+\_\+map\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Allows for easy acess of unitary parameter. \end{DoxyCompactList}\item 
+std\+::map$<$ size\+\_\+t, size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a7a33745ae709fa5b9f6526953cab5dd6}{npart\+\_\+map\+\_\+}}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a07ad28a17d65606647385d34beee2f8b}{cas\+\_\+}}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a2d4df88496cd9b9cf1403df2c74625b2}{gas\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ad9b7a552ab9d5def3d94fab7c61d225a}{gas\+\_\+num\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Number of G\+AS. \end{DoxyCompactList}\item 
+std\+::pair$<$ int, std\+::map$<$ std\+::string, \mbox{\hyperlink{namespaceforte_a5409f5af2d60d63681bfac1017b8e226}{Space\+Info}} $>$ $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_ab2b2a1ccb10976a2557221f7f22cb0ad}{gas\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Information about G\+AS. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::vector$<$ size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a79432eda78baba3dbd70983e5cd6db58}{relative\+\_\+gas\+\_\+mo\+\_\+}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\mbox{\hyperlink{classforte_1_1_orbital_optimizer}{Orbital\+Optimizer}} does an orbital optimization given an 1\+R\+DM, 2\+R\+DM, and the integrals Forms an orbital gradient\+: g\+\_\+\{pq\} = \mbox{[} h\+\_\+\{pq\} gamma\+\_\+\{pq\} + Gamma\+\_\+\{pq\}$^\wedge$\{rs\} $<$pq$\vert$$\vert$rs$>$ -\/ A(p-\/$>$q)\mbox{]} Here only form a diagonal hessian of orbitals\+: Look at Hohenstein J. Chem. Phys. 142, 224103. Diagonal Hessian only requires (pu$\vert$xy) integrals (many are built in JK library) Daniel Smith\textquotesingle{}s \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} code in P\+S\+I4 was integral in debugging. 
+
+Usage of this class\+: Contructor will just set\+\_\+up the basic values I learn best from examples\+: Here is how I use it in the \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} code. Note\+: If you are not freezing core, you do not need F\+\_\+froze \mbox{\hyperlink{classforte_1_1_orbital_optimizer}{Orbital\+Optimizer}} orbital\+\_\+optimizer(gamma1\+\_\+, gamma2\+\_\+, ints\+\_\+-\/$>$aptei\+\_\+ab\+\_\+block(nmo\+\_\+abs\+\_\+, active\+\_\+abs\+\_\+, active\+\_\+abs\+\_\+, active\+\_\+abs\+\_\+) , options\+\_\+, mo\+\_\+space\+\_\+info\+\_\+); orbital\+\_\+optimizer.\+set\+\_\+one\+\_\+body(\+One\+Body) orbital\+\_\+optimizer.\+set\+\_\+frozen\+\_\+one\+\_\+body(\+F\+\_\+froze\+\_\+); orbital\+\_\+optimizer.\+set\+\_\+no\+\_\+symmetry\+\_\+mo(\+Call\+\_\+); orbital\+\_\+optimizer.\+set\+\_\+symmmetry\+\_\+mo(\+Ca);
+
+orbital\+\_\+optimizer.\+update() S = orbital\+\_\+optimizer.\+approx\+\_\+solve() C\+\_\+new = orbital\+\_\+optimizer.\+rotate(\+Ca, S) -\/$>$ Right now, if this is an iterative procedure, you should use the Ca that was previously updated, ie (C\+\_\+new = Cold(exp(\+S\+\_\+previous)) $\ast$ exp(\+S)) 
+
+\subsection{Member Enumeration Documentation}
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02}\label{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!M\+A\+T\+R\+I\+X\+\_\+\+E\+XP@{M\+A\+T\+R\+I\+X\+\_\+\+E\+XP}}
+\index{M\+A\+T\+R\+I\+X\+\_\+\+E\+XP@{M\+A\+T\+R\+I\+X\+\_\+\+E\+XP}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{M\+A\+T\+R\+I\+X\+\_\+\+E\+XP}{MATRIX\_EXP}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02}{forte\+::\+Orbital\+Optimizer\+::\+M\+A\+T\+R\+I\+X\+\_\+\+E\+XP}}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{P\+S\+I4@{P\+S\+I4}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!P\+S\+I4@{P\+S\+I4}}}\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02aaa88911fe72bdb92ecc6faec6415431c}\label{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02aaa88911fe72bdb92ecc6faec6415431c}} 
+P\+S\+I4&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{T\+A\+Y\+L\+OR@{T\+A\+Y\+L\+OR}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!T\+A\+Y\+L\+OR@{T\+A\+Y\+L\+OR}}}\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02a27d6b1d722fcd3260c4ef85ba48e75e6}\label{classforte_1_1_orbital_optimizer_a980c6c26da8235026de349b1b11ccc02a27d6b1d722fcd3260c4ef85ba48e75e6}} 
+T\+A\+Y\+L\+OR&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a6026a400fc34ad76ebe1d1ddf8999f8e}\label{classforte_1_1_orbital_optimizer_a6026a400fc34ad76ebe1d1ddf8999f8e}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!Orbital\+Optimizer@{Orbital\+Optimizer}}
+\index{Orbital\+Optimizer@{Orbital\+Optimizer}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{Orbital\+Optimizer()}{OrbitalOptimizer()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+Orbital\+Optimizer\+::\+Orbital\+Optimizer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a5033f80887f8b72341e522a54216fa97}\label{classforte_1_1_orbital_optimizer_a5033f80887f8b72341e522a54216fa97}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!Orbital\+Optimizer@{Orbital\+Optimizer}}
+\index{Orbital\+Optimizer@{Orbital\+Optimizer}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{Orbital\+Optimizer()}{OrbitalOptimizer()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+Orbital\+Optimizer\+::\+Orbital\+Optimizer (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor}]{Gamma1,  }\item[{ambit\+::\+Tensor}]{Gamma2,  }\item[{ambit\+::\+Tensor}]{two\+\_\+body\+\_\+ab,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints }\end{DoxyParamCaption})}
+
+
+
+Given 1\+R\+DM, 2\+R\+DM, (pu$\vert$xy) integrals, and space information, do an orbital optimization \mbox{\hyperlink{classforte_1_1_orbital_optimizer}{Orbital\+Optimizer}} returns a orbital rotation parameter that allows you to update your orbitals. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Gamma1} & The S\+Y\+M\+M\+E\+T\+R\+I\+Z\+ED 1-\/\+R\+DM\+: gamma1\+\_\+a + gamma1\+\_\+b \\
+\hline
+{\em Gamma2} & The S\+Y\+M\+M\+E\+T\+R\+I\+Z\+ED 2-\/\+R\+DM\+: Look at code ( Gamma = rdm\+\_\+2aa + rdm\+\_\+2ab) with prefactors \\
+\hline
+{\em two\+\_\+body\+\_\+ab} & (pu$\vert$xy) integrals (N\+O\+TE\+: This is only valid if you are doing an orbital optimization at the level of \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} \\
+\hline
+{\em options} & The options object \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & M\+O\+Space object for handling active/rdocc/ruocc \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a9f998520c061013d80501e85b7b302d5}\label{classforte_1_1_orbital_optimizer_a9f998520c061013d80501e85b7b302d5}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!approx\+\_\+solve@{approx\+\_\+solve}}
+\index{approx\+\_\+solve@{approx\+\_\+solve}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{approx\+\_\+solve()}{approx\_solve()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::approx\+\_\+solve (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Solution of g + Hx = 0 (with diagonal H), so x = -\/ g / H. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_af3aa08d3914c100e2ac1ac738d462881}\label{classforte_1_1_orbital_optimizer_af3aa08d3914c100e2ac1ac738d462881}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!Augmented\+Hessian\+Solve@{Augmented\+Hessian\+Solve}}
+\index{Augmented\+Hessian\+Solve@{Augmented\+Hessian\+Solve}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{Augmented\+Hessian\+Solve()}{AugmentedHessianSolve()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+Augmented\+Hessian\+Solve (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Diagonalize an augmented Hessian and take lowest eigenvector as solution. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a160f10316ab646946b81b29588c15dd9}\label{classforte_1_1_orbital_optimizer_a160f10316ab646946b81b29588c15dd9}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!diagonal\+\_\+hessian@{diagonal\+\_\+hessian}}
+\index{diagonal\+\_\+hessian@{diagonal\+\_\+hessian}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{diagonal\+\_\+hessian()}{diagonal\_hessian()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::diagonal\+\_\+hessian (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Assemble the diagonal Hessian (20-\/22) 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ab664d52eae4da6b098d40367083c75d2}\label{classforte_1_1_orbital_optimizer_ab664d52eae4da6b098d40367083c75d2}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!fill\+\_\+shared\+\_\+density\+\_\+matrices@{fill\+\_\+shared\+\_\+density\+\_\+matrices}}
+\index{fill\+\_\+shared\+\_\+density\+\_\+matrices@{fill\+\_\+shared\+\_\+density\+\_\+matrices}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{fill\+\_\+shared\+\_\+density\+\_\+matrices()}{fill\_shared\_density\_matrices()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::fill\+\_\+shared\+\_\+density\+\_\+matrices (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+form Shared\+Matrices of Gamma1 and Gamma2 (Tensor library not great for non contractions) \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a220ce17cb9737398ce72e1ebb0cc6deb}\label{classforte_1_1_orbital_optimizer_a220ce17cb9737398ce72e1ebb0cc6deb}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!form\+\_\+fock\+\_\+intermediates@{form\+\_\+fock\+\_\+intermediates}}
+\index{form\+\_\+fock\+\_\+intermediates@{form\+\_\+fock\+\_\+intermediates}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{form\+\_\+fock\+\_\+intermediates()}{form\_fock\_intermediates()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Orbital\+Optimizer\+::form\+\_\+fock\+\_\+intermediates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [pure virtual]}}
+
+
+
+private functions 
+
+This function will implement steps 4 and 9 of algorithm \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ab23e7cd3a3fb5cf248d6746dfba9aa63}\label{classforte_1_1_orbital_optimizer_ab23e7cd3a3fb5cf248d6746dfba9aa63}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!matrix\+\_\+exp@{matrix\+\_\+exp}}
+\index{matrix\+\_\+exp@{matrix\+\_\+exp}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{matrix\+\_\+exp()}{matrix\_exp()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::matrix\+\_\+exp (\begin{DoxyParamCaption}\item[{const psi\+::\+Shared\+Matrix \&}]{unitary }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Perform the exponential of x. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a5ca11117fb746c532f964edca9e11483}\label{classforte_1_1_orbital_optimizer_a5ca11117fb746c532f964edca9e11483}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!one\+\_\+body@{one\+\_\+body}}
+\index{one\+\_\+body@{one\+\_\+body}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{one\+\_\+body()}{one\_body()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::one\+\_\+body (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{H }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Give the AO one electron integrals (H = T + V) 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a756bc6851ab69b75af50988df8e3c09b}\label{classforte_1_1_orbital_optimizer_a756bc6851ab69b75af50988df8e3c09b}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!orbital\+\_\+gradient@{orbital\+\_\+gradient}}
+\index{orbital\+\_\+gradient@{orbital\+\_\+gradient}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{orbital\+\_\+gradient()}{orbital\_gradient()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::orbital\+\_\+gradient (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Assemble the orbital gradient (10-\/15) 
+
+From Y\+\_\+\{pt\} = F\+\_\+\{pu\}$^\wedge$\{core\} $\ast$ Gamma\+\_\+\{tu\}
+
+lambda2 = gamma1$\ast$gamma1
+
+S\+Ince the integrals class assumes that the indices are relative, pass the relative indices to the integrals code. ~\newline
+~\newline
+~\newline
+~\newline
+~\newline
+~\newline
+ Create a map that takes absolute index (in nmo indexing) and returns a value that corresponds to either hole or particle IE\+: 0, 1, 2, 9 for hole where 2 and 9 are active This map returns 0, 1, 2, 3 ~\newline
+~\newline
+~\newline
+~\newline
+~\newline
+ generalized\+\_\+hole\+\_\+rel\mbox{[}i\mbox{]}.second tells where the entry is in with respect to the irrep hole\+\_\+offset is an offset that accounts for the previous irreps ~\newline
+~\newline
+~\newline
+~\newline
+ generalized\+\_\+part\+\_\+rel\mbox{[}a\mbox{]}.second tells where the entry is in with respect to the irrep part\+\_\+offset\+\_\+vector is an offset that accounts for the previous irreps ~\newline
+~\newline
+~\newline
+ Some wierdness going on Since G is nhole by npart I need to make sure that the matrix is ordered in pitzer ordering ~\newline
+~\newline
+ The offset allows me to place the correct values with pitzer ordering
+
+The Fock matrix is computed as stated in Pg. 622 of Helgaker book \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a974d61893017eb0baf4c7c73321b75f8}\label{classforte_1_1_orbital_optimizer_a974d61893017eb0baf4c7c73321b75f8}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!orbital\+\_\+gradient\+\_\+norm@{orbital\+\_\+gradient\+\_\+norm}}
+\index{orbital\+\_\+gradient\+\_\+norm@{orbital\+\_\+gradient\+\_\+norm}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{orbital\+\_\+gradient\+\_\+norm()}{orbital\_gradient\_norm()}}
+{\footnotesize\ttfamily double forte\+::\+Orbital\+Optimizer\+::orbital\+\_\+gradient\+\_\+norm (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The norm of the orbital gradient. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ab203be9923d38cc32fcc14dde9c7ee6e}\label{classforte_1_1_orbital_optimizer_ab203be9923d38cc32fcc14dde9c7ee6e}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!orbital\+\_\+rotation\+\_\+parameter@{orbital\+\_\+rotation\+\_\+parameter}}
+\index{orbital\+\_\+rotation\+\_\+parameter@{orbital\+\_\+rotation\+\_\+parameter}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{orbital\+\_\+rotation\+\_\+parameter()}{orbital\_rotation\_parameter()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::orbital\+\_\+rotation\+\_\+parameter (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+check the cas\+\_\+ci energy with spin-\/free R\+DM 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a98809e4d8fe5a75f5ec20773ae6d4274}\label{classforte_1_1_orbital_optimizer_a98809e4d8fe5a75f5ec20773ae6d4274}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!rotate\+\_\+orbitals@{rotate\+\_\+orbitals}}
+\index{rotate\+\_\+orbitals@{rotate\+\_\+orbitals}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{rotate\+\_\+orbitals()}{rotate\_orbitals()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::rotate\+\_\+orbitals (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{C,  }\item[{psi\+::\+Shared\+Matrix}]{S }\end{DoxyParamCaption})}
+
+Exponentiate the orbital rotation parameter and use this to update your M\+O\+Coefficient Clone the C matrix \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a8473b0a13d06e6757eb98b08d0e5ea07}\label{classforte_1_1_orbital_optimizer_a8473b0a13d06e6757eb98b08d0e5ea07}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!set\+\_\+frozen\+\_\+one\+\_\+body@{set\+\_\+frozen\+\_\+one\+\_\+body}}
+\index{set\+\_\+frozen\+\_\+one\+\_\+body@{set\+\_\+frozen\+\_\+one\+\_\+body}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{set\+\_\+frozen\+\_\+one\+\_\+body()}{set\_frozen\_one\_body()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::set\+\_\+frozen\+\_\+one\+\_\+body (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{F\+\_\+froze }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Must compute the frozen\+\_\+one\+\_\+body fock matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_adfde10cea1c788ab2f3647906447ccfd}\label{classforte_1_1_orbital_optimizer_adfde10cea1c788ab2f3647906447ccfd}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!set\+\_\+jk@{set\+\_\+jk}}
+\index{set\+\_\+jk@{set\+\_\+jk}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{set\+\_\+jk()}{set\_jk()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::set\+\_\+jk (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ JK $>$ \&}]{JK }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set the JK object. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a5c8716e0bae31ce5ed43464b612a4648}\label{classforte_1_1_orbital_optimizer_a5c8716e0bae31ce5ed43464b612a4648}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!set\+\_\+print\+\_\+timings@{set\+\_\+print\+\_\+timings}}
+\index{set\+\_\+print\+\_\+timings@{set\+\_\+print\+\_\+timings}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{set\+\_\+print\+\_\+timings()}{set\_print\_timings()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::set\+\_\+print\+\_\+timings (\begin{DoxyParamCaption}\item[{bool}]{timing }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Print a summary of timings. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ad52632ad818dc34312c7763a6020d74d}\label{classforte_1_1_orbital_optimizer_ad52632ad818dc34312c7763a6020d74d}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!set\+\_\+symmmetry\+\_\+mo@{set\+\_\+symmmetry\+\_\+mo}}
+\index{set\+\_\+symmmetry\+\_\+mo@{set\+\_\+symmmetry\+\_\+mo}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{set\+\_\+symmmetry\+\_\+mo()}{set\_symmmetry\_mo()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::set\+\_\+symmmetry\+\_\+mo (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{C }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+You have to set these at the start of the computation The MO Coefficient you get from wfn\+\_\+-\/$>$Ca() \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_afb772d5dd6c157b0c210c7bbd20c0e81}\label{classforte_1_1_orbital_optimizer_afb772d5dd6c157b0c210c7bbd20c0e81}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!startup@{startup}}
+\index{startup@{startup}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{startup()}{startup()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::startup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a575a256f93d9c3ca9d8eb388a9f51f79}\label{classforte_1_1_orbital_optimizer_a575a256f93d9c3ca9d8eb388a9f51f79}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!update@{update}}
+\index{update@{update}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{update()}{update()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::update (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+The MO Coefficient in pitzer ordering (symmetry-\/aware) The workhouse of the program\+: Computes gradient, hessian. F$^\wedge$\{I\}\+\_\+\{pq\} = h\+\_\+\{pq\} + 2 (pq $\vert$ kk) -\/ (pk $\vert$qk) This is done using JK builder\+: F$^\wedge$\{I\}\+\_\+\{pq\} = h\+\_\+\{pq\} + C$^\wedge$\{T\}\mbox{[}2J -\/ K\mbox{]}C Built in the AO basis for efficiency \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a7f79e499361da4bc0d4b90187033d38f}\label{classforte_1_1_orbital_optimizer_a7f79e499361da4bc0d4b90187033d38f}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!zero\+\_\+redunant@{zero\+\_\+redunant}}
+\index{zero\+\_\+redunant@{zero\+\_\+redunant}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{zero\+\_\+redunant()}{zero\_redunant()}}
+{\footnotesize\ttfamily void forte\+::\+Orbital\+Optimizer\+::zero\+\_\+redunant (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix \&}]{matrix }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a09ced43769a9cd379b3ec4a0cd5be430}\label{classforte_1_1_orbital_optimizer_a09ced43769a9cd379b3ec4a0cd5be430}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!active\+\_\+abs\+\_\+@{active\+\_\+abs\+\_\+}}
+\index{active\+\_\+abs\+\_\+@{active\+\_\+abs\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{active\+\_\+abs\+\_\+}{active\_abs\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Orbital\+Optimizer\+::active\+\_\+abs\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a2dfc66511a89851c4a37364854202c2e}\label{classforte_1_1_orbital_optimizer_a2dfc66511a89851c4a37364854202c2e}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!active\+\_\+dim\+\_\+@{active\+\_\+dim\+\_\+}}
+\index{active\+\_\+dim\+\_\+@{active\+\_\+dim\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{active\+\_\+dim\+\_\+}{active\_dim\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Orbital\+Optimizer\+::active\+\_\+dim\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a3049d4ffa9016122c75062f30273585d}\label{classforte_1_1_orbital_optimizer_a3049d4ffa9016122c75062f30273585d}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!all\+\_\+nmo\+\_\+@{all\+\_\+nmo\+\_\+}}
+\index{all\+\_\+nmo\+\_\+@{all\+\_\+nmo\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{all\+\_\+nmo\+\_\+}{all\_nmo\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Orbital\+Optimizer\+::all\+\_\+nmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of N\+MO including frozen core. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a849bfb63a27b0e75adbf67da8b74d04e}\label{classforte_1_1_orbital_optimizer_a849bfb63a27b0e75adbf67da8b74d04e}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!Ca\+\_\+sym\+\_\+@{Ca\+\_\+sym\+\_\+}}
+\index{Ca\+\_\+sym\+\_\+@{Ca\+\_\+sym\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{Ca\+\_\+sym\+\_\+}{Ca\_sym\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+Ca\+\_\+sym\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+C matrix in the SO basis. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_addd44581df4959715d650fce7e142547}\label{classforte_1_1_orbital_optimizer_addd44581df4959715d650fce7e142547}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!Call\+\_\+@{Call\+\_\+}}
+\index{Call\+\_\+@{Call\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{Call\+\_\+}{Call\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+Call\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The mo\+\_\+space\+\_\+info The MO Coefficient matrix in Pfitzer ordering in whatever symmetry this matrix is ao by nmo \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a07ad28a17d65606647385d34beee2f8b}\label{classforte_1_1_orbital_optimizer_a07ad28a17d65606647385d34beee2f8b}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!cas\+\_\+@{cas\+\_\+}}
+\index{cas\+\_\+@{cas\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{cas\+\_\+}{cas\_}}
+{\footnotesize\ttfamily bool forte\+::\+Orbital\+Optimizer\+::cas\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a3631de4de1b872fdbcd93554ec892ba6}\label{classforte_1_1_orbital_optimizer_a3631de4de1b872fdbcd93554ec892ba6}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!casscf\+\_\+debug\+\_\+print\+\_\+@{casscf\+\_\+debug\+\_\+print\+\_\+}}
+\index{casscf\+\_\+debug\+\_\+print\+\_\+@{casscf\+\_\+debug\+\_\+print\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{casscf\+\_\+debug\+\_\+print\+\_\+}{casscf\_debug\_print\_}}
+{\footnotesize\ttfamily bool forte\+::\+Orbital\+Optimizer\+::casscf\+\_\+debug\+\_\+print\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+D\+E\+B\+UG P\+R\+I\+N\+T\+I\+NG. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a41e43eada47dd7a103cb9439af387c7b}\label{classforte_1_1_orbital_optimizer_a41e43eada47dd7a103cb9439af387c7b}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!casscf\+\_\+freeze\+\_\+core\+\_\+@{casscf\+\_\+freeze\+\_\+core\+\_\+}}
+\index{casscf\+\_\+freeze\+\_\+core\+\_\+@{casscf\+\_\+freeze\+\_\+core\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{casscf\+\_\+freeze\+\_\+core\+\_\+}{casscf\_freeze\_core\_}}
+{\footnotesize\ttfamily bool forte\+::\+Orbital\+Optimizer\+::casscf\+\_\+freeze\+\_\+core\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+Freeze the core and leave them unchanged Uses this to override M\+O\+S\+P\+A\+C\+E\+I\+N\+FO \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ada852e8c0a077b6f9b5ad56457d2913c}\label{classforte_1_1_orbital_optimizer_ada852e8c0a077b6f9b5ad56457d2913c}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!d\+\_\+@{d\+\_\+}}
+\index{d\+\_\+@{d\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{d\+\_\+}{d\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::d\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The Orbital Hessian. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a22131c8803cbc3732911cc6bd8393913}\label{classforte_1_1_orbital_optimizer_a22131c8803cbc3732911cc6bd8393913}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!F\+\_\+act\+\_\+@{F\+\_\+act\+\_\+}}
+\index{F\+\_\+act\+\_\+@{F\+\_\+act\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{F\+\_\+act\+\_\+}{F\_act\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+F\+\_\+act\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The F\+\_\+act\+\_\+ -\/$>$ ie the fock matrix of nmo by nmo generated using the all active portion of the O\+PM Equation 10 \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_aa04f54da75fd34ecf6feddc891d27bcf}\label{classforte_1_1_orbital_optimizer_aa04f54da75fd34ecf6feddc891d27bcf}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!F\+\_\+core\+\_\+@{F\+\_\+core\+\_\+}}
+\index{F\+\_\+core\+\_\+@{F\+\_\+core\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{F\+\_\+core\+\_\+}{F\_core\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+F\+\_\+core\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The core Fock Matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a82e9925ea8bd99323035022a23e2268d}\label{classforte_1_1_orbital_optimizer_a82e9925ea8bd99323035022a23e2268d}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!F\+\_\+froze\+\_\+@{F\+\_\+froze\+\_\+}}
+\index{F\+\_\+froze\+\_\+@{F\+\_\+froze\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{F\+\_\+froze\+\_\+}{F\_froze\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+F\+\_\+froze\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The Fock matrix due to Frozen core orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a5ad02f9d3c927c488b753bbd8bd1ea78}\label{classforte_1_1_orbital_optimizer_a5ad02f9d3c927c488b753bbd8bd1ea78}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!frozen\+\_\+docc\+\_\+abs\+\_\+@{frozen\+\_\+docc\+\_\+abs\+\_\+}}
+\index{frozen\+\_\+docc\+\_\+abs\+\_\+@{frozen\+\_\+docc\+\_\+abs\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{frozen\+\_\+docc\+\_\+abs\+\_\+}{frozen\_docc\_abs\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Orbital\+Optimizer\+::frozen\+\_\+docc\+\_\+abs\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a14b9be982c03f5e461643d321ba118c2}\label{classforte_1_1_orbital_optimizer_a14b9be982c03f5e461643d321ba118c2}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!frozen\+\_\+docc\+\_\+dim\+\_\+@{frozen\+\_\+docc\+\_\+dim\+\_\+}}
+\index{frozen\+\_\+docc\+\_\+dim\+\_\+@{frozen\+\_\+docc\+\_\+dim\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{frozen\+\_\+docc\+\_\+dim\+\_\+}{frozen\_docc\_dim\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Orbital\+Optimizer\+::frozen\+\_\+docc\+\_\+dim\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The psi\+::\+Dimensions for the major orbitals spaces involved in \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} Trying to get these all in the startup, so I can use them repeatly rather than create them in different places \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_aeb4e4c1519a3f81859eb56c0d8cf74c5}\label{classforte_1_1_orbital_optimizer_aeb4e4c1519a3f81859eb56c0d8cf74c5}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!g\+\_\+@{g\+\_\+}}
+\index{g\+\_\+@{g\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{g\+\_\+}{g\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::g\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The Orbital Gradient. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a5b7f6953dfef1cefc76a3ef06e1f5fba}\label{classforte_1_1_orbital_optimizer_a5b7f6953dfef1cefc76a3ef06e1f5fba}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!gamma1\+\_\+@{gamma1\+\_\+}}
+\index{gamma1\+\_\+@{gamma1\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{gamma1\+\_\+}{gamma1\_}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Orbital\+Optimizer\+::gamma1\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The 1-\/\+R\+DM (usually of size na\+\_\+$^\wedge$2) 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a9812763f6f70ec990d121946d45d07b4}\label{classforte_1_1_orbital_optimizer_a9812763f6f70ec990d121946d45d07b4}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!gamma1\+M\+\_\+@{gamma1\+M\+\_\+}}
+\index{gamma1\+M\+\_\+@{gamma1\+M\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{gamma1\+M\+\_\+}{gamma1M\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::gamma1\+M\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The 1-\/\+R\+DM psi\+::\+Shared\+Matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_aa049ad4cf277246ec54a0c2182a9cde5}\label{classforte_1_1_orbital_optimizer_aa049ad4cf277246ec54a0c2182a9cde5}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!gamma2\+\_\+@{gamma2\+\_\+}}
+\index{gamma2\+\_\+@{gamma2\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{gamma2\+\_\+}{gamma2\_}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Orbital\+Optimizer\+::gamma2\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The 2-\/\+R\+DM (usually of size na$^\wedge$4) 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_aeb2414ef0595d7afc2136c28235611d8}\label{classforte_1_1_orbital_optimizer_aeb2414ef0595d7afc2136c28235611d8}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!gamma2\+M\+\_\+@{gamma2\+M\+\_\+}}
+\index{gamma2\+M\+\_\+@{gamma2\+M\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{gamma2\+M\+\_\+}{gamma2M\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::gamma2\+M\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The 2-\/\+R\+DM psi\+::\+Shared\+Matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a2d4df88496cd9b9cf1403df2c74625b2}\label{classforte_1_1_orbital_optimizer_a2d4df88496cd9b9cf1403df2c74625b2}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!gas\+\_\+@{gas\+\_\+}}
+\index{gas\+\_\+@{gas\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{gas\+\_\+}{gas\_}}
+{\footnotesize\ttfamily bool forte\+::\+Orbital\+Optimizer\+::gas\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ab2b2a1ccb10976a2557221f7f22cb0ad}\label{classforte_1_1_orbital_optimizer_ab2b2a1ccb10976a2557221f7f22cb0ad}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!gas\+\_\+info\+\_\+@{gas\+\_\+info\+\_\+}}
+\index{gas\+\_\+info\+\_\+@{gas\+\_\+info\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{gas\+\_\+info\+\_\+}{gas\_info\_}}
+{\footnotesize\ttfamily std\+::pair$<$int, std\+::map$<$std\+::string, \mbox{\hyperlink{namespaceforte_a5409f5af2d60d63681bfac1017b8e226}{Space\+Info}}$>$ $>$ forte\+::\+Orbital\+Optimizer\+::gas\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Information about G\+AS. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ad9b7a552ab9d5def3d94fab7c61d225a}\label{classforte_1_1_orbital_optimizer_ad9b7a552ab9d5def3d94fab7c61d225a}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!gas\+\_\+num\+\_\+@{gas\+\_\+num\+\_\+}}
+\index{gas\+\_\+num\+\_\+@{gas\+\_\+num\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{gas\+\_\+num\+\_\+}{gas\_num\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Orbital\+Optimizer\+::gas\+\_\+num\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Number of G\+AS. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ad82c00e627723c1fe086d03783e8cd28}\label{classforte_1_1_orbital_optimizer_ad82c00e627723c1fe086d03783e8cd28}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!H\+\_\+@{H\+\_\+}}
+\index{H\+\_\+@{H\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{H\+\_\+}{H\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+H\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+H = T + V. 
+
+These member variables are all summarized in Algorithm 1 Equation 9 \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a91d081aa8a5ca86e16eb69668a4a4a83}\label{classforte_1_1_orbital_optimizer_a91d081aa8a5ca86e16eb69668a4a4a83}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!inactive\+\_\+docc\+\_\+abs\+\_\+@{inactive\+\_\+docc\+\_\+abs\+\_\+}}
+\index{inactive\+\_\+docc\+\_\+abs\+\_\+@{inactive\+\_\+docc\+\_\+abs\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{inactive\+\_\+docc\+\_\+abs\+\_\+}{inactive\_docc\_abs\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Orbital\+Optimizer\+::inactive\+\_\+docc\+\_\+abs\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_abc92eec0401d92847dcf26b4fb01fabd}\label{classforte_1_1_orbital_optimizer_abc92eec0401d92847dcf26b4fb01fabd}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!inactive\+\_\+docc\+\_\+dim\+\_\+@{inactive\+\_\+docc\+\_\+dim\+\_\+}}
+\index{inactive\+\_\+docc\+\_\+dim\+\_\+@{inactive\+\_\+docc\+\_\+dim\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{inactive\+\_\+docc\+\_\+dim\+\_\+}{inactive\_docc\_dim\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Orbital\+Optimizer\+::inactive\+\_\+docc\+\_\+dim\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_aad19beb900203fb849891aa8657ccc94}\label{classforte_1_1_orbital_optimizer_aad19beb900203fb849891aa8657ccc94}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!integral\+\_\+@{integral\+\_\+}}
+\index{integral\+\_\+@{integral\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{integral\+\_\+}{integral\_}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Orbital\+Optimizer\+::integral\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a7330289491630846933d424e60e718d7}\label{classforte_1_1_orbital_optimizer_a7330289491630846933d424e60e718d7}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!J\+K\+\_\+@{J\+K\+\_\+}}
+\index{J\+K\+\_\+@{J\+K\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{J\+K\+\_\+}{JK\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$JK$>$ forte\+::\+Orbital\+Optimizer\+::\+J\+K\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a825df85d45912f07d32131818ac783de}\label{classforte_1_1_orbital_optimizer_a825df85d45912f07d32131818ac783de}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!J\+K\+\_\+fock\+\_\+@{J\+K\+\_\+fock\+\_\+}}
+\index{J\+K\+\_\+fock\+\_\+@{J\+K\+\_\+fock\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{J\+K\+\_\+fock\+\_\+}{JK\_fock\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+J\+K\+\_\+fock\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The JK object. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a426be7cb09565f97b09c80f6007e975a}\label{classforte_1_1_orbital_optimizer_a426be7cb09565f97b09c80f6007e975a}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}}
+\index{mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{mo\+\_\+space\+\_\+info\+\_\+}{mo\_space\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}$>$ forte\+::\+Orbital\+Optimizer\+::mo\+\_\+space\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ae6ec0e06528c96c505b877ba139e2091}\label{classforte_1_1_orbital_optimizer_ae6ec0e06528c96c505b877ba139e2091}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!na\+\_\+@{na\+\_\+}}
+\index{na\+\_\+@{na\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{na\+\_\+}{na\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Orbital\+Optimizer\+::na\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of active orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a8d53170a8913f34344f9068d65a948f9}\label{classforte_1_1_orbital_optimizer_a8d53170a8913f34344f9068d65a948f9}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nfrozen\+\_\+@{nfrozen\+\_\+}}
+\index{nfrozen\+\_\+@{nfrozen\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nfrozen\+\_\+}{nfrozen\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Orbital\+Optimizer\+::nfrozen\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of frozen\+\_\+docc. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a02903cd2951117b676cc97ee08f0195b}\label{classforte_1_1_orbital_optimizer_a02903cd2951117b676cc97ee08f0195b}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nhole\+\_\+map\+\_\+@{nhole\+\_\+map\+\_\+}}
+\index{nhole\+\_\+map\+\_\+@{nhole\+\_\+map\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nhole\+\_\+map\+\_\+}{nhole\_map\_}}
+{\footnotesize\ttfamily std\+::map$<$size\+\_\+t, size\+\_\+t$>$ forte\+::\+Orbital\+Optimizer\+::nhole\+\_\+map\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Allows for easy acess of unitary parameter. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a9e0f51314c4e208ae3c09a023209494b}\label{classforte_1_1_orbital_optimizer_a9e0f51314c4e208ae3c09a023209494b}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nirrep\+\_\+@{nirrep\+\_\+}}
+\index{nirrep\+\_\+@{nirrep\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nirrep\+\_\+}{nirrep\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Orbital\+Optimizer\+::nirrep\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of irreps. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a238376ec9831d97b133d4ea57219b21b}\label{classforte_1_1_orbital_optimizer_a238376ec9831d97b133d4ea57219b21b}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nmo\+\_\+@{nmo\+\_\+}}
+\index{nmo\+\_\+@{nmo\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nmo\+\_\+}{nmo\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Orbital\+Optimizer\+::nmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The number of correlated molecular orbitals (Restricted Core + Active + Restricted\+\_\+\+U\+O\+CC + Frozen\+\_\+\+Virt \mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ac809975471748bca6e0ca2f11c0f2795}\label{classforte_1_1_orbital_optimizer_ac809975471748bca6e0ca2f11c0f2795}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nmo\+\_\+abs\+\_\+@{nmo\+\_\+abs\+\_\+}}
+\index{nmo\+\_\+abs\+\_\+@{nmo\+\_\+abs\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nmo\+\_\+abs\+\_\+}{nmo\_abs\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Orbital\+Optimizer\+::nmo\+\_\+abs\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a2439f35f33a87f6432b3fd65ee6eadaf}\label{classforte_1_1_orbital_optimizer_a2439f35f33a87f6432b3fd65ee6eadaf}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nmopi\+\_\+@{nmopi\+\_\+}}
+\index{nmopi\+\_\+@{nmopi\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nmopi\+\_\+}{nmopi\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Orbital\+Optimizer\+::nmopi\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The dimension for number of molecular orbitals (C\+O\+R\+R\+E\+L\+A\+T\+ED or A\+LL) 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a7a33745ae709fa5b9f6526953cab5dd6}\label{classforte_1_1_orbital_optimizer_a7a33745ae709fa5b9f6526953cab5dd6}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!npart\+\_\+map\+\_\+@{npart\+\_\+map\+\_\+}}
+\index{npart\+\_\+map\+\_\+@{npart\+\_\+map\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{npart\+\_\+map\+\_\+}{npart\_map\_}}
+{\footnotesize\ttfamily std\+::map$<$size\+\_\+t, size\+\_\+t$>$ forte\+::\+Orbital\+Optimizer\+::npart\+\_\+map\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a086d17877eb4c87547c6caaf7660ec27}\label{classforte_1_1_orbital_optimizer_a086d17877eb4c87547c6caaf7660ec27}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nrdocc\+\_\+@{nrdocc\+\_\+}}
+\index{nrdocc\+\_\+@{nrdocc\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nrdocc\+\_\+}{nrdocc\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Orbital\+Optimizer\+::nrdocc\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+the number of restricted\+\_\+docc 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a9eecd789fe5954676698a177d773babd}\label{classforte_1_1_orbital_optimizer_a9eecd789fe5954676698a177d773babd}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nsopi\+\_\+@{nsopi\+\_\+}}
+\index{nsopi\+\_\+@{nsopi\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nsopi\+\_\+}{nsopi\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Orbital\+Optimizer\+::nsopi\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of SO (AO for C matrices) 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a18aeed651c18e3774ceded5f83b424ec}\label{classforte_1_1_orbital_optimizer_a18aeed651c18e3774ceded5f83b424ec}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!nvir\+\_\+@{nvir\+\_\+}}
+\index{nvir\+\_\+@{nvir\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{nvir\+\_\+}{nvir\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Orbital\+Optimizer\+::nvir\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of virtual orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ae426c8d5fe9b5942c4a0dc6573fe3c2c}\label{classforte_1_1_orbital_optimizer_ae426c8d5fe9b5942c4a0dc6573fe3c2c}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!options\+\_\+@{options\+\_\+}}
+\index{options\+\_\+@{options\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{options\+\_\+}{options\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}$>$ forte\+::\+Orbital\+Optimizer\+::options\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a79432eda78baba3dbd70983e5cd6db58}\label{classforte_1_1_orbital_optimizer_a79432eda78baba3dbd70983e5cd6db58}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!relative\+\_\+gas\+\_\+mo\+\_\+@{relative\+\_\+gas\+\_\+mo\+\_\+}}
+\index{relative\+\_\+gas\+\_\+mo\+\_\+@{relative\+\_\+gas\+\_\+mo\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{relative\+\_\+gas\+\_\+mo\+\_\+}{relative\_gas\_mo\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$size\+\_\+t$>$ $>$ forte\+::\+Orbital\+Optimizer\+::relative\+\_\+gas\+\_\+mo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_af7dcd99d782ebfcaf5a84ed4a0cb8a55}\label{classforte_1_1_orbital_optimizer_af7dcd99d782ebfcaf5a84ed4a0cb8a55}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!restricted\+\_\+docc\+\_\+abs\+\_\+@{restricted\+\_\+docc\+\_\+abs\+\_\+}}
+\index{restricted\+\_\+docc\+\_\+abs\+\_\+@{restricted\+\_\+docc\+\_\+abs\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{restricted\+\_\+docc\+\_\+abs\+\_\+}{restricted\_docc\_abs\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Orbital\+Optimizer\+::restricted\+\_\+docc\+\_\+abs\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_aca488bd1292993ab8ca2852946ed21b7}\label{classforte_1_1_orbital_optimizer_aca488bd1292993ab8ca2852946ed21b7}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!restricted\+\_\+docc\+\_\+dim\+\_\+@{restricted\+\_\+docc\+\_\+dim\+\_\+}}
+\index{restricted\+\_\+docc\+\_\+dim\+\_\+@{restricted\+\_\+docc\+\_\+dim\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{restricted\+\_\+docc\+\_\+dim\+\_\+}{restricted\_docc\_dim\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Orbital\+Optimizer\+::restricted\+\_\+docc\+\_\+dim\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a58194fef0fcc40972c6f9dff5bf71c0f}\label{classforte_1_1_orbital_optimizer_a58194fef0fcc40972c6f9dff5bf71c0f}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!restricted\+\_\+uocc\+\_\+abs\+\_\+@{restricted\+\_\+uocc\+\_\+abs\+\_\+}}
+\index{restricted\+\_\+uocc\+\_\+abs\+\_\+@{restricted\+\_\+uocc\+\_\+abs\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{restricted\+\_\+uocc\+\_\+abs\+\_\+}{restricted\_uocc\_abs\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Orbital\+Optimizer\+::restricted\+\_\+uocc\+\_\+abs\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a6fc580ff9745c1b34ce10bb402577450}\label{classforte_1_1_orbital_optimizer_a6fc580ff9745c1b34ce10bb402577450}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!restricted\+\_\+uocc\+\_\+dim\+\_\+@{restricted\+\_\+uocc\+\_\+dim\+\_\+}}
+\index{restricted\+\_\+uocc\+\_\+dim\+\_\+@{restricted\+\_\+uocc\+\_\+dim\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{restricted\+\_\+uocc\+\_\+dim\+\_\+}{restricted\_uocc\_dim\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Orbital\+Optimizer\+::restricted\+\_\+uocc\+\_\+dim\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a897d9d467633875f999de629bf61e433}\label{classforte_1_1_orbital_optimizer_a897d9d467633875f999de629bf61e433}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!S\+\_\+@{S\+\_\+}}
+\index{S\+\_\+@{S\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{S\+\_\+}{S\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+S\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Solution of g + HS = 0. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ac4e79f71738bfa62f3681e3e12240b67}\label{classforte_1_1_orbital_optimizer_ac4e79f71738bfa62f3681e3e12240b67}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!scf\+\_\+info\+\_\+@{scf\+\_\+info\+\_\+}}
+\index{scf\+\_\+info\+\_\+@{scf\+\_\+info\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{scf\+\_\+info\+\_\+}{scf\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}}$>$ forte\+::\+Orbital\+Optimizer\+::scf\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+S\+CF information. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_ada9eb662cf02e096436f137f622d70d7}\label{classforte_1_1_orbital_optimizer_ada9eb662cf02e096436f137f622d70d7}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!timings\+\_\+@{timings\+\_\+}}
+\index{timings\+\_\+@{timings\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{timings\+\_\+}{timings\_}}
+{\footnotesize\ttfamily bool forte\+::\+Orbital\+Optimizer\+::timings\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print timings. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_a3616eec66dda962613054ce8c792505d}\label{classforte_1_1_orbital_optimizer_a3616eec66dda962613054ce8c792505d}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!Y\+\_\+@{Y\+\_\+}}
+\index{Y\+\_\+@{Y\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{Y\+\_\+}{Y\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+Y\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Intermediate in forming orbital gradient matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_optimizer_aabb269507aaeefe6b56f918aa26c1768}\label{classforte_1_1_orbital_optimizer_aabb269507aaeefe6b56f918aa26c1768}} 
+\index{forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}!Z\+\_\+@{Z\+\_\+}}
+\index{Z\+\_\+@{Z\+\_\+}!forte\+::\+Orbital\+Optimizer@{forte\+::\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{Z\+\_\+}{Z\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Optimizer\+::\+Z\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Z intermediate. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{orbitaloptimizer_8h}{orbitaloptimizer.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{orbitaloptimizer_8cc}{orbitaloptimizer.\+cc}}\end{DoxyCompactItemize}

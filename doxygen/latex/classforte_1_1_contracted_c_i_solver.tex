@@ -1,0 +1,84 @@
+\hypertarget{classforte_1_1_contracted_c_i_solver}{}\section{forte\+:\+:Contracted\+C\+I\+Solver Class Reference}
+\label{classforte_1_1_contracted_c_i_solver}\index{forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}}
+
+
+Contracted Configuration Interaction Solver for multi-\/state D\+S\+RG.  
+
+
+
+
+{\ttfamily \#include $<$cci\+\_\+solver.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_contracted_c_i_solver_a4503df709ead99d98a03f5b04f6feeaa}{Contracted\+C\+I\+Solver}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_solver}{Active\+Space\+Solver}} $>$ as\+\_\+solver, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints, int max\+\_\+rdm\+\_\+level, int max\+\_\+body)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_contracted_c_i_solver}{Contracted\+C\+I\+Solver}} constructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_contracted_c_i_solver_a048dbac796ce7a43a2e6021dbda14577}{compute\+\_\+\+Heff}} ()
+\begin{DoxyCompactList}\small\item\em T\+O\+DO\+: the as\+\_\+ints should handle 3-\/body integrals, as\+\_\+ints may not be Hermitian. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \mbox{\hyperlink{classforte_1_1_contracted_c_i_solver_a06f7a3526d04daf00f8ec663b48f2d01}{get\+\_\+energies}} ()
+\begin{DoxyCompactList}\small\item\em compute the new densities and return a new \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}?? \end{DoxyCompactList}\item 
+std\+::vector$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_contracted_c_i_solver_ad3d7712cb2485dde8b3fbb9b8e47b657}{get\+\_\+evecs}} ()
+\begin{DoxyCompactList}\small\item\em get the eigen vectors \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Contracted Configuration Interaction Solver for multi-\/state D\+S\+RG. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_contracted_c_i_solver_a4503df709ead99d98a03f5b04f6feeaa}\label{classforte_1_1_contracted_c_i_solver_a4503df709ead99d98a03f5b04f6feeaa}} 
+\index{forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}!Contracted\+C\+I\+Solver@{Contracted\+C\+I\+Solver}}
+\index{Contracted\+C\+I\+Solver@{Contracted\+C\+I\+Solver}!forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{Contracted\+C\+I\+Solver()}{ContractedCISolver()}}
+{\footnotesize\ttfamily forte\+::\+Contracted\+C\+I\+Solver\+::\+Contracted\+C\+I\+Solver (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_solver}{Active\+Space\+Solver}} $>$}]{as\+\_\+solver,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints,  }\item[{int}]{max\+\_\+rdm\+\_\+level,  }\item[{int}]{max\+\_\+body }\end{DoxyParamCaption})}
+
+
+
+\mbox{\hyperlink{classforte_1_1_contracted_c_i_solver}{Contracted\+C\+I\+Solver}} constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em as\+\_\+solver} & active space solver \\
+\hline
+{\em as\+\_\+ints} & active space integrals \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_contracted_c_i_solver_a048dbac796ce7a43a2e6021dbda14577}\label{classforte_1_1_contracted_c_i_solver_a048dbac796ce7a43a2e6021dbda14577}} 
+\index{forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}!compute\+\_\+\+Heff@{compute\+\_\+\+Heff}}
+\index{compute\+\_\+\+Heff@{compute\+\_\+\+Heff}!forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Heff()}{compute\_Heff()}}
+{\footnotesize\ttfamily void forte\+::\+Contracted\+C\+I\+Solver\+::compute\+\_\+\+Heff (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+T\+O\+DO\+: the as\+\_\+ints should handle 3-\/body integrals, as\+\_\+ints may not be Hermitian. 
+
+build the effective Hamiltonian $<$A$\vert$\+H$\vert$B$>$ and diagonalize it \mbox{\Hypertarget{classforte_1_1_contracted_c_i_solver_a06f7a3526d04daf00f8ec663b48f2d01}\label{classforte_1_1_contracted_c_i_solver_a06f7a3526d04daf00f8ec663b48f2d01}} 
+\index{forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}!get\+\_\+energies@{get\+\_\+energies}}
+\index{get\+\_\+energies@{get\+\_\+energies}!forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{get\+\_\+energies()}{get\_energies()}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$double$>$ $>$ forte\+::\+Contracted\+C\+I\+Solver\+::get\+\_\+energies (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+compute the new densities and return a new \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}?? 
+
+get the eigen values \mbox{\Hypertarget{classforte_1_1_contracted_c_i_solver_ad3d7712cb2485dde8b3fbb9b8e47b657}\label{classforte_1_1_contracted_c_i_solver_ad3d7712cb2485dde8b3fbb9b8e47b657}} 
+\index{forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}!get\+\_\+evecs@{get\+\_\+evecs}}
+\index{get\+\_\+evecs@{get\+\_\+evecs}!forte\+::\+Contracted\+C\+I\+Solver@{forte\+::\+Contracted\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{get\+\_\+evecs()}{get\_evecs()}}
+{\footnotesize\ttfamily std\+::vector$<$psi\+::\+Matrix$>$ forte\+::\+Contracted\+C\+I\+Solver\+::get\+\_\+evecs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+get the eigen vectors 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/\mbox{\hyperlink{cci__solver_8h}{cci\+\_\+solver.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/\mbox{\hyperlink{cci__solver_8cc}{cci\+\_\+solver.\+cc}}\end{DoxyCompactItemize}

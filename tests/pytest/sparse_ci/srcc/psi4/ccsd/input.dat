@@ -1,0 +1,8 @@
+
+molecule {
+H
+H 1 1.0
+}
+
+set e_convergence 13
+energy('CCSD/DZ')

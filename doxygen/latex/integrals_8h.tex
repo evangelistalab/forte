@@ -1,0 +1,53 @@
+\hypertarget{integrals_8h}{}\section{/\+Users/fevange/\+Source/forte/src/integrals/integrals.h File Reference}
+\label{integrals_8h}\index{/\+Users/fevange/\+Source/forte/src/integrals/integrals.\+h@{/\+Users/fevange/\+Source/forte/src/integrals/integrals.\+h}}
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libfock/jk.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/dimension.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}ambit/blocked\+\_\+tensor.\+h\char`\"{}}\newline
+Include dependency graph for integrals.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{integrals_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{integrals_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classforte_1_1_forte_integrals}{forte\+::\+Forte\+Integrals}}
+\begin{DoxyCompactList}\small\item\em The \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} class is a base class for transforming and storing MO integrals. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classforte_1_1_psi4_integrals}{forte\+::\+Psi4\+Integrals}}
+\begin{DoxyCompactList}\small\item\em Interface to integrals read from psi4. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespacepsi}{psi}}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{forte\+::\+Integral\+Spin\+Restriction}} \{ \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7aecdee5de15af6876cfab0801bb36f445}{forte\+::\+Integral\+Spin\+Restriction\+::\+Restricted}}, 
+\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7a89c6caacc7047b0a535412d7f939f870}{forte\+::\+Integral\+Spin\+Restriction\+::\+Unrestricted}}
+ \}
+\begin{DoxyCompactList}\small\item\em The Integral\+Spin\+Restriction enum. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{forte\+::\+Integral\+Type}} \{ \newline
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6af94bb2613e35569ce7e8050363ff45eb}{forte\+::\+Conventional}}, 
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6ab8b5949fb2d3e58becc289fea2b4c750}{forte\+::\+DF}}, 
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6a95bcf5261a856e90df642fb085ed9f94}{forte\+::\+Cholesky}}, 
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6a4e355b6eb7fda3f59498181a102dac45}{forte\+::\+Disk\+DF}}, 
+\newline
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6a094dfed17168b1bf17c1d39490c708dc}{forte\+::\+Dist\+DF}}, 
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6a5fafd80e1e593e4b4e5b35e6b0cf9dd6}{forte\+::\+Custom}}
+ \}
+\begin{DoxyCompactList}\small\item\em The Integral\+Type enum. \end{DoxyCompactList}\end{DoxyCompactItemize}

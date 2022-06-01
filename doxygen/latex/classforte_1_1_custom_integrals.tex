@@ -1,0 +1,297 @@
+\hypertarget{classforte_1_1_custom_integrals}{}\section{forte\+:\+:Custom\+Integrals Class Reference}
+\label{classforte_1_1_custom_integrals}\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+
+
+The \mbox{\hyperlink{classforte_1_1_custom_integrals}{Custom\+Integrals}} class stores user-\/provided integrals.  
+
+
+
+
+{\ttfamily \#include $<$custom\+\_\+integrals.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Custom\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=195pt]{classforte_1_1_custom_integrals__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Custom\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=195pt]{classforte_1_1_custom_integrals__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_custom_integrals_ae7a71673fc56be09c26fae459f7bc84e}{Custom\+Integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} restricted, double \mbox{\hyperlink{classforte_1_1_forte_integrals_a7e2dec148b4e6c3bbd918df8025f8329}{scalar}}, const std\+::vector$<$ double $>$ \&\mbox{\hyperlink{classforte_1_1_forte_integrals_adeb8d675248cb181a502818b8a972908}{oei\+\_\+a}}, const std\+::vector$<$ double $>$ \&\mbox{\hyperlink{classforte_1_1_forte_integrals_ace33795c89d99da0aa8bac4a95263d23}{oei\+\_\+b}}, const std\+::vector$<$ double $>$ \&tei\+\_\+aa, const std\+::vector$<$ double $>$ \&tei\+\_\+ab, const std\+::vector$<$ double $>$ \&tei\+\_\+bb)
+\item 
+void \mbox{\hyperlink{classforte_1_1_custom_integrals_a09375e296a39feb6a94c7cf4947d0206}{initialize}} () override
+\item 
+double \mbox{\hyperlink{classforte_1_1_custom_integrals_a933807bd0f7a711329edb83b9b9915f0}{aptei\+\_\+aa}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em Grabs the antisymmetriced T\+EI -\/ assumes storage in aphy\+\_\+tei\+\_\+$\ast$. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_custom_integrals_abfea37dad8b705e35732f3fae06dd151}{aptei\+\_\+ab}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed alpha-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$rs$>$ \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_custom_integrals_a2f10a8117087972091b1a7b7188bf797}{aptei\+\_\+bb}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed beta-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_custom_integrals_ae60addb837588a5101f1f2485a818426}{aptei\+\_\+aa\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\begin{DoxyCompactList}\small\item\em Grabs the antisymmetrized T\+EI -\/ assumes storage of ambit tensor. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_custom_integrals_af65b7d58e92e6ec9a13c93238724a831}{aptei\+\_\+ab\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_custom_integrals_a71e29eaa0e9b1a84fe679e147c22398f}{aptei\+\_\+bb\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_custom_integrals_aae47837ebc64bb62efb0c23107ebfafa}{make\+\_\+fock\+\_\+matrix}} (ambit\+::\+Tensor Da, ambit\+::\+Tensor Db) override
+\begin{DoxyCompactList}\small\item\em Make the generalized Fock matrix. \end{DoxyCompactList}\item 
+std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix, double $>$ \mbox{\hyperlink{classforte_1_1_custom_integrals_a00921e140fba2f63eb8399003029ad1a}{make\+\_\+fock\+\_\+inactive}} (psi\+::\+Dimension dim\+\_\+start, psi\+::\+Dimension dim\+\_\+end) override
+\begin{DoxyCompactList}\small\item\em Make the closed-\/shell Fock matrix. \end{DoxyCompactList}\item 
+std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_custom_integrals_aab638e735541a02c266c8ed5bf25af3a}{make\+\_\+fock\+\_\+active}} (ambit\+::\+Tensor Da, ambit\+::\+Tensor Db) override
+\begin{DoxyCompactList}\small\item\em Make the active Fock matrix. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_custom_integrals_a8079cb2a8c6b71608db08667694183b9}{make\+\_\+fock\+\_\+active\+\_\+restricted}} (psi\+::\+Shared\+Matrix D) override
+\begin{DoxyCompactList}\small\item\em Make the active Fock matrix using restricted equation. \end{DoxyCompactList}\item 
+std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_custom_integrals_a87a7d17ddd89c004adf56b032d409669}{make\+\_\+fock\+\_\+active\+\_\+unrestricted}} (psi\+::\+Shared\+Matrix Da, psi\+::\+Shared\+Matrix Db) override
+\begin{DoxyCompactList}\small\item\em Make the active Fock matrix using unrestricted equation. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_custom_integrals_aa8813730038bbc062d8e08d33600c27d}{nthree}} () const override
+\begin{DoxyCompactList}\small\item\em Return the number of auxiliary functions. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_custom_integrals_ab9b7fd99d359eedcde4fcbf5e5df1795}{set\+\_\+tei}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s, double value, bool alpha1, bool alpha2) override
+\begin{DoxyCompactList}\small\item\em Set the value of the two-\/electron integrals. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_custom_integrals}{Custom\+Integrals}} class stores user-\/provided integrals. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_ae7a71673fc56be09c26fae459f7bc84e}\label{classforte_1_1_custom_integrals_ae7a71673fc56be09c26fae459f7bc84e}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!Custom\+Integrals@{Custom\+Integrals}}
+\index{Custom\+Integrals@{Custom\+Integrals}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{Custom\+Integrals()}{CustomIntegrals()}}
+{\footnotesize\ttfamily forte\+::\+Custom\+Integrals\+::\+Custom\+Integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}}}]{restricted,  }\item[{double}]{scalar,  }\item[{const std\+::vector$<$ double $>$ \&}]{oei\+\_\+a,  }\item[{const std\+::vector$<$ double $>$ \&}]{oei\+\_\+b,  }\item[{const std\+::vector$<$ double $>$ \&}]{tei\+\_\+aa,  }\item[{const std\+::vector$<$ double $>$ \&}]{tei\+\_\+ab,  }\item[{const std\+::vector$<$ double $>$ \&}]{tei\+\_\+bb }\end{DoxyParamCaption})}
+
+Contructor of \mbox{\hyperlink{classforte_1_1_custom_integrals}{Custom\+Integrals}} 
+\begin{DoxyParams}{Parameters}
+{\em options} & a pointer to \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & a pointer to Forte \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} \\
+\hline
+{\em restricted} & the type of integral transformation \\
+\hline
+{\em scalar} & the nuclear repulsion energy \\
+\hline
+{\em oei\+\_\+a} & the alpha one-\/electron integrals in MO basis \\
+\hline
+{\em oei\+\_\+b} & the beta one-\/electron integrals in MO basis \\
+\hline
+{\em tei\+\_\+aa} & the alpha-\/alpha two-\/electron integrals in MO basis \\
+\hline
+{\em tei\+\_\+ab} & the alpha-\/beta two-\/electron integrals in MO basis \\
+\hline
+{\em tei\+\_\+bb} & the beta-\/beta two-\/electron integrals in MO basis \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_a933807bd0f7a711329edb83b9b9915f0}\label{classforte_1_1_custom_integrals_a933807bd0f7a711329edb83b9b9915f0}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!aptei\+\_\+aa@{aptei\+\_\+aa}}
+\index{aptei\+\_\+aa@{aptei\+\_\+aa}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+aa()}{aptei\_aa()}}
+{\footnotesize\ttfamily double forte\+::\+Custom\+Integrals\+::aptei\+\_\+aa (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Grabs the antisymmetriced T\+EI -\/ assumes storage in aphy\+\_\+tei\+\_\+$\ast$. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_afc84c157025b56ee0f8e3b1abe1c0a5f}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_ae60addb837588a5101f1f2485a818426}\label{classforte_1_1_custom_integrals_ae60addb837588a5101f1f2485a818426}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!aptei\+\_\+aa\+\_\+block@{aptei\+\_\+aa\+\_\+block}}
+\index{aptei\+\_\+aa\+\_\+block@{aptei\+\_\+aa\+\_\+block}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+aa\+\_\+block()}{aptei\_aa\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Custom\+Integrals\+::aptei\+\_\+aa\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Grabs the antisymmetrized T\+EI -\/ assumes storage of ambit tensor. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_ac20ae649b8cfe116f8583d676e43da27}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_abfea37dad8b705e35732f3fae06dd151}\label{classforte_1_1_custom_integrals_abfea37dad8b705e35732f3fae06dd151}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!aptei\+\_\+ab@{aptei\+\_\+ab}}
+\index{aptei\+\_\+ab@{aptei\+\_\+ab}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+ab()}{aptei\_ab()}}
+{\footnotesize\ttfamily double forte\+::\+Custom\+Integrals\+::aptei\+\_\+ab (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+The antisymmetrixed alpha-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$rs$>$ 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a45efc2329cdfc7e4690cbe85688b947e}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_af65b7d58e92e6ec9a13c93238724a831}\label{classforte_1_1_custom_integrals_af65b7d58e92e6ec9a13c93238724a831}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!aptei\+\_\+ab\+\_\+block@{aptei\+\_\+ab\+\_\+block}}
+\index{aptei\+\_\+ab\+\_\+block@{aptei\+\_\+ab\+\_\+block}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+ab\+\_\+block()}{aptei\_ab\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Custom\+Integrals\+::aptei\+\_\+ab\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+a tensor with a block of the alpha-\/beta antisymmetrized two-\/electron integrals 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_acd40e350dc861baf8adf6a3b47c74023}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_a2f10a8117087972091b1a7b7188bf797}\label{classforte_1_1_custom_integrals_a2f10a8117087972091b1a7b7188bf797}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!aptei\+\_\+bb@{aptei\+\_\+bb}}
+\index{aptei\+\_\+bb@{aptei\+\_\+bb}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+bb()}{aptei\_bb()}}
+{\footnotesize\ttfamily double forte\+::\+Custom\+Integrals\+::aptei\+\_\+bb (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+The antisymmetrixed beta-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a246225031c3799dc446f94e0e732c3ac}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_a71e29eaa0e9b1a84fe679e147c22398f}\label{classforte_1_1_custom_integrals_a71e29eaa0e9b1a84fe679e147c22398f}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!aptei\+\_\+bb\+\_\+block@{aptei\+\_\+bb\+\_\+block}}
+\index{aptei\+\_\+bb\+\_\+block@{aptei\+\_\+bb\+\_\+block}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+bb\+\_\+block()}{aptei\_bb\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Custom\+Integrals\+::aptei\+\_\+bb\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+a tensor with a block of the beta-\/beta antisymmetrized two-\/electron integrals 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_ae2799dc7cbfd456603a2b841b26582ab}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_a09375e296a39feb6a94c7cf4947d0206}\label{classforte_1_1_custom_integrals_a09375e296a39feb6a94c7cf4947d0206}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!initialize@{initialize}}
+\index{initialize@{initialize}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{initialize()}{initialize()}}
+{\footnotesize\ttfamily void forte\+::\+Custom\+Integrals\+::initialize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a7862835fa0f5f9abe13dfcd6730fa4be}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_aab638e735541a02c266c8ed5bf25af3a}\label{classforte_1_1_custom_integrals_aab638e735541a02c266c8ed5bf25af3a}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!make\+\_\+fock\+\_\+active@{make\+\_\+fock\+\_\+active}}
+\index{make\+\_\+fock\+\_\+active@{make\+\_\+fock\+\_\+active}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active()}{make\_fock\_active()}}
+{\footnotesize\ttfamily std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ forte\+::\+Custom\+Integrals\+::make\+\_\+fock\+\_\+active (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor}]{Da,  }\item[{ambit\+::\+Tensor}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the active Fock matrix. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a1dda7858e1766c9869b58eeda81d5a21}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_a8079cb2a8c6b71608db08667694183b9}\label{classforte_1_1_custom_integrals_a8079cb2a8c6b71608db08667694183b9}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!make\+\_\+fock\+\_\+active\+\_\+restricted@{make\+\_\+fock\+\_\+active\+\_\+restricted}}
+\index{make\+\_\+fock\+\_\+active\+\_\+restricted@{make\+\_\+fock\+\_\+active\+\_\+restricted}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active\+\_\+restricted()}{make\_fock\_active\_restricted()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Custom\+Integrals\+::make\+\_\+fock\+\_\+active\+\_\+restricted (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{D }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the active Fock matrix using restricted equation. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a9e2f6f24d734aa04784dfc46d3f031ae}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_a87a7d17ddd89c004adf56b032d409669}\label{classforte_1_1_custom_integrals_a87a7d17ddd89c004adf56b032d409669}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!make\+\_\+fock\+\_\+active\+\_\+unrestricted@{make\+\_\+fock\+\_\+active\+\_\+unrestricted}}
+\index{make\+\_\+fock\+\_\+active\+\_\+unrestricted@{make\+\_\+fock\+\_\+active\+\_\+unrestricted}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active\+\_\+unrestricted()}{make\_fock\_active\_unrestricted()}}
+{\footnotesize\ttfamily std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ forte\+::\+Custom\+Integrals\+::make\+\_\+fock\+\_\+active\+\_\+unrestricted (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{Da,  }\item[{psi\+::\+Shared\+Matrix}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the active Fock matrix using unrestricted equation. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a3bc94f56104d72581629d9d6a6a3a74c}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_a00921e140fba2f63eb8399003029ad1a}\label{classforte_1_1_custom_integrals_a00921e140fba2f63eb8399003029ad1a}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!make\+\_\+fock\+\_\+inactive@{make\+\_\+fock\+\_\+inactive}}
+\index{make\+\_\+fock\+\_\+inactive@{make\+\_\+fock\+\_\+inactive}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+inactive()}{make\_fock\_inactive()}}
+{\footnotesize\ttfamily std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix, double $>$ forte\+::\+Custom\+Integrals\+::make\+\_\+fock\+\_\+inactive (\begin{DoxyParamCaption}\item[{psi\+::\+Dimension}]{dim\+\_\+start,  }\item[{psi\+::\+Dimension}]{dim\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the closed-\/shell Fock matrix. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a4cdca0a7587cad9d830ed3b333ec78cf}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_aae47837ebc64bb62efb0c23107ebfafa}\label{classforte_1_1_custom_integrals_aae47837ebc64bb62efb0c23107ebfafa}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!make\+\_\+fock\+\_\+matrix@{make\+\_\+fock\+\_\+matrix}}
+\index{make\+\_\+fock\+\_\+matrix@{make\+\_\+fock\+\_\+matrix}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+matrix()}{make\_fock\_matrix()}}
+{\footnotesize\ttfamily void forte\+::\+Custom\+Integrals\+::make\+\_\+fock\+\_\+matrix (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor}]{Da,  }\item[{ambit\+::\+Tensor}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Make the generalized Fock matrix. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_aadd195fbc0c7f7b659ab9280457568e0}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_aa8813730038bbc062d8e08d33600c27d}\label{classforte_1_1_custom_integrals_aa8813730038bbc062d8e08d33600c27d}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!nthree@{nthree}}
+\index{nthree@{nthree}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{nthree()}{nthree()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Custom\+Integrals\+::nthree (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Return the number of auxiliary functions. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classforte_1_1_forte_integrals_af04858e7813556747745f90ffbda81a4}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_custom_integrals_ab9b7fd99d359eedcde4fcbf5e5df1795}\label{classforte_1_1_custom_integrals_ab9b7fd99d359eedcde4fcbf5e5df1795}} 
+\index{forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}!set\+\_\+tei@{set\+\_\+tei}}
+\index{set\+\_\+tei@{set\+\_\+tei}!forte\+::\+Custom\+Integrals@{forte\+::\+Custom\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+tei()}{set\_tei()}}
+{\footnotesize\ttfamily void forte\+::\+Custom\+Integrals\+::set\+\_\+tei (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s,  }\item[{double}]{value,  }\item[{bool}]{alpha1,  }\item[{bool}]{alpha2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Set the value of the two-\/electron integrals. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_aaccd56e90bbc3c423158efb154336b9c}{forte\+::\+Forte\+Integrals}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{custom__integrals_8h}{custom\+\_\+integrals.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{custom__integrals_8cc}{custom\+\_\+integrals.\+cc}}\end{DoxyCompactItemize}

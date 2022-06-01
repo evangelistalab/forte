@@ -1,0 +1,32 @@
+import forte
+
+molecule HF{
+         F            0.000000000000     0.000000000000    -0.046381013528
+         H            0.000000000000     0.000000000000     0.874323583870
+}
+
+set globals{
+  basis                    cc-pvdz
+  reference                rhf
+  d_convergence            12
+  e_convergence            15
+  restricted_docc          [2,0,1,1]
+  active                   [2,0,0,0]
+  maxiter                  100
+}
+
+set forte{
+  active_space_solver      fci
+  correlation_solver       dsrg-mrpt2
+  ref_type                 casscf
+  frozen_docc              [1,0,0,0]
+  restricted_docc          [1,0,1,1]
+  active                   [2,0,0,0]
+  root_sym                 0
+  nroot                    1
+  dsrg_s                   0.5
+  active_space_solver      fci 
+}
+
+ecas,ref = energy('casscf',return_wfn=True)
+E = energy('forte',ref_wfn=ref)

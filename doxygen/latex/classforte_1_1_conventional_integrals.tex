@@ -1,0 +1,186 @@
+\hypertarget{classforte_1_1_conventional_integrals}{}\section{forte\+:\+:Conventional\+Integrals Class Reference}
+\label{classforte_1_1_conventional_integrals}\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+
+
+The \mbox{\hyperlink{classforte_1_1_conventional_integrals}{Conventional\+Integrals}} class computes and transforms conventional two-\/electron integrals.  
+
+
+
+
+{\ttfamily \#include $<$conventional\+\_\+integrals.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Conventional\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=219pt]{classforte_1_1_conventional_integrals__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Conventional\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=219pt]{classforte_1_1_conventional_integrals__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_conventional_integrals_a4b49dff68c291079528e82420e037248}{Conventional\+Integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$ ref\+\_\+wfn, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} restricted)
+\begin{DoxyCompactList}\small\item\em Contructor of \mbox{\hyperlink{classforte_1_1_conventional_integrals}{Conventional\+Integrals}}. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_conventional_integrals_a9d9d6528eb1241a9e03fcf82e4a88dbe}{initialize}} () override
+\item 
+double \mbox{\hyperlink{classforte_1_1_conventional_integrals_a4df626960614077f1df435efba44bd0a}{aptei\+\_\+aa}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em Grabs the antisymmetriced T\+EI -\/ assumes storage in aphy\+\_\+tei\+\_\+$\ast$. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_conventional_integrals_a7ebb8bcee10a6cbac613e7b626093731}{aptei\+\_\+ab}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed alpha-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$rs$>$ \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_conventional_integrals_ae6d6bfe97bb42d74dc9b69b5c617a966}{aptei\+\_\+bb}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) override
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed beta-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_conventional_integrals_abbe1dfb244b776a9d50fb2a06a837cbf}{aptei\+\_\+aa\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\begin{DoxyCompactList}\small\item\em Grabs the antisymmetrized T\+EI -\/ assumes storage of ambit tensor. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_conventional_integrals_aeb46dfc0030e582c301b64a011e2af58}{aptei\+\_\+ab\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_conventional_integrals_a85a995f80f256953f9ceeb2ea903cf0b}{aptei\+\_\+bb\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_conventional_integrals_aef0130cb53212f32652a56e83e204519}{set\+\_\+tei}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s, double value, bool alpha1, bool alpha2) override
+\begin{DoxyCompactList}\small\item\em Set the value of the two-\/electron integrals. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_conventional_integrals}{Conventional\+Integrals}} class computes and transforms conventional two-\/electron integrals. 
+
+This class assumes the two-\/electron integrals can be stored in memory. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_a4b49dff68c291079528e82420e037248}\label{classforte_1_1_conventional_integrals_a4b49dff68c291079528e82420e037248}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!Conventional\+Integrals@{Conventional\+Integrals}}
+\index{Conventional\+Integrals@{Conventional\+Integrals}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{Conventional\+Integrals()}{ConventionalIntegrals()}}
+{\footnotesize\ttfamily forte\+::\+Conventional\+Integrals\+::\+Conventional\+Integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$}]{ref\+\_\+wfn,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}}}]{restricted }\end{DoxyParamCaption})}
+
+
+
+Contructor of \mbox{\hyperlink{classforte_1_1_conventional_integrals}{Conventional\+Integrals}}. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_a4df626960614077f1df435efba44bd0a}\label{classforte_1_1_conventional_integrals_a4df626960614077f1df435efba44bd0a}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!aptei\+\_\+aa@{aptei\+\_\+aa}}
+\index{aptei\+\_\+aa@{aptei\+\_\+aa}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+aa()}{aptei\_aa()}}
+{\footnotesize\ttfamily double forte\+::\+Conventional\+Integrals\+::aptei\+\_\+aa (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Grabs the antisymmetriced T\+EI -\/ assumes storage in aphy\+\_\+tei\+\_\+$\ast$. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_afc84c157025b56ee0f8e3b1abe1c0a5f}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_abbe1dfb244b776a9d50fb2a06a837cbf}\label{classforte_1_1_conventional_integrals_abbe1dfb244b776a9d50fb2a06a837cbf}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!aptei\+\_\+aa\+\_\+block@{aptei\+\_\+aa\+\_\+block}}
+\index{aptei\+\_\+aa\+\_\+block@{aptei\+\_\+aa\+\_\+block}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+aa\+\_\+block()}{aptei\_aa\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Conventional\+Integrals\+::aptei\+\_\+aa\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Grabs the antisymmetrized T\+EI -\/ assumes storage of ambit tensor. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_ac20ae649b8cfe116f8583d676e43da27}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_a7ebb8bcee10a6cbac613e7b626093731}\label{classforte_1_1_conventional_integrals_a7ebb8bcee10a6cbac613e7b626093731}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!aptei\+\_\+ab@{aptei\+\_\+ab}}
+\index{aptei\+\_\+ab@{aptei\+\_\+ab}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+ab()}{aptei\_ab()}}
+{\footnotesize\ttfamily double forte\+::\+Conventional\+Integrals\+::aptei\+\_\+ab (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+The antisymmetrixed alpha-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$rs$>$ 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a45efc2329cdfc7e4690cbe85688b947e}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_aeb46dfc0030e582c301b64a011e2af58}\label{classforte_1_1_conventional_integrals_aeb46dfc0030e582c301b64a011e2af58}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!aptei\+\_\+ab\+\_\+block@{aptei\+\_\+ab\+\_\+block}}
+\index{aptei\+\_\+ab\+\_\+block@{aptei\+\_\+ab\+\_\+block}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+ab\+\_\+block()}{aptei\_ab\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Conventional\+Integrals\+::aptei\+\_\+ab\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+a tensor with a block of the alpha-\/beta antisymmetrized two-\/electron integrals 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_acd40e350dc861baf8adf6a3b47c74023}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_ae6d6bfe97bb42d74dc9b69b5c617a966}\label{classforte_1_1_conventional_integrals_ae6d6bfe97bb42d74dc9b69b5c617a966}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!aptei\+\_\+bb@{aptei\+\_\+bb}}
+\index{aptei\+\_\+bb@{aptei\+\_\+bb}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+bb()}{aptei\_bb()}}
+{\footnotesize\ttfamily double forte\+::\+Conventional\+Integrals\+::aptei\+\_\+bb (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+The antisymmetrixed beta-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a246225031c3799dc446f94e0e732c3ac}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_a85a995f80f256953f9ceeb2ea903cf0b}\label{classforte_1_1_conventional_integrals_a85a995f80f256953f9ceeb2ea903cf0b}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!aptei\+\_\+bb\+\_\+block@{aptei\+\_\+bb\+\_\+block}}
+\index{aptei\+\_\+bb\+\_\+block@{aptei\+\_\+bb\+\_\+block}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+bb\+\_\+block()}{aptei\_bb\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Conventional\+Integrals\+::aptei\+\_\+bb\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+a tensor with a block of the beta-\/beta antisymmetrized two-\/electron integrals 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_ae2799dc7cbfd456603a2b841b26582ab}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_a9d9d6528eb1241a9e03fcf82e4a88dbe}\label{classforte_1_1_conventional_integrals_a9d9d6528eb1241a9e03fcf82e4a88dbe}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!initialize@{initialize}}
+\index{initialize@{initialize}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{initialize()}{initialize()}}
+{\footnotesize\ttfamily void forte\+::\+Conventional\+Integrals\+::initialize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_a7862835fa0f5f9abe13dfcd6730fa4be}{forte\+::\+Forte\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_conventional_integrals_aef0130cb53212f32652a56e83e204519}\label{classforte_1_1_conventional_integrals_aef0130cb53212f32652a56e83e204519}} 
+\index{forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}!set\+\_\+tei@{set\+\_\+tei}}
+\index{set\+\_\+tei@{set\+\_\+tei}!forte\+::\+Conventional\+Integrals@{forte\+::\+Conventional\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+tei()}{set\_tei()}}
+{\footnotesize\ttfamily void forte\+::\+Conventional\+Integrals\+::set\+\_\+tei (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s,  }\item[{double}]{value,  }\item[{bool}]{alpha1,  }\item[{bool}]{alpha2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Set the value of the two-\/electron integrals. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_forte_integrals_aaccd56e90bbc3c423158efb154336b9c}{forte\+::\+Forte\+Integrals}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{conventional__integrals_8h}{conventional\+\_\+integrals.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{conventional__integrals_8cc}{conventional\+\_\+integrals.\+cc}}\end{DoxyCompactItemize}

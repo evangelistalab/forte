@@ -1,0 +1,501 @@
+\hypertarget{classforte_1_1_sigma_vector_dynamic}{}\section{forte\+:\+:Sigma\+Vector\+Dynamic Class Reference}
+\label{classforte_1_1_sigma_vector_dynamic}\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+
+
+The \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic}{Sigma\+Vector\+Dynamic}} class Computes the sigma vector with a dynamic approach.  
+
+
+
+
+{\ttfamily \#include $<$sigma\+\_\+vector\+\_\+dynamic.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Sigma\+Vector\+Dynamic\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=218pt]{classforte_1_1_sigma_vector_dynamic__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Sigma\+Vector\+Dynamic\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_sigma_vector_dynamic__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ac2fe877e6af7cb012659e616cfc3cbb0}{Sigma\+Vector\+Dynamic}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&space, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints, size\+\_\+t max\+\_\+memory)
+\item 
+\mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_aa6039b8b2283208c770e2a81d8fc41d8}{$\sim$\+Sigma\+Vector\+Dynamic}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a04a941c88e4c8a1254e96ad8a8dd5c64}{compute\+\_\+sigma}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ sigma, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ b) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a82c707e8e276ae30fef5d78e473eadc1}{get\+\_\+diagonal}} (psi\+::\+Vector \&diag) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a06fa37f7134ca1b1efbfc77ccb8afa01}{add\+\_\+bad\+\_\+roots}} (std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$$>$ \&bad\+\_\+states) override
+\item 
+double \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ac8aec7cf6d360cfcd391ea90f68c86ba}{compute\+\_\+spin}} (const std\+::vector$<$ double $>$ \&c) override
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a54bdf1da1b5951edd1bd9b9ba4333f0b}{bad\+\_\+states\+\_\+}}
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a9c168362117643a0a0422a1213143c05}{print\+\_\+thread\+\_\+stats}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a997eaf87b10fdd2ea9e65dc28a4f5707}{compute\+\_\+sigma\+\_\+scalar}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ sigma, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ b)
+\begin{DoxyCompactList}\small\item\em Scalar contribution to sigma. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_aa56beb4165e25347cd21925d58ab5850}{compute\+\_\+sigma\+\_\+aa}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ sigma, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ b)
+\begin{DoxyCompactList}\small\item\em Alpha-\/alpha single and double excitation contributions to sigma. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a4cd2eff1fd65a16afd4a9be40abfed23}{compute\+\_\+sigma\+\_\+bb}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ sigma, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ b)
+\begin{DoxyCompactList}\small\item\em Beta-\/beta single and double excitation contributions to sigma. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_aff4d059b14d67c178e16fa981cf2f98b}{compute\+\_\+sigma\+\_\+abab}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ sigma, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ b)
+\begin{DoxyCompactList}\small\item\em Alpha-\/beta double excitation contributions to sigma. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a1c05cdfb083520638f8f581d9288dc85}{sigma\+\_\+aa\+\_\+store\+\_\+task}} (size\+\_\+t task\+\_\+id, size\+\_\+t num\+\_\+tasks)
+\begin{DoxyCompactList}\small\item\em Task to compute sigma\+\_\+aa. Computes sigma and stores part of the Hamiltonian. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_acb207c4804b33a07797fbe4c5e203348}{sigma\+\_\+aa\+\_\+dynamic\+\_\+task}} (size\+\_\+t task\+\_\+id, size\+\_\+t num\+\_\+tasks)
+\begin{DoxyCompactList}\small\item\em Task to compute sigma\+\_\+aa. Computes sigma using a dynamic approach. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ac0bab0d24d52fa504955f030d9ad5c1b}{sigma\+\_\+bb\+\_\+store\+\_\+task}} (size\+\_\+t task\+\_\+id, size\+\_\+t num\+\_\+tasks)
+\begin{DoxyCompactList}\small\item\em Task to compute sigma\+\_\+bb. Computes sigma and stores part of the Hamiltonian. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a6fd74c1a7c959e833a08218aa417e312}{sigma\+\_\+bb\+\_\+dynamic\+\_\+task}} (size\+\_\+t task\+\_\+id, size\+\_\+t num\+\_\+tasks)
+\begin{DoxyCompactList}\small\item\em Task to compute sigma\+\_\+bb. Computes sigma using a dynamic approach. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a3ffe1f2de8091c52c95f6afa8359c6a1}{sigma\+\_\+abab\+\_\+store\+\_\+task}} (size\+\_\+t task\+\_\+id, size\+\_\+t num\+\_\+tasks)
+\begin{DoxyCompactList}\small\item\em Task to compute sigma\+\_\+abab. Computes sigma and stores part of the Hamiltonian. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a1b847accdb778cc177f56f2b5e23ae31}{sigma\+\_\+abab\+\_\+dynamic\+\_\+task}} (size\+\_\+t task\+\_\+id, size\+\_\+t num\+\_\+tasks)
+\begin{DoxyCompactList}\small\item\em Task to compute sigma\+\_\+abab. Computes sigma using a dynamic approach. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a353b9c88fb8b844fca9a4c78da994394}{compute\+\_\+aa\+\_\+coupling\+\_\+and\+\_\+store}} (const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&Ib, const std\+::vector$<$ double $>$ \&b, size\+\_\+t task\+\_\+id)
+\item 
+bool \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a366c37e24eb1e81ab31017afd3879b46}{compute\+\_\+bb\+\_\+coupling\+\_\+and\+\_\+store}} (const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&Ia, const std\+::vector$<$ double $>$ \&b, size\+\_\+t task\+\_\+id)
+\item 
+bool \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_aeab3e51a9ef41df6a53bbd02be377a75}{compute\+\_\+abab\+\_\+coupling\+\_\+and\+\_\+store}} (const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&det\+Ia, const std\+::vector$<$ double $>$ \&b, size\+\_\+t task\+\_\+id)
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a1975dd7fd3bc81afee007b01382679f8}{compute\+\_\+aa\+\_\+coupling}} (const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&det\+Ib, const std\+::vector$<$ double $>$ \&b)
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a05d5d3691dd33c2afb001af2be5902a8}{compute\+\_\+bb\+\_\+coupling}} (const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&det\+Ia, const std\+::vector$<$ double $>$ \&b)
+\item 
+void \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a9893c4a50b5a5ef2405dcaa04bbdb312}{compute\+\_\+abab\+\_\+coupling}} (const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&det\+Ia, const std\+::vector$<$ double $>$ \&b)
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespaceforte_a03c165703ac6571c2ec6f966a6153a22}{Sigma\+Vector\+Mode}} \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a59caf3c83ac63c2b8d887db073f5a3bf}{mode\+\_\+}} = \mbox{\hyperlink{namespaceforte_a94410e08f0cf9a0cfc5e53c70b6bf485a971fd8cc345d8bd9f92e9f7d88fdf20c}{Sigma\+Vector\+Mode\+::\+Dynamic}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ad03b41c577c98bd0c9db4073b0edd941}{num\+\_\+threads\+\_\+}} = 1
+\begin{DoxyCompactList}\small\item\em The number of threads. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ab539f0ab423f45b066cb8e38d768f9ca}{total\+\_\+space\+\_\+}} = 0
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_aec67a684199133a8b6abcd72a3b33991}{nmo\+\_\+}} = 0
+\begin{DoxyCompactList}\small\item\em The number of molecular orbitals. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ac168a907aeb0425a36e03d8cc85afbdc}{num\+\_\+builds\+\_\+}} = 0
+\begin{DoxyCompactList}\small\item\em Number of sigma builds. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a479e1be73df53e5fa3f7317121decf1e}{H\+\_\+threshold\+\_\+}} = 1.\+0e-\/14
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a4007a610353c66220f0b9d939b3a03d2}{temp\+\_\+b\+\_\+}}
+\begin{DoxyCompactList}\small\item\em A temporary sigma vector of size N\+\_\+det. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ad99b90c2620a933dc06db419077a6910}{temp\+\_\+sigma\+\_\+}}
+\begin{DoxyCompactList}\small\item\em A temporary sigma vector of size N\+\_\+det. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_sorted_string_list}{Sorted\+String\+List}} \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ad73df6a42410729e4c4af3a4b02b6c77}{a\+\_\+sorted\+\_\+string\+\_\+list\+\_\+}}
+\item 
+\mbox{\hyperlink{classforte_1_1_sorted_string_list}{Sorted\+String\+List}} \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_adce1ba2ba0017146310352eb68b8189b}{b\+\_\+sorted\+\_\+string\+\_\+list\+\_\+}}
+\item 
+std\+::vector$<$ std\+::tuple$<$ double, std\+::uint32\+\_\+t, std\+::uint32\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_aa8f1f16414182bc4c82ac6371e030c30}{H\+\_\+\+I\+J\+\_\+list\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The Hamiltonian stored as a list of pairs (H\+\_\+\+IJ, I, J) \end{DoxyCompactList}\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a0789df9ec4056b3be2cda9ba805a2af6}{H\+\_\+\+I\+J\+\_\+list\+\_\+thread\+\_\+limit\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a17aaacecd5da481ba8424aa20c95cca2}{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+start\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a025fd0facb65e035947d7be6adb7df4c}{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+end\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a9704c268df8651ca5af5185853936c49}{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+start\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a5354d1805bbf0dad643e4dc1157a44cf}{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+end\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ac9da1448d14c5f185d3730e46fa82432}{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+start\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_a34afa4286e7513c24761864e8e217965}{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+end\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ac0d7f55f2fbefc773a687908e2d62e81}{first\+\_\+aa\+\_\+onthefly\+\_\+group\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_ab9f4bb6250341b137547c5db79729d14}{first\+\_\+bb\+\_\+onthefly\+\_\+group\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic_aed969a03bee0b29cf3fbf13c28d5e026}{first\+\_\+abab\+\_\+onthefly\+\_\+group\+\_\+}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_sigma_vector_dynamic}{Sigma\+Vector\+Dynamic}} class Computes the sigma vector with a dynamic approach. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ac2fe877e6af7cb012659e616cfc3cbb0}\label{classforte_1_1_sigma_vector_dynamic_ac2fe877e6af7cb012659e616cfc3cbb0}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!Sigma\+Vector\+Dynamic@{Sigma\+Vector\+Dynamic}}
+\index{Sigma\+Vector\+Dynamic@{Sigma\+Vector\+Dynamic}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{Sigma\+Vector\+Dynamic()}{SigmaVectorDynamic()}}
+{\footnotesize\ttfamily forte\+::\+Sigma\+Vector\+Dynamic\+::\+Sigma\+Vector\+Dynamic (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{space,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints,  }\item[{size\+\_\+t}]{max\+\_\+memory }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_aa6039b8b2283208c770e2a81d8fc41d8}\label{classforte_1_1_sigma_vector_dynamic_aa6039b8b2283208c770e2a81d8fc41d8}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!````~Sigma\+Vector\+Dynamic@{$\sim$\+Sigma\+Vector\+Dynamic}}
+\index{````~Sigma\+Vector\+Dynamic@{$\sim$\+Sigma\+Vector\+Dynamic}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{$\sim$\+Sigma\+Vector\+Dynamic()}{~SigmaVectorDynamic()}}
+{\footnotesize\ttfamily forte\+::\+Sigma\+Vector\+Dynamic\+::$\sim$\+Sigma\+Vector\+Dynamic (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a06fa37f7134ca1b1efbfc77ccb8afa01}\label{classforte_1_1_sigma_vector_dynamic_a06fa37f7134ca1b1efbfc77ccb8afa01}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!add\+\_\+bad\+\_\+roots@{add\+\_\+bad\+\_\+roots}}
+\index{add\+\_\+bad\+\_\+roots@{add\+\_\+bad\+\_\+roots}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{add\+\_\+bad\+\_\+roots()}{add\_bad\_roots()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::add\+\_\+bad\+\_\+roots (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$$>$ \&}]{bad\+\_\+states }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_sigma_vector_a5cd950852f515bc082ca1df31bd84e3e}{forte\+::\+Sigma\+Vector}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a1975dd7fd3bc81afee007b01382679f8}\label{classforte_1_1_sigma_vector_dynamic_a1975dd7fd3bc81afee007b01382679f8}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+aa\+\_\+coupling@{compute\+\_\+aa\+\_\+coupling}}
+\index{compute\+\_\+aa\+\_\+coupling@{compute\+\_\+aa\+\_\+coupling}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+aa\+\_\+coupling()}{compute\_aa\_coupling()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+aa\+\_\+coupling (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&}]{det\+Ib,  }\item[{const std\+::vector$<$ double $>$ \&}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a353b9c88fb8b844fca9a4c78da994394}\label{classforte_1_1_sigma_vector_dynamic_a353b9c88fb8b844fca9a4c78da994394}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+aa\+\_\+coupling\+\_\+and\+\_\+store@{compute\+\_\+aa\+\_\+coupling\+\_\+and\+\_\+store}}
+\index{compute\+\_\+aa\+\_\+coupling\+\_\+and\+\_\+store@{compute\+\_\+aa\+\_\+coupling\+\_\+and\+\_\+store}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+aa\+\_\+coupling\+\_\+and\+\_\+store()}{compute\_aa\_coupling\_and\_store()}}
+{\footnotesize\ttfamily bool forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+aa\+\_\+coupling\+\_\+and\+\_\+store (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&}]{Ib,  }\item[{const std\+::vector$<$ double $>$ \&}]{b,  }\item[{size\+\_\+t}]{task\+\_\+id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a9893c4a50b5a5ef2405dcaa04bbdb312}\label{classforte_1_1_sigma_vector_dynamic_a9893c4a50b5a5ef2405dcaa04bbdb312}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+abab\+\_\+coupling@{compute\+\_\+abab\+\_\+coupling}}
+\index{compute\+\_\+abab\+\_\+coupling@{compute\+\_\+abab\+\_\+coupling}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+abab\+\_\+coupling()}{compute\_abab\_coupling()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+abab\+\_\+coupling (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&}]{det\+Ia,  }\item[{const std\+::vector$<$ double $>$ \&}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_aeab3e51a9ef41df6a53bbd02be377a75}\label{classforte_1_1_sigma_vector_dynamic_aeab3e51a9ef41df6a53bbd02be377a75}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+abab\+\_\+coupling\+\_\+and\+\_\+store@{compute\+\_\+abab\+\_\+coupling\+\_\+and\+\_\+store}}
+\index{compute\+\_\+abab\+\_\+coupling\+\_\+and\+\_\+store@{compute\+\_\+abab\+\_\+coupling\+\_\+and\+\_\+store}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+abab\+\_\+coupling\+\_\+and\+\_\+store()}{compute\_abab\_coupling\_and\_store()}}
+{\footnotesize\ttfamily bool forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+abab\+\_\+coupling\+\_\+and\+\_\+store (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&}]{det\+Ia,  }\item[{const std\+::vector$<$ double $>$ \&}]{b,  }\item[{size\+\_\+t}]{task\+\_\+id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a05d5d3691dd33c2afb001af2be5902a8}\label{classforte_1_1_sigma_vector_dynamic_a05d5d3691dd33c2afb001af2be5902a8}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+bb\+\_\+coupling@{compute\+\_\+bb\+\_\+coupling}}
+\index{compute\+\_\+bb\+\_\+coupling@{compute\+\_\+bb\+\_\+coupling}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+bb\+\_\+coupling()}{compute\_bb\_coupling()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+bb\+\_\+coupling (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&}]{det\+Ia,  }\item[{const std\+::vector$<$ double $>$ \&}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a366c37e24eb1e81ab31017afd3879b46}\label{classforte_1_1_sigma_vector_dynamic_a366c37e24eb1e81ab31017afd3879b46}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+bb\+\_\+coupling\+\_\+and\+\_\+store@{compute\+\_\+bb\+\_\+coupling\+\_\+and\+\_\+store}}
+\index{compute\+\_\+bb\+\_\+coupling\+\_\+and\+\_\+store@{compute\+\_\+bb\+\_\+coupling\+\_\+and\+\_\+store}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+bb\+\_\+coupling\+\_\+and\+\_\+store()}{compute\_bb\_coupling\_and\_store()}}
+{\footnotesize\ttfamily bool forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+bb\+\_\+coupling\+\_\+and\+\_\+store (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a840d1bfd3a8b3c16e09979212f37313f}{String}} \&}]{Ia,  }\item[{const std\+::vector$<$ double $>$ \&}]{b,  }\item[{size\+\_\+t}]{task\+\_\+id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a04a941c88e4c8a1254e96ad8a8dd5c64}\label{classforte_1_1_sigma_vector_dynamic_a04a941c88e4c8a1254e96ad8a8dd5c64}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+sigma@{compute\+\_\+sigma}}
+\index{compute\+\_\+sigma@{compute\+\_\+sigma}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+sigma()}{compute\_sigma()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+sigma (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{sigma,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_sigma_vector_afa184f816a37649a4e2316d62c8b621e}{forte\+::\+Sigma\+Vector}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_aa56beb4165e25347cd21925d58ab5850}\label{classforte_1_1_sigma_vector_dynamic_aa56beb4165e25347cd21925d58ab5850}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+sigma\+\_\+aa@{compute\+\_\+sigma\+\_\+aa}}
+\index{compute\+\_\+sigma\+\_\+aa@{compute\+\_\+sigma\+\_\+aa}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+sigma\+\_\+aa()}{compute\_sigma\_aa()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+sigma\+\_\+aa (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{sigma,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Alpha-\/alpha single and double excitation contributions to sigma. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_aff4d059b14d67c178e16fa981cf2f98b}\label{classforte_1_1_sigma_vector_dynamic_aff4d059b14d67c178e16fa981cf2f98b}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+sigma\+\_\+abab@{compute\+\_\+sigma\+\_\+abab}}
+\index{compute\+\_\+sigma\+\_\+abab@{compute\+\_\+sigma\+\_\+abab}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+sigma\+\_\+abab()}{compute\_sigma\_abab()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+sigma\+\_\+abab (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{sigma,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Alpha-\/beta double excitation contributions to sigma. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a4cd2eff1fd65a16afd4a9be40abfed23}\label{classforte_1_1_sigma_vector_dynamic_a4cd2eff1fd65a16afd4a9be40abfed23}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+sigma\+\_\+bb@{compute\+\_\+sigma\+\_\+bb}}
+\index{compute\+\_\+sigma\+\_\+bb@{compute\+\_\+sigma\+\_\+bb}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+sigma\+\_\+bb()}{compute\_sigma\_bb()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+sigma\+\_\+bb (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{sigma,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Beta-\/beta single and double excitation contributions to sigma. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a997eaf87b10fdd2ea9e65dc28a4f5707}\label{classforte_1_1_sigma_vector_dynamic_a997eaf87b10fdd2ea9e65dc28a4f5707}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+sigma\+\_\+scalar@{compute\+\_\+sigma\+\_\+scalar}}
+\index{compute\+\_\+sigma\+\_\+scalar@{compute\+\_\+sigma\+\_\+scalar}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+sigma\+\_\+scalar()}{compute\_sigma\_scalar()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+sigma\+\_\+scalar (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{sigma,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Scalar contribution to sigma. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ac8aec7cf6d360cfcd391ea90f68c86ba}\label{classforte_1_1_sigma_vector_dynamic_ac8aec7cf6d360cfcd391ea90f68c86ba}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!compute\+\_\+spin@{compute\+\_\+spin}}
+\index{compute\+\_\+spin@{compute\+\_\+spin}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{compute\+\_\+spin()}{compute\_spin()}}
+{\footnotesize\ttfamily double forte\+::\+Sigma\+Vector\+Dynamic\+::compute\+\_\+spin (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_sigma_vector_afe5ac487b5277b86fbe4398ba861773c}{forte\+::\+Sigma\+Vector}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a82c707e8e276ae30fef5d78e473eadc1}\label{classforte_1_1_sigma_vector_dynamic_a82c707e8e276ae30fef5d78e473eadc1}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!get\+\_\+diagonal@{get\+\_\+diagonal}}
+\index{get\+\_\+diagonal@{get\+\_\+diagonal}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{get\+\_\+diagonal()}{get\_diagonal()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::get\+\_\+diagonal (\begin{DoxyParamCaption}\item[{psi\+::\+Vector \&}]{diag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_sigma_vector_a4df4b96c5c24a3560a874eae061a502e}{forte\+::\+Sigma\+Vector}}.
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a9c168362117643a0a0422a1213143c05}\label{classforte_1_1_sigma_vector_dynamic_a9c168362117643a0a0422a1213143c05}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!print\+\_\+thread\+\_\+stats@{print\+\_\+thread\+\_\+stats}}
+\index{print\+\_\+thread\+\_\+stats@{print\+\_\+thread\+\_\+stats}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{print\+\_\+thread\+\_\+stats()}{print\_thread\_stats()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::print\+\_\+thread\+\_\+stats (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_acb207c4804b33a07797fbe4c5e203348}\label{classforte_1_1_sigma_vector_dynamic_acb207c4804b33a07797fbe4c5e203348}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!sigma\+\_\+aa\+\_\+dynamic\+\_\+task@{sigma\+\_\+aa\+\_\+dynamic\+\_\+task}}
+\index{sigma\+\_\+aa\+\_\+dynamic\+\_\+task@{sigma\+\_\+aa\+\_\+dynamic\+\_\+task}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{sigma\+\_\+aa\+\_\+dynamic\+\_\+task()}{sigma\_aa\_dynamic\_task()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::sigma\+\_\+aa\+\_\+dynamic\+\_\+task (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{task\+\_\+id,  }\item[{size\+\_\+t}]{num\+\_\+tasks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Task to compute sigma\+\_\+aa. Computes sigma using a dynamic approach. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a1c05cdfb083520638f8f581d9288dc85}\label{classforte_1_1_sigma_vector_dynamic_a1c05cdfb083520638f8f581d9288dc85}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!sigma\+\_\+aa\+\_\+store\+\_\+task@{sigma\+\_\+aa\+\_\+store\+\_\+task}}
+\index{sigma\+\_\+aa\+\_\+store\+\_\+task@{sigma\+\_\+aa\+\_\+store\+\_\+task}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{sigma\+\_\+aa\+\_\+store\+\_\+task()}{sigma\_aa\_store\_task()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::sigma\+\_\+aa\+\_\+store\+\_\+task (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{task\+\_\+id,  }\item[{size\+\_\+t}]{num\+\_\+tasks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Task to compute sigma\+\_\+aa. Computes sigma and stores part of the Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a1b847accdb778cc177f56f2b5e23ae31}\label{classforte_1_1_sigma_vector_dynamic_a1b847accdb778cc177f56f2b5e23ae31}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!sigma\+\_\+abab\+\_\+dynamic\+\_\+task@{sigma\+\_\+abab\+\_\+dynamic\+\_\+task}}
+\index{sigma\+\_\+abab\+\_\+dynamic\+\_\+task@{sigma\+\_\+abab\+\_\+dynamic\+\_\+task}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{sigma\+\_\+abab\+\_\+dynamic\+\_\+task()}{sigma\_abab\_dynamic\_task()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::sigma\+\_\+abab\+\_\+dynamic\+\_\+task (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{task\+\_\+id,  }\item[{size\+\_\+t}]{num\+\_\+tasks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Task to compute sigma\+\_\+abab. Computes sigma using a dynamic approach. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a3ffe1f2de8091c52c95f6afa8359c6a1}\label{classforte_1_1_sigma_vector_dynamic_a3ffe1f2de8091c52c95f6afa8359c6a1}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!sigma\+\_\+abab\+\_\+store\+\_\+task@{sigma\+\_\+abab\+\_\+store\+\_\+task}}
+\index{sigma\+\_\+abab\+\_\+store\+\_\+task@{sigma\+\_\+abab\+\_\+store\+\_\+task}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{sigma\+\_\+abab\+\_\+store\+\_\+task()}{sigma\_abab\_store\_task()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::sigma\+\_\+abab\+\_\+store\+\_\+task (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{task\+\_\+id,  }\item[{size\+\_\+t}]{num\+\_\+tasks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Task to compute sigma\+\_\+abab. Computes sigma and stores part of the Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a6fd74c1a7c959e833a08218aa417e312}\label{classforte_1_1_sigma_vector_dynamic_a6fd74c1a7c959e833a08218aa417e312}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!sigma\+\_\+bb\+\_\+dynamic\+\_\+task@{sigma\+\_\+bb\+\_\+dynamic\+\_\+task}}
+\index{sigma\+\_\+bb\+\_\+dynamic\+\_\+task@{sigma\+\_\+bb\+\_\+dynamic\+\_\+task}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{sigma\+\_\+bb\+\_\+dynamic\+\_\+task()}{sigma\_bb\_dynamic\_task()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::sigma\+\_\+bb\+\_\+dynamic\+\_\+task (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{task\+\_\+id,  }\item[{size\+\_\+t}]{num\+\_\+tasks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Task to compute sigma\+\_\+bb. Computes sigma using a dynamic approach. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ac0bab0d24d52fa504955f030d9ad5c1b}\label{classforte_1_1_sigma_vector_dynamic_ac0bab0d24d52fa504955f030d9ad5c1b}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!sigma\+\_\+bb\+\_\+store\+\_\+task@{sigma\+\_\+bb\+\_\+store\+\_\+task}}
+\index{sigma\+\_\+bb\+\_\+store\+\_\+task@{sigma\+\_\+bb\+\_\+store\+\_\+task}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{sigma\+\_\+bb\+\_\+store\+\_\+task()}{sigma\_bb\_store\_task()}}
+{\footnotesize\ttfamily void forte\+::\+Sigma\+Vector\+Dynamic\+::sigma\+\_\+bb\+\_\+store\+\_\+task (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{task\+\_\+id,  }\item[{size\+\_\+t}]{num\+\_\+tasks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Task to compute sigma\+\_\+bb. Computes sigma and stores part of the Hamiltonian. 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ad73df6a42410729e4c4af3a4b02b6c77}\label{classforte_1_1_sigma_vector_dynamic_ad73df6a42410729e4c4af3a4b02b6c77}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!a\+\_\+sorted\+\_\+string\+\_\+list\+\_\+@{a\+\_\+sorted\+\_\+string\+\_\+list\+\_\+}}
+\index{a\+\_\+sorted\+\_\+string\+\_\+list\+\_\+@{a\+\_\+sorted\+\_\+string\+\_\+list\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{a\+\_\+sorted\+\_\+string\+\_\+list\+\_\+}{a\_sorted\_string\_list\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_sorted_string_list}{Sorted\+String\+List}} forte\+::\+Sigma\+Vector\+Dynamic\+::a\+\_\+sorted\+\_\+string\+\_\+list\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_adce1ba2ba0017146310352eb68b8189b}\label{classforte_1_1_sigma_vector_dynamic_adce1ba2ba0017146310352eb68b8189b}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!b\+\_\+sorted\+\_\+string\+\_\+list\+\_\+@{b\+\_\+sorted\+\_\+string\+\_\+list\+\_\+}}
+\index{b\+\_\+sorted\+\_\+string\+\_\+list\+\_\+@{b\+\_\+sorted\+\_\+string\+\_\+list\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{b\+\_\+sorted\+\_\+string\+\_\+list\+\_\+}{b\_sorted\_string\_list\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_sorted_string_list}{Sorted\+String\+List}} forte\+::\+Sigma\+Vector\+Dynamic\+::b\+\_\+sorted\+\_\+string\+\_\+list\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a54bdf1da1b5951edd1bd9b9ba4333f0b}\label{classforte_1_1_sigma_vector_dynamic_a54bdf1da1b5951edd1bd9b9ba4333f0b}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!bad\+\_\+states\+\_\+@{bad\+\_\+states\+\_\+}}
+\index{bad\+\_\+states\+\_\+@{bad\+\_\+states\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{bad\+\_\+states\+\_\+}{bad\_states\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::pair$<$size\+\_\+t, double$>$ $>$ $>$ forte\+::\+Sigma\+Vector\+Dynamic\+::bad\+\_\+states\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ac0d7f55f2fbefc773a687908e2d62e81}\label{classforte_1_1_sigma_vector_dynamic_ac0d7f55f2fbefc773a687908e2d62e81}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!first\+\_\+aa\+\_\+onthefly\+\_\+group\+\_\+@{first\+\_\+aa\+\_\+onthefly\+\_\+group\+\_\+}}
+\index{first\+\_\+aa\+\_\+onthefly\+\_\+group\+\_\+@{first\+\_\+aa\+\_\+onthefly\+\_\+group\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{first\+\_\+aa\+\_\+onthefly\+\_\+group\+\_\+}{first\_aa\_onthefly\_group\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::first\+\_\+aa\+\_\+onthefly\+\_\+group\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_aed969a03bee0b29cf3fbf13c28d5e026}\label{classforte_1_1_sigma_vector_dynamic_aed969a03bee0b29cf3fbf13c28d5e026}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!first\+\_\+abab\+\_\+onthefly\+\_\+group\+\_\+@{first\+\_\+abab\+\_\+onthefly\+\_\+group\+\_\+}}
+\index{first\+\_\+abab\+\_\+onthefly\+\_\+group\+\_\+@{first\+\_\+abab\+\_\+onthefly\+\_\+group\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{first\+\_\+abab\+\_\+onthefly\+\_\+group\+\_\+}{first\_abab\_onthefly\_group\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::first\+\_\+abab\+\_\+onthefly\+\_\+group\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ab9f4bb6250341b137547c5db79729d14}\label{classforte_1_1_sigma_vector_dynamic_ab9f4bb6250341b137547c5db79729d14}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!first\+\_\+bb\+\_\+onthefly\+\_\+group\+\_\+@{first\+\_\+bb\+\_\+onthefly\+\_\+group\+\_\+}}
+\index{first\+\_\+bb\+\_\+onthefly\+\_\+group\+\_\+@{first\+\_\+bb\+\_\+onthefly\+\_\+group\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{first\+\_\+bb\+\_\+onthefly\+\_\+group\+\_\+}{first\_bb\_onthefly\_group\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::first\+\_\+bb\+\_\+onthefly\+\_\+group\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a025fd0facb65e035947d7be6adb7df4c}\label{classforte_1_1_sigma_vector_dynamic_a025fd0facb65e035947d7be6adb7df4c}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+end\+\_\+@{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+end\+\_\+}}
+\index{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+end\+\_\+@{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+end\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+end\+\_\+}{H\_IJ\_aa\_list\_thread\_end\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+end\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a17aaacecd5da481ba8424aa20c95cca2}\label{classforte_1_1_sigma_vector_dynamic_a17aaacecd5da481ba8424aa20c95cca2}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+start\+\_\+@{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+start\+\_\+}}
+\index{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+start\+\_\+@{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+start\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+start\+\_\+}{H\_IJ\_aa\_list\_thread\_start\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+\+I\+J\+\_\+aa\+\_\+list\+\_\+thread\+\_\+start\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a34afa4286e7513c24761864e8e217965}\label{classforte_1_1_sigma_vector_dynamic_a34afa4286e7513c24761864e8e217965}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+end\+\_\+@{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+end\+\_\+}}
+\index{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+end\+\_\+@{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+end\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+end\+\_\+}{H\_IJ\_abab\_list\_thread\_end\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+end\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ac9da1448d14c5f185d3730e46fa82432}\label{classforte_1_1_sigma_vector_dynamic_ac9da1448d14c5f185d3730e46fa82432}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+start\+\_\+@{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+start\+\_\+}}
+\index{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+start\+\_\+@{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+start\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+start\+\_\+}{H\_IJ\_abab\_list\_thread\_start\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+\+I\+J\+\_\+abab\+\_\+list\+\_\+thread\+\_\+start\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a5354d1805bbf0dad643e4dc1157a44cf}\label{classforte_1_1_sigma_vector_dynamic_a5354d1805bbf0dad643e4dc1157a44cf}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+end\+\_\+@{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+end\+\_\+}}
+\index{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+end\+\_\+@{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+end\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+end\+\_\+}{H\_IJ\_bb\_list\_thread\_end\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+end\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a9704c268df8651ca5af5185853936c49}\label{classforte_1_1_sigma_vector_dynamic_a9704c268df8651ca5af5185853936c49}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+start\+\_\+@{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+start\+\_\+}}
+\index{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+start\+\_\+@{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+start\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+start\+\_\+}{H\_IJ\_bb\_list\_thread\_start\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+\+I\+J\+\_\+bb\+\_\+list\+\_\+thread\+\_\+start\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_aa8f1f16414182bc4c82ac6371e030c30}\label{classforte_1_1_sigma_vector_dynamic_aa8f1f16414182bc4c82ac6371e030c30}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+\+I\+J\+\_\+list\+\_\+@{H\+\_\+\+I\+J\+\_\+list\+\_\+}}
+\index{H\+\_\+\+I\+J\+\_\+list\+\_\+@{H\+\_\+\+I\+J\+\_\+list\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+\+I\+J\+\_\+list\+\_\+}{H\_IJ\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::tuple$<$double, std\+::uint32\+\_\+t, std\+::uint32\+\_\+t$>$ $>$ forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+\+I\+J\+\_\+list\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The Hamiltonian stored as a list of pairs (H\+\_\+\+IJ, I, J) 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a0789df9ec4056b3be2cda9ba805a2af6}\label{classforte_1_1_sigma_vector_dynamic_a0789df9ec4056b3be2cda9ba805a2af6}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+\+I\+J\+\_\+list\+\_\+thread\+\_\+limit\+\_\+@{H\+\_\+\+I\+J\+\_\+list\+\_\+thread\+\_\+limit\+\_\+}}
+\index{H\+\_\+\+I\+J\+\_\+list\+\_\+thread\+\_\+limit\+\_\+@{H\+\_\+\+I\+J\+\_\+list\+\_\+thread\+\_\+limit\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+\+I\+J\+\_\+list\+\_\+thread\+\_\+limit\+\_\+}{H\_IJ\_list\_thread\_limit\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+\+I\+J\+\_\+list\+\_\+thread\+\_\+limit\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a479e1be73df53e5fa3f7317121decf1e}\label{classforte_1_1_sigma_vector_dynamic_a479e1be73df53e5fa3f7317121decf1e}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!H\+\_\+threshold\+\_\+@{H\+\_\+threshold\+\_\+}}
+\index{H\+\_\+threshold\+\_\+@{H\+\_\+threshold\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{H\+\_\+threshold\+\_\+}{H\_threshold\_}}
+{\footnotesize\ttfamily double forte\+::\+Sigma\+Vector\+Dynamic\+::\+H\+\_\+threshold\+\_\+ = 1.\+0e-\/14\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a59caf3c83ac63c2b8d887db073f5a3bf}\label{classforte_1_1_sigma_vector_dynamic_a59caf3c83ac63c2b8d887db073f5a3bf}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!mode\+\_\+@{mode\+\_\+}}
+\index{mode\+\_\+@{mode\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{mode\+\_\+}{mode\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_a03c165703ac6571c2ec6f966a6153a22}{Sigma\+Vector\+Mode}} forte\+::\+Sigma\+Vector\+Dynamic\+::mode\+\_\+ = \mbox{\hyperlink{namespaceforte_a94410e08f0cf9a0cfc5e53c70b6bf485a971fd8cc345d8bd9f92e9f7d88fdf20c}{Sigma\+Vector\+Mode\+::\+Dynamic}}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_aec67a684199133a8b6abcd72a3b33991}\label{classforte_1_1_sigma_vector_dynamic_aec67a684199133a8b6abcd72a3b33991}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!nmo\+\_\+@{nmo\+\_\+}}
+\index{nmo\+\_\+@{nmo\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{nmo\+\_\+}{nmo\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Sigma\+Vector\+Dynamic\+::nmo\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of molecular orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ac168a907aeb0425a36e03d8cc85afbdc}\label{classforte_1_1_sigma_vector_dynamic_ac168a907aeb0425a36e03d8cc85afbdc}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!num\+\_\+builds\+\_\+@{num\+\_\+builds\+\_\+}}
+\index{num\+\_\+builds\+\_\+@{num\+\_\+builds\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{num\+\_\+builds\+\_\+}{num\_builds\_}}
+{\footnotesize\ttfamily int forte\+::\+Sigma\+Vector\+Dynamic\+::num\+\_\+builds\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Number of sigma builds. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ad03b41c577c98bd0c9db4073b0edd941}\label{classforte_1_1_sigma_vector_dynamic_ad03b41c577c98bd0c9db4073b0edd941}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!num\+\_\+threads\+\_\+@{num\+\_\+threads\+\_\+}}
+\index{num\+\_\+threads\+\_\+@{num\+\_\+threads\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{num\+\_\+threads\+\_\+}{num\_threads\_}}
+{\footnotesize\ttfamily int forte\+::\+Sigma\+Vector\+Dynamic\+::num\+\_\+threads\+\_\+ = 1\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of threads. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_a4007a610353c66220f0b9d939b3a03d2}\label{classforte_1_1_sigma_vector_dynamic_a4007a610353c66220f0b9d939b3a03d2}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!temp\+\_\+b\+\_\+@{temp\+\_\+b\+\_\+}}
+\index{temp\+\_\+b\+\_\+@{temp\+\_\+b\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{temp\+\_\+b\+\_\+}{temp\_b\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::temp\+\_\+b\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+A temporary sigma vector of size N\+\_\+det. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ad99b90c2620a933dc06db419077a6910}\label{classforte_1_1_sigma_vector_dynamic_ad99b90c2620a933dc06db419077a6910}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!temp\+\_\+sigma\+\_\+@{temp\+\_\+sigma\+\_\+}}
+\index{temp\+\_\+sigma\+\_\+@{temp\+\_\+sigma\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{temp\+\_\+sigma\+\_\+}{temp\_sigma\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Sigma\+Vector\+Dynamic\+::temp\+\_\+sigma\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+A temporary sigma vector of size N\+\_\+det. 
+
+\mbox{\Hypertarget{classforte_1_1_sigma_vector_dynamic_ab539f0ab423f45b066cb8e38d768f9ca}\label{classforte_1_1_sigma_vector_dynamic_ab539f0ab423f45b066cb8e38d768f9ca}} 
+\index{forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}!total\+\_\+space\+\_\+@{total\+\_\+space\+\_\+}}
+\index{total\+\_\+space\+\_\+@{total\+\_\+space\+\_\+}!forte\+::\+Sigma\+Vector\+Dynamic@{forte\+::\+Sigma\+Vector\+Dynamic}}
+\subsubsection{\texorpdfstring{total\+\_\+space\+\_\+}{total\_space\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Sigma\+Vector\+Dynamic\+::total\+\_\+space\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sigma__vector__dynamic_8h}{sigma\+\_\+vector\+\_\+dynamic.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sigma__vector__dynamic_8cc}{sigma\+\_\+vector\+\_\+dynamic.\+cc}}\end{DoxyCompactItemize}

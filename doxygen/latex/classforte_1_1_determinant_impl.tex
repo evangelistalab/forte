@@ -1,0 +1,512 @@
+\hypertarget{classforte_1_1_determinant_impl}{}\section{forte\+:\+:Determinant\+Impl$<$ N $>$ Class Template Reference}
+\label{classforte_1_1_determinant_impl}\index{forte\+::\+Determinant\+Impl$<$ N $>$@{forte\+::\+Determinant\+Impl$<$ N $>$}}
+
+
+A class to represent a Slater determinant with N spin orbitals.  
+
+
+
+
+{\ttfamily \#include $<$determinant.\+hpp$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Determinant\+Impl$<$ N $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=220pt]{classforte_1_1_determinant_impl__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Determinant\+Impl$<$ N $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=220pt]{classforte_1_1_determinant_impl__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_impl_afc9e7b4d9b3ec24a97ca3793272ce595}{get\+\_\+nbits\+\_\+half}} () const
+\begin{DoxyCompactList}\small\item\em returns half the number of bits \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_impl_a7c8dfa806c2a2991024ae0fd2c041616}{Determinant\+Impl}} ()
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_impl_a007afc997d612ea68ef4760d56617bf5}{Determinant\+Impl}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&ba)
+\begin{DoxyCompactList}\small\item\em Constructor from a bit array. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_impl_a45a02db5e268e7e2c2978bd105f571b3}{Determinant\+Impl}} (const std\+::vector$<$ bool $>$ \&occupation\+\_\+a, const std\+::vector$<$ bool $>$ \&occupation\+\_\+b)
+\item 
+\mbox{\hyperlink{classforte_1_1_determinant_impl_a85f7530da66f7fb1a649be1ad69b0e94}{Determinant\+Impl}} (const std\+::string \&\mbox{\hyperlink{namespaceforte_af0f9481a38ad3ccb1dd258bdfea20492}{str}})
+\item 
+bool \mbox{\hyperlink{classforte_1_1_determinant_impl_a14a47fa6165d685967ce1c8554c7d3cc}{get\+\_\+alfa\+\_\+bit}} (size\+\_\+t pos) const
+\begin{DoxyCompactList}\small\item\em get the value of alfa bit pos \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_determinant_impl_a7105d98744e76588e9db2797e12c8406}{get\+\_\+beta\+\_\+bit}} (size\+\_\+t pos) const
+\begin{DoxyCompactList}\small\item\em get the value of beta bit pos \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_impl_aed8c6eaece3cce82a5acf459013b7b23}{set\+\_\+alfa\+\_\+bit}} (size\+\_\+t pos, bool val)
+\begin{DoxyCompactList}\small\item\em set alfa bit pos to val \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_impl_a47f0329c3d05f3aa9785b8bb0b2a55a5}{set\+\_\+beta\+\_\+bit}} (size\+\_\+t pos, bool val)
+\begin{DoxyCompactList}\small\item\em set beta bit pos to val \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_determinant_impl_afb3ba3c94638a83e137e5ee275bc7001}{get\+\_\+alfa\+\_\+occ}} (int norb) const
+\begin{DoxyCompactList}\small\item\em Return a vector of occupied alpha orbitals. \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_determinant_impl_ab87b65035dc9cd5c48d9fc709702e8c8}{get\+\_\+beta\+\_\+occ}} (int norb) const
+\begin{DoxyCompactList}\small\item\em Return a vector of occupied beta orbitals. \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_determinant_impl_a1dc3bb02e9944e3c83d98052c91fe44c}{get\+\_\+alfa\+\_\+vir}} (int norb) const
+\begin{DoxyCompactList}\small\item\em Return a vector of virtual alpha orbitals. \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_determinant_impl_aabfa5748bf819c5030245fd13dc6115d}{get\+\_\+beta\+\_\+vir}} (int norb) const
+\begin{DoxyCompactList}\small\item\em Return a vector of virtual beta orbitals. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_af04a9600e0092df7024fed3a1aa4e5a4}{create\+\_\+alfa\+\_\+bit}} (int n)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_a029be4ce6d50df77300096e58a83a42f}{create\+\_\+beta\+\_\+bit}} (int n)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_a01c1ef1e7f640bc18a3e6fa18116d848}{destroy\+\_\+alfa\+\_\+bit}} (int n)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_ad19fd82d5428c19620d44868984fbd32}{destroy\+\_\+beta\+\_\+bit}} (int n)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_ae654b55997ceb9a745edbd60a4d6978d}{slater\+\_\+sign\+\_\+a}} (int n) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_ad6b9f063782fe2abb85a742f0a223ec1}{slater\+\_\+sign\+\_\+b}} (int n) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_abb5dee18e8891364cc6f60f282e5a7f8}{slater\+\_\+sign\+\_\+aa}} (int n, int m) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_afa8fce46c2de5e0d65878f49315aeb9f}{slater\+\_\+sign\+\_\+bb}} (int n, int m) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_ab1855ca2b1feed1b3733a36c7be64429}{slater\+\_\+sign\+\_\+aaaa}} (int i, int j, int a, int b) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_ac169e8423398ef5011450811c61a363b}{slater\+\_\+sign\+\_\+bbbb}} (int i, int j, int a, int b) const
+\item 
+int \mbox{\hyperlink{classforte_1_1_determinant_impl_abfc420df71d4fa00dcbf239a3b425f62}{count\+\_\+alfa}} () const
+\begin{DoxyCompactList}\small\item\em Count the number of beta bits set to 1. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_determinant_impl_acd8866f4054bf89589213992668eb3d2}{count\+\_\+beta}} () const
+\begin{DoxyCompactList}\small\item\em Count the number of beta bits set to 1. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_determinant_impl_ae08fd0456249dc605ba10b095afc2549}{npair}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of alpha/beta pairs. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_a29e9efc18d8346cd7e2809a1e9c8f2a9}{single\+\_\+excitation\+\_\+a}} (int i, int a)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_ade9281e561132e5ea22cc515b051e14b}{single\+\_\+excitation\+\_\+b}} (int i, int a)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_a2279b78fd6dc7dfdcd0e0a1c7f77b9ac}{double\+\_\+excitation\+\_\+aa}} (int i, int j, int a, int b)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_ac5c15433d3496bdd90e867bfe396c948}{double\+\_\+excitation\+\_\+ab}} (int i, int j, int a, int b)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_impl_a1ddb5fecd7e198cfcc6d5bc61a7ca866}{double\+\_\+excitation\+\_\+bb}} (int i, int j, int a, int b)
+\begin{DoxyCompactList}\small\item\em Perform an beta-\/beta double excitation (IJ -\/$>$ AB) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ \mbox{\hyperlink{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}{nbits\+\_\+half}} $>$ \mbox{\hyperlink{classforte_1_1_determinant_impl_a29ea8ae7c2f083aaa959d9f6f1de9d3c}{get\+\_\+alfa\+\_\+bits}} () const
+\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ \mbox{\hyperlink{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}{nbits\+\_\+half}} $>$ \mbox{\hyperlink{classforte_1_1_determinant_impl_a9109cbc06b0753d030de49786a4d6b22}{get\+\_\+beta\+\_\+bits}} () const
+\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ \mbox{\hyperlink{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}{nbits\+\_\+half}} $>$ \mbox{\hyperlink{classforte_1_1_determinant_impl_a924606ae7e4855ccb197fc3e5bec7028}{get\+\_\+bits}} (\mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179}{Det\+Spin\+Type}} spin\+\_\+type)
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_impl_a0c84ab17402db250ba4c64c6991a6723}{zero\+\_\+alfa}} ()
+\begin{DoxyCompactList}\small\item\em Zero the alpha part of a determinant. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_impl_aeca8e43710bad20561193304aee10c9b}{zero\+\_\+beta}} ()
+\begin{DoxyCompactList}\small\item\em Zero the alpha part of a determinant. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static bool \mbox{\hyperlink{classforte_1_1_determinant_impl_afa56e1f10e5d64c959ff0257a9ee8eb0}{less\+\_\+than}} (const \mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}}$<$ N $>$ \&rhs, const \mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}}$<$ N $>$ \&lhs)
+\item 
+static bool \mbox{\hyperlink{classforte_1_1_determinant_impl_a082c139fb3b70315591512bb4d36857f}{reverse\+\_\+less\+\_\+than}} (const \mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}}$<$ N $>$ \&rhs, const \mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}}$<$ N $>$ \&lhs)
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}{nbits\+\_\+half}} = N / 2
+\begin{DoxyCompactList}\small\item\em the number of bits divided by two \end{DoxyCompactList}\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_impl_a7474c95c308be22daaa9cd26aed8a035}{nwords\+\_\+half}} = \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$\+::\mbox{\hyperlink{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}{nwords\+\_\+}} / 2
+\begin{DoxyCompactList}\small\item\em half of the words used to store the bits \end{DoxyCompactList}\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_impl_aae5a6637a75d4c47513e906c60857f2b}{beta\+\_\+bit\+\_\+offset}} = \mbox{\hyperlink{classforte_1_1_determinant_impl_a7474c95c308be22daaa9cd26aed8a035}{nwords\+\_\+half}} $\ast$ \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$\+::\mbox{\hyperlink{classforte_1_1_bit_array_ad5ca62ac879b44e0e28017a73fd6c3fd}{bits\+\_\+per\+\_\+word}}
+\begin{DoxyCompactList}\small\item\em the starting bit for beta orbitals \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$size\+\_\+t N$>$\newline
+class forte\+::\+Determinant\+Impl$<$ N $>$}
+
+A class to represent a Slater determinant with N spin orbitals. 
+
+Spin orbitals are divided into N/2 alpha and N/2 beta set. For each set we pack groups of 64 spin orbitals into an array of 64-\/bit unsigned integers. Each group of 64 bits is called a word. Each set of N/2 bits is stored in K = ceil(N/2 / 64) words. So the full determinant is stored as an array of words of the form \mbox{[}word 1\mbox{]}\mbox{[}word 2\mbox{]}...\mbox{[}word K\mbox{]}\mbox{[}word K+1\mbox{]}...\mbox{[}word 2K\mbox{]} 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a7c8dfa806c2a2991024ae0fd2c041616}\label{classforte_1_1_determinant_impl_a7c8dfa806c2a2991024ae0fd2c041616}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!Determinant\+Impl@{Determinant\+Impl}}
+\index{Determinant\+Impl@{Determinant\+Impl}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{Determinant\+Impl()}{DeterminantImpl()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::\mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Default constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a007afc997d612ea68ef4760d56617bf5}\label{classforte_1_1_determinant_impl_a007afc997d612ea68ef4760d56617bf5}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!Determinant\+Impl@{Determinant\+Impl}}
+\index{Determinant\+Impl@{Determinant\+Impl}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{Determinant\+Impl()}{DeterminantImpl()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::\mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{ba }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Constructor from a bit array. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a45a02db5e268e7e2c2978bd105f571b3}\label{classforte_1_1_determinant_impl_a45a02db5e268e7e2c2978bd105f571b3}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!Determinant\+Impl@{Determinant\+Impl}}
+\index{Determinant\+Impl@{Determinant\+Impl}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{Determinant\+Impl()}{DeterminantImpl()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::\mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ bool $>$ \&}]{occupation\+\_\+a,  }\item[{const std\+::vector$<$ bool $>$ \&}]{occupation\+\_\+b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [explicit]}}
+
+Construct the determinant from an occupation vector that specifies the alpha and beta strings. occupation = \mbox{[}Ia,Ib\mbox{]} \mbox{\Hypertarget{classforte_1_1_determinant_impl_a85f7530da66f7fb1a649be1ad69b0e94}\label{classforte_1_1_determinant_impl_a85f7530da66f7fb1a649be1ad69b0e94}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!Determinant\+Impl@{Determinant\+Impl}}
+\index{Determinant\+Impl@{Determinant\+Impl}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{Determinant\+Impl()}{DeterminantImpl()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::\mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}} (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{str }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+String constructor. Convert a std\+::string to a determinant. E.\+g. Determinant\+Impl$<$64$>$(\char`\"{}0011\char`\"{}) gives the determinant$\vert$0011$>$ 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_abfc420df71d4fa00dcbf239a3b425f62}\label{classforte_1_1_determinant_impl_abfc420df71d4fa00dcbf239a3b425f62}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!count\+\_\+alfa@{count\+\_\+alfa}}
+\index{count\+\_\+alfa@{count\+\_\+alfa}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{count\+\_\+alfa()}{count\_alfa()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+int \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::count\+\_\+alfa (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Count the number of beta bits set to 1. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_acd8866f4054bf89589213992668eb3d2}\label{classforte_1_1_determinant_impl_acd8866f4054bf89589213992668eb3d2}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!count\+\_\+beta@{count\+\_\+beta}}
+\index{count\+\_\+beta@{count\+\_\+beta}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{count\+\_\+beta()}{count\_beta()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+int \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::count\+\_\+beta (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Count the number of beta bits set to 1. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_af04a9600e0092df7024fed3a1aa4e5a4}\label{classforte_1_1_determinant_impl_af04a9600e0092df7024fed3a1aa4e5a4}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!create\+\_\+alfa\+\_\+bit@{create\+\_\+alfa\+\_\+bit}}
+\index{create\+\_\+alfa\+\_\+bit@{create\+\_\+alfa\+\_\+bit}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{create\+\_\+alfa\+\_\+bit()}{create\_alfa\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::create\+\_\+alfa\+\_\+bit (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Apply the alpha creation operator a$^\wedge$+\+\_\+n to this determinant If orbital n is unoccupied, create the electron and return the sign If orbital n is occupied, do not modify the determinant and return 0 \mbox{\Hypertarget{classforte_1_1_determinant_impl_a029be4ce6d50df77300096e58a83a42f}\label{classforte_1_1_determinant_impl_a029be4ce6d50df77300096e58a83a42f}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!create\+\_\+beta\+\_\+bit@{create\+\_\+beta\+\_\+bit}}
+\index{create\+\_\+beta\+\_\+bit@{create\+\_\+beta\+\_\+bit}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{create\+\_\+beta\+\_\+bit()}{create\_beta\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::create\+\_\+beta\+\_\+bit (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Apply the beta creation operator a$^\wedge$+\+\_\+n to this determinant If orbital n is unoccupied, create the electron and return the sign If orbital n is occupied, do not modify the determinant and return 0 \mbox{\Hypertarget{classforte_1_1_determinant_impl_a01c1ef1e7f640bc18a3e6fa18116d848}\label{classforte_1_1_determinant_impl_a01c1ef1e7f640bc18a3e6fa18116d848}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!destroy\+\_\+alfa\+\_\+bit@{destroy\+\_\+alfa\+\_\+bit}}
+\index{destroy\+\_\+alfa\+\_\+bit@{destroy\+\_\+alfa\+\_\+bit}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{destroy\+\_\+alfa\+\_\+bit()}{destroy\_alfa\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::destroy\+\_\+alfa\+\_\+bit (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Apply the alpha annihilation operator a$^\wedge$+\+\_\+n to this determinant If orbital n is occupied, annihilate the electron and return the sign If orbital n is unoccupied, do not modify the determinant and return 0 \mbox{\Hypertarget{classforte_1_1_determinant_impl_ad19fd82d5428c19620d44868984fbd32}\label{classforte_1_1_determinant_impl_ad19fd82d5428c19620d44868984fbd32}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!destroy\+\_\+beta\+\_\+bit@{destroy\+\_\+beta\+\_\+bit}}
+\index{destroy\+\_\+beta\+\_\+bit@{destroy\+\_\+beta\+\_\+bit}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{destroy\+\_\+beta\+\_\+bit()}{destroy\_beta\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::destroy\+\_\+beta\+\_\+bit (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Apply the beta annihilation operator a$^\wedge$+\+\_\+n to this determinant If orbital n is occupied, annihilate the electron and return the sign If orbital n is unoccupied, do not modify the determinant and return 0 \mbox{\Hypertarget{classforte_1_1_determinant_impl_a2279b78fd6dc7dfdcd0e0a1c7f77b9ac}\label{classforte_1_1_determinant_impl_a2279b78fd6dc7dfdcd0e0a1c7f77b9ac}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!double\+\_\+excitation\+\_\+aa@{double\+\_\+excitation\+\_\+aa}}
+\index{double\+\_\+excitation\+\_\+aa@{double\+\_\+excitation\+\_\+aa}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{double\+\_\+excitation\+\_\+aa()}{double\_excitation\_aa()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::double\+\_\+excitation\+\_\+aa (\begin{DoxyParamCaption}\item[{int}]{i,  }\item[{int}]{j,  }\item[{int}]{a,  }\item[{int}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Perform an alpha-\/alpha double excitation (ij-\/$>$ab) assuming that ij are occupied and ab are empty \mbox{\Hypertarget{classforte_1_1_determinant_impl_ac5c15433d3496bdd90e867bfe396c948}\label{classforte_1_1_determinant_impl_ac5c15433d3496bdd90e867bfe396c948}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!double\+\_\+excitation\+\_\+ab@{double\+\_\+excitation\+\_\+ab}}
+\index{double\+\_\+excitation\+\_\+ab@{double\+\_\+excitation\+\_\+ab}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{double\+\_\+excitation\+\_\+ab()}{double\_excitation\_ab()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::double\+\_\+excitation\+\_\+ab (\begin{DoxyParamCaption}\item[{int}]{i,  }\item[{int}]{j,  }\item[{int}]{a,  }\item[{int}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Perform an alpha-\/beta double excitation (iJ -\/$>$ aB) /// assuming that ij are occupied and ab are empty \mbox{\Hypertarget{classforte_1_1_determinant_impl_a1ddb5fecd7e198cfcc6d5bc61a7ca866}\label{classforte_1_1_determinant_impl_a1ddb5fecd7e198cfcc6d5bc61a7ca866}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!double\+\_\+excitation\+\_\+bb@{double\+\_\+excitation\+\_\+bb}}
+\index{double\+\_\+excitation\+\_\+bb@{double\+\_\+excitation\+\_\+bb}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{double\+\_\+excitation\+\_\+bb()}{double\_excitation\_bb()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::double\+\_\+excitation\+\_\+bb (\begin{DoxyParamCaption}\item[{int}]{i,  }\item[{int}]{j,  }\item[{int}]{a,  }\item[{int}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Perform an beta-\/beta double excitation (IJ -\/$>$ AB) 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a14a47fa6165d685967ce1c8554c7d3cc}\label{classforte_1_1_determinant_impl_a14a47fa6165d685967ce1c8554c7d3cc}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+alfa\+\_\+bit@{get\+\_\+alfa\+\_\+bit}}
+\index{get\+\_\+alfa\+\_\+bit@{get\+\_\+alfa\+\_\+bit}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+alfa\+\_\+bit()}{get\_alfa\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+bool \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+alfa\+\_\+bit (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+get the value of alfa bit pos 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a29ea8ae7c2f083aaa959d9f6f1de9d3c}\label{classforte_1_1_determinant_impl_a29ea8ae7c2f083aaa959d9f6f1de9d3c}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+alfa\+\_\+bits@{get\+\_\+alfa\+\_\+bits}}
+\index{get\+\_\+alfa\+\_\+bits@{get\+\_\+alfa\+\_\+bits}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+alfa\+\_\+bits()}{get\_alfa\_bits()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$\mbox{\hyperlink{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}{nbits\+\_\+half}}$>$ \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+alfa\+\_\+bits (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_afb3ba3c94638a83e137e5ee275bc7001}\label{classforte_1_1_determinant_impl_afb3ba3c94638a83e137e5ee275bc7001}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+alfa\+\_\+occ@{get\+\_\+alfa\+\_\+occ}}
+\index{get\+\_\+alfa\+\_\+occ@{get\+\_\+alfa\+\_\+occ}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+alfa\+\_\+occ()}{get\_alfa\_occ()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+std\+::vector$<$int$>$ \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+alfa\+\_\+occ (\begin{DoxyParamCaption}\item[{int}]{norb }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a vector of occupied alpha orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a1dc3bb02e9944e3c83d98052c91fe44c}\label{classforte_1_1_determinant_impl_a1dc3bb02e9944e3c83d98052c91fe44c}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+alfa\+\_\+vir@{get\+\_\+alfa\+\_\+vir}}
+\index{get\+\_\+alfa\+\_\+vir@{get\+\_\+alfa\+\_\+vir}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+alfa\+\_\+vir()}{get\_alfa\_vir()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+std\+::vector$<$int$>$ \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+alfa\+\_\+vir (\begin{DoxyParamCaption}\item[{int}]{norb }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a vector of virtual alpha orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a7105d98744e76588e9db2797e12c8406}\label{classforte_1_1_determinant_impl_a7105d98744e76588e9db2797e12c8406}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+beta\+\_\+bit@{get\+\_\+beta\+\_\+bit}}
+\index{get\+\_\+beta\+\_\+bit@{get\+\_\+beta\+\_\+bit}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+beta\+\_\+bit()}{get\_beta\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+bool \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+beta\+\_\+bit (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+get the value of beta bit pos 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a9109cbc06b0753d030de49786a4d6b22}\label{classforte_1_1_determinant_impl_a9109cbc06b0753d030de49786a4d6b22}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+beta\+\_\+bits@{get\+\_\+beta\+\_\+bits}}
+\index{get\+\_\+beta\+\_\+bits@{get\+\_\+beta\+\_\+bits}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+beta\+\_\+bits()}{get\_beta\_bits()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$\mbox{\hyperlink{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}{nbits\+\_\+half}}$>$ \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+beta\+\_\+bits (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_ab87b65035dc9cd5c48d9fc709702e8c8}\label{classforte_1_1_determinant_impl_ab87b65035dc9cd5c48d9fc709702e8c8}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+beta\+\_\+occ@{get\+\_\+beta\+\_\+occ}}
+\index{get\+\_\+beta\+\_\+occ@{get\+\_\+beta\+\_\+occ}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+beta\+\_\+occ()}{get\_beta\_occ()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+std\+::vector$<$int$>$ \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+beta\+\_\+occ (\begin{DoxyParamCaption}\item[{int}]{norb }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a vector of occupied beta orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_aabfa5748bf819c5030245fd13dc6115d}\label{classforte_1_1_determinant_impl_aabfa5748bf819c5030245fd13dc6115d}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+beta\+\_\+vir@{get\+\_\+beta\+\_\+vir}}
+\index{get\+\_\+beta\+\_\+vir@{get\+\_\+beta\+\_\+vir}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+beta\+\_\+vir()}{get\_beta\_vir()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+std\+::vector$<$int$>$ \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+beta\+\_\+vir (\begin{DoxyParamCaption}\item[{int}]{norb }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a vector of virtual beta orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a924606ae7e4855ccb197fc3e5bec7028}\label{classforte_1_1_determinant_impl_a924606ae7e4855ccb197fc3e5bec7028}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+bits@{get\+\_\+bits}}
+\index{get\+\_\+bits@{get\+\_\+bits}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+bits()}{get\_bits()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$\mbox{\hyperlink{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}{nbits\+\_\+half}}$>$ \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespaceforte_acb88fa63430aae4a1b15c7be9c55f179}{Det\+Spin\+Type}}}]{spin\+\_\+type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_afc9e7b4d9b3ec24a97ca3793272ce595}\label{classforte_1_1_determinant_impl_afc9e7b4d9b3ec24a97ca3793272ce595}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!get\+\_\+nbits\+\_\+half@{get\+\_\+nbits\+\_\+half}}
+\index{get\+\_\+nbits\+\_\+half@{get\+\_\+nbits\+\_\+half}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{get\+\_\+nbits\+\_\+half()}{get\_nbits\_half()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::get\+\_\+nbits\+\_\+half (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+returns half the number of bits 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_afa56e1f10e5d64c959ff0257a9ee8eb0}\label{classforte_1_1_determinant_impl_afa56e1f10e5d64c959ff0257a9ee8eb0}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!less\+\_\+than@{less\+\_\+than}}
+\index{less\+\_\+than@{less\+\_\+than}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{less\+\_\+than()}{less\_than()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+static bool \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::less\+\_\+than (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}}$<$ N $>$ \&}]{rhs,  }\item[{const \mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_ae08fd0456249dc605ba10b095afc2549}\label{classforte_1_1_determinant_impl_ae08fd0456249dc605ba10b095afc2549}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!npair@{npair}}
+\index{npair@{npair}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{npair()}{npair()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+int \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::npair (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the number of alpha/beta pairs. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a082c139fb3b70315591512bb4d36857f}\label{classforte_1_1_determinant_impl_a082c139fb3b70315591512bb4d36857f}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!reverse\+\_\+less\+\_\+than@{reverse\+\_\+less\+\_\+than}}
+\index{reverse\+\_\+less\+\_\+than@{reverse\+\_\+less\+\_\+than}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{reverse\+\_\+less\+\_\+than()}{reverse\_less\_than()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+static bool \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::reverse\+\_\+less\+\_\+than (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}}$<$ N $>$ \&}]{rhs,  }\item[{const \mbox{\hyperlink{classforte_1_1_determinant_impl}{Determinant\+Impl}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_aed8c6eaece3cce82a5acf459013b7b23}\label{classforte_1_1_determinant_impl_aed8c6eaece3cce82a5acf459013b7b23}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!set\+\_\+alfa\+\_\+bit@{set\+\_\+alfa\+\_\+bit}}
+\index{set\+\_\+alfa\+\_\+bit@{set\+\_\+alfa\+\_\+bit}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{set\+\_\+alfa\+\_\+bit()}{set\_alfa\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::set\+\_\+alfa\+\_\+bit (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos,  }\item[{bool}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+set alfa bit pos to val 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a47f0329c3d05f3aa9785b8bb0b2a55a5}\label{classforte_1_1_determinant_impl_a47f0329c3d05f3aa9785b8bb0b2a55a5}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!set\+\_\+beta\+\_\+bit@{set\+\_\+beta\+\_\+bit}}
+\index{set\+\_\+beta\+\_\+bit@{set\+\_\+beta\+\_\+bit}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{set\+\_\+beta\+\_\+bit()}{set\_beta\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::set\+\_\+beta\+\_\+bit (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos,  }\item[{bool}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+set beta bit pos to val 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a29e9efc18d8346cd7e2809a1e9c8f2a9}\label{classforte_1_1_determinant_impl_a29e9efc18d8346cd7e2809a1e9c8f2a9}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!single\+\_\+excitation\+\_\+a@{single\+\_\+excitation\+\_\+a}}
+\index{single\+\_\+excitation\+\_\+a@{single\+\_\+excitation\+\_\+a}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{single\+\_\+excitation\+\_\+a()}{single\_excitation\_a()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::single\+\_\+excitation\+\_\+a (\begin{DoxyParamCaption}\item[{int}]{i,  }\item[{int}]{a }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Perform an alpha-\/alpha single excitation (i-\/$>$a) assuming that i is occupied and a is empty \mbox{\Hypertarget{classforte_1_1_determinant_impl_ade9281e561132e5ea22cc515b051e14b}\label{classforte_1_1_determinant_impl_ade9281e561132e5ea22cc515b051e14b}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!single\+\_\+excitation\+\_\+b@{single\+\_\+excitation\+\_\+b}}
+\index{single\+\_\+excitation\+\_\+b@{single\+\_\+excitation\+\_\+b}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{single\+\_\+excitation\+\_\+b()}{single\_excitation\_b()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::single\+\_\+excitation\+\_\+b (\begin{DoxyParamCaption}\item[{int}]{i,  }\item[{int}]{a }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Perform an beta-\/beta single excitation (I -\/$>$ A) assuming that i is occupied and a is empty \mbox{\Hypertarget{classforte_1_1_determinant_impl_ae654b55997ceb9a745edbd60a4d6978d}\label{classforte_1_1_determinant_impl_ae654b55997ceb9a745edbd60a4d6978d}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!slater\+\_\+sign\+\_\+a@{slater\+\_\+sign\+\_\+a}}
+\index{slater\+\_\+sign\+\_\+a@{slater\+\_\+sign\+\_\+a}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign\+\_\+a()}{slater\_sign\_a()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::slater\+\_\+sign\+\_\+a (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign for a single second quantized operator This function ignores if bit n is set or not \mbox{\Hypertarget{classforte_1_1_determinant_impl_abb5dee18e8891364cc6f60f282e5a7f8}\label{classforte_1_1_determinant_impl_abb5dee18e8891364cc6f60f282e5a7f8}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!slater\+\_\+sign\+\_\+aa@{slater\+\_\+sign\+\_\+aa}}
+\index{slater\+\_\+sign\+\_\+aa@{slater\+\_\+sign\+\_\+aa}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign\+\_\+aa()}{slater\_sign\_aa()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::slater\+\_\+sign\+\_\+aa (\begin{DoxyParamCaption}\item[{int}]{n,  }\item[{int}]{m }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign for a pair of alpha second quantized operators The sign depends only on the number of bits = 1 between n and m n and m are not assumed to have any specific order \mbox{\Hypertarget{classforte_1_1_determinant_impl_ab1855ca2b1feed1b3733a36c7be64429}\label{classforte_1_1_determinant_impl_ab1855ca2b1feed1b3733a36c7be64429}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!slater\+\_\+sign\+\_\+aaaa@{slater\+\_\+sign\+\_\+aaaa}}
+\index{slater\+\_\+sign\+\_\+aaaa@{slater\+\_\+sign\+\_\+aaaa}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign\+\_\+aaaa()}{slater\_sign\_aaaa()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::slater\+\_\+sign\+\_\+aaaa (\begin{DoxyParamCaption}\item[{int}]{i,  }\item[{int}]{j,  }\item[{int}]{a,  }\item[{int}]{b }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign for a quadruplet of alpha second quantized operators a+(a) a+(b) a(j) a(i) applied to this determinant Untested, needs documentation \mbox{\Hypertarget{classforte_1_1_determinant_impl_ad6b9f063782fe2abb85a742f0a223ec1}\label{classforte_1_1_determinant_impl_ad6b9f063782fe2abb85a742f0a223ec1}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!slater\+\_\+sign\+\_\+b@{slater\+\_\+sign\+\_\+b}}
+\index{slater\+\_\+sign\+\_\+b@{slater\+\_\+sign\+\_\+b}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign\+\_\+b()}{slater\_sign\_b()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::slater\+\_\+sign\+\_\+b (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign for a single second quantized operator This function ignores if bit n is set or not \mbox{\Hypertarget{classforte_1_1_determinant_impl_afa8fce46c2de5e0d65878f49315aeb9f}\label{classforte_1_1_determinant_impl_afa8fce46c2de5e0d65878f49315aeb9f}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!slater\+\_\+sign\+\_\+bb@{slater\+\_\+sign\+\_\+bb}}
+\index{slater\+\_\+sign\+\_\+bb@{slater\+\_\+sign\+\_\+bb}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign\+\_\+bb()}{slater\_sign\_bb()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::slater\+\_\+sign\+\_\+bb (\begin{DoxyParamCaption}\item[{int}]{n,  }\item[{int}]{m }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign for a pair of beta second quantized operators The sign depends only on the number of bits = 1 between n and m n and m are not assumed to have any specific order \mbox{\Hypertarget{classforte_1_1_determinant_impl_ac169e8423398ef5011450811c61a363b}\label{classforte_1_1_determinant_impl_ac169e8423398ef5011450811c61a363b}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!slater\+\_\+sign\+\_\+bbbb@{slater\+\_\+sign\+\_\+bbbb}}
+\index{slater\+\_\+sign\+\_\+bbbb@{slater\+\_\+sign\+\_\+bbbb}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign\+\_\+bbbb()}{slater\_sign\_bbbb()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::slater\+\_\+sign\+\_\+bbbb (\begin{DoxyParamCaption}\item[{int}]{i,  }\item[{int}]{j,  }\item[{int}]{a,  }\item[{int}]{b }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign for a quadruplet of beta second quantized operators a+(A) a+(B) a(\+J) a(\+I) applied to this determinant Untested, needs documentation \mbox{\Hypertarget{classforte_1_1_determinant_impl_a0c84ab17402db250ba4c64c6991a6723}\label{classforte_1_1_determinant_impl_a0c84ab17402db250ba4c64c6991a6723}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!zero\+\_\+alfa@{zero\+\_\+alfa}}
+\index{zero\+\_\+alfa@{zero\+\_\+alfa}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{zero\+\_\+alfa()}{zero\_alfa()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::zero\+\_\+alfa (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Zero the alpha part of a determinant. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_aeca8e43710bad20561193304aee10c9b}\label{classforte_1_1_determinant_impl_aeca8e43710bad20561193304aee10c9b}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!zero\+\_\+beta@{zero\+\_\+beta}}
+\index{zero\+\_\+beta@{zero\+\_\+beta}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{zero\+\_\+beta()}{zero\_beta()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::zero\+\_\+beta (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Zero the alpha part of a determinant. 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_aae5a6637a75d4c47513e906c60857f2b}\label{classforte_1_1_determinant_impl_aae5a6637a75d4c47513e906c60857f2b}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!beta\+\_\+bit\+\_\+offset@{beta\+\_\+bit\+\_\+offset}}
+\index{beta\+\_\+bit\+\_\+offset@{beta\+\_\+bit\+\_\+offset}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{beta\+\_\+bit\+\_\+offset}{beta\_bit\_offset}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::beta\+\_\+bit\+\_\+offset = \mbox{\hyperlink{classforte_1_1_determinant_impl_a7474c95c308be22daaa9cd26aed8a035}{nwords\+\_\+half}} $\ast$ \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$\+::\mbox{\hyperlink{classforte_1_1_bit_array_ad5ca62ac879b44e0e28017a73fd6c3fd}{bits\+\_\+per\+\_\+word}}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+the starting bit for beta orbitals 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}\label{classforte_1_1_determinant_impl_ac8d2a64c2fb785ccb79b1cecc553d63d}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!nbits\+\_\+half@{nbits\+\_\+half}}
+\index{nbits\+\_\+half@{nbits\+\_\+half}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{nbits\+\_\+half}{nbits\_half}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::nbits\+\_\+half = N / 2\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+the number of bits divided by two 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_impl_a7474c95c308be22daaa9cd26aed8a035}\label{classforte_1_1_determinant_impl_a7474c95c308be22daaa9cd26aed8a035}} 
+\index{forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}!nwords\+\_\+half@{nwords\+\_\+half}}
+\index{nwords\+\_\+half@{nwords\+\_\+half}!forte\+::\+Determinant\+Impl@{forte\+::\+Determinant\+Impl}}
+\subsubsection{\texorpdfstring{nwords\+\_\+half}{nwords\_half}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_impl}{forte\+::\+Determinant\+Impl}}$<$ N $>$\+::nwords\+\_\+half = \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$\+::\mbox{\hyperlink{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}{nwords\+\_\+}} / 2\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+half of the words used to store the bits 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{determinant_8hpp}{determinant.\+hpp}}\end{DoxyCompactItemize}

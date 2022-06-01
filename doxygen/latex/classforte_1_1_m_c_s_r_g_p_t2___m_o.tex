@@ -1,0 +1,1299 @@
+\hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o}{}\section{forte\+:\+:M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO Class Reference}
+\label{classforte_1_1_m_c_s_r_g_p_t2___m_o}\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+
+
+{\ttfamily \#include $<$mcsrgpt2\+\_\+mo.\+h$>$}
+
+
+
+Collaboration diagram for forte\+:\+:M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=258pt]{classforte_1_1_m_c_s_r_g_p_t2___m_o__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a52774da32a658fa6b46a7b176a8df564}{M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}} (\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} reference, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info)
+\begin{DoxyCompactList}\small\item\em The Constructor for the pilot D\+S\+R\+G-\/\+M\+R\+P\+T2 code. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a64d29f95654d1ca214b49674e918b535}{$\sim$\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8983a928beadc64ac842e55d70e23d1d}{compute\+\_\+energy}} ()
+\begin{DoxyCompactList}\small\item\em Compute the energy. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Types}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1}{sourceop}} \{ \newline
+\mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a0b64256e8b44dbe842be9d5698318579}{S\+T\+A\+N\+D\+A\+RD}}, 
+\mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a5811e417c1c498623bd94d1d5013df95}{A\+MP}}, 
+\mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1ae712aa6a2ffadd5f220d8f1700eb94af}{E\+M\+P2}}, 
+\mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1af1f23d90950da0348be1b106dd5c84b3}{L\+A\+MP}}, 
+\newline
+\mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a1988646a02aba967738d55d47907fd28}{L\+E\+M\+P2}}
+ \}
+\begin{DoxyCompactList}\small\item\em Source Operators. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a47e338c51626a323fb371aa5a7b1aa02}{startup}} ()
+\begin{DoxyCompactList}\small\item\em Basis preparation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a54d13435f0e25a148cc8dc176ccbc1b6}{cleanup}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a81773e4db7c548a9f6c24374056dc008}{prepare\+\_\+mo\+\_\+space}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad064311348ef7d691c755ae854ade618}{compute\+\_\+ref}} ()
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} Energy. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a44467184902a50fafd224ff1230b80a7}{fill\+\_\+naive\+\_\+cumulants}} (\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} ref, const int level)
+\begin{DoxyCompactList}\small\item\em Fill in non-\/tensor cumulants used in the naive M\+R-\/\+D\+S\+R\+G-\/\+P\+T2 code. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2b21f9a413f49f41449a3a94b1576c88}{fill\+\_\+one\+\_\+cumulant}} (ambit\+::\+Tensor \&L1a, ambit\+::\+Tensor \&L1b)
+\begin{DoxyCompactList}\small\item\em Fill in non-\/tensor quantities D1a\+\_\+ and D1b\+\_\+ using ambit tensors. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a16a2294f9dda61114a38f0652144fa7d}{fill\+\_\+two\+\_\+cumulant}} (ambit\+::\+Tensor \&L2aa, ambit\+::\+Tensor \&L2ab, ambit\+::\+Tensor \&L2bb)
+\begin{DoxyCompactList}\small\item\em Fill in non-\/tensor quantities L2aa\+\_\+, L2ab\+\_\+, and L2bb\+\_\+ using ambit tensors. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ada5a88df27b0c810a6da3188fe3bfe0b}{fill\+\_\+three\+\_\+cumulant}} (ambit\+::\+Tensor \&L3aaa, ambit\+::\+Tensor \&L3aab, ambit\+::\+Tensor \&L3abb, ambit\+::\+Tensor \&L3bbb)
+\begin{DoxyCompactList}\small\item\em Fill in non-\/tensor quantities L3aaa\+\_\+, L3aab\+\_\+, L3abb\+\_\+ and L3bbb\+\_\+ using ambit tensors. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2d4dc40b11c8cfb77171700a504602bc}{print\+\_\+density}} (const std\+::string \&spin, const \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&density)
+\begin{DoxyCompactList}\small\item\em Print Density Matrix (Active O\+N\+LY) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1e0f52e95c5ddeff56ca15b994c2ed27}{print2\+P\+DC}} (const std\+::string \&\mbox{\hyperlink{namespaceforte_af0f9481a38ad3ccb1dd258bdfea20492}{str}}, const \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&Two\+P\+DC, const int \&P\+R\+I\+NT)
+\begin{DoxyCompactList}\small\item\em Print 2-\/body cumulants. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a77aecb3ccbd7d29c8c0c9b6f4cf1502f}{print3\+P\+DC}} (const std\+::string \&\mbox{\hyperlink{namespaceforte_af0f9481a38ad3ccb1dd258bdfea20492}{str}}, const \mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} \&Three\+P\+DC, const int \&P\+R\+I\+NT)
+\begin{DoxyCompactList}\small\item\em Print 3-\/body cumulants. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7d6c590a53ea89304507133ebe778bce}{Form\+\_\+\+Fock}} (\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&A, \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&B)
+\begin{DoxyCompactList}\small\item\em Form Fock matrix. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a81f13aa73866cbd8dd1589ffcce6de8f}{compute\+\_\+\+Fock\+\_\+ints}} ()
+\begin{DoxyCompactList}\small\item\em Compute Fock (stored in Forte\+Integal) using this-\/$>$Da\+\_\+. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3090cb11611f7d3bd74dcb59ee431ffb}{print\+\_\+\+Fock}} (const std\+::string \&spin, const \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&Fock)
+\begin{DoxyCompactList}\small\item\em Print Fock Matrix in Blocks. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a220d94aaf515b4fa7ed3aec37f552baa}{Form\+\_\+\+A\+M\+P\+\_\+\+D\+S\+RG}} ()
+\begin{DoxyCompactList}\small\item\em Form T Amplitudes for D\+S\+RG. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0ed08f7a03042f89508ab41377d970ea}{Form\+\_\+\+T2\+\_\+\+D\+S\+RG}} (\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&AA, \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&AB, \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&BB, std\+::string \&T\+\_\+\+A\+L\+G\+OR)
+\begin{DoxyCompactList}\small\item\em Form T Amplitudes. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_aa5fe840d496431af5e53ba309e30a747}{Form\+\_\+\+T1\+\_\+\+D\+S\+RG}} (\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&A, \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&B)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_af679c23cc0988a503c06a45caabc9c38}{Form\+\_\+\+T2\+\_\+\+I\+SA}} (\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&AA, \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&AB, \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&BB, const double \&b\+\_\+const)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a647e83e0b4444a44dea8c6b6288f6f3f}{Form\+\_\+\+T1\+\_\+\+I\+SA}} (\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&A, \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&B, const double \&b\+\_\+const)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2f6d8ab15eff1d1a4cef504976268836}{Form\+\_\+\+T2\+\_\+\+S\+E\+L\+EC}} (\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&AA, \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&AB, \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&BB)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a737d2c7deb1c24d5710225709e9ea367}{Check\+\_\+\+T1}} (const std\+::string \&x, const \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&M, double \&Norm, double \&MaxT, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options)
+\begin{DoxyCompactList}\small\item\em Check T Amplitudes. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4c21e5482c787306d1bfc356577149ca}{Check\+\_\+\+T2}} (const std\+::string \&x, const \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&M, double \&Norm, double \&MaxT, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_aff036d2fcafadf0978399b23f6248695}{Form\+\_\+\+Fock\+\_\+\+D\+S\+RG}} (\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&A, \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&B, const bool \&dsrgpt)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9a21cc4d3124bf2e4f030a6232f1a179}{Form\+\_\+\+A\+P\+T\+E\+I\+\_\+\+D\+S\+RG}} (const bool \&dsrgpt)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad4abb0ead47e9109fd12388ab3f341ff}{Print\+Delta}} ()
+\begin{DoxyCompactList}\small\item\em Print Delta. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1501ae80bca18cfb8a189346443efa2e}{compute\+\_\+energy\+\_\+dsrg}} ()
+\begin{DoxyCompactList}\small\item\em Computes the D\+S\+R\+G-\/\+M\+R\+P\+T2 energy. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a320ed94dd45e634913bf226f5885f638}{compute\+\_\+energy\+\_\+srg}} ()
+\begin{DoxyCompactList}\small\item\em Computes the S\+R\+G-\/\+M\+R\+P\+T2 energy. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae6cb2ec44c6c8c46b34cc27467de49c1}{Form\+\_\+\+Fock\+\_\+\+S\+RG}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae2eb1e7eed16738aac3c013f9773bc0f}{E\+S\+R\+G\+\_\+11}} ()
+\begin{DoxyCompactList}\small\item\em S\+R\+G-\/\+M\+R\+P\+T2 Energy Components. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a10e39753f1094dc48a4086d95541e40f}{E\+S\+R\+G\+\_\+12}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab41baca21b5f575b89aa04a7372d8eb6}{E\+S\+R\+G\+\_\+21}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9b5ad651f6b5ec2c4c56047e24893407}{E\+S\+R\+G\+\_\+22\+\_\+2}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_aeacf14f3de6588ad89c88853e680af71}{E\+S\+R\+G\+\_\+22\+\_\+4}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_adcdea03111a41700b182e4d0a6d457bf}{E\+S\+R\+G\+\_\+22\+\_\+6}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a73e3ed734c27d6860ea2868ff0edf768}{E\+\_\+\+F\+T1}} (double \&E)
+\begin{DoxyCompactList}\small\item\em Energy Components. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a86058b92bd133506c7b537711b2bee94}{E\+\_\+\+V\+T1\+\_\+\+F\+T2}} (double \&E\+F1, double \&E\+F2, double \&E\+V1, double \&E\+V2)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a32946f4fae2b5da8d964b9ef5290061d}{E\+\_\+\+V\+T2\+\_\+2}} (double \&E)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4b7373616732797d0d4130cfec596dd3}{E\+\_\+\+V\+T2\+\_\+4\+PP}} (double \&E)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad1b584d2141a26a890fe50b2860e53a3}{E\+\_\+\+V\+T2\+\_\+4\+HH}} (double \&E)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac17b6c997087406c6a6d649c7d974829}{E\+\_\+\+V\+T2\+\_\+4\+PH}} (double \&E)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae5c2836e64b6755ff5211e9458b75407}{E\+\_\+\+V\+T2\+\_\+6}} (double \&E1, double \&E2)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a5bd7a91d8461cff512c3cfafd0578e27}{test\+\_\+\+D1\+\_\+\+RE}} ()
+\begin{DoxyCompactList}\small\item\em Test denominators from Dyall / retaining excitation Hamiltonian. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2a27b2e71bb7a35f5bdc1fb12732fa79}{test\+\_\+\+D2\+\_\+\+RE}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a89126beac8ce5676b5b49e8b67c17c61}{test\+\_\+\+D2\+\_\+\+Dyall}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3794ac7eb215ae0ef6bbfc55d4726d7e}{Print\+\_\+\+Timing}} ()
+\begin{DoxyCompactList}\small\item\em Timings. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_aff400e48ffc929eeb61bbe1e32407707}{Element\+RH}} (const std\+::string \&source, const double \&D, const double \&V)
+\begin{DoxyCompactList}\small\item\em Compute an addition element of renorm. H according to source operator. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9668e316f94c15c688146a7e2d20893c}{ElementT}} (const std\+::string \&source, const double \&D, const double \&V)
+\begin{DoxyCompactList}\small\item\em Compute an element of T according to source operator. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4a7b7d01659b380e0c790d440d9c8588}{Taylor\+\_\+\+Exp}} (const double \&Z, const int \&n, const double \&g)
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_afa94ebf067f0670291d880a1bff7c747}{Taylor\+\_\+\+Exp\+\_\+\+Linear}} (const double \&Z, const int \&n)
+\begin{DoxyCompactList}\small\item\em Taylor Expansion of \mbox{[}1 -\/ exp(-\/$\vert$\+Z$\vert$)\mbox{]} / Z. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::map$<$ std\+::string, \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1}{sourceop}} $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8edcac7af48fd15aba27a90b30e57940}{sourcemap}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab7f3aa76186b95d2047cf92cbb0f4eeb}{integral\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Integrals. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a13dfc425a4eedd0fee06df5f97add808}{reference\+\_\+}}
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0cc34cc42dfc9e286b55f723f8ffbcb0}{mo\+\_\+space\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em MO space info. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac5db188d4d2d45bff7d2ee843eef15a2}{options\+\_\+}}
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad7fb479ce571b84b53b6006c20c567e6}{print\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Printing level. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a622132d781e2204d32c7c71a2ff38c50}{ncmo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Molecular Orbitals. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_adcfce8d353b5e7570cc39f4ca2fa4faa}{nfrzc\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_adeed1d99a9fc941ac2e12b8c973662b6}{nfrzv\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a14d8e1325d662fba9349f407e2914545}{ncore\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9c89f12d524c3f1b767115f4bc1a20b8}{core\+\_\+mos\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a20a862b80242d33cb0ea5f754c39b13c}{nactv\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9bccae7e40de9bd8aa67843dcfd0d66b}{actv\+\_\+mos\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a136aec4dfbb582a38ea5cd97cbc78dc3}{nvirt\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a73605df231cff451462141dc30f3180e}{virt\+\_\+mos\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1b683b2c5bc8cdc4facc5b74b399d699}{nhole\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0a928e046fd3a6d08e28fbbb5d8260fa}{hole\+\_\+mos\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a789bd33d16142dcbdee59fca2f45358a}{npart\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab60fcc4eb184666fbd626831b2552d12}{part\+\_\+mos\+\_\+}}
+\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9eba1f5e4fa8e9e096c87d86f7ad1f90}{sym\+\_\+actv\+\_\+}}
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_symmetry}{Symmetry}}. \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_af83573819da4037ce8fc574d9a0c0be8}{sym\+\_\+ncmo\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a95045d8bd52ded5f72c1022374da2299}{s\+\_\+}}
+\begin{DoxyCompactList}\small\item\em D\+S\+RG s Parameter. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a997e8df570d59a3f4b190bb6db57f1ea}{source\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Source Operator. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac8e317c80e4668f24891096ee21e8f54}{expo\+\_\+delta\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Exponent of Delta. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae59121f5f7ba5f30aa06d9c0de2d711a}{taylor\+\_\+threshold\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Taylor Expansion Threshold. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0801d6bbeb8d5ab5161d0b27f683f932}{taylor\+\_\+order\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_adf0fe66b1a0b06c10ff7a159da57cd6a}{Da\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Density Matrix. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_af56fe01444a0c47e5e6da37fe35e29e0}{Db\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a08df4573012bd9b084446827e50270d1}{L2aa\+\_\+}}
+\begin{DoxyCompactList}\small\item\em 2-\/\+Body Density Cumulant \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a457291946ab2f4642a6b36c3206122bf}{L2ab\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a889ab7cb90f48df4b68cbe4f02c0b5bc}{L2bb\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a378390d76b72edb35a4b5f8251a34698}{L3aaa\+\_\+}}
+\begin{DoxyCompactList}\small\item\em 3-\/\+Body Density Cumulant \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2e3626a88b9d2615890534426943e7ee}{L3aab\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_aa9298a5ab47bfadbba3348fa194d213a}{L3abb\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a15f8b16ff564e95f6f7d375dd6e9a855}{L3bbb\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8463e21fc967f652cb7669a4ea7dc781}{Fa\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Fock Matrix. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3d96af66778fe6d35fe9bac4fb1d3c6f}{Fb\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a47de26a92eeae21871ceb54ecccada10}{T1a\+\_\+}}
+\begin{DoxyCompactList}\small\item\em T1 Amplitude. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7314ff59566861f1be39c88e28288002}{T1b\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad07ebb8148edb7cec7949bcf1826025b}{T1\+Na\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9cdc45e2993e19d2869b97af3c7c0b38}{T1\+Nb\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad56f0c372017947d8ca0091690f7e2f0}{T1\+Maxa\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a72b14b19a7c84b93b1d34d73a0ac09b4}{T1\+Maxb\+\_\+}}
+\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab1725f82a61bd743a3eae5fb51b9d5e2}{t1\+\_\+amp\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0acae731bea2f642f5d368ea2d84d955}{T2aa\+\_\+}}
+\begin{DoxyCompactList}\small\item\em T2 Amplitude. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a12ebb666577ae82094097d21113bb95a}{T2ab\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4be2301cc5504db809c09cf9fe0d1e94}{T2bb\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3ab5df32554a58cd4d7730d114576717}{T2\+Naa\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9fbdfb349795d0f26ec48354e67a7374}{T2\+Nab\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3c942130a7234b6155741ef79fd1630c}{T2\+Nbb\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a597b543329d0f593b314f24031f5ca37}{T2\+Maxaa\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7d732d2f45a3199fa2ecb421459c6290}{T2\+Maxab\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a78ba6dbb6fc41fe7a965f955e3d350f7}{T2\+Maxbb\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab2996e176f7a0bb08e4ada76f19bc45d}{Fa\+\_\+dsrg\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Effective Fock Matrix. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a39467f78d8c5061641a4b9dba4ed8211}{Fb\+\_\+dsrg\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a854ca8ec4f26830bb07e4b551bb07894}{vaa\+\_\+dsrg\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Effective Two Electron Integral. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_af90db713e40fc4cedb4d1989b7dd5e6a}{vab\+\_\+dsrg\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1b4e13e78a7c77af85f41166e2725df6}{vbb\+\_\+dsrg\+\_\+}}
+\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_aeb93e9cba7b31a76f99d58bda4b23867}{Fa\+\_\+srg\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Fock Matrix in S\+RG. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad03e193596e773f191d0a763f1b3ddad}{Fb\+\_\+srg\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e}{D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}} $>$ \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0bdb54b9f324182b06da2e1e8902530a}{srg\+\_\+source\+\_\+}}
+\begin{DoxyCompactList}\small\item\em S\+RG source operator, just need the linear one. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a5cb2d5353e670f44e90e7177c9956df3}{Eref\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1ef3601cacf556b50508c83f4e5893b8}{Ecorr\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7b97f08442d4e5610c3a7f371827394b}{Etotal\+\_\+}}
+\item 
+\mbox{\hyperlink{classforte_1_1local__timer}{local\+\_\+timer}} \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9b508ab2b3ca78e69ab0df182eafd929}{dsrg\+\_\+timer}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8e0c4de4b2aca628b9ef53e117e48456}{T2\+\_\+timing}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a12cb08f4ef192953a23441557b36f817}{T1\+\_\+timing}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae8885ec30ce6680d8c410f738d715a5a}{F\+T1\+\_\+timing}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae954ecab960ddb36bc419e9b7029ba20}{F\+T2\+\_\+timing}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7bad86251186ef082e22bc5ace0d0de2}{V\+T1\+\_\+timing}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8fadc50a8e07348398cfa7e6c4323ff5}{V\+T2\+C2\+\_\+timing}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a760d7803c6cdfeec10e8a745eea0d376}{V\+T2\+C4\+\_\+timing}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1993b3dec813f7f3a24134f17393db84}{V\+T2\+C6\+\_\+timing}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Enumeration Documentation}
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!sourceop@{sourceop}}
+\index{sourceop@{sourceop}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{sourceop}{sourceop}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1}{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::sourceop}}\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Source Operators. 
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{S\+T\+A\+N\+D\+A\+RD@{S\+T\+A\+N\+D\+A\+RD}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!S\+T\+A\+N\+D\+A\+RD@{S\+T\+A\+N\+D\+A\+RD}}}\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a0b64256e8b44dbe842be9d5698318579}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a0b64256e8b44dbe842be9d5698318579}} 
+S\+T\+A\+N\+D\+A\+RD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{A\+MP@{A\+MP}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!A\+MP@{A\+MP}}}\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a5811e417c1c498623bd94d1d5013df95}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a5811e417c1c498623bd94d1d5013df95}} 
+A\+MP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{E\+M\+P2@{E\+M\+P2}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+M\+P2@{E\+M\+P2}}}\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1ae712aa6a2ffadd5f220d8f1700eb94af}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1ae712aa6a2ffadd5f220d8f1700eb94af}} 
+E\+M\+P2&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{L\+A\+MP@{L\+A\+MP}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L\+A\+MP@{L\+A\+MP}}}\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1af1f23d90950da0348be1b106dd5c84b3}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1af1f23d90950da0348be1b106dd5c84b3}} 
+L\+A\+MP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{L\+E\+M\+P2@{L\+E\+M\+P2}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L\+E\+M\+P2@{L\+E\+M\+P2}}}\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a1988646a02aba967738d55d47907fd28}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a1988646a02aba967738d55d47907fd28}} 
+L\+E\+M\+P2&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a52774da32a658fa6b46a7b176a8df564}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a52774da32a658fa6b46a7b176a8df564}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\index{M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O()}{MCSRGPT2\_MO()}}
+{\footnotesize\ttfamily forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}}]{reference,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info }\end{DoxyParamCaption})}
+
+
+
+The Constructor for the pilot D\+S\+R\+G-\/\+M\+R\+P\+T2 code. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ref\+\_\+wfn} & The reference wavefunction object \\
+\hline
+{\em options} & The main options object \\
+\hline
+{\em ints} & A pointer to an allocated integral object \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a64d29f95654d1ca214b49674e918b535}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a64d29f95654d1ca214b49674e918b535}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!````~M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{$\sim$\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\index{````~M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{$\sim$\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{$\sim$\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O()}{~MCSRGPT2\_MO()}}
+{\footnotesize\ttfamily forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::$\sim$\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a737d2c7deb1c24d5710225709e9ea367}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a737d2c7deb1c24d5710225709e9ea367}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Check\+\_\+\+T1@{Check\+\_\+\+T1}}
+\index{Check\+\_\+\+T1@{Check\+\_\+\+T1}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Check\+\_\+\+T1()}{Check\_T1()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Check\+\_\+\+T1 (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{x,  }\item[{const \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{M,  }\item[{double \&}]{Norm,  }\item[{double \&}]{MaxT,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Check T Amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4c21e5482c787306d1bfc356577149ca}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4c21e5482c787306d1bfc356577149ca}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Check\+\_\+\+T2@{Check\+\_\+\+T2}}
+\index{Check\+\_\+\+T2@{Check\+\_\+\+T2}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Check\+\_\+\+T2()}{Check\_T2()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Check\+\_\+\+T2 (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{x,  }\item[{const \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{M,  }\item[{double \&}]{Norm,  }\item[{double \&}]{MaxT,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a54d13435f0e25a148cc8dc176ccbc1b6}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a54d13435f0e25a148cc8dc176ccbc1b6}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!cleanup@{cleanup}}
+\index{cleanup@{cleanup}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{cleanup()}{cleanup()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::cleanup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8983a928beadc64ac842e55d70e23d1d}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8983a928beadc64ac842e55d70e23d1d}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the energy. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1501ae80bca18cfb8a189346443efa2e}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1501ae80bca18cfb8a189346443efa2e}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!compute\+\_\+energy\+\_\+dsrg@{compute\+\_\+energy\+\_\+dsrg}}
+\index{compute\+\_\+energy\+\_\+dsrg@{compute\+\_\+energy\+\_\+dsrg}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy\+\_\+dsrg()}{compute\_energy\_dsrg()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::compute\+\_\+energy\+\_\+dsrg (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Computes the D\+S\+R\+G-\/\+M\+R\+P\+T2 energy. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a320ed94dd45e634913bf226f5885f638}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a320ed94dd45e634913bf226f5885f638}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!compute\+\_\+energy\+\_\+srg@{compute\+\_\+energy\+\_\+srg}}
+\index{compute\+\_\+energy\+\_\+srg@{compute\+\_\+energy\+\_\+srg}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy\+\_\+srg()}{compute\_energy\_srg()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::compute\+\_\+energy\+\_\+srg (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Computes the S\+R\+G-\/\+M\+R\+P\+T2 energy. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a81f13aa73866cbd8dd1589ffcce6de8f}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a81f13aa73866cbd8dd1589ffcce6de8f}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!compute\+\_\+\+Fock\+\_\+ints@{compute\+\_\+\+Fock\+\_\+ints}}
+\index{compute\+\_\+\+Fock\+\_\+ints@{compute\+\_\+\+Fock\+\_\+ints}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Fock\+\_\+ints()}{compute\_Fock\_ints()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::compute\+\_\+\+Fock\+\_\+ints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute Fock (stored in Forte\+Integal) using this-\/$>$Da\+\_\+. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad064311348ef7d691c755ae854ade618}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad064311348ef7d691c755ae854ade618}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!compute\+\_\+ref@{compute\+\_\+ref}}
+\index{compute\+\_\+ref@{compute\+\_\+ref}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{compute\+\_\+ref()}{compute\_ref()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::compute\+\_\+ref (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} Energy. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a73e3ed734c27d6860ea2868ff0edf768}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a73e3ed734c27d6860ea2868ff0edf768}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+\_\+\+F\+T1@{E\+\_\+\+F\+T1}}
+\index{E\+\_\+\+F\+T1@{E\+\_\+\+F\+T1}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+\_\+\+F\+T1()}{E\_FT1()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+\_\+\+F\+T1 (\begin{DoxyParamCaption}\item[{double \&}]{E }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Energy Components. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a86058b92bd133506c7b537711b2bee94}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a86058b92bd133506c7b537711b2bee94}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+\_\+\+V\+T1\+\_\+\+F\+T2@{E\+\_\+\+V\+T1\+\_\+\+F\+T2}}
+\index{E\+\_\+\+V\+T1\+\_\+\+F\+T2@{E\+\_\+\+V\+T1\+\_\+\+F\+T2}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+T1\+\_\+\+F\+T2()}{E\_VT1\_FT2()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+\_\+\+V\+T1\+\_\+\+F\+T2 (\begin{DoxyParamCaption}\item[{double \&}]{E\+F1,  }\item[{double \&}]{E\+F2,  }\item[{double \&}]{E\+V1,  }\item[{double \&}]{E\+V2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a32946f4fae2b5da8d964b9ef5290061d}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a32946f4fae2b5da8d964b9ef5290061d}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+\_\+\+V\+T2\+\_\+2@{E\+\_\+\+V\+T2\+\_\+2}}
+\index{E\+\_\+\+V\+T2\+\_\+2@{E\+\_\+\+V\+T2\+\_\+2}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+T2\+\_\+2()}{E\_VT2\_2()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+\_\+\+V\+T2\+\_\+2 (\begin{DoxyParamCaption}\item[{double \&}]{E }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad1b584d2141a26a890fe50b2860e53a3}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad1b584d2141a26a890fe50b2860e53a3}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+\_\+\+V\+T2\+\_\+4\+HH@{E\+\_\+\+V\+T2\+\_\+4\+HH}}
+\index{E\+\_\+\+V\+T2\+\_\+4\+HH@{E\+\_\+\+V\+T2\+\_\+4\+HH}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+T2\+\_\+4\+H\+H()}{E\_VT2\_4HH()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+\_\+\+V\+T2\+\_\+4\+HH (\begin{DoxyParamCaption}\item[{double \&}]{E }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac17b6c997087406c6a6d649c7d974829}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac17b6c997087406c6a6d649c7d974829}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+\_\+\+V\+T2\+\_\+4\+PH@{E\+\_\+\+V\+T2\+\_\+4\+PH}}
+\index{E\+\_\+\+V\+T2\+\_\+4\+PH@{E\+\_\+\+V\+T2\+\_\+4\+PH}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+T2\+\_\+4\+P\+H()}{E\_VT2\_4PH()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+\_\+\+V\+T2\+\_\+4\+PH (\begin{DoxyParamCaption}\item[{double \&}]{E }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4b7373616732797d0d4130cfec596dd3}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4b7373616732797d0d4130cfec596dd3}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+\_\+\+V\+T2\+\_\+4\+PP@{E\+\_\+\+V\+T2\+\_\+4\+PP}}
+\index{E\+\_\+\+V\+T2\+\_\+4\+PP@{E\+\_\+\+V\+T2\+\_\+4\+PP}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+T2\+\_\+4\+P\+P()}{E\_VT2\_4PP()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+\_\+\+V\+T2\+\_\+4\+PP (\begin{DoxyParamCaption}\item[{double \&}]{E }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae5c2836e64b6755ff5211e9458b75407}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae5c2836e64b6755ff5211e9458b75407}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+\_\+\+V\+T2\+\_\+6@{E\+\_\+\+V\+T2\+\_\+6}}
+\index{E\+\_\+\+V\+T2\+\_\+6@{E\+\_\+\+V\+T2\+\_\+6}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+\_\+\+V\+T2\+\_\+6()}{E\_VT2\_6()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+\_\+\+V\+T2\+\_\+6 (\begin{DoxyParamCaption}\item[{double \&}]{E1,  }\item[{double \&}]{E2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_aff400e48ffc929eeb61bbe1e32407707}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_aff400e48ffc929eeb61bbe1e32407707}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Element\+RH@{Element\+RH}}
+\index{Element\+RH@{Element\+RH}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Element\+R\+H()}{ElementRH()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Element\+RH (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{source,  }\item[{const double \&}]{D,  }\item[{const double \&}]{V }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute an addition element of renorm. H according to source operator. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9668e316f94c15c688146a7e2d20893c}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9668e316f94c15c688146a7e2d20893c}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!ElementT@{ElementT}}
+\index{ElementT@{ElementT}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Element\+T()}{ElementT()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+ElementT (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{source,  }\item[{const double \&}]{D,  }\item[{const double \&}]{V }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute an element of T according to source operator. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae2eb1e7eed16738aac3c013f9773bc0f}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae2eb1e7eed16738aac3c013f9773bc0f}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+S\+R\+G\+\_\+11@{E\+S\+R\+G\+\_\+11}}
+\index{E\+S\+R\+G\+\_\+11@{E\+S\+R\+G\+\_\+11}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+S\+R\+G\+\_\+11()}{ESRG\_11()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+S\+R\+G\+\_\+11 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+S\+R\+G-\/\+M\+R\+P\+T2 Energy Components. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a10e39753f1094dc48a4086d95541e40f}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a10e39753f1094dc48a4086d95541e40f}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+S\+R\+G\+\_\+12@{E\+S\+R\+G\+\_\+12}}
+\index{E\+S\+R\+G\+\_\+12@{E\+S\+R\+G\+\_\+12}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+S\+R\+G\+\_\+12()}{ESRG\_12()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+S\+R\+G\+\_\+12 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab41baca21b5f575b89aa04a7372d8eb6}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab41baca21b5f575b89aa04a7372d8eb6}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+S\+R\+G\+\_\+21@{E\+S\+R\+G\+\_\+21}}
+\index{E\+S\+R\+G\+\_\+21@{E\+S\+R\+G\+\_\+21}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+S\+R\+G\+\_\+21()}{ESRG\_21()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+S\+R\+G\+\_\+21 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9b5ad651f6b5ec2c4c56047e24893407}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9b5ad651f6b5ec2c4c56047e24893407}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+S\+R\+G\+\_\+22\+\_\+2@{E\+S\+R\+G\+\_\+22\+\_\+2}}
+\index{E\+S\+R\+G\+\_\+22\+\_\+2@{E\+S\+R\+G\+\_\+22\+\_\+2}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+S\+R\+G\+\_\+22\+\_\+2()}{ESRG\_22\_2()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+S\+R\+G\+\_\+22\+\_\+2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_aeacf14f3de6588ad89c88853e680af71}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_aeacf14f3de6588ad89c88853e680af71}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+S\+R\+G\+\_\+22\+\_\+4@{E\+S\+R\+G\+\_\+22\+\_\+4}}
+\index{E\+S\+R\+G\+\_\+22\+\_\+4@{E\+S\+R\+G\+\_\+22\+\_\+4}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+S\+R\+G\+\_\+22\+\_\+4()}{ESRG\_22\_4()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+S\+R\+G\+\_\+22\+\_\+4 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_adcdea03111a41700b182e4d0a6d457bf}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_adcdea03111a41700b182e4d0a6d457bf}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!E\+S\+R\+G\+\_\+22\+\_\+6@{E\+S\+R\+G\+\_\+22\+\_\+6}}
+\index{E\+S\+R\+G\+\_\+22\+\_\+6@{E\+S\+R\+G\+\_\+22\+\_\+6}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{E\+S\+R\+G\+\_\+22\+\_\+6()}{ESRG\_22\_6()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+E\+S\+R\+G\+\_\+22\+\_\+6 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a44467184902a50fafd224ff1230b80a7}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a44467184902a50fafd224ff1230b80a7}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!fill\+\_\+naive\+\_\+cumulants@{fill\+\_\+naive\+\_\+cumulants}}
+\index{fill\+\_\+naive\+\_\+cumulants@{fill\+\_\+naive\+\_\+cumulants}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{fill\+\_\+naive\+\_\+cumulants()}{fill\_naive\_cumulants()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::fill\+\_\+naive\+\_\+cumulants (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}}]{ref,  }\item[{const int}]{level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fill in non-\/tensor cumulants used in the naive M\+R-\/\+D\+S\+R\+G-\/\+P\+T2 code. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2b21f9a413f49f41449a3a94b1576c88}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2b21f9a413f49f41449a3a94b1576c88}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!fill\+\_\+one\+\_\+cumulant@{fill\+\_\+one\+\_\+cumulant}}
+\index{fill\+\_\+one\+\_\+cumulant@{fill\+\_\+one\+\_\+cumulant}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{fill\+\_\+one\+\_\+cumulant()}{fill\_one\_cumulant()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::fill\+\_\+one\+\_\+cumulant (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor \&}]{L1a,  }\item[{ambit\+::\+Tensor \&}]{L1b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fill in non-\/tensor quantities D1a\+\_\+ and D1b\+\_\+ using ambit tensors. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ada5a88df27b0c810a6da3188fe3bfe0b}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ada5a88df27b0c810a6da3188fe3bfe0b}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!fill\+\_\+three\+\_\+cumulant@{fill\+\_\+three\+\_\+cumulant}}
+\index{fill\+\_\+three\+\_\+cumulant@{fill\+\_\+three\+\_\+cumulant}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{fill\+\_\+three\+\_\+cumulant()}{fill\_three\_cumulant()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::fill\+\_\+three\+\_\+cumulant (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor \&}]{L3aaa,  }\item[{ambit\+::\+Tensor \&}]{L3aab,  }\item[{ambit\+::\+Tensor \&}]{L3abb,  }\item[{ambit\+::\+Tensor \&}]{L3bbb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fill in non-\/tensor quantities L3aaa\+\_\+, L3aab\+\_\+, L3abb\+\_\+ and L3bbb\+\_\+ using ambit tensors. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a16a2294f9dda61114a38f0652144fa7d}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a16a2294f9dda61114a38f0652144fa7d}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!fill\+\_\+two\+\_\+cumulant@{fill\+\_\+two\+\_\+cumulant}}
+\index{fill\+\_\+two\+\_\+cumulant@{fill\+\_\+two\+\_\+cumulant}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{fill\+\_\+two\+\_\+cumulant()}{fill\_two\_cumulant()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::fill\+\_\+two\+\_\+cumulant (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor \&}]{L2aa,  }\item[{ambit\+::\+Tensor \&}]{L2ab,  }\item[{ambit\+::\+Tensor \&}]{L2bb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fill in non-\/tensor quantities L2aa\+\_\+, L2ab\+\_\+, and L2bb\+\_\+ using ambit tensors. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a220d94aaf515b4fa7ed3aec37f552baa}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a220d94aaf515b4fa7ed3aec37f552baa}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+A\+M\+P\+\_\+\+D\+S\+RG@{Form\+\_\+\+A\+M\+P\+\_\+\+D\+S\+RG}}
+\index{Form\+\_\+\+A\+M\+P\+\_\+\+D\+S\+RG@{Form\+\_\+\+A\+M\+P\+\_\+\+D\+S\+RG}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+A\+M\+P\+\_\+\+D\+S\+R\+G()}{Form\_AMP\_DSRG()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+A\+M\+P\+\_\+\+D\+S\+RG (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Form T Amplitudes for D\+S\+RG. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9a21cc4d3124bf2e4f030a6232f1a179}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9a21cc4d3124bf2e4f030a6232f1a179}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+A\+P\+T\+E\+I\+\_\+\+D\+S\+RG@{Form\+\_\+\+A\+P\+T\+E\+I\+\_\+\+D\+S\+RG}}
+\index{Form\+\_\+\+A\+P\+T\+E\+I\+\_\+\+D\+S\+RG@{Form\+\_\+\+A\+P\+T\+E\+I\+\_\+\+D\+S\+RG}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+A\+P\+T\+E\+I\+\_\+\+D\+S\+R\+G()}{Form\_APTEI\_DSRG()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+A\+P\+T\+E\+I\+\_\+\+D\+S\+RG (\begin{DoxyParamCaption}\item[{const bool \&}]{dsrgpt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7d6c590a53ea89304507133ebe778bce}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7d6c590a53ea89304507133ebe778bce}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+Fock@{Form\+\_\+\+Fock}}
+\index{Form\+\_\+\+Fock@{Form\+\_\+\+Fock}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+Fock()}{Form\_Fock()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+Fock (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{A,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{B }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Form Fock matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_aff036d2fcafadf0978399b23f6248695}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_aff036d2fcafadf0978399b23f6248695}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+Fock\+\_\+\+D\+S\+RG@{Form\+\_\+\+Fock\+\_\+\+D\+S\+RG}}
+\index{Form\+\_\+\+Fock\+\_\+\+D\+S\+RG@{Form\+\_\+\+Fock\+\_\+\+D\+S\+RG}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+Fock\+\_\+\+D\+S\+R\+G()}{Form\_Fock\_DSRG()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+Fock\+\_\+\+D\+S\+RG (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{A,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{B,  }\item[{const bool \&}]{dsrgpt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae6cb2ec44c6c8c46b34cc27467de49c1}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae6cb2ec44c6c8c46b34cc27467de49c1}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+Fock\+\_\+\+S\+RG@{Form\+\_\+\+Fock\+\_\+\+S\+RG}}
+\index{Form\+\_\+\+Fock\+\_\+\+S\+RG@{Form\+\_\+\+Fock\+\_\+\+S\+RG}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+Fock\+\_\+\+S\+R\+G()}{Form\_Fock\_SRG()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+Fock\+\_\+\+S\+RG (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_aa5fe840d496431af5e53ba309e30a747}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_aa5fe840d496431af5e53ba309e30a747}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+T1\+\_\+\+D\+S\+RG@{Form\+\_\+\+T1\+\_\+\+D\+S\+RG}}
+\index{Form\+\_\+\+T1\+\_\+\+D\+S\+RG@{Form\+\_\+\+T1\+\_\+\+D\+S\+RG}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+T1\+\_\+\+D\+S\+R\+G()}{Form\_T1\_DSRG()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+T1\+\_\+\+D\+S\+RG (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{A,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{B }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a647e83e0b4444a44dea8c6b6288f6f3f}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a647e83e0b4444a44dea8c6b6288f6f3f}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+T1\+\_\+\+I\+SA@{Form\+\_\+\+T1\+\_\+\+I\+SA}}
+\index{Form\+\_\+\+T1\+\_\+\+I\+SA@{Form\+\_\+\+T1\+\_\+\+I\+SA}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+T1\+\_\+\+I\+S\+A()}{Form\_T1\_ISA()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+T1\+\_\+\+I\+SA (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{A,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{B,  }\item[{const double \&}]{b\+\_\+const }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0ed08f7a03042f89508ab41377d970ea}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0ed08f7a03042f89508ab41377d970ea}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+T2\+\_\+\+D\+S\+RG@{Form\+\_\+\+T2\+\_\+\+D\+S\+RG}}
+\index{Form\+\_\+\+T2\+\_\+\+D\+S\+RG@{Form\+\_\+\+T2\+\_\+\+D\+S\+RG}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+T2\+\_\+\+D\+S\+R\+G()}{Form\_T2\_DSRG()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+T2\+\_\+\+D\+S\+RG (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{AA,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{AB,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{BB,  }\item[{std\+::string \&}]{T\+\_\+\+A\+L\+G\+OR }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Form T Amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_af679c23cc0988a503c06a45caabc9c38}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_af679c23cc0988a503c06a45caabc9c38}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+T2\+\_\+\+I\+SA@{Form\+\_\+\+T2\+\_\+\+I\+SA}}
+\index{Form\+\_\+\+T2\+\_\+\+I\+SA@{Form\+\_\+\+T2\+\_\+\+I\+SA}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+T2\+\_\+\+I\+S\+A()}{Form\_T2\_ISA()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+T2\+\_\+\+I\+SA (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{AA,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{AB,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{BB,  }\item[{const double \&}]{b\+\_\+const }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2f6d8ab15eff1d1a4cef504976268836}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2f6d8ab15eff1d1a4cef504976268836}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Form\+\_\+\+T2\+\_\+\+S\+E\+L\+EC@{Form\+\_\+\+T2\+\_\+\+S\+E\+L\+EC}}
+\index{Form\+\_\+\+T2\+\_\+\+S\+E\+L\+EC@{Form\+\_\+\+T2\+\_\+\+S\+E\+L\+EC}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Form\+\_\+\+T2\+\_\+\+S\+E\+L\+E\+C()}{Form\_T2\_SELEC()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Form\+\_\+\+T2\+\_\+\+S\+E\+L\+EC (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{AA,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{AB,  }\item[{\mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{BB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a81773e4db7c548a9f6c24374056dc008}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a81773e4db7c548a9f6c24374056dc008}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!prepare\+\_\+mo\+\_\+space@{prepare\+\_\+mo\+\_\+space}}
+\index{prepare\+\_\+mo\+\_\+space@{prepare\+\_\+mo\+\_\+space}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{prepare\+\_\+mo\+\_\+space()}{prepare\_mo\_space()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::prepare\+\_\+mo\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1e0f52e95c5ddeff56ca15b994c2ed27}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1e0f52e95c5ddeff56ca15b994c2ed27}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!print2\+P\+DC@{print2\+P\+DC}}
+\index{print2\+P\+DC@{print2\+P\+DC}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{print2\+P\+D\+C()}{print2PDC()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::print2\+P\+DC (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{str,  }\item[{const \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} \&}]{Two\+P\+DC,  }\item[{const int \&}]{P\+R\+I\+NT }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print 2-\/body cumulants. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a77aecb3ccbd7d29c8c0c9b6f4cf1502f}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a77aecb3ccbd7d29c8c0c9b6f4cf1502f}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!print3\+P\+DC@{print3\+P\+DC}}
+\index{print3\+P\+DC@{print3\+P\+DC}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{print3\+P\+D\+C()}{print3PDC()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::print3\+P\+DC (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{str,  }\item[{const \mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} \&}]{Three\+P\+DC,  }\item[{const int \&}]{P\+R\+I\+NT }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print 3-\/body cumulants. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2d4dc40b11c8cfb77171700a504602bc}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2d4dc40b11c8cfb77171700a504602bc}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!print\+\_\+density@{print\+\_\+density}}
+\index{print\+\_\+density@{print\+\_\+density}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{print\+\_\+density()}{print\_density()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::print\+\_\+density (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{spin,  }\item[{const \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{density }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print Density Matrix (Active O\+N\+LY) 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3090cb11611f7d3bd74dcb59ee431ffb}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3090cb11611f7d3bd74dcb59ee431ffb}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!print\+\_\+\+Fock@{print\+\_\+\+Fock}}
+\index{print\+\_\+\+Fock@{print\+\_\+\+Fock}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{print\+\_\+\+Fock()}{print\_Fock()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::print\+\_\+\+Fock (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{spin,  }\item[{const \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} \&}]{Fock }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print Fock Matrix in Blocks. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3794ac7eb215ae0ef6bbfc55d4726d7e}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3794ac7eb215ae0ef6bbfc55d4726d7e}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Print\+\_\+\+Timing@{Print\+\_\+\+Timing}}
+\index{Print\+\_\+\+Timing@{Print\+\_\+\+Timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Print\+\_\+\+Timing()}{Print\_Timing()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Print\+\_\+\+Timing (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Timings. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad4abb0ead47e9109fd12388ab3f341ff}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad4abb0ead47e9109fd12388ab3f341ff}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Print\+Delta@{Print\+Delta}}
+\index{Print\+Delta@{Print\+Delta}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Print\+Delta()}{PrintDelta()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Print\+Delta (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print Delta. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a47e338c51626a323fb371aa5a7b1aa02}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a47e338c51626a323fb371aa5a7b1aa02}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!startup@{startup}}
+\index{startup@{startup}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{startup()}{startup()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::startup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Basis preparation. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4a7b7d01659b380e0c790d440d9c8588}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4a7b7d01659b380e0c790d440d9c8588}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Taylor\+\_\+\+Exp@{Taylor\+\_\+\+Exp}}
+\index{Taylor\+\_\+\+Exp@{Taylor\+\_\+\+Exp}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Taylor\+\_\+\+Exp()}{Taylor\_Exp()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Taylor\+\_\+\+Exp (\begin{DoxyParamCaption}\item[{const double \&}]{Z,  }\item[{const int \&}]{n,  }\item[{const double \&}]{g }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+Taylor Expansion of \mbox{[}1 -\/ exp(-\/$\vert$\+Z$\vert$$^\wedge$g)\mbox{]} / Z = Z$^\wedge$\{g-\/1\} \{n=1\} \{1\}\{n!\} (-\/1)$^\wedge$\{n+1\} Z$^\wedge$\{(n-\/1)g\}) \mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_afa94ebf067f0670291d880a1bff7c747}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_afa94ebf067f0670291d880a1bff7c747}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Taylor\+\_\+\+Exp\+\_\+\+Linear@{Taylor\+\_\+\+Exp\+\_\+\+Linear}}
+\index{Taylor\+\_\+\+Exp\+\_\+\+Linear@{Taylor\+\_\+\+Exp\+\_\+\+Linear}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Taylor\+\_\+\+Exp\+\_\+\+Linear()}{Taylor\_Exp\_Linear()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Taylor\+\_\+\+Exp\+\_\+\+Linear (\begin{DoxyParamCaption}\item[{const double \&}]{Z,  }\item[{const int \&}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+
+
+Taylor Expansion of \mbox{[}1 -\/ exp(-\/$\vert$\+Z$\vert$)\mbox{]} / Z. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a5bd7a91d8461cff512c3cfafd0578e27}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a5bd7a91d8461cff512c3cfafd0578e27}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!test\+\_\+\+D1\+\_\+\+RE@{test\+\_\+\+D1\+\_\+\+RE}}
+\index{test\+\_\+\+D1\+\_\+\+RE@{test\+\_\+\+D1\+\_\+\+RE}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{test\+\_\+\+D1\+\_\+\+R\+E()}{test\_D1\_RE()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::test\+\_\+\+D1\+\_\+\+RE (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Test denominators from Dyall / retaining excitation Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a89126beac8ce5676b5b49e8b67c17c61}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a89126beac8ce5676b5b49e8b67c17c61}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!test\+\_\+\+D2\+\_\+\+Dyall@{test\+\_\+\+D2\+\_\+\+Dyall}}
+\index{test\+\_\+\+D2\+\_\+\+Dyall@{test\+\_\+\+D2\+\_\+\+Dyall}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{test\+\_\+\+D2\+\_\+\+Dyall()}{test\_D2\_Dyall()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::test\+\_\+\+D2\+\_\+\+Dyall (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2a27b2e71bb7a35f5bdc1fb12732fa79}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2a27b2e71bb7a35f5bdc1fb12732fa79}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!test\+\_\+\+D2\+\_\+\+RE@{test\+\_\+\+D2\+\_\+\+RE}}
+\index{test\+\_\+\+D2\+\_\+\+RE@{test\+\_\+\+D2\+\_\+\+RE}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{test\+\_\+\+D2\+\_\+\+R\+E()}{test\_D2\_RE()}}
+{\footnotesize\ttfamily void forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::test\+\_\+\+D2\+\_\+\+RE (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9bccae7e40de9bd8aa67843dcfd0d66b}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9bccae7e40de9bd8aa67843dcfd0d66b}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!actv\+\_\+mos\+\_\+@{actv\+\_\+mos\+\_\+}}
+\index{actv\+\_\+mos\+\_\+@{actv\+\_\+mos\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{actv\+\_\+mos\+\_\+}{actv\_mos\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::actv\+\_\+mos\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9c89f12d524c3f1b767115f4bc1a20b8}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9c89f12d524c3f1b767115f4bc1a20b8}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!core\+\_\+mos\+\_\+@{core\+\_\+mos\+\_\+}}
+\index{core\+\_\+mos\+\_\+@{core\+\_\+mos\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{core\+\_\+mos\+\_\+}{core\_mos\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::core\+\_\+mos\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_adf0fe66b1a0b06c10ff7a159da57cd6a}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_adf0fe66b1a0b06c10ff7a159da57cd6a}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Da\+\_\+@{Da\+\_\+}}
+\index{Da\+\_\+@{Da\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Da\+\_\+}{Da\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Da\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Density Matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_af56fe01444a0c47e5e6da37fe35e29e0}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_af56fe01444a0c47e5e6da37fe35e29e0}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Db\+\_\+@{Db\+\_\+}}
+\index{Db\+\_\+@{Db\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Db\+\_\+}{Db\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Db\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9b508ab2b3ca78e69ab0df182eafd929}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9b508ab2b3ca78e69ab0df182eafd929}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!dsrg\+\_\+timer@{dsrg\+\_\+timer}}
+\index{dsrg\+\_\+timer@{dsrg\+\_\+timer}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{dsrg\+\_\+timer}{dsrg\_timer}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1local__timer}{local\+\_\+timer}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::dsrg\+\_\+timer\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1ef3601cacf556b50508c83f4e5893b8}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1ef3601cacf556b50508c83f4e5893b8}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Ecorr\+\_\+@{Ecorr\+\_\+}}
+\index{Ecorr\+\_\+@{Ecorr\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Ecorr\+\_\+}{Ecorr\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Ecorr\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a5cb2d5353e670f44e90e7177c9956df3}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a5cb2d5353e670f44e90e7177c9956df3}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Eref\+\_\+@{Eref\+\_\+}}
+\index{Eref\+\_\+@{Eref\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Eref\+\_\+}{Eref\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Eref\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7b97f08442d4e5610c3a7f371827394b}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7b97f08442d4e5610c3a7f371827394b}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Etotal\+\_\+@{Etotal\+\_\+}}
+\index{Etotal\+\_\+@{Etotal\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Etotal\+\_\+}{Etotal\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Etotal\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac8e317c80e4668f24891096ee21e8f54}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac8e317c80e4668f24891096ee21e8f54}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!expo\+\_\+delta\+\_\+@{expo\+\_\+delta\+\_\+}}
+\index{expo\+\_\+delta\+\_\+@{expo\+\_\+delta\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{expo\+\_\+delta\+\_\+}{expo\_delta\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::expo\+\_\+delta\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Exponent of Delta. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8463e21fc967f652cb7669a4ea7dc781}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8463e21fc967f652cb7669a4ea7dc781}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Fa\+\_\+@{Fa\+\_\+}}
+\index{Fa\+\_\+@{Fa\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Fa\+\_\+}{Fa\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Fa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fock Matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab2996e176f7a0bb08e4ada76f19bc45d}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab2996e176f7a0bb08e4ada76f19bc45d}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Fa\+\_\+dsrg\+\_\+@{Fa\+\_\+dsrg\+\_\+}}
+\index{Fa\+\_\+dsrg\+\_\+@{Fa\+\_\+dsrg\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Fa\+\_\+dsrg\+\_\+}{Fa\_dsrg\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Fa\+\_\+dsrg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Effective Fock Matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_aeb93e9cba7b31a76f99d58bda4b23867}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_aeb93e9cba7b31a76f99d58bda4b23867}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Fa\+\_\+srg\+\_\+@{Fa\+\_\+srg\+\_\+}}
+\index{Fa\+\_\+srg\+\_\+@{Fa\+\_\+srg\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Fa\+\_\+srg\+\_\+}{Fa\_srg\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Fa\+\_\+srg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fock Matrix in S\+RG. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3d96af66778fe6d35fe9bac4fb1d3c6f}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3d96af66778fe6d35fe9bac4fb1d3c6f}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Fb\+\_\+@{Fb\+\_\+}}
+\index{Fb\+\_\+@{Fb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Fb\+\_\+}{Fb\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Fb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a39467f78d8c5061641a4b9dba4ed8211}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a39467f78d8c5061641a4b9dba4ed8211}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Fb\+\_\+dsrg\+\_\+@{Fb\+\_\+dsrg\+\_\+}}
+\index{Fb\+\_\+dsrg\+\_\+@{Fb\+\_\+dsrg\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Fb\+\_\+dsrg\+\_\+}{Fb\_dsrg\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Fb\+\_\+dsrg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad03e193596e773f191d0a763f1b3ddad}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad03e193596e773f191d0a763f1b3ddad}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!Fb\+\_\+srg\+\_\+@{Fb\+\_\+srg\+\_\+}}
+\index{Fb\+\_\+srg\+\_\+@{Fb\+\_\+srg\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{Fb\+\_\+srg\+\_\+}{Fb\_srg\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+Fb\+\_\+srg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae8885ec30ce6680d8c410f738d715a5a}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae8885ec30ce6680d8c410f738d715a5a}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!F\+T1\+\_\+timing@{F\+T1\+\_\+timing}}
+\index{F\+T1\+\_\+timing@{F\+T1\+\_\+timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{F\+T1\+\_\+timing}{FT1\_timing}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+F\+T1\+\_\+timing\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae954ecab960ddb36bc419e9b7029ba20}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae954ecab960ddb36bc419e9b7029ba20}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!F\+T2\+\_\+timing@{F\+T2\+\_\+timing}}
+\index{F\+T2\+\_\+timing@{F\+T2\+\_\+timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{F\+T2\+\_\+timing}{FT2\_timing}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+F\+T2\+\_\+timing\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0a928e046fd3a6d08e28fbbb5d8260fa}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0a928e046fd3a6d08e28fbbb5d8260fa}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!hole\+\_\+mos\+\_\+@{hole\+\_\+mos\+\_\+}}
+\index{hole\+\_\+mos\+\_\+@{hole\+\_\+mos\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{hole\+\_\+mos\+\_\+}{hole\_mos\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::hole\+\_\+mos\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab7f3aa76186b95d2047cf92cbb0f4eeb}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab7f3aa76186b95d2047cf92cbb0f4eeb}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!integral\+\_\+@{integral\+\_\+}}
+\index{integral\+\_\+@{integral\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{integral\+\_\+}{integral\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}}$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::integral\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a08df4573012bd9b084446827e50270d1}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a08df4573012bd9b084446827e50270d1}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L2aa\+\_\+@{L2aa\+\_\+}}
+\index{L2aa\+\_\+@{L2aa\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{L2aa\+\_\+}{L2aa\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+L2aa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+2-\/\+Body Density Cumulant 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a457291946ab2f4642a6b36c3206122bf}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a457291946ab2f4642a6b36c3206122bf}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L2ab\+\_\+@{L2ab\+\_\+}}
+\index{L2ab\+\_\+@{L2ab\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{L2ab\+\_\+}{L2ab\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+L2ab\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a889ab7cb90f48df4b68cbe4f02c0b5bc}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a889ab7cb90f48df4b68cbe4f02c0b5bc}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L2bb\+\_\+@{L2bb\+\_\+}}
+\index{L2bb\+\_\+@{L2bb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{L2bb\+\_\+}{L2bb\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+L2bb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a378390d76b72edb35a4b5f8251a34698}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a378390d76b72edb35a4b5f8251a34698}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L3aaa\+\_\+@{L3aaa\+\_\+}}
+\index{L3aaa\+\_\+@{L3aaa\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{L3aaa\+\_\+}{L3aaa\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+L3aaa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+3-\/\+Body Density Cumulant 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2e3626a88b9d2615890534426943e7ee}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a2e3626a88b9d2615890534426943e7ee}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L3aab\+\_\+@{L3aab\+\_\+}}
+\index{L3aab\+\_\+@{L3aab\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{L3aab\+\_\+}{L3aab\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+L3aab\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_aa9298a5ab47bfadbba3348fa194d213a}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_aa9298a5ab47bfadbba3348fa194d213a}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L3abb\+\_\+@{L3abb\+\_\+}}
+\index{L3abb\+\_\+@{L3abb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{L3abb\+\_\+}{L3abb\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+L3abb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a15f8b16ff564e95f6f7d375dd6e9a855}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a15f8b16ff564e95f6f7d375dd6e9a855}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!L3bbb\+\_\+@{L3bbb\+\_\+}}
+\index{L3bbb\+\_\+@{L3bbb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{L3bbb\+\_\+}{L3bbb\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_aba90f18433f93c10946dc45fc444d743}{d6}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+L3bbb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0cc34cc42dfc9e286b55f723f8ffbcb0}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0cc34cc42dfc9e286b55f723f8ffbcb0}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}}
+\index{mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{mo\+\_\+space\+\_\+info\+\_\+}{mo\_space\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::mo\+\_\+space\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+MO space info. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a20a862b80242d33cb0ea5f754c39b13c}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a20a862b80242d33cb0ea5f754c39b13c}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!nactv\+\_\+@{nactv\+\_\+}}
+\index{nactv\+\_\+@{nactv\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{nactv\+\_\+}{nactv\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::nactv\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a622132d781e2204d32c7c71a2ff38c50}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a622132d781e2204d32c7c71a2ff38c50}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!ncmo\+\_\+@{ncmo\+\_\+}}
+\index{ncmo\+\_\+@{ncmo\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{ncmo\+\_\+}{ncmo\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::ncmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Molecular Orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a14d8e1325d662fba9349f407e2914545}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a14d8e1325d662fba9349f407e2914545}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!ncore\+\_\+@{ncore\+\_\+}}
+\index{ncore\+\_\+@{ncore\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{ncore\+\_\+}{ncore\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::ncore\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_adcfce8d353b5e7570cc39f4ca2fa4faa}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_adcfce8d353b5e7570cc39f4ca2fa4faa}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!nfrzc\+\_\+@{nfrzc\+\_\+}}
+\index{nfrzc\+\_\+@{nfrzc\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{nfrzc\+\_\+}{nfrzc\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::nfrzc\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_adeed1d99a9fc941ac2e12b8c973662b6}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_adeed1d99a9fc941ac2e12b8c973662b6}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!nfrzv\+\_\+@{nfrzv\+\_\+}}
+\index{nfrzv\+\_\+@{nfrzv\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{nfrzv\+\_\+}{nfrzv\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::nfrzv\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1b683b2c5bc8cdc4facc5b74b399d699}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1b683b2c5bc8cdc4facc5b74b399d699}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!nhole\+\_\+@{nhole\+\_\+}}
+\index{nhole\+\_\+@{nhole\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{nhole\+\_\+}{nhole\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::nhole\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a789bd33d16142dcbdee59fca2f45358a}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a789bd33d16142dcbdee59fca2f45358a}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!npart\+\_\+@{npart\+\_\+}}
+\index{npart\+\_\+@{npart\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{npart\+\_\+}{npart\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::npart\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a136aec4dfbb582a38ea5cd97cbc78dc3}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a136aec4dfbb582a38ea5cd97cbc78dc3}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!nvirt\+\_\+@{nvirt\+\_\+}}
+\index{nvirt\+\_\+@{nvirt\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{nvirt\+\_\+}{nvirt\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::nvirt\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac5db188d4d2d45bff7d2ee843eef15a2}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ac5db188d4d2d45bff7d2ee843eef15a2}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!options\+\_\+@{options\+\_\+}}
+\index{options\+\_\+@{options\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{options\+\_\+}{options\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::options\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab60fcc4eb184666fbd626831b2552d12}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab60fcc4eb184666fbd626831b2552d12}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!part\+\_\+mos\+\_\+@{part\+\_\+mos\+\_\+}}
+\index{part\+\_\+mos\+\_\+@{part\+\_\+mos\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{part\+\_\+mos\+\_\+}{part\_mos\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::part\+\_\+mos\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad7fb479ce571b84b53b6006c20c567e6}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad7fb479ce571b84b53b6006c20c567e6}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!print\+\_\+@{print\+\_\+}}
+\index{print\+\_\+@{print\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{print\+\_\+}{print\_}}
+{\footnotesize\ttfamily int forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::print\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Printing level. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a13dfc425a4eedd0fee06df5f97add808}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a13dfc425a4eedd0fee06df5f97add808}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!reference\+\_\+@{reference\+\_\+}}
+\index{reference\+\_\+@{reference\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{reference\+\_\+}{reference\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::reference\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a95045d8bd52ded5f72c1022374da2299}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a95045d8bd52ded5f72c1022374da2299}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!s\+\_\+@{s\+\_\+}}
+\index{s\+\_\+@{s\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{s\+\_\+}{s\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::s\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+D\+S\+RG s Parameter. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a997e8df570d59a3f4b190bb6db57f1ea}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a997e8df570d59a3f4b190bb6db57f1ea}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!source\+\_\+@{source\+\_\+}}
+\index{source\+\_\+@{source\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{source\+\_\+}{source\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::source\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Source Operator. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8edcac7af48fd15aba27a90b30e57940}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8edcac7af48fd15aba27a90b30e57940}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!sourcemap@{sourcemap}}
+\index{sourcemap@{sourcemap}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{sourcemap}{sourcemap}}
+{\footnotesize\ttfamily std\+::map$<$std\+::string, \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1}{sourceop}}$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::sourcemap\hspace{0.3cm}{\ttfamily [protected]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= boost::assign::map\_list\_of(\textcolor{stringliteral}{"STANDARD"}, \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a0b64256e8b44dbe842be9d5698318579}{STANDARD}})(
+        \textcolor{stringliteral}{"AMP"}, \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a5811e417c1c498623bd94d1d5013df95}{AMP}})(\textcolor{stringliteral}{"EMP2"}, \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1ae712aa6a2ffadd5f220d8f1700eb94af}{EMP2}})(\textcolor{stringliteral}{"LAMP"}, \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1af1f23d90950da0348be1b106dd5c84b3}{LAMP}})(\textcolor{stringliteral}{"LEMP2"}, \mbox{\hyperlink{classforte_1_1_m_c_s_r_g_p_t2___m_o_a541d16aa14bd6d3e685b6bda0b8602f1a1988646a02aba967738d55d47907fd28}{LEMP2}})
+\end{DoxyCode}
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0bdb54b9f324182b06da2e1e8902530a}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0bdb54b9f324182b06da2e1e8902530a}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!srg\+\_\+source\+\_\+@{srg\+\_\+source\+\_\+}}
+\index{srg\+\_\+source\+\_\+@{srg\+\_\+source\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{srg\+\_\+source\+\_\+}{srg\_source\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e}{D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::srg\+\_\+source\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+S\+RG source operator, just need the linear one. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9eba1f5e4fa8e9e096c87d86f7ad1f90}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9eba1f5e4fa8e9e096c87d86f7ad1f90}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!sym\+\_\+actv\+\_\+@{sym\+\_\+actv\+\_\+}}
+\index{sym\+\_\+actv\+\_\+@{sym\+\_\+actv\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{sym\+\_\+actv\+\_\+}{sym\_actv\_}}
+{\footnotesize\ttfamily std\+::vector$<$int$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::sym\+\_\+actv\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\mbox{\hyperlink{classforte_1_1_symmetry}{Symmetry}}. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_af83573819da4037ce8fc574d9a0c0be8}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_af83573819da4037ce8fc574d9a0c0be8}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!sym\+\_\+ncmo\+\_\+@{sym\+\_\+ncmo\+\_\+}}
+\index{sym\+\_\+ncmo\+\_\+@{sym\+\_\+ncmo\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{sym\+\_\+ncmo\+\_\+}{sym\_ncmo\_}}
+{\footnotesize\ttfamily std\+::vector$<$int$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::sym\+\_\+ncmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab1725f82a61bd743a3eae5fb51b9d5e2}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ab1725f82a61bd743a3eae5fb51b9d5e2}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!t1\+\_\+amp\+\_\+@{t1\+\_\+amp\+\_\+}}
+\index{t1\+\_\+amp\+\_\+@{t1\+\_\+amp\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{t1\+\_\+amp\+\_\+}{t1\_amp\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::t1\+\_\+amp\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a12cb08f4ef192953a23441557b36f817}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a12cb08f4ef192953a23441557b36f817}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T1\+\_\+timing@{T1\+\_\+timing}}
+\index{T1\+\_\+timing@{T1\+\_\+timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T1\+\_\+timing}{T1\_timing}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T1\+\_\+timing\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a47de26a92eeae21871ceb54ecccada10}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a47de26a92eeae21871ceb54ecccada10}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T1a\+\_\+@{T1a\+\_\+}}
+\index{T1a\+\_\+@{T1a\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T1a\+\_\+}{T1a\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T1a\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+T1 Amplitude. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7314ff59566861f1be39c88e28288002}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7314ff59566861f1be39c88e28288002}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T1b\+\_\+@{T1b\+\_\+}}
+\index{T1b\+\_\+@{T1b\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T1b\+\_\+}{T1b\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_ae5de8a172a3b363a852d6d32e6d90537}{d2}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T1b\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad56f0c372017947d8ca0091690f7e2f0}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad56f0c372017947d8ca0091690f7e2f0}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T1\+Maxa\+\_\+@{T1\+Maxa\+\_\+}}
+\index{T1\+Maxa\+\_\+@{T1\+Maxa\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T1\+Maxa\+\_\+}{T1Maxa\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T1\+Maxa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a72b14b19a7c84b93b1d34d73a0ac09b4}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a72b14b19a7c84b93b1d34d73a0ac09b4}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T1\+Maxb\+\_\+@{T1\+Maxb\+\_\+}}
+\index{T1\+Maxb\+\_\+@{T1\+Maxb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T1\+Maxb\+\_\+}{T1Maxb\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T1\+Maxb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad07ebb8148edb7cec7949bcf1826025b}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ad07ebb8148edb7cec7949bcf1826025b}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T1\+Na\+\_\+@{T1\+Na\+\_\+}}
+\index{T1\+Na\+\_\+@{T1\+Na\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T1\+Na\+\_\+}{T1Na\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T1\+Na\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9cdc45e2993e19d2869b97af3c7c0b38}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9cdc45e2993e19d2869b97af3c7c0b38}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T1\+Nb\+\_\+@{T1\+Nb\+\_\+}}
+\index{T1\+Nb\+\_\+@{T1\+Nb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T1\+Nb\+\_\+}{T1Nb\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T1\+Nb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8e0c4de4b2aca628b9ef53e117e48456}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8e0c4de4b2aca628b9ef53e117e48456}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2\+\_\+timing@{T2\+\_\+timing}}
+\index{T2\+\_\+timing@{T2\+\_\+timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2\+\_\+timing}{T2\_timing}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2\+\_\+timing\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0acae731bea2f642f5d368ea2d84d955}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0acae731bea2f642f5d368ea2d84d955}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2aa\+\_\+@{T2aa\+\_\+}}
+\index{T2aa\+\_\+@{T2aa\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2aa\+\_\+}{T2aa\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2aa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+T2 Amplitude. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a12ebb666577ae82094097d21113bb95a}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a12ebb666577ae82094097d21113bb95a}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2ab\+\_\+@{T2ab\+\_\+}}
+\index{T2ab\+\_\+@{T2ab\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2ab\+\_\+}{T2ab\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2ab\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4be2301cc5504db809c09cf9fe0d1e94}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a4be2301cc5504db809c09cf9fe0d1e94}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2bb\+\_\+@{T2bb\+\_\+}}
+\index{T2bb\+\_\+@{T2bb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2bb\+\_\+}{T2bb\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2bb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a597b543329d0f593b314f24031f5ca37}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a597b543329d0f593b314f24031f5ca37}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2\+Maxaa\+\_\+@{T2\+Maxaa\+\_\+}}
+\index{T2\+Maxaa\+\_\+@{T2\+Maxaa\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2\+Maxaa\+\_\+}{T2Maxaa\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2\+Maxaa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7d732d2f45a3199fa2ecb421459c6290}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7d732d2f45a3199fa2ecb421459c6290}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2\+Maxab\+\_\+@{T2\+Maxab\+\_\+}}
+\index{T2\+Maxab\+\_\+@{T2\+Maxab\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2\+Maxab\+\_\+}{T2Maxab\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2\+Maxab\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a78ba6dbb6fc41fe7a965f955e3d350f7}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a78ba6dbb6fc41fe7a965f955e3d350f7}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2\+Maxbb\+\_\+@{T2\+Maxbb\+\_\+}}
+\index{T2\+Maxbb\+\_\+@{T2\+Maxbb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2\+Maxbb\+\_\+}{T2Maxbb\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2\+Maxbb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3ab5df32554a58cd4d7730d114576717}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3ab5df32554a58cd4d7730d114576717}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2\+Naa\+\_\+@{T2\+Naa\+\_\+}}
+\index{T2\+Naa\+\_\+@{T2\+Naa\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2\+Naa\+\_\+}{T2Naa\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2\+Naa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9fbdfb349795d0f26ec48354e67a7374}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a9fbdfb349795d0f26ec48354e67a7374}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2\+Nab\+\_\+@{T2\+Nab\+\_\+}}
+\index{T2\+Nab\+\_\+@{T2\+Nab\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2\+Nab\+\_\+}{T2Nab\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2\+Nab\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3c942130a7234b6155741ef79fd1630c}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a3c942130a7234b6155741ef79fd1630c}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!T2\+Nbb\+\_\+@{T2\+Nbb\+\_\+}}
+\index{T2\+Nbb\+\_\+@{T2\+Nbb\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{T2\+Nbb\+\_\+}{T2Nbb\_}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+T2\+Nbb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0801d6bbeb8d5ab5161d0b27f683f932}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a0801d6bbeb8d5ab5161d0b27f683f932}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!taylor\+\_\+order\+\_\+@{taylor\+\_\+order\+\_\+}}
+\index{taylor\+\_\+order\+\_\+@{taylor\+\_\+order\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{taylor\+\_\+order\+\_\+}{taylor\_order\_}}
+{\footnotesize\ttfamily int forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::taylor\+\_\+order\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae59121f5f7ba5f30aa06d9c0de2d711a}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_ae59121f5f7ba5f30aa06d9c0de2d711a}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!taylor\+\_\+threshold\+\_\+@{taylor\+\_\+threshold\+\_\+}}
+\index{taylor\+\_\+threshold\+\_\+@{taylor\+\_\+threshold\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{taylor\+\_\+threshold\+\_\+}{taylor\_threshold\_}}
+{\footnotesize\ttfamily int forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::taylor\+\_\+threshold\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Taylor Expansion Threshold. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a854ca8ec4f26830bb07e4b551bb07894}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a854ca8ec4f26830bb07e4b551bb07894}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!vaa\+\_\+dsrg\+\_\+@{vaa\+\_\+dsrg\+\_\+}}
+\index{vaa\+\_\+dsrg\+\_\+@{vaa\+\_\+dsrg\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{vaa\+\_\+dsrg\+\_\+}{vaa\_dsrg\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::vaa\+\_\+dsrg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Effective Two Electron Integral. 
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_af90db713e40fc4cedb4d1989b7dd5e6a}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_af90db713e40fc4cedb4d1989b7dd5e6a}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!vab\+\_\+dsrg\+\_\+@{vab\+\_\+dsrg\+\_\+}}
+\index{vab\+\_\+dsrg\+\_\+@{vab\+\_\+dsrg\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{vab\+\_\+dsrg\+\_\+}{vab\_dsrg\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::vab\+\_\+dsrg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1b4e13e78a7c77af85f41166e2725df6}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1b4e13e78a7c77af85f41166e2725df6}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!vbb\+\_\+dsrg\+\_\+@{vbb\+\_\+dsrg\+\_\+}}
+\index{vbb\+\_\+dsrg\+\_\+@{vbb\+\_\+dsrg\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{vbb\+\_\+dsrg\+\_\+}{vbb\_dsrg\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{mcsrgpt2__mo_8h_a0a2245afece5cd37d3b0b6a462927f69}{d4}} forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::vbb\+\_\+dsrg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a73605df231cff451462141dc30f3180e}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a73605df231cff451462141dc30f3180e}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!virt\+\_\+mos\+\_\+@{virt\+\_\+mos\+\_\+}}
+\index{virt\+\_\+mos\+\_\+@{virt\+\_\+mos\+\_\+}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{virt\+\_\+mos\+\_\+}{virt\_mos\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::virt\+\_\+mos\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7bad86251186ef082e22bc5ace0d0de2}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a7bad86251186ef082e22bc5ace0d0de2}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!V\+T1\+\_\+timing@{V\+T1\+\_\+timing}}
+\index{V\+T1\+\_\+timing@{V\+T1\+\_\+timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{V\+T1\+\_\+timing}{VT1\_timing}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+V\+T1\+\_\+timing\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8fadc50a8e07348398cfa7e6c4323ff5}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a8fadc50a8e07348398cfa7e6c4323ff5}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!V\+T2\+C2\+\_\+timing@{V\+T2\+C2\+\_\+timing}}
+\index{V\+T2\+C2\+\_\+timing@{V\+T2\+C2\+\_\+timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{V\+T2\+C2\+\_\+timing}{VT2C2\_timing}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+V\+T2\+C2\+\_\+timing\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a760d7803c6cdfeec10e8a745eea0d376}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a760d7803c6cdfeec10e8a745eea0d376}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!V\+T2\+C4\+\_\+timing@{V\+T2\+C4\+\_\+timing}}
+\index{V\+T2\+C4\+\_\+timing@{V\+T2\+C4\+\_\+timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{V\+T2\+C4\+\_\+timing}{VT2C4\_timing}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+V\+T2\+C4\+\_\+timing\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1993b3dec813f7f3a24134f17393db84}\label{classforte_1_1_m_c_s_r_g_p_t2___m_o_a1993b3dec813f7f3a24134f17393db84}} 
+\index{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}!V\+T2\+C6\+\_\+timing@{V\+T2\+C6\+\_\+timing}}
+\index{V\+T2\+C6\+\_\+timing@{V\+T2\+C6\+\_\+timing}!forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO@{forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+MO}}
+\subsubsection{\texorpdfstring{V\+T2\+C6\+\_\+timing}{VT2C6\_timing}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+R\+G\+P\+T2\+\_\+\+M\+O\+::\+V\+T2\+C6\+\_\+timing\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/spin-\/integrated/\mbox{\hyperlink{mcsrgpt2__mo_8h}{mcsrgpt2\+\_\+mo.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/spin-\/integrated/\mbox{\hyperlink{mcsrgpt2__mo_8cc}{mcsrgpt2\+\_\+mo.\+cc}}\end{DoxyCompactItemize}

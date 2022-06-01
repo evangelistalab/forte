@@ -1,0 +1,106 @@
+\hypertarget{classforte_1_1_c_p_s_c_f}{}\section{forte\+:\+:C\+P\+S\+CF Class Reference}
+\label{classforte_1_1_c_p_s_c_f}\index{forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}}
+
+
+{\ttfamily \#include $<$cpscf.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_c_p_s_c_f_a4ca7f1d2db6b7ee422f779447592cff0}{C\+P\+S\+CF}} (std\+::shared\+\_\+ptr$<$ psi\+::\+JK $>$ JK, psi\+::\+Shared\+Matrix C, psi\+::\+Shared\+Matrix b, psi\+::\+Shared\+Vector edocc, psi\+::\+Shared\+Vector euocc)
+\begin{DoxyCompactList}\small\item\em Constructor of C\+P\+S\+C\+F\+\_\+\+F\+U\+N\+C\+T\+OR. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_c_p_s_c_f_ab111cda27e9bc9c8eb2f575ae89104e5}{evaluate}} (psi\+::\+Shared\+Vector x, psi\+::\+Shared\+Vector g, bool do\+\_\+g=true)
+\begin{DoxyCompactList}\small\item\em Evaluate the scalar and gradient. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_c_p_s_c_f_a974ab98e124651d3d3bc8b163a00286f}{hess\+\_\+diag}} (psi\+::\+Shared\+Vector x, psi\+::\+Shared\+Vector h0)
+\begin{DoxyCompactList}\small\item\em Evaluate the diagonal Hessian. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_c_p_s_c_f_ac5a426e6730351ff0a3639fec8931c16}{vdimpi}} ()
+\begin{DoxyCompactList}\small\item\em Return the vector dimension. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_c_p_s_c_f_a2fec329d9dbf17e1762e256cffd1dff8}{mat\+\_\+to\+\_\+vec}} (psi\+::\+Shared\+Matrix M)
+\begin{DoxyCompactList}\small\item\em Reshape matrix to vector. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_c_p_s_c_f_ae8f08daaa75c9664d357f0245c334d9b}{vec\+\_\+to\+\_\+mat}} (psi\+::\+Shared\+Vector v)
+\begin{DoxyCompactList}\small\item\em Reshape vector to matrix. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f_a4ca7f1d2db6b7ee422f779447592cff0}\label{classforte_1_1_c_p_s_c_f_a4ca7f1d2db6b7ee422f779447592cff0}} 
+\index{forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}!C\+P\+S\+CF@{C\+P\+S\+CF}}
+\index{C\+P\+S\+CF@{C\+P\+S\+CF}!forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}}
+\subsubsection{\texorpdfstring{C\+P\+S\+C\+F()}{CPSCF()}}
+{\footnotesize\ttfamily forte\+::\+C\+P\+S\+C\+F\+::\+C\+P\+S\+CF (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+JK $>$}]{JK,  }\item[{psi\+::\+Shared\+Matrix}]{C,  }\item[{psi\+::\+Shared\+Matrix}]{b,  }\item[{psi\+::\+Shared\+Vector}]{edocc,  }\item[{psi\+::\+Shared\+Vector}]{euocc }\end{DoxyParamCaption})}
+
+
+
+Constructor of C\+P\+S\+C\+F\+\_\+\+F\+U\+N\+C\+T\+OR. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em JK} & The pointer to a Psi4 JK object \\
+\hline
+{\em C} & The Hartree-\/\+Fock orbital coefficients \\
+\hline
+{\em b} & The R.\+H.\+S. of \mbox{\hyperlink{classforte_1_1_c_p_s_c_f}{C\+P\+S\+CF}} equation Ax = b (nuocc x ndocc) \\
+\hline
+{\em edocc} & The occupied orbital energies \\
+\hline
+{\em euocc} & The unoccupied orbital energies \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f_ab111cda27e9bc9c8eb2f575ae89104e5}\label{classforte_1_1_c_p_s_c_f_ab111cda27e9bc9c8eb2f575ae89104e5}} 
+\index{forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}!evaluate@{evaluate}}
+\index{evaluate@{evaluate}!forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}}
+\subsubsection{\texorpdfstring{evaluate()}{evaluate()}}
+{\footnotesize\ttfamily double forte\+::\+C\+P\+S\+C\+F\+::evaluate (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{x,  }\item[{psi\+::\+Shared\+Vector}]{g,  }\item[{bool}]{do\+\_\+g = {\ttfamily true} }\end{DoxyParamCaption})}
+
+
+
+Evaluate the scalar and gradient. 
+
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f_a974ab98e124651d3d3bc8b163a00286f}\label{classforte_1_1_c_p_s_c_f_a974ab98e124651d3d3bc8b163a00286f}} 
+\index{forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}!hess\+\_\+diag@{hess\+\_\+diag}}
+\index{hess\+\_\+diag@{hess\+\_\+diag}!forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}}
+\subsubsection{\texorpdfstring{hess\+\_\+diag()}{hess\_diag()}}
+{\footnotesize\ttfamily void forte\+::\+C\+P\+S\+C\+F\+::hess\+\_\+diag (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{x,  }\item[{psi\+::\+Shared\+Vector}]{h0 }\end{DoxyParamCaption})}
+
+
+
+Evaluate the diagonal Hessian. 
+
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f_a2fec329d9dbf17e1762e256cffd1dff8}\label{classforte_1_1_c_p_s_c_f_a2fec329d9dbf17e1762e256cffd1dff8}} 
+\index{forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}!mat\+\_\+to\+\_\+vec@{mat\+\_\+to\+\_\+vec}}
+\index{mat\+\_\+to\+\_\+vec@{mat\+\_\+to\+\_\+vec}!forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}}
+\subsubsection{\texorpdfstring{mat\+\_\+to\+\_\+vec()}{mat\_to\_vec()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+C\+P\+S\+C\+F\+::mat\+\_\+to\+\_\+vec (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{M }\end{DoxyParamCaption})}
+
+
+
+Reshape matrix to vector. 
+
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f_ac5a426e6730351ff0a3639fec8931c16}\label{classforte_1_1_c_p_s_c_f_ac5a426e6730351ff0a3639fec8931c16}} 
+\index{forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}!vdimpi@{vdimpi}}
+\index{vdimpi@{vdimpi}!forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}}
+\subsubsection{\texorpdfstring{vdimpi()}{vdimpi()}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+C\+P\+S\+C\+F\+::vdimpi (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the vector dimension. 
+
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f_ae8f08daaa75c9664d357f0245c334d9b}\label{classforte_1_1_c_p_s_c_f_ae8f08daaa75c9664d357f0245c334d9b}} 
+\index{forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}!vec\+\_\+to\+\_\+mat@{vec\+\_\+to\+\_\+mat}}
+\index{vec\+\_\+to\+\_\+mat@{vec\+\_\+to\+\_\+mat}!forte\+::\+C\+P\+S\+CF@{forte\+::\+C\+P\+S\+CF}}
+\subsubsection{\texorpdfstring{vec\+\_\+to\+\_\+mat()}{vec\_to\_mat()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+C\+P\+S\+C\+F\+::vec\+\_\+to\+\_\+mat (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{v }\end{DoxyParamCaption})}
+
+
+
+Reshape vector to matrix. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{cpscf_8h}{cpscf.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{cpscf_8cc}{cpscf.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,29 @@
+\hypertarget{mo__space__info_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/mo\+\_\+space\+\_\+info.cc File Reference}
+\label{mo__space__info_8cc}\index{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/mo\+\_\+space\+\_\+info.\+cc@{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/mo\+\_\+space\+\_\+info.\+cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$numeric$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/psi4-\/dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/molecule.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/wavefunction.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+Include dependency graph for mo\+\_\+space\+\_\+info.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mo__space__info_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ \mbox{\hyperlink{namespaceforte_aa9f89022974a234d0346f3da95429247}{forte\+::make\+\_\+mo\+\_\+space\+\_\+info}} (const psi\+::\+Dimension \&nmopi, const std\+::string \&point\+\_\+group, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options)
+\begin{DoxyCompactList}\small\item\em Make \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} from input (options) \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ M\+O\+Space\+Info $>$ \mbox{\hyperlink{namespaceforte_a3e043074979348f86b002b2087141750}{forte\+::make\+\_\+mo\+\_\+space\+\_\+info\+\_\+from\+\_\+map}} (const psi\+::\+Dimension \&nmopi, const std\+::string \&point\+\_\+group, std\+::map$<$ std\+::string, std\+::vector$<$ size\+\_\+t $>$$>$ \&mo\+\_\+space\+\_\+map, std\+::vector$<$ size\+\_\+t $>$ reorder)
+\begin{DoxyCompactList}\small\item\em Make \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} from a map of spacename-\/dimension\+\_\+vector (\char`\"{}\+A\+C\+T\+I\+V\+E\char`\"{}, \mbox{[}size\+\_\+t, size\+\_\+t, ...\mbox{]}) \end{DoxyCompactList}\end{DoxyCompactItemize}

@@ -1,0 +1,59 @@
+\hypertarget{excited__state__solver_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/ci\+\_\+ex\+\_\+states/excited\+\_\+state\+\_\+solver.cc File Reference}
+\label{excited__state__solver_8cc}\index{/\+Users/fevange/\+Source/forte/src/ci\+\_\+ex\+\_\+states/excited\+\_\+state\+\_\+solver.\+cc@{/\+Users/fevange/\+Source/forte/src/ci\+\_\+ex\+\_\+states/excited\+\_\+state\+\_\+solver.\+cc}}
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iomanip$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/physconst.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sci/sci.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sparse\+\_\+ci/determinant\+\_\+substitution\+\_\+lists.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/helpers.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/printing.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}ci\+\_\+rdm/ci\+\_\+rdms.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}excited\+\_\+state\+\_\+solver.\+h\char`\"{}}\newline
+Include dependency graph for excited\+\_\+state\+\_\+solver.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{excited__state__solver_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{excited__state__solver_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{excited__state__solver_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\item 
+\#define \mbox{\hyperlink{excited__state__solver_8cc_a4353281743925f182316dba7cda58fee}{omp\+\_\+get\+\_\+num\+\_\+threads}}()~1
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{excited__state__solver_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{excited__state__solver_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{excited\+\_\+state\+\_\+solver.\+cc@{excited\+\_\+state\+\_\+solver.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!excited\+\_\+state\+\_\+solver.\+cc@{excited\+\_\+state\+\_\+solver.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{excited__state__solver_8cc_a4353281743925f182316dba7cda58fee}\label{excited__state__solver_8cc_a4353281743925f182316dba7cda58fee}} 
+\index{excited\+\_\+state\+\_\+solver.\+cc@{excited\+\_\+state\+\_\+solver.\+cc}!omp\+\_\+get\+\_\+num\+\_\+threads@{omp\+\_\+get\+\_\+num\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+num\+\_\+threads@{omp\+\_\+get\+\_\+num\+\_\+threads}!excited\+\_\+state\+\_\+solver.\+cc@{excited\+\_\+state\+\_\+solver.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+num\+\_\+threads}{omp\_get\_num\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+num\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{excited__state__solver_8cc_a889ec205c635b219999c761b28cc39ba}\label{excited__state__solver_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{excited\+\_\+state\+\_\+solver.\+cc@{excited\+\_\+state\+\_\+solver.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!excited\+\_\+state\+\_\+solver.\+cc@{excited\+\_\+state\+\_\+solver.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+

@@ -1,0 +1,219 @@
+\hypertarget{classforte_1_1_blocked_tensor_factory}{}\section{forte\+:\+:Blocked\+Tensor\+Factory Class Reference}
+\label{classforte_1_1_blocked_tensor_factory}\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+
+
+{\ttfamily \#include $<$blockedtensorfactory.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a4d918bbb012371d84c4c6b09a49137cf}{Blocked\+Tensor\+Factory}} ()
+\item 
+\mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a7e8f4846afdf3a558725eecee7ebb7ed}{$\sim$\+Blocked\+Tensor\+Factory}} ()
+\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_afd101ce291ce4d6c5068edb9afde081b}{build}} (ambit\+::\+Tensor\+Type storage, const std\+::string \&name, const std\+::vector$<$ std\+::string $>$ \&spin\+\_\+stuff, bool is\+\_\+local\+\_\+variable=false)
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_ab9bfd3f8d82a640bf816d841222396a8}{add\+\_\+mo\+\_\+space}} (const std\+::string \&name, const std\+::string \&mo\+\_\+indices, std\+::vector$<$ size\+\_\+t $>$ mos, ambit\+::\+Spin\+Type spin)
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a774396c3920f7e306bef84e35b15eaf0}{add\+\_\+mo\+\_\+space}} (const std\+::string \&name, const std\+::string \&mo\+\_\+indices, std\+::vector$<$ std\+::pair$<$ size\+\_\+t, ambit\+::\+Spin\+Type $>$$>$ mo\+\_\+spin)
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_aa0e2f489066c8636c897b5b15a48b438}{add\+\_\+composite\+\_\+mo\+\_\+space}} (const std\+::string \&name, const std\+::string \&mo\+\_\+indices, const std\+::vector$<$ std\+::string $>$ \&subspaces)
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_aab5575350323f1f7834f181621f7ca63}{reset\+\_\+mo\+\_\+space}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a3eddaa890daf654401d8bc4558192fe0}{memory\+\_\+info}} (ambit\+::\+Blocked\+Tensor BT)
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a28860c90536db087853cb72624cf7725}{generate\+\_\+indices}} (const std\+::string in\+\_\+str, const std\+::string type)
+\item 
+double \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a47744796e621186e98cdfa248028a018}{memory\+\_\+left}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_acdfa2a1fb3cbc8e805e889eda83ed3ff}{memory\+\_\+information}} (ambit\+::\+Blocked\+Tensor, bool is\+\_\+local\+\_\+variable)
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_add5a173399befcf7be8f4bf4bfc17255}{memory\+\_\+summary}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a106e8d5c691e86d67e77c84e550b8a2c}{print\+\_\+memory\+\_\+info}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a93bfb9352eaa22bf2cbdb5a6fafcbad0}{memory\+\_\+summary\+\_\+per\+\_\+block}} (ambit\+::\+Blocked\+Tensor \&)
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_aeba42fda0cc7c4eba29e48d03bad6974}{spin\+\_\+cases\+\_\+avoid}} (const std\+::vector$<$ std\+::string $>$ \&vecstring, int how\+\_\+many\+\_\+active)
+\item 
+std\+::map$<$ std\+::string, std\+::vector$<$ size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_ae11f51f169b5c39e11ff92c7681c714d}{get\+\_\+mo\+\_\+to\+\_\+index}} ()
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+ambit\+::\+Tensor\+Type \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a57b7de17cd536996e3ad6dc2e4bc98cd}{tensor\+\_\+type\+\_\+}} = ambit\+::\+Core\+Tensor
+\item 
+double \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_aa4d207ff5a6ed05ab002ef3d1b8577c0}{memory\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_ac06f12f97228cb11b65d56e62339a50e}{number\+\_\+of\+\_\+tensors\+\_\+}}
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a5765aa6c7d5d136807602db26806c384}{tensor\+\_\+names\+\_\+}}
+\item 
+std\+::vector$<$ std\+::pair$<$ std\+::string, double $>$ $>$ \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a9718510c80ab928097b1db00bc042363}{tensors\+\_\+information\+\_\+}}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a92166317d538805bc5a843ed1e16363f}{number\+\_\+of\+\_\+blocks\+\_\+}}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a44b9c67b34efc8fe48b6c9c50f1570cb}{print\+\_\+memory\+\_\+}} = false
+\item 
+std\+::map$<$ std\+::string, std\+::vector$<$ size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_blocked_tensor_factory_a18abab2d711ab3217d77e093072b2701}{molabel\+\_\+to\+\_\+index\+\_\+}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a4d918bbb012371d84c4c6b09a49137cf}\label{classforte_1_1_blocked_tensor_factory_a4d918bbb012371d84c4c6b09a49137cf}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!Blocked\+Tensor\+Factory@{Blocked\+Tensor\+Factory}}
+\index{Blocked\+Tensor\+Factory@{Blocked\+Tensor\+Factory}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{Blocked\+Tensor\+Factory()}{BlockedTensorFactory()}}
+{\footnotesize\ttfamily forte\+::\+Blocked\+Tensor\+Factory\+::\+Blocked\+Tensor\+Factory (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a7e8f4846afdf3a558725eecee7ebb7ed}\label{classforte_1_1_blocked_tensor_factory_a7e8f4846afdf3a558725eecee7ebb7ed}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!````~Blocked\+Tensor\+Factory@{$\sim$\+Blocked\+Tensor\+Factory}}
+\index{````~Blocked\+Tensor\+Factory@{$\sim$\+Blocked\+Tensor\+Factory}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{$\sim$\+Blocked\+Tensor\+Factory()}{~BlockedTensorFactory()}}
+{\footnotesize\ttfamily forte\+::\+Blocked\+Tensor\+Factory\+::$\sim$\+Blocked\+Tensor\+Factory (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_aa0e2f489066c8636c897b5b15a48b438}\label{classforte_1_1_blocked_tensor_factory_aa0e2f489066c8636c897b5b15a48b438}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!add\+\_\+composite\+\_\+mo\+\_\+space@{add\+\_\+composite\+\_\+mo\+\_\+space}}
+\index{add\+\_\+composite\+\_\+mo\+\_\+space@{add\+\_\+composite\+\_\+mo\+\_\+space}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{add\+\_\+composite\+\_\+mo\+\_\+space()}{add\_composite\_mo\_space()}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::add\+\_\+composite\+\_\+mo\+\_\+space (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{const std\+::string \&}]{mo\+\_\+indices,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{subspaces }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_ab9bfd3f8d82a640bf816d841222396a8}\label{classforte_1_1_blocked_tensor_factory_ab9bfd3f8d82a640bf816d841222396a8}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!add\+\_\+mo\+\_\+space@{add\+\_\+mo\+\_\+space}}
+\index{add\+\_\+mo\+\_\+space@{add\+\_\+mo\+\_\+space}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{add\+\_\+mo\+\_\+space()}{add\_mo\_space()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::add\+\_\+mo\+\_\+space (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{const std\+::string \&}]{mo\+\_\+indices,  }\item[{std\+::vector$<$ size\+\_\+t $>$}]{mos,  }\item[{ambit\+::\+Spin\+Type}]{spin }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a774396c3920f7e306bef84e35b15eaf0}\label{classforte_1_1_blocked_tensor_factory_a774396c3920f7e306bef84e35b15eaf0}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!add\+\_\+mo\+\_\+space@{add\+\_\+mo\+\_\+space}}
+\index{add\+\_\+mo\+\_\+space@{add\+\_\+mo\+\_\+space}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{add\+\_\+mo\+\_\+space()}{add\_mo\_space()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::add\+\_\+mo\+\_\+space (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{const std\+::string \&}]{mo\+\_\+indices,  }\item[{std\+::vector$<$ std\+::pair$<$ size\+\_\+t, ambit\+::\+Spin\+Type $>$$>$}]{mo\+\_\+spin }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_afd101ce291ce4d6c5068edb9afde081b}\label{classforte_1_1_blocked_tensor_factory_afd101ce291ce4d6c5068edb9afde081b}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!build@{build}}
+\index{build@{build}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{build()}{build()}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+Blocked\+Tensor\+Factory\+::build (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor\+Type}]{storage,  }\item[{const std\+::string \&}]{name,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{spin\+\_\+stuff,  }\item[{bool}]{is\+\_\+local\+\_\+variable = {\ttfamily false} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a28860c90536db087853cb72624cf7725}\label{classforte_1_1_blocked_tensor_factory_a28860c90536db087853cb72624cf7725}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!generate\+\_\+indices@{generate\+\_\+indices}}
+\index{generate\+\_\+indices@{generate\+\_\+indices}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{generate\+\_\+indices()}{generate\_indices()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::string $>$ forte\+::\+Blocked\+Tensor\+Factory\+::generate\+\_\+indices (\begin{DoxyParamCaption}\item[{const std\+::string}]{in\+\_\+str,  }\item[{const std\+::string}]{type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_ae11f51f169b5c39e11ff92c7681c714d}\label{classforte_1_1_blocked_tensor_factory_ae11f51f169b5c39e11ff92c7681c714d}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!get\+\_\+mo\+\_\+to\+\_\+index@{get\+\_\+mo\+\_\+to\+\_\+index}}
+\index{get\+\_\+mo\+\_\+to\+\_\+index@{get\+\_\+mo\+\_\+to\+\_\+index}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{get\+\_\+mo\+\_\+to\+\_\+index()}{get\_mo\_to\_index()}}
+{\footnotesize\ttfamily std\+::map$<$std\+::string, std\+::vector$<$size\+\_\+t$>$ $>$ forte\+::\+Blocked\+Tensor\+Factory\+::get\+\_\+mo\+\_\+to\+\_\+index (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a3eddaa890daf654401d8bc4558192fe0}\label{classforte_1_1_blocked_tensor_factory_a3eddaa890daf654401d8bc4558192fe0}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!memory\+\_\+info@{memory\+\_\+info}}
+\index{memory\+\_\+info@{memory\+\_\+info}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{memory\+\_\+info()}{memory\_info()}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::memory\+\_\+info (\begin{DoxyParamCaption}\item[{ambit\+::\+Blocked\+Tensor}]{BT }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_acdfa2a1fb3cbc8e805e889eda83ed3ff}\label{classforte_1_1_blocked_tensor_factory_acdfa2a1fb3cbc8e805e889eda83ed3ff}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!memory\+\_\+information@{memory\+\_\+information}}
+\index{memory\+\_\+information@{memory\+\_\+information}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{memory\+\_\+information()}{memory\_information()}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::memory\+\_\+information (\begin{DoxyParamCaption}\item[{ambit\+::\+Blocked\+Tensor}]{BT,  }\item[{bool}]{is\+\_\+local\+\_\+variable }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a47744796e621186e98cdfa248028a018}\label{classforte_1_1_blocked_tensor_factory_a47744796e621186e98cdfa248028a018}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!memory\+\_\+left@{memory\+\_\+left}}
+\index{memory\+\_\+left@{memory\+\_\+left}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{memory\+\_\+left()}{memory\_left()}}
+{\footnotesize\ttfamily double forte\+::\+Blocked\+Tensor\+Factory\+::memory\+\_\+left (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_add5a173399befcf7be8f4bf4bfc17255}\label{classforte_1_1_blocked_tensor_factory_add5a173399befcf7be8f4bf4bfc17255}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!memory\+\_\+summary@{memory\+\_\+summary}}
+\index{memory\+\_\+summary@{memory\+\_\+summary}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{memory\+\_\+summary()}{memory\_summary()}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::memory\+\_\+summary (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a93bfb9352eaa22bf2cbdb5a6fafcbad0}\label{classforte_1_1_blocked_tensor_factory_a93bfb9352eaa22bf2cbdb5a6fafcbad0}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!memory\+\_\+summary\+\_\+per\+\_\+block@{memory\+\_\+summary\+\_\+per\+\_\+block}}
+\index{memory\+\_\+summary\+\_\+per\+\_\+block@{memory\+\_\+summary\+\_\+per\+\_\+block}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{memory\+\_\+summary\+\_\+per\+\_\+block()}{memory\_summary\_per\_block()}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::memory\+\_\+summary\+\_\+per\+\_\+block (\begin{DoxyParamCaption}\item[{ambit\+::\+Blocked\+Tensor \&}]{tensor }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a106e8d5c691e86d67e77c84e550b8a2c}\label{classforte_1_1_blocked_tensor_factory_a106e8d5c691e86d67e77c84e550b8a2c}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!print\+\_\+memory\+\_\+info@{print\+\_\+memory\+\_\+info}}
+\index{print\+\_\+memory\+\_\+info@{print\+\_\+memory\+\_\+info}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{print\+\_\+memory\+\_\+info()}{print\_memory\_info()}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::print\+\_\+memory\+\_\+info (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_aab5575350323f1f7834f181621f7ca63}\label{classforte_1_1_blocked_tensor_factory_aab5575350323f1f7834f181621f7ca63}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!reset\+\_\+mo\+\_\+space@{reset\+\_\+mo\+\_\+space}}
+\index{reset\+\_\+mo\+\_\+space@{reset\+\_\+mo\+\_\+space}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{reset\+\_\+mo\+\_\+space()}{reset\_mo\_space()}}
+{\footnotesize\ttfamily void forte\+::\+Blocked\+Tensor\+Factory\+::reset\+\_\+mo\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_aeba42fda0cc7c4eba29e48d03bad6974}\label{classforte_1_1_blocked_tensor_factory_aeba42fda0cc7c4eba29e48d03bad6974}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!spin\+\_\+cases\+\_\+avoid@{spin\+\_\+cases\+\_\+avoid}}
+\index{spin\+\_\+cases\+\_\+avoid@{spin\+\_\+cases\+\_\+avoid}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{spin\+\_\+cases\+\_\+avoid()}{spin\_cases\_avoid()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::string $>$ forte\+::\+Blocked\+Tensor\+Factory\+::spin\+\_\+cases\+\_\+avoid (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::string $>$ \&}]{vecstring,  }\item[{int}]{how\+\_\+many\+\_\+active }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_aa4d207ff5a6ed05ab002ef3d1b8577c0}\label{classforte_1_1_blocked_tensor_factory_aa4d207ff5a6ed05ab002ef3d1b8577c0}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!memory\+\_\+@{memory\+\_\+}}
+\index{memory\+\_\+@{memory\+\_\+}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{memory\+\_\+}{memory\_}}
+{\footnotesize\ttfamily double forte\+::\+Blocked\+Tensor\+Factory\+::memory\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a18abab2d711ab3217d77e093072b2701}\label{classforte_1_1_blocked_tensor_factory_a18abab2d711ab3217d77e093072b2701}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!molabel\+\_\+to\+\_\+index\+\_\+@{molabel\+\_\+to\+\_\+index\+\_\+}}
+\index{molabel\+\_\+to\+\_\+index\+\_\+@{molabel\+\_\+to\+\_\+index\+\_\+}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{molabel\+\_\+to\+\_\+index\+\_\+}{molabel\_to\_index\_}}
+{\footnotesize\ttfamily std\+::map$<$std\+::string, std\+::vector$<$size\+\_\+t$>$ $>$ forte\+::\+Blocked\+Tensor\+Factory\+::molabel\+\_\+to\+\_\+index\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a92166317d538805bc5a843ed1e16363f}\label{classforte_1_1_blocked_tensor_factory_a92166317d538805bc5a843ed1e16363f}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!number\+\_\+of\+\_\+blocks\+\_\+@{number\+\_\+of\+\_\+blocks\+\_\+}}
+\index{number\+\_\+of\+\_\+blocks\+\_\+@{number\+\_\+of\+\_\+blocks\+\_\+}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{number\+\_\+of\+\_\+blocks\+\_\+}{number\_of\_blocks\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Blocked\+Tensor\+Factory\+::number\+\_\+of\+\_\+blocks\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_ac06f12f97228cb11b65d56e62339a50e}\label{classforte_1_1_blocked_tensor_factory_ac06f12f97228cb11b65d56e62339a50e}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!number\+\_\+of\+\_\+tensors\+\_\+@{number\+\_\+of\+\_\+tensors\+\_\+}}
+\index{number\+\_\+of\+\_\+tensors\+\_\+@{number\+\_\+of\+\_\+tensors\+\_\+}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{number\+\_\+of\+\_\+tensors\+\_\+}{number\_of\_tensors\_}}
+{\footnotesize\ttfamily int forte\+::\+Blocked\+Tensor\+Factory\+::number\+\_\+of\+\_\+tensors\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a44b9c67b34efc8fe48b6c9c50f1570cb}\label{classforte_1_1_blocked_tensor_factory_a44b9c67b34efc8fe48b6c9c50f1570cb}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!print\+\_\+memory\+\_\+@{print\+\_\+memory\+\_\+}}
+\index{print\+\_\+memory\+\_\+@{print\+\_\+memory\+\_\+}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{print\+\_\+memory\+\_\+}{print\_memory\_}}
+{\footnotesize\ttfamily bool forte\+::\+Blocked\+Tensor\+Factory\+::print\+\_\+memory\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a5765aa6c7d5d136807602db26806c384}\label{classforte_1_1_blocked_tensor_factory_a5765aa6c7d5d136807602db26806c384}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!tensor\+\_\+names\+\_\+@{tensor\+\_\+names\+\_\+}}
+\index{tensor\+\_\+names\+\_\+@{tensor\+\_\+names\+\_\+}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{tensor\+\_\+names\+\_\+}{tensor\_names\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::string$>$ forte\+::\+Blocked\+Tensor\+Factory\+::tensor\+\_\+names\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a57b7de17cd536996e3ad6dc2e4bc98cd}\label{classforte_1_1_blocked_tensor_factory_a57b7de17cd536996e3ad6dc2e4bc98cd}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!tensor\+\_\+type\+\_\+@{tensor\+\_\+type\+\_\+}}
+\index{tensor\+\_\+type\+\_\+@{tensor\+\_\+type\+\_\+}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{tensor\+\_\+type\+\_\+}{tensor\_type\_}}
+{\footnotesize\ttfamily ambit\+::\+Tensor\+Type forte\+::\+Blocked\+Tensor\+Factory\+::tensor\+\_\+type\+\_\+ = ambit\+::\+Core\+Tensor\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_blocked_tensor_factory_a9718510c80ab928097b1db00bc042363}\label{classforte_1_1_blocked_tensor_factory_a9718510c80ab928097b1db00bc042363}} 
+\index{forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}!tensors\+\_\+information\+\_\+@{tensors\+\_\+information\+\_\+}}
+\index{tensors\+\_\+information\+\_\+@{tensors\+\_\+information\+\_\+}!forte\+::\+Blocked\+Tensor\+Factory@{forte\+::\+Blocked\+Tensor\+Factory}}
+\subsubsection{\texorpdfstring{tensors\+\_\+information\+\_\+}{tensors\_information\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::pair$<$std\+::string, double$>$ $>$ forte\+::\+Blocked\+Tensor\+Factory\+::tensors\+\_\+information\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/helpers/\mbox{\hyperlink{blockedtensorfactory_8h}{blockedtensorfactory.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/helpers/\mbox{\hyperlink{blockedtensorfactory_8cc}{blockedtensorfactory.\+cc}}\end{DoxyCompactItemize}

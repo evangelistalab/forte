@@ -1,0 +1,91 @@
+\hypertarget{classforte_1_1_c_a_s_s_c_f}{}\section{forte\+:\+:C\+A\+S\+S\+CF Class Reference}
+\label{classforte_1_1_c_a_s_s_c_f}\index{forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}}
+
+
+{\ttfamily \#include $<$casscf.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f_a8c427d619073161c17ce1ad2de104667}{C\+A\+S\+S\+CF}} (const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&state\+\_\+weights\+\_\+map, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{forte\+::\+S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f_a8c427d619073161c17ce1ad2de104667}{C\+A\+S\+S\+C\+F\+::\+C\+A\+S\+S\+CF}}. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f_a221e64b6cc67b8d5aa6abc6b8023ef81}{gamma1}} ()
+\begin{DoxyCompactList}\small\item\em Return the final gamma1. \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f_a2fc7d80dcaa59c4c10af2c0764663875}{gamma2}} ()
+\begin{DoxyCompactList}\small\item\em Return the final gamma2;. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f_a7f604a31c632b2241917af6227705ef5}{compute\+\_\+energy}} ()
+\begin{DoxyCompactList}\small\item\em Compute the \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} energy. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f_a18a1ebd4ac3cac9a6d7b3376b22022f8}{compute\+\_\+gradient}} ()
+\begin{DoxyCompactList}\small\item\em Compute the \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} energy gradient. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f_a8c427d619073161c17ce1ad2de104667}\label{classforte_1_1_c_a_s_s_c_f_a8c427d619073161c17ce1ad2de104667}} 
+\index{forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}!C\+A\+S\+S\+CF@{C\+A\+S\+S\+CF}}
+\index{C\+A\+S\+S\+CF@{C\+A\+S\+S\+CF}!forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}}
+\subsubsection{\texorpdfstring{C\+A\+S\+S\+C\+F()}{CASSCF()}}
+{\footnotesize\ttfamily forte\+::\+C\+A\+S\+S\+C\+F\+::\+C\+A\+S\+S\+CF (\begin{DoxyParamCaption}\item[{const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&}]{state\+\_\+weights\+\_\+map,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{forte\+::\+S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints }\end{DoxyParamCaption})}
+
+
+
+\mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f_a8c427d619073161c17ce1ad2de104667}{C\+A\+S\+S\+C\+F\+::\+C\+A\+S\+S\+CF}}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em options} & -\/$>$ Options object \\
+\hline
+{\em ints} & -\/$>$ The integral object. I may not use this as I need the AO based integrals \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & -\/$>$ The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object for getting active space information This class will implement the AO based \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} by Hohenstein and Martinez. Ref is . Hohenstein J.\+Chem.\+Phys, 142, 224103. This reference has a nice algorithmic flowchart. Look it up \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f_a7f604a31c632b2241917af6227705ef5}\label{classforte_1_1_c_a_s_s_c_f_a7f604a31c632b2241917af6227705ef5}} 
+\index{forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+C\+A\+S\+S\+C\+F\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} energy. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f_a18a1ebd4ac3cac9a6d7b3376b22022f8}\label{classforte_1_1_c_a_s_s_c_f_a18a1ebd4ac3cac9a6d7b3376b22022f8}} 
+\index{forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}!compute\+\_\+gradient@{compute\+\_\+gradient}}
+\index{compute\+\_\+gradient@{compute\+\_\+gradient}!forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}}
+\subsubsection{\texorpdfstring{compute\+\_\+gradient()}{compute\_gradient()}}
+{\footnotesize\ttfamily Shared\+Matrix forte\+::\+C\+A\+S\+S\+C\+F\+::compute\+\_\+gradient (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} energy gradient. 
+
+The procedure of computing gradients \mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f_a221e64b6cc67b8d5aa6abc6b8023ef81}\label{classforte_1_1_c_a_s_s_c_f_a221e64b6cc67b8d5aa6abc6b8023ef81}} 
+\index{forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}!gamma1@{gamma1}}
+\index{gamma1@{gamma1}!forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}}
+\subsubsection{\texorpdfstring{gamma1()}{gamma1()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+C\+A\+S\+S\+C\+F\+::gamma1 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the final gamma1. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f_a2fc7d80dcaa59c4c10af2c0764663875}\label{classforte_1_1_c_a_s_s_c_f_a2fc7d80dcaa59c4c10af2c0764663875}} 
+\index{forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}!gamma2@{gamma2}}
+\index{gamma2@{gamma2}!forte\+::\+C\+A\+S\+S\+CF@{forte\+::\+C\+A\+S\+S\+CF}}
+\subsubsection{\texorpdfstring{gamma2()}{gamma2()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+C\+A\+S\+S\+C\+F\+::gamma2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the final gamma2;. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{casscf_8h}{casscf.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{casscf_8cc}{casscf.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{casscf__gradient_8cc}{casscf\+\_\+gradient.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,121 @@
+\hypertarget{classforte_1_1_c_i_n_o}{}\section{forte\+:\+:C\+I\+NO Class Reference}
+\label{classforte_1_1_c_i_n_o}\index{forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}}
+
+
+The \mbox{\hyperlink{classforte_1_1_c_i_n_o}{C\+I\+NO}} class This class implements natural orbitals for CI wave functions.  
+
+
+
+
+{\ttfamily \#include $<$ci-\/no.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:C\+I\+NO\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=197pt]{classforte_1_1_c_i_n_o__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:C\+I\+NO\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=197pt]{classforte_1_1_c_i_n_o__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_c_i_n_o_af2ad19171a4a6ded060e0641043f0630}{C\+I\+NO}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info)
+\item 
+\mbox{\hyperlink{classforte_1_1_c_i_n_o_a0d1de460f1bb446781c9dc2fbdb0a04a}{$\sim$\+C\+I\+NO}} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_c_i_n_o_a8ac65e808e51c30f613cea8fcdbec851}{compute\+\_\+transformation}} ()
+\begin{DoxyCompactList}\small\item\em Compute the energy. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_c_i_n_o_a382fe0963a51a908790fda6a7aab0e7c}{get\+\_\+\+Ua}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_c_i_n_o_a24b4455c4b640b7bc01b0f12b0ecb655}{get\+\_\+\+Ub}} ()
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_c_i_n_o}{C\+I\+NO}} class This class implements natural orbitals for CI wave functions. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_i_n_o_af2ad19171a4a6ded060e0641043f0630}\label{classforte_1_1_c_i_n_o_af2ad19171a4a6ded060e0641043f0630}} 
+\index{forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}!C\+I\+NO@{C\+I\+NO}}
+\index{C\+I\+NO@{C\+I\+NO}!forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}}
+\subsubsection{\texorpdfstring{C\+I\+N\+O()}{CINO()}}
+{\footnotesize\ttfamily forte\+::\+C\+I\+N\+O\+::\+C\+I\+NO (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info }\end{DoxyParamCaption})}
+
+Constructor 
+\begin{DoxyParams}{Parameters}
+{\em ref\+\_\+wfn} & The reference wavefunction object \\
+\hline
+{\em options} & The main options object \\
+\hline
+{\em ints} & A pointer to an allocated integral object \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & A pointer to the \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_c_i_n_o_a0d1de460f1bb446781c9dc2fbdb0a04a}\label{classforte_1_1_c_i_n_o_a0d1de460f1bb446781c9dc2fbdb0a04a}} 
+\index{forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}!````~C\+I\+NO@{$\sim$\+C\+I\+NO}}
+\index{````~C\+I\+NO@{$\sim$\+C\+I\+NO}!forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}}
+\subsubsection{\texorpdfstring{$\sim$\+C\+I\+N\+O()}{~CINO()}}
+{\footnotesize\ttfamily forte\+::\+C\+I\+N\+O\+::$\sim$\+C\+I\+NO (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_i_n_o_a8ac65e808e51c30f613cea8fcdbec851}\label{classforte_1_1_c_i_n_o_a8ac65e808e51c30f613cea8fcdbec851}} 
+\index{forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}!compute\+\_\+transformation@{compute\+\_\+transformation}}
+\index{compute\+\_\+transformation@{compute\+\_\+transformation}!forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}}
+\subsubsection{\texorpdfstring{compute\+\_\+transformation()}{compute\_transformation()}}
+{\footnotesize\ttfamily void forte\+::\+C\+I\+N\+O\+::compute\+\_\+transformation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Compute the energy. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_orbital_transform_a48704cbce9fd066ef7e58270bb413c25}{forte\+::\+Orbital\+Transform}}.
+
+\mbox{\Hypertarget{classforte_1_1_c_i_n_o_a382fe0963a51a908790fda6a7aab0e7c}\label{classforte_1_1_c_i_n_o_a382fe0963a51a908790fda6a7aab0e7c}} 
+\index{forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}!get\+\_\+\+Ua@{get\+\_\+\+Ua}}
+\index{get\+\_\+\+Ua@{get\+\_\+\+Ua}!forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}}
+\subsubsection{\texorpdfstring{get\+\_\+\+Ua()}{get\_Ua()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+C\+I\+N\+O\+::get\+\_\+\+Ua (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_orbital_transform_aedd124480b35eba56653109578c05ec9}{forte\+::\+Orbital\+Transform}}.
+
+\mbox{\Hypertarget{classforte_1_1_c_i_n_o_a24b4455c4b640b7bc01b0f12b0ecb655}\label{classforte_1_1_c_i_n_o_a24b4455c4b640b7bc01b0f12b0ecb655}} 
+\index{forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}!get\+\_\+\+Ub@{get\+\_\+\+Ub}}
+\index{get\+\_\+\+Ub@{get\+\_\+\+Ub}!forte\+::\+C\+I\+NO@{forte\+::\+C\+I\+NO}}
+\subsubsection{\texorpdfstring{get\+\_\+\+Ub()}{get\_Ub()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+C\+I\+N\+O\+::get\+\_\+\+Ub (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_orbital_transform_aeb179f5b68883cf346dde354c05fd27b}{forte\+::\+Orbital\+Transform}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/ci-\/no/\mbox{\hyperlink{ci-no_8h}{ci-\/no.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/ci-\/no/\mbox{\hyperlink{ci-no_8cc}{ci-\/no.\+cc}}\end{DoxyCompactItemize}

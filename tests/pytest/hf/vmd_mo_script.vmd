@@ -1,0 +1,501 @@
+
+light 1 off
+light 0 rot y  30.0
+light 0 rot x -30.0
+#
+# VMD script to plot MOs from cube files
+#
+
+# Load the molecule and change the atom style
+mol load cube ./Psi_a_1_1-A.cube
+mol modcolor 0 000 Element
+mol modstyle 0 000 Licorice 0.110000 10.000000 10.000000
+#mol modstyle 0 000 CPK 0.400000 0.40000 30.000000 16.000000
+
+# Define the material
+material change ambient Opaque 0.310000
+material change diffuse Opaque 0.720000
+material change specular Opaque 0.500000
+material change shininess Opaque 0.480000
+material change opacity Opaque 1.000000
+material change outline Opaque 0.000000
+material change outlinewidth Opaque 0.000000
+material change transmode Opaque 0.000000
+material change specular Opaque 0.750000
+
+material change ambient   EdgyShiny 0.310000
+material change diffuse   EdgyShiny 0.720000
+material change shininess EdgyShiny 1.0000
+material change opacity   EdgyShiny 1.0
+
+# Customize atom colors
+color Element C silver
+color Element H white
+
+# Rotate and translate the molecule
+rotate x by 30.0
+rotate y by 40.0
+rotate z by 15.0
+translate by 0.0 0.0 0.0
+scale by 1.0
+
+# Eliminate the axis and perfect the view
+axes location Off
+display projection Orthographic
+display depthcue off
+display resize 250 250
+color Display Background white
+#
+# Add a surface
+mol color ColorID 3
+mol representation Isosurface 0.0976763 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 000
+#
+# Add a surface
+mol color ColorID 23
+mol representation Isosurface -0.0977257 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 000
+
+
+# Render
+render TachyonInternal ./Psi_a_1_1-A.tga
+mol delete 000
+#
+# VMD script to plot MOs from cube files
+#
+
+# Load the molecule and change the atom style
+mol load cube ./Psi_a_2_2-A.cube
+mol modcolor 0 001 Element
+mol modstyle 0 001 Licorice 0.110000 10.000000 10.000000
+#mol modstyle 0 001 CPK 0.400000 0.40000 30.000000 16.000000
+
+# Define the material
+material change ambient Opaque 0.310000
+material change diffuse Opaque 0.720000
+material change specular Opaque 0.500000
+material change shininess Opaque 0.480000
+material change opacity Opaque 1.000000
+material change outline Opaque 0.000000
+material change outlinewidth Opaque 0.000000
+material change transmode Opaque 0.000000
+material change specular Opaque 0.750000
+
+material change ambient   EdgyShiny 0.310000
+material change diffuse   EdgyShiny 0.720000
+material change shininess EdgyShiny 1.0000
+material change opacity   EdgyShiny 1.0
+
+# Customize atom colors
+color Element C silver
+color Element H white
+
+# Rotate and translate the molecule
+rotate x by 30.0
+rotate y by 40.0
+rotate z by 15.0
+translate by 0.0 0.0 0.0
+scale by 1.0
+
+# Eliminate the axis and perfect the view
+axes location Off
+display projection Orthographic
+display depthcue off
+display resize 250 250
+color Display Background white
+#
+# Add a surface
+mol color ColorID 3
+mol representation Isosurface 0.0842138 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 001
+#
+# Add a surface
+mol color ColorID 23
+mol representation Isosurface -0.0833355 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 001
+
+
+# Render
+render TachyonInternal ./Psi_a_2_2-A.tga
+mol delete 001
+#
+# VMD script to plot MOs from cube files
+#
+
+# Load the molecule and change the atom style
+mol load cube ./Psi_a_3_3-A.cube
+mol modcolor 0 002 Element
+mol modstyle 0 002 Licorice 0.110000 10.000000 10.000000
+#mol modstyle 0 002 CPK 0.400000 0.40000 30.000000 16.000000
+
+# Define the material
+material change ambient Opaque 0.310000
+material change diffuse Opaque 0.720000
+material change specular Opaque 0.500000
+material change shininess Opaque 0.480000
+material change opacity Opaque 1.000000
+material change outline Opaque 0.000000
+material change outlinewidth Opaque 0.000000
+material change transmode Opaque 0.000000
+material change specular Opaque 0.750000
+
+material change ambient   EdgyShiny 0.310000
+material change diffuse   EdgyShiny 0.720000
+material change shininess EdgyShiny 1.0000
+material change opacity   EdgyShiny 1.0
+
+# Customize atom colors
+color Element C silver
+color Element H white
+
+# Rotate and translate the molecule
+rotate x by 30.0
+rotate y by 40.0
+rotate z by 15.0
+translate by 0.0 0.0 0.0
+scale by 1.0
+
+# Eliminate the axis and perfect the view
+axes location Off
+display projection Orthographic
+display depthcue off
+display resize 250 250
+color Display Background white
+#
+# Add a surface
+mol color ColorID 3
+mol representation Isosurface 0.0833355 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 002
+#
+# Add a surface
+mol color ColorID 23
+mol representation Isosurface -0.0842138 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 002
+
+
+# Render
+render TachyonInternal ./Psi_a_3_3-A.tga
+mol delete 002
+#
+# VMD script to plot MOs from cube files
+#
+
+# Load the molecule and change the atom style
+mol load cube ./Psi_a_4_4-A.cube
+mol modcolor 0 003 Element
+mol modstyle 0 003 Licorice 0.110000 10.000000 10.000000
+#mol modstyle 0 003 CPK 0.400000 0.40000 30.000000 16.000000
+
+# Define the material
+material change ambient Opaque 0.310000
+material change diffuse Opaque 0.720000
+material change specular Opaque 0.500000
+material change shininess Opaque 0.480000
+material change opacity Opaque 1.000000
+material change outline Opaque 0.000000
+material change outlinewidth Opaque 0.000000
+material change transmode Opaque 0.000000
+material change specular Opaque 0.750000
+
+material change ambient   EdgyShiny 0.310000
+material change diffuse   EdgyShiny 0.720000
+material change shininess EdgyShiny 1.0000
+material change opacity   EdgyShiny 1.0
+
+# Customize atom colors
+color Element C silver
+color Element H white
+
+# Rotate and translate the molecule
+rotate x by 30.0
+rotate y by 40.0
+rotate z by 15.0
+translate by 0.0 0.0 0.0
+scale by 1.0
+
+# Eliminate the axis and perfect the view
+axes location Off
+display projection Orthographic
+display depthcue off
+display resize 250 250
+color Display Background white
+#
+# Add a surface
+mol color ColorID 3
+mol representation Isosurface 0.0977257 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 003
+#
+# Add a surface
+mol color ColorID 23
+mol representation Isosurface -0.0976763 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 003
+
+
+# Render
+render TachyonInternal ./Psi_a_4_4-A.tga
+mol delete 003
+#
+# VMD script to plot MOs from cube files
+#
+
+# Load the molecule and change the atom style
+mol load cube ./Psi_b_1_1-A.cube
+mol modcolor 0 004 Element
+mol modstyle 0 004 Licorice 0.110000 10.000000 10.000000
+#mol modstyle 0 004 CPK 0.400000 0.40000 30.000000 16.000000
+
+# Define the material
+material change ambient Opaque 0.310000
+material change diffuse Opaque 0.720000
+material change specular Opaque 0.500000
+material change shininess Opaque 0.480000
+material change opacity Opaque 1.000000
+material change outline Opaque 0.000000
+material change outlinewidth Opaque 0.000000
+material change transmode Opaque 0.000000
+material change specular Opaque 0.750000
+
+material change ambient   EdgyShiny 0.310000
+material change diffuse   EdgyShiny 0.720000
+material change shininess EdgyShiny 1.0000
+material change opacity   EdgyShiny 1.0
+
+# Customize atom colors
+color Element C silver
+color Element H white
+
+# Rotate and translate the molecule
+rotate x by 30.0
+rotate y by 40.0
+rotate z by 15.0
+translate by 0.0 0.0 0.0
+scale by 1.0
+
+# Eliminate the axis and perfect the view
+axes location Off
+display projection Orthographic
+display depthcue off
+display resize 250 250
+color Display Background white
+#
+# Add a surface
+mol color ColorID 3
+mol representation Isosurface 0.0976763 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 004
+#
+# Add a surface
+mol color ColorID 23
+mol representation Isosurface -0.0977257 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 004
+
+
+# Render
+render TachyonInternal ./Psi_b_1_1-A.tga
+mol delete 004
+#
+# VMD script to plot MOs from cube files
+#
+
+# Load the molecule and change the atom style
+mol load cube ./Psi_b_2_2-A.cube
+mol modcolor 0 005 Element
+mol modstyle 0 005 Licorice 0.110000 10.000000 10.000000
+#mol modstyle 0 005 CPK 0.400000 0.40000 30.000000 16.000000
+
+# Define the material
+material change ambient Opaque 0.310000
+material change diffuse Opaque 0.720000
+material change specular Opaque 0.500000
+material change shininess Opaque 0.480000
+material change opacity Opaque 1.000000
+material change outline Opaque 0.000000
+material change outlinewidth Opaque 0.000000
+material change transmode Opaque 0.000000
+material change specular Opaque 0.750000
+
+material change ambient   EdgyShiny 0.310000
+material change diffuse   EdgyShiny 0.720000
+material change shininess EdgyShiny 1.0000
+material change opacity   EdgyShiny 1.0
+
+# Customize atom colors
+color Element C silver
+color Element H white
+
+# Rotate and translate the molecule
+rotate x by 30.0
+rotate y by 40.0
+rotate z by 15.0
+translate by 0.0 0.0 0.0
+scale by 1.0
+
+# Eliminate the axis and perfect the view
+axes location Off
+display projection Orthographic
+display depthcue off
+display resize 250 250
+color Display Background white
+#
+# Add a surface
+mol color ColorID 3
+mol representation Isosurface 0.0842138 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 005
+#
+# Add a surface
+mol color ColorID 23
+mol representation Isosurface -0.0833355 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 005
+
+
+# Render
+render TachyonInternal ./Psi_b_2_2-A.tga
+mol delete 005
+#
+# VMD script to plot MOs from cube files
+#
+
+# Load the molecule and change the atom style
+mol load cube ./Psi_b_3_3-A.cube
+mol modcolor 0 006 Element
+mol modstyle 0 006 Licorice 0.110000 10.000000 10.000000
+#mol modstyle 0 006 CPK 0.400000 0.40000 30.000000 16.000000
+
+# Define the material
+material change ambient Opaque 0.310000
+material change diffuse Opaque 0.720000
+material change specular Opaque 0.500000
+material change shininess Opaque 0.480000
+material change opacity Opaque 1.000000
+material change outline Opaque 0.000000
+material change outlinewidth Opaque 0.000000
+material change transmode Opaque 0.000000
+material change specular Opaque 0.750000
+
+material change ambient   EdgyShiny 0.310000
+material change diffuse   EdgyShiny 0.720000
+material change shininess EdgyShiny 1.0000
+material change opacity   EdgyShiny 1.0
+
+# Customize atom colors
+color Element C silver
+color Element H white
+
+# Rotate and translate the molecule
+rotate x by 30.0
+rotate y by 40.0
+rotate z by 15.0
+translate by 0.0 0.0 0.0
+scale by 1.0
+
+# Eliminate the axis and perfect the view
+axes location Off
+display projection Orthographic
+display depthcue off
+display resize 250 250
+color Display Background white
+#
+# Add a surface
+mol color ColorID 3
+mol representation Isosurface 0.0833355 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 006
+#
+# Add a surface
+mol color ColorID 23
+mol representation Isosurface -0.0842138 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 006
+
+
+# Render
+render TachyonInternal ./Psi_b_3_3-A.tga
+mol delete 006
+#
+# VMD script to plot MOs from cube files
+#
+
+# Load the molecule and change the atom style
+mol load cube ./Psi_b_4_4-A.cube
+mol modcolor 0 007 Element
+mol modstyle 0 007 Licorice 0.110000 10.000000 10.000000
+#mol modstyle 0 007 CPK 0.400000 0.40000 30.000000 16.000000
+
+# Define the material
+material change ambient Opaque 0.310000
+material change diffuse Opaque 0.720000
+material change specular Opaque 0.500000
+material change shininess Opaque 0.480000
+material change opacity Opaque 1.000000
+material change outline Opaque 0.000000
+material change outlinewidth Opaque 0.000000
+material change transmode Opaque 0.000000
+material change specular Opaque 0.750000
+
+material change ambient   EdgyShiny 0.310000
+material change diffuse   EdgyShiny 0.720000
+material change shininess EdgyShiny 1.0000
+material change opacity   EdgyShiny 1.0
+
+# Customize atom colors
+color Element C silver
+color Element H white
+
+# Rotate and translate the molecule
+rotate x by 30.0
+rotate y by 40.0
+rotate z by 15.0
+translate by 0.0 0.0 0.0
+scale by 1.0
+
+# Eliminate the axis and perfect the view
+axes location Off
+display projection Orthographic
+display depthcue off
+display resize 250 250
+color Display Background white
+#
+# Add a surface
+mol color ColorID 3
+mol representation Isosurface 0.0977257 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 007
+#
+# Add a surface
+mol color ColorID 23
+mol representation Isosurface -0.0976763 0 0 0 1 1
+mol selection all
+mol material EdgyShiny
+mol addrep 007
+
+
+# Render
+render TachyonInternal ./Psi_b_4_4-A.tga
+mol delete 007
+quit

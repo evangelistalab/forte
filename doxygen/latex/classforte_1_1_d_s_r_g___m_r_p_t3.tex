@@ -1,0 +1,893 @@
+\hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3}{}\section{forte\+:\+:D\+S\+R\+G\+\_\+\+M\+R\+P\+T3 Class Reference}
+\label{classforte_1_1_d_s_r_g___m_r_p_t3}\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+
+
+{\ttfamily \#include $<$dsrg\+\_\+mrpt3.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=210pt]{classforte_1_1_d_s_r_g___m_r_p_t3__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=328pt]{classforte_1_1_d_s_r_g___m_r_p_t3__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a411038a819da24f5ffb4db0cf621a742}{D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}} (\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} rdms, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info)
+\item 
+virtual \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ae2419fb8f82089098a086f62baff4816}{$\sim$\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a48a25a952206690bcf8125e583576052}{compute\+\_\+energy}} ()
+\begin{DoxyCompactList}\small\item\em Compute the D\+S\+R\+G-\/\+M\+R\+P\+T3 energy. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ac01edeb17737755a3b025459a792aad4}{compute\+\_\+energy\+\_\+relaxed}} ()
+\begin{DoxyCompactList}\small\item\em Compute the D\+S\+R\+G-\/\+M\+R\+P\+T3 energy with relaxed reference (once) \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a2b3a92749aae957f93d5f9cda22d0716}{compute\+\_\+energy\+\_\+sa}} ()
+\begin{DoxyCompactList}\small\item\em Compute the state-\/averaged D\+S\+R\+G-\/\+M\+R\+P\+T3 energies. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a20ec1fcadc9b1e3cb8d21df9a86fa055}{set\+\_\+eigens}} (std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ psi\+::\+Shared\+Vector, double $>$$>$$>$ eigens)
+\begin{DoxyCompactList}\small\item\em Set C\+A\+S\+CI eigen values and eigen vectors for state averaging. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_af5b78a8ae153c66e5733d0749972185b}{set\+\_\+p\+\_\+spaces}} (std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{forte\+::\+Determinant}} $>$$>$ p\+\_\+spaces)
+\begin{DoxyCompactList}\small\item\em Set determinants in the model space. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ae03d4e96612c876c0d9f0715f93316fe}{startup}} ()
+\begin{DoxyCompactList}\small\item\em Called in the constructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ac7f2deb2afe35fcbe80b0f7863cb79d1}{cleanup}} ()
+\begin{DoxyCompactList}\small\item\em Called in the destructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a73debd7fa355ac2311d92f6d86b5e3e5}{print\+\_\+options\+\_\+summary}} ()
+\begin{DoxyCompactList}\small\item\em Print a summary of the options. \end{DoxyCompactList}\item 
+std\+::chrono\+::duration$<$ double $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ac2e41cad2c6f82f0b7051b02becd1595}{compute\+\_\+elapsed\+\_\+time}} (std\+::chrono\+::time\+\_\+point$<$ std\+::chrono\+::system\+\_\+clock $>$ t1, std\+::chrono\+::time\+\_\+point$<$ std\+::chrono\+::system\+\_\+clock $>$ t2)
+\begin{DoxyCompactList}\small\item\em Compute elapsed time. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ac610cb51af174c9c3fd3eb2d68f62bb3}{build\+\_\+tei}} (Blocked\+Tensor \&V)
+\begin{DoxyCompactList}\small\item\em Fill up two-\/electron integrals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aed32292cef9e15981542c638236748b8}{build\+\_\+fock\+\_\+half}} ()
+\begin{DoxyCompactList}\small\item\em Build Fock matrix and diagonal Fock matrix elements. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_acf82777d9515f7cc988b82c03ffeb291}{build\+\_\+fock\+\_\+full}} ()
+\begin{DoxyCompactList}\small\item\em Build Fock matrix when two-\/electron integrals are fully stored. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a592593cdbd5cbf0024bc5f9520b4a88d}{renormalize\+\_\+F}} (const bool \&plusone=true)
+\begin{DoxyCompactList}\small\item\em Renormalize Fock matrix. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aaf25a724d9aeeafb121d56abd71f0748}{renormalize\+\_\+V}} (const bool \&plusone=true)
+\begin{DoxyCompactList}\small\item\em Renormalize two-\/electron integrals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a0358b0213517f969fda06fbcbe86ea94}{compute\+\_\+t2}} ()
+\begin{DoxyCompactList}\small\item\em Compute T2 amplitudes. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a2312c6b70f31b23da999119623f5d633}{check\+\_\+t2}} ()
+\begin{DoxyCompactList}\small\item\em Check T2 and store large amplitudes. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aff426cbae8aba3b3df9a9817a13280d0}{compute\+\_\+t1}} ()
+\begin{DoxyCompactList}\small\item\em Compute T1 amplitudes. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a6ae32df9118f9ee9c9a8f5a37c81c601}{check\+\_\+t1}} ()
+\begin{DoxyCompactList}\small\item\em Check T1 and store large amplitudes. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_acc86f6e843feea90ab27a456ccdca039}{print\+\_\+amp\+\_\+summary}} (const std\+::string \&name, const std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$$>$ \&list, const double \&norm, const size\+\_\+t \&number\+\_\+nonzero)
+\begin{DoxyCompactList}\small\item\em Print amplitudes summary. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_af557b9dbad07468f31550890d06ceb8e}{print\+\_\+intruder}} (const std\+::string \&name, const std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$$>$ \&list)
+\begin{DoxyCompactList}\small\item\em Print intruder analysis. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a5d538d326cd0c34727b3dc5d9dbe7237}{compute\+\_\+energy\+\_\+pt2}} ()
+\begin{DoxyCompactList}\small\item\em compute 2nd-\/order energy and transformed Hamiltonian \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a644f6b92ddcb87b33a5bc467e0f79846}{compute\+\_\+energy\+\_\+pt3\+\_\+1}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ab5d7445a318b4d5d2fea4cde2edc6818}{compute\+\_\+energy\+\_\+pt3\+\_\+2}} ()
+\begin{DoxyCompactList}\small\item\em compute 3d-\/order energy contribution 1.\+0 / 2.\+0 $\ast$ \mbox{[}H1st + Hbar1st,A2nd\mbox{]} \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a3b72cd8ca5066848111f384afc4a97ff}{compute\+\_\+energy\+\_\+pt3\+\_\+3}} ()
+\begin{DoxyCompactList}\small\item\em compute 3rd-\/order energy contribution 1.\+0 / 2.\+0 $\ast$ \mbox{[}Hbar2nd,A1st\mbox{]} \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a0a5a5e4a7f71dd0fb364b184fb0e65b5}{V\+\_\+\+T1\+\_\+\+C1\+\_\+\+DF}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T1, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4a1a2ddc2db4693cfd16d534cde5572cc1}{C1}})
+\begin{DoxyCompactList}\small\item\em Compute one-\/body term of commutator \mbox{[}V, T1\mbox{]}, V is constructed from B (D\+F/\+CD) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a9546d1b6861d0b5b222011d1339bf40b}{V\+\_\+\+T2\+\_\+\+C1\+\_\+\+DF}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T2, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4a1a2ddc2db4693cfd16d534cde5572cc1}{C1}})
+\begin{DoxyCompactList}\small\item\em Compute one-\/body term of commutator \mbox{[}V, T2\mbox{]}, V is constructed from B (D\+F/\+CD) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a40d599393dfce102715ffdc027b2c88b}{V\+\_\+\+T1\+\_\+\+C2\+\_\+\+DF}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T1, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4af1a543f5a2c5d49bc5dde298fcf716e4}{C2}})
+\begin{DoxyCompactList}\small\item\em Compute two-\/body term of commutator \mbox{[}V, T1\mbox{]}, V is constructed from B (D\+F/\+CD) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ab71c3b2fafa76b719d08acb4000d527b}{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+DF}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T2, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4af1a543f5a2c5d49bc5dde298fcf716e4}{C2}})
+\begin{DoxyCompactList}\small\item\em Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]}, V is constructed from B (D\+F/\+CD) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a48e6f20b01fa4ebdf3fcb3b2444b8443}{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AA}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T2, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4af1a543f5a2c5d49bc5dde298fcf716e4}{C2}})
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a91c900ea22e66c97bb0db18c8f49e8cb}{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AV}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T2, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4af1a543f5a2c5d49bc5dde298fcf716e4}{C2}})
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a0e00b4f4fdac4498d4d16c3f8cda54de}{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+VV}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T2, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4af1a543f5a2c5d49bc5dde298fcf716e4}{C2}})
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a2beafc4ba36ddc0c27557c0c858fbf85}{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+H\+\_\+\+EX}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T2, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4af1a543f5a2c5d49bc5dde298fcf716e4}{C2}}, const std\+::vector$<$ std\+::vector$<$ std\+::string $>$$>$ \&qs, const std\+::vector$<$ std\+::vector$<$ std\+::string $>$$>$ \&jb)
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a3484a8491033f0e2171936ba0da11f38}{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+A\+\_\+\+EX}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T2, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4af1a543f5a2c5d49bc5dde298fcf716e4}{C2}}, const std\+::vector$<$ std\+::string $>$ \&qs\+\_\+lower, const std\+::vector$<$ std\+::string $>$ \&jb\+\_\+lower)
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ab486aac4ea25510f0ca1d94b39d3e12d}{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+C\+\_\+\+EX}} (Blocked\+Tensor \&B, Blocked\+Tensor \&T2, const double \&alpha, Blocked\+Tensor \&\mbox{\hyperlink{namespaceforte_abe00ec86d0015c0f2b6ac298c6e428e4af1a543f5a2c5d49bc5dde298fcf716e4}{C2}}, const std\+::vector$<$ std\+::string $>$ \&qs\+\_\+lower, const std\+::vector$<$ std\+::string $>$ \&jb\+\_\+lower)
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ab6ccdab98659f6661900cfa29fa6872d}{compute\+\_\+dm1d\+\_\+pt3\+\_\+1}} (Blocked\+Tensor \&M, double \&Mbar0, double \&Mbar0\+\_\+pt2, Blocked\+Tensor \&Mbar1, Blocked\+Tensor \&Mbar2)
+\begin{DoxyCompactList}\small\item\em Compute D\+S\+RG transformed dipole integrals from 1st-\/order amplitudes for a given direction. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aa6f6e8955cf8ecbe07f6f0eb3522f649}{compute\+\_\+dm1d\+\_\+pt3\+\_\+2}} (Blocked\+Tensor \&M, double \&Mbar0, double \&Mbar0\+\_\+pt2, Blocked\+Tensor \&Mbar1, Blocked\+Tensor \&Mbar2)
+\begin{DoxyCompactList}\small\item\em Compute D\+S\+RG transformed dipole integrals from 2nd-\/order amplitudes for a given direction. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aa8d6ffbd67970a5b8711924b44d786aa}{print\+\_\+dm\+\_\+pt3}} ()
+\begin{DoxyCompactList}\small\item\em Print unrelaxed dipole. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ac7a05164e2aeb450f275ace8b4d68141}{profile\+\_\+print\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Profile printing for DF. \end{DoxyCompactList}\item 
+std\+::chrono\+::time\+\_\+point$<$ std\+::chrono\+::system\+\_\+clock $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a5cfb4204003849251f3aeb2c6e9eedf6}{start\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Time variable. \end{DoxyCompactList}\item 
+std\+::chrono\+::time\+\_\+point$<$ std\+::chrono\+::system\+\_\+clock $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a87374317ecaaa1fc3dadee71238a287a}{end\+\_\+}}
+\item 
+std\+::time\+\_\+t \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a1769af0d38cd96df2578205dad1add46}{tt1\+\_\+}}
+\item 
+std\+::time\+\_\+t \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_afdea4aab3d4dc3f8e6d451973aaf15ca}{tt2\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ psi\+::\+Shared\+Vector, double $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a22fd832ebfbf1be19fa04fb4a011ace3}{eigens\+\_\+}}
+\begin{DoxyCompactList}\small\item\em C\+A\+S\+CI eigen values and eigen vectors for state averaging. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{forte\+::\+Determinant}} $>$ $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a30dffa14bad488e78ffe178e3ca962f0}{p\+\_\+spaces\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Determinants in the model space. \end{DoxyCompactList}\item 
+int64\+\_\+t \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a45977e4675ce30ca1750869c7c81fa3f}{mem\+\_\+total\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Total memory left. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a32aa55b38940e86d15b60350ccb636f7}{semi\+\_\+canonical\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Are orbitals semi-\/canonicalized? \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_afda1234ea7f619908fb0ff10188d0d74}{Fa\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Diagonal elements of Fock matrices. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a469cd21683c1d469f08c7b5c6f4c3f95}{Fb\+\_\+}}
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_af947d5aa4c9aee775d56ad6085e299ac}{aone\+\_\+eff\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Effective alpha one-\/electron integrals (used in denormal ordering) \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aed9f088d1f9bcd8facb10dd1569748aa}{bone\+\_\+eff\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Effective beta one-\/electron integrals (used in denormal ordering) \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a358a3512d5e25f9830f24df84c03d565}{F\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Generalized Fock matrix (bare or renormalized) \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ad529a0f458610f6099d7e2cc47cfd896}{F0th\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Zeroth-\/order Hamiltonian (bare diagonal blocks of Fock) \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a078a80b254310fde8b5f0f4dec0d316d}{F1st\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Generalized Fock matrix (bare off-\/diagonal blocks) \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a4df42fb2007964419b78dcde72886db8}{V\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Two-\/electron integrals (bare or renormalized) \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ad2075beaa4159ef620f34df0fc5fdd64}{B\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Three-\/index integrals. \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aa7a1ae6e6db9791b3dc40052ef0d1af5}{T1\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Single excitation amplitude. \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ab74e92a4d965c40a6d2a6f1a0afceea2}{T2\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Double excitation amplitude. \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aec8b24da0956caeaed744b78d132a9ef}{O1\+\_\+}}
+\begin{DoxyCompactList}\small\item\em One-\/body temp tensor (\mbox{[}\mbox{[}H0th,A1st\mbox{]},A1st\mbox{]} or 1st-\/order amplitudes) \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aafc09e3bcf2969a8c54cd80611f22615}{O2\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Two-\/body temp tensor (\mbox{[}\mbox{[}H0th,A1st\mbox{]},A1st\mbox{]} or 1st-\/order amplitudes) \end{DoxyCompactList}\item 
+ambit\+::\+Blocked\+Tensor \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a3ffd43eb3dbaf441b72eb5f158eca6d2}{U\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Unitary matrix to block diagonal Fock. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_af22b0cb1620229a88e7988d3e564f368}{T2norm\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Norm of T2. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a8f5e43d366ea5f4130f64ae882f484fb}{T2max\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Max (with sign) of T2. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a4e586ce2fafa9c900df089d2f739cd5c}{T1norm\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Norm of T1. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_adacbd3ce8f65586ecd75c74c12b0db50}{T1max\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Max (with sign) of T1. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$ $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a325f745173790dba2942214ca9c040e8}{lt1a\+\_\+}}
+\begin{DoxyCompactList}\small\item\em List of large amplitudes. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$ $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aba50c32ec211e470f442ed49a6bb16f5}{lt1b\+\_\+}}
+\item 
+std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$ $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_aedbbe720462fe87709525bedc8541251}{lt2aa\+\_\+}}
+\item 
+std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$ $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a3a00248cfbd090f9c1338d534b9ae233}{lt2ab\+\_\+}}
+\item 
+std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$ $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a819e9535c0fa33f8918569629f6bf552}{lt2bb\+\_\+}}
+\item 
+std\+::array$<$ double, 3 $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a0d739ecebfa2759f30e21e1fd46bf5d1}{Mbar0\+\_\+pt2\+\_\+}}
+\begin{DoxyCompactList}\small\item\em D\+S\+R\+G-\/\+M\+R\+P\+T2 transformed dipole scalar. \end{DoxyCompactList}\item 
+std\+::array$<$ double, 3 $>$ \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_ac79b938fc2c1551fed6195eaddad5616}{Mbar0\+\_\+pt2c\+\_\+}}
+\begin{DoxyCompactList}\small\item\em D\+S\+R\+G-\/\+M\+R\+P\+T2 (2nd-\/order complete) transformed dipole scalar. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a411038a819da24f5ffb4db0cf621a742}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a411038a819da24f5ffb4db0cf621a742}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\index{D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{D\+S\+R\+G\+\_\+\+M\+R\+P\+T3()}{DSRG\_MRPT3()}}
+{\footnotesize\ttfamily forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}}]{rdms,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info }\end{DoxyParamCaption})}
+
+\mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3}{D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}} Constructor 
+\begin{DoxyParams}{Parameters}
+{\em reference} & The reference object of F\+O\+R\+TE \\
+\hline
+{\em ref\+\_\+wfn} & The reference wavefunction object \\
+\hline
+{\em options} & The main options object \\
+\hline
+{\em ints} & A pointer to an allocated integral object \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ae2419fb8f82089098a086f62baff4816}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ae2419fb8f82089098a086f62baff4816}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!````~D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{$\sim$\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\index{````~D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{$\sim$\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{$\sim$\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3()}{~DSRG\_MRPT3()}}
+{\footnotesize\ttfamily virtual forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::$\sim$\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_acf82777d9515f7cc988b82c03ffeb291}\label{classforte_1_1_d_s_r_g___m_r_p_t3_acf82777d9515f7cc988b82c03ffeb291}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!build\+\_\+fock\+\_\+full@{build\+\_\+fock\+\_\+full}}
+\index{build\+\_\+fock\+\_\+full@{build\+\_\+fock\+\_\+full}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{build\+\_\+fock\+\_\+full()}{build\_fock\_full()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::build\+\_\+fock\+\_\+full (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Build Fock matrix when two-\/electron integrals are fully stored. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aed32292cef9e15981542c638236748b8}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aed32292cef9e15981542c638236748b8}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!build\+\_\+fock\+\_\+half@{build\+\_\+fock\+\_\+half}}
+\index{build\+\_\+fock\+\_\+half@{build\+\_\+fock\+\_\+half}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{build\+\_\+fock\+\_\+half()}{build\_fock\_half()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::build\+\_\+fock\+\_\+half (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Build Fock matrix and diagonal Fock matrix elements. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ac610cb51af174c9c3fd3eb2d68f62bb3}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ac610cb51af174c9c3fd3eb2d68f62bb3}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!build\+\_\+tei@{build\+\_\+tei}}
+\index{build\+\_\+tei@{build\+\_\+tei}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{build\+\_\+tei()}{build\_tei()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::build\+\_\+tei (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{V }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fill up two-\/electron integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a6ae32df9118f9ee9c9a8f5a37c81c601}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a6ae32df9118f9ee9c9a8f5a37c81c601}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!check\+\_\+t1@{check\+\_\+t1}}
+\index{check\+\_\+t1@{check\+\_\+t1}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{check\+\_\+t1()}{check\_t1()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::check\+\_\+t1 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Check T1 and store large amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a2312c6b70f31b23da999119623f5d633}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a2312c6b70f31b23da999119623f5d633}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!check\+\_\+t2@{check\+\_\+t2}}
+\index{check\+\_\+t2@{check\+\_\+t2}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{check\+\_\+t2()}{check\_t2()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::check\+\_\+t2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Check T2 and store large amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ac7f2deb2afe35fcbe80b0f7863cb79d1}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ac7f2deb2afe35fcbe80b0f7863cb79d1}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!cleanup@{cleanup}}
+\index{cleanup@{cleanup}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{cleanup()}{cleanup()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::cleanup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Called in the destructor. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ab6ccdab98659f6661900cfa29fa6872d}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ab6ccdab98659f6661900cfa29fa6872d}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+dm1d\+\_\+pt3\+\_\+1@{compute\+\_\+dm1d\+\_\+pt3\+\_\+1}}
+\index{compute\+\_\+dm1d\+\_\+pt3\+\_\+1@{compute\+\_\+dm1d\+\_\+pt3\+\_\+1}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+dm1d\+\_\+pt3\+\_\+1()}{compute\_dm1d\_pt3\_1()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+dm1d\+\_\+pt3\+\_\+1 (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{M,  }\item[{double \&}]{Mbar0,  }\item[{double \&}]{Mbar0\+\_\+pt2,  }\item[{Blocked\+Tensor \&}]{Mbar1,  }\item[{Blocked\+Tensor \&}]{Mbar2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute D\+S\+RG transformed dipole integrals from 1st-\/order amplitudes for a given direction. 
+
+Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]}, particle-\/hole contraction (exchange part), contracted particle index is virtual ~\newline
+~\newline
+~\newline
+Get a sub block of tensor T 
+\begin{DoxyParams}{Parameters}
+{\em T} & The big tensor \\
+\hline
+{\em P} & The map of $<$partitioned dimension index, its absolute indices in T$>$ \\
+\hline
+{\em name} & The name of the returned sub tensor \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A sub tensor of T with the same dimension\+Rotate \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} computed by eigens\+\_\+ (in original basis) to semicanonical basis so that they are in the same basis as amplitudes (in semicanonical basis) 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aa6f6e8955cf8ecbe07f6f0eb3522f649}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aa6f6e8955cf8ecbe07f6f0eb3522f649}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+dm1d\+\_\+pt3\+\_\+2@{compute\+\_\+dm1d\+\_\+pt3\+\_\+2}}
+\index{compute\+\_\+dm1d\+\_\+pt3\+\_\+2@{compute\+\_\+dm1d\+\_\+pt3\+\_\+2}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+dm1d\+\_\+pt3\+\_\+2()}{compute\_dm1d\_pt3\_2()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+dm1d\+\_\+pt3\+\_\+2 (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{M,  }\item[{double \&}]{Mbar0,  }\item[{double \&}]{Mbar0\+\_\+pt2,  }\item[{Blocked\+Tensor \&}]{Mbar1,  }\item[{Blocked\+Tensor \&}]{Mbar2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute D\+S\+RG transformed dipole integrals from 2nd-\/order amplitudes for a given direction. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ac2e41cad2c6f82f0b7051b02becd1595}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ac2e41cad2c6f82f0b7051b02becd1595}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+elapsed\+\_\+time@{compute\+\_\+elapsed\+\_\+time}}
+\index{compute\+\_\+elapsed\+\_\+time@{compute\+\_\+elapsed\+\_\+time}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+elapsed\+\_\+time()}{compute\_elapsed\_time()}}
+{\footnotesize\ttfamily std\+::chrono\+::duration$<$double$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+elapsed\+\_\+time (\begin{DoxyParamCaption}\item[{std\+::chrono\+::time\+\_\+point$<$ std\+::chrono\+::system\+\_\+clock $>$}]{t1,  }\item[{std\+::chrono\+::time\+\_\+point$<$ std\+::chrono\+::system\+\_\+clock $>$}]{t2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+
+
+Compute elapsed time. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a48a25a952206690bcf8125e583576052}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a48a25a952206690bcf8125e583576052}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily virtual double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Compute the D\+S\+R\+G-\/\+M\+R\+P\+T3 energy. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_m_a_s_t_e_r___d_s_r_g_a34011aaadcc79224071a4266a095591b}{forte\+::\+M\+A\+S\+T\+E\+R\+\_\+\+D\+S\+RG}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a5d538d326cd0c34727b3dc5d9dbe7237}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a5d538d326cd0c34727b3dc5d9dbe7237}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+energy\+\_\+pt2@{compute\+\_\+energy\+\_\+pt2}}
+\index{compute\+\_\+energy\+\_\+pt2@{compute\+\_\+energy\+\_\+pt2}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy\+\_\+pt2()}{compute\_energy\_pt2()}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+energy\+\_\+pt2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+compute 2nd-\/order energy and transformed Hamiltonian 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a644f6b92ddcb87b33a5bc467e0f79846}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a644f6b92ddcb87b33a5bc467e0f79846}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+energy\+\_\+pt3\+\_\+1@{compute\+\_\+energy\+\_\+pt3\+\_\+1}}
+\index{compute\+\_\+energy\+\_\+pt3\+\_\+1@{compute\+\_\+energy\+\_\+pt3\+\_\+1}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy\+\_\+pt3\+\_\+1()}{compute\_energy\_pt3\_1()}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+energy\+\_\+pt3\+\_\+1 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+compute 3rd-\/order energy contribution 1.\+0 / 12.\+0 $\ast$ \mbox{[}\mbox{[}\mbox{[}H0th,A1st\mbox{]},A1st\mbox{]},A1st\mbox{]}, computed before pt2 \mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ab5d7445a318b4d5d2fea4cde2edc6818}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ab5d7445a318b4d5d2fea4cde2edc6818}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+energy\+\_\+pt3\+\_\+2@{compute\+\_\+energy\+\_\+pt3\+\_\+2}}
+\index{compute\+\_\+energy\+\_\+pt3\+\_\+2@{compute\+\_\+energy\+\_\+pt3\+\_\+2}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy\+\_\+pt3\+\_\+2()}{compute\_energy\_pt3\_2()}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+energy\+\_\+pt3\+\_\+2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+compute 3d-\/order energy contribution 1.\+0 / 2.\+0 $\ast$ \mbox{[}H1st + Hbar1st,A2nd\mbox{]} 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a3b72cd8ca5066848111f384afc4a97ff}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a3b72cd8ca5066848111f384afc4a97ff}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+energy\+\_\+pt3\+\_\+3@{compute\+\_\+energy\+\_\+pt3\+\_\+3}}
+\index{compute\+\_\+energy\+\_\+pt3\+\_\+3@{compute\+\_\+energy\+\_\+pt3\+\_\+3}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy\+\_\+pt3\+\_\+3()}{compute\_energy\_pt3\_3()}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+energy\+\_\+pt3\+\_\+3 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+compute 3rd-\/order energy contribution 1.\+0 / 2.\+0 $\ast$ \mbox{[}Hbar2nd,A1st\mbox{]} 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ac01edeb17737755a3b025459a792aad4}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ac01edeb17737755a3b025459a792aad4}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+energy\+\_\+relaxed@{compute\+\_\+energy\+\_\+relaxed}}
+\index{compute\+\_\+energy\+\_\+relaxed@{compute\+\_\+energy\+\_\+relaxed}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy\+\_\+relaxed()}{compute\_energy\_relaxed()}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+energy\+\_\+relaxed (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the D\+S\+R\+G-\/\+M\+R\+P\+T3 energy with relaxed reference (once) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a2b3a92749aae957f93d5f9cda22d0716}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a2b3a92749aae957f93d5f9cda22d0716}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+energy\+\_\+sa@{compute\+\_\+energy\+\_\+sa}}
+\index{compute\+\_\+energy\+\_\+sa@{compute\+\_\+energy\+\_\+sa}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy\+\_\+sa()}{compute\_energy\_sa()}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+energy\+\_\+sa (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the state-\/averaged D\+S\+R\+G-\/\+M\+R\+P\+T3 energies. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aff426cbae8aba3b3df9a9817a13280d0}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aff426cbae8aba3b3df9a9817a13280d0}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+t1@{compute\+\_\+t1}}
+\index{compute\+\_\+t1@{compute\+\_\+t1}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+t1()}{compute\_t1()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+t1 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute T1 amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a0358b0213517f969fda06fbcbe86ea94}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a0358b0213517f969fda06fbcbe86ea94}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!compute\+\_\+t2@{compute\+\_\+t2}}
+\index{compute\+\_\+t2@{compute\+\_\+t2}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{compute\+\_\+t2()}{compute\_t2()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::compute\+\_\+t2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute T2 amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_acc86f6e843feea90ab27a456ccdca039}\label{classforte_1_1_d_s_r_g___m_r_p_t3_acc86f6e843feea90ab27a456ccdca039}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!print\+\_\+amp\+\_\+summary@{print\+\_\+amp\+\_\+summary}}
+\index{print\+\_\+amp\+\_\+summary@{print\+\_\+amp\+\_\+summary}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{print\+\_\+amp\+\_\+summary()}{print\_amp\_summary()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::print\+\_\+amp\+\_\+summary (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{const std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$$>$ \&}]{list,  }\item[{const double \&}]{norm,  }\item[{const size\+\_\+t \&}]{number\+\_\+nonzero }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print amplitudes summary. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aa8d6ffbd67970a5b8711924b44d786aa}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aa8d6ffbd67970a5b8711924b44d786aa}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!print\+\_\+dm\+\_\+pt3@{print\+\_\+dm\+\_\+pt3}}
+\index{print\+\_\+dm\+\_\+pt3@{print\+\_\+dm\+\_\+pt3}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{print\+\_\+dm\+\_\+pt3()}{print\_dm\_pt3()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::print\+\_\+dm\+\_\+pt3 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print unrelaxed dipole. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_af557b9dbad07468f31550890d06ceb8e}\label{classforte_1_1_d_s_r_g___m_r_p_t3_af557b9dbad07468f31550890d06ceb8e}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!print\+\_\+intruder@{print\+\_\+intruder}}
+\index{print\+\_\+intruder@{print\+\_\+intruder}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{print\+\_\+intruder()}{print\_intruder()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::print\+\_\+intruder (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{const std\+::vector$<$ std\+::pair$<$ std\+::vector$<$ size\+\_\+t $>$, double $>$$>$ \&}]{list }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print intruder analysis. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a73debd7fa355ac2311d92f6d86b5e3e5}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a73debd7fa355ac2311d92f6d86b5e3e5}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!print\+\_\+options\+\_\+summary@{print\+\_\+options\+\_\+summary}}
+\index{print\+\_\+options\+\_\+summary@{print\+\_\+options\+\_\+summary}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{print\+\_\+options\+\_\+summary()}{print\_options\_summary()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::print\+\_\+options\+\_\+summary (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print a summary of the options. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a592593cdbd5cbf0024bc5f9520b4a88d}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a592593cdbd5cbf0024bc5f9520b4a88d}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!renormalize\+\_\+F@{renormalize\+\_\+F}}
+\index{renormalize\+\_\+F@{renormalize\+\_\+F}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{renormalize\+\_\+\+F()}{renormalize\_F()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::renormalize\+\_\+F (\begin{DoxyParamCaption}\item[{const bool \&}]{plusone = {\ttfamily true} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Renormalize Fock matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aaf25a724d9aeeafb121d56abd71f0748}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aaf25a724d9aeeafb121d56abd71f0748}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!renormalize\+\_\+V@{renormalize\+\_\+V}}
+\index{renormalize\+\_\+V@{renormalize\+\_\+V}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{renormalize\+\_\+\+V()}{renormalize\_V()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::renormalize\+\_\+V (\begin{DoxyParamCaption}\item[{const bool \&}]{plusone = {\ttfamily true} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Renormalize two-\/electron integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a20ec1fcadc9b1e3cb8d21df9a86fa055}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a20ec1fcadc9b1e3cb8d21df9a86fa055}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!set\+\_\+eigens@{set\+\_\+eigens}}
+\index{set\+\_\+eigens@{set\+\_\+eigens}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{set\+\_\+eigens()}{set\_eigens()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::set\+\_\+eigens (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ psi\+::\+Shared\+Vector, double $>$$>$$>$}]{eigens }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set C\+A\+S\+CI eigen values and eigen vectors for state averaging. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_af5b78a8ae153c66e5733d0749972185b}\label{classforte_1_1_d_s_r_g___m_r_p_t3_af5b78a8ae153c66e5733d0749972185b}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!set\+\_\+p\+\_\+spaces@{set\+\_\+p\+\_\+spaces}}
+\index{set\+\_\+p\+\_\+spaces@{set\+\_\+p\+\_\+spaces}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{set\+\_\+p\+\_\+spaces()}{set\_p\_spaces()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::set\+\_\+p\+\_\+spaces (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{forte\+::\+Determinant}} $>$$>$}]{p\+\_\+spaces }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set determinants in the model space. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ae03d4e96612c876c0d9f0715f93316fe}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ae03d4e96612c876c0d9f0715f93316fe}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!startup@{startup}}
+\index{startup@{startup}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{startup()}{startup()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::startup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Called in the constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a0a5a5e4a7f71dd0fb364b184fb0e65b5}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a0a5a5e4a7f71dd0fb364b184fb0e65b5}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T1\+\_\+\+C1\+\_\+\+DF@{V\+\_\+\+T1\+\_\+\+C1\+\_\+\+DF}}
+\index{V\+\_\+\+T1\+\_\+\+C1\+\_\+\+DF@{V\+\_\+\+T1\+\_\+\+C1\+\_\+\+DF}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T1\+\_\+\+C1\+\_\+\+D\+F()}{V\_T1\_C1\_DF()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T1\+\_\+\+C1\+\_\+\+DF (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T1,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C1 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute one-\/body term of commutator \mbox{[}V, T1\mbox{]}, V is constructed from B (D\+F/\+CD) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a40d599393dfce102715ffdc027b2c88b}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a40d599393dfce102715ffdc027b2c88b}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T1\+\_\+\+C2\+\_\+\+DF@{V\+\_\+\+T1\+\_\+\+C2\+\_\+\+DF}}
+\index{V\+\_\+\+T1\+\_\+\+C2\+\_\+\+DF@{V\+\_\+\+T1\+\_\+\+C2\+\_\+\+DF}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T1\+\_\+\+C2\+\_\+\+D\+F()}{V\_T1\_C2\_DF()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T1\+\_\+\+C2\+\_\+\+DF (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T1,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute two-\/body term of commutator \mbox{[}V, T1\mbox{]}, V is constructed from B (D\+F/\+CD) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a9546d1b6861d0b5b222011d1339bf40b}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a9546d1b6861d0b5b222011d1339bf40b}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T2\+\_\+\+C1\+\_\+\+DF@{V\+\_\+\+T2\+\_\+\+C1\+\_\+\+DF}}
+\index{V\+\_\+\+T2\+\_\+\+C1\+\_\+\+DF@{V\+\_\+\+T2\+\_\+\+C1\+\_\+\+DF}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T2\+\_\+\+C1\+\_\+\+D\+F()}{V\_T2\_C1\_DF()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T2\+\_\+\+C1\+\_\+\+DF (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T2,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C1 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute one-\/body term of commutator \mbox{[}V, T2\mbox{]}, V is constructed from B (D\+F/\+CD) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ab71c3b2fafa76b719d08acb4000d527b}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ab71c3b2fafa76b719d08acb4000d527b}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T2\+\_\+\+C2\+\_\+\+DF@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+DF}}
+\index{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+DF@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+DF}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F()}{V\_T2\_C2\_DF()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T2\+\_\+\+C2\+\_\+\+DF (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T2,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]}, V is constructed from B (D\+F/\+CD) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a48e6f20b01fa4ebdf3fcb3b2444b8443}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a48e6f20b01fa4ebdf3fcb3b2444b8443}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AA@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AA}}
+\index{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AA@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AA}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+A()}{V\_T2\_C2\_DF\_AA()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AA (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T2,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]}, particle-\/particle contraction when \char`\"{}ab\char`\"{} in T2 are actives \mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a2beafc4ba36ddc0c27557c0c858fbf85}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a2beafc4ba36ddc0c27557c0c858fbf85}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+H\+\_\+\+EX@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+H\+\_\+\+EX}}
+\index{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+H\+\_\+\+EX@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+H\+\_\+\+EX}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+H\+\_\+\+E\+X()}{V\_T2\_C2\_DF\_AH\_EX()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+H\+\_\+\+EX (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T2,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C2,  }\item[{const std\+::vector$<$ std\+::vector$<$ std\+::string $>$$>$ \&}]{qs,  }\item[{const std\+::vector$<$ std\+::vector$<$ std\+::string $>$$>$ \&}]{jb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]}, particle-\/hole contraction (exchange part), contracted particle index is active \mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a91c900ea22e66c97bb0db18c8f49e8cb}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a91c900ea22e66c97bb0db18c8f49e8cb}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AV@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AV}}
+\index{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AV@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AV}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+A\+V()}{V\_T2\_C2\_DF\_AV()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+AV (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T2,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]} (batch), particle-\/particle contraction when \char`\"{}ab\char`\"{} in T2 are active and virtual \mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a3484a8491033f0e2171936ba0da11f38}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a3484a8491033f0e2171936ba0da11f38}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+A\+\_\+\+EX@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+A\+\_\+\+EX}}
+\index{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+A\+\_\+\+EX@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+A\+\_\+\+EX}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+A\+\_\+\+E\+X()}{V\_T2\_C2\_DF\_VA\_EX()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+A\+\_\+\+EX (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T2,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C2,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{qs\+\_\+lower,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{jb\+\_\+lower }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]}, particle-\/hole contraction (exchange part), contracted particle index is virtual \mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ab486aac4ea25510f0ca1d94b39d3e12d}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ab486aac4ea25510f0ca1d94b39d3e12d}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+C\+\_\+\+EX@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+C\+\_\+\+EX}}
+\index{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+C\+\_\+\+EX@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+C\+\_\+\+EX}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+C\+\_\+\+E\+X()}{V\_T2\_C2\_DF\_VC\_EX()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+C\+\_\+\+EX (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T2,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C2,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{qs\+\_\+lower,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{jb\+\_\+lower }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]}, particle-\/hole contraction (exchange part), contracted particle index is virtual \mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a0e00b4f4fdac4498d4d16c3f8cda54de}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a0e00b4f4fdac4498d4d16c3f8cda54de}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+VV@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+VV}}
+\index{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+VV@{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+VV}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+V\+V()}{V\_T2\_C2\_DF\_VV()}}
+{\footnotesize\ttfamily void forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\+T2\+\_\+\+C2\+\_\+\+D\+F\+\_\+\+VV (\begin{DoxyParamCaption}\item[{Blocked\+Tensor \&}]{B,  }\item[{Blocked\+Tensor \&}]{T2,  }\item[{const double \&}]{alpha,  }\item[{Blocked\+Tensor \&}]{C2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Compute two-\/body term of commutator \mbox{[}V, T2\mbox{]} (batch), particle-\/particle contraction when \char`\"{}ab\char`\"{} in T2 are virtuals 
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_af947d5aa4c9aee775d56ad6085e299ac}\label{classforte_1_1_d_s_r_g___m_r_p_t3_af947d5aa4c9aee775d56ad6085e299ac}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!aone\+\_\+eff\+\_\+@{aone\+\_\+eff\+\_\+}}
+\index{aone\+\_\+eff\+\_\+@{aone\+\_\+eff\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{aone\+\_\+eff\+\_\+}{aone\_eff\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::aone\+\_\+eff\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Effective alpha one-\/electron integrals (used in denormal ordering) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ad2075beaa4159ef620f34df0fc5fdd64}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ad2075beaa4159ef620f34df0fc5fdd64}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!B\+\_\+@{B\+\_\+}}
+\index{B\+\_\+@{B\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{B\+\_\+}{B\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+B\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Three-\/index integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aed9f088d1f9bcd8facb10dd1569748aa}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aed9f088d1f9bcd8facb10dd1569748aa}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!bone\+\_\+eff\+\_\+@{bone\+\_\+eff\+\_\+}}
+\index{bone\+\_\+eff\+\_\+@{bone\+\_\+eff\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{bone\+\_\+eff\+\_\+}{bone\_eff\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::bone\+\_\+eff\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Effective beta one-\/electron integrals (used in denormal ordering) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a22fd832ebfbf1be19fa04fb4a011ace3}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a22fd832ebfbf1be19fa04fb4a011ace3}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!eigens\+\_\+@{eigens\+\_\+}}
+\index{eigens\+\_\+@{eigens\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{eigens\+\_\+}{eigens\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::pair$<$psi\+::\+Shared\+Vector, double$>$ $>$ $>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::eigens\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+C\+A\+S\+CI eigen values and eigen vectors for state averaging. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a87374317ecaaa1fc3dadee71238a287a}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a87374317ecaaa1fc3dadee71238a287a}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!end\+\_\+@{end\+\_\+}}
+\index{end\+\_\+@{end\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{end\+\_\+}{end\_}}
+{\footnotesize\ttfamily std\+::chrono\+::time\+\_\+point$<$std\+::chrono\+::system\+\_\+clock$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::end\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ad529a0f458610f6099d7e2cc47cfd896}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ad529a0f458610f6099d7e2cc47cfd896}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!F0th\+\_\+@{F0th\+\_\+}}
+\index{F0th\+\_\+@{F0th\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{F0th\+\_\+}{F0th\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+F0th\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Zeroth-\/order Hamiltonian (bare diagonal blocks of Fock) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a078a80b254310fde8b5f0f4dec0d316d}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a078a80b254310fde8b5f0f4dec0d316d}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!F1st\+\_\+@{F1st\+\_\+}}
+\index{F1st\+\_\+@{F1st\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{F1st\+\_\+}{F1st\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+F1st\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Generalized Fock matrix (bare off-\/diagonal blocks) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a358a3512d5e25f9830f24df84c03d565}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a358a3512d5e25f9830f24df84c03d565}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!F\+\_\+@{F\+\_\+}}
+\index{F\+\_\+@{F\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{F\+\_\+}{F\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+F\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Generalized Fock matrix (bare or renormalized) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_afda1234ea7f619908fb0ff10188d0d74}\label{classforte_1_1_d_s_r_g___m_r_p_t3_afda1234ea7f619908fb0ff10188d0d74}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!Fa\+\_\+@{Fa\+\_\+}}
+\index{Fa\+\_\+@{Fa\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{Fa\+\_\+}{Fa\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+Fa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Diagonal elements of Fock matrices. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a469cd21683c1d469f08c7b5c6f4c3f95}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a469cd21683c1d469f08c7b5c6f4c3f95}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!Fb\+\_\+@{Fb\+\_\+}}
+\index{Fb\+\_\+@{Fb\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{Fb\+\_\+}{Fb\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+Fb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a325f745173790dba2942214ca9c040e8}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a325f745173790dba2942214ca9c040e8}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!lt1a\+\_\+@{lt1a\+\_\+}}
+\index{lt1a\+\_\+@{lt1a\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{lt1a\+\_\+}{lt1a\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::pair$<$std\+::vector$<$size\+\_\+t$>$, double$>$ $>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::lt1a\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+List of large amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aba50c32ec211e470f442ed49a6bb16f5}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aba50c32ec211e470f442ed49a6bb16f5}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!lt1b\+\_\+@{lt1b\+\_\+}}
+\index{lt1b\+\_\+@{lt1b\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{lt1b\+\_\+}{lt1b\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::pair$<$std\+::vector$<$size\+\_\+t$>$, double$>$ $>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::lt1b\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aedbbe720462fe87709525bedc8541251}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aedbbe720462fe87709525bedc8541251}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!lt2aa\+\_\+@{lt2aa\+\_\+}}
+\index{lt2aa\+\_\+@{lt2aa\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{lt2aa\+\_\+}{lt2aa\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::pair$<$std\+::vector$<$size\+\_\+t$>$, double$>$ $>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::lt2aa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a3a00248cfbd090f9c1338d534b9ae233}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a3a00248cfbd090f9c1338d534b9ae233}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!lt2ab\+\_\+@{lt2ab\+\_\+}}
+\index{lt2ab\+\_\+@{lt2ab\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{lt2ab\+\_\+}{lt2ab\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::pair$<$std\+::vector$<$size\+\_\+t$>$, double$>$ $>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::lt2ab\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a819e9535c0fa33f8918569629f6bf552}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a819e9535c0fa33f8918569629f6bf552}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!lt2bb\+\_\+@{lt2bb\+\_\+}}
+\index{lt2bb\+\_\+@{lt2bb\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{lt2bb\+\_\+}{lt2bb\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::pair$<$std\+::vector$<$size\+\_\+t$>$, double$>$ $>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::lt2bb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a0d739ecebfa2759f30e21e1fd46bf5d1}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a0d739ecebfa2759f30e21e1fd46bf5d1}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!Mbar0\+\_\+pt2\+\_\+@{Mbar0\+\_\+pt2\+\_\+}}
+\index{Mbar0\+\_\+pt2\+\_\+@{Mbar0\+\_\+pt2\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{Mbar0\+\_\+pt2\+\_\+}{Mbar0\_pt2\_}}
+{\footnotesize\ttfamily std\+::array$<$double, 3$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+Mbar0\+\_\+pt2\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+D\+S\+R\+G-\/\+M\+R\+P\+T2 transformed dipole scalar. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ac79b938fc2c1551fed6195eaddad5616}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ac79b938fc2c1551fed6195eaddad5616}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!Mbar0\+\_\+pt2c\+\_\+@{Mbar0\+\_\+pt2c\+\_\+}}
+\index{Mbar0\+\_\+pt2c\+\_\+@{Mbar0\+\_\+pt2c\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{Mbar0\+\_\+pt2c\+\_\+}{Mbar0\_pt2c\_}}
+{\footnotesize\ttfamily std\+::array$<$double, 3$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+Mbar0\+\_\+pt2c\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+D\+S\+R\+G-\/\+M\+R\+P\+T2 (2nd-\/order complete) transformed dipole scalar. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a45977e4675ce30ca1750869c7c81fa3f}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a45977e4675ce30ca1750869c7c81fa3f}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!mem\+\_\+total\+\_\+@{mem\+\_\+total\+\_\+}}
+\index{mem\+\_\+total\+\_\+@{mem\+\_\+total\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{mem\+\_\+total\+\_\+}{mem\_total\_}}
+{\footnotesize\ttfamily int64\+\_\+t forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::mem\+\_\+total\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Total memory left. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aec8b24da0956caeaed744b78d132a9ef}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aec8b24da0956caeaed744b78d132a9ef}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!O1\+\_\+@{O1\+\_\+}}
+\index{O1\+\_\+@{O1\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{O1\+\_\+}{O1\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+O1\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+One-\/body temp tensor (\mbox{[}\mbox{[}H0th,A1st\mbox{]},A1st\mbox{]} or 1st-\/order amplitudes) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aafc09e3bcf2969a8c54cd80611f22615}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aafc09e3bcf2969a8c54cd80611f22615}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!O2\+\_\+@{O2\+\_\+}}
+\index{O2\+\_\+@{O2\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{O2\+\_\+}{O2\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+O2\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Two-\/body temp tensor (\mbox{[}\mbox{[}H0th,A1st\mbox{]},A1st\mbox{]} or 1st-\/order amplitudes) 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a30dffa14bad488e78ffe178e3ca962f0}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a30dffa14bad488e78ffe178e3ca962f0}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!p\+\_\+spaces\+\_\+@{p\+\_\+spaces\+\_\+}}
+\index{p\+\_\+spaces\+\_\+@{p\+\_\+spaces\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{p\+\_\+spaces\+\_\+}{p\_spaces\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$\mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{forte\+::\+Determinant}}$>$ $>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::p\+\_\+spaces\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Determinants in the model space. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ac7a05164e2aeb450f275ace8b4d68141}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ac7a05164e2aeb450f275ace8b4d68141}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!profile\+\_\+print\+\_\+@{profile\+\_\+print\+\_\+}}
+\index{profile\+\_\+print\+\_\+@{profile\+\_\+print\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{profile\+\_\+print\+\_\+}{profile\_print\_}}
+{\footnotesize\ttfamily bool forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::profile\+\_\+print\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Profile printing for DF. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a32aa55b38940e86d15b60350ccb636f7}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a32aa55b38940e86d15b60350ccb636f7}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!semi\+\_\+canonical\+\_\+@{semi\+\_\+canonical\+\_\+}}
+\index{semi\+\_\+canonical\+\_\+@{semi\+\_\+canonical\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{semi\+\_\+canonical\+\_\+}{semi\_canonical\_}}
+{\footnotesize\ttfamily bool forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::semi\+\_\+canonical\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Are orbitals semi-\/canonicalized? 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a5cfb4204003849251f3aeb2c6e9eedf6}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a5cfb4204003849251f3aeb2c6e9eedf6}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!start\+\_\+@{start\+\_\+}}
+\index{start\+\_\+@{start\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{start\+\_\+}{start\_}}
+{\footnotesize\ttfamily std\+::chrono\+::time\+\_\+point$<$std\+::chrono\+::system\+\_\+clock$>$ forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::start\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Time variable. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_aa7a1ae6e6db9791b3dc40052ef0d1af5}\label{classforte_1_1_d_s_r_g___m_r_p_t3_aa7a1ae6e6db9791b3dc40052ef0d1af5}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!T1\+\_\+@{T1\+\_\+}}
+\index{T1\+\_\+@{T1\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{T1\+\_\+}{T1\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+T1\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Single excitation amplitude. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_adacbd3ce8f65586ecd75c74c12b0db50}\label{classforte_1_1_d_s_r_g___m_r_p_t3_adacbd3ce8f65586ecd75c74c12b0db50}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!T1max\+\_\+@{T1max\+\_\+}}
+\index{T1max\+\_\+@{T1max\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{T1max\+\_\+}{T1max\_}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+T1max\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Max (with sign) of T1. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a4e586ce2fafa9c900df089d2f739cd5c}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a4e586ce2fafa9c900df089d2f739cd5c}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!T1norm\+\_\+@{T1norm\+\_\+}}
+\index{T1norm\+\_\+@{T1norm\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{T1norm\+\_\+}{T1norm\_}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+T1norm\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Norm of T1. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_ab74e92a4d965c40a6d2a6f1a0afceea2}\label{classforte_1_1_d_s_r_g___m_r_p_t3_ab74e92a4d965c40a6d2a6f1a0afceea2}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!T2\+\_\+@{T2\+\_\+}}
+\index{T2\+\_\+@{T2\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{T2\+\_\+}{T2\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+T2\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Double excitation amplitude. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a8f5e43d366ea5f4130f64ae882f484fb}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a8f5e43d366ea5f4130f64ae882f484fb}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!T2max\+\_\+@{T2max\+\_\+}}
+\index{T2max\+\_\+@{T2max\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{T2max\+\_\+}{T2max\_}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+T2max\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Max (with sign) of T2. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_af22b0cb1620229a88e7988d3e564f368}\label{classforte_1_1_d_s_r_g___m_r_p_t3_af22b0cb1620229a88e7988d3e564f368}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!T2norm\+\_\+@{T2norm\+\_\+}}
+\index{T2norm\+\_\+@{T2norm\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{T2norm\+\_\+}{T2norm\_}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+T2norm\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Norm of T2. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a1769af0d38cd96df2578205dad1add46}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a1769af0d38cd96df2578205dad1add46}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!tt1\+\_\+@{tt1\+\_\+}}
+\index{tt1\+\_\+@{tt1\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{tt1\+\_\+}{tt1\_}}
+{\footnotesize\ttfamily std\+::time\+\_\+t forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::tt1\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_afdea4aab3d4dc3f8e6d451973aaf15ca}\label{classforte_1_1_d_s_r_g___m_r_p_t3_afdea4aab3d4dc3f8e6d451973aaf15ca}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!tt2\+\_\+@{tt2\+\_\+}}
+\index{tt2\+\_\+@{tt2\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{tt2\+\_\+}{tt2\_}}
+{\footnotesize\ttfamily std\+::time\+\_\+t forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::tt2\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a3ffd43eb3dbaf441b72eb5f158eca6d2}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a3ffd43eb3dbaf441b72eb5f158eca6d2}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!U\+\_\+@{U\+\_\+}}
+\index{U\+\_\+@{U\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{U\+\_\+}{U\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+U\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Unitary matrix to block diagonal Fock. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___m_r_p_t3_a4df42fb2007964419b78dcde72886db8}\label{classforte_1_1_d_s_r_g___m_r_p_t3_a4df42fb2007964419b78dcde72886db8}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}!V\+\_\+@{V\+\_\+}}
+\index{V\+\_\+@{V\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3@{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}
+\subsubsection{\texorpdfstring{V\+\_\+}{V\_}}
+{\footnotesize\ttfamily ambit\+::\+Blocked\+Tensor forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3\+::\+V\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Two-\/electron integrals (bare or renormalized) 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/spin-\/integrated/\mbox{\hyperlink{dsrg__mrpt3_8h}{dsrg\+\_\+mrpt3.\+h}}\end{DoxyCompactItemize}

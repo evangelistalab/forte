@@ -1,0 +1,6 @@
+2022-05-31:17:34:02,130 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'ACTIVE': [0, 1, 1, 1], 'DOCC': [6, 0, 2, 3], 'MCSCF_TYPE': 'CONV', 'REFERENCE': 'RHF', 'REFERENCE_SYM': 0, 'RESTRICTED_DOCC': [6, 0, 1, 2], 'SCF_TYPE': 'DIRECT', 'function_kwargs': {}}
+2022-05-31:17:34:02,132 INFO     [psi4.driver.driver:499] Compute energy(): method=casscf, basis=3-21g, molecule=cyclopropene, nre=63.71376567222021
+2022-05-31:17:34:02,831 INFO     [psi4.driver.driver:502] Return energy(): -115.19196913828372
+2022-05-31:17:34:02,845 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'ACTIVE': [0, 1, 1, 1], 'DOCC': [6, 0, 2, 3], 'SCF__INTS_TOLERANCE': 1e-12, 'MCSCF_TYPE': 'CONV', 'REFERENCE': 'RHF', 'REFERENCE_SYM': 0, 'RESTRICTED_DOCC': [6, 0, 1, 2], 'SCF_TYPE': 'DIRECT', 'function_kwargs': {}}
+2022-05-31:17:34:02,847 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=3-21g, molecule=cyclopropene, nre=63.71376567222021
+2022-05-31:17:34:03,444 INFO     [psi4.driver.driver:502] Return energy(): -115.19196913945407

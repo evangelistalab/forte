@@ -1,0 +1,256 @@
+\hypertarget{classforte_1_1_cube_file}{}\section{forte\+:\+:Cube\+File Class Reference}
+\label{classforte_1_1_cube_file}\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+
+
+A class for loading, maniputlating, and storing cube files.  
+
+
+
+
+{\ttfamily \#include $<$cube\+\_\+file.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_cube_file_a5b182bf719f0668f4e4d59fef9140f36}{Cube\+File}} (const std\+::string \&filename)
+\begin{DoxyCompactList}\small\item\em Build a \mbox{\hyperlink{classforte_1_1_cube_file}{Cube\+File}} object from a file stored on disk. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_cube_file_ac091f6918736c043fad6e108ec209b66}{Cube\+File}} (const \mbox{\hyperlink{classforte_1_1_cube_file}{Cube\+File}} \&cube)=default
+\item 
+int \mbox{\hyperlink{classforte_1_1_cube_file_a9ad38a5a7b190ddb0a5e162755cecf59}{natoms}} () const
+\item 
+const std\+::vector$<$ int $>$ \& \mbox{\hyperlink{classforte_1_1_cube_file_a2b6769f5f719e86ef637badec2b0cff1}{atom\+\_\+numbers}} () const
+\item 
+const std\+::vector$<$ std\+::tuple$<$ double, double, double $>$ $>$ \& \mbox{\hyperlink{classforte_1_1_cube_file_aa443cf8e4c16f88cea31d5082c73b83d}{atom\+\_\+coords}} () const
+\item 
+const std\+::vector$<$ int $>$ \& \mbox{\hyperlink{classforte_1_1_cube_file_a0f2d624536eb4ecdca77092e0ac39ff8}{num}} () const
+\item 
+const std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_cube_file_a4d045a770876626dc7d34ebc39ca0525}{min}} () const
+\item 
+const std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_cube_file_ac09285b9257b4a4c4fcf7f1d304ae953}{max}} () const
+\item 
+const std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_cube_file_a9ec8e2d49f08a95023310ec5814d0631}{inc}} () const
+\item 
+const std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_cube_file_ac3de35bae3f81d684ce53aced0486e28}{data}} () const
+\item 
+void \mbox{\hyperlink{classforte_1_1_cube_file_aa1a220dd0dc464118d874004be847138}{load}} (std\+::string filename)
+\item 
+void \mbox{\hyperlink{classforte_1_1_cube_file_ac45d60ce3490487dd948a4ef9d3d3730}{save}} (std\+::string filename) const
+\item 
+std\+::pair$<$ double, double $>$ \mbox{\hyperlink{classforte_1_1_cube_file_ae645bcad6dbc72a471f032e436bd21ae}{compute\+\_\+levels}} (std\+::string type, double fraction) const
+\begin{DoxyCompactList}\small\item\em Compute the isolevel that encompasses a give fraction of the total density. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_cube_file_a1f6886f860b2388a7898d61dc493f58e}{zero}} ()
+\begin{DoxyCompactList}\small\item\em zero this cube file \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_cube_file_af0841a7b1389699679bae67a8027d501}{scale}} (double factor)
+\begin{DoxyCompactList}\small\item\em scale the value of the cube file at each point by a factor \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_cube_file_a79768e0f554988aa44df4136dc6bdf38}{add}} (const \mbox{\hyperlink{classforte_1_1_cube_file}{Cube\+File}} \&other, double factor=1.\+0)
+\begin{DoxyCompactList}\small\item\em add to each grid point the value of another cube file times a scaling factor \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_cube_file_af35406d88fc10f10ed1cf162d395a5f2}{pointwise\+\_\+product}} (const \mbox{\hyperlink{classforte_1_1_cube_file}{Cube\+File}} \&other)
+\begin{DoxyCompactList}\small\item\em multiply each grid point by the value of another cube file \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A class for loading, maniputlating, and storing cube files. 
+
+This class provides some basic functionality to handle cube files. It can read/write cube files and since it uses low-\/level C++ functions is faster than a Pyhton based implementation. This class also provides some basic operations (adding, scaling, multiplying) on cube files. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_cube_file_a5b182bf719f0668f4e4d59fef9140f36}\label{classforte_1_1_cube_file_a5b182bf719f0668f4e4d59fef9140f36}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!Cube\+File@{Cube\+File}}
+\index{Cube\+File@{Cube\+File}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{Cube\+File()}{CubeFile()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+Cube\+File\+::\+Cube\+File (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{filename }\end{DoxyParamCaption})}
+
+
+
+Build a \mbox{\hyperlink{classforte_1_1_cube_file}{Cube\+File}} object from a file stored on disk. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & the path to the cube file \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_cube_file_ac091f6918736c043fad6e108ec209b66}\label{classforte_1_1_cube_file_ac091f6918736c043fad6e108ec209b66}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!Cube\+File@{Cube\+File}}
+\index{Cube\+File@{Cube\+File}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{Cube\+File()}{CubeFile()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+Cube\+File\+::\+Cube\+File (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_cube_file}{Cube\+File}} \&}]{cube }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_cube_file_a79768e0f554988aa44df4136dc6bdf38}\label{classforte_1_1_cube_file_a79768e0f554988aa44df4136dc6bdf38}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!add@{add}}
+\index{add@{add}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{add()}{add()}}
+{\footnotesize\ttfamily void forte\+::\+Cube\+File\+::add (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_cube_file}{Cube\+File}} \&}]{other,  }\item[{double}]{factor = {\ttfamily 1.0} }\end{DoxyParamCaption})}
+
+
+
+add to each grid point the value of another cube file times a scaling factor 
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & the cube file to add \\
+\hline
+{\em factor} & the scaling factor \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_cube_file_aa443cf8e4c16f88cea31d5082c73b83d}\label{classforte_1_1_cube_file_aa443cf8e4c16f88cea31d5082c73b83d}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!atom\+\_\+coords@{atom\+\_\+coords}}
+\index{atom\+\_\+coords@{atom\+\_\+coords}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{atom\+\_\+coords()}{atom\_coords()}}
+{\footnotesize\ttfamily const std\+::vector$<$ std\+::tuple$<$ double, double, double $>$ $>$ \& forte\+::\+Cube\+File\+::atom\+\_\+coords (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+the (x,y,z) atomic coordinates (in Angstrom) 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_cube_file_a2b6769f5f719e86ef637badec2b0cff1}\label{classforte_1_1_cube_file_a2b6769f5f719e86ef637badec2b0cff1}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!atom\+\_\+numbers@{atom\+\_\+numbers}}
+\index{atom\+\_\+numbers@{atom\+\_\+numbers}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{atom\+\_\+numbers()}{atom\_numbers()}}
+{\footnotesize\ttfamily const std\+::vector$<$ int $>$ \& forte\+::\+Cube\+File\+::atom\+\_\+numbers (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+the atomic numbers of the atoms 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_cube_file_ae645bcad6dbc72a471f032e436bd21ae}\label{classforte_1_1_cube_file_ae645bcad6dbc72a471f032e436bd21ae}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!compute\+\_\+levels@{compute\+\_\+levels}}
+\index{compute\+\_\+levels@{compute\+\_\+levels}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{compute\+\_\+levels()}{compute\_levels()}}
+{\footnotesize\ttfamily std\+::pair$<$ double, double $>$ forte\+::\+Cube\+File\+::compute\+\_\+levels (\begin{DoxyParamCaption}\item[{std\+::string}]{type,  }\item[{double}]{fraction }\end{DoxyParamCaption}) const}
+
+
+
+Compute the isolevel that encompasses a give fraction of the total density. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em type} & the type of cube file (\char`\"{}mo\char`\"{} or \char`\"{}density\char`\"{}) \\
+\hline
+{\em fraction} & the fraction of the density \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_cube_file_ac3de35bae3f81d684ce53aced0486e28}\label{classforte_1_1_cube_file_ac3de35bae3f81d684ce53aced0486e28}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!data@{data}}
+\index{data@{data}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{data()}{data()}}
+{\footnotesize\ttfamily const std\+::vector$<$ double $>$ \& forte\+::\+Cube\+File\+::data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+the grid points stored as a vector 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_cube_file_a9ec8e2d49f08a95023310ec5814d0631}\label{classforte_1_1_cube_file_a9ec8e2d49f08a95023310ec5814d0631}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!inc@{inc}}
+\index{inc@{inc}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{inc()}{inc()}}
+{\footnotesize\ttfamily const std\+::vector$<$ double $>$ \& forte\+::\+Cube\+File\+::inc (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+the grid increment 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_cube_file_aa1a220dd0dc464118d874004be847138}\label{classforte_1_1_cube_file_aa1a220dd0dc464118d874004be847138}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!load@{load}}
+\index{load@{load}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{load()}{load()}}
+{\footnotesize\ttfamily void forte\+::\+Cube\+File\+::load (\begin{DoxyParamCaption}\item[{std\+::string}]{filename }\end{DoxyParamCaption})}
+
+load a cube file 
+\begin{DoxyParams}{Parameters}
+{\em filename} & the cube file name \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_cube_file_ac09285b9257b4a4c4fcf7f1d304ae953}\label{classforte_1_1_cube_file_ac09285b9257b4a4c4fcf7f1d304ae953}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!max@{max}}
+\index{max@{max}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{max()}{max()}}
+{\footnotesize\ttfamily const std\+::vector$<$ double $>$ \& forte\+::\+Cube\+File\+::max (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+the maximum value of a grid point 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_cube_file_a4d045a770876626dc7d34ebc39ca0525}\label{classforte_1_1_cube_file_a4d045a770876626dc7d34ebc39ca0525}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!min@{min}}
+\index{min@{min}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{min()}{min()}}
+{\footnotesize\ttfamily const std\+::vector$<$ double $>$ \& forte\+::\+Cube\+File\+::min (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+the minimum value of a grid point 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_cube_file_a9ad38a5a7b190ddb0a5e162755cecf59}\label{classforte_1_1_cube_file_a9ad38a5a7b190ddb0a5e162755cecf59}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!natoms@{natoms}}
+\index{natoms@{natoms}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{natoms()}{natoms()}}
+{\footnotesize\ttfamily int forte\+::\+Cube\+File\+::natoms (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+the number of atoms 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_cube_file_a0f2d624536eb4ecdca77092e0ac39ff8}\label{classforte_1_1_cube_file_a0f2d624536eb4ecdca77092e0ac39ff8}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!num@{num}}
+\index{num@{num}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{num()}{num()}}
+{\footnotesize\ttfamily const std\+::vector$<$ int $>$ \& forte\+::\+Cube\+File\+::num (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+the number of grid points in each direction 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_cube_file_af35406d88fc10f10ed1cf162d395a5f2}\label{classforte_1_1_cube_file_af35406d88fc10f10ed1cf162d395a5f2}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!pointwise\+\_\+product@{pointwise\+\_\+product}}
+\index{pointwise\+\_\+product@{pointwise\+\_\+product}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{pointwise\+\_\+product()}{pointwise\_product()}}
+{\footnotesize\ttfamily void forte\+::\+Cube\+File\+::pointwise\+\_\+product (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_cube_file}{Cube\+File}} \&}]{other }\end{DoxyParamCaption})}
+
+
+
+multiply each grid point by the value of another cube file 
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & the cube file to add \\
+\hline
+{\em factor} & the scaling factor \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_cube_file_ac45d60ce3490487dd948a4ef9d3d3730}\label{classforte_1_1_cube_file_ac45d60ce3490487dd948a4ef9d3d3730}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!save@{save}}
+\index{save@{save}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{save()}{save()}}
+{\footnotesize\ttfamily void forte\+::\+Cube\+File\+::save (\begin{DoxyParamCaption}\item[{std\+::string}]{filename }\end{DoxyParamCaption}) const}
+
+save a cube file 
+\begin{DoxyParams}{Parameters}
+{\em filename} & the cube file name \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_cube_file_af0841a7b1389699679bae67a8027d501}\label{classforte_1_1_cube_file_af0841a7b1389699679bae67a8027d501}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!scale@{scale}}
+\index{scale@{scale}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{scale()}{scale()}}
+{\footnotesize\ttfamily void forte\+::\+Cube\+File\+::scale (\begin{DoxyParamCaption}\item[{double}]{factor }\end{DoxyParamCaption})}
+
+
+
+scale the value of the cube file at each point by a factor 
+
+
+\begin{DoxyParams}{Parameters}
+{\em factor} & the scaling factor \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_cube_file_a1f6886f860b2388a7898d61dc493f58e}\label{classforte_1_1_cube_file_a1f6886f860b2388a7898d61dc493f58e}} 
+\index{forte\+::\+Cube\+File@{forte\+::\+Cube\+File}!zero@{zero}}
+\index{zero@{zero}!forte\+::\+Cube\+File@{forte\+::\+Cube\+File}}
+\subsubsection{\texorpdfstring{zero()}{zero()}}
+{\footnotesize\ttfamily void forte\+::\+Cube\+File\+::zero (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+zero this cube file 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/helpers/\mbox{\hyperlink{cube__file_8h}{cube\+\_\+file.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/helpers/\mbox{\hyperlink{cube__file_8cc}{cube\+\_\+file.\+cc}}\end{DoxyCompactItemize}

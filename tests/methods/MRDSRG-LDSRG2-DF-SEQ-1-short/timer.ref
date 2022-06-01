@@ -1,0 +1,124 @@
+
+Host: CHE-FEVANGE-01I (2)
+
+Timers On : Tue Jun 25 11:54:48 2019
+Timers Off: Tue Jun 25 12:00:45 2019
+
+Wall Time:      357.03 seconds
+
+                                                       Time (seconds)
+Module                                       User      System        Wall        Calls
+Total PK formation time             :      0.067u      0.000s      0.047w      1 calls
+HF: Form core H                     :      0.000u      0.000s      0.009w      1 calls
+HF: Form S/X                        :      0.000u      0.000s      0.000w      1 calls
+HF: Guess                           :      0.133u      0.017s      0.080w      1 calls
+SAD Guess                           :      0.117u      0.000s      0.073w      1 calls
+HF: Form G                          :      0.000u      0.000s      0.001w      7 calls
+JK: D                               :      0.000u      0.000s      0.000w      7 calls
+JK: USO2AO                          :      0.000u      0.000s      0.000w      7 calls
+JK: JK                              :      0.000u      0.000s      0.000w      7 calls
+PK computes JK                      :      0.000u      0.000s      0.000w      7 calls
+JK: AO2USO                          :      0.000u      0.000s      0.000w      7 calls
+HF: Form F                          :      0.000u      0.000s      0.000w      7 calls
+HF: Form D                          :      0.000u      0.000s      0.000w      7 calls
+HF: DIIS                            :      0.017u      0.000s      0.009w      6 calls
+DIISManager::add_entry              :      0.000u      0.000s      0.001w     18 calls
+DIISManager::extrapolate            :      0.000u      0.000s      0.001w     10 calls
+bMatrix setup                       :      0.000u      0.000s      0.000w     10 calls
+bMatrix pseudoinverse               :      0.000u      0.000s      0.000w     10 calls
+New vector                          :      0.000u      0.000s      0.000w     10 calls
+HF: Form C                          :      0.000u      0.000s      0.000w      6 calls
+Integrals                           :      0.033u      0.000s      0.023w      1 calls
+make_cumulant_L2aa_in_place         :      0.000u      0.000s      0.001w      2 calls
+make_cumulant_L2ab_in_place         :      0.000u      0.000s      0.000w      2 calls
+make_cumulant_L2bb_in_place         :      0.000u      0.000s      0.001w      2 calls
+make_cumulant_L3aaa_in_place        :      0.000u      0.000s      0.006w      2 calls
+make_cumulant_L3aab_in_place        :      0.000u      0.000s      0.002w      2 calls
+make_cumulant_L3abb_in_place        :      0.017u      0.000s      0.002w      2 calls
+make_cumulant_L3bbb_in_place        :      0.000u      0.000s      0.006w      2 calls
+Energy_ldsrg2                       :    548.450u      4.400s    350.288w      2 calls
+Compute Hbar                        :    481.050u      3.800s    306.846w     16 calls
+Hbar T1 rotation                    :      1.850u      0.017s      1.176w     18 calls
+Hbar T2 commutator                  :    546.167u      4.367s    348.813w     18 calls
+H2_T2_C2 pp                         :     14.233u      0.133s      9.047w     18 calls
+H2_T2_C2 hh                         :     10.683u      0.050s      6.854w     18 calls
+H2_T2_C2 hp                         :     40.817u      0.317s     26.734w     18 calls
+temp build                          :      0.000u      0.000s      0.009w     36 calls
+Resorting                           :      0.233u      0.017s      0.156w     36 calls
+Off-diagonal Hbar                   :      0.317u      0.000s      0.204w     16 calls
+transform Hbar2 to semi-canonical basis:      0.050u      0.000s      0.036w     16 calls
+scale Hbar2 by renormalized denominator:      0.000u      0.000s      0.010w     16 calls
+copy T2 to Hbar2                    :      0.067u      0.000s      0.036w     16 calls
+transform T2 to semi-canonical basis:      0.000u      0.000s      0.000w     16 calls
+scale T2 by delta exponential       :      0.000u      0.000s      0.009w     16 calls
+minus the renormalized T2 from renormalized Hbar2:      0.067u      0.000s      0.021w     16 calls
+zero internal amplitudes            :      0.000u      0.000s      0.000w     16 calls
+transform DT2 back to original basis:      0.000u      0.000s      0.000w     16 calls
+Step 3: update and analyze T2       :      0.117u      0.000s      0.066w     16 calls
+DIIS                                :      0.033u      0.000s      0.025w     16 calls
+Summary                             :      0.033u      0.017s      0.018w      2 calls
+
+--------------------------------------------------------------------------------------
+Total PK formation time             :      0.067u      0.000s      0.047w      1 calls
+HF: Form core H                     :      0.000u      0.000s      0.009w      1 calls
+HF: Form S/X                        :      0.000u      0.000s      0.000w      1 calls
+HF: Guess                           :      0.133u      0.017s      0.080w      1 calls
+| SAD Guess                         :      0.117u      0.000s      0.073w      1 calls
+HF: Form G                          :      0.000u      0.000s      0.001w      7 calls
+| JK: D                             :      0.000u      0.000s      0.000w      7 calls
+| JK: USO2AO                        :      0.000u      0.000s      0.000w      7 calls
+| JK: JK                            :      0.000u      0.000s      0.000w      7 calls
+| | PK computes JK                  :      0.000u      0.000s      0.000w      7 calls
+| JK: AO2USO                        :      0.000u      0.000s      0.000w      7 calls
+HF: Form F                          :      0.000u      0.000s      0.000w      7 calls
+HF: Form D                          :      0.000u      0.000s      0.000w      7 calls
+HF: DIIS                            :      0.017u      0.000s      0.009w      6 calls
+| DIISManager::add_entry            :      0.000u      0.000s      0.001w      6 calls
+| DIISManager::extrapolate          :      0.000u      0.000s      0.001w      6 calls
+| | bMatrix setup                   :      0.000u      0.000s      0.000w      6 calls
+| | bMatrix pseudoinverse           :      0.000u      0.000s      0.000w      6 calls
+| | New vector                      :      0.000u      0.000s      0.000w      6 calls
+HF: Form C                          :      0.000u      0.000s      0.000w      6 calls
+Integrals                           :      0.033u      0.000s      0.023w      1 calls
+make_cumulant_L2aa_in_place         :      0.000u      0.000s      0.001w      2 calls
+make_cumulant_L2ab_in_place         :      0.000u      0.000s      0.000w      2 calls
+make_cumulant_L2bb_in_place         :      0.000u      0.000s      0.001w      2 calls
+make_cumulant_L3aaa_in_place        :      0.000u      0.000s      0.006w      2 calls
+make_cumulant_L3aab_in_place        :      0.000u      0.000s      0.002w      2 calls
+make_cumulant_L3abb_in_place        :      0.017u      0.000s      0.002w      2 calls
+make_cumulant_L3bbb_in_place        :      0.000u      0.000s      0.006w      2 calls
+Energy_ldsrg2                       :    548.450u      4.400s    350.288w      2 calls
+| Compute Hbar                      :    481.050u      3.800s    306.846w     16 calls
+| | Hbar T1 rotation                :      1.650u      0.017s      1.009w     16 calls
+| | Hbar T2 commutator              :    479.383u      3.783s    305.835w     16 calls
+| | | H2_T2_C2 pp                   :     12.550u      0.117s      7.990w     16 calls
+| | | H2_T2_C2 hh                   :      9.467u      0.050s      6.084w     16 calls
+| | | H2_T2_C2 hp                   :     36.167u      0.283s     23.848w     16 calls
+| | | | temp build                  :      0.000u      0.000s      0.008w     32 calls
+| | | | Resorting                   :      0.200u      0.017s      0.139w     32 calls
+| Off-diagonal Hbar                 :      0.317u      0.000s      0.204w     16 calls
+| | transform Hbar2 to semi-canonical basis:      0.050u      0.000s      0.036w     16 calls
+| | scale Hbar2 by renormalized denominator:      0.000u      0.000s      0.010w     16 calls
+| | copy T2 to Hbar2                :      0.067u      0.000s      0.036w     16 calls
+| | transform T2 to semi-canonical basis:      0.000u      0.000s      0.000w     16 calls
+| | scale T2 by delta exponential   :      0.000u      0.000s      0.009w     16 calls
+| | minus the renormalized T2 from renormalized Hbar2:      0.067u      0.000s      0.021w     16 calls
+| | zero internal amplitudes        :      0.000u      0.000s      0.000w     16 calls
+| | transform DT2 back to original basis:      0.000u      0.000s      0.000w     16 calls
+| | Step 3: update and analyze T2   :      0.117u      0.000s      0.066w     16 calls
+| DIIS                              :      0.033u      0.000s      0.025w     16 calls
+| | DIISManager::add_entry          :      0.000u      0.000s      0.000w     12 calls
+| | DIISManager::extrapolate        :      0.000u      0.000s      0.000w      4 calls
+| | | bMatrix setup                 :      0.000u      0.000s      0.000w      4 calls
+| | | bMatrix pseudoinverse         :      0.000u      0.000s      0.000w      4 calls
+| | | New vector                    :      0.000u      0.000s      0.000w      4 calls
+| Hbar T1 rotation                  :      0.200u      0.000s      0.167w      2 calls
+| Hbar T2 commutator                :     66.783u      0.583s     42.978w      2 calls
+| | H2_T2_C2 pp                     :      1.683u      0.017s      1.057w      2 calls
+| | H2_T2_C2 hh                     :      1.217u      0.000s      0.770w      2 calls
+| | H2_T2_C2 hp                     :      4.650u      0.033s      2.886w      2 calls
+| | | temp build                    :      0.000u      0.000s      0.001w      4 calls
+| | | Resorting                     :      0.033u      0.000s      0.017w      4 calls
+| Summary                           :      0.033u      0.017s      0.018w      2 calls
+
+**************************************************************************************

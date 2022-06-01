@@ -1,0 +1,315 @@
+\hypertarget{classforte_1_1_active_space_solver}{}\section{forte\+:\+:Active\+Space\+Solver Class Reference}
+\label{classforte_1_1_active_space_solver}\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+
+
+General class for a multi-\/state active space solver.  
+
+
+
+
+{\ttfamily \#include $<$active\+\_\+space\+\_\+solver.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_active_space_solver_af2b538aa99fd5b6493d0825f9c0a3729}{Active\+Space\+Solver}} (const std\+::string \&method, const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, size\+\_\+t $>$ \&state\+\_\+nroots\+\_\+map, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} Constructor for a multi-\/state computation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_solver_a40e5dded4471f30b5aa7afbe27167031}{set\+\_\+print}} (int level)
+\item 
+const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$ $>$ \& \mbox{\hyperlink{classforte_1_1_active_space_solver_a719be2ea9e2d227fd810481f7dd644a1}{compute\+\_\+energy}} ()
+\begin{DoxyCompactList}\small\item\em Compute the energy and return it // T\+O\+DO\+: document (Francesco) \end{DoxyCompactList}\item 
+const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$ $>$ \& \mbox{\hyperlink{classforte_1_1_active_space_solver_a53ed58e64499f8fa661b49d48648f3cb}{compute\+\_\+contracted\+\_\+energy}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{forte\+::\+Active\+Space\+Integrals}} $>$ as\+\_\+ints, int max\+\_\+rdm\+\_\+level)
+\begin{DoxyCompactList}\small\item\em Compute the contracted CI energy. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_a96b316d00aada0b7b68c153f8c89bcea}{rdms}} (std\+::map$<$ std\+::pair$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} $>$, std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$$>$ \&elements, int max\+\_\+rdm\+\_\+level)
+\item 
+\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \mbox{\hyperlink{classforte_1_1_active_space_solver_ac109bd2bb723b8530a829b5dde97783b}{compute\+\_\+average\+\_\+rdms}} (const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&state\+\_\+weights\+\_\+map, int max\+\_\+rdm\+\_\+level)
+\begin{DoxyCompactList}\small\item\em Compute the state-\/averaged reference. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_solver_ae4b1ab93708d2ddb0b00a1f6df9e1fdf}{print\+\_\+options}} ()
+\begin{DoxyCompactList}\small\item\em Print a summary of the computation information. \end{DoxyCompactList}\item 
+const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$ $>$ \& \mbox{\hyperlink{classforte_1_1_active_space_solver_a7b3fec1838a74fa058d232c7b7dc6b4c}{state\+\_\+energies\+\_\+map}} () const
+\begin{DoxyCompactList}\small\item\em Return a map of \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} to the computed nroots of energies. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_solver_aff170a7857b4887368d74e82847188d0}{set\+\_\+active\+\_\+space\+\_\+integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints)
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_solver_aacff6aa65d24758c8ac71ec6ac8991f3}{print\+\_\+energies}} (std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&energies)
+\begin{DoxyCompactList}\small\item\em Prints a summary of the energies with State info. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \mbox{\hyperlink{classforte_1_1_active_space_solver_a851a96efeeb246b31117548fafbc2271}{compute\+\_\+avg\+\_\+rdms\+\_\+ms\+\_\+avg}} (const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&state\+\_\+weights\+\_\+map, int max\+\_\+rdm\+\_\+level)
+\begin{DoxyCompactList}\small\item\em Compute the state-\/averaged reference when spin multiplets are also averaged. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \mbox{\hyperlink{classforte_1_1_active_space_solver_aeab569a38a2caee72f8f9967438f3e15}{compute\+\_\+avg\+\_\+rdms}} (const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&state\+\_\+weights\+\_\+map, int max\+\_\+rdm\+\_\+level)
+\begin{DoxyCompactList}\small\item\em Compute the state-\/averaged reference when spin multiplets are also averaged. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_active_space_solver_a7d69532c3bb03e0dc39a0b5b8c633544}{method\+\_\+}}
+\begin{DoxyCompactList}\small\item\em a string that specifies the method used (e.\+g. \char`\"{}\+F\+C\+I\char`\"{}, \char`\"{}\+A\+C\+I\char`\"{}, ...) \end{DoxyCompactList}\item 
+std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_ad97b0a6e07f38da9e7f32632bdec95bb}{state\+\_\+nroots\+\_\+map\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_a03edab09e020e472b311be5401d9ebad}{scf\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The information about a previous S\+CF computation. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_a32a700889f190e3114786cee58255f27}{mo\+\_\+space\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_a0af4d2dcbe729958cc0526436534b61e}{as\+\_\+ints\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_a2916126e2403a6955fa6f76f13285232}{options\+\_\+}}
+\begin{DoxyCompactList}\small\item\em User-\/provided options. \end{DoxyCompactList}\item 
+std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} $>$ $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_a0f0a070d97a0ccf46e2c4103eaecf416}{state\+\_\+method\+\_\+map\+\_\+}}
+\begin{DoxyCompactList}\small\item\em A map of state symmetries to the associated \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}}. \end{DoxyCompactList}\item 
+std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$ $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_a5586d712e35c7c36ad53ddb399cb8dcb}{state\+\_\+energies\+\_\+map\+\_\+}}
+\begin{DoxyCompactList}\small\item\em A map of state symmetries to vectors of computed energies under given state symmetry. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_active_space_solver_a57db6210c31056c68d05a3aed518dacf}{ms\+\_\+avg\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_active_space_solver_a00a665e5f842845a03aad95d4e4050a8}{print\+\_\+}} = 1
+\begin{DoxyCompactList}\small\item\em A variable to control printing information. \end{DoxyCompactList}\item 
+std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ \mbox{\hyperlink{classforte_1_1_active_space_solver_af79b71466a6e515d969a1312e35de3be}{state\+\_\+contracted\+\_\+evecs\+\_\+map\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Pairs of state info and the contracted CI eigen vectors. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+General class for a multi-\/state active space solver. 
+
+This class can run state-\/specific, multi-\/state, and state-\/averaged computations on small subset of the full orbital space ($<$30-\/40 orbitals). 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_af2b538aa99fd5b6493d0825f9c0a3729}\label{classforte_1_1_active_space_solver_af2b538aa99fd5b6493d0825f9c0a3729}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!Active\+Space\+Solver@{Active\+Space\+Solver}}
+\index{Active\+Space\+Solver@{Active\+Space\+Solver}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{Active\+Space\+Solver()}{ActiveSpaceSolver()}}
+{\footnotesize\ttfamily forte\+::\+Active\+Space\+Solver\+::\+Active\+Space\+Solver (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{method,  }\item[{const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, size\+\_\+t $>$ \&}]{state\+\_\+nroots\+\_\+map,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})}
+
+
+
+\mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} Constructor for a multi-\/state computation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em method} & A string that labels the method requested (e.\+g. \char`\"{}\+F\+C\+I\char`\"{}, \char`\"{}\+A\+C\+I\char`\"{}, ...) \\
+\hline
+{\em nroots\+\_\+map} & A map of electronic states to the number of roots computed \{state\+\_\+1 \+: n\+\_\+1, state\+\_\+2 \+: n\+\_\+2, ...\} where state\+\_\+i specifies the symmetry of a state and n\+\_\+i is the number of levels computed. \\
+\hline
+{\em state} & information about the electronic state \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & a \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+{\em as\+\_\+ints} & integrals for active space \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_ac109bd2bb723b8530a829b5dde97783b}\label{classforte_1_1_active_space_solver_ac109bd2bb723b8530a829b5dde97783b}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!compute\+\_\+average\+\_\+rdms@{compute\+\_\+average\+\_\+rdms}}
+\index{compute\+\_\+average\+\_\+rdms@{compute\+\_\+average\+\_\+rdms}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+average\+\_\+rdms()}{compute\_average\_rdms()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} forte\+::\+Active\+Space\+Solver\+::compute\+\_\+average\+\_\+rdms (\begin{DoxyParamCaption}\item[{const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&}]{state\+\_\+weights\+\_\+map,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})}
+
+
+
+Compute the state-\/averaged reference. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_aeab569a38a2caee72f8f9967438f3e15}\label{classforte_1_1_active_space_solver_aeab569a38a2caee72f8f9967438f3e15}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!compute\+\_\+avg\+\_\+rdms@{compute\+\_\+avg\+\_\+rdms}}
+\index{compute\+\_\+avg\+\_\+rdms@{compute\+\_\+avg\+\_\+rdms}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+avg\+\_\+rdms()}{compute\_avg\_rdms()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} forte\+::\+Active\+Space\+Solver\+::compute\+\_\+avg\+\_\+rdms (\begin{DoxyParamCaption}\item[{const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&}]{state\+\_\+weights\+\_\+map,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute the state-\/averaged reference when spin multiplets are also averaged. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a851a96efeeb246b31117548fafbc2271}\label{classforte_1_1_active_space_solver_a851a96efeeb246b31117548fafbc2271}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!compute\+\_\+avg\+\_\+rdms\+\_\+ms\+\_\+avg@{compute\+\_\+avg\+\_\+rdms\+\_\+ms\+\_\+avg}}
+\index{compute\+\_\+avg\+\_\+rdms\+\_\+ms\+\_\+avg@{compute\+\_\+avg\+\_\+rdms\+\_\+ms\+\_\+avg}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+avg\+\_\+rdms\+\_\+ms\+\_\+avg()}{compute\_avg\_rdms\_ms\_avg()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} forte\+::\+Active\+Space\+Solver\+::compute\+\_\+avg\+\_\+rdms\+\_\+ms\+\_\+avg (\begin{DoxyParamCaption}\item[{const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&}]{state\+\_\+weights\+\_\+map,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute the state-\/averaged reference when spin multiplets are also averaged. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a53ed58e64499f8fa661b49d48648f3cb}\label{classforte_1_1_active_space_solver_a53ed58e64499f8fa661b49d48648f3cb}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!compute\+\_\+contracted\+\_\+energy@{compute\+\_\+contracted\+\_\+energy}}
+\index{compute\+\_\+contracted\+\_\+energy@{compute\+\_\+contracted\+\_\+energy}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+contracted\+\_\+energy()}{compute\_contracted\_energy()}}
+{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$ $>$ \& forte\+::\+Active\+Space\+Solver\+::compute\+\_\+contracted\+\_\+energy (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{forte\+::\+Active\+Space\+Integrals}} $>$}]{as\+\_\+ints,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})}
+
+
+
+Compute the contracted CI energy. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a719be2ea9e2d227fd810481f7dd644a1}\label{classforte_1_1_active_space_solver_a719be2ea9e2d227fd810481f7dd644a1}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$ $>$ \& forte\+::\+Active\+Space\+Solver\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the energy and return it // T\+O\+DO\+: document (Francesco) 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_aacff6aa65d24758c8ac71ec6ac8991f3}\label{classforte_1_1_active_space_solver_aacff6aa65d24758c8ac71ec6ac8991f3}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!print\+\_\+energies@{print\+\_\+energies}}
+\index{print\+\_\+energies@{print\+\_\+energies}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{print\+\_\+energies()}{print\_energies()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Solver\+::print\+\_\+energies (\begin{DoxyParamCaption}\item[{std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&}]{energies }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Prints a summary of the energies with State info. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_ae4b1ab93708d2ddb0b00a1f6df9e1fdf}\label{classforte_1_1_active_space_solver_ae4b1ab93708d2ddb0b00a1f6df9e1fdf}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!print\+\_\+options@{print\+\_\+options}}
+\index{print\+\_\+options@{print\+\_\+options}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{print\+\_\+options()}{print\_options()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Solver\+::print\+\_\+options (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Print a summary of the computation information. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a96b316d00aada0b7b68c153f8c89bcea}\label{classforte_1_1_active_space_solver_a96b316d00aada0b7b68c153f8c89bcea}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!rdms@{rdms}}
+\index{rdms@{rdms}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{rdms()}{rdms()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ forte\+::\+Active\+Space\+Solver\+::rdms (\begin{DoxyParamCaption}\item[{std\+::map$<$ std\+::pair$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} $>$, std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$$>$ \&}]{elements,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})}
+
+Compute \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} of all states in the given map First entry of the pair corresponds to bra and the second is the ket. \mbox{\Hypertarget{classforte_1_1_active_space_solver_aff170a7857b4887368d74e82847188d0}\label{classforte_1_1_active_space_solver_aff170a7857b4887368d74e82847188d0}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!set\+\_\+active\+\_\+space\+\_\+integrals@{set\+\_\+active\+\_\+space\+\_\+integrals}}
+\index{set\+\_\+active\+\_\+space\+\_\+integrals@{set\+\_\+active\+\_\+space\+\_\+integrals}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+active\+\_\+space\+\_\+integrals()}{set\_active\_space\_integrals()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Solver\+::set\+\_\+active\+\_\+space\+\_\+integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Pass a set of \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} to the solver (e.\+g. an effective Hamiltonian) 
+\begin{DoxyParams}{Parameters}
+{\em as\+\_\+ints} & the pointer to a set of acitve-\/space integrals \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a40e5dded4471f30b5aa7afbe27167031}\label{classforte_1_1_active_space_solver_a40e5dded4471f30b5aa7afbe27167031}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!set\+\_\+print@{set\+\_\+print}}
+\index{set\+\_\+print@{set\+\_\+print}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+print()}{set\_print()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Solver\+::set\+\_\+print (\begin{DoxyParamCaption}\item[{int}]{level }\end{DoxyParamCaption})}
+
+Set the print level 
+\begin{DoxyParams}{Parameters}
+{\em level} & the print level (0 = no printing, 1 default) \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a7b3fec1838a74fa058d232c7b7dc6b4c}\label{classforte_1_1_active_space_solver_a7b3fec1838a74fa058d232c7b7dc6b4c}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!state\+\_\+energies\+\_\+map@{state\+\_\+energies\+\_\+map}}
+\index{state\+\_\+energies\+\_\+map@{state\+\_\+energies\+\_\+map}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{state\+\_\+energies\+\_\+map()}{state\_energies\_map()}}
+{\footnotesize\ttfamily const std\+::map$<$\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$double$>$ $>$\& forte\+::\+Active\+Space\+Solver\+::state\+\_\+energies\+\_\+map (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a map of \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} to the computed nroots of energies. 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a0af4d2dcbe729958cc0526436534b61e}\label{classforte_1_1_active_space_solver_a0af4d2dcbe729958cc0526436534b61e}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!as\+\_\+ints\+\_\+@{as\+\_\+ints\+\_\+}}
+\index{as\+\_\+ints\+\_\+@{as\+\_\+ints\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{as\+\_\+ints\+\_\+}{as\_ints\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}}$>$ forte\+::\+Active\+Space\+Solver\+::as\+\_\+ints\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The molecular integrals for the active space This object holds only the integrals for the orbital contained in the active\+\_\+mo\+\_\+vector. The one-\/electron integrals and scalar energy contains contributions from the doubly occupied orbitals specified by the core\+\_\+mo\+\_\+ vector. \mbox{\Hypertarget{classforte_1_1_active_space_solver_a7d69532c3bb03e0dc39a0b5b8c633544}\label{classforte_1_1_active_space_solver_a7d69532c3bb03e0dc39a0b5b8c633544}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!method\+\_\+@{method\+\_\+}}
+\index{method\+\_\+@{method\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{method\+\_\+}{method\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Active\+Space\+Solver\+::method\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+a string that specifies the method used (e.\+g. \char`\"{}\+F\+C\+I\char`\"{}, \char`\"{}\+A\+C\+I\char`\"{}, ...) 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a32a700889f190e3114786cee58255f27}\label{classforte_1_1_active_space_solver_a32a700889f190e3114786cee58255f27}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}}
+\index{mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{mo\+\_\+space\+\_\+info\+\_\+}{mo\_space\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}$>$ forte\+::\+Active\+Space\+Solver\+::mo\+\_\+space\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a57db6210c31056c68d05a3aed518dacf}\label{classforte_1_1_active_space_solver_a57db6210c31056c68d05a3aed518dacf}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!ms\+\_\+avg\+\_\+@{ms\+\_\+avg\+\_\+}}
+\index{ms\+\_\+avg\+\_\+@{ms\+\_\+avg\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{ms\+\_\+avg\+\_\+}{ms\_avg\_}}
+{\footnotesize\ttfamily bool forte\+::\+Active\+Space\+Solver\+::ms\+\_\+avg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+Average spin multiplets for \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} If true, the weight of a state will be averaged by its multiplicity. Moreover, all its ms components will be computed by the solver. \mbox{\Hypertarget{classforte_1_1_active_space_solver_a2916126e2403a6955fa6f76f13285232}\label{classforte_1_1_active_space_solver_a2916126e2403a6955fa6f76f13285232}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!options\+\_\+@{options\+\_\+}}
+\index{options\+\_\+@{options\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{options\+\_\+}{options\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}$>$ forte\+::\+Active\+Space\+Solver\+::options\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+User-\/provided options. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a00a665e5f842845a03aad95d4e4050a8}\label{classforte_1_1_active_space_solver_a00a665e5f842845a03aad95d4e4050a8}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!print\+\_\+@{print\+\_\+}}
+\index{print\+\_\+@{print\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{print\+\_\+}{print\_}}
+{\footnotesize\ttfamily int forte\+::\+Active\+Space\+Solver\+::print\+\_\+ = 1\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+A variable to control printing information. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a03edab09e020e472b311be5401d9ebad}\label{classforte_1_1_active_space_solver_a03edab09e020e472b311be5401d9ebad}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!scf\+\_\+info\+\_\+@{scf\+\_\+info\+\_\+}}
+\index{scf\+\_\+info\+\_\+@{scf\+\_\+info\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{scf\+\_\+info\+\_\+}{scf\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}}$>$ forte\+::\+Active\+Space\+Solver\+::scf\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The information about a previous S\+CF computation. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_af79b71466a6e515d969a1312e35de3be}\label{classforte_1_1_active_space_solver_af79b71466a6e515d969a1312e35de3be}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!state\+\_\+contracted\+\_\+evecs\+\_\+map\+\_\+@{state\+\_\+contracted\+\_\+evecs\+\_\+map\+\_\+}}
+\index{state\+\_\+contracted\+\_\+evecs\+\_\+map\+\_\+@{state\+\_\+contracted\+\_\+evecs\+\_\+map\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{state\+\_\+contracted\+\_\+evecs\+\_\+map\+\_\+}{state\_contracted\_evecs\_map\_}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ $>$ forte\+::\+Active\+Space\+Solver\+::state\+\_\+contracted\+\_\+evecs\+\_\+map\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Pairs of state info and the contracted CI eigen vectors. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a5586d712e35c7c36ad53ddb399cb8dcb}\label{classforte_1_1_active_space_solver_a5586d712e35c7c36ad53ddb399cb8dcb}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!state\+\_\+energies\+\_\+map\+\_\+@{state\+\_\+energies\+\_\+map\+\_\+}}
+\index{state\+\_\+energies\+\_\+map\+\_\+@{state\+\_\+energies\+\_\+map\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{state\+\_\+energies\+\_\+map\+\_\+}{state\_energies\_map\_}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$double$>$ $>$ forte\+::\+Active\+Space\+Solver\+::state\+\_\+energies\+\_\+map\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+A map of state symmetries to vectors of computed energies under given state symmetry. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_a0f0a070d97a0ccf46e2c4103eaecf416}\label{classforte_1_1_active_space_solver_a0f0a070d97a0ccf46e2c4103eaecf416}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!state\+\_\+method\+\_\+map\+\_\+@{state\+\_\+method\+\_\+map\+\_\+}}
+\index{state\+\_\+method\+\_\+map\+\_\+@{state\+\_\+method\+\_\+map\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{state\+\_\+method\+\_\+map\+\_\+}{state\_method\_map\_}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}}$>$ $>$ forte\+::\+Active\+Space\+Solver\+::state\+\_\+method\+\_\+map\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+A map of state symmetries to the associated \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}}. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_solver_ad97b0a6e07f38da9e7f32632bdec95bb}\label{classforte_1_1_active_space_solver_ad97b0a6e07f38da9e7f32632bdec95bb}} 
+\index{forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}!state\+\_\+nroots\+\_\+map\+\_\+@{state\+\_\+nroots\+\_\+map\+\_\+}}
+\index{state\+\_\+nroots\+\_\+map\+\_\+@{state\+\_\+nroots\+\_\+map\+\_\+}!forte\+::\+Active\+Space\+Solver@{forte\+::\+Active\+Space\+Solver}}
+\subsubsection{\texorpdfstring{state\+\_\+nroots\+\_\+map\+\_\+}{state\_nroots\_map\_}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, size\+\_\+t$>$ forte\+::\+Active\+Space\+Solver\+::state\+\_\+nroots\+\_\+map\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+A map of electronic states to the number of roots computed \{state\+\_\+1 \+: n\+\_\+1, state\+\_\+2 \+: n\+\_\+2, ...\} where state\+\_\+i specifies the symmetry of a state and n\+\_\+i is the number of levels computed. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{active__space__solver_8h}{active\+\_\+space\+\_\+solver.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{active__space__solver_8cc}{active\+\_\+space\+\_\+solver.\+cc}}\end{DoxyCompactItemize}

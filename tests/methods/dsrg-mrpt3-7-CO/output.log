@@ -1,0 +1,6 @@
+2022-05-31:17:35:54,978 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'ACTIVE': [4, 0, 2, 2], 'DOCC': [5, 0, 1, 1], 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'MAXITER': 300, 'MCSCF_DIIS_START': 6, 'MCSCF_E_CONVERGENCE': 1e-10, 'MCSCF_MAXITER': 100, 'MCSCF_R_CONVERGENCE': 1e-08, 'REFERENCE': 'RHF', 'RESTRICTED_DOCC': [2, 0, 0, 0], 'SCF_TYPE': 'OUT_OF_CORE', 'function_kwargs': {}}
+2022-05-31:17:35:54,980 INFO     [psi4.driver.driver:499] Compute energy(): method=casscf, basis=cc-pcvdz, molecule=CO, nre=22.51817917744681
+2022-05-31:17:36:07,788 INFO     [psi4.driver.driver:502] Return energy(): -112.88148148928968
+2022-05-31:17:36:07,802 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'ACTIVE': [4, 0, 2, 2], 'DOCC': [5, 0, 1, 1], 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 300, 'MCSCF_DIIS_START': 6, 'MCSCF_E_CONVERGENCE': 1e-10, 'MCSCF_MAXITER': 100, 'MCSCF_R_CONVERGENCE': 1e-08, 'REFERENCE': 'RHF', 'RESTRICTED_DOCC': [2, 0, 0, 0], 'SCF_TYPE': 'OUT_OF_CORE', 'function_kwargs': {}}
+2022-05-31:17:36:07,804 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=cc-pcvdz, molecule=CO, nre=22.518179177446818
+2022-05-31:17:36:09,782 INFO     [psi4.driver.driver:502] Return energy(): -113.12583019530231

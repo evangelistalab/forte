@@ -1,0 +1,258 @@
+\hypertarget{classforte_1_1_atomic_orbital_helper}{}\section{forte\+:\+:Atomic\+Orbital\+Helper Class Reference}
+\label{classforte_1_1_atomic_orbital_helper}\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+
+
+{\ttfamily \#include $<$ao\+\_\+helper.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_aae3faca1d68ec5b2da4e2dbe2b3c0c76}{A\+O\+\_\+\+Screen}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a436f7437af75a2bb5bdf0926b4a128e5}{Trans\+A\+O\+\_\+\+Screen}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_adda71a215917ca372968507cd5253d91}{Occupied\+\_\+\+Laplace}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a30cf42f4d768185645e8e07a45da8e22}{Virtual\+\_\+\+Laplace}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a8e8dadd03ee3485dc4b26bba84759e3f}{P\+Occ}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a8eab87d87f3560ca1e35c48d6e017ca1}{P\+Vir}} ()
+\item 
+int \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_aba981b8d86dd9418ac491b6529363507}{Weights}} ()
+\item 
+\mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a14a54771aec07f989de0504907007923}{Atomic\+Orbital\+Helper}} (psi\+::\+Shared\+Matrix C\+MO, psi\+::\+Shared\+Vector eps\+\_\+occ, psi\+::\+Shared\+Vector eps\+\_\+vir, double laplace\+\_\+tolerance)
+\item 
+\mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_ad22eb22a692b1d690bbfe0acc629c1c4}{Atomic\+Orbital\+Helper}} (psi\+::\+Shared\+Matrix C\+MO, psi\+::\+Shared\+Vector eps\+\_\+occ, psi\+::\+Shared\+Vector eps\+\_\+vir, double laplace\+\_\+tolerance, int shift)
+\item 
+void \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a177bf2b84d858251fceb166a71b12119}{Compute\+\_\+\+A\+O\+\_\+\+Screen}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ \&primary)
+\begin{DoxyCompactList}\small\item\em Compute (mu nu $\vert$ mu nu)$^\wedge$\{(1/2)\}. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a19898dcd4ea53638b54ce7821982f900}{Estimate\+\_\+\+Trans\+A\+O\+\_\+\+Screen}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ \&primary, std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ \&auxiliary)
+\item 
+\mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a6b46a292d87abe345f8c68e3dd442fcf}{$\sim$\+Atomic\+Orbital\+Helper}} ()
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_aaf06be8bb2f953d576c5df623a4207cb}{Compute\+\_\+\+Psuedo\+\_\+\+Density}} ()
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a5896c9e72821a9b25fdf50a7fe3f41d5}{A\+O\+\_\+\+Screen\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a717f94e6594b0d6e440eb0cb534fe533}{Trans\+A\+O\+\_\+\+Screen\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_af5afb917090ce71dbf360af4e7542762}{C\+M\+O\+\_\+}}
+\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a4cc753aab5b772c6f5bc9af9663c6248}{eps\+\_\+rdocc\+\_\+}}
+\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a9497fd7b7a65b41d453ff70909455f40}{eps\+\_\+virtual\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a111df8cb0812bec57b7c4f7062578b78}{P\+Occ\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a592c52435831ae234781ecbfb34ad6ad}{P\+Vir\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_ad13f3a30eba62a3c0e62f3e37e391a6f}{Occupied\+\_\+\+Laplace\+\_\+}}
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_abdd4033673986a208a48a5f3084f4c06}{Virtual\+\_\+\+Laplace\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_ad30e1c8811b274f655fb4a5a7ca0162e}{laplace\+\_\+tolerance\+\_\+}} = 1e-\/10
+\item 
+int \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a2cda118e3b004f18d785b1c14a50ee3e}{weights\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a69c052b5064e8ed87fd2697a344001e1}{nbf\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a039b8f61b9eb2acf1562311827247093}{nrdocc\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_ac0f50e9d760abee8b4a90c64acf3f71d}{nvir\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_atomic_orbital_helper_a6fdce16217872f48ac97362f2524892b}{shift\+\_\+}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a14a54771aec07f989de0504907007923}\label{classforte_1_1_atomic_orbital_helper_a14a54771aec07f989de0504907007923}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Atomic\+Orbital\+Helper@{Atomic\+Orbital\+Helper}}
+\index{Atomic\+Orbital\+Helper@{Atomic\+Orbital\+Helper}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Atomic\+Orbital\+Helper()}{AtomicOrbitalHelper()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+Atomic\+Orbital\+Helper\+::\+Atomic\+Orbital\+Helper (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{C\+MO,  }\item[{psi\+::\+Shared\+Vector}]{eps\+\_\+occ,  }\item[{psi\+::\+Shared\+Vector}]{eps\+\_\+vir,  }\item[{double}]{laplace\+\_\+tolerance }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_ad22eb22a692b1d690bbfe0acc629c1c4}\label{classforte_1_1_atomic_orbital_helper_ad22eb22a692b1d690bbfe0acc629c1c4}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Atomic\+Orbital\+Helper@{Atomic\+Orbital\+Helper}}
+\index{Atomic\+Orbital\+Helper@{Atomic\+Orbital\+Helper}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Atomic\+Orbital\+Helper()}{AtomicOrbitalHelper()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+Atomic\+Orbital\+Helper\+::\+Atomic\+Orbital\+Helper (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{C\+MO,  }\item[{psi\+::\+Shared\+Vector}]{eps\+\_\+occ,  }\item[{psi\+::\+Shared\+Vector}]{eps\+\_\+vir,  }\item[{double}]{laplace\+\_\+tolerance,  }\item[{int}]{shift }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a6b46a292d87abe345f8c68e3dd442fcf}\label{classforte_1_1_atomic_orbital_helper_a6b46a292d87abe345f8c68e3dd442fcf}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!````~Atomic\+Orbital\+Helper@{$\sim$\+Atomic\+Orbital\+Helper}}
+\index{````~Atomic\+Orbital\+Helper@{$\sim$\+Atomic\+Orbital\+Helper}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{$\sim$\+Atomic\+Orbital\+Helper()}{~AtomicOrbitalHelper()}}
+{\footnotesize\ttfamily forte\+::\+Atomic\+Orbital\+Helper\+::$\sim$\+Atomic\+Orbital\+Helper (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_aae3faca1d68ec5b2da4e2dbe2b3c0c76}\label{classforte_1_1_atomic_orbital_helper_aae3faca1d68ec5b2da4e2dbe2b3c0c76}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!A\+O\+\_\+\+Screen@{A\+O\+\_\+\+Screen}}
+\index{A\+O\+\_\+\+Screen@{A\+O\+\_\+\+Screen}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{A\+O\+\_\+\+Screen()}{AO\_Screen()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+A\+O\+\_\+\+Screen (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a177bf2b84d858251fceb166a71b12119}\label{classforte_1_1_atomic_orbital_helper_a177bf2b84d858251fceb166a71b12119}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Compute\+\_\+\+A\+O\+\_\+\+Screen@{Compute\+\_\+\+A\+O\+\_\+\+Screen}}
+\index{Compute\+\_\+\+A\+O\+\_\+\+Screen@{Compute\+\_\+\+A\+O\+\_\+\+Screen}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Compute\+\_\+\+A\+O\+\_\+\+Screen()}{Compute\_AO\_Screen()}}
+{\footnotesize\ttfamily void forte\+::\+Atomic\+Orbital\+Helper\+::\+Compute\+\_\+\+A\+O\+\_\+\+Screen (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ \&}]{primary }\end{DoxyParamCaption})}
+
+
+
+Compute (mu nu $\vert$ mu nu)$^\wedge$\{(1/2)\}. 
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_aaf06be8bb2f953d576c5df623a4207cb}\label{classforte_1_1_atomic_orbital_helper_aaf06be8bb2f953d576c5df623a4207cb}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Compute\+\_\+\+Psuedo\+\_\+\+Density@{Compute\+\_\+\+Psuedo\+\_\+\+Density}}
+\index{Compute\+\_\+\+Psuedo\+\_\+\+Density@{Compute\+\_\+\+Psuedo\+\_\+\+Density}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Compute\+\_\+\+Psuedo\+\_\+\+Density()}{Compute\_Psuedo\_Density()}}
+{\footnotesize\ttfamily void forte\+::\+Atomic\+Orbital\+Helper\+::\+Compute\+\_\+\+Psuedo\+\_\+\+Density (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a19898dcd4ea53638b54ce7821982f900}\label{classforte_1_1_atomic_orbital_helper_a19898dcd4ea53638b54ce7821982f900}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Estimate\+\_\+\+Trans\+A\+O\+\_\+\+Screen@{Estimate\+\_\+\+Trans\+A\+O\+\_\+\+Screen}}
+\index{Estimate\+\_\+\+Trans\+A\+O\+\_\+\+Screen@{Estimate\+\_\+\+Trans\+A\+O\+\_\+\+Screen}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Estimate\+\_\+\+Trans\+A\+O\+\_\+\+Screen()}{Estimate\_TransAO\_Screen()}}
+{\footnotesize\ttfamily void forte\+::\+Atomic\+Orbital\+Helper\+::\+Estimate\+\_\+\+Trans\+A\+O\+\_\+\+Screen (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ \&}]{primary,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ \&}]{auxiliary }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_adda71a215917ca372968507cd5253d91}\label{classforte_1_1_atomic_orbital_helper_adda71a215917ca372968507cd5253d91}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Occupied\+\_\+\+Laplace@{Occupied\+\_\+\+Laplace}}
+\index{Occupied\+\_\+\+Laplace@{Occupied\+\_\+\+Laplace}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Occupied\+\_\+\+Laplace()}{Occupied\_Laplace()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+Occupied\+\_\+\+Laplace (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a8e8dadd03ee3485dc4b26bba84759e3f}\label{classforte_1_1_atomic_orbital_helper_a8e8dadd03ee3485dc4b26bba84759e3f}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!P\+Occ@{P\+Occ}}
+\index{P\+Occ@{P\+Occ}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{P\+Occ()}{POcc()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+P\+Occ (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a8eab87d87f3560ca1e35c48d6e017ca1}\label{classforte_1_1_atomic_orbital_helper_a8eab87d87f3560ca1e35c48d6e017ca1}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!P\+Vir@{P\+Vir}}
+\index{P\+Vir@{P\+Vir}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{P\+Vir()}{PVir()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+P\+Vir (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a436f7437af75a2bb5bdf0926b4a128e5}\label{classforte_1_1_atomic_orbital_helper_a436f7437af75a2bb5bdf0926b4a128e5}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Trans\+A\+O\+\_\+\+Screen@{Trans\+A\+O\+\_\+\+Screen}}
+\index{Trans\+A\+O\+\_\+\+Screen@{Trans\+A\+O\+\_\+\+Screen}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Trans\+A\+O\+\_\+\+Screen()}{TransAO\_Screen()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+Trans\+A\+O\+\_\+\+Screen (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a30cf42f4d768185645e8e07a45da8e22}\label{classforte_1_1_atomic_orbital_helper_a30cf42f4d768185645e8e07a45da8e22}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Virtual\+\_\+\+Laplace@{Virtual\+\_\+\+Laplace}}
+\index{Virtual\+\_\+\+Laplace@{Virtual\+\_\+\+Laplace}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Virtual\+\_\+\+Laplace()}{Virtual\_Laplace()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+Virtual\+\_\+\+Laplace (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_aba981b8d86dd9418ac491b6529363507}\label{classforte_1_1_atomic_orbital_helper_aba981b8d86dd9418ac491b6529363507}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Weights@{Weights}}
+\index{Weights@{Weights}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Weights()}{Weights()}}
+{\footnotesize\ttfamily int forte\+::\+Atomic\+Orbital\+Helper\+::\+Weights (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a5896c9e72821a9b25fdf50a7fe3f41d5}\label{classforte_1_1_atomic_orbital_helper_a5896c9e72821a9b25fdf50a7fe3f41d5}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!A\+O\+\_\+\+Screen\+\_\+@{A\+O\+\_\+\+Screen\+\_\+}}
+\index{A\+O\+\_\+\+Screen\+\_\+@{A\+O\+\_\+\+Screen\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{A\+O\+\_\+\+Screen\+\_\+}{AO\_Screen\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+A\+O\+\_\+\+Screen\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_af5afb917090ce71dbf360af4e7542762}\label{classforte_1_1_atomic_orbital_helper_af5afb917090ce71dbf360af4e7542762}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!C\+M\+O\+\_\+@{C\+M\+O\+\_\+}}
+\index{C\+M\+O\+\_\+@{C\+M\+O\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{C\+M\+O\+\_\+}{CMO\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+C\+M\+O\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a4cc753aab5b772c6f5bc9af9663c6248}\label{classforte_1_1_atomic_orbital_helper_a4cc753aab5b772c6f5bc9af9663c6248}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!eps\+\_\+rdocc\+\_\+@{eps\+\_\+rdocc\+\_\+}}
+\index{eps\+\_\+rdocc\+\_\+@{eps\+\_\+rdocc\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{eps\+\_\+rdocc\+\_\+}{eps\_rdocc\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+Atomic\+Orbital\+Helper\+::eps\+\_\+rdocc\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a9497fd7b7a65b41d453ff70909455f40}\label{classforte_1_1_atomic_orbital_helper_a9497fd7b7a65b41d453ff70909455f40}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!eps\+\_\+virtual\+\_\+@{eps\+\_\+virtual\+\_\+}}
+\index{eps\+\_\+virtual\+\_\+@{eps\+\_\+virtual\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{eps\+\_\+virtual\+\_\+}{eps\_virtual\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+Atomic\+Orbital\+Helper\+::eps\+\_\+virtual\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_ad30e1c8811b274f655fb4a5a7ca0162e}\label{classforte_1_1_atomic_orbital_helper_ad30e1c8811b274f655fb4a5a7ca0162e}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!laplace\+\_\+tolerance\+\_\+@{laplace\+\_\+tolerance\+\_\+}}
+\index{laplace\+\_\+tolerance\+\_\+@{laplace\+\_\+tolerance\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{laplace\+\_\+tolerance\+\_\+}{laplace\_tolerance\_}}
+{\footnotesize\ttfamily double forte\+::\+Atomic\+Orbital\+Helper\+::laplace\+\_\+tolerance\+\_\+ = 1e-\/10\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a69c052b5064e8ed87fd2697a344001e1}\label{classforte_1_1_atomic_orbital_helper_a69c052b5064e8ed87fd2697a344001e1}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!nbf\+\_\+@{nbf\+\_\+}}
+\index{nbf\+\_\+@{nbf\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{nbf\+\_\+}{nbf\_}}
+{\footnotesize\ttfamily int forte\+::\+Atomic\+Orbital\+Helper\+::nbf\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a039b8f61b9eb2acf1562311827247093}\label{classforte_1_1_atomic_orbital_helper_a039b8f61b9eb2acf1562311827247093}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!nrdocc\+\_\+@{nrdocc\+\_\+}}
+\index{nrdocc\+\_\+@{nrdocc\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{nrdocc\+\_\+}{nrdocc\_}}
+{\footnotesize\ttfamily int forte\+::\+Atomic\+Orbital\+Helper\+::nrdocc\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_ac0f50e9d760abee8b4a90c64acf3f71d}\label{classforte_1_1_atomic_orbital_helper_ac0f50e9d760abee8b4a90c64acf3f71d}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!nvir\+\_\+@{nvir\+\_\+}}
+\index{nvir\+\_\+@{nvir\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{nvir\+\_\+}{nvir\_}}
+{\footnotesize\ttfamily int forte\+::\+Atomic\+Orbital\+Helper\+::nvir\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_ad13f3a30eba62a3c0e62f3e37e391a6f}\label{classforte_1_1_atomic_orbital_helper_ad13f3a30eba62a3c0e62f3e37e391a6f}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Occupied\+\_\+\+Laplace\+\_\+@{Occupied\+\_\+\+Laplace\+\_\+}}
+\index{Occupied\+\_\+\+Laplace\+\_\+@{Occupied\+\_\+\+Laplace\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Occupied\+\_\+\+Laplace\+\_\+}{Occupied\_Laplace\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+Occupied\+\_\+\+Laplace\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a111df8cb0812bec57b7c4f7062578b78}\label{classforte_1_1_atomic_orbital_helper_a111df8cb0812bec57b7c4f7062578b78}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!P\+Occ\+\_\+@{P\+Occ\+\_\+}}
+\index{P\+Occ\+\_\+@{P\+Occ\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{P\+Occ\+\_\+}{POcc\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+P\+Occ\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a592c52435831ae234781ecbfb34ad6ad}\label{classforte_1_1_atomic_orbital_helper_a592c52435831ae234781ecbfb34ad6ad}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!P\+Vir\+\_\+@{P\+Vir\+\_\+}}
+\index{P\+Vir\+\_\+@{P\+Vir\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{P\+Vir\+\_\+}{PVir\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+P\+Vir\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a6fdce16217872f48ac97362f2524892b}\label{classforte_1_1_atomic_orbital_helper_a6fdce16217872f48ac97362f2524892b}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!shift\+\_\+@{shift\+\_\+}}
+\index{shift\+\_\+@{shift\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{shift\+\_\+}{shift\_}}
+{\footnotesize\ttfamily int forte\+::\+Atomic\+Orbital\+Helper\+::shift\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+How many orbitals does it take to go from occupied to virtual (ie should be active) \mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a717f94e6594b0d6e440eb0cb534fe533}\label{classforte_1_1_atomic_orbital_helper_a717f94e6594b0d6e440eb0cb534fe533}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Trans\+A\+O\+\_\+\+Screen\+\_\+@{Trans\+A\+O\+\_\+\+Screen\+\_\+}}
+\index{Trans\+A\+O\+\_\+\+Screen\+\_\+@{Trans\+A\+O\+\_\+\+Screen\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Trans\+A\+O\+\_\+\+Screen\+\_\+}{TransAO\_Screen\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+Trans\+A\+O\+\_\+\+Screen\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_abdd4033673986a208a48a5f3084f4c06}\label{classforte_1_1_atomic_orbital_helper_abdd4033673986a208a48a5f3084f4c06}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!Virtual\+\_\+\+Laplace\+\_\+@{Virtual\+\_\+\+Laplace\+\_\+}}
+\index{Virtual\+\_\+\+Laplace\+\_\+@{Virtual\+\_\+\+Laplace\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{Virtual\+\_\+\+Laplace\+\_\+}{Virtual\_Laplace\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Atomic\+Orbital\+Helper\+::\+Virtual\+\_\+\+Laplace\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_atomic_orbital_helper_a2cda118e3b004f18d785b1c14a50ee3e}\label{classforte_1_1_atomic_orbital_helper_a2cda118e3b004f18d785b1c14a50ee3e}} 
+\index{forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}!weights\+\_\+@{weights\+\_\+}}
+\index{weights\+\_\+@{weights\+\_\+}!forte\+::\+Atomic\+Orbital\+Helper@{forte\+::\+Atomic\+Orbital\+Helper}}
+\subsubsection{\texorpdfstring{weights\+\_\+}{weights\_}}
+{\footnotesize\ttfamily int forte\+::\+Atomic\+Orbital\+Helper\+::weights\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{ao__helper_8h}{ao\+\_\+helper.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{ao__helper_8cc}{ao\+\_\+helper.\+cc}}\end{DoxyCompactItemize}

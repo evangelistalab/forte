@@ -1,0 +1,21 @@
+2022-05-28:11:13:40,292 INFO     [psi4.driver.task_planner:270] PLANNING FD:  dermode=(1, 0) keywords={'ACTIVE': [2, 0, 0, 0], 'DOCC': [3, 0, 1, 1], 'D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-12, 'G_CONVERGENCE': 'GAU_VERYTIGHT', 'MCSCF_E_CONVERGENCE': 1e-12, 'MCSCF_MAXITER': 100, 'MCSCF_R_CONVERGENCE': 1e-08, 'REFERENCE': 'RHF', 'RESTRICTED_DOCC': [2, 0, 1, 1], 'function_kwargs': {}} findif_kw={'findif_stencil_size': 3, 'findif_step_size': 0.005, 'findif_verbose': 1} kw={'opt_iter': True}
+2022-05-28:11:13:40,292 INFO     [psi4.driver.driver_findif:258] 
+         ----------------------------------------------------------
+                                   FINDIF
+                     R. A. King and Jonathon Misiewicz
+         ----------------------------------------------------------
+
+
+2022-05-28:11:13:40,292 INFO     [psi4.driver.driver_findif:267]   Using finite-differences of energies to determine gradients.
+    Generating geometries for use with 3-point formula.
+    Displacement size will be 5.00e-03.
+
+2022-05-28:11:13:40,292 INFO     [psi4.driver.driver_findif:286]     Number of atoms is 2.
+    Number of symmetric SALCs is 1.
+    Translations projected? 1. Rotations projected? 1.
+
+2022-05-28:11:13:40,292 INFO     [psi4.driver.driver_findif:362]     Number of geometries (including reference) is 3.
+
+2022-05-28:11:13:40,620 INFO     [psi4.driver.task_base:154] <<< JSON launch ... c2v 5.188011869313725
+2022-05-28:11:13:40,994 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'ACTIVE': [2, 0, 0, 0], 'DOCC': [3, 0, 1, 1], 'D_CONVERGENCE': 1e-10, 'E_CONVERGENCE': 1e-12, 'G_CONVERGENCE': 'GAU_VERYTIGHT', 'MCSCF_E_CONVERGENCE': 1e-12, 'MCSCF_MAXITER': 100, 'MCSCF_R_CONVERGENCE': 1e-08, 'PARENT_SYMMETRY': 'C2V(Z)', 'REFERENCE': 'RHF', 'RESTRICTED_DOCC': [2, 0, 1, 1], 'function_kwargs': {}}
+2022-05-28:11:13:40,995 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=cc-pvdz, molecule=HF, nre=5.188011869313725

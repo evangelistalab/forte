@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -59,7 +59,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
     alpha_strings_.clear();
     alpha_a_strings_.clear();
 
-    // First build a map from beta strings to determinants
+    // Build a map from beta strings to determinants
     const det_hashvec& wfn_map = wfn.wfn_hash();
     {
         det_hash<size_t> beta_str_hash;
@@ -83,6 +83,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
         }
     }
 
+    // Build a map from alpha strings to determinants
     {
         det_hash<size_t> alfa_str_hash;
         size_t nalfa = 0;
@@ -105,7 +106,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
         }
     }
 
-    // Next build a map from annihilated alpha strings to determinants
+    // Build a map from annihilated alpha strings to determinants
     det_hash<size_t> alfa_str_hash;
     size_t naalpha = 0;
     for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
@@ -176,6 +177,7 @@ void DeterminantSubstitutionLists::lists_1a(const DeterminantHashVec& wfn) {
 
         for (const auto& vec : tmp) {
             if (!vec.empty()) {
+                // ignore (N-1)-electron det. only coupled to itself
                 a_list_.push_back(vec);
             }
             auto s = vec.size();
@@ -188,7 +190,7 @@ void DeterminantSubstitutionLists::lists_1a(const DeterminantHashVec& wfn) {
     }
     outfile->Printf("\n  (N-1) a lists size counts");
     outfile->Printf("\n      Size      Count");
-    for (const auto& p: vec_size) {
+    for (const auto& p : vec_size) {
         outfile->Printf("\n  %8zu %10zu", p.first, p.second);
     }
 
@@ -291,22 +293,22 @@ void DeterminantSubstitutionLists::lists_2aa(const DeterminantHashVec& wfn) {
                 }
             }
         }
-
         for (auto& vec : tmp) {
+            // ignore (N-2)-electron det. only coupled to itself
             if (!vec.empty()) {
                 aa_list_.push_back(vec);
             }
-            auto s = vec.size();
-            if (vec_size.find(s) == vec_size.end()) {
-                vec_size[s] = 1;
-            } else {
-                vec_size[s] += 1;
-            }
+        }
+        auto s = vec.size();
+        if (vec_size.find(s) == vec_size.end()) {
+            vec_size[s] = 1;
+        } else {
+            vec_size[s] += 1;
         }
     }
     outfile->Printf("\n  (N-2) aa lists size counts");
     outfile->Printf("\n      Size      Count");
-    for (const auto& p: vec_size) {
+    for (const auto& p : vec_size) {
         outfile->Printf("\n  %8zu %10zu", p.first, p.second);
     }
 
@@ -352,7 +354,6 @@ void DeterminantSubstitutionLists::lists_2ab(const DeterminantHashVec& wfn) {
                 tmp[detJ_add].emplace_back(idx, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
             }
         }
-
         for (auto& vec : tmp) {
             if (!vec.empty()) {
                 ab_list_.push_back(vec);
@@ -367,10 +368,9 @@ void DeterminantSubstitutionLists::lists_2ab(const DeterminantHashVec& wfn) {
     }
     outfile->Printf("\n  (N-2) ab lists size counts");
     outfile->Printf("\n      Size      Count");
-    for (const auto& p: vec_size) {
+    for (const auto& p : vec_size) {
         outfile->Printf("\n  %8zu %10zu", p.first, p.second);
     }
-
 
     if (!quiet_) {
         outfile->Printf("\n        αβ         %.3e seconds", timer_ab.stop());
@@ -415,7 +415,6 @@ void DeterminantSubstitutionLists::lists_2bb(const DeterminantHashVec& wfn) {
                     } else {
                         detJ_add = it->second;
                     }
-
                     tmp[detJ_add].emplace_back(idx, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
                 }
             }
@@ -523,7 +522,7 @@ void DeterminantSubstitutionLists::lists_3aaa(const DeterminantHashVec& wfn) {
     }
     outfile->Printf("\n  (N-3) aaa lists size counts");
     outfile->Printf("\n      Size      Count");
-    for (const auto& p: vec_size) {
+    for (const auto& p : vec_size) {
         outfile->Printf("\n  %8zu %10zu", p.first, p.second);
     }
 
@@ -566,7 +565,7 @@ void DeterminantSubstitutionLists::lists_3aab(const DeterminantHashVec& wfn) {
         }
     }
 
-    for (auto & c_dets : beta_string) {
+    for (auto& c_dets : beta_string) {
         size_t naab_ann = 0;
         det_hash<int> aab_ann_map;
         std::vector<std::vector<std::tuple<size_t, short, short, short>>> tmp;
@@ -623,7 +622,7 @@ void DeterminantSubstitutionLists::lists_3aab(const DeterminantHashVec& wfn) {
     }
     outfile->Printf("\n  (N-3) aab lists size counts");
     outfile->Printf("\n      Size      Count");
-    for (const auto& p: vec_size) {
+    for (const auto& p : vec_size) {
         outfile->Printf("\n  %8zu %10zu", p.first, p.second);
     }
 
@@ -636,7 +635,7 @@ void DeterminantSubstitutionLists::lists_3abb(const DeterminantHashVec& wfn) {
 
     const det_hashvec& dets = wfn.wfn_hash();
 
-    for (auto & c_dets : alpha_a_strings_) {
+    for (auto& c_dets : alpha_a_strings_) {
         size_t nabb_ann = 0;
         det_hash<int> abb_ann_map;
         size_t max_I = c_dets.size();
@@ -679,7 +678,6 @@ void DeterminantSubstitutionLists::lists_3abb(const DeterminantHashVec& wfn) {
                 }
             }
         }
-
         for (auto& vec : tmp) {
             if (!vec.empty()) {
                 abb_list_.push_back(vec);

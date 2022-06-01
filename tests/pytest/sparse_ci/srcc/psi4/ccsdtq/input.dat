@@ -1,0 +1,10 @@
+
+molecule {
+     H 0.0 0.0 0.0
+     H 0.0 0.0 1.0
+     H 0.0 0.0 2.0
+     H 0.0 0.0 3.0  
+}
+
+set e_convergence 13
+energy('FCI/DZ')

@@ -1,0 +1,84 @@
+\hypertarget{classforte_1_1_d_m_r_g_solver}{}\section{forte\+:\+:D\+M\+R\+G\+Solver Class Reference}
+\label{classforte_1_1_d_m_r_g_solver}\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+
+
+{\ttfamily \#include $<$dmrgsolver.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_d_m_r_g_solver_a5ebba6d331bf64c143e9d04e1a8aa1ff}{D\+M\+R\+G\+Solver}} (\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} state, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info)
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_m_r_g_solver_a814330798182f4bd92f17f6dae68ff84}{compute\+\_\+energy}} ()
+\item 
+\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \mbox{\hyperlink{classforte_1_1_d_m_r_g_solver_a6ca5d416d6917bca2b012cc02a0b471e}{rdms}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_m_r_g_solver_ad5cc293e3204cb77905758b2688f7275}{set\+\_\+max\+\_\+rdm}} (int max\+\_\+rdm)
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_m_r_g_solver_a7f34b4aa229850ce78701122f7f20aa0}{spin\+\_\+free\+\_\+rdm}} (bool spin\+\_\+free)
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_m_r_g_solver_aaec87fefcbd55f4af7aa1bb03cf3a3f8}{disk\+\_\+3\+\_\+rdm}} (bool use\+\_\+disk\+\_\+for\+\_\+3rdm)
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_m_r_g_solver_a066b17dd1686e43c2de23ae57e6a3a64}{set\+\_\+up\+\_\+integrals}} (const ambit\+::\+Tensor \&active\+\_\+integrals, const std\+::vector$<$ double $>$ \&one\+\_\+body)
+\item 
+void \mbox{\hyperlink{classforte_1_1_d_m_r_g_solver_aca9ca177f2b8a10c9692eda29d883eec}{set\+\_\+scalar}} (double energy)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_m_r_g_solver_a5ebba6d331bf64c143e9d04e1a8aa1ff}\label{classforte_1_1_d_m_r_g_solver_a5ebba6d331bf64c143e9d04e1a8aa1ff}} 
+\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}!D\+M\+R\+G\+Solver@{D\+M\+R\+G\+Solver}}
+\index{D\+M\+R\+G\+Solver@{D\+M\+R\+G\+Solver}!forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+\subsubsection{\texorpdfstring{D\+M\+R\+G\+Solver()}{DMRGSolver()}}
+{\footnotesize\ttfamily forte\+::\+D\+M\+R\+G\+Solver\+::\+D\+M\+R\+G\+Solver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}}]{state,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_m_r_g_solver_a814330798182f4bd92f17f6dae68ff84}\label{classforte_1_1_d_m_r_g_solver_a814330798182f4bd92f17f6dae68ff84}} 
+\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily void forte\+::\+D\+M\+R\+G\+Solver\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_d_m_r_g_solver_aaec87fefcbd55f4af7aa1bb03cf3a3f8}\label{classforte_1_1_d_m_r_g_solver_aaec87fefcbd55f4af7aa1bb03cf3a3f8}} 
+\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}!disk\+\_\+3\+\_\+rdm@{disk\+\_\+3\+\_\+rdm}}
+\index{disk\+\_\+3\+\_\+rdm@{disk\+\_\+3\+\_\+rdm}!forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+\subsubsection{\texorpdfstring{disk\+\_\+3\+\_\+rdm()}{disk\_3\_rdm()}}
+{\footnotesize\ttfamily void forte\+::\+D\+M\+R\+G\+Solver\+::disk\+\_\+3\+\_\+rdm (\begin{DoxyParamCaption}\item[{bool}]{use\+\_\+disk\+\_\+for\+\_\+3rdm }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_m_r_g_solver_a6ca5d416d6917bca2b012cc02a0b471e}\label{classforte_1_1_d_m_r_g_solver_a6ca5d416d6917bca2b012cc02a0b471e}} 
+\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}!rdms@{rdms}}
+\index{rdms@{rdms}!forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+\subsubsection{\texorpdfstring{rdms()}{rdms()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} forte\+::\+D\+M\+R\+G\+Solver\+::rdms (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_m_r_g_solver_ad5cc293e3204cb77905758b2688f7275}\label{classforte_1_1_d_m_r_g_solver_ad5cc293e3204cb77905758b2688f7275}} 
+\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}!set\+\_\+max\+\_\+rdm@{set\+\_\+max\+\_\+rdm}}
+\index{set\+\_\+max\+\_\+rdm@{set\+\_\+max\+\_\+rdm}!forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+max\+\_\+rdm()}{set\_max\_rdm()}}
+{\footnotesize\ttfamily void forte\+::\+D\+M\+R\+G\+Solver\+::set\+\_\+max\+\_\+rdm (\begin{DoxyParamCaption}\item[{int}]{max\+\_\+rdm }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_m_r_g_solver_aca9ca177f2b8a10c9692eda29d883eec}\label{classforte_1_1_d_m_r_g_solver_aca9ca177f2b8a10c9692eda29d883eec}} 
+\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}!set\+\_\+scalar@{set\+\_\+scalar}}
+\index{set\+\_\+scalar@{set\+\_\+scalar}!forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+scalar()}{set\_scalar()}}
+{\footnotesize\ttfamily void forte\+::\+D\+M\+R\+G\+Solver\+::set\+\_\+scalar (\begin{DoxyParamCaption}\item[{double}]{energy }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_m_r_g_solver_a066b17dd1686e43c2de23ae57e6a3a64}\label{classforte_1_1_d_m_r_g_solver_a066b17dd1686e43c2de23ae57e6a3a64}} 
+\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}!set\+\_\+up\+\_\+integrals@{set\+\_\+up\+\_\+integrals}}
+\index{set\+\_\+up\+\_\+integrals@{set\+\_\+up\+\_\+integrals}!forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+up\+\_\+integrals()}{set\_up\_integrals()}}
+{\footnotesize\ttfamily void forte\+::\+D\+M\+R\+G\+Solver\+::set\+\_\+up\+\_\+integrals (\begin{DoxyParamCaption}\item[{const ambit\+::\+Tensor \&}]{active\+\_\+integrals,  }\item[{const std\+::vector$<$ double $>$ \&}]{one\+\_\+body }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_d_m_r_g_solver_a7f34b4aa229850ce78701122f7f20aa0}\label{classforte_1_1_d_m_r_g_solver_a7f34b4aa229850ce78701122f7f20aa0}} 
+\index{forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}!spin\+\_\+free\+\_\+rdm@{spin\+\_\+free\+\_\+rdm}}
+\index{spin\+\_\+free\+\_\+rdm@{spin\+\_\+free\+\_\+rdm}!forte\+::\+D\+M\+R\+G\+Solver@{forte\+::\+D\+M\+R\+G\+Solver}}
+\subsubsection{\texorpdfstring{spin\+\_\+free\+\_\+rdm()}{spin\_free\_rdm()}}
+{\footnotesize\ttfamily void forte\+::\+D\+M\+R\+G\+Solver\+::spin\+\_\+free\+\_\+rdm (\begin{DoxyParamCaption}\item[{bool}]{spin\+\_\+free }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/dmrg/\mbox{\hyperlink{dmrgsolver_8h}{dmrgsolver.\+h}}\end{DoxyCompactItemize}

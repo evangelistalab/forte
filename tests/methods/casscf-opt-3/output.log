@@ -1,0 +1,15 @@
+2022-05-31:17:34:15,825 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-12, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:17:34:15,827 INFO     [psi4.driver.driver:617] Compute gradient(): method=forte, basis=3-21g, molecule=HF, nre=5.013257785294738
+2022-05-31:17:34:16,69 INFO     [psi4.driver.driver:620] Return gradient(): -99.58669246530127
+2022-05-31:17:34:16,69 INFO     [psi4.driver.driver:621] [[ 0.         0.         0.0128795]
+ [ 0.         0.        -0.0128795]]
+2022-05-31:17:34:16,85 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CART_HESS_READ': 0, 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-12, 'SCF__GUESS': 'READ', 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:17:34:16,86 INFO     [psi4.driver.driver:617] Compute gradient(): method=forte, basis=3-21g, molecule=HF, nre=4.951700291444271
+2022-05-31:17:34:16,232 INFO     [psi4.driver.driver:620] Return gradient(): -99.58685077951725
+2022-05-31:17:34:16,232 INFO     [psi4.driver.driver:621] [[ 0.         0.         0.0014659]
+ [ 0.         0.        -0.0014659]]
+2022-05-31:17:34:16,248 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'CART_HESS_READ': 0, 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-12, 'SCF__GUESS': 'READ', 'OPTKING__INTRAFRAG_STEP_LIMIT': 1.0, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:17:34:16,249 INFO     [psi4.driver.driver:617] Compute gradient(): method=forte, basis=3-21g, molecule=HF, nre=4.9439036292305305
+2022-05-31:17:34:16,392 INFO     [psi4.driver.driver:620] Return gradient(): -99.58685297383524
+2022-05-31:17:34:16,392 INFO     [psi4.driver.driver:621] [[ 0.          0.          0.00006765]
+ [ 0.          0.         -0.00006765]]

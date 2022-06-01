@@ -1,0 +1,83 @@
+\hypertarget{classforte_1_1_fragment_projector}{}\section{forte\+:\+:Fragment\+Projector Class Reference}
+\label{classforte_1_1_fragment_projector}\index{forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}}
+
+
+The fragment\+\_\+projector class.  
+
+
+
+
+{\ttfamily \#include $<$fragment\+\_\+projector.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_fragment_projector_aa66efdff21a75ad8f77beb72c166a45c}{Fragment\+Projector}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Molecule $>$ molecule, std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ basis)
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_fragment_projector_aae8790c8c1aefadaedf74007ffc459bc}{build\+\_\+f\+\_\+projector}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ basis)
+\item 
+int \mbox{\hyperlink{classforte_1_1_fragment_projector_a1ff48ecdfc4013f9e0d9a0aa9eb640f4}{get\+\_\+nbf\+\_\+A}} ()
+\begin{DoxyCompactList}\small\item\em Return number of system (fragment) basis functions. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_fragment_projector_a76c6011302d2d34bcd0672b8e67059d5}{get\+\_\+natom\+\_\+A}} ()
+\begin{DoxyCompactList}\small\item\em Return number of atoms in the system. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_fragment_projector_af10a8be1ee4d53333f1832eaa8097f5f}{get\+\_\+\+Snn}} ()
+\begin{DoxyCompactList}\small\item\em eturn the AO overlap matrix (S\+\_\+) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The fragment\+\_\+projector class. 
+
+A class to store information about a (system) fragment 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_fragment_projector_aa66efdff21a75ad8f77beb72c166a45c}\label{classforte_1_1_fragment_projector_aa66efdff21a75ad8f77beb72c166a45c}} 
+\index{forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}!Fragment\+Projector@{Fragment\+Projector}}
+\index{Fragment\+Projector@{Fragment\+Projector}!forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}}
+\subsubsection{\texorpdfstring{Fragment\+Projector()}{FragmentProjector()}}
+{\footnotesize\ttfamily forte\+::\+Fragment\+Projector\+::\+Fragment\+Projector (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Molecule $>$}]{molecule,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{basis }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_fragment_projector_aae8790c8c1aefadaedf74007ffc459bc}\label{classforte_1_1_fragment_projector_aae8790c8c1aefadaedf74007ffc459bc}} 
+\index{forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}!build\+\_\+f\+\_\+projector@{build\+\_\+f\+\_\+projector}}
+\index{build\+\_\+f\+\_\+projector@{build\+\_\+f\+\_\+projector}!forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}}
+\subsubsection{\texorpdfstring{build\+\_\+f\+\_\+projector()}{build\_f\_projector()}}
+{\footnotesize\ttfamily Shared\+Matrix forte\+::\+Fragment\+Projector\+::build\+\_\+f\+\_\+projector (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{basis }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_fragment_projector_a76c6011302d2d34bcd0672b8e67059d5}\label{classforte_1_1_fragment_projector_a76c6011302d2d34bcd0672b8e67059d5}} 
+\index{forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}!get\+\_\+natom\+\_\+A@{get\+\_\+natom\+\_\+A}}
+\index{get\+\_\+natom\+\_\+A@{get\+\_\+natom\+\_\+A}!forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}}
+\subsubsection{\texorpdfstring{get\+\_\+natom\+\_\+\+A()}{get\_natom\_A()}}
+{\footnotesize\ttfamily int forte\+::\+Fragment\+Projector\+::get\+\_\+natom\+\_\+A (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return number of atoms in the system. 
+
+\mbox{\Hypertarget{classforte_1_1_fragment_projector_a1ff48ecdfc4013f9e0d9a0aa9eb640f4}\label{classforte_1_1_fragment_projector_a1ff48ecdfc4013f9e0d9a0aa9eb640f4}} 
+\index{forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}!get\+\_\+nbf\+\_\+A@{get\+\_\+nbf\+\_\+A}}
+\index{get\+\_\+nbf\+\_\+A@{get\+\_\+nbf\+\_\+A}!forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}}
+\subsubsection{\texorpdfstring{get\+\_\+nbf\+\_\+\+A()}{get\_nbf\_A()}}
+{\footnotesize\ttfamily int forte\+::\+Fragment\+Projector\+::get\+\_\+nbf\+\_\+A (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return number of system (fragment) basis functions. 
+
+\mbox{\Hypertarget{classforte_1_1_fragment_projector_af10a8be1ee4d53333f1832eaa8097f5f}\label{classforte_1_1_fragment_projector_af10a8be1ee4d53333f1832eaa8097f5f}} 
+\index{forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}!get\+\_\+\+Snn@{get\+\_\+\+Snn}}
+\index{get\+\_\+\+Snn@{get\+\_\+\+Snn}!forte\+::\+Fragment\+Projector@{forte\+::\+Fragment\+Projector}}
+\subsubsection{\texorpdfstring{get\+\_\+\+Snn()}{get\_Snn()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Fragment\+Projector\+::get\+\_\+\+Snn (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+eturn the AO overlap matrix (S\+\_\+) 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{fragment__projector_8h}{fragment\+\_\+projector.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{fragment__projector_8cc}{fragment\+\_\+projector.\+cc}}\end{DoxyCompactItemize}

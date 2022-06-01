@@ -1,0 +1,143 @@
+\hypertarget{classforte_1_1_binary_graph}{}\section{forte\+:\+:Binary\+Graph Class Reference}
+\label{classforte_1_1_binary_graph}\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+
+
+{\ttfamily \#include $<$binary\+\_\+graph.\+hpp$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_binary_graph_a7db10825a6ba7e9c674ea2572e18f721}{Binary\+Graph}} (int n, int k, std\+::vector$<$ int $>$ symm, int nirr)
+\item 
+\mbox{\hyperlink{classforte_1_1_binary_graph_a2e5b37be3498a0510d728a06d13d3dbb}{Binary\+Graph}} (int n, int k, std\+::vector$<$ int $>$ \&irrep\+\_\+size)
+\item 
+\mbox{\hyperlink{classforte_1_1_binary_graph_ac61460299c2957fa129d32d5e6dcc2e6}{$\sim$\+Binary\+Graph}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_binary_graph_a59aab8558674818bcca1cd6ebd0de449}{print}} ()
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_binary_graph_ad3345f97ada9b29ac2280bc4dd94ee9f}{abs\+\_\+add}} (bool $\ast$string)
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_binary_graph_adb079b21b25fa6fd79f5ac9880bb9776}{abs\+\_\+add}} (std\+::vector$<$ bool $>$ \&string)
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_binary_graph_adff860d95ab0b83339a85f74609fc19f}{rel\+\_\+add}} (bool $\ast$string)
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_binary_graph_afd54724890c20c1a6d88437ff8549e44}{rel\+\_\+add}} (std\+::vector$<$ bool $>$ \&string)
+\item 
+int \mbox{\hyperlink{classforte_1_1_binary_graph_ac9989eaceaf58b917d755fe6d503a4fb}{sym}} (bool $\ast$string)
+\item 
+int \mbox{\hyperlink{classforte_1_1_binary_graph_ab97305943561cf833f1871510af039b6}{sym}} (std\+::vector$<$ bool $>$ \&string)
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_binary_graph_a5256e8152eccc64ad285413f4e19abc8}{nstr}} ()
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_binary_graph_a9edd8d8b1fe41552192ca4105e5e21b5}{strpi}} (int h) const
+\item 
+int \mbox{\hyperlink{classforte_1_1_binary_graph_ae7015bad2f05753624d976b2e1b49726}{nbits}} () const
+\item 
+int \mbox{\hyperlink{classforte_1_1_binary_graph_aa9856a757d43525687f435f9e6f41859}{nones}} () const
+\item 
+int \mbox{\hyperlink{classforte_1_1_binary_graph_a8f432f2906a6b2ae1885527a2f934aa5}{nirrep}} () const
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Compute the address of a string of bits. Strings are grouped by symmetry. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_binary_graph_a7db10825a6ba7e9c674ea2572e18f721}\label{classforte_1_1_binary_graph_a7db10825a6ba7e9c674ea2572e18f721}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!Binary\+Graph@{Binary\+Graph}}
+\index{Binary\+Graph@{Binary\+Graph}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{Binary\+Graph()}{BinaryGraph()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+Binary\+Graph\+::\+Binary\+Graph (\begin{DoxyParamCaption}\item[{int}]{n,  }\item[{int}]{k,  }\item[{std\+::vector$<$ int $>$}]{symm,  }\item[{int}]{nirr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_a2e5b37be3498a0510d728a06d13d3dbb}\label{classforte_1_1_binary_graph_a2e5b37be3498a0510d728a06d13d3dbb}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!Binary\+Graph@{Binary\+Graph}}
+\index{Binary\+Graph@{Binary\+Graph}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{Binary\+Graph()}{BinaryGraph()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+Binary\+Graph\+::\+Binary\+Graph (\begin{DoxyParamCaption}\item[{int}]{n,  }\item[{int}]{k,  }\item[{std\+::vector$<$ int $>$ \&}]{irrep\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_ac61460299c2957fa129d32d5e6dcc2e6}\label{classforte_1_1_binary_graph_ac61460299c2957fa129d32d5e6dcc2e6}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!````~Binary\+Graph@{$\sim$\+Binary\+Graph}}
+\index{````~Binary\+Graph@{$\sim$\+Binary\+Graph}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{$\sim$\+Binary\+Graph()}{~BinaryGraph()}}
+{\footnotesize\ttfamily forte\+::\+Binary\+Graph\+::$\sim$\+Binary\+Graph (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_binary_graph_ad3345f97ada9b29ac2280bc4dd94ee9f}\label{classforte_1_1_binary_graph_ad3345f97ada9b29ac2280bc4dd94ee9f}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!abs\+\_\+add@{abs\+\_\+add}}
+\index{abs\+\_\+add@{abs\+\_\+add}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{abs\+\_\+add()}{abs\_add()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Binary\+Graph\+::abs\+\_\+add (\begin{DoxyParamCaption}\item[{bool $\ast$}]{string }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_adb079b21b25fa6fd79f5ac9880bb9776}\label{classforte_1_1_binary_graph_adb079b21b25fa6fd79f5ac9880bb9776}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!abs\+\_\+add@{abs\+\_\+add}}
+\index{abs\+\_\+add@{abs\+\_\+add}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{abs\+\_\+add()}{abs\_add()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Binary\+Graph\+::abs\+\_\+add (\begin{DoxyParamCaption}\item[{std\+::vector$<$ bool $>$ \&}]{string }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_ae7015bad2f05753624d976b2e1b49726}\label{classforte_1_1_binary_graph_ae7015bad2f05753624d976b2e1b49726}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!nbits@{nbits}}
+\index{nbits@{nbits}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{nbits()}{nbits()}}
+{\footnotesize\ttfamily int forte\+::\+Binary\+Graph\+::nbits (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_a8f432f2906a6b2ae1885527a2f934aa5}\label{classforte_1_1_binary_graph_a8f432f2906a6b2ae1885527a2f934aa5}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!nirrep@{nirrep}}
+\index{nirrep@{nirrep}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{nirrep()}{nirrep()}}
+{\footnotesize\ttfamily int forte\+::\+Binary\+Graph\+::nirrep (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_aa9856a757d43525687f435f9e6f41859}\label{classforte_1_1_binary_graph_aa9856a757d43525687f435f9e6f41859}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!nones@{nones}}
+\index{nones@{nones}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{nones()}{nones()}}
+{\footnotesize\ttfamily int forte\+::\+Binary\+Graph\+::nones (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_a5256e8152eccc64ad285413f4e19abc8}\label{classforte_1_1_binary_graph_a5256e8152eccc64ad285413f4e19abc8}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!nstr@{nstr}}
+\index{nstr@{nstr}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{nstr()}{nstr()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Binary\+Graph\+::nstr (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_a59aab8558674818bcca1cd6ebd0de449}\label{classforte_1_1_binary_graph_a59aab8558674818bcca1cd6ebd0de449}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!print@{print}}
+\index{print@{print}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{print()}{print()}}
+{\footnotesize\ttfamily void forte\+::\+Binary\+Graph\+::print (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_adff860d95ab0b83339a85f74609fc19f}\label{classforte_1_1_binary_graph_adff860d95ab0b83339a85f74609fc19f}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!rel\+\_\+add@{rel\+\_\+add}}
+\index{rel\+\_\+add@{rel\+\_\+add}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{rel\+\_\+add()}{rel\_add()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Binary\+Graph\+::rel\+\_\+add (\begin{DoxyParamCaption}\item[{bool $\ast$}]{string }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_afd54724890c20c1a6d88437ff8549e44}\label{classforte_1_1_binary_graph_afd54724890c20c1a6d88437ff8549e44}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!rel\+\_\+add@{rel\+\_\+add}}
+\index{rel\+\_\+add@{rel\+\_\+add}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{rel\+\_\+add()}{rel\_add()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Binary\+Graph\+::rel\+\_\+add (\begin{DoxyParamCaption}\item[{std\+::vector$<$ bool $>$ \&}]{string }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_a9edd8d8b1fe41552192ca4105e5e21b5}\label{classforte_1_1_binary_graph_a9edd8d8b1fe41552192ca4105e5e21b5}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!strpi@{strpi}}
+\index{strpi@{strpi}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{strpi()}{strpi()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Binary\+Graph\+::strpi (\begin{DoxyParamCaption}\item[{int}]{h }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_ac9989eaceaf58b917d755fe6d503a4fb}\label{classforte_1_1_binary_graph_ac9989eaceaf58b917d755fe6d503a4fb}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!sym@{sym}}
+\index{sym@{sym}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{sym()}{sym()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily int forte\+::\+Binary\+Graph\+::sym (\begin{DoxyParamCaption}\item[{bool $\ast$}]{string }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_binary_graph_ab97305943561cf833f1871510af039b6}\label{classforte_1_1_binary_graph_ab97305943561cf833f1871510af039b6}} 
+\index{forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}!sym@{sym}}
+\index{sym@{sym}!forte\+::\+Binary\+Graph@{forte\+::\+Binary\+Graph}}
+\subsubsection{\texorpdfstring{sym()}{sym()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily int forte\+::\+Binary\+Graph\+::sym (\begin{DoxyParamCaption}\item[{std\+::vector$<$ bool $>$ \&}]{string }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/fci/\mbox{\hyperlink{binary__graph_8hpp}{binary\+\_\+graph.\+hpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,102 @@
+\hypertarget{pci_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/pci/pci.cc File Reference}
+\label{pci_8cc}\index{/\+Users/fevange/\+Source/forte/src/pci/pci.\+cc@{/\+Users/fevange/\+Source/forte/src/pci/pci.\+cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$limits$>$}\newline
+{\ttfamily \#include $<$cfloat$>$}\newline
+{\ttfamily \#include $<$functional$>$}\newline
+{\ttfamily \#include $<$tuple$>$}\newline
+{\ttfamily \#include $<$unordered\+\_\+map$>$}\newline
+{\ttfamily \#include $<$utility$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sparse\+\_\+ci/ci\+\_\+reference.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sparse\+\_\+ci/determinant\+\_\+functions.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}pci.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}pci\+\_\+sigma.\+h\char`\"{}}\newline
+Include dependency graph for pci.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{pci_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{pci_8cc_ab27161a3f078faef7c239d7919139387}{U\+S\+E\+\_\+\+H\+A\+SH}}~1
+\item 
+\#define \mbox{\hyperlink{pci_8cc_a46667633e12965b7091c25cdacfdab1f}{D\+O\+\_\+\+S\+T\+A\+TS}}~0
+\item 
+\#define \mbox{\hyperlink{pci_8cc_a6bc13740a6cae223682c32abf8d2801d}{E\+N\+F\+O\+R\+C\+E\+\_\+\+S\+YM}}~1
+\item 
+\#define \mbox{\hyperlink{pci_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{pci_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{namespaceforte_a65475f9b6cbbec2d3a20df202f8ad0c1}{forte\+::to\+\_\+std\+\_\+vector}} (psi\+::\+Shared\+Vector c)
+\item 
+void \mbox{\hyperlink{namespaceforte_ae4cd4c8022826599c3dda3710349723a}{forte\+::set\+\_\+psi\+\_\+\+Vector}} (psi\+::\+Shared\+Vector c\+\_\+psi, const std\+::vector$<$ double $>$ \&c\+\_\+vec)
+\item 
+double \mbox{\hyperlink{namespaceforte_a5f19ff39bfec493c05fc4d2a864f7651}{forte\+::normalize}} (std\+::vector$<$ double $>$ \&C)
+\item 
+double \mbox{\hyperlink{namespaceforte_a9f1a481dd9716b11cb09ddeb7f030a27}{forte\+::factorial}} (int n)
+\item 
+void \mbox{\hyperlink{namespaceforte_afa0eca959585b5f22950ec78545c776a}{forte\+::binomial\+\_\+coefs}} (std\+::vector$<$ double $>$ \&coefs, int order, double a, double b)
+\item 
+void \mbox{\hyperlink{namespaceforte_a35a73b6c34213712ad88a24d62012a4d}{forte\+::\+Polynomial\+\_\+generator\+\_\+coefs}} (std\+::vector$<$ double $>$ \&coefs, std\+::vector$<$ double $>$ \&poly\+\_\+coefs, double a, double b)
+\item 
+void \mbox{\hyperlink{namespaceforte_a49951e085a0ae4293cca543bd045a7ec}{forte\+::\+Chebyshev\+\_\+polynomial\+\_\+coefs}} (std\+::vector$<$ double $>$ \&coefs, int order)
+\item 
+void \mbox{\hyperlink{namespaceforte_a02efe67eb965bf34450ffefb24412655}{forte\+::\+Wall\+\_\+\+Chebyshev\+\_\+generator\+\_\+coefs}} (std\+::vector$<$ double $>$ \&coefs, int order, double range)
+\item 
+void \mbox{\hyperlink{namespaceforte_aa3aad70028aaf787650cea71183fc340}{forte\+::print\+\_\+polynomial}} (std\+::vector$<$ double $>$ \&coefs)
+\item 
+void \mbox{\hyperlink{namespaceforte_aaa15ba3048914f75527569dad1866895}{forte\+::add}} (const det\+\_\+hashvec \&A, std\+::vector$<$ double $>$ \&Ca, double beta, const det\+\_\+hashvec \&B, const std\+::vector$<$ double $>$ Cb)
+\item 
+double \mbox{\hyperlink{namespaceforte_a33ed0ede38050d6118cebec8d960cc6b}{forte\+::dot}} (const det\+\_\+hashvec \&A, const std\+::vector$<$ double $>$ Ca, const det\+\_\+hashvec \&B, const std\+::vector$<$ double $>$ Cb)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{pci_8cc_a46667633e12965b7091c25cdacfdab1f}\label{pci_8cc_a46667633e12965b7091c25cdacfdab1f}} 
+\index{pci.\+cc@{pci.\+cc}!D\+O\+\_\+\+S\+T\+A\+TS@{D\+O\+\_\+\+S\+T\+A\+TS}}
+\index{D\+O\+\_\+\+S\+T\+A\+TS@{D\+O\+\_\+\+S\+T\+A\+TS}!pci.\+cc@{pci.\+cc}}
+\subsubsection{\texorpdfstring{D\+O\+\_\+\+S\+T\+A\+TS}{DO\_STATS}}
+{\footnotesize\ttfamily \#define D\+O\+\_\+\+S\+T\+A\+TS~0}
+
+\mbox{\Hypertarget{pci_8cc_a6bc13740a6cae223682c32abf8d2801d}\label{pci_8cc_a6bc13740a6cae223682c32abf8d2801d}} 
+\index{pci.\+cc@{pci.\+cc}!E\+N\+F\+O\+R\+C\+E\+\_\+\+S\+YM@{E\+N\+F\+O\+R\+C\+E\+\_\+\+S\+YM}}
+\index{E\+N\+F\+O\+R\+C\+E\+\_\+\+S\+YM@{E\+N\+F\+O\+R\+C\+E\+\_\+\+S\+YM}!pci.\+cc@{pci.\+cc}}
+\subsubsection{\texorpdfstring{E\+N\+F\+O\+R\+C\+E\+\_\+\+S\+YM}{ENFORCE\_SYM}}
+{\footnotesize\ttfamily \#define E\+N\+F\+O\+R\+C\+E\+\_\+\+S\+YM~1}
+
+\mbox{\Hypertarget{pci_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{pci_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{pci.\+cc@{pci.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!pci.\+cc@{pci.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{pci_8cc_a889ec205c635b219999c761b28cc39ba}\label{pci_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{pci.\+cc@{pci.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!pci.\+cc@{pci.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+
+\mbox{\Hypertarget{pci_8cc_ab27161a3f078faef7c239d7919139387}\label{pci_8cc_ab27161a3f078faef7c239d7919139387}} 
+\index{pci.\+cc@{pci.\+cc}!U\+S\+E\+\_\+\+H\+A\+SH@{U\+S\+E\+\_\+\+H\+A\+SH}}
+\index{U\+S\+E\+\_\+\+H\+A\+SH@{U\+S\+E\+\_\+\+H\+A\+SH}!pci.\+cc@{pci.\+cc}}
+\subsubsection{\texorpdfstring{U\+S\+E\+\_\+\+H\+A\+SH}{USE\_HASH}}
+{\footnotesize\ttfamily \#define U\+S\+E\+\_\+\+H\+A\+SH~1}
+

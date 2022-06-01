@@ -1,0 +1,1635 @@
+\hypertarget{classforte_1_1_forte_integrals}{}\section{forte\+:\+:Forte\+Integrals Class Reference}
+\label{classforte_1_1_forte_integrals}\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+
+
+The \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} class is a base class for transforming and storing MO integrals.  
+
+
+
+
+{\ttfamily \#include $<$integrals.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Forte\+Integrals\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_forte_integrals__inherit__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2}{J\+K\+Status}} \{ \mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2aa2e4822a98337283e39f7b60acf85ec9}{J\+K\+Status\+::empty}}, 
+\mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2a84d10a1ed612e61dbf6880f6e3ee533a}{J\+K\+Status\+::initialized}}, 
+\mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2a73d0ccbca69b94ee4cd7fc367a8ac9fc}{J\+K\+Status\+::finalized}}
+ \}
+\begin{DoxyCompactList}\small\item\em Enum class for the status of Pis4 JK. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_forte_integrals_ae1b1c7c744c7bd522c94bfa46d78bd05}{Forte\+Integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$ ref\+\_\+wfn, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, \mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} \mbox{\hyperlink{classforte_1_1_forte_integrals_af62c129aee5c995d15a95136a89faada}{integral\+\_\+type}}, \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} restricted)
+\begin{DoxyCompactList}\small\item\em Class constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_forte_integrals_a3053bf9ad483639d24392da21fbf522b}{Forte\+Integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, \mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} \mbox{\hyperlink{classforte_1_1_forte_integrals_af62c129aee5c995d15a95136a89faada}{integral\+\_\+type}}, \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} restricted)
+\begin{DoxyCompactList}\small\item\em Class constructor. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classforte_1_1_forte_integrals_a2d950c2561843509cf9cc5eb2205b0c6}{$\sim$\+Forte\+Integrals}} ()=default
+\begin{DoxyCompactList}\small\item\em Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_a74f97a711600c888b3cfea4e59c3483f}{common\+\_\+initialize}} ()
+\begin{DoxyCompactList}\small\item\em Common initializer for all types of integrals. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_a7862835fa0f5f9abe13dfcd6730fa4be}{initialize}} ()=0
+\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a4607d886e1224bc0b0db9b9a5fe44edb}{Ca}} () const
+\begin{DoxyCompactList}\small\item\em Return Ca. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a99ae31009f9c83f1c7b5871e9dcdcffe}{Cb}} () const
+\begin{DoxyCompactList}\small\item\em Return Cb. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_ae83c6f8ee941902655eb8dd27b993e2d}{nuclear\+\_\+repulsion\+\_\+energy}} () const
+\begin{DoxyCompactList}\small\item\em Return nuclear repulsion energy. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_af70ab78cbd8726d63bb7cc6e93d82e71}{wfn}} ()
+\begin{DoxyCompactList}\small\item\em temporary solution for not having a Wavefunction \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+JK $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a863150497a5b64b0617b58c5ff6c1f82}{jk}} ()
+\begin{DoxyCompactList}\small\item\em Return the Pis4 JK object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2}{J\+K\+Status}} \mbox{\hyperlink{classforte_1_1_forte_integrals_afdaad0b6e254794d8f1911cd786367f0}{jk\+\_\+status}} ()
+\begin{DoxyCompactList}\small\item\em Return the status of Psi4 JK object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_abe3df47d3c7fe30ac090362f20ca5160}{jk\+\_\+finalize}} ()
+\begin{DoxyCompactList}\small\item\em Finalize Psi4 JK object. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_aa008ab25f2c1a11cbe6b7ba43ca6179d}{nso}} () const
+\item 
+const psi\+::\+Dimension \& \mbox{\hyperlink{classforte_1_1_forte_integrals_afa631a01ad69a803b065734067671704}{nsopi}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of symmetry-\/adapted orbitals per irrep. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_ae1ba804bac41846e3fe915dbab9d57a7}{nmo}} () const
+\begin{DoxyCompactList}\small\item\em Return the total number of molecular orbitals (this number includes frozen M\+Os) \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_forte_integrals_a85f2644fb48f17cfd172682b10a0d252}{nirrep}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of irreducible representations. \end{DoxyCompactList}\item 
+const psi\+::\+Dimension \& \mbox{\hyperlink{classforte_1_1_forte_integrals_a944cff5a804957677551420b35443a5c}{frzcpi}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of frozen core orbitals per irrep. \end{DoxyCompactList}\item 
+const psi\+::\+Dimension \& \mbox{\hyperlink{classforte_1_1_forte_integrals_a9ec81966b5288931a2116e6f2f34a85d}{frzvpi}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of frozen virtual orbitals per irrep. \end{DoxyCompactList}\item 
+const psi\+::\+Dimension \& \mbox{\hyperlink{classforte_1_1_forte_integrals_a95947448d8e40f2be497e613512e64eb}{ncmopi}} () const
+\begin{DoxyCompactList}\small\item\em The number of correlated M\+Os per irrep (non frozen). This is nmopi -\/ nfzcpi -\/ nfzvpi. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_a3b78f05526be30dda1653d66f8dfdd74}{ncmo}} () const
+\begin{DoxyCompactList}\small\item\em Return the total number of correlated molecular orbitals (this number excludes frozen M\+Os) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_af7a507eef40436e68fff042565249f94}{set\+\_\+print}} (int print)
+\begin{DoxyCompactList}\small\item\em Set printing level. \end{DoxyCompactList}\item 
+virtual size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_af04858e7813556747745f90ffbda81a4}{nthree}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of auxiliary functions. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_a3045ecd9722fd7d7544832f7381c5fb3}{frozen\+\_\+core\+\_\+energy}} ()
+\begin{DoxyCompactList}\small\item\em Return the frozen core energy. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_a7e2dec148b4e6c3bbd918df8025f8329}{scalar}} () const
+\begin{DoxyCompactList}\small\item\em Scalar component of the Hamiltonian. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_adeb8d675248cb181a502818b8a972908}{oei\+\_\+a}} (size\+\_\+t p, size\+\_\+t q) const
+\begin{DoxyCompactList}\small\item\em The alpha one-\/electron integrals. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_ace33795c89d99da0aa8bac4a95263d23}{oei\+\_\+b}} (size\+\_\+t p, size\+\_\+t q) const
+\begin{DoxyCompactList}\small\item\em The beta one-\/electron integrals. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_a15ff05380f547fa00132ff7f993f1aa0}{get\+\_\+fock\+\_\+a}} (size\+\_\+t p, size\+\_\+t q, bool corr=true) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_a62a831e5387b3f2b6e7edfc5bf83c70b}{get\+\_\+fock\+\_\+b}} (size\+\_\+t p, size\+\_\+t q, bool corr=true) const
+\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a8d1ebbd9be1d2d06685c355dc8f1f384}{get\+\_\+fock\+\_\+a}} (bool corr=true) const
+\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_adb5c74105cf591a402ca01d37c7c9738}{get\+\_\+fock\+\_\+b}} (bool corr=true) const
+\item 
+virtual double \mbox{\hyperlink{classforte_1_1_forte_integrals_afc84c157025b56ee0f8e3b1abe1c0a5f}{aptei\+\_\+aa}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s)=0
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed alpha-\/alpha two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classforte_1_1_forte_integrals_a45efc2329cdfc7e4690cbe85688b947e}{aptei\+\_\+ab}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s)=0
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed alpha-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$rs$>$ \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classforte_1_1_forte_integrals_a246225031c3799dc446f94e0e732c3ac}{aptei\+\_\+bb}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s)=0
+\begin{DoxyCompactList}\small\item\em The antisymmetrixed beta-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ \end{DoxyCompactList}\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_forte_integrals_a0e01f8b4de06ec9eb2cd79ebb375da08}{oei\+\_\+a\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q)
+\item 
+ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_forte_integrals_af49cebc262b53e87620b23a70b167fb6}{oei\+\_\+b\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q)
+\item 
+virtual ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_forte_integrals_ac20ae649b8cfe116f8583d676e43da27}{aptei\+\_\+aa\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s)=0
+\item 
+virtual ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_forte_integrals_acd40e350dc861baf8adf6a3b47c74023}{aptei\+\_\+ab\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s)=0
+\item 
+virtual ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_forte_integrals_ae2799dc7cbfd456603a2b841b26582ab}{aptei\+\_\+bb\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&p, const std\+::vector$<$ size\+\_\+t $>$ \&q, const std\+::vector$<$ size\+\_\+t $>$ \&r, const std\+::vector$<$ size\+\_\+t $>$ \&s)=0
+\item 
+virtual ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_forte_integrals_aa1d259ae97b5a9c96ccb20599543b126}{three\+\_\+integral\+\_\+block}} (const std\+::vector$<$ size\+\_\+t $>$ \&, const std\+::vector$<$ size\+\_\+t $>$ \&, const std\+::vector$<$ size\+\_\+t $>$ \&)
+\item 
+virtual ambit\+::\+Tensor \mbox{\hyperlink{classforte_1_1_forte_integrals_aab51824020dc3588c026b5b7740f55a9}{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index}} (const std\+::vector$<$ size\+\_\+t $>$ \&A, size\+\_\+t p, const std\+::vector$<$ size\+\_\+t $>$ \&)
+\begin{DoxyCompactList}\small\item\em This function is only used by Disk\+DF and it is used to go from a Apq-\/$>$Aq tensor. \end{DoxyCompactList}\item 
+virtual double $\ast$$\ast$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a69292bc8e42a76e344cd01c4e3dd48d5}{three\+\_\+integral\+\_\+pointer}} ()
+\begin{DoxyCompactList}\small\item\em Expert Option\+: just try and use three\+\_\+integral. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_aadd195fbc0c7f7b659ab9280457568e0}{make\+\_\+fock\+\_\+matrix}} (ambit\+::\+Tensor Da, ambit\+::\+Tensor Db)=0
+\item 
+virtual std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix, double $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a4cdca0a7587cad9d830ed3b333ec78cf}{make\+\_\+fock\+\_\+inactive}} (psi\+::\+Dimension dim\+\_\+start, psi\+::\+Dimension dim\+\_\+end)=0
+\item 
+virtual std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a1dda7858e1766c9869b58eeda81d5a21}{make\+\_\+fock\+\_\+active}} (ambit\+::\+Tensor Da, ambit\+::\+Tensor Db)=0
+\item 
+virtual psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_forte_integrals_a9e2f6f24d734aa04784dfc46d3f031ae}{make\+\_\+fock\+\_\+active\+\_\+restricted}} (psi\+::\+Shared\+Matrix D)=0
+\item 
+virtual std\+::tuple$<$ psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a3bc94f56104d72581629d9d6a6a3a74c}{make\+\_\+fock\+\_\+active\+\_\+unrestricted}} (psi\+::\+Shared\+Matrix Da, psi\+::\+Shared\+Matrix Db)=0
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_ade72331435cd82f97fa2c97bb4b117c4}{set\+\_\+fock\+\_\+matrix}} (psi\+::\+Shared\+Matrix fa, psi\+::\+Shared\+Matrix fb)
+\begin{DoxyCompactList}\small\item\em Set Fock matrix. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_a32c581d05040cdc6f2c8e010468e3b34}{set\+\_\+nuclear\+\_\+repulsion}} (double value)
+\begin{DoxyCompactList}\small\item\em Set nuclear repulstion energy. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_aea3e933653ebe660401498969f5f834d}{set\+\_\+scalar}} (double value)
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_a5ab3fcc5430368fcd3c24eca7eef1018}{set\+\_\+oei\+\_\+all}} (const std\+::vector$<$ double $>$ \&\mbox{\hyperlink{classforte_1_1_forte_integrals_adeb8d675248cb181a502818b8a972908}{oei\+\_\+a}}, const std\+::vector$<$ double $>$ \&\mbox{\hyperlink{classforte_1_1_forte_integrals_ace33795c89d99da0aa8bac4a95263d23}{oei\+\_\+b}})
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_afe2d1f8b866b95bd3c299e5d7d0ca2db}{set\+\_\+tei\+\_\+all}} (const std\+::vector$<$ double $>$ \&tei\+\_\+aa, const std\+::vector$<$ double $>$ \&tei\+\_\+ab, const std\+::vector$<$ double $>$ \&tei\+\_\+bb)
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_af89a969af38f04545152bd7dcd545dda}{set\+\_\+oei}} (size\+\_\+t p, size\+\_\+t q, double value, bool alpha)
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_aaccd56e90bbc3c423158efb154336b9c}{set\+\_\+tei}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s, double value, bool alpha1, bool alpha2)=0
+\begin{DoxyCompactList}\small\item\em Set the value of the two-\/electron integrals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_ac4e5ddc01308998039176ad1d238323c}{rotate\+\_\+orbitals}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ Ua, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ Ub)
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_a8c30851e608fc99e86990688dce95b85}{update\+\_\+orbitals}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a4607d886e1224bc0b0db9b9a5fe44edb}{Ca}}, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a99ae31009f9c83f1c7b5871e9dcdcffe}{Cb}})
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_a4e6072183864e721498d63c65c24a114}{fix\+\_\+orbital\+\_\+phases}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ U, bool is\+\_\+alpha, bool debug=false)
+\item 
+\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} \mbox{\hyperlink{classforte_1_1_forte_integrals_ab276bac62693891c39007622e2227748}{spin\+\_\+restriction}} () const
+\begin{DoxyCompactList}\small\item\em Return the type of spin restriction enforced. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} \mbox{\hyperlink{classforte_1_1_forte_integrals_af62c129aee5c995d15a95136a89faada}{integral\+\_\+type}} () const
+\begin{DoxyCompactList}\small\item\em Return the type of integral used. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a61ed6c6eef6af54c77d9b62806cf5368}{One\+Body\+\_\+symm}} () const
+\begin{DoxyCompactList}\small\item\em Return the one-\/body symmetry integrals. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a44fb4e730761a5b9cd51d35562e01021}{One\+Body\+AO}} () const
+\begin{DoxyCompactList}\small\item\em Return the one-\/body AO integrals. \end{DoxyCompactList}\item 
+virtual int \mbox{\hyperlink{classforte_1_1_forte_integrals_ae3bb9e1cbe8b4a39e3befb070b41018f}{ga\+\_\+handle}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_a6d34bb4775299f7a481bfc0b7b23b1c2}{print\+\_\+info}} ()
+\begin{DoxyCompactList}\small\item\em Print the details of the integral transformation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_ad25a0cd3ad3a912200ea05cd7e5ff503}{print\+\_\+ints}} ()
+\begin{DoxyCompactList}\small\item\em Print the one-\/ and two-\/electron integrals to the output. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a58fd73798c66da537c507e640ccecde5}{ao\+\_\+dipole\+\_\+ints}} () const
+\item 
+virtual std\+::vector$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_acf43a2d4203cd062a2e011b3e3dfde3a}{mo\+\_\+dipole\+\_\+ints}} (const bool \&alpha=true, const bool \&resort=false)
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_forte_integrals_aed0fc4c8db2559e805b61739b8b3fcfc}{skip\+\_\+build\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Skip integral transformation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_a5b27ca75c026c350cdeb81fd64337c0c}{build\+\_\+dipole\+\_\+ints\+\_\+ao}} ()
+\begin{DoxyCompactList}\small\item\em Compute AO dipole integrals. \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_ad459b61022f3cc816f471e11022e1047}{dipole\+\_\+ints\+\_\+mo\+\_\+helper}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ Cao, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ epsilon, const bool \&resort)
+\begin{DoxyCompactList}\small\item\em Compute MO dipole integrals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_a953cb77df89721c19595a9d1ee3b7332}{startup}} ()
+\begin{DoxyCompactList}\small\item\em Class initializer. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_a0043eed3580cf4160134e65538f82e59}{read\+\_\+information}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_af9a0455b8cc8cf9482b5ee9c051161f2}{allocate}} ()
+\item 
+bool \mbox{\hyperlink{classforte_1_1_forte_integrals_ac2a413788a731cc2c48df947862bc964}{test\+\_\+orbital\+\_\+spin\+\_\+restriction}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ A, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ B) const
+\begin{DoxyCompactList}\small\item\em Test if two matrices are approximately identical. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_a39cf39d6554a2ca4a4338ffda7500426}{aptei\+\_\+index}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s)
+\item 
+void \mbox{\hyperlink{classforte_1_1_forte_integrals_a0013fb3e33eeeb1774569b4c442d8080}{\+\_\+undefined\+\_\+function}} (const std\+::string \&method) const
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_a0736cf358a7f4376ddf437da981a6a83}{freeze\+\_\+core\+\_\+orbitals}} ()
+\begin{DoxyCompactList}\small\item\em This function manages freezing core and virtual orbitals. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_a5dd931996d9b7b93fec4c635e67d8d83}{compute\+\_\+frozen\+\_\+one\+\_\+body\+\_\+operator}} ()
+\begin{DoxyCompactList}\small\item\em Compute the one-\/body operator modified by the frozen core orbitals. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_ad93f0d9805c265930ef77363d3b8f8ec}{rotate\+\_\+mos}} ()
+\begin{DoxyCompactList}\small\item\em Function used to rotate M\+Os during contructor. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_ab7f509d211328763c589db5e83b7b144}{gather\+\_\+integrals}} ()=0
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_forte_integrals_a733b77acfb8c47c59e764e9c7602d6bc}{resort\+\_\+integrals\+\_\+after\+\_\+freezing}} ()=0
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_afdf67caea315c0734445593bca936c1f}{options\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The options object. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a3dce6aa1e684a583f2cd947450f4b6f6}{mo\+\_\+space\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_aa054ac658980cf98f4f614fc34e4e0dd}{wfn\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The Wavefunction object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} \mbox{\hyperlink{classforte_1_1_forte_integrals_a8b8716d114d065e97c564b98c9329d37}{integral\+\_\+type\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The integral\+\_\+type. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} \mbox{\hyperlink{classforte_1_1_forte_integrals_ae3d3d96dbaaa25e3fad5c97b65339f08}{spin\+\_\+restriction\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Are we doing a spin-\/restricted computation? \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a5e3363b0a9b53f384ce80052cd1171d2}{Ca\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a865a73e683388b5d09923dc51f42dff0}{Cb\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_forte_integrals_a3f1ec2352852ca36cbb2317aa899a4e4}{nirrep\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Number of irreps. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_a78b8c5f768c3f2823d5e8e39786ea697}{nso\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of symmetry-\/adapted orbitals. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_aafdb1a329cd0768ae5bb6f6ee5157691}{nmo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of M\+Os, including the ones that are frozen. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_ad62e3e6c2be759579a27dae04eeae7c7}{ncmo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of correlated M\+Os (excluding frozen). This is nmo -\/ nfzc -\/ nfzv. \end{DoxyCompactList}\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_af31074926b010e7bc45231026bc947d0}{cmotomo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The mapping from correlated MO to full MO (frozen + correlated) \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a0fa58e78991336eeb446e0d0446f1aee}{mo\+\_\+to\+\_\+relmo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The mapping from full MO to irrep and relative indices. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_forte_integrals_a4265ec277dd2ba9c84baa00b873ef2ca}{nsopi\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of symmetry-\/adapted orbitals per irrep. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_forte_integrals_a42ea9a1d7fac58f4b6f7aacec22c0fe2}{nmopi\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of M\+Os per irrep. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_forte_integrals_a6dda8a446b4f3d37a80a7d747298001f}{frzcpi\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of frozen core M\+Os per irrep. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_forte_integrals_a7489dd8131b0d5e40ca092a01afeac3d}{frzvpi\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of frozen unoccupied M\+Os per irrep. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_forte_integrals_a89d80b31901b09b1cdc8e7b1735ac53d}{ncmopi\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_a8ec100fdb106f4b2abe8cacb18ef24cc}{aptei\+\_\+idx\+\_\+}}
+\item 
+int \mbox{\hyperlink{classforte_1_1_forte_integrals_a5a4b02c8be48f24a28416e40ad582590}{num\+\_\+threads\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of O\+MP threads. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_a71b35a2e3ec4920ebdd9c77563e740c0}{num\+\_\+tei\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Number of two electron integrals in chemist notation (pq$\vert$rs) \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_forte_integrals_a2771a7fb9101ca7fd335746986e9d75f}{num\+\_\+aptei\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_aa5d263203e19d829eacb573af9e65a10}{nucrep\+\_\+}} = 0.\+0
+\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_ad1662715d02f90e5a5a8ad21ff6678d9}{frozen\+\_\+core\+\_\+energy\+\_\+}} = 0.\+0
+\begin{DoxyCompactList}\small\item\em Frozen-\/core energy. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_aa7e9d38826e27e61eaedbe649f83f564}{scalar\+\_\+energy\+\_\+}} = 0.\+0
+\begin{DoxyCompactList}\small\item\em Scalar energy term. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a6017ecb2f221d2515f2920e4190aa8ea}{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Full one-\/electron integrals stored as a vector (includes frozen orbitals) \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a494b96e304db8fa9b24a1f60f99bc8a7}{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+}}
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_ad6df989214f6653702821bf048a49c02}{one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+}}
+\begin{DoxyCompactList}\small\item\em One-\/electron integrals stored as a vector. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a44cb55039d6b53a7572358db609e2782}{one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+JK $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a8535e687a9a82e87983f68d3e9921eba}{J\+K\+\_\+}}
+\begin{DoxyCompactList}\small\item\em JK object from Psi4. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2}{J\+K\+Status}} \mbox{\hyperlink{classforte_1_1_forte_integrals_a9084872d37bee552673bb1d574527ba2}{J\+K\+\_\+status\+\_\+}} = \mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2aa2e4822a98337283e39f7b60acf85ec9}{J\+K\+Status\+::empty}}
+\begin{DoxyCompactList}\small\item\em Status of the JK object. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_forte_integrals_a2d3cf66f9a6f95e365a3ba16841ee567}{fock\+\_\+a\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Fock matrix (including frozen orbitals) \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_forte_integrals_ae97fe104442ec92972f450de1c032e48}{fock\+\_\+b\+\_\+}}
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a53b95d98b262874ed8e73e17377dc6d7}{aphys\+\_\+tei\+\_\+aa\+\_\+}}
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_ab5af519ef73a625e5279a04801224b46}{aphys\+\_\+tei\+\_\+ab\+\_\+}}
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a759f8bf4799bcaaf26fd673c92914ec4}{aphys\+\_\+tei\+\_\+bb\+\_\+}}
+\item 
+ambit\+::\+Tensor\+Type \mbox{\hyperlink{classforte_1_1_forte_integrals_a4dc4fef1392fb146f9585daf945e4399}{tensor\+\_\+type\+\_\+}} = ambit\+::\+Core\+Tensor
+\begin{DoxyCompactList}\small\item\em The type of tensor that ambit uses -\/$>$ Core\+Tensor. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_forte_integrals_aadefcdebabf54f05730574d16af787cb}{int\+\_\+mem\+\_\+}}
+\begin{DoxyCompactList}\small\item\em How much memory each integral takes up. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_forte_integrals_af1dfd9a5f18efa1bac5d55f1e90b4f83}{print\+\_\+}} = 1
+\begin{DoxyCompactList}\small\item\em Control printing of timings. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a1a25c318a9230e340e922c14e2c3d07c}{One\+Body\+\_\+symm\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The One Electron Integrals (T + V) in SO Basis. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ \mbox{\hyperlink{classforte_1_1_forte_integrals_a52fd868c9e9370ab6869abd7ea48a1b4}{dipole\+\_\+ints\+\_\+ao\+\_\+}}
+\begin{DoxyCompactList}\small\item\em AO dipole integrals. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const bool \mbox{\hyperlink{classforte_1_1_forte_integrals_aa239481b0b665b7b4859f3aef4819f41}{have\+\_\+omp\+\_\+}} = false
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} class is a base class for transforming and storing MO integrals. 
+
+\mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} provides a common interface for using one-\/ and two-\/electron integrals in the MO basis. This class also takes care of removing frozen core and virtual orbitals (excluded from any treatment of correlation energy) and forming the modified one-\/electron operator, which includes contributions from doubly occupied frozen orbitals.
+
+One electron integrals include kinetic, nuclear potential, and frozen core potential and are stored as \begin{DoxyVerb}h_pq = <phi_p|h|phi_q>.
+\end{DoxyVerb}
+
+
+Two electron integrals are returned as antisymmetrized integrals in physicist notation ($<$pq$\vert$$\vert$rs$>$), and are accessed as \begin{DoxyVerb}aptei(p,q,r,s) = <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr),
+\end{DoxyVerb}
+
+
+where (pr$\vert$qs) is a two electron integral in chemist notation.
+
+There are several classes that derive from \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} (Convetional, DF, ...) and these are best created via the helper function \begin{DoxyVerb}std::shared_ptr<ForteIntegrals> make_forte_integrals(...)
+\end{DoxyVerb}
+
+
+defined in \textquotesingle{}\mbox{\hyperlink{make__integrals_8h}{make\+\_\+integrals.\+h}}\textquotesingle{} 
+
+\subsection{Member Enumeration Documentation}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2}\label{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!J\+K\+Status@{J\+K\+Status}}
+\index{J\+K\+Status@{J\+K\+Status}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{J\+K\+Status}{JKStatus}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2}{forte\+::\+Forte\+Integrals\+::\+J\+K\+Status}}\hspace{0.3cm}{\ttfamily [strong]}}
+
+
+
+Enum class for the status of Pis4 JK. 
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{empty@{empty}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!empty@{empty}}}\mbox{\Hypertarget{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2aa2e4822a98337283e39f7b60acf85ec9}\label{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2aa2e4822a98337283e39f7b60acf85ec9}} 
+empty&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{initialized@{initialized}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!initialized@{initialized}}}\mbox{\Hypertarget{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2a84d10a1ed612e61dbf6880f6e3ee533a}\label{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2a84d10a1ed612e61dbf6880f6e3ee533a}} 
+initialized&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{finalized@{finalized}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!finalized@{finalized}}}\mbox{\Hypertarget{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2a73d0ccbca69b94ee4cd7fc367a8ac9fc}\label{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2a73d0ccbca69b94ee4cd7fc367a8ac9fc}} 
+finalized&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ae1b1c7c744c7bd522c94bfa46d78bd05}\label{classforte_1_1_forte_integrals_ae1b1c7c744c7bd522c94bfa46d78bd05}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!Forte\+Integrals@{Forte\+Integrals}}
+\index{Forte\+Integrals@{Forte\+Integrals}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{Forte\+Integrals()}{ForteIntegrals()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+Forte\+Integrals\+::\+Forte\+Integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$}]{ref\+\_\+wfn,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}}}]{integral\+\_\+type,  }\item[{\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}}}]{restricted }\end{DoxyParamCaption})}
+
+
+
+Class constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em options} & The main options object \\
+\hline
+{\em ref\+\_\+wfn} & The reference wave function object \\
+\hline
+{\em restricted} & Select a restricted or unrestricted transformation \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a3053bf9ad483639d24392da21fbf522b}\label{classforte_1_1_forte_integrals_a3053bf9ad483639d24392da21fbf522b}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!Forte\+Integrals@{Forte\+Integrals}}
+\index{Forte\+Integrals@{Forte\+Integrals}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{Forte\+Integrals()}{ForteIntegrals()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+Forte\+Integrals\+::\+Forte\+Integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}}}]{integral\+\_\+type,  }\item[{\mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}}}]{restricted }\end{DoxyParamCaption})}
+
+
+
+Class constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em options} & The main options object \\
+\hline
+{\em restricted} & Select a restricted or unrestricted transformation \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a2d950c2561843509cf9cc5eb2205b0c6}\label{classforte_1_1_forte_integrals_a2d950c2561843509cf9cc5eb2205b0c6}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!````~Forte\+Integrals@{$\sim$\+Forte\+Integrals}}
+\index{````~Forte\+Integrals@{$\sim$\+Forte\+Integrals}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{$\sim$\+Forte\+Integrals()}{~ForteIntegrals()}}
+{\footnotesize\ttfamily virtual forte\+::\+Forte\+Integrals\+::$\sim$\+Forte\+Integrals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+
+
+Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a0013fb3e33eeeb1774569b4c442d8080}\label{classforte_1_1_forte_integrals_a0013fb3e33eeeb1774569b4c442d8080}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!\+\_\+undefined\+\_\+function@{\+\_\+undefined\+\_\+function}}
+\index{\+\_\+undefined\+\_\+function@{\+\_\+undefined\+\_\+function}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{\+\_\+undefined\+\_\+function()}{\_undefined\_function()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::\+\_\+undefined\+\_\+function (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{method }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af9a0455b8cc8cf9482b5ee9c051161f2}\label{classforte_1_1_forte_integrals_af9a0455b8cc8cf9482b5ee9c051161f2}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!allocate@{allocate}}
+\index{allocate@{allocate}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{allocate()}{allocate()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::allocate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a58fd73798c66da537c507e640ccecde5}\label{classforte_1_1_forte_integrals_a58fd73798c66da537c507e640ccecde5}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!ao\+\_\+dipole\+\_\+ints@{ao\+\_\+dipole\+\_\+ints}}
+\index{ao\+\_\+dipole\+\_\+ints@{ao\+\_\+dipole\+\_\+ints}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{ao\+\_\+dipole\+\_\+ints()}{ao\_dipole\_ints()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ forte\+::\+Forte\+Integrals\+::ao\+\_\+dipole\+\_\+ints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Obtain AO dipole integrals \mbox{[}X, Y, Z\mbox{]} Each direction is a std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ of dimension nmo $\ast$ nmo \mbox{\Hypertarget{classforte_1_1_forte_integrals_afc84c157025b56ee0f8e3b1abe1c0a5f}\label{classforte_1_1_forte_integrals_afc84c157025b56ee0f8e3b1abe1c0a5f}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aptei\+\_\+aa@{aptei\+\_\+aa}}
+\index{aptei\+\_\+aa@{aptei\+\_\+aa}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+aa()}{aptei\_aa()}}
+{\footnotesize\ttfamily virtual double forte\+::\+Forte\+Integrals\+::aptei\+\_\+aa (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+The antisymmetrixed alpha-\/alpha two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_a933807bd0f7a711329edb83b9b9915f0}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_conventional_integrals_a4df626960614077f1df435efba44bd0a}{forte\+::\+Conventional\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_a118be3ea0020672f3d3e6ce4602cc14c}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a3a815a39bc2f01a1cb5398e857f56285}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_aa495745fe55286ec7b4ff10ec6d22fae}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ac20ae649b8cfe116f8583d676e43da27}\label{classforte_1_1_forte_integrals_ac20ae649b8cfe116f8583d676e43da27}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aptei\+\_\+aa\+\_\+block@{aptei\+\_\+aa\+\_\+block}}
+\index{aptei\+\_\+aa\+\_\+block@{aptei\+\_\+aa\+\_\+block}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+aa\+\_\+block()}{aptei\_aa\_block()}}
+{\footnotesize\ttfamily virtual ambit\+::\+Tensor forte\+::\+Forte\+Integrals\+::aptei\+\_\+aa\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Grab a block of the integrals and return a tensor p, q, r, s correspond to the vector of indices you want for your tensor if p, q, r, s is equal to an array of all of the mos, then this will \begin{DoxyReturn}{Returns}
+a tensor with a block of the alpha-\/alpha antisymmetrized two-\/electron integrals 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_ae60addb837588a5101f1f2485a818426}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_conventional_integrals_abbe1dfb244b776a9d50fb2a06a837cbf}{forte\+::\+Conventional\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_aeaecb1b7275f8b9fc8b87b4a3b110fcd}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a2709b0116f0e44fc1eb8038a2b7afd54}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_a2dc1ace8715b3c5a9b7c9da4afbeee44}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a45efc2329cdfc7e4690cbe85688b947e}\label{classforte_1_1_forte_integrals_a45efc2329cdfc7e4690cbe85688b947e}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aptei\+\_\+ab@{aptei\+\_\+ab}}
+\index{aptei\+\_\+ab@{aptei\+\_\+ab}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+ab()}{aptei\_ab()}}
+{\footnotesize\ttfamily virtual double forte\+::\+Forte\+Integrals\+::aptei\+\_\+ab (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+The antisymmetrixed alpha-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$rs$>$ 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_abfea37dad8b705e35732f3fae06dd151}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_conventional_integrals_a7ebb8bcee10a6cbac613e7b626093731}{forte\+::\+Conventional\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_aba4876388a8b9b633f38af3fc1cb4227}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_aa0ab48ce47dab83c35bf3b9433273f59}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_a01ec88efadb6b8b28bae6c5c3fbfd389}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_acd40e350dc861baf8adf6a3b47c74023}\label{classforte_1_1_forte_integrals_acd40e350dc861baf8adf6a3b47c74023}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aptei\+\_\+ab\+\_\+block@{aptei\+\_\+ab\+\_\+block}}
+\index{aptei\+\_\+ab\+\_\+block@{aptei\+\_\+ab\+\_\+block}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+ab\+\_\+block()}{aptei\_ab\_block()}}
+{\footnotesize\ttfamily virtual ambit\+::\+Tensor forte\+::\+Forte\+Integrals\+::aptei\+\_\+ab\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+\begin{DoxyReturn}{Returns}
+a tensor with a block of the alpha-\/beta antisymmetrized two-\/electron integrals 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_af65b7d58e92e6ec9a13c93238724a831}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_conventional_integrals_aeb46dfc0030e582c301b64a011e2af58}{forte\+::\+Conventional\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_af9aff1a966a4e520aa4cc62afd1c6998}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a3512219937aa98d2f0b6ee680254317a}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_a0c7391787d43e90df9a343a59bcadfbc}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a246225031c3799dc446f94e0e732c3ac}\label{classforte_1_1_forte_integrals_a246225031c3799dc446f94e0e732c3ac}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aptei\+\_\+bb@{aptei\+\_\+bb}}
+\index{aptei\+\_\+bb@{aptei\+\_\+bb}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+bb()}{aptei\_bb()}}
+{\footnotesize\ttfamily virtual double forte\+::\+Forte\+Integrals\+::aptei\+\_\+bb (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+The antisymmetrixed beta-\/beta two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_a2f10a8117087972091b1a7b7188bf797}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_conventional_integrals_ae6d6bfe97bb42d74dc9b69b5c617a966}{forte\+::\+Conventional\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_a02acd5ac863dcc1577c8b481ab80e8b6}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a84224ddc5210cad49b63e74bdd1d4342}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_ac9c2cb326b43623cbb290f7d6e1738cb}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ae2799dc7cbfd456603a2b841b26582ab}\label{classforte_1_1_forte_integrals_ae2799dc7cbfd456603a2b841b26582ab}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aptei\+\_\+bb\+\_\+block@{aptei\+\_\+bb\+\_\+block}}
+\index{aptei\+\_\+bb\+\_\+block@{aptei\+\_\+bb\+\_\+block}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+bb\+\_\+block()}{aptei\_bb\_block()}}
+{\footnotesize\ttfamily virtual ambit\+::\+Tensor forte\+::\+Forte\+Integrals\+::aptei\+\_\+bb\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{r,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+\begin{DoxyReturn}{Returns}
+a tensor with a block of the beta-\/beta antisymmetrized two-\/electron integrals 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_a71e29eaa0e9b1a84fe679e147c22398f}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_conventional_integrals_a85a995f80f256953f9ceeb2ea903cf0b}{forte\+::\+Conventional\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_a87d158226e76e8897395384f78b3ce24}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a4b78b82f7bb76de677a476d5982e9f89}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_a1eb5b7a379b668d0b10a0871a934b2cd}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a39cf39d6554a2ca4a4338ffda7500426}\label{classforte_1_1_forte_integrals_a39cf39d6554a2ca4a4338ffda7500426}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aptei\+\_\+index@{aptei\+\_\+index}}
+\index{aptei\+\_\+index@{aptei\+\_\+index}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+index()}{aptei\_index()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::aptei\+\_\+index (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+An addressing function to for two-\/electron integrals \begin{DoxyReturn}{Returns}
+the address of the integral $<$pq$\vert$rs$>$ or $<$pq$\vert$$\vert$rs$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a5b27ca75c026c350cdeb81fd64337c0c}\label{classforte_1_1_forte_integrals_a5b27ca75c026c350cdeb81fd64337c0c}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!build\+\_\+dipole\+\_\+ints\+\_\+ao@{build\+\_\+dipole\+\_\+ints\+\_\+ao}}
+\index{build\+\_\+dipole\+\_\+ints\+\_\+ao@{build\+\_\+dipole\+\_\+ints\+\_\+ao}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{build\+\_\+dipole\+\_\+ints\+\_\+ao()}{build\_dipole\_ints\_ao()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::build\+\_\+dipole\+\_\+ints\+\_\+ao (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute AO dipole integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a4607d886e1224bc0b0db9b9a5fe44edb}\label{classforte_1_1_forte_integrals_a4607d886e1224bc0b0db9b9a5fe44edb}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!Ca@{Ca}}
+\index{Ca@{Ca}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{Ca()}{Ca()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ forte\+::\+Forte\+Integrals\+::\+Ca (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return Ca. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a99ae31009f9c83f1c7b5871e9dcdcffe}\label{classforte_1_1_forte_integrals_a99ae31009f9c83f1c7b5871e9dcdcffe}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!Cb@{Cb}}
+\index{Cb@{Cb}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{Cb()}{Cb()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ forte\+::\+Forte\+Integrals\+::\+Cb (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return Cb. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a74f97a711600c888b3cfea4e59c3483f}\label{classforte_1_1_forte_integrals_a74f97a711600c888b3cfea4e59c3483f}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!common\+\_\+initialize@{common\+\_\+initialize}}
+\index{common\+\_\+initialize@{common\+\_\+initialize}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{common\+\_\+initialize()}{common\_initialize()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::common\+\_\+initialize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Common initializer for all types of integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a5dd931996d9b7b93fec4c635e67d8d83}\label{classforte_1_1_forte_integrals_a5dd931996d9b7b93fec4c635e67d8d83}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!compute\+\_\+frozen\+\_\+one\+\_\+body\+\_\+operator@{compute\+\_\+frozen\+\_\+one\+\_\+body\+\_\+operator}}
+\index{compute\+\_\+frozen\+\_\+one\+\_\+body\+\_\+operator@{compute\+\_\+frozen\+\_\+one\+\_\+body\+\_\+operator}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{compute\+\_\+frozen\+\_\+one\+\_\+body\+\_\+operator()}{compute\_frozen\_one\_body\_operator()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::compute\+\_\+frozen\+\_\+one\+\_\+body\+\_\+operator (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute the one-\/body operator modified by the frozen core orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ad459b61022f3cc816f471e11022e1047}\label{classforte_1_1_forte_integrals_ad459b61022f3cc816f471e11022e1047}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!dipole\+\_\+ints\+\_\+mo\+\_\+helper@{dipole\+\_\+ints\+\_\+mo\+\_\+helper}}
+\index{dipole\+\_\+ints\+\_\+mo\+\_\+helper@{dipole\+\_\+ints\+\_\+mo\+\_\+helper}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{dipole\+\_\+ints\+\_\+mo\+\_\+helper()}{dipole\_ints\_mo\_helper()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ forte\+::\+Forte\+Integrals\+::dipole\+\_\+ints\+\_\+mo\+\_\+helper (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{Cao,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{epsilon,  }\item[{const bool \&}]{resort }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute MO dipole integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a4e6072183864e721498d63c65c24a114}\label{classforte_1_1_forte_integrals_a4e6072183864e721498d63c65c24a114}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!fix\+\_\+orbital\+\_\+phases@{fix\+\_\+orbital\+\_\+phases}}
+\index{fix\+\_\+orbital\+\_\+phases@{fix\+\_\+orbital\+\_\+phases}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{fix\+\_\+orbital\+\_\+phases()}{fix\_orbital\_phases()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::fix\+\_\+orbital\+\_\+phases (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{U,  }\item[{bool}]{is\+\_\+alpha,  }\item[{bool}]{debug = {\ttfamily false} }\end{DoxyParamCaption})}
+
+Make the orbital phase consistent when updating orbitals 
+\begin{DoxyParams}{Parameters}
+{\em U} & the unitary transformation matrix so that C\+\_\+new = C\+\_\+old $\ast$ U \\
+\hline
+{\em is\+\_\+alpha} & target Ca if true else Cb \\
+\hline
+{\em debug} & print MO overlap and transformation matrix if true \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a0736cf358a7f4376ddf437da981a6a83}\label{classforte_1_1_forte_integrals_a0736cf358a7f4376ddf437da981a6a83}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!freeze\+\_\+core\+\_\+orbitals@{freeze\+\_\+core\+\_\+orbitals}}
+\index{freeze\+\_\+core\+\_\+orbitals@{freeze\+\_\+core\+\_\+orbitals}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{freeze\+\_\+core\+\_\+orbitals()}{freeze\_core\_orbitals()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::freeze\+\_\+core\+\_\+orbitals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+This function manages freezing core and virtual orbitals. 
+
+
+
+Reimplemented in \mbox{\hyperlink{classforte_1_1_psi4_integrals_ae547d05a2ada31f05a5e3dc58c9630c3}{forte\+::\+Psi4\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a3045ecd9722fd7d7544832f7381c5fb3}\label{classforte_1_1_forte_integrals_a3045ecd9722fd7d7544832f7381c5fb3}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!frozen\+\_\+core\+\_\+energy@{frozen\+\_\+core\+\_\+energy}}
+\index{frozen\+\_\+core\+\_\+energy@{frozen\+\_\+core\+\_\+energy}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{frozen\+\_\+core\+\_\+energy()}{frozen\_core\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::frozen\+\_\+core\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Return the frozen core energy. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a944cff5a804957677551420b35443a5c}\label{classforte_1_1_forte_integrals_a944cff5a804957677551420b35443a5c}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!frzcpi@{frzcpi}}
+\index{frzcpi@{frzcpi}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{frzcpi()}{frzcpi()}}
+{\footnotesize\ttfamily const psi\+::\+Dimension \& forte\+::\+Forte\+Integrals\+::frzcpi (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the number of frozen core orbitals per irrep. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a9ec81966b5288931a2116e6f2f34a85d}\label{classforte_1_1_forte_integrals_a9ec81966b5288931a2116e6f2f34a85d}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!frzvpi@{frzvpi}}
+\index{frzvpi@{frzvpi}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{frzvpi()}{frzvpi()}}
+{\footnotesize\ttfamily const psi\+::\+Dimension \& forte\+::\+Forte\+Integrals\+::frzvpi (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the number of frozen virtual orbitals per irrep. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ae3bb9e1cbe8b4a39e3befb070b41018f}\label{classforte_1_1_forte_integrals_ae3bb9e1cbe8b4a39e3befb070b41018f}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!ga\+\_\+handle@{ga\+\_\+handle}}
+\index{ga\+\_\+handle@{ga\+\_\+handle}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{ga\+\_\+handle()}{ga\_handle()}}
+{\footnotesize\ttfamily int forte\+::\+Forte\+Integrals\+::ga\+\_\+handle (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ab7f509d211328763c589db5e83b7b144}\label{classforte_1_1_forte_integrals_ab7f509d211328763c589db5e83b7b144}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!gather\+\_\+integrals@{gather\+\_\+integrals}}
+\index{gather\+\_\+integrals@{gather\+\_\+integrals}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{gather\+\_\+integrals()}{gather\_integrals()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Forte\+Integrals\+::gather\+\_\+integrals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [pure virtual]}}
+
+Computes/reads two-\/electron integrals (see C\+D/\+D\+F/\+Conventional classes for implementation) \mbox{\Hypertarget{classforte_1_1_forte_integrals_a15ff05380f547fa00132ff7f993f1aa0}\label{classforte_1_1_forte_integrals_a15ff05380f547fa00132ff7f993f1aa0}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!get\+\_\+fock\+\_\+a@{get\+\_\+fock\+\_\+a}}
+\index{get\+\_\+fock\+\_\+a@{get\+\_\+fock\+\_\+a}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{get\+\_\+fock\+\_\+a()}{get\_fock\_a()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::get\+\_\+fock\+\_\+a (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{bool}]{corr = {\ttfamily true} }\end{DoxyParamCaption}) const}
+
+Get the alpha Fock matrix element 
+\begin{DoxyParams}{Parameters}
+{\em p} & The bra index \\
+\hline
+{\em q} & The ket index \\
+\hline
+{\em corr} & Whether indices p, q start counting from correlated orbitals \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the alpha Fock matrix element F\+\_\+\{pq\} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a8d1ebbd9be1d2d06685c355dc8f1f384}\label{classforte_1_1_forte_integrals_a8d1ebbd9be1d2d06685c355dc8f1f384}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!get\+\_\+fock\+\_\+a@{get\+\_\+fock\+\_\+a}}
+\index{get\+\_\+fock\+\_\+a@{get\+\_\+fock\+\_\+a}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{get\+\_\+fock\+\_\+a()}{get\_fock\_a()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ forte\+::\+Forte\+Integrals\+::get\+\_\+fock\+\_\+a (\begin{DoxyParamCaption}\item[{bool}]{corr = {\ttfamily true} }\end{DoxyParamCaption}) const}
+
+Get the alpha Fock matrix in Psi4 matrix 
+\begin{DoxyParams}{Parameters}
+{\em corr} & Whether to return only the part of correlated orbitals \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the alpha Fock matrix 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a62a831e5387b3f2b6e7edfc5bf83c70b}\label{classforte_1_1_forte_integrals_a62a831e5387b3f2b6e7edfc5bf83c70b}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!get\+\_\+fock\+\_\+b@{get\+\_\+fock\+\_\+b}}
+\index{get\+\_\+fock\+\_\+b@{get\+\_\+fock\+\_\+b}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{get\+\_\+fock\+\_\+b()}{get\_fock\_b()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::get\+\_\+fock\+\_\+b (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{bool}]{corr = {\ttfamily true} }\end{DoxyParamCaption}) const}
+
+Get the beta Fock matrix element 
+\begin{DoxyParams}{Parameters}
+{\em p} & The bra index \\
+\hline
+{\em q} & The ket index \\
+\hline
+{\em corr} & Whether indices p, q start counting from correlated orbitals \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the beta Fock matrix element F\+\_\+\{pq\} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_adb5c74105cf591a402ca01d37c7c9738}\label{classforte_1_1_forte_integrals_adb5c74105cf591a402ca01d37c7c9738}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!get\+\_\+fock\+\_\+b@{get\+\_\+fock\+\_\+b}}
+\index{get\+\_\+fock\+\_\+b@{get\+\_\+fock\+\_\+b}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{get\+\_\+fock\+\_\+b()}{get\_fock\_b()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ forte\+::\+Forte\+Integrals\+::get\+\_\+fock\+\_\+b (\begin{DoxyParamCaption}\item[{bool}]{corr = {\ttfamily true} }\end{DoxyParamCaption}) const}
+
+Get the beta fock matrix in Psi4 matrix 
+\begin{DoxyParams}{Parameters}
+{\em corr} & Whether to return only the part of correlated orbitals \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the beta Fock matrix 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a7862835fa0f5f9abe13dfcd6730fa4be}\label{classforte_1_1_forte_integrals_a7862835fa0f5f9abe13dfcd6730fa4be}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!initialize@{initialize}}
+\index{initialize@{initialize}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{initialize()}{initialize()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Forte\+Integrals\+::initialize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_a09375e296a39feb6a94c7cf4947d0206}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_conventional_integrals_a9d9d6528eb1241a9e03fcf82e4a88dbe}{forte\+::\+Conventional\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_af303c4caae64a8a7231239a676cac65e}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a3205b9dc431a7104969132b1f4bc206f}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_a8488339b2eff7dea6e98e29e9bf55a97}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af62c129aee5c995d15a95136a89faada}\label{classforte_1_1_forte_integrals_af62c129aee5c995d15a95136a89faada}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!integral\+\_\+type@{integral\+\_\+type}}
+\index{integral\+\_\+type@{integral\+\_\+type}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{integral\+\_\+type()}{integral\_type()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} forte\+::\+Forte\+Integrals\+::integral\+\_\+type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the type of integral used. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a863150497a5b64b0617b58c5ff6c1f82}\label{classforte_1_1_forte_integrals_a863150497a5b64b0617b58c5ff6c1f82}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!jk@{jk}}
+\index{jk@{jk}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{jk()}{jk()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ psi\+::\+JK $>$ forte\+::\+Forte\+Integrals\+::jk (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Return the Pis4 JK object. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_abe3df47d3c7fe30ac090362f20ca5160}\label{classforte_1_1_forte_integrals_abe3df47d3c7fe30ac090362f20ca5160}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!jk\+\_\+finalize@{jk\+\_\+finalize}}
+\index{jk\+\_\+finalize@{jk\+\_\+finalize}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{jk\+\_\+finalize()}{jk\_finalize()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::jk\+\_\+finalize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Finalize Psi4 JK object. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_afdaad0b6e254794d8f1911cd786367f0}\label{classforte_1_1_forte_integrals_afdaad0b6e254794d8f1911cd786367f0}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!jk\+\_\+status@{jk\+\_\+status}}
+\index{jk\+\_\+status@{jk\+\_\+status}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{jk\+\_\+status()}{jk\_status()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2}{Forte\+Integrals\+::\+J\+K\+Status}} forte\+::\+Forte\+Integrals\+::jk\+\_\+status (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Return the status of Psi4 JK object. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a1dda7858e1766c9869b58eeda81d5a21}\label{classforte_1_1_forte_integrals_a1dda7858e1766c9869b58eeda81d5a21}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!make\+\_\+fock\+\_\+active@{make\+\_\+fock\+\_\+active}}
+\index{make\+\_\+fock\+\_\+active@{make\+\_\+fock\+\_\+active}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active()}{make\_fock\_active()}}
+{\footnotesize\ttfamily virtual std\+::tuple$<$psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix$>$ forte\+::\+Forte\+Integrals\+::make\+\_\+fock\+\_\+active (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor}]{Da,  }\item[{ambit\+::\+Tensor}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Make the active Fock matrix in MO basis (include frozen orbitals) 
+\begin{DoxyParams}{Parameters}
+{\em Da} & The alpha 1\+R\+DM (nactv x nactv, no symmetry) from \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} class \\
+\hline
+{\em Db} & The beta 1\+R\+DM (nactv x nactv, no symmetry) from \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} class \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+alpha Fock, beta Fock spin orbital equation\+: F\+\_\+\{pq\} = \{uv\}$^\wedge$\{active\} $<$pu$\vert$$\vert$qv$>$ $\ast$ gamma\+\_\+\{uv\} 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_psi4_integrals_a0f33ab6a5df70095c58e662b6ebc3725}{forte\+::\+Psi4\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_custom_integrals_aab638e735541a02c266c8ed5bf25af3a}{forte\+::\+Custom\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a9e2f6f24d734aa04784dfc46d3f031ae}\label{classforte_1_1_forte_integrals_a9e2f6f24d734aa04784dfc46d3f031ae}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!make\+\_\+fock\+\_\+active\+\_\+restricted@{make\+\_\+fock\+\_\+active\+\_\+restricted}}
+\index{make\+\_\+fock\+\_\+active\+\_\+restricted@{make\+\_\+fock\+\_\+active\+\_\+restricted}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active\+\_\+restricted()}{make\_fock\_active\_restricted()}}
+{\footnotesize\ttfamily virtual psi\+::\+Shared\+Matrix forte\+::\+Forte\+Integrals\+::make\+\_\+fock\+\_\+active\+\_\+restricted (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{D }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Make the active Fock matrix in MO basis (include frozen orbitals) 
+\begin{DoxyParams}{Parameters}
+{\em D} & The spin-\/summed 1\+R\+DM in psi\+::\+Shared\+Matrix form \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Fock matrix 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_psi4_integrals_a37dd630ef0a774d76aadcc73a920cd7f}{forte\+::\+Psi4\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_custom_integrals_a8079cb2a8c6b71608db08667694183b9}{forte\+::\+Custom\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a3bc94f56104d72581629d9d6a6a3a74c}\label{classforte_1_1_forte_integrals_a3bc94f56104d72581629d9d6a6a3a74c}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!make\+\_\+fock\+\_\+active\+\_\+unrestricted@{make\+\_\+fock\+\_\+active\+\_\+unrestricted}}
+\index{make\+\_\+fock\+\_\+active\+\_\+unrestricted@{make\+\_\+fock\+\_\+active\+\_\+unrestricted}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+active\+\_\+unrestricted()}{make\_fock\_active\_unrestricted()}}
+{\footnotesize\ttfamily virtual std\+::tuple$<$psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix$>$ forte\+::\+Forte\+Integrals\+::make\+\_\+fock\+\_\+active\+\_\+unrestricted (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{Da,  }\item[{psi\+::\+Shared\+Matrix}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Make the active Fock matrix in MO basis (include frozen orbitals) 
+\begin{DoxyParams}{Parameters}
+{\em Da} & The alpha 1\+R\+DM in psi\+::\+Shared\+Matrix form \\
+\hline
+{\em Db} & The beta 1\+R\+DM in psi\+::\+Shared\+Matrix form \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+alpha Fock matrix, beta Fock matrix 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_psi4_integrals_a42f39301293e0b8048412cb833420797}{forte\+::\+Psi4\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_custom_integrals_a87a7d17ddd89c004adf56b032d409669}{forte\+::\+Custom\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a4cdca0a7587cad9d830ed3b333ec78cf}\label{classforte_1_1_forte_integrals_a4cdca0a7587cad9d830ed3b333ec78cf}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!make\+\_\+fock\+\_\+inactive@{make\+\_\+fock\+\_\+inactive}}
+\index{make\+\_\+fock\+\_\+inactive@{make\+\_\+fock\+\_\+inactive}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+inactive()}{make\_fock\_inactive()}}
+{\footnotesize\ttfamily virtual std\+::tuple$<$psi\+::\+Shared\+Matrix, psi\+::\+Shared\+Matrix, double$>$ forte\+::\+Forte\+Integrals\+::make\+\_\+fock\+\_\+inactive (\begin{DoxyParamCaption}\item[{psi\+::\+Dimension}]{dim\+\_\+start,  }\item[{psi\+::\+Dimension}]{dim\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Make the closed-\/shell Fock matrix in MO basis (include frozen orbitals) 
+\begin{DoxyParams}{Parameters}
+{\em dim\+\_\+start} & Dimension for the starting index (per irrep) of closed-\/shell orbitals \\
+\hline
+{\em dim\+\_\+end} & Dimension for the ending index (per irrep) of closed-\/shell orbitals \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+alpha Fock, beta Fock, and closed-\/shell energy spin orbital equation\+: F\+\_\+\{pq\} = h\+\_\+\{pq\} + \{i\}$^\wedge$\{closed\} $<$pi$\vert$$\vert$qi$>$ e\+\_\+closed = \{i\}$^\wedge$\{closed\} h\+\_\+\{ii\} + 0.\+5 $\ast$ \{ij\}$^\wedge$\{closed\} $<$ij$\vert$$\vert$ij$>$ 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_psi4_integrals_ac867cd8004611a1fe93c31f1068ad81c}{forte\+::\+Psi4\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_custom_integrals_a00921e140fba2f63eb8399003029ad1a}{forte\+::\+Custom\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aadd195fbc0c7f7b659ab9280457568e0}\label{classforte_1_1_forte_integrals_aadd195fbc0c7f7b659ab9280457568e0}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!make\+\_\+fock\+\_\+matrix@{make\+\_\+fock\+\_\+matrix}}
+\index{make\+\_\+fock\+\_\+matrix@{make\+\_\+fock\+\_\+matrix}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{make\+\_\+fock\+\_\+matrix()}{make\_fock\_matrix()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Forte\+Integrals\+::make\+\_\+fock\+\_\+matrix (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor}]{Da,  }\item[{ambit\+::\+Tensor}]{Db }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Make the generalized Fock matrix (closed-\/shell + active) 
+\begin{DoxyParams}{Parameters}
+{\em Da} & The alpha 1\+R\+DM (nactv x nactv, no symmetry) from \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} class \\
+\hline
+{\em Db} & The beta 1\+R\+DM (nactv x nactv, no symmetry) from \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} class \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_psi4_integrals_abfd1e7a105ef05bfe50d175fbe766c36}{forte\+::\+Psi4\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_custom_integrals_aae47837ebc64bb62efb0c23107ebfafa}{forte\+::\+Custom\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_acf43a2d4203cd062a2e011b3e3dfde3a}\label{classforte_1_1_forte_integrals_acf43a2d4203cd062a2e011b3e3dfde3a}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!mo\+\_\+dipole\+\_\+ints@{mo\+\_\+dipole\+\_\+ints}}
+\index{mo\+\_\+dipole\+\_\+ints@{mo\+\_\+dipole\+\_\+ints}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{mo\+\_\+dipole\+\_\+ints()}{mo\_dipole\_ints()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ forte\+::\+Forte\+Integrals\+::mo\+\_\+dipole\+\_\+ints (\begin{DoxyParamCaption}\item[{const bool \&}]{alpha = {\ttfamily true},  }\item[{const bool \&}]{resort = {\ttfamily false} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Compute MO dipole integrals 
+\begin{DoxyParams}{Parameters}
+{\em alpha} & if true, compute MO dipole using Ca, else Cb \\
+\hline
+{\em resort} & if true, M\+Odipole ints are sorted to Pitzer order, otherwise in C1 order \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a vector of M\+Odipole ints in X, Y, Z order, each of which is a nmo by nmo std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a3b78f05526be30dda1653d66f8dfdd74}\label{classforte_1_1_forte_integrals_a3b78f05526be30dda1653d66f8dfdd74}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!ncmo@{ncmo}}
+\index{ncmo@{ncmo}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{ncmo()}{ncmo()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::ncmo (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the total number of correlated molecular orbitals (this number excludes frozen M\+Os) 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a95947448d8e40f2be497e613512e64eb}\label{classforte_1_1_forte_integrals_a95947448d8e40f2be497e613512e64eb}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!ncmopi@{ncmopi}}
+\index{ncmopi@{ncmopi}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{ncmopi()}{ncmopi()}}
+{\footnotesize\ttfamily const psi\+::\+Dimension \& forte\+::\+Forte\+Integrals\+::ncmopi (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+The number of correlated M\+Os per irrep (non frozen). This is nmopi -\/ nfzcpi -\/ nfzvpi. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a85f2644fb48f17cfd172682b10a0d252}\label{classforte_1_1_forte_integrals_a85f2644fb48f17cfd172682b10a0d252}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nirrep@{nirrep}}
+\index{nirrep@{nirrep}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nirrep()}{nirrep()}}
+{\footnotesize\ttfamily int forte\+::\+Forte\+Integrals\+::nirrep (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the number of irreducible representations. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ae1ba804bac41846e3fe915dbab9d57a7}\label{classforte_1_1_forte_integrals_ae1ba804bac41846e3fe915dbab9d57a7}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nmo@{nmo}}
+\index{nmo@{nmo}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nmo()}{nmo()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::nmo (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the total number of molecular orbitals (this number includes frozen M\+Os) 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aa008ab25f2c1a11cbe6b7ba43ca6179d}\label{classforte_1_1_forte_integrals_aa008ab25f2c1a11cbe6b7ba43ca6179d}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nso@{nso}}
+\index{nso@{nso}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nso()}{nso()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::nso (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_afa631a01ad69a803b065734067671704}\label{classforte_1_1_forte_integrals_afa631a01ad69a803b065734067671704}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nsopi@{nsopi}}
+\index{nsopi@{nsopi}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nsopi()}{nsopi()}}
+{\footnotesize\ttfamily const psi\+::\+Dimension \& forte\+::\+Forte\+Integrals\+::nsopi (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the number of symmetry-\/adapted orbitals per irrep. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af04858e7813556747745f90ffbda81a4}\label{classforte_1_1_forte_integrals_af04858e7813556747745f90ffbda81a4}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nthree@{nthree}}
+\index{nthree@{nthree}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nthree()}{nthree()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::nthree (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Return the number of auxiliary functions. 
+
+
+
+Reimplemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_aa8813730038bbc062d8e08d33600c27d}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a56b38fd57064c9d6464f2173127835bd}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_a595f615fb37218eb03e862fb993151fa}{forte\+::\+Cholesky\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_ac514e780990cdc0b3b594453eb63e901}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ae83c6f8ee941902655eb8dd27b993e2d}\label{classforte_1_1_forte_integrals_ae83c6f8ee941902655eb8dd27b993e2d}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nuclear\+\_\+repulsion\+\_\+energy@{nuclear\+\_\+repulsion\+\_\+energy}}
+\index{nuclear\+\_\+repulsion\+\_\+energy@{nuclear\+\_\+repulsion\+\_\+energy}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nuclear\+\_\+repulsion\+\_\+energy()}{nuclear\_repulsion\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::nuclear\+\_\+repulsion\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return nuclear repulsion energy. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_adeb8d675248cb181a502818b8a972908}\label{classforte_1_1_forte_integrals_adeb8d675248cb181a502818b8a972908}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!oei\+\_\+a@{oei\+\_\+a}}
+\index{oei\+\_\+a@{oei\+\_\+a}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{oei\+\_\+a()}{oei\_a()}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::oei\+\_\+a (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q }\end{DoxyParamCaption}) const}
+
+
+
+The alpha one-\/electron integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a0e01f8b4de06ec9eb2cd79ebb375da08}\label{classforte_1_1_forte_integrals_a0e01f8b4de06ec9eb2cd79ebb375da08}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!oei\+\_\+a\+\_\+block@{oei\+\_\+a\+\_\+block}}
+\index{oei\+\_\+a\+\_\+block@{oei\+\_\+a\+\_\+block}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{oei\+\_\+a\+\_\+block()}{oei\_a\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Forte\+Integrals\+::oei\+\_\+a\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+a tensor with a block of the alpha one-\/electron integrals 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ace33795c89d99da0aa8bac4a95263d23}\label{classforte_1_1_forte_integrals_ace33795c89d99da0aa8bac4a95263d23}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!oei\+\_\+b@{oei\+\_\+b}}
+\index{oei\+\_\+b@{oei\+\_\+b}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{oei\+\_\+b()}{oei\_b()}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::oei\+\_\+b (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q }\end{DoxyParamCaption}) const}
+
+
+
+The beta one-\/electron integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af49cebc262b53e87620b23a70b167fb6}\label{classforte_1_1_forte_integrals_af49cebc262b53e87620b23a70b167fb6}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!oei\+\_\+b\+\_\+block@{oei\+\_\+b\+\_\+block}}
+\index{oei\+\_\+b\+\_\+block@{oei\+\_\+b\+\_\+block}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{oei\+\_\+b\+\_\+block()}{oei\_b\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Forte\+Integrals\+::oei\+\_\+b\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{q }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+a tensor with a block of the beta one-\/electron integrals 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a61ed6c6eef6af54c77d9b62806cf5368}\label{classforte_1_1_forte_integrals_a61ed6c6eef6af54c77d9b62806cf5368}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!One\+Body\+\_\+symm@{One\+Body\+\_\+symm}}
+\index{One\+Body\+\_\+symm@{One\+Body\+\_\+symm}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{One\+Body\+\_\+symm()}{OneBody\_symm()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ forte\+::\+Forte\+Integrals\+::\+One\+Body\+\_\+symm (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the one-\/body symmetry integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a44fb4e730761a5b9cd51d35562e01021}\label{classforte_1_1_forte_integrals_a44fb4e730761a5b9cd51d35562e01021}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!One\+Body\+AO@{One\+Body\+AO}}
+\index{One\+Body\+AO@{One\+Body\+AO}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{One\+Body\+A\+O()}{OneBodyAO()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ forte\+::\+Forte\+Integrals\+::\+One\+Body\+AO (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the one-\/body AO integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a6d34bb4775299f7a481bfc0b7b23b1c2}\label{classforte_1_1_forte_integrals_a6d34bb4775299f7a481bfc0b7b23b1c2}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!print\+\_\+info@{print\+\_\+info}}
+\index{print\+\_\+info@{print\+\_\+info}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{print\+\_\+info()}{print\_info()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::print\+\_\+info (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Print the details of the integral transformation. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ad25a0cd3ad3a912200ea05cd7e5ff503}\label{classforte_1_1_forte_integrals_ad25a0cd3ad3a912200ea05cd7e5ff503}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!print\+\_\+ints@{print\+\_\+ints}}
+\index{print\+\_\+ints@{print\+\_\+ints}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{print\+\_\+ints()}{print\_ints()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::print\+\_\+ints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Print the one-\/ and two-\/electron integrals to the output. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a0043eed3580cf4160134e65538f82e59}\label{classforte_1_1_forte_integrals_a0043eed3580cf4160134e65538f82e59}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!read\+\_\+information@{read\+\_\+information}}
+\index{read\+\_\+information@{read\+\_\+information}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{read\+\_\+information()}{read\_information()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::read\+\_\+information (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a733b77acfb8c47c59e764e9c7602d6bc}\label{classforte_1_1_forte_integrals_a733b77acfb8c47c59e764e9c7602d6bc}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!resort\+\_\+integrals\+\_\+after\+\_\+freezing@{resort\+\_\+integrals\+\_\+after\+\_\+freezing}}
+\index{resort\+\_\+integrals\+\_\+after\+\_\+freezing@{resort\+\_\+integrals\+\_\+after\+\_\+freezing}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{resort\+\_\+integrals\+\_\+after\+\_\+freezing()}{resort\_integrals\_after\_freezing()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Forte\+Integrals\+::resort\+\_\+integrals\+\_\+after\+\_\+freezing (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [pure virtual]}}
+
+Remove the doubly occupied and virtual orbitals and resort the rest so that we are left only with ncmo = nmo -\/ nfzc -\/ nfzv \mbox{\Hypertarget{classforte_1_1_forte_integrals_ad93f0d9805c265930ef77363d3b8f8ec}\label{classforte_1_1_forte_integrals_ad93f0d9805c265930ef77363d3b8f8ec}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!rotate\+\_\+mos@{rotate\+\_\+mos}}
+\index{rotate\+\_\+mos@{rotate\+\_\+mos}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{rotate\+\_\+mos()}{rotate\_mos()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::rotate\+\_\+mos (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Function used to rotate M\+Os during contructor. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ac4e5ddc01308998039176ad1d238323c}\label{classforte_1_1_forte_integrals_ac4e5ddc01308998039176ad1d238323c}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!rotate\+\_\+orbitals@{rotate\+\_\+orbitals}}
+\index{rotate\+\_\+orbitals@{rotate\+\_\+orbitals}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{rotate\+\_\+orbitals()}{rotate\_orbitals()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::rotate\+\_\+orbitals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{Ua,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{Ub }\end{DoxyParamCaption})}
+
+Rotate the MO coefficients, update psi\+::\+Wavefunction, and re-\/transform integrals 
+\begin{DoxyParams}{Parameters}
+{\em Ua} & the alpha unitary transformation matrix \\
+\hline
+{\em Ub} & the beta unitary transformation matrix \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a7e2dec148b4e6c3bbd918df8025f8329}\label{classforte_1_1_forte_integrals_a7e2dec148b4e6c3bbd918df8025f8329}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!scalar@{scalar}}
+\index{scalar@{scalar}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{scalar()}{scalar()}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::scalar (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Scalar component of the Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ade72331435cd82f97fa2c97bb4b117c4}\label{classforte_1_1_forte_integrals_ade72331435cd82f97fa2c97bb4b117c4}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!set\+\_\+fock\+\_\+matrix@{set\+\_\+fock\+\_\+matrix}}
+\index{set\+\_\+fock\+\_\+matrix@{set\+\_\+fock\+\_\+matrix}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+fock\+\_\+matrix()}{set\_fock\_matrix()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::set\+\_\+fock\+\_\+matrix (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{fa,  }\item[{psi\+::\+Shared\+Matrix}]{fb }\end{DoxyParamCaption})}
+
+
+
+Set Fock matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a32c581d05040cdc6f2c8e010468e3b34}\label{classforte_1_1_forte_integrals_a32c581d05040cdc6f2c8e010468e3b34}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!set\+\_\+nuclear\+\_\+repulsion@{set\+\_\+nuclear\+\_\+repulsion}}
+\index{set\+\_\+nuclear\+\_\+repulsion@{set\+\_\+nuclear\+\_\+repulsion}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+nuclear\+\_\+repulsion()}{set\_nuclear\_repulsion()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::set\+\_\+nuclear\+\_\+repulsion (\begin{DoxyParamCaption}\item[{double}]{value }\end{DoxyParamCaption})}
+
+
+
+Set nuclear repulstion energy. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af89a969af38f04545152bd7dcd545dda}\label{classforte_1_1_forte_integrals_af89a969af38f04545152bd7dcd545dda}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!set\+\_\+oei@{set\+\_\+oei}}
+\index{set\+\_\+oei@{set\+\_\+oei}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+oei()}{set\_oei()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::set\+\_\+oei (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{double}]{value,  }\item[{bool}]{alpha }\end{DoxyParamCaption})}
+
+Set the value of the one-\/electron integrals 
+\begin{DoxyParams}{Parameters}
+{\em p} & the integral index \\
+\hline
+{\em q} & the integral index \\
+\hline
+{\em value} & the value of the integral \\
+\hline
+{\em alpha} & the spin type of the integrals \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a5ab3fcc5430368fcd3c24eca7eef1018}\label{classforte_1_1_forte_integrals_a5ab3fcc5430368fcd3c24eca7eef1018}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!set\+\_\+oei\+\_\+all@{set\+\_\+oei\+\_\+all}}
+\index{set\+\_\+oei\+\_\+all@{set\+\_\+oei\+\_\+all}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+oei\+\_\+all()}{set\_oei\_all()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::set\+\_\+oei\+\_\+all (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{oei\+\_\+a,  }\item[{const std\+::vector$<$ double $>$ \&}]{oei\+\_\+b }\end{DoxyParamCaption})}
+
+Set the value of the one-\/electron integrals (stored with no symmetry) 
+\begin{DoxyParams}{Parameters}
+{\em oei\+\_\+a} & vector of alpha one-\/electron integrals \\
+\hline
+{\em oei\+\_\+b} & vector of beta one-\/electron integrals \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af7a507eef40436e68fff042565249f94}\label{classforte_1_1_forte_integrals_af7a507eef40436e68fff042565249f94}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!set\+\_\+print@{set\+\_\+print}}
+\index{set\+\_\+print@{set\+\_\+print}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+print()}{set\_print()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::set\+\_\+print (\begin{DoxyParamCaption}\item[{int}]{print }\end{DoxyParamCaption})}
+
+
+
+Set printing level. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aea3e933653ebe660401498969f5f834d}\label{classforte_1_1_forte_integrals_aea3e933653ebe660401498969f5f834d}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!set\+\_\+scalar@{set\+\_\+scalar}}
+\index{set\+\_\+scalar@{set\+\_\+scalar}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+scalar()}{set\_scalar()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::set\+\_\+scalar (\begin{DoxyParamCaption}\item[{double}]{value }\end{DoxyParamCaption})}
+
+Set the value of the scalar part of the Hamiltonian 
+\begin{DoxyParams}{Parameters}
+{\em value} & the new value of the scalar part of the Hamiltonian \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aaccd56e90bbc3c423158efb154336b9c}\label{classforte_1_1_forte_integrals_aaccd56e90bbc3c423158efb154336b9c}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!set\+\_\+tei@{set\+\_\+tei}}
+\index{set\+\_\+tei@{set\+\_\+tei}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+tei()}{set\_tei()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Forte\+Integrals\+::set\+\_\+tei (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s,  }\item[{double}]{value,  }\item[{bool}]{alpha1,  }\item[{bool}]{alpha2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Set the value of the two-\/electron integrals. 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_custom_integrals_ab9b7fd99d359eedcde4fcbf5e5df1795}{forte\+::\+Custom\+Integrals}}, \mbox{\hyperlink{classforte_1_1_cholesky_integrals_a1db39bcdf9fd78a15ca3d1448bd08c5f}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_aceee5961cd70cfc7fc9b7799675f8fb6}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_f_integrals_ac623714d6a85c8f18722aae187b8324e}{forte\+::\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_conventional_integrals_aef0130cb53212f32652a56e83e204519}{forte\+::\+Conventional\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_afe2d1f8b866b95bd3c299e5d7d0ca2db}\label{classforte_1_1_forte_integrals_afe2d1f8b866b95bd3c299e5d7d0ca2db}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!set\+\_\+tei\+\_\+all@{set\+\_\+tei\+\_\+all}}
+\index{set\+\_\+tei\+\_\+all@{set\+\_\+tei\+\_\+all}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+tei\+\_\+all()}{set\_tei\_all()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::set\+\_\+tei\+\_\+all (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{tei\+\_\+aa,  }\item[{const std\+::vector$<$ double $>$ \&}]{tei\+\_\+ab,  }\item[{const std\+::vector$<$ double $>$ \&}]{tei\+\_\+bb }\end{DoxyParamCaption})}
+
+Set the value of the two-\/electron integrals (stored with no symmetry) 
+\begin{DoxyParams}{Parameters}
+{\em tei\+\_\+aa} & vector of antisymmetrized alpha-\/alpha two-\/electron integrals \\
+\hline
+{\em tei\+\_\+ab} & vector of antisymmetrized alpha-\/alpha two-\/electron integrals \\
+\hline
+{\em tei\+\_\+bb} & vector of antisymmetrized alpha-\/alpha two-\/electron integrals \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ab276bac62693891c39007622e2227748}\label{classforte_1_1_forte_integrals_ab276bac62693891c39007622e2227748}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!spin\+\_\+restriction@{spin\+\_\+restriction}}
+\index{spin\+\_\+restriction@{spin\+\_\+restriction}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{spin\+\_\+restriction()}{spin\_restriction()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} forte\+::\+Forte\+Integrals\+::spin\+\_\+restriction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the type of spin restriction enforced. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a953cb77df89721c19595a9d1ee3b7332}\label{classforte_1_1_forte_integrals_a953cb77df89721c19595a9d1ee3b7332}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!startup@{startup}}
+\index{startup@{startup}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{startup()}{startup()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::startup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Class initializer. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ac2a413788a731cc2c48df947862bc964}\label{classforte_1_1_forte_integrals_ac2a413788a731cc2c48df947862bc964}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!test\+\_\+orbital\+\_\+spin\+\_\+restriction@{test\+\_\+orbital\+\_\+spin\+\_\+restriction}}
+\index{test\+\_\+orbital\+\_\+spin\+\_\+restriction@{test\+\_\+orbital\+\_\+spin\+\_\+restriction}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{test\+\_\+orbital\+\_\+spin\+\_\+restriction()}{test\_orbital\_spin\_restriction()}}
+{\footnotesize\ttfamily bool forte\+::\+Forte\+Integrals\+::test\+\_\+orbital\+\_\+spin\+\_\+restriction (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{A,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{B }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Test if two matrices are approximately identical. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aa1d259ae97b5a9c96ccb20599543b126}\label{classforte_1_1_forte_integrals_aa1d259ae97b5a9c96ccb20599543b126}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!three\+\_\+integral\+\_\+block@{three\+\_\+integral\+\_\+block}}
+\index{three\+\_\+integral\+\_\+block@{three\+\_\+integral\+\_\+block}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{three\+\_\+integral\+\_\+block()}{three\_integral\_block()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Forte\+Integrals\+::three\+\_\+integral\+\_\+block (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classforte_1_1_cholesky_integrals_a73dccc944cd9fdb00626bc88390136bf}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_aa36e8484286f58bcb2b57a7c8fb08a36}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_a830361fd7e2efd8c8d22fd5abcacfad1}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aab51824020dc3588c026b5b7740f55a9}\label{classforte_1_1_forte_integrals_aab51824020dc3588c026b5b7740f55a9}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index@{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index}}
+\index{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index@{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index()}{three\_integral\_block\_two\_index()}}
+{\footnotesize\ttfamily ambit\+::\+Tensor forte\+::\+Forte\+Integrals\+::three\+\_\+integral\+\_\+block\+\_\+two\+\_\+index (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{A,  }\item[{size\+\_\+t}]{p,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+This function is only used by Disk\+DF and it is used to go from a Apq-\/$>$Aq tensor. 
+
+
+
+Reimplemented in \mbox{\hyperlink{classforte_1_1_cholesky_integrals_a4f07e4c8e13a3424ec6b3d3a4d59a258}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a754ec30830dd51627a3608dfca9f5f4d}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_f_integrals_a455cc314d177bbcd4c25cbca6b0f02be}{forte\+::\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a69292bc8e42a76e344cd01c4e3dd48d5}\label{classforte_1_1_forte_integrals_a69292bc8e42a76e344cd01c4e3dd48d5}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!three\+\_\+integral\+\_\+pointer@{three\+\_\+integral\+\_\+pointer}}
+\index{three\+\_\+integral\+\_\+pointer@{three\+\_\+integral\+\_\+pointer}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{three\+\_\+integral\+\_\+pointer()}{three\_integral\_pointer()}}
+{\footnotesize\ttfamily double $\ast$$\ast$ forte\+::\+Forte\+Integrals\+::three\+\_\+integral\+\_\+pointer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Expert Option\+: just try and use three\+\_\+integral. 
+
+
+
+Reimplemented in \mbox{\hyperlink{classforte_1_1_cholesky_integrals_ac92cb7a11e5a027ba6ccd11181ddf61a}{forte\+::\+Cholesky\+Integrals}}, \mbox{\hyperlink{classforte_1_1_d_f_integrals_ad682d1f719de96683aa2bc02fc46eabe}{forte\+::\+D\+F\+Integrals}}, and \mbox{\hyperlink{classforte_1_1_d_i_s_k_d_f_integrals_a43f80b9c9e3b67223a11049c3e2f52e2}{forte\+::\+D\+I\+S\+K\+D\+F\+Integrals}}.
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a8c30851e608fc99e86990688dce95b85}\label{classforte_1_1_forte_integrals_a8c30851e608fc99e86990688dce95b85}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!update\+\_\+orbitals@{update\+\_\+orbitals}}
+\index{update\+\_\+orbitals@{update\+\_\+orbitals}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{update\+\_\+orbitals()}{update\_orbitals()}}
+{\footnotesize\ttfamily void forte\+::\+Forte\+Integrals\+::update\+\_\+orbitals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{Ca,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{Cb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Copy these MO coeffs to class variables, update psi\+::\+Wavefunction, and re-\/transform integrals 
+\begin{DoxyParams}{Parameters}
+{\em Ca} & the alpha MO coefficients \\
+\hline
+{\em Cb} & the beta MO coefficients \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af70ab78cbd8726d63bb7cc6e93d82e71}\label{classforte_1_1_forte_integrals_af70ab78cbd8726d63bb7cc6e93d82e71}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!wfn@{wfn}}
+\index{wfn@{wfn}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{wfn()}{wfn()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ psi\+::\+Wavefunction $>$ forte\+::\+Forte\+Integrals\+::wfn (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+temporary solution for not having a Wavefunction 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a53b95d98b262874ed8e73e17377dc6d7}\label{classforte_1_1_forte_integrals_a53b95d98b262874ed8e73e17377dc6d7}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aphys\+\_\+tei\+\_\+aa\+\_\+@{aphys\+\_\+tei\+\_\+aa\+\_\+}}
+\index{aphys\+\_\+tei\+\_\+aa\+\_\+@{aphys\+\_\+tei\+\_\+aa\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aphys\+\_\+tei\+\_\+aa\+\_\+}{aphys\_tei\_aa\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Forte\+Integrals\+::aphys\+\_\+tei\+\_\+aa\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+Two-\/electron integrals stored as a vector with redundant elements (no permutational symmetry). These are addressed with the function aptei\+\_\+index \mbox{\Hypertarget{classforte_1_1_forte_integrals_ab5af519ef73a625e5279a04801224b46}\label{classforte_1_1_forte_integrals_ab5af519ef73a625e5279a04801224b46}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aphys\+\_\+tei\+\_\+ab\+\_\+@{aphys\+\_\+tei\+\_\+ab\+\_\+}}
+\index{aphys\+\_\+tei\+\_\+ab\+\_\+@{aphys\+\_\+tei\+\_\+ab\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aphys\+\_\+tei\+\_\+ab\+\_\+}{aphys\_tei\_ab\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Forte\+Integrals\+::aphys\+\_\+tei\+\_\+ab\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a759f8bf4799bcaaf26fd673c92914ec4}\label{classforte_1_1_forte_integrals_a759f8bf4799bcaaf26fd673c92914ec4}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aphys\+\_\+tei\+\_\+bb\+\_\+@{aphys\+\_\+tei\+\_\+bb\+\_\+}}
+\index{aphys\+\_\+tei\+\_\+bb\+\_\+@{aphys\+\_\+tei\+\_\+bb\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aphys\+\_\+tei\+\_\+bb\+\_\+}{aphys\_tei\_bb\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Forte\+Integrals\+::aphys\+\_\+tei\+\_\+bb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a8ec100fdb106f4b2abe8cacb18ef24cc}\label{classforte_1_1_forte_integrals_a8ec100fdb106f4b2abe8cacb18ef24cc}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!aptei\+\_\+idx\+\_\+@{aptei\+\_\+idx\+\_\+}}
+\index{aptei\+\_\+idx\+\_\+@{aptei\+\_\+idx\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{aptei\+\_\+idx\+\_\+}{aptei\_idx\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::aptei\+\_\+idx\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The number of orbitals used in indexing routines (nmo or ncmo if core orbitals are frozen) The correct value is set by the integrals class \mbox{\Hypertarget{classforte_1_1_forte_integrals_a5e3363b0a9b53f384ce80052cd1171d2}\label{classforte_1_1_forte_integrals_a5e3363b0a9b53f384ce80052cd1171d2}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!Ca\+\_\+@{Ca\+\_\+}}
+\index{Ca\+\_\+@{Ca\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{Ca\+\_\+}{Ca\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ forte\+::\+Forte\+Integrals\+::\+Ca\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a865a73e683388b5d09923dc51f42dff0}\label{classforte_1_1_forte_integrals_a865a73e683388b5d09923dc51f42dff0}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!Cb\+\_\+@{Cb\+\_\+}}
+\index{Cb\+\_\+@{Cb\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{Cb\+\_\+}{Cb\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ forte\+::\+Forte\+Integrals\+::\+Cb\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af31074926b010e7bc45231026bc947d0}\label{classforte_1_1_forte_integrals_af31074926b010e7bc45231026bc947d0}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!cmotomo\+\_\+@{cmotomo\+\_\+}}
+\index{cmotomo\+\_\+@{cmotomo\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{cmotomo\+\_\+}{cmotomo\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Forte\+Integrals\+::cmotomo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The mapping from correlated MO to full MO (frozen + correlated) 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a52fd868c9e9370ab6869abd7ea48a1b4}\label{classforte_1_1_forte_integrals_a52fd868c9e9370ab6869abd7ea48a1b4}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!dipole\+\_\+ints\+\_\+ao\+\_\+@{dipole\+\_\+ints\+\_\+ao\+\_\+}}
+\index{dipole\+\_\+ints\+\_\+ao\+\_\+@{dipole\+\_\+ints\+\_\+ao\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{dipole\+\_\+ints\+\_\+ao\+\_\+}{dipole\_ints\_ao\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ $>$ forte\+::\+Forte\+Integrals\+::dipole\+\_\+ints\+\_\+ao\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+AO dipole integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a2d3cf66f9a6f95e365a3ba16841ee567}\label{classforte_1_1_forte_integrals_a2d3cf66f9a6f95e365a3ba16841ee567}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!fock\+\_\+a\+\_\+@{fock\+\_\+a\+\_\+}}
+\index{fock\+\_\+a\+\_\+@{fock\+\_\+a\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{fock\+\_\+a\+\_\+}{fock\_a\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Forte\+Integrals\+::fock\+\_\+a\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Fock matrix (including frozen orbitals) 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ae97fe104442ec92972f450de1c032e48}\label{classforte_1_1_forte_integrals_ae97fe104442ec92972f450de1c032e48}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!fock\+\_\+b\+\_\+@{fock\+\_\+b\+\_\+}}
+\index{fock\+\_\+b\+\_\+@{fock\+\_\+b\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{fock\+\_\+b\+\_\+}{fock\_b\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Forte\+Integrals\+::fock\+\_\+b\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ad1662715d02f90e5a5a8ad21ff6678d9}\label{classforte_1_1_forte_integrals_ad1662715d02f90e5a5a8ad21ff6678d9}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!frozen\+\_\+core\+\_\+energy\+\_\+@{frozen\+\_\+core\+\_\+energy\+\_\+}}
+\index{frozen\+\_\+core\+\_\+energy\+\_\+@{frozen\+\_\+core\+\_\+energy\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{frozen\+\_\+core\+\_\+energy\+\_\+}{frozen\_core\_energy\_}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::frozen\+\_\+core\+\_\+energy\+\_\+ = 0.\+0\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Frozen-\/core energy. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a6dda8a446b4f3d37a80a7d747298001f}\label{classforte_1_1_forte_integrals_a6dda8a446b4f3d37a80a7d747298001f}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!frzcpi\+\_\+@{frzcpi\+\_\+}}
+\index{frzcpi\+\_\+@{frzcpi\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{frzcpi\+\_\+}{frzcpi\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Forte\+Integrals\+::frzcpi\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of frozen core M\+Os per irrep. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a7489dd8131b0d5e40ca092a01afeac3d}\label{classforte_1_1_forte_integrals_a7489dd8131b0d5e40ca092a01afeac3d}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!frzvpi\+\_\+@{frzvpi\+\_\+}}
+\index{frzvpi\+\_\+@{frzvpi\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{frzvpi\+\_\+}{frzvpi\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Forte\+Integrals\+::frzvpi\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of frozen unoccupied M\+Os per irrep. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a6017ecb2f221d2515f2920e4190aa8ea}\label{classforte_1_1_forte_integrals_a6017ecb2f221d2515f2920e4190aa8ea}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+@{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+}}
+\index{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+@{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+}{full\_one\_electron\_integrals\_a\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Forte\+Integrals\+::full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Full one-\/electron integrals stored as a vector (includes frozen orbitals) 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a494b96e304db8fa9b24a1f60f99bc8a7}\label{classforte_1_1_forte_integrals_a494b96e304db8fa9b24a1f60f99bc8a7}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+@{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+}}
+\index{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+@{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+}{full\_one\_electron\_integrals\_b\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Forte\+Integrals\+::full\+\_\+one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aa239481b0b665b7b4859f3aef4819f41}\label{classforte_1_1_forte_integrals_aa239481b0b665b7b4859f3aef4819f41}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!have\+\_\+omp\+\_\+@{have\+\_\+omp\+\_\+}}
+\index{have\+\_\+omp\+\_\+@{have\+\_\+omp\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{have\+\_\+omp\+\_\+}{have\_omp\_}}
+{\footnotesize\ttfamily const bool forte\+::\+Forte\+Integrals\+::have\+\_\+omp\+\_\+ = false\hspace{0.3cm}{\ttfamily [static]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aadefcdebabf54f05730574d16af787cb}\label{classforte_1_1_forte_integrals_aadefcdebabf54f05730574d16af787cb}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!int\+\_\+mem\+\_\+@{int\+\_\+mem\+\_\+}}
+\index{int\+\_\+mem\+\_\+@{int\+\_\+mem\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{int\+\_\+mem\+\_\+}{int\_mem\_}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::int\+\_\+mem\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+How much memory each integral takes up. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a8b8716d114d065e97c564b98c9329d37}\label{classforte_1_1_forte_integrals_a8b8716d114d065e97c564b98c9329d37}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!integral\+\_\+type\+\_\+@{integral\+\_\+type\+\_\+}}
+\index{integral\+\_\+type\+\_\+@{integral\+\_\+type\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{integral\+\_\+type\+\_\+}{integral\_type\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} forte\+::\+Forte\+Integrals\+::integral\+\_\+type\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The integral\+\_\+type. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a8535e687a9a82e87983f68d3e9921eba}\label{classforte_1_1_forte_integrals_a8535e687a9a82e87983f68d3e9921eba}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!J\+K\+\_\+@{J\+K\+\_\+}}
+\index{J\+K\+\_\+@{J\+K\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{J\+K\+\_\+}{JK\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+JK$>$ forte\+::\+Forte\+Integrals\+::\+J\+K\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+JK object from Psi4. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a9084872d37bee552673bb1d574527ba2}\label{classforte_1_1_forte_integrals_a9084872d37bee552673bb1d574527ba2}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!J\+K\+\_\+status\+\_\+@{J\+K\+\_\+status\+\_\+}}
+\index{J\+K\+\_\+status\+\_\+@{J\+K\+\_\+status\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{J\+K\+\_\+status\+\_\+}{JK\_status\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2}{J\+K\+Status}} forte\+::\+Forte\+Integrals\+::\+J\+K\+\_\+status\+\_\+ = \mbox{\hyperlink{classforte_1_1_forte_integrals_a5ef066e57ff1494e90669779b1d0ecc2aa2e4822a98337283e39f7b60acf85ec9}{J\+K\+Status\+::empty}}\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Status of the JK object. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a3dce6aa1e684a583f2cd947450f4b6f6}\label{classforte_1_1_forte_integrals_a3dce6aa1e684a583f2cd947450f4b6f6}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}}
+\index{mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{mo\+\_\+space\+\_\+info\+\_\+}{mo\_space\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}$>$ forte\+::\+Forte\+Integrals\+::mo\+\_\+space\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a0fa58e78991336eeb446e0d0446f1aee}\label{classforte_1_1_forte_integrals_a0fa58e78991336eeb446e0d0446f1aee}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!mo\+\_\+to\+\_\+relmo\+\_\+@{mo\+\_\+to\+\_\+relmo\+\_\+}}
+\index{mo\+\_\+to\+\_\+relmo\+\_\+@{mo\+\_\+to\+\_\+relmo\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{mo\+\_\+to\+\_\+relmo\+\_\+}{mo\_to\_relmo\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::pair$<$size\+\_\+t, size\+\_\+t$>$ $>$ forte\+::\+Forte\+Integrals\+::mo\+\_\+to\+\_\+relmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The mapping from full MO to irrep and relative indices. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ad62e3e6c2be759579a27dae04eeae7c7}\label{classforte_1_1_forte_integrals_ad62e3e6c2be759579a27dae04eeae7c7}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!ncmo\+\_\+@{ncmo\+\_\+}}
+\index{ncmo\+\_\+@{ncmo\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{ncmo\+\_\+}{ncmo\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::ncmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of correlated M\+Os (excluding frozen). This is nmo -\/ nfzc -\/ nfzv. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a89d80b31901b09b1cdc8e7b1735ac53d}\label{classforte_1_1_forte_integrals_a89d80b31901b09b1cdc8e7b1735ac53d}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!ncmopi\+\_\+@{ncmopi\+\_\+}}
+\index{ncmopi\+\_\+@{ncmopi\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{ncmopi\+\_\+}{ncmopi\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Forte\+Integrals\+::ncmopi\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The number of correlated M\+Os per irrep (non frozen). This is nmopi -\/ nfzcpi -\/ nfzvpi. \mbox{\Hypertarget{classforte_1_1_forte_integrals_a3f1ec2352852ca36cbb2317aa899a4e4}\label{classforte_1_1_forte_integrals_a3f1ec2352852ca36cbb2317aa899a4e4}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nirrep\+\_\+@{nirrep\+\_\+}}
+\index{nirrep\+\_\+@{nirrep\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nirrep\+\_\+}{nirrep\_}}
+{\footnotesize\ttfamily int forte\+::\+Forte\+Integrals\+::nirrep\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Number of irreps. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aafdb1a329cd0768ae5bb6f6ee5157691}\label{classforte_1_1_forte_integrals_aafdb1a329cd0768ae5bb6f6ee5157691}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nmo\+\_\+@{nmo\+\_\+}}
+\index{nmo\+\_\+@{nmo\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nmo\+\_\+}{nmo\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::nmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of M\+Os, including the ones that are frozen. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a42ea9a1d7fac58f4b6f7aacec22c0fe2}\label{classforte_1_1_forte_integrals_a42ea9a1d7fac58f4b6f7aacec22c0fe2}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nmopi\+\_\+@{nmopi\+\_\+}}
+\index{nmopi\+\_\+@{nmopi\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nmopi\+\_\+}{nmopi\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Forte\+Integrals\+::nmopi\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of M\+Os per irrep. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a78b8c5f768c3f2823d5e8e39786ea697}\label{classforte_1_1_forte_integrals_a78b8c5f768c3f2823d5e8e39786ea697}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nso\+\_\+@{nso\+\_\+}}
+\index{nso\+\_\+@{nso\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nso\+\_\+}{nso\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::nso\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of symmetry-\/adapted orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a4265ec277dd2ba9c84baa00b873ef2ca}\label{classforte_1_1_forte_integrals_a4265ec277dd2ba9c84baa00b873ef2ca}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nsopi\+\_\+@{nsopi\+\_\+}}
+\index{nsopi\+\_\+@{nsopi\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nsopi\+\_\+}{nsopi\_}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+Forte\+Integrals\+::nsopi\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of symmetry-\/adapted orbitals per irrep. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aa5d263203e19d829eacb573af9e65a10}\label{classforte_1_1_forte_integrals_aa5d263203e19d829eacb573af9e65a10}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!nucrep\+\_\+@{nucrep\+\_\+}}
+\index{nucrep\+\_\+@{nucrep\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{nucrep\+\_\+}{nucrep\_}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::nucrep\+\_\+ = 0.\+0\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a2771a7fb9101ca7fd335746986e9d75f}\label{classforte_1_1_forte_integrals_a2771a7fb9101ca7fd335746986e9d75f}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!num\+\_\+aptei\+\_\+@{num\+\_\+aptei\+\_\+}}
+\index{num\+\_\+aptei\+\_\+@{num\+\_\+aptei\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{num\+\_\+aptei\+\_\+}{num\_aptei\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::num\+\_\+aptei\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The number of antisymmetrized two-\/electron integrals in physicist notation $<$pq$\vert$$\vert$rs$>$ \mbox{\Hypertarget{classforte_1_1_forte_integrals_a71b35a2e3ec4920ebdd9c77563e740c0}\label{classforte_1_1_forte_integrals_a71b35a2e3ec4920ebdd9c77563e740c0}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!num\+\_\+tei\+\_\+@{num\+\_\+tei\+\_\+}}
+\index{num\+\_\+tei\+\_\+@{num\+\_\+tei\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{num\+\_\+tei\+\_\+}{num\_tei\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Forte\+Integrals\+::num\+\_\+tei\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Number of two electron integrals in chemist notation (pq$\vert$rs) 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a5a4b02c8be48f24a28416e40ad582590}\label{classforte_1_1_forte_integrals_a5a4b02c8be48f24a28416e40ad582590}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!num\+\_\+threads\+\_\+@{num\+\_\+threads\+\_\+}}
+\index{num\+\_\+threads\+\_\+@{num\+\_\+threads\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{num\+\_\+threads\+\_\+}{num\_threads\_}}
+{\footnotesize\ttfamily int forte\+::\+Forte\+Integrals\+::num\+\_\+threads\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of O\+MP threads. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ad6df989214f6653702821bf048a49c02}\label{classforte_1_1_forte_integrals_ad6df989214f6653702821bf048a49c02}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+@{one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+}}
+\index{one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+@{one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+}{one\_electron\_integrals\_a\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Forte\+Integrals\+::one\+\_\+electron\+\_\+integrals\+\_\+a\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+One-\/electron integrals stored as a vector. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a44cb55039d6b53a7572358db609e2782}\label{classforte_1_1_forte_integrals_a44cb55039d6b53a7572358db609e2782}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+@{one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+}}
+\index{one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+@{one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+}{one\_electron\_integrals\_b\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Forte\+Integrals\+::one\+\_\+electron\+\_\+integrals\+\_\+b\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a1a25c318a9230e340e922c14e2c3d07c}\label{classforte_1_1_forte_integrals_a1a25c318a9230e340e922c14e2c3d07c}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!One\+Body\+\_\+symm\+\_\+@{One\+Body\+\_\+symm\+\_\+}}
+\index{One\+Body\+\_\+symm\+\_\+@{One\+Body\+\_\+symm\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{One\+Body\+\_\+symm\+\_\+}{OneBody\_symm\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ forte\+::\+Forte\+Integrals\+::\+One\+Body\+\_\+symm\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The One Electron Integrals (T + V) in SO Basis. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_afdf67caea315c0734445593bca936c1f}\label{classforte_1_1_forte_integrals_afdf67caea315c0734445593bca936c1f}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!options\+\_\+@{options\+\_\+}}
+\index{options\+\_\+@{options\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{options\+\_\+}{options\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}$>$ forte\+::\+Forte\+Integrals\+::options\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The options object. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_af1dfd9a5f18efa1bac5d55f1e90b4f83}\label{classforte_1_1_forte_integrals_af1dfd9a5f18efa1bac5d55f1e90b4f83}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!print\+\_\+@{print\+\_\+}}
+\index{print\+\_\+@{print\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{print\+\_\+}{print\_}}
+{\footnotesize\ttfamily int forte\+::\+Forte\+Integrals\+::print\+\_\+ = 1\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Control printing of timings. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aa7e9d38826e27e61eaedbe649f83f564}\label{classforte_1_1_forte_integrals_aa7e9d38826e27e61eaedbe649f83f564}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!scalar\+\_\+energy\+\_\+@{scalar\+\_\+energy\+\_\+}}
+\index{scalar\+\_\+energy\+\_\+@{scalar\+\_\+energy\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{scalar\+\_\+energy\+\_\+}{scalar\_energy\_}}
+{\footnotesize\ttfamily double forte\+::\+Forte\+Integrals\+::scalar\+\_\+energy\+\_\+ = 0.\+0\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Scalar energy term. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aed0fc4c8db2559e805b61739b8b3fcfc}\label{classforte_1_1_forte_integrals_aed0fc4c8db2559e805b61739b8b3fcfc}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!skip\+\_\+build\+\_\+@{skip\+\_\+build\+\_\+}}
+\index{skip\+\_\+build\+\_\+@{skip\+\_\+build\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{skip\+\_\+build\+\_\+}{skip\_build\_}}
+{\footnotesize\ttfamily bool forte\+::\+Forte\+Integrals\+::skip\+\_\+build\+\_\+}
+
+
+
+Skip integral transformation. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_ae3d3d96dbaaa25e3fad5c97b65339f08}\label{classforte_1_1_forte_integrals_ae3d3d96dbaaa25e3fad5c97b65339f08}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!spin\+\_\+restriction\+\_\+@{spin\+\_\+restriction\+\_\+}}
+\index{spin\+\_\+restriction\+\_\+@{spin\+\_\+restriction\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{spin\+\_\+restriction\+\_\+}{spin\_restriction\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_a7defa2660dd3eb07aa81176b90781be7}{Integral\+Spin\+Restriction}} forte\+::\+Forte\+Integrals\+::spin\+\_\+restriction\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Are we doing a spin-\/restricted computation? 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_a4dc4fef1392fb146f9585daf945e4399}\label{classforte_1_1_forte_integrals_a4dc4fef1392fb146f9585daf945e4399}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!tensor\+\_\+type\+\_\+@{tensor\+\_\+type\+\_\+}}
+\index{tensor\+\_\+type\+\_\+@{tensor\+\_\+type\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{tensor\+\_\+type\+\_\+}{tensor\_type\_}}
+{\footnotesize\ttfamily ambit\+::\+Tensor\+Type forte\+::\+Forte\+Integrals\+::tensor\+\_\+type\+\_\+ = ambit\+::\+Core\+Tensor\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The type of tensor that ambit uses -\/$>$ Core\+Tensor. 
+
+\mbox{\Hypertarget{classforte_1_1_forte_integrals_aa054ac658980cf98f4f614fc34e4e0dd}\label{classforte_1_1_forte_integrals_aa054ac658980cf98f4f614fc34e4e0dd}} 
+\index{forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}!wfn\+\_\+@{wfn\+\_\+}}
+\index{wfn\+\_\+@{wfn\+\_\+}!forte\+::\+Forte\+Integrals@{forte\+::\+Forte\+Integrals}}
+\subsubsection{\texorpdfstring{wfn\+\_\+}{wfn\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Wavefunction$>$ forte\+::\+Forte\+Integrals\+::wfn\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The Wavefunction object. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{integrals_8h}{integrals.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{integrals_8cc}{integrals.\+cc}}\end{DoxyCompactItemize}

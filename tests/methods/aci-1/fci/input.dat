@@ -1,0 +1,44 @@
+#! Generated using commit GITCOMMIT 
+# Basic ACI calculation with energy threshold selection
+
+import forte
+
+refscf = -14.839846512738 #TEST
+refaci = -14.889051449776 #TEST
+refacipt2 = -14.890048359302 #TEST
+
+molecule li2{
+0 1
+   Li
+   Li 1 2.0000
+}
+
+set {
+  basis DZ
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+}
+
+set scf {
+  scf_type pk
+  reference rohf
+#  docc = [2,0,0,0,0,1,0,0]
+}
+
+set forte {
+  active_space_solver aci
+  multiplicity 1
+  ms 0.0
+  sigma 0.001
+  nroot 1
+  root_sym 0
+  charge 0
+  sci_enforce_spin_complete false
+  r_convergence 0.1
+  active_ref_type hf 
+}
+
+energy('fci')
+

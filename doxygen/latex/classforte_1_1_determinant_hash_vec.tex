@@ -1,0 +1,283 @@
+\hypertarget{classforte_1_1_determinant_hash_vec}{}\section{forte\+:\+:Determinant\+Hash\+Vec Class Reference}
+\label{classforte_1_1_determinant_hash_vec}\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+
+
+{\ttfamily \#include $<$determinant\+\_\+hashvector.\+h$>$}
+
+
+
+Collaboration diagram for forte\+:\+:Determinant\+Hash\+Vec\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=217pt]{classforte_1_1_determinant_hash_vec__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec_aa09d2d81e23e9a1cdfbc6b595bb46a14}{Determinant\+Hash\+Vec}} (std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&dets)
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a70682499ebdecf59a21a65536bef6419}{Determinant\+Hash\+Vec}} (const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&dets)
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a2ab88d1ebf6df4232f3a3d89470c2cab}{Determinant\+Hash\+Vec}} (\mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det)
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec_ac5f95a20bc269024fc948691b0326fc4}{Determinant\+Hash\+Vec}} ()
+\begin{DoxyCompactList}\small\item\em Empty constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a3cd276dee3ee8a023104f1dc0224e941}{Determinant\+Hash\+Vec}} (const \mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \&\mbox{\hyperlink{classforte_1_1_determinant_hash_vec_abbbb485c33b1f107c3cafef27cdf5215}{wfn\+\_\+}})
+\begin{DoxyCompactList}\small\item\em Copy constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec_adda0ea8d50023e6b89493b3cd294ee10}{Determinant\+Hash\+Vec}} (\mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \&\&\mbox{\hyperlink{classforte_1_1_determinant_hash_vec_abbbb485c33b1f107c3cafef27cdf5215}{wfn\+\_\+}})
+\begin{DoxyCompactList}\small\item\em Move constructor. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \& \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a9fa3a1a6f30ffd78e70e5a6a23990273}{wfn\+\_\+hash}} () const
+\item 
+\mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \& \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_add576b2713d10d0449dd0cd7b38c7c38}{wfn\+\_\+hash}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a704d0c4af99bc018e01e96ca8ae8c9db}{add}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det)
+\begin{DoxyCompactList}\small\item\em Add a determinant. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a65a00ada6f1529a6e82908a4802f6729}{size}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of determinants. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a0a2110402a7e015c08edae95479cf0b9}{clear}} ()
+\item 
+const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \& \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a1e68e5960804d59cac572b41a4d6acee}{get\+\_\+det}} (const size\+\_\+t value) const
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a1547252a5e500ecb773d5ddac0368d1e}{get\+\_\+idx}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det) const
+\item 
+std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a42ada8706abb98122961fc5767be15b6}{determinants}} () const
+\item 
+std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a4d94caa7afe0fe09cac71bc38b585720}{determinant\+\_\+index\+\_\+pairs}} () const
+\begin{DoxyCompactList}\small\item\em Return a vector of the determinants and their indices. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_aadea7fce2c583d922a696093d2888619}{make\+\_\+spin\+\_\+complete}} (int nmo)
+\item 
+bool \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a683b6f9a2be21955d7caa0181cf88f77}{has\+\_\+det}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_ad4f538593c5f1d98da9a73e5462d3bfa}{overlap}} (std\+::vector$<$ double $>$ \&det1\+\_\+evecs, \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&det2, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ det2\+\_\+evecs, int root)
+\item 
+double \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a1168daa5c587057db556210cee6504a6}{overlap}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ det1\+\_\+evecs, int root1, \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&det2, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ det2\+\_\+evecs, int root2)
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_ab45b9bb4b2b10262fb8b5fc0394dd954}{subspace}} (\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&dets, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ evecs, std\+::vector$<$ double $>$ \&new\+\_\+evecs, size\+\_\+t dim, int root)
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a76bbc710a7fe975f008a5b41cc10f85c}{merge}} (\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&dets)
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a1c25ea4516f605640e8c7e134b13aecd}{copy}} (\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&dets)
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_a03d8f6394ae12862b2e4c782dcab82fa}{swap}} (\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&dets)
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_af5b7b59cac7ddccd0c0b595b9bb3e6d2}{swap}} (\mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \&dets)
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \mbox{\hyperlink{classforte_1_1_determinant_hash_vec_abbbb485c33b1f107c3cafef27cdf5215}{wfn\+\_\+}}
+\begin{DoxyCompactList}\small\item\em A hashvector of determinants. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_aa09d2d81e23e9a1cdfbc6b595bb46a14}\label{classforte_1_1_determinant_hash_vec_aa09d2d81e23e9a1cdfbc6b595bb46a14}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}}
+\index{Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{Determinant\+Hash\+Vec()}{DeterminantHashVec()}\hspace{0.1cm}{\footnotesize\ttfamily [1/6]}}
+{\footnotesize\ttfamily forte\+::\+Determinant\+Hash\+Vec\+::\+Determinant\+Hash\+Vec (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&}]{dets }\end{DoxyParamCaption})}
+
+
+
+Default constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a70682499ebdecf59a21a65536bef6419}\label{classforte_1_1_determinant_hash_vec_a70682499ebdecf59a21a65536bef6419}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}}
+\index{Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{Determinant\+Hash\+Vec()}{DeterminantHashVec()}\hspace{0.1cm}{\footnotesize\ttfamily [2/6]}}
+{\footnotesize\ttfamily forte\+::\+Determinant\+Hash\+Vec\+::\+Determinant\+Hash\+Vec (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&}]{dets }\end{DoxyParamCaption})}
+
+
+
+Default constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a2ab88d1ebf6df4232f3a3d89470c2cab}\label{classforte_1_1_determinant_hash_vec_a2ab88d1ebf6df4232f3a3d89470c2cab}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}}
+\index{Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{Determinant\+Hash\+Vec()}{DeterminantHashVec()}\hspace{0.1cm}{\footnotesize\ttfamily [3/6]}}
+{\footnotesize\ttfamily forte\+::\+Determinant\+Hash\+Vec\+::\+Determinant\+Hash\+Vec (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det }\end{DoxyParamCaption})}
+
+
+
+Default constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_ac5f95a20bc269024fc948691b0326fc4}\label{classforte_1_1_determinant_hash_vec_ac5f95a20bc269024fc948691b0326fc4}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}}
+\index{Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{Determinant\+Hash\+Vec()}{DeterminantHashVec()}\hspace{0.1cm}{\footnotesize\ttfamily [4/6]}}
+{\footnotesize\ttfamily forte\+::\+Determinant\+Hash\+Vec\+::\+Determinant\+Hash\+Vec (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Empty constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a3cd276dee3ee8a023104f1dc0224e941}\label{classforte_1_1_determinant_hash_vec_a3cd276dee3ee8a023104f1dc0224e941}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}}
+\index{Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{Determinant\+Hash\+Vec()}{DeterminantHashVec()}\hspace{0.1cm}{\footnotesize\ttfamily [5/6]}}
+{\footnotesize\ttfamily forte\+::\+Determinant\+Hash\+Vec\+::\+Determinant\+Hash\+Vec (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \&}]{wfn\+\_\+ }\end{DoxyParamCaption})}
+
+
+
+Copy constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_adda0ea8d50023e6b89493b3cd294ee10}\label{classforte_1_1_determinant_hash_vec_adda0ea8d50023e6b89493b3cd294ee10}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}}
+\index{Determinant\+Hash\+Vec@{Determinant\+Hash\+Vec}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{Determinant\+Hash\+Vec()}{DeterminantHashVec()}\hspace{0.1cm}{\footnotesize\ttfamily [6/6]}}
+{\footnotesize\ttfamily forte\+::\+Determinant\+Hash\+Vec\+::\+Determinant\+Hash\+Vec (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \&\&}]{wfn\+\_\+ }\end{DoxyParamCaption})}
+
+
+
+Move constructor. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a704d0c4af99bc018e01e96ca8ae8c9db}\label{classforte_1_1_determinant_hash_vec_a704d0c4af99bc018e01e96ca8ae8c9db}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!add@{add}}
+\index{add@{add}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{add()}{add()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Hash\+Vec\+::add (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det }\end{DoxyParamCaption})}
+
+
+
+Add a determinant. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a0a2110402a7e015c08edae95479cf0b9}\label{classforte_1_1_determinant_hash_vec_a0a2110402a7e015c08edae95479cf0b9}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!clear@{clear}}
+\index{clear@{clear}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Hash\+Vec\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a1c25ea4516f605640e8c7e134b13aecd}\label{classforte_1_1_determinant_hash_vec_a1c25ea4516f605640e8c7e134b13aecd}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!copy@{copy}}
+\index{copy@{copy}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{copy()}{copy()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Hash\+Vec\+::copy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{dets }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a4d94caa7afe0fe09cac71bc38b585720}\label{classforte_1_1_determinant_hash_vec_a4d94caa7afe0fe09cac71bc38b585720}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!determinant\+\_\+index\+\_\+pairs@{determinant\+\_\+index\+\_\+pairs}}
+\index{determinant\+\_\+index\+\_\+pairs@{determinant\+\_\+index\+\_\+pairs}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{determinant\+\_\+index\+\_\+pairs()}{determinant\_index\_pairs()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, size\+\_\+t $>$ $>$ forte\+::\+Determinant\+Hash\+Vec\+::determinant\+\_\+index\+\_\+pairs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return a vector of the determinants and their indices. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a42ada8706abb98122961fc5767be15b6}\label{classforte_1_1_determinant_hash_vec_a42ada8706abb98122961fc5767be15b6}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!determinants@{determinants}}
+\index{determinants@{determinants}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{determinants()}{determinants()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ forte\+::\+Determinant\+Hash\+Vec\+::determinants (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a1e68e5960804d59cac572b41a4d6acee}\label{classforte_1_1_determinant_hash_vec_a1e68e5960804d59cac572b41a4d6acee}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!get\+\_\+det@{get\+\_\+det}}
+\index{get\+\_\+det@{get\+\_\+det}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{get\+\_\+det()}{get\_det()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \& forte\+::\+Determinant\+Hash\+Vec\+::get\+\_\+det (\begin{DoxyParamCaption}\item[{const size\+\_\+t}]{value }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a1547252a5e500ecb773d5ddac0368d1e}\label{classforte_1_1_determinant_hash_vec_a1547252a5e500ecb773d5ddac0368d1e}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!get\+\_\+idx@{get\+\_\+idx}}
+\index{get\+\_\+idx@{get\+\_\+idx}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{get\+\_\+idx()}{get\_idx()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Determinant\+Hash\+Vec\+::get\+\_\+idx (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a683b6f9a2be21955d7caa0181cf88f77}\label{classforte_1_1_determinant_hash_vec_a683b6f9a2be21955d7caa0181cf88f77}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!has\+\_\+det@{has\+\_\+det}}
+\index{has\+\_\+det@{has\+\_\+det}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{has\+\_\+det()}{has\_det()}}
+{\footnotesize\ttfamily bool forte\+::\+Determinant\+Hash\+Vec\+::has\+\_\+det (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_aadea7fce2c583d922a696093d2888619}\label{classforte_1_1_determinant_hash_vec_aadea7fce2c583d922a696093d2888619}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!make\+\_\+spin\+\_\+complete@{make\+\_\+spin\+\_\+complete}}
+\index{make\+\_\+spin\+\_\+complete@{make\+\_\+spin\+\_\+complete}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{make\+\_\+spin\+\_\+complete()}{make\_spin\_complete()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Hash\+Vec\+::make\+\_\+spin\+\_\+complete (\begin{DoxyParamCaption}\item[{int}]{nmo }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a76bbc710a7fe975f008a5b41cc10f85c}\label{classforte_1_1_determinant_hash_vec_a76bbc710a7fe975f008a5b41cc10f85c}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!merge@{merge}}
+\index{merge@{merge}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{merge()}{merge()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Hash\+Vec\+::merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{dets }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_ad4f538593c5f1d98da9a73e5462d3bfa}\label{classforte_1_1_determinant_hash_vec_ad4f538593c5f1d98da9a73e5462d3bfa}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!overlap@{overlap}}
+\index{overlap@{overlap}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{overlap()}{overlap()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double forte\+::\+Determinant\+Hash\+Vec\+::overlap (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{det1\+\_\+evecs,  }\item[{\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{det2,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{det2\+\_\+evecs,  }\item[{int}]{root }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a1168daa5c587057db556210cee6504a6}\label{classforte_1_1_determinant_hash_vec_a1168daa5c587057db556210cee6504a6}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!overlap@{overlap}}
+\index{overlap@{overlap}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{overlap()}{overlap()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily double forte\+::\+Determinant\+Hash\+Vec\+::overlap (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{det1\+\_\+evecs,  }\item[{int}]{root1,  }\item[{\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{det2,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{det2\+\_\+evecs,  }\item[{int}]{root2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a65a00ada6f1529a6e82908a4802f6729}\label{classforte_1_1_determinant_hash_vec_a65a00ada6f1529a6e82908a4802f6729}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!size@{size}}
+\index{size@{size}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Determinant\+Hash\+Vec\+::size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return the number of determinants. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_ab45b9bb4b2b10262fb8b5fc0394dd954}\label{classforte_1_1_determinant_hash_vec_ab45b9bb4b2b10262fb8b5fc0394dd954}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!subspace@{subspace}}
+\index{subspace@{subspace}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{subspace()}{subspace()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Hash\+Vec\+::subspace (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{dets,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$}]{evecs,  }\item[{std\+::vector$<$ double $>$ \&}]{new\+\_\+evecs,  }\item[{size\+\_\+t}]{dim,  }\item[{int}]{root }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a03d8f6394ae12862b2e4c782dcab82fa}\label{classforte_1_1_determinant_hash_vec_a03d8f6394ae12862b2e4c782dcab82fa}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!swap@{swap}}
+\index{swap@{swap}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{swap()}{swap()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Hash\+Vec\+::swap (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{dets }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_af5b7b59cac7ddccd0c0b595b9bb3e6d2}\label{classforte_1_1_determinant_hash_vec_af5b7b59cac7ddccd0c0b595b9bb3e6d2}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!swap@{swap}}
+\index{swap@{swap}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{swap()}{swap()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Hash\+Vec\+::swap (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \&}]{dets }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_a9fa3a1a6f30ffd78e70e5a6a23990273}\label{classforte_1_1_determinant_hash_vec_a9fa3a1a6f30ffd78e70e5a6a23990273}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!wfn\+\_\+hash@{wfn\+\_\+hash}}
+\index{wfn\+\_\+hash@{wfn\+\_\+hash}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{wfn\+\_\+hash()}{wfn\_hash()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \& forte\+::\+Determinant\+Hash\+Vec\+::wfn\+\_\+hash (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+The hash 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_add576b2713d10d0449dd0cd7b38c7c38}\label{classforte_1_1_determinant_hash_vec_add576b2713d10d0449dd0cd7b38c7c38}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!wfn\+\_\+hash@{wfn\+\_\+hash}}
+\index{wfn\+\_\+hash@{wfn\+\_\+hash}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{wfn\+\_\+hash()}{wfn\_hash()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} \& forte\+::\+Determinant\+Hash\+Vec\+::wfn\+\_\+hash (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The hash 
+\end{DoxyReturn}
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_hash_vec_abbbb485c33b1f107c3cafef27cdf5215}\label{classforte_1_1_determinant_hash_vec_abbbb485c33b1f107c3cafef27cdf5215}} 
+\index{forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}!wfn\+\_\+@{wfn\+\_\+}}
+\index{wfn\+\_\+@{wfn\+\_\+}!forte\+::\+Determinant\+Hash\+Vec@{forte\+::\+Determinant\+Hash\+Vec}}
+\subsubsection{\texorpdfstring{wfn\+\_\+}{wfn\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{det\+\_\+hashvec}} forte\+::\+Determinant\+Hash\+Vec\+::wfn\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+A hashvector of determinants. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{determinant__hashvector_8h}{determinant\+\_\+hashvector.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{determinant__hashvector_8cc}{determinant\+\_\+hashvector.\+cc}}\end{DoxyCompactItemize}

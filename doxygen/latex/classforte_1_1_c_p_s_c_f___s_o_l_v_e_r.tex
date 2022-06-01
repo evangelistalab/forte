@@ -1,0 +1,72 @@
+\hypertarget{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r}{}\section{forte\+:\+:C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER Class Reference}
+\label{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r}\index{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}}
+
+
+{\ttfamily \#include $<$cpscf.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_abf8d542e0f97464c9fd03dfa2d2528d8}{C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ psi\+::\+JK $>$ JK, psi\+::\+Shared\+Matrix C, psi\+::\+Shared\+Matrix b, psi\+::\+Shared\+Vector edocc, psi\+::\+Shared\+Vector euocc)
+\begin{DoxyCompactList}\small\item\em Constructor of \mbox{\hyperlink{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r}{C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}}. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_ac210c880f297904efa59bfc46881ca9b}{solve}} ()
+\begin{DoxyCompactList}\small\item\em Solve \mbox{\hyperlink{classforte_1_1_c_p_s_c_f}{C\+P\+S\+CF}} equation and return if the equations are converged or not. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_a3d1a12199bb5114f71216738404f8fce}{x}} ()
+\begin{DoxyCompactList}\small\item\em Return the unknown in matrix form. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_abf8d542e0f97464c9fd03dfa2d2528d8}\label{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_abf8d542e0f97464c9fd03dfa2d2528d8}} 
+\index{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}!C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}}
+\index{C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}!forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}}
+\subsubsection{\texorpdfstring{C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+E\+R()}{CPSCF\_SOLVER()}}
+{\footnotesize\ttfamily forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+E\+R\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+JK $>$}]{JK,  }\item[{psi\+::\+Shared\+Matrix}]{C,  }\item[{psi\+::\+Shared\+Matrix}]{b,  }\item[{psi\+::\+Shared\+Vector}]{edocc,  }\item[{psi\+::\+Shared\+Vector}]{euocc }\end{DoxyParamCaption})}
+
+
+
+Constructor of \mbox{\hyperlink{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r}{C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em options} & The \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} pointer \\
+\hline
+{\em JK} & The pointer to a Psi4 JK object \\
+\hline
+{\em C} & The Hartree-\/\+Fock orbital coefficients \\
+\hline
+{\em b} & The R.\+H.\+S. of \mbox{\hyperlink{classforte_1_1_c_p_s_c_f}{C\+P\+S\+CF}} equation Ax = b (nuocc x ndocc) \\
+\hline
+{\em edocc} & The occupied orbital energies \\
+\hline
+{\em euocc} & The unoccupied orbital energies \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_ac210c880f297904efa59bfc46881ca9b}\label{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_ac210c880f297904efa59bfc46881ca9b}} 
+\index{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}!solve@{solve}}
+\index{solve@{solve}!forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}}
+\subsubsection{\texorpdfstring{solve()}{solve()}}
+{\footnotesize\ttfamily bool forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+E\+R\+::solve (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Solve \mbox{\hyperlink{classforte_1_1_c_p_s_c_f}{C\+P\+S\+CF}} equation and return if the equations are converged or not. 
+
+\mbox{\Hypertarget{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_a3d1a12199bb5114f71216738404f8fce}\label{classforte_1_1_c_p_s_c_f___s_o_l_v_e_r_a3d1a12199bb5114f71216738404f8fce}} 
+\index{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}!x@{x}}
+\index{x@{x}!forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER@{forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+ER}}
+\subsubsection{\texorpdfstring{x()}{x()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+C\+P\+S\+C\+F\+\_\+\+S\+O\+L\+V\+E\+R\+::x (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Return the unknown in matrix form. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{cpscf_8h}{cpscf.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{cpscf_8cc}{cpscf.\+cc}}\end{DoxyCompactItemize}

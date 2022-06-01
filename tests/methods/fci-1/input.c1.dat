@@ -1,0 +1,31 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refscf = -14.54873910108353
+reffci = -14.595808852754054
+
+molecule {
+0 1
+Li
+Li 1 R
+R = 3.0
+units bohr
+symmetry c1
+}
+
+set {
+  basis sto-3g
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  active_space_solver fci 
+}
+
+energy('scf')
+compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST

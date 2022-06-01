@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -92,7 +92,7 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
     in.close();
 }
 
-//std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
+// std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
 //                          const std::string& file_prefix) {
 //    auto block_labels = BT.block_labels();
 //    std::vector<std::string> block_file_names;
@@ -133,7 +133,7 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
 //    return file_path;
 //}
 
-//void read_disk_BT(ambit::BlockedTensor& BT, const std::string& filename) {
+// void read_disk_BT(ambit::BlockedTensor& BT, const std::string& filename) {
 //    // read master file info for each block
 //    std::ifstream infile(filename);
 //    if (!infile.good()) {
@@ -163,7 +163,7 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
 //    infile.close();
 //}
 
-//void delete_disk_BT(const std::string& filename) {
+// void delete_disk_BT(const std::string& filename) {
 //    std::ifstream infile(filename);
 //    if (!infile.good()) {
 //        std::string error = "File " + filename + " does not exist.";

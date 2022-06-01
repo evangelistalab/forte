@@ -1,0 +1,68 @@
+\hypertarget{sigma__vector__dynamic_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/sigma\+\_\+vector\+\_\+dynamic.cc File Reference}
+\label{sigma__vector__dynamic_8cc}\index{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/sigma\+\_\+vector\+\_\+dynamic.\+cc@{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/sigma\+\_\+vector\+\_\+dynamic.\+cc}}
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$thread$>$}\newline
+{\ttfamily \#include $<$future$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}forte-\/def.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/iterative\+\_\+solvers.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sigma\+\_\+vector\+\_\+dynamic.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}integrals/active\+\_\+space\+\_\+integrals.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sparse\+\_\+ci/determinant\+\_\+functions.\+hpp\char`\"{}}\newline
+Include dependency graph for sigma\+\_\+vector\+\_\+dynamic.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sigma__vector__dynamic_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{sigma__vector__dynamic_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{sigma__vector__dynamic_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\item 
+\#define \mbox{\hyperlink{sigma__vector__dynamic_8cc_a4353281743925f182316dba7cda58fee}{omp\+\_\+get\+\_\+num\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{sigma__vector__dynamic_8cc_a6980e9cf1f6b3cc59e146a98b878a971}{S\+I\+G\+M\+A\+\_\+\+V\+E\+C\+\_\+\+D\+E\+B\+UG}}~0
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{namespaceforte_a71401439b13f82795c9010e5e1632efa}{forte\+::print\+\_\+\+Sigma\+Vector\+Dynamic\+\_\+stats}} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{sigma__vector__dynamic_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{sigma__vector__dynamic_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{sigma\+\_\+vector\+\_\+dynamic.\+cc@{sigma\+\_\+vector\+\_\+dynamic.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!sigma\+\_\+vector\+\_\+dynamic.\+cc@{sigma\+\_\+vector\+\_\+dynamic.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{sigma__vector__dynamic_8cc_a4353281743925f182316dba7cda58fee}\label{sigma__vector__dynamic_8cc_a4353281743925f182316dba7cda58fee}} 
+\index{sigma\+\_\+vector\+\_\+dynamic.\+cc@{sigma\+\_\+vector\+\_\+dynamic.\+cc}!omp\+\_\+get\+\_\+num\+\_\+threads@{omp\+\_\+get\+\_\+num\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+num\+\_\+threads@{omp\+\_\+get\+\_\+num\+\_\+threads}!sigma\+\_\+vector\+\_\+dynamic.\+cc@{sigma\+\_\+vector\+\_\+dynamic.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+num\+\_\+threads}{omp\_get\_num\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+num\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{sigma__vector__dynamic_8cc_a889ec205c635b219999c761b28cc39ba}\label{sigma__vector__dynamic_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{sigma\+\_\+vector\+\_\+dynamic.\+cc@{sigma\+\_\+vector\+\_\+dynamic.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!sigma\+\_\+vector\+\_\+dynamic.\+cc@{sigma\+\_\+vector\+\_\+dynamic.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+
+\mbox{\Hypertarget{sigma__vector__dynamic_8cc_a6980e9cf1f6b3cc59e146a98b878a971}\label{sigma__vector__dynamic_8cc_a6980e9cf1f6b3cc59e146a98b878a971}} 
+\index{sigma\+\_\+vector\+\_\+dynamic.\+cc@{sigma\+\_\+vector\+\_\+dynamic.\+cc}!S\+I\+G\+M\+A\+\_\+\+V\+E\+C\+\_\+\+D\+E\+B\+UG@{S\+I\+G\+M\+A\+\_\+\+V\+E\+C\+\_\+\+D\+E\+B\+UG}}
+\index{S\+I\+G\+M\+A\+\_\+\+V\+E\+C\+\_\+\+D\+E\+B\+UG@{S\+I\+G\+M\+A\+\_\+\+V\+E\+C\+\_\+\+D\+E\+B\+UG}!sigma\+\_\+vector\+\_\+dynamic.\+cc@{sigma\+\_\+vector\+\_\+dynamic.\+cc}}
+\subsubsection{\texorpdfstring{S\+I\+G\+M\+A\+\_\+\+V\+E\+C\+\_\+\+D\+E\+B\+UG}{SIGMA\_VEC\_DEBUG}}
+{\footnotesize\ttfamily \#define S\+I\+G\+M\+A\+\_\+\+V\+E\+C\+\_\+\+D\+E\+B\+UG~0}
+

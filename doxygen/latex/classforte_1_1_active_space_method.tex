@@ -1,0 +1,459 @@
+\hypertarget{classforte_1_1_active_space_method}{}\section{forte\+:\+:Active\+Space\+Method Class Reference}
+\label{classforte_1_1_active_space_method}\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+
+
+Base class for methods that solve the Schrodinger equation in an active space.  
+
+
+
+
+{\ttfamily \#include $<$active\+\_\+space\+\_\+method.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Active\+Space\+Method\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_active_space_method__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Active\+Space\+Method\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=211pt]{classforte_1_1_active_space_method__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_active_space_method_afa70f2a1ba6e629d47aa9cd53aaff803}{Active\+Space\+Method}} (\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \mbox{\hyperlink{classforte_1_1_active_space_method_a609f005cc7d3a1bc03ae517002eb19dc}{state}}, size\+\_\+t \mbox{\hyperlink{classforte_1_1_active_space_method_aa2bafc732bd7023fd32fbd263ef2e903}{nroot}}, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} Constructor for a single state computation. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_active_space_method_ae630700e0a16cca4aaa0e22d0902f873}{Active\+Space\+Method}} ()=default
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classforte_1_1_active_space_method_a89c56600b54016ec3ad0c4c946fe0e5d}{$\sim$\+Active\+Space\+Method}} ()=default
+\begin{DoxyCompactList}\small\item\em Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classforte_1_1_active_space_method_a99736e2b94405371b224b0750569b077}{compute\+\_\+energy}} ()=0
+\begin{DoxyCompactList}\small\item\em Compute the energy and return it. \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_method_a0b2c4903551a7602db815d67349ba7c9}{rdms}} (const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&root\+\_\+list, int max\+\_\+rdm\+\_\+level)=0
+\begin{DoxyCompactList}\small\item\em Compute the reduced density matrices up to a given particle rank (max\+\_\+rdm\+\_\+level) \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_method_a4460069915e56a1994d3a4a4e78bdb30}{transition\+\_\+rdms}} (const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&root\+\_\+list, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} $>$ method2, int max\+\_\+rdm\+\_\+level)=0
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_active_space_method_a9416a627f550d4d56f6b8ffe7478ed89}{set\+\_\+options}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options)=0
+\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_method_a68315114ff7ca403e1cf05ad9faaf1d0}{set\+\_\+active\+\_\+space\+\_\+integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints)
+\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_active_space_method_a4991f2ecd42e6a1c89a5c607b4815b47}{evals}} ()
+\begin{DoxyCompactList}\small\item\em Return the eigenvalues. \end{DoxyCompactList}\item 
+const std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_active_space_method_a9fdd240d326fab5791b58278af2a69bf}{energies}} () const
+\begin{DoxyCompactList}\small\item\em Return a vector with the energies of all the states. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_active_space_method_aa2bafc732bd7023fd32fbd263ef2e903}{nroot}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of roots computed. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \& \mbox{\hyperlink{classforte_1_1_active_space_method_a609f005cc7d3a1bc03ae517002eb19dc}{state}} () const
+\begin{DoxyCompactList}\small\item\em Return the state info. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_method_ac4f39aa66c9d4481d172ea9e6255dc03}{set\+\_\+e\+\_\+convergence}} (double value)
+\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_method_a59aad054d7966dc86ef01ea143fb1308}{set\+\_\+r\+\_\+convergence}} (double value)
+\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_method_a0abdfc8523b4c7e4fdd3a0e6a3d4bd13}{set\+\_\+root}} (int value)
+\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_method_a4442ac4afcec13630ff4e539a321205a}{set\+\_\+print}} (int level)
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_active_space_method_a02a2f9b7c138d1471cd6632650508819}{active\+\_\+mo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The list of active orbitals (absolute ordering) \end{DoxyCompactList}\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_active_space_method_aa68eb7267f635f0f885d921a61197281}{core\+\_\+mo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The list of doubly occupied orbitals (absolute ordering) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \mbox{\hyperlink{classforte_1_1_active_space_method_a1d90017e267642942760830b17d27d9f}{state\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The state to calculate. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_active_space_method_a3e299283cd1a99a718307a05f0790039}{nroot\+\_\+}} = 1
+\begin{DoxyCompactList}\small\item\em The number of roots (default = 1) \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_method_a7359678b3a1f747c0800323748bd9ba2}{mo\+\_\+space\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_method_ab012eecdedfe5373e2845fd6959e9fca}{as\+\_\+ints\+\_\+}}
+\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_method_aabde020cf2dee6ccee213f0a3e364327}{e\+\_\+convergence\+\_\+}} = 1.\+0e-\/12
+\begin{DoxyCompactList}\small\item\em The energy convergence criterion. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_method_a78d130a7a72dede5a9908218fbb968e1}{r\+\_\+convergence\+\_\+}} = 1.\+0e-\/6
+\begin{DoxyCompactList}\small\item\em The residual 2-\/norm convergence criterion. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_active_space_method_a53458a01013f2953a6d1f9f7ffaf7748}{root\+\_\+}} = 0
+\begin{DoxyCompactList}\small\item\em The root used to compute properties (zero based, default = 0) \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_active_space_method_aad045907e17a8a42f293d50315586eb2}{print\+\_\+}} = 0
+\begin{DoxyCompactList}\small\item\em A variable to control printing information. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_active_space_method_a22e878923ad570612cf05674f339c0ca}{evals\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Eigenvalues. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_active_space_method_a9dad8dec653d25bab4c7a6a9c2293e12}{energies\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The energies (including nuclear repulsion) of all the states. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Base class for methods that solve the Schrodinger equation in an active space. 
+
+This class is the base class for methods that solve for the wavefunction in a small subset of the full orbital space ($<$30-\/40 orbitals). The molecular orbital used by the active space methods are stored in a \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} and must be passed at the time of creation.
+
+All methods that derive from this class offer the following interface
+
+
+\begin{DoxyItemize}
+\item Compute the energy double \mbox{\hyperlink{classforte_1_1_active_space_method_a99736e2b94405371b224b0750569b077}{compute\+\_\+energy()}};
+\item Compute a \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} object \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \mbox{\hyperlink{classforte_1_1_active_space_method_a0b2c4903551a7602db815d67349ba7c9}{rdms()}};
+\item Set the options for the derived methods \mbox{\hyperlink{classforte_1_1_active_space_method_a9416a627f550d4d56f6b8ffe7478ed89}{set\+\_\+options(std\+::shared\+\_\+ptr$<$\+Forte\+Options$>$ options)}};
+\end{DoxyItemize}
+
+All methods must also use the following base class variables
+
+
+\begin{DoxyItemize}
+\item Information about the state \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} state\+\_\+;
+\item Number of states computed size\+\_\+t nroot\+\_\+;
+\item Store final energies in the vector (including nuclear repulsion)\+: std\+::vector$<$double$>$ energies\+\_\+;
+\end{DoxyItemize}
+
+\begin{DoxyNote}{Note}
+This class is not aware of which orbitals are considered active. This information is contained in the \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} object. Orbitals that are double occupied are not correlated and are trated via effective scalar and one-\/body interactions. 
+\end{DoxyNote}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_afa70f2a1ba6e629d47aa9cd53aaff803}\label{classforte_1_1_active_space_method_afa70f2a1ba6e629d47aa9cd53aaff803}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!Active\+Space\+Method@{Active\+Space\+Method}}
+\index{Active\+Space\+Method@{Active\+Space\+Method}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{Active\+Space\+Method()}{ActiveSpaceMethod()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+Active\+Space\+Method\+::\+Active\+Space\+Method (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}}]{state,  }\item[{size\+\_\+t}]{nroot,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints }\end{DoxyParamCaption})}
+
+
+
+\mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} Constructor for a single state computation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state} & the electronic state to compute \\
+\hline
+{\em nroot} & the number of roots \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & a \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object that defines the orbital spaces \\
+\hline
+{\em as\+\_\+ints} & molecular integrals defined only for the active space orbitals \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_ae630700e0a16cca4aaa0e22d0902f873}\label{classforte_1_1_active_space_method_ae630700e0a16cca4aaa0e22d0902f873}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!Active\+Space\+Method@{Active\+Space\+Method}}
+\index{Active\+Space\+Method@{Active\+Space\+Method}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{Active\+Space\+Method()}{ActiveSpaceMethod()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+Active\+Space\+Method\+::\+Active\+Space\+Method (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+Default constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a89c56600b54016ec3ad0c4c946fe0e5d}\label{classforte_1_1_active_space_method_a89c56600b54016ec3ad0c4c946fe0e5d}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!````~Active\+Space\+Method@{$\sim$\+Active\+Space\+Method}}
+\index{````~Active\+Space\+Method@{$\sim$\+Active\+Space\+Method}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{$\sim$\+Active\+Space\+Method()}{~ActiveSpaceMethod()}}
+{\footnotesize\ttfamily virtual forte\+::\+Active\+Space\+Method\+::$\sim$\+Active\+Space\+Method (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+
+
+Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a99736e2b94405371b224b0750569b077}\label{classforte_1_1_active_space_method_a99736e2b94405371b224b0750569b077}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily virtual double forte\+::\+Active\+Space\+Method\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Compute the energy and return it. 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_f_c_i___m_o_a98d9b947e1cf345c82d513a54ca51ddd}{forte\+::\+F\+C\+I\+\_\+\+MO}}, \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a5ea02e6826ffd8eb01fd25c229517159}{forte\+::\+F\+C\+I\+Solver}}, \mbox{\hyperlink{classforte_1_1_excited_state_solver_a35b840324fb9e080eda46f29e544c86a}{forte\+::\+Excited\+State\+Solver}}, and \mbox{\hyperlink{classforte_1_1_d_m_r_g_s_c_f_a19128db2df6992b295bd00d85c43309d}{forte\+::\+D\+M\+R\+G\+S\+CF}}.
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a9fdd240d326fab5791b58278af2a69bf}\label{classforte_1_1_active_space_method_a9fdd240d326fab5791b58278af2a69bf}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!energies@{energies}}
+\index{energies@{energies}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{energies()}{energies()}}
+{\footnotesize\ttfamily const std\+::vector$<$ double $>$ \& forte\+::\+Active\+Space\+Method\+::energies (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return a vector with the energies of all the states. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a4991f2ecd42e6a1c89a5c607b4815b47}\label{classforte_1_1_active_space_method_a4991f2ecd42e6a1c89a5c607b4815b47}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!evals@{evals}}
+\index{evals@{evals}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{evals()}{evals()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+Active\+Space\+Method\+::evals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Return the eigenvalues. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_aa2bafc732bd7023fd32fbd263ef2e903}\label{classforte_1_1_active_space_method_aa2bafc732bd7023fd32fbd263ef2e903}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!nroot@{nroot}}
+\index{nroot@{nroot}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{nroot()}{nroot()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Active\+Space\+Method\+::nroot (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the number of roots computed. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a0b2c4903551a7602db815d67349ba7c9}\label{classforte_1_1_active_space_method_a0b2c4903551a7602db815d67349ba7c9}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!rdms@{rdms}}
+\index{rdms@{rdms}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{rdms()}{rdms()}}
+{\footnotesize\ttfamily virtual std\+::vector$<$\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}$>$ forte\+::\+Active\+Space\+Method\+::rdms (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&}]{root\+\_\+list,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Compute the reduced density matrices up to a given particle rank (max\+\_\+rdm\+\_\+level) 
+
+This function can be used to compute transition density matrices between states of difference symmetry,
+
+D$^\wedge$\{p\}\+\_\+\{q\} = $<$I, symmetry\+\_\+l$\vert$ a+\+\_\+p1 ... a\+\_\+qn $\vert$J, symmetry\+\_\+r$>$
+
+where $\vert$I, symmetry\+\_\+l$>$ is the I-\/th state of symmetry = symmetry\+\_\+l $\vert$J, symmetry\+\_\+r$>$ is the J-\/th state of symmetry = symmetry\+\_\+r
+
+
+\begin{DoxyParams}{Parameters}
+{\em root\+\_\+list} & a list of pairs of roots to compute \mbox{[}(I\+\_\+1, J\+\_\+1), (I\+\_\+2, J\+\_\+2), ...\mbox{]} \\
+\hline
+{\em method2} & a second \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} object that holds the states for symmetry\+\_\+r \\
+\hline
+{\em max\+\_\+rdm\+\_\+level} & the maximum R\+DM rank \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_f_c_i___m_o_afe4bb6cb53fbf4190c020ee3fa794237}{forte\+::\+F\+C\+I\+\_\+\+MO}}, \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a40d53f62ae73a7baf7560dac37838b8b}{forte\+::\+F\+C\+I\+Solver}}, and \mbox{\hyperlink{classforte_1_1_excited_state_solver_a67a061a196cc9e492fabc1b6c7995409}{forte\+::\+Excited\+State\+Solver}}.
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a68315114ff7ca403e1cf05ad9faaf1d0}\label{classforte_1_1_active_space_method_a68315114ff7ca403e1cf05ad9faaf1d0}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!set\+\_\+active\+\_\+space\+\_\+integrals@{set\+\_\+active\+\_\+space\+\_\+integrals}}
+\index{set\+\_\+active\+\_\+space\+\_\+integrals@{set\+\_\+active\+\_\+space\+\_\+integrals}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{set\+\_\+active\+\_\+space\+\_\+integrals()}{set\_active\_space\_integrals()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Method\+::set\+\_\+active\+\_\+space\+\_\+integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints }\end{DoxyParamCaption})}
+
+Pass a set of \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} to the solver (e.\+g. an effective Hamiltonian) 
+\begin{DoxyParams}{Parameters}
+{\em as\+\_\+ints} & the integrals passed in \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_ac4f39aa66c9d4481d172ea9e6255dc03}\label{classforte_1_1_active_space_method_ac4f39aa66c9d4481d172ea9e6255dc03}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!set\+\_\+e\+\_\+convergence@{set\+\_\+e\+\_\+convergence}}
+\index{set\+\_\+e\+\_\+convergence@{set\+\_\+e\+\_\+convergence}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{set\+\_\+e\+\_\+convergence()}{set\_e\_convergence()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Method\+::set\+\_\+e\+\_\+convergence (\begin{DoxyParamCaption}\item[{double}]{value }\end{DoxyParamCaption})}
+
+Set the energy convergence criterion 
+\begin{DoxyParams}{Parameters}
+{\em value} & the convergence criterion in a.\+u. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a9416a627f550d4d56f6b8ffe7478ed89}\label{classforte_1_1_active_space_method_a9416a627f550d4d56f6b8ffe7478ed89}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!set\+\_\+options@{set\+\_\+options}}
+\index{set\+\_\+options@{set\+\_\+options}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{set\+\_\+options()}{set\_options()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Active\+Space\+Method\+::set\+\_\+options (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Set options from an option object 
+\begin{DoxyParams}{Parameters}
+{\em options} & the options passed in \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_f_c_i___m_o_ad03e24facf8d8b4ba766ce7a0e5725e6}{forte\+::\+F\+C\+I\+\_\+\+MO}}, \mbox{\hyperlink{classforte_1_1_f_c_i_solver_a5bb962ea913122dbcec9319411876b05}{forte\+::\+F\+C\+I\+Solver}}, and \mbox{\hyperlink{classforte_1_1_excited_state_solver_ac32716228ebaa1dfda75cf48db544e5f}{forte\+::\+Excited\+State\+Solver}}.
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a4442ac4afcec13630ff4e539a321205a}\label{classforte_1_1_active_space_method_a4442ac4afcec13630ff4e539a321205a}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!set\+\_\+print@{set\+\_\+print}}
+\index{set\+\_\+print@{set\+\_\+print}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{set\+\_\+print()}{set\_print()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Method\+::set\+\_\+print (\begin{DoxyParamCaption}\item[{int}]{level }\end{DoxyParamCaption})}
+
+Set the print level 
+\begin{DoxyParams}{Parameters}
+{\em level} & the print level (0 = no printing, 1 default) \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a59aad054d7966dc86ef01ea143fb1308}\label{classforte_1_1_active_space_method_a59aad054d7966dc86ef01ea143fb1308}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!set\+\_\+r\+\_\+convergence@{set\+\_\+r\+\_\+convergence}}
+\index{set\+\_\+r\+\_\+convergence@{set\+\_\+r\+\_\+convergence}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{set\+\_\+r\+\_\+convergence()}{set\_r\_convergence()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Method\+::set\+\_\+r\+\_\+convergence (\begin{DoxyParamCaption}\item[{double}]{value }\end{DoxyParamCaption})}
+
+Set the residual 2-\/norm convergence criterion 
+\begin{DoxyParams}{Parameters}
+{\em value} & the convergence criterion in a.\+u. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a0abdfc8523b4c7e4fdd3a0e6a3d4bd13}\label{classforte_1_1_active_space_method_a0abdfc8523b4c7e4fdd3a0e6a3d4bd13}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!set\+\_\+root@{set\+\_\+root}}
+\index{set\+\_\+root@{set\+\_\+root}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{set\+\_\+root()}{set\_root()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Method\+::set\+\_\+root (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+Set the root that will be used to compute the properties 
+\begin{DoxyParams}{Parameters}
+{\em the} & root (root = 0, 1, 2, ...) \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a609f005cc7d3a1bc03ae517002eb19dc}\label{classforte_1_1_active_space_method_a609f005cc7d3a1bc03ae517002eb19dc}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!state@{state}}
+\index{state@{state}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{state()}{state()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}\& forte\+::\+Active\+Space\+Method\+::state (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the state info. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a4460069915e56a1994d3a4a4e78bdb30}\label{classforte_1_1_active_space_method_a4460069915e56a1994d3a4a4e78bdb30}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!transition\+\_\+rdms@{transition\+\_\+rdms}}
+\index{transition\+\_\+rdms@{transition\+\_\+rdms}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{transition\+\_\+rdms()}{transition\_rdms()}}
+{\footnotesize\ttfamily virtual std\+::vector$<$\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}$>$ forte\+::\+Active\+Space\+Method\+::transition\+\_\+rdms (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&}]{root\+\_\+list,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} $>$}]{method2,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_f_c_i___m_o_a62d0c9bbee3dc8942ab109354074ad87}{forte\+::\+F\+C\+I\+\_\+\+MO}}, \mbox{\hyperlink{classforte_1_1_f_c_i_solver_ad29797ad91b7edb6b3d8a4c66aaf18a0}{forte\+::\+F\+C\+I\+Solver}}, and \mbox{\hyperlink{classforte_1_1_excited_state_solver_a8fa122b902c65b75470e34cdd475acaf}{forte\+::\+Excited\+State\+Solver}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a02a2f9b7c138d1471cd6632650508819}\label{classforte_1_1_active_space_method_a02a2f9b7c138d1471cd6632650508819}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!active\+\_\+mo\+\_\+@{active\+\_\+mo\+\_\+}}
+\index{active\+\_\+mo\+\_\+@{active\+\_\+mo\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{active\+\_\+mo\+\_\+}{active\_mo\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Active\+Space\+Method\+::active\+\_\+mo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The list of active orbitals (absolute ordering) 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_ab012eecdedfe5373e2845fd6959e9fca}\label{classforte_1_1_active_space_method_ab012eecdedfe5373e2845fd6959e9fca}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!as\+\_\+ints\+\_\+@{as\+\_\+ints\+\_\+}}
+\index{as\+\_\+ints\+\_\+@{as\+\_\+ints\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{as\+\_\+ints\+\_\+}{as\_ints\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}}$>$ forte\+::\+Active\+Space\+Method\+::as\+\_\+ints\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+The molecular integrals for the active space This object holds only the integrals for the orbital contained in the active\+\_\+mo\+\_\+ vector. The one-\/electron integrals and scalar energy contains contributions from the doubly occupied orbitals specified by the core\+\_\+mo\+\_\+ vector. \mbox{\Hypertarget{classforte_1_1_active_space_method_aa68eb7267f635f0f885d921a61197281}\label{classforte_1_1_active_space_method_aa68eb7267f635f0f885d921a61197281}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!core\+\_\+mo\+\_\+@{core\+\_\+mo\+\_\+}}
+\index{core\+\_\+mo\+\_\+@{core\+\_\+mo\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{core\+\_\+mo\+\_\+}{core\_mo\_}}
+{\footnotesize\ttfamily std\+::vector$<$size\+\_\+t$>$ forte\+::\+Active\+Space\+Method\+::core\+\_\+mo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The list of doubly occupied orbitals (absolute ordering) 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_aabde020cf2dee6ccee213f0a3e364327}\label{classforte_1_1_active_space_method_aabde020cf2dee6ccee213f0a3e364327}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!e\+\_\+convergence\+\_\+@{e\+\_\+convergence\+\_\+}}
+\index{e\+\_\+convergence\+\_\+@{e\+\_\+convergence\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{e\+\_\+convergence\+\_\+}{e\_convergence\_}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Method\+::e\+\_\+convergence\+\_\+ = 1.\+0e-\/12\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The energy convergence criterion. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a9dad8dec653d25bab4c7a6a9c2293e12}\label{classforte_1_1_active_space_method_a9dad8dec653d25bab4c7a6a9c2293e12}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!energies\+\_\+@{energies\+\_\+}}
+\index{energies\+\_\+@{energies\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{energies\+\_\+}{energies\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Active\+Space\+Method\+::energies\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The energies (including nuclear repulsion) of all the states. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a22e878923ad570612cf05674f339c0ca}\label{classforte_1_1_active_space_method_a22e878923ad570612cf05674f339c0ca}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!evals\+\_\+@{evals\+\_\+}}
+\index{evals\+\_\+@{evals\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{evals\+\_\+}{evals\_}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+Active\+Space\+Method\+::evals\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Eigenvalues. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a7359678b3a1f747c0800323748bd9ba2}\label{classforte_1_1_active_space_method_a7359678b3a1f747c0800323748bd9ba2}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}}
+\index{mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{mo\+\_\+space\+\_\+info\+\_\+}{mo\_space\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}$>$ forte\+::\+Active\+Space\+Method\+::mo\+\_\+space\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a3e299283cd1a99a718307a05f0790039}\label{classforte_1_1_active_space_method_a3e299283cd1a99a718307a05f0790039}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!nroot\+\_\+@{nroot\+\_\+}}
+\index{nroot\+\_\+@{nroot\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{nroot\+\_\+}{nroot\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Active\+Space\+Method\+::nroot\+\_\+ = 1\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of roots (default = 1) 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_aad045907e17a8a42f293d50315586eb2}\label{classforte_1_1_active_space_method_aad045907e17a8a42f293d50315586eb2}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!print\+\_\+@{print\+\_\+}}
+\index{print\+\_\+@{print\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{print\+\_\+}{print\_}}
+{\footnotesize\ttfamily int forte\+::\+Active\+Space\+Method\+::print\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+A variable to control printing information. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a78d130a7a72dede5a9908218fbb968e1}\label{classforte_1_1_active_space_method_a78d130a7a72dede5a9908218fbb968e1}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!r\+\_\+convergence\+\_\+@{r\+\_\+convergence\+\_\+}}
+\index{r\+\_\+convergence\+\_\+@{r\+\_\+convergence\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{r\+\_\+convergence\+\_\+}{r\_convergence\_}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Method\+::r\+\_\+convergence\+\_\+ = 1.\+0e-\/6\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The residual 2-\/norm convergence criterion. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a53458a01013f2953a6d1f9f7ffaf7748}\label{classforte_1_1_active_space_method_a53458a01013f2953a6d1f9f7ffaf7748}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!root\+\_\+@{root\+\_\+}}
+\index{root\+\_\+@{root\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{root\+\_\+}{root\_}}
+{\footnotesize\ttfamily int forte\+::\+Active\+Space\+Method\+::root\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The root used to compute properties (zero based, default = 0) 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_method_a1d90017e267642942760830b17d27d9f}\label{classforte_1_1_active_space_method_a1d90017e267642942760830b17d27d9f}} 
+\index{forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}!state\+\_\+@{state\+\_\+}}
+\index{state\+\_\+@{state\+\_\+}!forte\+::\+Active\+Space\+Method@{forte\+::\+Active\+Space\+Method}}
+\subsubsection{\texorpdfstring{state\+\_\+}{state\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} forte\+::\+Active\+Space\+Method\+::state\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The state to calculate. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{active__space__method_8h}{active\+\_\+space\+\_\+method.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{active__space__method_8cc}{active\+\_\+space\+\_\+method.\+cc}}\end{DoxyCompactItemize}

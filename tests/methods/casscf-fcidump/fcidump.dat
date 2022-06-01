@@ -1,0 +1,28 @@
+#! CASSCF on HF with no symmetry
+
+import forte
+
+refscf          = -99.87285247289
+
+memory 500 mb
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 1.50
+  symmetry c1
+}
+
+set globals {
+    basis           cc-pvdz
+    scf_type        out_of_core
+    reference       RHF
+    e_convergence   1e-10
+    d_convergence   1e-10
+    frozen_docc     [0]
+    restricted_docc [4]
+    active          [2]
+}
+scf,wfn = energy('scf', return_wfn=True)
+fcidump(wfn,oe_ints=['EIGENVALUES'],write_pntgrp=True)

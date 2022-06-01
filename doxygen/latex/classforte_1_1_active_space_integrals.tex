@@ -1,0 +1,412 @@
+\hypertarget{classforte_1_1_active_space_integrals}{}\section{forte\+:\+:Active\+Space\+Integrals Class Reference}
+\label{classforte_1_1_active_space_integrals}\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+
+
+The \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} class stores integrals necessary for F\+CI calculations.  
+
+
+
+
+{\ttfamily \#include $<$active\+\_\+space\+\_\+integrals.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_active_space_integrals_a0b136807e7e7c9aa516d4db75c9f6fd8}{Active\+Space\+Integrals}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_integrals_a8942409ee10fb0edf1e3905eda18874e}{ints}}, const std\+::vector$<$ size\+\_\+t $>$ \&\mbox{\hyperlink{classforte_1_1_active_space_integrals_a6f5bb9340f7f6d8ad923e71110851abe}{active\+\_\+mo}}, const std\+::vector$<$ int $>$ \&\mbox{\hyperlink{classforte_1_1_active_space_integrals_a8a3db27eab08b1be6d123ec2609f414c}{active\+\_\+mo\+\_\+symmetry}}, const std\+::vector$<$ size\+\_\+t $>$ \&rdocc\+\_\+mo)
+\begin{DoxyCompactList}\small\item\em Contructor to create integrals for an active space. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_active_space_integrals_a8942409ee10fb0edf1e3905eda18874e}{ints}} ()
+\begin{DoxyCompactList}\small\item\em Return the. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_active_space_integrals_a9b282d6339c5d9d58b9068c673c30386}{nmo}} () const
+\begin{DoxyCompactList}\small\item\em Return the number of M\+Os. \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_active_space_integrals_a8a3db27eab08b1be6d123ec2609f414c}{active\+\_\+mo\+\_\+symmetry}} () const
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_active_space_integrals_a6f5bb9340f7f6d8ad923e71110851abe}{active\+\_\+mo}} () const
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_active_space_integrals_a2f8581b9313b07abf073a42acf53c95d}{restricted\+\_\+docc\+\_\+mo}} () const
+\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_aa7f55e243730026dc330f202d731934e}{nuclear\+\_\+repulsion\+\_\+energy}} () const
+\begin{DoxyCompactList}\small\item\em Return nuclear repulsion energy. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a8481b2cb3f2bc4b44984da170724cb72}{frozen\+\_\+core\+\_\+energy}} () const
+\begin{DoxyCompactList}\small\item\em Return the frozen core energy (contribution from F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+CC) \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_ad75d3daa2e4a1d78b4dc0ffb5f60c80e}{scalar\+\_\+energy}} () const
+\begin{DoxyCompactList}\small\item\em Return the scalar\+\_\+energy energy (contribution from R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_integrals_a456ae6c8d7df86829519b265b728ff49}{set\+\_\+scalar\+\_\+energy}} (double \mbox{\hyperlink{classforte_1_1_active_space_integrals_ad75d3daa2e4a1d78b4dc0ffb5f60c80e}{scalar\+\_\+energy}})
+\begin{DoxyCompactList}\small\item\em Set \mbox{\hyperlink{classforte_1_1_active_space_integrals_ad75d3daa2e4a1d78b4dc0ffb5f60c80e}{scalar\+\_\+energy()}};. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a3b5853b2d617be385a5ffa89cc50ebc9}{energy}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det) const
+\begin{DoxyCompactList}\small\item\em Compute a determinant\textquotesingle{}s energy. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_ae371fb9c622fd81006f20ed257853527}{slater\+\_\+rules}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&lhs, const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&rhs) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a2b03f0580818ada3774a48366057bfdf}{slater\+\_\+rules\+\_\+single\+\_\+alpha}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det, int i, int a) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a058234ffee116c7be071ebf33d319880}{slater\+\_\+rules\+\_\+single\+\_\+beta}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det, int i, int a) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_abbf6bf916c0d561ce88001fed3b6967a}{slater\+\_\+rules\+\_\+single\+\_\+alpha\+\_\+abs}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det, int i, int a) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a1bb5b1702ef03d473ed13f97c56af37f}{slater\+\_\+rules\+\_\+single\+\_\+beta\+\_\+abs}} (const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&det, int i, int a) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a6463a779fa993faef6065c3bd3da1b1e}{oei\+\_\+a}} (size\+\_\+t p, size\+\_\+t q) const
+\begin{DoxyCompactList}\small\item\em Return the alpha effective one-\/electron integral. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_aee9d0ef5878d538d922f702228fc5884}{oei\+\_\+b}} (size\+\_\+t p, size\+\_\+t q) const
+\begin{DoxyCompactList}\small\item\em Return the beta effective one-\/electron integral. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_active_space_integrals_a44df304705d652eb55ee7f8d18d1202d}{oei\+\_\+a\+\_\+vector}} ()
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_active_space_integrals_abf4ac6d3c017c227daa37406e947bbe5}{oei\+\_\+b\+\_\+vector}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a41602985b2dd4fb879c21c7aab5d558f}{tei\+\_\+aa}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) const
+\begin{DoxyCompactList}\small\item\em Return the alpha-\/alpha antisymmetrized two-\/electron integral $<$pq$\vert$$\vert$rs$>$ \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a5ba6a11664bc0f72e2a2508f76421ac9}{tei\+\_\+ab}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) const
+\begin{DoxyCompactList}\small\item\em Return the alpha-\/beta two-\/electron integral $<$pq$\vert$rs$>$ \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_aac5d72add98a1f2583046687108941f6}{tei\+\_\+bb}} (size\+\_\+t p, size\+\_\+t q, size\+\_\+t r, size\+\_\+t s) const
+\begin{DoxyCompactList}\small\item\em Return the beta-\/beta antisymmetrized two-\/electron integral $<$pq$\vert$$\vert$rs$>$ \end{DoxyCompactList}\item 
+const std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_active_space_integrals_ad54901c053b19691f7920b1dd87e654b}{tei\+\_\+aa\+\_\+vector}} () const
+\begin{DoxyCompactList}\small\item\em Return a vector of alpha-\/alpha antisymmetrized two-\/electron integrals. \end{DoxyCompactList}\item 
+const std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_active_space_integrals_a3ffbe588c1db00534668eecccd2959fe}{tei\+\_\+ab\+\_\+vector}} () const
+\begin{DoxyCompactList}\small\item\em Return a vector of alpha-\/beta antisymmetrized two-\/electron integrals. \end{DoxyCompactList}\item 
+const std\+::vector$<$ double $>$ \& \mbox{\hyperlink{classforte_1_1_active_space_integrals_a04d77c7dfc8f4b8a2b80a2180da324cc}{tei\+\_\+bb\+\_\+vector}} () const
+\begin{DoxyCompactList}\small\item\em Return a vector of beta-\/beta antisymmetrized two-\/electron integrals. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_ae3d52adc6a64f6ad2c227c9387b50382}{diag\+\_\+tei\+\_\+aa}} (size\+\_\+t p, size\+\_\+t q) const
+\begin{DoxyCompactList}\small\item\em Return the alpha-\/alpha antisymmetrized two-\/electron integral $<$pq$\vert$$\vert$pq$>$ \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_a35000e575a4872262b1cc481371ab11f}{diag\+\_\+tei\+\_\+ab}} (size\+\_\+t p, size\+\_\+t q) const
+\begin{DoxyCompactList}\small\item\em Return the alpha-\/beta two-\/electron integral $<$pq$\vert$rs$>$ \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_active_space_integrals_aebc265d6a71280b33db9bc1e71ea32ca}{diag\+\_\+tei\+\_\+bb}} (size\+\_\+t p, size\+\_\+t q) const
+\begin{DoxyCompactList}\small\item\em Return the beta-\/beta antisymmetrized two-\/electron integral $<$pq$\vert$$\vert$rs$>$ \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} \mbox{\hyperlink{classforte_1_1_active_space_integrals_aae0f53c04ea99da9626ed9908ea82900}{get\+\_\+integral\+\_\+type}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_integrals_a8fdc3dcfc65590390c3da5a818eca12c}{set\+\_\+active\+\_\+integrals}} (const ambit\+::\+Tensor \&\mbox{\hyperlink{classforte_1_1_active_space_integrals_a41602985b2dd4fb879c21c7aab5d558f}{tei\+\_\+aa}}, const ambit\+::\+Tensor \&\mbox{\hyperlink{classforte_1_1_active_space_integrals_a5ba6a11664bc0f72e2a2508f76421ac9}{tei\+\_\+ab}}, const ambit\+::\+Tensor \&\mbox{\hyperlink{classforte_1_1_active_space_integrals_aac5d72add98a1f2583046687108941f6}{tei\+\_\+bb}})
+\begin{DoxyCompactList}\small\item\em Set the active integrals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_integrals_a3cc7df1a53e31254342158a2080eabf5}{compute\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator}} ()
+\begin{DoxyCompactList}\small\item\em Compute the restricted\+\_\+docc operator. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_integrals_ab6ecdd7235c8bb3c573dfd7dbd4db890}{set\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator}} (const std\+::vector$<$ double $>$ \&\mbox{\hyperlink{classforte_1_1_active_space_integrals_a6463a779fa993faef6065c3bd3da1b1e}{oei\+\_\+a}}, const std\+::vector$<$ double $>$ \&\mbox{\hyperlink{classforte_1_1_active_space_integrals_aee9d0ef5878d538d922f702228fc5884}{oei\+\_\+b}})
+\begin{DoxyCompactList}\small\item\em Set the restricted\+\_\+one\+\_\+body\+\_\+operator. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_integrals_a43129d2c6aaed7ac76f2ed146cd6b57e}{set\+\_\+active\+\_\+integrals\+\_\+and\+\_\+restricted\+\_\+docc}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_active_space_integrals_af93d7e92f4874dacbdd992810bad04c4}{print}} ()
+\begin{DoxyCompactList}\small\item\em Print the alpha-\/alpha integrals. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} class stores integrals necessary for F\+CI calculations. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a0b136807e7e7c9aa516d4db75c9f6fd8}\label{classforte_1_1_active_space_integrals_a0b136807e7e7c9aa516d4db75c9f6fd8}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!Active\+Space\+Integrals@{Active\+Space\+Integrals}}
+\index{Active\+Space\+Integrals@{Active\+Space\+Integrals}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{Active\+Space\+Integrals()}{ActiveSpaceIntegrals()}}
+{\footnotesize\ttfamily forte\+::\+Active\+Space\+Integrals\+::\+Active\+Space\+Integrals (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{active\+\_\+mo,  }\item[{const std\+::vector$<$ int $>$ \&}]{active\+\_\+mo\+\_\+symmetry,  }\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{rdocc\+\_\+mo }\end{DoxyParamCaption})}
+
+
+
+Contructor to create integrals for an active space. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ints} & forte integral object \\
+\hline
+{\em active\+\_\+mo} & the list of active orbitals \\
+\hline
+{\em active\+\_\+mo\+\_\+symmetry} & the symmetry of the active orbitals \\
+\hline
+{\em rdocc\+\_\+mo} & the list of orbitals that are doubly occupied. This information is used to form the effective one-\/electron operator \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a6f5bb9340f7f6d8ad923e71110851abe}\label{classforte_1_1_active_space_integrals_a6f5bb9340f7f6d8ad923e71110851abe}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!active\+\_\+mo@{active\+\_\+mo}}
+\index{active\+\_\+mo@{active\+\_\+mo}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{active\+\_\+mo()}{active\_mo()}}
+{\footnotesize\ttfamily std\+::vector$<$ size\+\_\+t $>$ forte\+::\+Active\+Space\+Integrals\+::active\+\_\+mo (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a8a3db27eab08b1be6d123ec2609f414c}\label{classforte_1_1_active_space_integrals_a8a3db27eab08b1be6d123ec2609f414c}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!active\+\_\+mo\+\_\+symmetry@{active\+\_\+mo\+\_\+symmetry}}
+\index{active\+\_\+mo\+\_\+symmetry@{active\+\_\+mo\+\_\+symmetry}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{active\+\_\+mo\+\_\+symmetry()}{active\_mo\_symmetry()}}
+{\footnotesize\ttfamily std\+::vector$<$ int $>$ forte\+::\+Active\+Space\+Integrals\+::active\+\_\+mo\+\_\+symmetry (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a3cc7df1a53e31254342158a2080eabf5}\label{classforte_1_1_active_space_integrals_a3cc7df1a53e31254342158a2080eabf5}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!compute\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator@{compute\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator}}
+\index{compute\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator@{compute\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{compute\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator()}{compute\_restricted\_one\_body\_operator()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Integrals\+::compute\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the restricted\+\_\+docc operator. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_ae3d52adc6a64f6ad2c227c9387b50382}\label{classforte_1_1_active_space_integrals_ae3d52adc6a64f6ad2c227c9387b50382}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!diag\+\_\+tei\+\_\+aa@{diag\+\_\+tei\+\_\+aa}}
+\index{diag\+\_\+tei\+\_\+aa@{diag\+\_\+tei\+\_\+aa}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{diag\+\_\+tei\+\_\+aa()}{diag\_tei\_aa()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::diag\+\_\+tei\+\_\+aa (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the alpha-\/alpha antisymmetrized two-\/electron integral $<$pq$\vert$$\vert$pq$>$ 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a35000e575a4872262b1cc481371ab11f}\label{classforte_1_1_active_space_integrals_a35000e575a4872262b1cc481371ab11f}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!diag\+\_\+tei\+\_\+ab@{diag\+\_\+tei\+\_\+ab}}
+\index{diag\+\_\+tei\+\_\+ab@{diag\+\_\+tei\+\_\+ab}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{diag\+\_\+tei\+\_\+ab()}{diag\_tei\_ab()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::diag\+\_\+tei\+\_\+ab (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the alpha-\/beta two-\/electron integral $<$pq$\vert$rs$>$ 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_aebc265d6a71280b33db9bc1e71ea32ca}\label{classforte_1_1_active_space_integrals_aebc265d6a71280b33db9bc1e71ea32ca}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!diag\+\_\+tei\+\_\+bb@{diag\+\_\+tei\+\_\+bb}}
+\index{diag\+\_\+tei\+\_\+bb@{diag\+\_\+tei\+\_\+bb}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{diag\+\_\+tei\+\_\+bb()}{diag\_tei\_bb()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::diag\+\_\+tei\+\_\+bb (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the beta-\/beta antisymmetrized two-\/electron integral $<$pq$\vert$$\vert$rs$>$ 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a3b5853b2d617be385a5ffa89cc50ebc9}\label{classforte_1_1_active_space_integrals_a3b5853b2d617be385a5ffa89cc50ebc9}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!energy@{energy}}
+\index{energy@{energy}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{energy()}{energy()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::energy (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det }\end{DoxyParamCaption}) const}
+
+
+
+Compute a determinant\textquotesingle{}s energy. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a8481b2cb3f2bc4b44984da170724cb72}\label{classforte_1_1_active_space_integrals_a8481b2cb3f2bc4b44984da170724cb72}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!frozen\+\_\+core\+\_\+energy@{frozen\+\_\+core\+\_\+energy}}
+\index{frozen\+\_\+core\+\_\+energy@{frozen\+\_\+core\+\_\+energy}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{frozen\+\_\+core\+\_\+energy()}{frozen\_core\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::frozen\+\_\+core\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the frozen core energy (contribution from F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+CC) 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_aae0f53c04ea99da9626ed9908ea82900}\label{classforte_1_1_active_space_integrals_aae0f53c04ea99da9626ed9908ea82900}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!get\+\_\+integral\+\_\+type@{get\+\_\+integral\+\_\+type}}
+\index{get\+\_\+integral\+\_\+type@{get\+\_\+integral\+\_\+type}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{get\+\_\+integral\+\_\+type()}{get\_integral\_type()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceforte_a790e7e85ac0911c4c9494622496d95e6}{Integral\+Type}} forte\+::\+Active\+Space\+Integrals\+::get\+\_\+integral\+\_\+type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a8942409ee10fb0edf1e3905eda18874e}\label{classforte_1_1_active_space_integrals_a8942409ee10fb0edf1e3905eda18874e}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!ints@{ints}}
+\index{ints@{ints}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{ints()}{ints()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}}$>$ forte\+::\+Active\+Space\+Integrals\+::ints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a9b282d6339c5d9d58b9068c673c30386}\label{classforte_1_1_active_space_integrals_a9b282d6339c5d9d58b9068c673c30386}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!nmo@{nmo}}
+\index{nmo@{nmo}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{nmo()}{nmo()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Active\+Space\+Integrals\+::nmo (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the number of M\+Os. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_aa7f55e243730026dc330f202d731934e}\label{classforte_1_1_active_space_integrals_aa7f55e243730026dc330f202d731934e}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!nuclear\+\_\+repulsion\+\_\+energy@{nuclear\+\_\+repulsion\+\_\+energy}}
+\index{nuclear\+\_\+repulsion\+\_\+energy@{nuclear\+\_\+repulsion\+\_\+energy}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{nuclear\+\_\+repulsion\+\_\+energy()}{nuclear\_repulsion\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::nuclear\+\_\+repulsion\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return nuclear repulsion energy. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a6463a779fa993faef6065c3bd3da1b1e}\label{classforte_1_1_active_space_integrals_a6463a779fa993faef6065c3bd3da1b1e}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!oei\+\_\+a@{oei\+\_\+a}}
+\index{oei\+\_\+a@{oei\+\_\+a}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{oei\+\_\+a()}{oei\_a()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::oei\+\_\+a (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the alpha effective one-\/electron integral. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a44df304705d652eb55ee7f8d18d1202d}\label{classforte_1_1_active_space_integrals_a44df304705d652eb55ee7f8d18d1202d}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!oei\+\_\+a\+\_\+vector@{oei\+\_\+a\+\_\+vector}}
+\index{oei\+\_\+a\+\_\+vector@{oei\+\_\+a\+\_\+vector}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{oei\+\_\+a\+\_\+vector()}{oei\_a\_vector()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Active\+Space\+Integrals\+::oei\+\_\+a\+\_\+vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_aee9d0ef5878d538d922f702228fc5884}\label{classforte_1_1_active_space_integrals_aee9d0ef5878d538d922f702228fc5884}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!oei\+\_\+b@{oei\+\_\+b}}
+\index{oei\+\_\+b@{oei\+\_\+b}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{oei\+\_\+b()}{oei\_b()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::oei\+\_\+b (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the beta effective one-\/electron integral. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_abf4ac6d3c017c227daa37406e947bbe5}\label{classforte_1_1_active_space_integrals_abf4ac6d3c017c227daa37406e947bbe5}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!oei\+\_\+b\+\_\+vector@{oei\+\_\+b\+\_\+vector}}
+\index{oei\+\_\+b\+\_\+vector@{oei\+\_\+b\+\_\+vector}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{oei\+\_\+b\+\_\+vector()}{oei\_b\_vector()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Active\+Space\+Integrals\+::oei\+\_\+b\+\_\+vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_af93d7e92f4874dacbdd992810bad04c4}\label{classforte_1_1_active_space_integrals_af93d7e92f4874dacbdd992810bad04c4}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!print@{print}}
+\index{print@{print}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{print()}{print()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Integrals\+::print (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Print the alpha-\/alpha integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a2f8581b9313b07abf073a42acf53c95d}\label{classforte_1_1_active_space_integrals_a2f8581b9313b07abf073a42acf53c95d}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!restricted\+\_\+docc\+\_\+mo@{restricted\+\_\+docc\+\_\+mo}}
+\index{restricted\+\_\+docc\+\_\+mo@{restricted\+\_\+docc\+\_\+mo}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{restricted\+\_\+docc\+\_\+mo()}{restricted\_docc\_mo()}}
+{\footnotesize\ttfamily std\+::vector$<$ size\+\_\+t $>$ forte\+::\+Active\+Space\+Integrals\+::restricted\+\_\+docc\+\_\+mo (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_ad75d3daa2e4a1d78b4dc0ffb5f60c80e}\label{classforte_1_1_active_space_integrals_ad75d3daa2e4a1d78b4dc0ffb5f60c80e}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!scalar\+\_\+energy@{scalar\+\_\+energy}}
+\index{scalar\+\_\+energy@{scalar\+\_\+energy}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{scalar\+\_\+energy()}{scalar\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::scalar\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the scalar\+\_\+energy energy (contribution from R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC) 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a8fdc3dcfc65590390c3da5a818eca12c}\label{classforte_1_1_active_space_integrals_a8fdc3dcfc65590390c3da5a818eca12c}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!set\+\_\+active\+\_\+integrals@{set\+\_\+active\+\_\+integrals}}
+\index{set\+\_\+active\+\_\+integrals@{set\+\_\+active\+\_\+integrals}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+active\+\_\+integrals()}{set\_active\_integrals()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Integrals\+::set\+\_\+active\+\_\+integrals (\begin{DoxyParamCaption}\item[{const ambit\+::\+Tensor \&}]{tei\+\_\+aa,  }\item[{const ambit\+::\+Tensor \&}]{tei\+\_\+ab,  }\item[{const ambit\+::\+Tensor \&}]{tei\+\_\+bb }\end{DoxyParamCaption})}
+
+
+
+Set the active integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a43129d2c6aaed7ac76f2ed146cd6b57e}\label{classforte_1_1_active_space_integrals_a43129d2c6aaed7ac76f2ed146cd6b57e}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!set\+\_\+active\+\_\+integrals\+\_\+and\+\_\+restricted\+\_\+docc@{set\+\_\+active\+\_\+integrals\+\_\+and\+\_\+restricted\+\_\+docc}}
+\index{set\+\_\+active\+\_\+integrals\+\_\+and\+\_\+restricted\+\_\+docc@{set\+\_\+active\+\_\+integrals\+\_\+and\+\_\+restricted\+\_\+docc}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+active\+\_\+integrals\+\_\+and\+\_\+restricted\+\_\+docc()}{set\_active\_integrals\_and\_restricted\_docc()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Integrals\+::set\+\_\+active\+\_\+integrals\+\_\+and\+\_\+restricted\+\_\+docc (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Streamline the process of setting up active integrals and restricted\+\_\+docc Sets active integrals based on active space and restricted\+\_\+docc If you want more control, don\textquotesingle{}t use this function. \mbox{\Hypertarget{classforte_1_1_active_space_integrals_ab6ecdd7235c8bb3c573dfd7dbd4db890}\label{classforte_1_1_active_space_integrals_ab6ecdd7235c8bb3c573dfd7dbd4db890}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!set\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator@{set\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator}}
+\index{set\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator@{set\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator()}{set\_restricted\_one\_body\_operator()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Integrals\+::set\+\_\+restricted\+\_\+one\+\_\+body\+\_\+operator (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{oei\+\_\+a,  }\item[{const std\+::vector$<$ double $>$ \&}]{oei\+\_\+b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set the restricted\+\_\+one\+\_\+body\+\_\+operator. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a456ae6c8d7df86829519b265b728ff49}\label{classforte_1_1_active_space_integrals_a456ae6c8d7df86829519b265b728ff49}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!set\+\_\+scalar\+\_\+energy@{set\+\_\+scalar\+\_\+energy}}
+\index{set\+\_\+scalar\+\_\+energy@{set\+\_\+scalar\+\_\+energy}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{set\+\_\+scalar\+\_\+energy()}{set\_scalar\_energy()}}
+{\footnotesize\ttfamily void forte\+::\+Active\+Space\+Integrals\+::set\+\_\+scalar\+\_\+energy (\begin{DoxyParamCaption}\item[{double}]{scalar\+\_\+energy }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set \mbox{\hyperlink{classforte_1_1_active_space_integrals_ad75d3daa2e4a1d78b4dc0ffb5f60c80e}{scalar\+\_\+energy()}};. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_ae371fb9c622fd81006f20ed257853527}\label{classforte_1_1_active_space_integrals_ae371fb9c622fd81006f20ed257853527}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!slater\+\_\+rules@{slater\+\_\+rules}}
+\index{slater\+\_\+rules@{slater\+\_\+rules}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{slater\+\_\+rules()}{slater\_rules()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::slater\+\_\+rules (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{lhs,  }\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{rhs }\end{DoxyParamCaption}) const}
+
+Compute the matrix element of the Hamiltonian between this determinant and a given one \mbox{\Hypertarget{classforte_1_1_active_space_integrals_a2b03f0580818ada3774a48366057bfdf}\label{classforte_1_1_active_space_integrals_a2b03f0580818ada3774a48366057bfdf}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!slater\+\_\+rules\+\_\+single\+\_\+alpha@{slater\+\_\+rules\+\_\+single\+\_\+alpha}}
+\index{slater\+\_\+rules\+\_\+single\+\_\+alpha@{slater\+\_\+rules\+\_\+single\+\_\+alpha}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{slater\+\_\+rules\+\_\+single\+\_\+alpha()}{slater\_rules\_single\_alpha()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::slater\+\_\+rules\+\_\+single\+\_\+alpha (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det,  }\item[{int}]{i,  }\item[{int}]{a }\end{DoxyParamCaption}) const}
+
+Compute the matrix element of the Hamiltonian between this determinant and a given one \mbox{\Hypertarget{classforte_1_1_active_space_integrals_abbf6bf916c0d561ce88001fed3b6967a}\label{classforte_1_1_active_space_integrals_abbf6bf916c0d561ce88001fed3b6967a}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!slater\+\_\+rules\+\_\+single\+\_\+alpha\+\_\+abs@{slater\+\_\+rules\+\_\+single\+\_\+alpha\+\_\+abs}}
+\index{slater\+\_\+rules\+\_\+single\+\_\+alpha\+\_\+abs@{slater\+\_\+rules\+\_\+single\+\_\+alpha\+\_\+abs}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{slater\+\_\+rules\+\_\+single\+\_\+alpha\+\_\+abs()}{slater\_rules\_single\_alpha\_abs()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::slater\+\_\+rules\+\_\+single\+\_\+alpha\+\_\+abs (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det,  }\item[{int}]{i,  }\item[{int}]{a }\end{DoxyParamCaption}) const}
+
+Compute the matrix element of the Hamiltonian between this determinant and a given one \mbox{\Hypertarget{classforte_1_1_active_space_integrals_a058234ffee116c7be071ebf33d319880}\label{classforte_1_1_active_space_integrals_a058234ffee116c7be071ebf33d319880}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!slater\+\_\+rules\+\_\+single\+\_\+beta@{slater\+\_\+rules\+\_\+single\+\_\+beta}}
+\index{slater\+\_\+rules\+\_\+single\+\_\+beta@{slater\+\_\+rules\+\_\+single\+\_\+beta}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{slater\+\_\+rules\+\_\+single\+\_\+beta()}{slater\_rules\_single\_beta()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::slater\+\_\+rules\+\_\+single\+\_\+beta (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det,  }\item[{int}]{i,  }\item[{int}]{a }\end{DoxyParamCaption}) const}
+
+Compute the matrix element of the Hamiltonian between this determinant and a given one \mbox{\Hypertarget{classforte_1_1_active_space_integrals_a1bb5b1702ef03d473ed13f97c56af37f}\label{classforte_1_1_active_space_integrals_a1bb5b1702ef03d473ed13f97c56af37f}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!slater\+\_\+rules\+\_\+single\+\_\+beta\+\_\+abs@{slater\+\_\+rules\+\_\+single\+\_\+beta\+\_\+abs}}
+\index{slater\+\_\+rules\+\_\+single\+\_\+beta\+\_\+abs@{slater\+\_\+rules\+\_\+single\+\_\+beta\+\_\+abs}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{slater\+\_\+rules\+\_\+single\+\_\+beta\+\_\+abs()}{slater\_rules\_single\_beta\_abs()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::slater\+\_\+rules\+\_\+single\+\_\+beta\+\_\+abs (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} \&}]{det,  }\item[{int}]{i,  }\item[{int}]{a }\end{DoxyParamCaption}) const}
+
+Compute the matrix element of the Hamiltonian between this determinant and a given one \mbox{\Hypertarget{classforte_1_1_active_space_integrals_a41602985b2dd4fb879c21c7aab5d558f}\label{classforte_1_1_active_space_integrals_a41602985b2dd4fb879c21c7aab5d558f}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!tei\+\_\+aa@{tei\+\_\+aa}}
+\index{tei\+\_\+aa@{tei\+\_\+aa}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{tei\+\_\+aa()}{tei\_aa()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::tei\+\_\+aa (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the alpha-\/alpha antisymmetrized two-\/electron integral $<$pq$\vert$$\vert$rs$>$ 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_ad54901c053b19691f7920b1dd87e654b}\label{classforte_1_1_active_space_integrals_ad54901c053b19691f7920b1dd87e654b}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!tei\+\_\+aa\+\_\+vector@{tei\+\_\+aa\+\_\+vector}}
+\index{tei\+\_\+aa\+\_\+vector@{tei\+\_\+aa\+\_\+vector}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{tei\+\_\+aa\+\_\+vector()}{tei\_aa\_vector()}}
+{\footnotesize\ttfamily const std\+::vector$<$double$>$\& forte\+::\+Active\+Space\+Integrals\+::tei\+\_\+aa\+\_\+vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a vector of alpha-\/alpha antisymmetrized two-\/electron integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a5ba6a11664bc0f72e2a2508f76421ac9}\label{classforte_1_1_active_space_integrals_a5ba6a11664bc0f72e2a2508f76421ac9}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!tei\+\_\+ab@{tei\+\_\+ab}}
+\index{tei\+\_\+ab@{tei\+\_\+ab}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{tei\+\_\+ab()}{tei\_ab()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::tei\+\_\+ab (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the alpha-\/beta two-\/electron integral $<$pq$\vert$rs$>$ 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a3ffbe588c1db00534668eecccd2959fe}\label{classforte_1_1_active_space_integrals_a3ffbe588c1db00534668eecccd2959fe}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!tei\+\_\+ab\+\_\+vector@{tei\+\_\+ab\+\_\+vector}}
+\index{tei\+\_\+ab\+\_\+vector@{tei\+\_\+ab\+\_\+vector}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{tei\+\_\+ab\+\_\+vector()}{tei\_ab\_vector()}}
+{\footnotesize\ttfamily const std\+::vector$<$double$>$\& forte\+::\+Active\+Space\+Integrals\+::tei\+\_\+ab\+\_\+vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a vector of alpha-\/beta antisymmetrized two-\/electron integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_aac5d72add98a1f2583046687108941f6}\label{classforte_1_1_active_space_integrals_aac5d72add98a1f2583046687108941f6}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!tei\+\_\+bb@{tei\+\_\+bb}}
+\index{tei\+\_\+bb@{tei\+\_\+bb}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{tei\+\_\+bb()}{tei\_bb()}}
+{\footnotesize\ttfamily double forte\+::\+Active\+Space\+Integrals\+::tei\+\_\+bb (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{p,  }\item[{size\+\_\+t}]{q,  }\item[{size\+\_\+t}]{r,  }\item[{size\+\_\+t}]{s }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the beta-\/beta antisymmetrized two-\/electron integral $<$pq$\vert$$\vert$rs$>$ 
+
+\mbox{\Hypertarget{classforte_1_1_active_space_integrals_a04d77c7dfc8f4b8a2b80a2180da324cc}\label{classforte_1_1_active_space_integrals_a04d77c7dfc8f4b8a2b80a2180da324cc}} 
+\index{forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}!tei\+\_\+bb\+\_\+vector@{tei\+\_\+bb\+\_\+vector}}
+\index{tei\+\_\+bb\+\_\+vector@{tei\+\_\+bb\+\_\+vector}!forte\+::\+Active\+Space\+Integrals@{forte\+::\+Active\+Space\+Integrals}}
+\subsubsection{\texorpdfstring{tei\+\_\+bb\+\_\+vector()}{tei\_bb\_vector()}}
+{\footnotesize\ttfamily const std\+::vector$<$double$>$\& forte\+::\+Active\+Space\+Integrals\+::tei\+\_\+bb\+\_\+vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return a vector of beta-\/beta antisymmetrized two-\/electron integrals. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{active__space__integrals_8h}{active\+\_\+space\+\_\+integrals.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/integrals/\mbox{\hyperlink{active__space__integrals_8cc}{active\+\_\+space\+\_\+integrals.\+cc}}\end{DoxyCompactItemize}

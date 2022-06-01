@@ -31,6 +31,7 @@ import forte
 import json
 import warnings
 import math
+import numpy as np
 
 
 class ProcedureDSRG:
@@ -47,6 +48,11 @@ class ProcedureDSRG:
 
         # Read options
         self.solver_type = options.get_str('CORRELATION_SOLVER')
+        if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG", "DSRG_MRPT", "DSRG-MRPT"]:
+            self.rdm_type = forte.RDMsType.spin_free
+        else:
+            self.rdm_type = forte.RDMsType.spin_free if options.get_bool('DSRG_RDM_MS_AVG') \
+                else forte.RDMsType.spin_dependent
 
         self.do_semicanonical = options.get_bool("SEMI_CANONICAL")
 
@@ -57,6 +63,14 @@ class ProcedureDSRG:
             self.relax_ref = "ONCE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
+        if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
+            as_type = options.get_str("ACTIVE_SPACE_SOLVER")
+            if as_type == "CAS" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
+                self.max_rdm_level = 2
+            else:
+                psi4.core.print_out(f"\n  DSRG 3RDM direct algorithm only available for CAS/SA-MRDSRG")
+                psi4.core.print_out(f"\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
+                options.set_str("DSRG_3RDM_ALGORITHM", "EXPLICIT")
 
         self.relax_convergence = float('inf')
         self.e_convergence = options.get_double("E_CONVERGENCE")
@@ -104,6 +118,7 @@ class ProcedureDSRG:
         # Set up Forte objects
         self.active_space_solver = active_space_solver
         self.state_weights_map = state_weights_map
+        self.states = sorted(state_weights_map.keys())
         self.mo_space_info = mo_space_info
         self.ints = ints
         self.options = options
@@ -117,12 +132,19 @@ class ProcedureDSRG:
         self.energies_environment = {}  # energies pushed to Psi4 environment globals
 
         # Compute RDMs from initial ActiveSpaceSolver
-        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level)
+        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type)
+
+        # Save a copy CI vectors
+        try:
+            self.state_ci_wfn_map = active_space_solver.state_ci_wfn_map()
+        except RuntimeError as err:
+            print("Warning DSRG Python driver:", err)
+            self.state_ci_wfn_map = None
 
         # Semi-canonicalize orbitals and rotation matrices
         self.semi = forte.SemiCanonical(mo_space_info, ints, options)
         if self.do_semicanonical:
-            self.semi.semicanonicalize(self.rdms, self.max_rdm_level)
+            self.semi.semicanonicalize(self.rdms)
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
 
     def make_dsrg_solver(self):
@@ -131,10 +153,13 @@ class ProcedureDSRG:
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
             self.dsrg_solver = forte.make_dsrg_method(*args)
+            # self.dsrg_solver.set_state_weights_map(self.state_weights_map) MERGE ?
             self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
         elif self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             self.dsrg_solver = forte.make_sadsrg_method(*args)
+            self.dsrg_solver.set_state_weights_map(self.state_weights_map)
+            self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
         elif self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
             self.dsrg_solver = forte.make_dsrg_so_y(*args)
@@ -183,9 +208,12 @@ class ProcedureDSRG:
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
-            # Grab effective Hamiltonian in the active space
-            # These active integrals are in the original basis (before semi-canonicalize in the init function),
-            # so that the CI coefficients are comparable before and after DSRG dressing.
+            # Grab the effective Hamiltonian in the active space
+            # Note: The active integrals (ints_dressed) are in the original basis
+            #       (before semi-canonicalization in the init function),
+            #       so that the CI vectors are comparable before and after DSRG dressing.
+            #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
+            #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
 
             # Spit out contracted SA-DSRG energy
@@ -196,15 +224,27 @@ class ProcedureDSRG:
                 self.energies.append((e_dsrg, e_relax))
                 break
 
-            # Solver active space using dressed integrals
+            # Call the active space solver using the dressed integrals
             self.active_space_solver.set_active_space_integrals(ints_dressed)
+            # pass to the active space solver the unitary transformation between the original basis
+            # and the current semi-canonical basis
+            self.active_space_solver.set_Uactv(self.Ua, self.Ub)
             state_energies_list = self.active_space_solver.compute_energy()
+
+            # Reorder weights if needed
+            if self.state_ci_wfn_map is not None:
+                state_ci_wfn_map = self.active_space_solver.state_ci_wfn_map()
+                self.reorder_weights(state_ci_wfn_map)
+                self.state_ci_wfn_map = state_ci_wfn_map
+
             e_relax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
             self.energies.append((e_dsrg, e_relax))
 
             # Compute relaxed dipole
             if self.do_dipole:
-                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level)
+                self.rdms = self.active_space_solver.compute_average_rdms(
+                    self.state_weights_map, self.max_rdm_level, self.rdm_type
+                )
                 dm_u = ProcedureDSRG.grab_dipole_unrelaxed()
                 dm_r = self.compute_dipole_relaxed()
                 self.dipoles.append((dm_u, dm_r))
@@ -220,19 +260,36 @@ class ProcedureDSRG:
 
             # Continue to solve DSRG equations
 
-            # - Compute RDMs (RDMs available if done relaxed dipole)
+            # - Compute RDMs from the active space solver (the RDMs are already available if we computed the relaxed dipole)
+            #   These RDMs are computed in the original basis
             if self.do_multi_state or (not self.do_dipole):
-                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level)
+                self.rdms = self.active_space_solver.compute_average_rdms(
+                    self.state_weights_map, self.max_rdm_level, self.rdm_type
+                )
 
-            # - Transform RDMs to the semi-canonical orbitals of last step
-            self.rdms = self.semi.transform_rdms(self.Ua, self.Ub, self.rdms, self.max_rdm_level)
+            # - Transform RDMs to the semi-canonical basis used in the last step (stored in self.Ua/self.Ub)
+            #   We do this because the integrals and amplitudes are all expressed in the previous semi-canonical basis
+            self.rdms.rotate(self.Ua, self.Ub)
 
             # - Semi-canonicalize RDMs and orbitals
             if self.do_semicanonical:
-                self.semi.semicanonicalize(self.rdms, self.max_rdm_level)
-            self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
+                self.semi.semicanonicalize(self.rdms)
+                # Do NOT read previous orbitals if fixing orbital ordering and phases failed
+                if (not self.semi.fix_orbital_success()) and self.Heff_implemented:
+                    psi4.core.print_out(
+                        "\n  DSRG checkpoint files removed due to the unsuccessful"
+                        " attempt to fix orbital phase and order."
+                    )
+                    self.dsrg_solver.clean_checkpoints()
 
-            # - Compute DSRG energy
+                # update the orbital transformation matrix that connects the original orbitals
+                # to the current semi-canonical ones. We do this only if we did a semi-canonicalization
+                temp = self.Ua.clone()
+                self.Ua["ik"] = temp["ij"] * self.semi.Ua_t()["jk"]
+                temp.copy(self.Ub)
+                self.Ub["ik"] = temp["ij"] * self.semi.Ub_t()["jk"]
+
+            # - Compute the DSRG energy
             self.make_dsrg_solver()
             self.dsrg_setup()
             self.dsrg_solver.set_read_cwd_amps(not self.restart_amps)  # don't read from cwd if checkpoint available
@@ -240,14 +297,15 @@ class ProcedureDSRG:
 
         self.dsrg_cleanup()
 
-        psi4.core.set_scalar_variable("CURRENT ENERGY", e_dsrg)
-
         # dump reference relaxation energies to json file
         if self.save_relax_energies:
             with open('dsrg_relaxed_energies.json', 'w') as w:
                 json.dump(self.energies_environment, w, sort_keys=True, indent=4)
 
-        return e_dsrg if len(self.energies) == 0 else e_relax
+        e_current = e_dsrg if len(self.energies) == 0 else e_relax
+        psi4.core.set_scalar_variable("CURRENT ENERGY", e_current)
+
+        return e_current
 
     def compute_gradient(self, ci_vectors):
         """
@@ -273,11 +331,8 @@ class ProcedureDSRG:
     @staticmethod
     def grab_dipole_unrelaxed():
         """ Grab dipole moment from C++ results. """
-        x = psi4.core.variable('UNRELAXED DIPOLE X')
-        y = psi4.core.variable('UNRELAXED DIPOLE Y')
-        z = psi4.core.variable('UNRELAXED DIPOLE Z')
-        t = psi4.core.variable('UNRELAXED DIPOLE')
-        return x, y, z, t
+        dipole = psi4.core.variable('UNRELAXED DIPOLE')
+        return dipole[0], dipole[1], dipole[2], np.linalg.norm(dipole)
 
     def test_relaxation_convergence(self, n):
         """
@@ -299,6 +354,64 @@ class ProcedureDSRG:
                 self.converged = True
 
         return self.converged
+
+    def reorder_weights(self, state_ci_wfn_map):
+        """
+        Check CI overlap and reorder weights between consecutive relaxation steps.
+        :param state_ci_wfn_map: the map to be compared to self.state_ci_wfn_map
+        """
+        # bypass this check if state to CI vectors map not available
+        if self.state_ci_wfn_map is None:
+            return
+
+        for state in self.states:
+            twice_ms = state.twice_ms()
+            if twice_ms < 0:
+                continue
+
+            # compute overlap between two sets of CI vectors <this|prior>
+            overlap = psi4.core.doublet(state_ci_wfn_map[state], self.state_ci_wfn_map[state], True, False)
+            overlap.name = f"CI Overlap of {state}"
+
+            # check overlap and determine if we need to permute states
+            overlap_np = np.abs(overlap.to_array())
+            max_values = np.max(overlap_np, axis=1)
+            permutation = np.argmax(overlap_np, axis=1)
+            check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.5)
+
+            if not check_pass:
+                msg = "Relaxed states are likely wrong. Please increase the number of roots."
+                warnings.warn(f"{msg}", UserWarning)
+                psi4.core.print_out(f"\n\n  Forte Warning: {msg}")
+                psi4.core.print_out(f"\n\n  ==> Overlap of CI Vectors <this|prior> <==\n\n")
+                overlap.print_out()
+            else:
+                if list(permutation) == list(range(len(permutation))):
+                    continue
+
+                msg = "Weights will be permuted to ensure consistency before and after relaxation."
+                psi4.core.print_out(f"\n\n  Forte Warning: {msg}\n")
+
+                weights_old = self.state_weights_map[state]
+                weights_new = [weights_old[i] for i in permutation]
+                self.state_weights_map[state] = weights_new
+
+                psi4.core.print_out(f"\n  ==> Weights for {state} <==\n")
+                psi4.core.print_out(f"\n    Root    Old       New")
+                psi4.core.print_out(f"\n    {'-' * 24}")
+                for i, w_old in enumerate(weights_old):
+                    w_new = weights_new[i]
+                    psi4.core.print_out(f"\n    {i:4d} {w_old:9.3e} {w_new:9.3e}")
+                psi4.core.print_out(f"\n    {'-' * 24}\n")
+
+                # try to fix ms < 0
+                if twice_ms > 0:
+                    state_spin = forte.StateInfo(
+                        state.nb(), state.na(), state.multiplicity(), -twice_ms, state.irrep(), state.irrep_label(),
+                        state.gas_min(), state.gas_max()
+                    )
+                    if state_spin in self.state_weights_map:
+                        self.state_weights_map[state_spin] = weights_new
 
     def print_summary(self):
         """ Print energies and dipole moment to output file. """

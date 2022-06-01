@@ -1,0 +1,93 @@
+\hypertarget{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer}{}\section{forte\+:\+:Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer Class Reference}
+\label{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer}\index{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+
+
+{\ttfamily \#include $<$orbitaloptimizer.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=212pt]{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=212pt]{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a3a1a4891ed89f797a48a74d084c0a4f4}{Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}} (ambit\+::\+Tensor Gamma1, ambit\+::\+Tensor Gamma2, ambit\+::\+Tensor two\+\_\+body\+\_\+ab, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints)
+\item 
+virtual \mbox{\hyperlink{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_af00d676f08aa31941da688c52cf0bd07}{$\sim$\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_ac9c648911b5873fc47ffa7b6ead29d47}{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+mm}} (const ambit\+::\+Tensor \&pq\+\_\+mm)
+\item 
+void \mbox{\hyperlink{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a49d688b303e6d6bebe328b8bb7dc3091}{set\+\_\+fock\+\_\+integrals\+\_\+pm\+\_\+qm}} (const ambit\+::\+Tensor \&pm\+\_\+qm)
+\item 
+void \mbox{\hyperlink{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a914ddfd4d08e391d1e8ec81970ec0210}{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+uv}} (const ambit\+::\+Tensor \&pq\+\_\+uv)
+\item 
+void \mbox{\hyperlink{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a02a516e2eb483d69e0eaa7a59fc2358f}{set\+\_\+fock\+\_\+integrals\+\_\+pu\+\_\+qv}} (const ambit\+::\+Tensor \&pu\+\_\+qv)
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+A Class for Orbital\+Optimization in Post\+C\+A\+S\+S\+CF methods through use of renormalized integrals Pass (pq $\vert$ ij) and (pj $\vert$ iq) type integrals 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a3a1a4891ed89f797a48a74d084c0a4f4}\label{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a3a1a4891ed89f797a48a74d084c0a4f4}} 
+\index{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}!Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\index{Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}!forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer()}{PostCASSCFOrbitalOptimizer()}}
+{\footnotesize\ttfamily forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer (\begin{DoxyParamCaption}\item[{ambit\+::\+Tensor}]{Gamma1,  }\item[{ambit\+::\+Tensor}]{Gamma2,  }\item[{ambit\+::\+Tensor}]{two\+\_\+body\+\_\+ab,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_af00d676f08aa31941da688c52cf0bd07}\label{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_af00d676f08aa31941da688c52cf0bd07}} 
+\index{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}!````~Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{$\sim$\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\index{````~Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{$\sim$\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}!forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{$\sim$\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer()}{~PostCASSCFOrbitalOptimizer()}}
+{\footnotesize\ttfamily forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer\+::$\sim$\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a49d688b303e6d6bebe328b8bb7dc3091}\label{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a49d688b303e6d6bebe328b8bb7dc3091}} 
+\index{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}!set\+\_\+fock\+\_\+integrals\+\_\+pm\+\_\+qm@{set\+\_\+fock\+\_\+integrals\+\_\+pm\+\_\+qm}}
+\index{set\+\_\+fock\+\_\+integrals\+\_\+pm\+\_\+qm@{set\+\_\+fock\+\_\+integrals\+\_\+pm\+\_\+qm}!forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{set\+\_\+fock\+\_\+integrals\+\_\+pm\+\_\+qm()}{set\_fock\_integrals\_pm\_qm()}}
+{\footnotesize\ttfamily void forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer\+::set\+\_\+fock\+\_\+integrals\+\_\+pm\+\_\+qm (\begin{DoxyParamCaption}\item[{const ambit\+::\+Tensor \&}]{pm\+\_\+qm }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_ac9c648911b5873fc47ffa7b6ead29d47}\label{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_ac9c648911b5873fc47ffa7b6ead29d47}} 
+\index{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}!set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+mm@{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+mm}}
+\index{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+mm@{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+mm}!forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+mm()}{set\_fock\_integrals\_pq\_mm()}}
+{\footnotesize\ttfamily void forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer\+::set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+mm (\begin{DoxyParamCaption}\item[{const ambit\+::\+Tensor \&}]{pq\+\_\+mm }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a914ddfd4d08e391d1e8ec81970ec0210}\label{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a914ddfd4d08e391d1e8ec81970ec0210}} 
+\index{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}!set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+uv@{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+uv}}
+\index{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+uv@{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+uv}!forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+uv()}{set\_fock\_integrals\_pq\_uv()}}
+{\footnotesize\ttfamily void forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer\+::set\+\_\+fock\+\_\+integrals\+\_\+pq\+\_\+uv (\begin{DoxyParamCaption}\item[{const ambit\+::\+Tensor \&}]{pq\+\_\+uv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a02a516e2eb483d69e0eaa7a59fc2358f}\label{classforte_1_1_post_c_a_s_s_c_f_orbital_optimizer_a02a516e2eb483d69e0eaa7a59fc2358f}} 
+\index{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}!set\+\_\+fock\+\_\+integrals\+\_\+pu\+\_\+qv@{set\+\_\+fock\+\_\+integrals\+\_\+pu\+\_\+qv}}
+\index{set\+\_\+fock\+\_\+integrals\+\_\+pu\+\_\+qv@{set\+\_\+fock\+\_\+integrals\+\_\+pu\+\_\+qv}!forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer@{forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer}}
+\subsubsection{\texorpdfstring{set\+\_\+fock\+\_\+integrals\+\_\+pu\+\_\+qv()}{set\_fock\_integrals\_pu\_qv()}}
+{\footnotesize\ttfamily void forte\+::\+Post\+C\+A\+S\+S\+C\+F\+Orbital\+Optimizer\+::set\+\_\+fock\+\_\+integrals\+\_\+pu\+\_\+qv (\begin{DoxyParamCaption}\item[{const ambit\+::\+Tensor \&}]{pu\+\_\+qv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{orbitaloptimizer_8h}{orbitaloptimizer.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{orbitaloptimizer_8cc}{orbitaloptimizer.\+cc}}\end{DoxyCompactItemize}

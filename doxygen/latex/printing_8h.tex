@@ -1,0 +1,39 @@
+\hypertarget{printing_8h}{}\section{/\+Users/fevange/\+Source/forte/src/helpers/printing.h File Reference}
+\label{printing_8h}\index{/\+Users/fevange/\+Source/forte/src/helpers/printing.\+h@{/\+Users/fevange/\+Source/forte/src/helpers/printing.\+h}}
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+Include dependency graph for printing.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=215pt]{printing_8h__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{namespaceforte_a9fb94fdd677b63ea549d4195732ba2fa}{forte\+::\+Print\+Level}} \{ \mbox{\hyperlink{namespaceforte_a9fb94fdd677b63ea549d4195732ba2faa098753f8980036f4b936e3d4b6997111}{forte\+::\+Print\+Level\+::\+Quiet}} = 0, 
+\mbox{\hyperlink{namespaceforte_a9fb94fdd677b63ea549d4195732ba2faad3d5b2e9cc26e07d9bf4ebfbab15fda4}{forte\+::\+Print\+Level\+::\+Mini}} = 1, 
+\mbox{\hyperlink{namespaceforte_a9fb94fdd677b63ea549d4195732ba2faa7a1920d61156abc05a60135aefe8bc67}{forte\+::\+Print\+Level\+::\+Default}} = 2, 
+\mbox{\hyperlink{namespaceforte_a9fb94fdd677b63ea549d4195732ba2faaa603905470e2a5b8c13e96b579ef0dba}{forte\+::\+Print\+Level\+::\+Debug}} = 3
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{namespaceforte_a5d72fc4d0f690163ec44d8c21eea5846}{forte\+::print\+\_\+h1}} (const std\+::string \&text, bool centerd=true, const std\+::string \&left\+\_\+filler=\char`\"{}-\/\char`\"{}, const std\+::string \&right\+\_\+filler=\char`\"{}-\/\char`\"{})
+\begin{DoxyCompactList}\small\item\em print\+\_\+h1 Print a header \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_acaf4c68a8a4eeee430eb7ea896b5b531}{forte\+::print\+\_\+h2}} (const std\+::string \&text, const std\+::string \&left\+\_\+separator=\char`\"{}==$>$\char`\"{}, const std\+::string \&right\+\_\+separator=\char`\"{}$<$==\char`\"{})
+\begin{DoxyCompactList}\small\item\em print\+\_\+h2 Print a header \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a2067a73a790cda9202b0623d017e9be6}{forte\+::print\+\_\+method\+\_\+banner}} (const std\+::vector$<$ std\+::string $>$ \&text, const std\+::string \&separator=\char`\"{}-\/\char`\"{})
+\begin{DoxyCompactList}\small\item\em print\+\_\+method\+\_\+banner Print a banner for a method \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a6bc10435be314362031d697359d66754}{forte\+::print\+\_\+timing}} (const std\+::string \&text, double seconds)
+\begin{DoxyCompactList}\small\item\em print\+\_\+timing Print the string \char`\"{}\+Timing for $<$text$>$\+: $<$padding$>$ X.\+X\+X\+X s.\char`\"{} to the output file \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_a5364cef3c69e94cc246f14caf39f2e61}{forte\+::print\+\_\+selected\+\_\+options}} (const std\+::string \&title, const std\+::vector$<$ std\+::pair$<$ std\+::string, std\+::string $>$$>$ \&info\+\_\+string, const std\+::vector$<$ std\+::pair$<$ std\+::string, bool $>$$>$ \&info\+\_\+bool, const std\+::vector$<$ std\+::pair$<$ std\+::string, double $>$$>$ \&info\+\_\+double, const std\+::vector$<$ std\+::pair$<$ std\+::string, int $>$$>$ \&info\+\_\+int)
+\begin{DoxyCompactList}\small\item\em print\+\_\+selected\+\_\+options Print options summary \end{DoxyCompactList}\end{DoxyCompactItemize}

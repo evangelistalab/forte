@@ -1,0 +1,12 @@
+2022-05-31:18:08:05,438 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_SCF_GUESS': 0, 'DOCC': [8, 1, 2, 5], 'E_CONVERGENCE': 1e-12, 'GUESS': 'GWH', 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:18:08:05,440 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=3-21g, molecule=acetone, nre=119.01326588061353
+2022-05-31:18:08:05,659 INFO     [psi4.driver.driver:502] Return energy(): -190.886314113838
+2022-05-31:18:08:05,673 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_SCF_GUESS': 0, 'DOCC': [8, 1, 2, 5], 'E_CONVERGENCE': 1e-12, 'GUESS': 'GWH', 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:18:08:05,674 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=3-21g, molecule=acetone, nre=119.01326588061353
+2022-05-31:18:08:06,41 INFO     [psi4.driver.driver:502] Return energy(): -190.90304335341125
+2022-05-31:18:08:06,55 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_SCF_GUESS': 0, 'DOCC': [8, 1, 2, 5], 'E_CONVERGENCE': 1e-12, 'GUESS': 'GWH', 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:18:08:06,56 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=3-21g, molecule=acetone, nre=119.01326588061353
+2022-05-31:18:08:06,213 INFO     [psi4.driver.driver:502] Return energy(): -190.886314113838
+2022-05-31:18:08:06,227 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_SCF_GUESS': 0, 'DOCC': [8, 1, 2, 5], 'E_CONVERGENCE': 1e-12, 'GUESS': 'GWH', 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:18:08:06,228 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=3-21g, molecule=acetone, nre=119.01326588061353
+2022-05-31:18:08:06,605 INFO     [psi4.driver.driver:502] Return energy(): -190.4605790580025

@@ -1,0 +1,5 @@
+<map id="forte::SelectedCIMethod" name="forte::SelectedCIMethod">
+<area shape="rect" id="node2" href="$classforte_1_1_adaptive_c_i.html" title="The AdaptiveCI class This class implements an adaptive CI algorithm. " alt="" coords="5,80,127,107"/>
+<area shape="rect" id="node3" href="$classforte_1_1_a_s_c_i.html" title="The ASCI class This class implements the Adaptively Selected CI algorithm. " alt="" coords="151,80,237,107"/>
+<area shape="rect" id="node4" href="$classforte_1_1_projector_c_i.html" title="The SparsePathIntegralCI class This class implements an a sparse path&#45;integral FCI algorithm..." alt="" coords="262,80,385,107"/>
+</map>

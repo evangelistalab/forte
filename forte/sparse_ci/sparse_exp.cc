@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -43,8 +43,7 @@ StateVector SparseExp::compute(const SparseOperator& sop, const StateVector& sta
     Algorithm alg = Algorithm::Cached;
     if (algorithm == "onthefly") {
         alg = Algorithm::OnTheFlySorted;
-    }
-    else if (algorithm == "ontheflystd") {
+    } else if (algorithm == "ontheflystd") {
         alg = Algorithm::OnTheFlyStd;
     }
 
@@ -267,7 +266,8 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
                 if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                     // check if this operator can be applied
                     if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
-                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.coefficient() * c;
+                        double value =
+                            apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.coefficient() * c;
                         new_terms[d] -= value;
                         num_success_++;
                     }
@@ -306,7 +306,8 @@ StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const State
                 // check if this operator can be applied
                 if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
                     new_d = d;
-                    double value = apply_op_safe(new_d, sqop.cre(), sqop.ann()) * sqop.coefficient() * c;
+                    double value =
+                        apply_op_safe(new_d, sqop.cre(), sqop.ann()) * sqop.coefficient() * c;
                     new_terms[new_d] += value;
                 }
             }

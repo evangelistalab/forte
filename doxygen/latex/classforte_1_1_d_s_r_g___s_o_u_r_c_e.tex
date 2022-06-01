@@ -1,0 +1,116 @@
+\hypertarget{classforte_1_1_d_s_r_g___s_o_u_r_c_e}{}\section{forte\+:\+:D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE Class Reference}
+\label{classforte_1_1_d_s_r_g___s_o_u_r_c_e}\index{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+
+
+{\ttfamily \#include $<$dsrg\+\_\+source.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_d_s_r_g___s_o_u_r_c_e__inherit__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a755f7db2ada7a0028f8b6427990d66e0}{D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}} (double s, double taylor\+\_\+threshold)
+\item 
+virtual \mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e_ab0dfae33a0b08a20312e593cb0af338e}{$\sim$\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}} ()
+\item 
+virtual double \mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a8b4c4428bb50af4561c256e3180f6b31}{compute\+\_\+renormalized}} (const double \&D)=0
+\begin{DoxyCompactList}\small\item\em Bare effect of source operator. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a7345ba63c3612369be7c4cc896b7d5c4}{compute\+\_\+renormalized\+\_\+denominator}} (const double \&D)=0
+\begin{DoxyCompactList}\small\item\em Renormalize denominator. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e_ab83311b0d70b05f301b80bcb9abaf76e}{s\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Flow parameter. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e_aaf7ea285612472cefc31e0de08856701}{taylor\+\_\+threshold\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Smaller than which we will do Taylor expansion. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a755f7db2ada7a0028f8b6427990d66e0}\label{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a755f7db2ada7a0028f8b6427990d66e0}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}!D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+\index{D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}!forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+\subsubsection{\texorpdfstring{D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+C\+E()}{DSRG\_SOURCE()}}
+{\footnotesize\ttfamily forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+C\+E\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE (\begin{DoxyParamCaption}\item[{double}]{s,  }\item[{double}]{taylor\+\_\+threshold }\end{DoxyParamCaption})}
+
+\mbox{\hyperlink{classforte_1_1_d_s_r_g___s_o_u_r_c_e}{D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}} Constructor 
+\begin{DoxyParams}{Parameters}
+{\em s} & The flow parameter \\
+\hline
+{\em taylor\+\_\+threshold} & The threshold for Taylor expansion \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___s_o_u_r_c_e_ab0dfae33a0b08a20312e593cb0af338e}\label{classforte_1_1_d_s_r_g___s_o_u_r_c_e_ab0dfae33a0b08a20312e593cb0af338e}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}!````~D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{$\sim$\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+\index{````~D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{$\sim$\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}!forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+\subsubsection{\texorpdfstring{$\sim$\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+C\+E()}{~DSRG\_SOURCE()}}
+{\footnotesize\ttfamily virtual forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+C\+E\+::$\sim$\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a8b4c4428bb50af4561c256e3180f6b31}\label{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a8b4c4428bb50af4561c256e3180f6b31}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}!compute\+\_\+renormalized@{compute\+\_\+renormalized}}
+\index{compute\+\_\+renormalized@{compute\+\_\+renormalized}!forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+\subsubsection{\texorpdfstring{compute\+\_\+renormalized()}{compute\_renormalized()}}
+{\footnotesize\ttfamily virtual double forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+C\+E\+::compute\+\_\+renormalized (\begin{DoxyParamCaption}\item[{const double \&}]{D }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Bare effect of source operator. 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_m_p2___s_o_u_r_c_e_ac1a5dfafa00da98e4d60b49abfbf1ace}{forte\+::\+M\+P2\+\_\+\+S\+O\+U\+R\+CE}}, \mbox{\hyperlink{classforte_1_1_d_y_s_o_n___s_o_u_r_c_e_a27ff5faaabaa609facbce558d126cc96}{forte\+::\+D\+Y\+S\+O\+N\+\_\+\+S\+O\+U\+R\+CE}}, \mbox{\hyperlink{classforte_1_1_l_a_b_s___s_o_u_r_c_e_a62a2509bdacd3a8456684b90ba6def30}{forte\+::\+L\+A\+B\+S\+\_\+\+S\+O\+U\+R\+CE}}, and \mbox{\hyperlink{classforte_1_1_s_t_d___s_o_u_r_c_e_a37548c104ca908d43d239638ad8b7cde}{forte\+::\+S\+T\+D\+\_\+\+S\+O\+U\+R\+CE}}.
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a7345ba63c3612369be7c4cc896b7d5c4}\label{classforte_1_1_d_s_r_g___s_o_u_r_c_e_a7345ba63c3612369be7c4cc896b7d5c4}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}!compute\+\_\+renormalized\+\_\+denominator@{compute\+\_\+renormalized\+\_\+denominator}}
+\index{compute\+\_\+renormalized\+\_\+denominator@{compute\+\_\+renormalized\+\_\+denominator}!forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+\subsubsection{\texorpdfstring{compute\+\_\+renormalized\+\_\+denominator()}{compute\_renormalized\_denominator()}}
+{\footnotesize\ttfamily virtual double forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+C\+E\+::compute\+\_\+renormalized\+\_\+denominator (\begin{DoxyParamCaption}\item[{const double \&}]{D }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Renormalize denominator. 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_m_p2___s_o_u_r_c_e_a7aabae75b519e6b52d8fc88626fc1895}{forte\+::\+M\+P2\+\_\+\+S\+O\+U\+R\+CE}}, \mbox{\hyperlink{classforte_1_1_d_y_s_o_n___s_o_u_r_c_e_a2da089db945ae849b5d733493a5b8d39}{forte\+::\+D\+Y\+S\+O\+N\+\_\+\+S\+O\+U\+R\+CE}}, \mbox{\hyperlink{classforte_1_1_l_a_b_s___s_o_u_r_c_e_a2bb2384aa4d711db4c3116e466d56835}{forte\+::\+L\+A\+B\+S\+\_\+\+S\+O\+U\+R\+CE}}, and \mbox{\hyperlink{classforte_1_1_s_t_d___s_o_u_r_c_e_a3f9dda1563d4679949001e604324eb16}{forte\+::\+S\+T\+D\+\_\+\+S\+O\+U\+R\+CE}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___s_o_u_r_c_e_ab83311b0d70b05f301b80bcb9abaf76e}\label{classforte_1_1_d_s_r_g___s_o_u_r_c_e_ab83311b0d70b05f301b80bcb9abaf76e}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}!s\+\_\+@{s\+\_\+}}
+\index{s\+\_\+@{s\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+\subsubsection{\texorpdfstring{s\+\_\+}{s\_}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+C\+E\+::s\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Flow parameter. 
+
+\mbox{\Hypertarget{classforte_1_1_d_s_r_g___s_o_u_r_c_e_aaf7ea285612472cefc31e0de08856701}\label{classforte_1_1_d_s_r_g___s_o_u_r_c_e_aaf7ea285612472cefc31e0de08856701}} 
+\index{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}!taylor\+\_\+threshold\+\_\+@{taylor\+\_\+threshold\+\_\+}}
+\index{taylor\+\_\+threshold\+\_\+@{taylor\+\_\+threshold\+\_\+}!forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE@{forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+CE}}
+\subsubsection{\texorpdfstring{taylor\+\_\+threshold\+\_\+}{taylor\_threshold\_}}
+{\footnotesize\ttfamily double forte\+::\+D\+S\+R\+G\+\_\+\+S\+O\+U\+R\+C\+E\+::taylor\+\_\+threshold\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Smaller than which we will do Taylor expansion. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/\mbox{\hyperlink{dsrg__source_8h}{dsrg\+\_\+source.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/mrdsrg-\/helper/\mbox{\hyperlink{dsrg__source_8cc}{dsrg\+\_\+source.\+cc}}\end{DoxyCompactItemize}

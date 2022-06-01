@@ -1,11 +1,12 @@
 #! Generated using commit GITCOMMIT 
-# GAS CI calculation with multi-gas algorithm/different symmetry
+# GASCI calculation on energy and transitiondipole with states of different symmetries
 
 import forte
 
 refscf = -76.0172965561
 refaci = -65.52803723267440716
 refacipt2 = -55.02612867161270316
+refosc_0a1_0b1 =  0.00000307 
 
 memory 6000mb
 molecule h2o{
@@ -42,6 +43,7 @@ set forte {
   GAS1MAX [2,1]
   GAS1MIN [0,0]
   avg_state [[0,1,1],[2,1,1]]
+  transition_dipoles True
 }
 
 escf, wfn = energy('scf', return_wfn=True)
@@ -50,3 +52,4 @@ compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
 eaci = energy('forte', ref_wfn=wfn)
 compare_values(refaci, eaci, 8, "Averaged ACI energy")
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"), 6, "ACI+PT2 energy")
+compare_values(refosc_0a1_0b1, variable("OSC. SINGLET 0A1 -> 0B1"), 6, "Oscillator strength singlet 0A1 -> 0B1")

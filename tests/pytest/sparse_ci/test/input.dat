@@ -1,0 +1,8 @@
+
+molecule {
+h
+h 1 1.0
+}
+
+set basis sto-3g
+energy('fci')

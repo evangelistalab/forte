@@ -1,0 +1,485 @@
+\hypertarget{classforte_1_1_bit_array}{}\section{forte\+:\+:Bit\+Array$<$ N $>$ Class Template Reference}
+\label{classforte_1_1_bit_array}\index{forte\+::\+Bit\+Array$<$ N $>$@{forte\+::\+Bit\+Array$<$ N $>$}}
+
+
+This class represents an array of N bits. The bits are stored in groups called \char`\"{}words\char`\"{}. Each word contains 64 bits stored as 64-\/bit unsigned integers.  
+
+
+
+
+{\ttfamily \#include $<$bitarray.\+hpp$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Bit\+Array$<$ N $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_bit_array__inherit__graph}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structforte_1_1_bit_array_1_1_hash}{Hash}}
+\begin{DoxyCompactList}\small\item\em Returns a hash value for a \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}} object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+using \mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}} = uint64\+\_\+t
+\begin{DoxyCompactList}\small\item\em alias for the type used to represent a word (a 64 bit unsigned integer) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classforte_1_1_bit_array_a6763512d765e8dbd07d7f70ed3bb1950}{get\+\_\+bit}} (size\+\_\+t pos) const
+\item 
+void \mbox{\hyperlink{classforte_1_1_bit_array_aded6c5518708c6433bba8c7b9115199d}{set\+\_\+bit}} (size\+\_\+t pos, bool val)
+\begin{DoxyCompactList}\small\item\em set bit in position pos to the value val \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_bit_array_a52623739054020b7da6ffab1cacf033e}{set\+\_\+word}} (size\+\_\+t pos, \mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}} word)
+\begin{DoxyCompactList}\small\item\em set a word in position pos \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_a2adc17f21cc178cf6450d74e5629884d}{get\+\_\+nbits}} () const
+\begin{DoxyCompactList}\small\item\em return the number of bits \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_bit_array_a3cdd02168872c1fc32ca3999207e3b38}{Bit\+Array}} ()
+\begin{DoxyCompactList}\small\item\em default constructor \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_bit_array_ab9e015d5e061725d21562ce068dc3dbb}{zero}} ()
+\begin{DoxyCompactList}\small\item\em set all bits (including unused) to zero \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_bit_array_ae6c9b2e2ddeaff0df89bc96f27625eb6}{flip}} ()
+\begin{DoxyCompactList}\small\item\em flip all bits \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_bit_array_abe6a395fc267c35a66224344a43f2cb2}{operator==}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&lhs) const
+\begin{DoxyCompactList}\small\item\em equal operator \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_bit_array_adce1757202af90d3a37ca08d32f0d778}{operator$<$}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&lhs) const
+\begin{DoxyCompactList}\small\item\em Less than operator. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \mbox{\hyperlink{classforte_1_1_bit_array_a6a76d16ef5acbf96710ca3420dbd4be5}{operator$\vert$}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&lhs) const
+\begin{DoxyCompactList}\small\item\em Bitwise OR operator ($\vert$) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \mbox{\hyperlink{classforte_1_1_bit_array_a64a5143b2b9e32399197546d239b6ac0}{operator$\vert$=}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&lhs) const
+\begin{DoxyCompactList}\small\item\em Bitwise OR operator ($\vert$=) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \mbox{\hyperlink{classforte_1_1_bit_array_a3ec375f1cffe72e1e4a737ebc3e4880e}{operator$^\wedge$}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&lhs) const
+\begin{DoxyCompactList}\small\item\em Bitwise X\+OR operator ($^\wedge$) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \mbox{\hyperlink{classforte_1_1_bit_array_a320cbd761b032de5797b95a08d27ac2f}{operator$^\wedge$=}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&lhs)
+\begin{DoxyCompactList}\small\item\em Bitwise X\+OR operator ($^\wedge$=) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \mbox{\hyperlink{classforte_1_1_bit_array_ae3a8e53963f77e90db15dd25f3abe87a}{operator \&}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&lhs) const
+\begin{DoxyCompactList}\small\item\em Bitwise A\+ND operator (\&) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \mbox{\hyperlink{classforte_1_1_bit_array_aaff16cc742d2f2af9dd32636310b17e3}{operator \&=}} (const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&lhs)
+\begin{DoxyCompactList}\small\item\em Bitwise A\+ND operator (\&=) \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_bit_array_a96c011285fabafbfcdeed8ab23caafef}{count}} (size\+\_\+t begin=0, size\+\_\+t end=\mbox{\hyperlink{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}{nwords\+\_\+}}) const
+\begin{DoxyCompactList}\small\item\em Count the number of bits set to true in the words included in the range \mbox{[}begin,end) \end{DoxyCompactList}\item 
+uint64\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_a8097da916dcef4238671782f4b6e3e59}{find\+\_\+first\+\_\+one}} () const
+\item 
+void \mbox{\hyperlink{classforte_1_1_bit_array_ae8b38769188be526a5c7be0aeb2481df}{clear\+\_\+first\+\_\+one}} ()
+\begin{DoxyCompactList}\small\item\em Clear the first bit set to one (starting from the lowest index) \end{DoxyCompactList}\item 
+uint64\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_a8485474d3cf2fc4c7ddca917e044e0bc}{find\+\_\+and\+\_\+clear\+\_\+first\+\_\+one}} ()
+\item 
+double \mbox{\hyperlink{classforte_1_1_bit_array_ad41338929f4ddb1ddb5c4e783e593645}{slater\+\_\+sign}} (int n) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_bit_array_ae622441da06a5612addf552aeab89040}{slater\+\_\+sign}} (int n, int m) const
+\item 
+double \mbox{\hyperlink{classforte_1_1_bit_array_a0bb468ffa1f6aa5e95458ee63be391e9}{slater\+\_\+sign\+\_\+safe}} (int n) const
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_a95b9ef6120acba58b0131afb94538411}{bits\+\_\+to\+\_\+words}} (size\+\_\+t n)
+\begin{DoxyCompactList}\small\item\em this tests that a word has 64 bits \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_a13866977deadcb098f2e5053025d12f0}{nbits}} = N
+\begin{DoxyCompactList}\small\item\em the total number of bits (must be a multiple of 64) \end{DoxyCompactList}\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_ad5ca62ac879b44e0e28017a73fd6c3fd}{bits\+\_\+per\+\_\+word}} = 8 $\ast$ sizeof(\mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}})
+\begin{DoxyCompactList}\small\item\em the number of bits in one word (64) \end{DoxyCompactList}\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}{nwords\+\_\+}} = \mbox{\hyperlink{classforte_1_1_bit_array_a95b9ef6120acba58b0131afb94538411}{bits\+\_\+to\+\_\+words}}(\mbox{\hyperlink{classforte_1_1_bit_array_a13866977deadcb098f2e5053025d12f0}{nbits}})
+\begin{DoxyCompactList}\small\item\em the number of words used to store the bits \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}} \& \mbox{\hyperlink{classforte_1_1_bit_array_aecfc8a774fcde14d6f458208d658988e}{getword}} (size\+\_\+t pos)
+\begin{DoxyCompactList}\small\item\em the word where bit in position pos is found \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}} \& \mbox{\hyperlink{classforte_1_1_bit_array_afd7eda3840661bf37fc587c1374e9bc8}{getword}} (size\+\_\+t pos) const
+\begin{DoxyCompactList}\small\item\em the word where bit in position pos is found (const version) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_a4da96fee16fe9fbad29d58bced1b13d1}{whichword}} (size\+\_\+t pos) noexcept
+\begin{DoxyCompactList}\small\item\em the index of the word where the bit in position pos is found \end{DoxyCompactList}\item 
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array_a10682d9d2a6a947f9a001af6bc3239d7}{whichbit}} (size\+\_\+t pos) noexcept
+\begin{DoxyCompactList}\small\item\em the index of a bit within a word \end{DoxyCompactList}\item 
+static constexpr \mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}} \mbox{\hyperlink{classforte_1_1_bit_array_aed63ad4064fdbd25e8d3878767a25e54}{maskbit}} (size\+\_\+t pos) noexcept
+\begin{DoxyCompactList}\small\item\em a mask for bit pos in its corresponding word \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::array$<$ \mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}}, \mbox{\hyperlink{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}{nwords\+\_\+}} $>$ \mbox{\hyperlink{classforte_1_1_bit_array_a3c8589dce264f70e98857d6e9eed1245}{words\+\_\+}} = \{\}
+\begin{DoxyCompactList}\small\item\em The bits stored as a vector of words (initialized to zero at construction) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$size\+\_\+t N$>$\newline
+class forte\+::\+Bit\+Array$<$ N $>$}
+
+This class represents an array of N bits. The bits are stored in groups called \char`\"{}words\char`\"{}. Each word contains 64 bits stored as 64-\/bit unsigned integers. 
+
+Words are store in a std\+::array object\+: std\+::array$<$word\+\_\+t, nwords\+\_\+$>$ words\+\_\+ = \{\};
+
+Bir\+Array = $\vert$--64 bits--$\vert$ $\vert$--64 bits--$\vert$ $\vert$--64 bits--$\vert$ ... word\mbox{[}0\mbox{]} word\mbox{[}1\mbox{]} word\mbox{[}2\mbox{]} 
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}\label{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!word\+\_\+t@{word\+\_\+t}}
+\index{word\+\_\+t@{word\+\_\+t}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{word\+\_\+t}{word\_t}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+using \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::\mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}} =  uint64\+\_\+t}
+
+
+
+alias for the type used to represent a word (a 64 bit unsigned integer) 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_bit_array_a3cdd02168872c1fc32ca3999207e3b38}\label{classforte_1_1_bit_array_a3cdd02168872c1fc32ca3999207e3b38}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!Bit\+Array@{Bit\+Array}}
+\index{Bit\+Array@{Bit\+Array}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{Bit\+Array()}{BitArray()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+default constructor 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_bit_array_a95b9ef6120acba58b0131afb94538411}\label{classforte_1_1_bit_array_a95b9ef6120acba58b0131afb94538411}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!bits\+\_\+to\+\_\+words@{bits\+\_\+to\+\_\+words}}
+\index{bits\+\_\+to\+\_\+words@{bits\+\_\+to\+\_\+words}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{bits\+\_\+to\+\_\+words()}{bits\_to\_words()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::bits\+\_\+to\+\_\+words (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+this tests that a word has 64 bits 
+
+this tests that N is a multiple of 64 the number of words needed to store n bits \mbox{\Hypertarget{classforte_1_1_bit_array_ae8b38769188be526a5c7be0aeb2481df}\label{classforte_1_1_bit_array_ae8b38769188be526a5c7be0aeb2481df}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!clear\+\_\+first\+\_\+one@{clear\+\_\+first\+\_\+one}}
+\index{clear\+\_\+first\+\_\+one@{clear\+\_\+first\+\_\+one}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{clear\+\_\+first\+\_\+one()}{clear\_first\_one()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::clear\+\_\+first\+\_\+one (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Clear the first bit set to one (starting from the lowest index) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a96c011285fabafbfcdeed8ab23caafef}\label{classforte_1_1_bit_array_a96c011285fabafbfcdeed8ab23caafef}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!count@{count}}
+\index{count@{count}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{count()}{count()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+int \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::count (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{begin = {\ttfamily 0},  }\item[{size\+\_\+t}]{end = {\ttfamily \mbox{\hyperlink{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}{nwords\+\_\+}}} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Count the number of bits set to true in the words included in the range \mbox{[}begin,end) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a8485474d3cf2fc4c7ddca917e044e0bc}\label{classforte_1_1_bit_array_a8485474d3cf2fc4c7ddca917e044e0bc}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!find\+\_\+and\+\_\+clear\+\_\+first\+\_\+one@{find\+\_\+and\+\_\+clear\+\_\+first\+\_\+one}}
+\index{find\+\_\+and\+\_\+clear\+\_\+first\+\_\+one@{find\+\_\+and\+\_\+clear\+\_\+first\+\_\+one}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{find\+\_\+and\+\_\+clear\+\_\+first\+\_\+one()}{find\_and\_clear\_first\_one()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+uint64\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::find\+\_\+and\+\_\+clear\+\_\+first\+\_\+one (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Find the first bit set to one and clear it (starting from the lowest index) \begin{DoxyReturn}{Returns}
+the index of the the first bit, or if all bits are zero, returns $\sim$0 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_bit_array_a8097da916dcef4238671782f4b6e3e59}\label{classforte_1_1_bit_array_a8097da916dcef4238671782f4b6e3e59}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!find\+\_\+first\+\_\+one@{find\+\_\+first\+\_\+one}}
+\index{find\+\_\+first\+\_\+one@{find\+\_\+first\+\_\+one}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{find\+\_\+first\+\_\+one()}{find\_first\_one()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+uint64\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::find\+\_\+first\+\_\+one (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Find the first bit set to one (starting from the lowest index) \begin{DoxyReturn}{Returns}
+the index of the the first bit, or if all bits are zero, returns $\sim$0 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_bit_array_ae6c9b2e2ddeaff0df89bc96f27625eb6}\label{classforte_1_1_bit_array_ae6c9b2e2ddeaff0df89bc96f27625eb6}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!flip@{flip}}
+\index{flip@{flip}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{flip()}{flip()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::flip (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+flip all bits 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a6763512d765e8dbd07d7f70ed3bb1950}\label{classforte_1_1_bit_array_a6763512d765e8dbd07d7f70ed3bb1950}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!get\+\_\+bit@{get\+\_\+bit}}
+\index{get\+\_\+bit@{get\+\_\+bit}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{get\+\_\+bit()}{get\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+bool \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::get\+\_\+bit (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a2adc17f21cc178cf6450d74e5629884d}\label{classforte_1_1_bit_array_a2adc17f21cc178cf6450d74e5629884d}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!get\+\_\+nbits@{get\+\_\+nbits}}
+\index{get\+\_\+nbits@{get\+\_\+nbits}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{get\+\_\+nbits()}{get\_nbits()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::get\+\_\+nbits (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+return the number of bits 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_aecfc8a774fcde14d6f458208d658988e}\label{classforte_1_1_bit_array_aecfc8a774fcde14d6f458208d658988e}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!getword@{getword}}
+\index{getword@{getword}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{getword()}{getword()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}}\& \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::getword (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+
+
+the word where bit in position pos is found 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_afd7eda3840661bf37fc587c1374e9bc8}\label{classforte_1_1_bit_array_afd7eda3840661bf37fc587c1374e9bc8}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!getword@{getword}}
+\index{getword@{getword}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{getword()}{getword()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+const \mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}}\& \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::getword (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+
+
+the word where bit in position pos is found (const version) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_aed63ad4064fdbd25e8d3878767a25e54}\label{classforte_1_1_bit_array_aed63ad4064fdbd25e8d3878767a25e54}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!maskbit@{maskbit}}
+\index{maskbit@{maskbit}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{maskbit()}{maskbit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+static constexpr \mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}} \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::maskbit (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}, {\ttfamily [protected]}, {\ttfamily [noexcept]}}
+
+
+
+a mask for bit pos in its corresponding word 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_ae3a8e53963f77e90db15dd25f3abe87a}\label{classforte_1_1_bit_array_ae3a8e53963f77e90db15dd25f3abe87a}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!operator \&@{operator \&}}
+\index{operator \&@{operator \&}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{operator \&()}{operator \&()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$ \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::operator\& (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Bitwise A\+ND operator (\&) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_aaff16cc742d2f2af9dd32636310b17e3}\label{classforte_1_1_bit_array_aaff16cc742d2f2af9dd32636310b17e3}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!operator \&=@{operator \&=}}
+\index{operator \&=@{operator \&=}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{operator \&=()}{operator \&=()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$ \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::operator\&= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Bitwise A\+ND operator (\&=) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_adce1757202af90d3a37ca08d32f0d778}\label{classforte_1_1_bit_array_adce1757202af90d3a37ca08d32f0d778}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!operator$<$@{operator$<$}}
+\index{operator$<$@{operator$<$}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{operator$<$()}{operator<()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+bool \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::operator$<$ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Less than operator. 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_abe6a395fc267c35a66224344a43f2cb2}\label{classforte_1_1_bit_array_abe6a395fc267c35a66224344a43f2cb2}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!operator==@{operator==}}
+\index{operator==@{operator==}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{operator==()}{operator==()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+bool \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::operator== (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+equal operator 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a3ec375f1cffe72e1e4a737ebc3e4880e}\label{classforte_1_1_bit_array_a3ec375f1cffe72e1e4a737ebc3e4880e}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!operator$^\wedge$@{operator$^\wedge$}}
+\index{operator$^\wedge$@{operator$^\wedge$}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{operator$^\wedge$()}{operator^()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$ \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::operator$^\wedge$ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Bitwise X\+OR operator ($^\wedge$) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a320cbd761b032de5797b95a08d27ac2f}\label{classforte_1_1_bit_array_a320cbd761b032de5797b95a08d27ac2f}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!operator$^\wedge$=@{operator$^\wedge$=}}
+\index{operator$^\wedge$=@{operator$^\wedge$=}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{operator$^\wedge$=()}{operator^=()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$ \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::operator$^\wedge$= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Bitwise X\+OR operator ($^\wedge$=) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a6a76d16ef5acbf96710ca3420dbd4be5}\label{classforte_1_1_bit_array_a6a76d16ef5acbf96710ca3420dbd4be5}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!operator\texttt{"|}@{operator\texttt{"|}}}
+\index{operator\texttt{"|}@{operator\texttt{"|}}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{operator\texttt{"|}()}{operator|()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$ \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::operator$\vert$ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Bitwise OR operator ($\vert$) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a64a5143b2b9e32399197546d239b6ac0}\label{classforte_1_1_bit_array_a64a5143b2b9e32399197546d239b6ac0}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!operator\texttt{"|}=@{operator\texttt{"|}=}}
+\index{operator\texttt{"|}=@{operator\texttt{"|}=}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{operator\texttt{"|}=()}{operator|=()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+\mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$N$>$ \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::operator$\vert$= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_bit_array}{Bit\+Array}}$<$ N $>$ \&}]{lhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Bitwise OR operator ($\vert$=) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_aded6c5518708c6433bba8c7b9115199d}\label{classforte_1_1_bit_array_aded6c5518708c6433bba8c7b9115199d}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!set\+\_\+bit@{set\+\_\+bit}}
+\index{set\+\_\+bit@{set\+\_\+bit}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{set\+\_\+bit()}{set\_bit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::set\+\_\+bit (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos,  }\item[{bool}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+set bit in position pos to the value val 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a52623739054020b7da6ffab1cacf033e}\label{classforte_1_1_bit_array_a52623739054020b7da6ffab1cacf033e}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!set\+\_\+word@{set\+\_\+word}}
+\index{set\+\_\+word@{set\+\_\+word}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{set\+\_\+word()}{set\_word()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::set\+\_\+word (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos,  }\item[{\mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}}}]{word }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+set a word in position pos 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_ad41338929f4ddb1ddb5c4e783e593645}\label{classforte_1_1_bit_array_ad41338929f4ddb1ddb5c4e783e593645}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!slater\+\_\+sign@{slater\+\_\+sign}}
+\index{slater\+\_\+sign@{slater\+\_\+sign}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign()}{slater\_sign()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::slater\+\_\+sign (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign of a\+\_\+n applied to this determinant This function ignores if bit n is set or not \mbox{\Hypertarget{classforte_1_1_bit_array_ae622441da06a5612addf552aeab89040}\label{classforte_1_1_bit_array_ae622441da06a5612addf552aeab89040}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!slater\+\_\+sign@{slater\+\_\+sign}}
+\index{slater\+\_\+sign@{slater\+\_\+sign}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign()}{slater\_sign()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::slater\+\_\+sign (\begin{DoxyParamCaption}\item[{int}]{n,  }\item[{int}]{m }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign for a pair of second quantized operators The sign depends only on the number of bits = 1 between n and m There are no restrictions on n and m \mbox{\Hypertarget{classforte_1_1_bit_array_a0bb468ffa1f6aa5e95458ee63be391e9}\label{classforte_1_1_bit_array_a0bb468ffa1f6aa5e95458ee63be391e9}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!slater\+\_\+sign\+\_\+safe@{slater\+\_\+sign\+\_\+safe}}
+\index{slater\+\_\+sign\+\_\+safe@{slater\+\_\+sign\+\_\+safe}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{slater\+\_\+sign\+\_\+safe()}{slater\_sign\_safe()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+double \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::slater\+\_\+sign\+\_\+safe (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the sign of a\+\_\+n applied to this determinant this version is inefficient and should be used only for testing/debugging \mbox{\Hypertarget{classforte_1_1_bit_array_a10682d9d2a6a947f9a001af6bc3239d7}\label{classforte_1_1_bit_array_a10682d9d2a6a947f9a001af6bc3239d7}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!whichbit@{whichbit}}
+\index{whichbit@{whichbit}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{whichbit()}{whichbit()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::whichbit (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}, {\ttfamily [protected]}, {\ttfamily [noexcept]}}
+
+
+
+the index of a bit within a word 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a4da96fee16fe9fbad29d58bced1b13d1}\label{classforte_1_1_bit_array_a4da96fee16fe9fbad29d58bced1b13d1}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!whichword@{whichword}}
+\index{whichword@{whichword}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{whichword()}{whichword()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+static constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::whichword (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}, {\ttfamily [protected]}, {\ttfamily [noexcept]}}
+
+
+
+the index of the word where the bit in position pos is found 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_ab9e015d5e061725d21562ce068dc3dbb}\label{classforte_1_1_bit_array_ab9e015d5e061725d21562ce068dc3dbb}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!zero@{zero}}
+\index{zero@{zero}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{zero()}{zero()}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+void \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::zero (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+set all bits (including unused) to zero 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_bit_array_ad5ca62ac879b44e0e28017a73fd6c3fd}\label{classforte_1_1_bit_array_ad5ca62ac879b44e0e28017a73fd6c3fd}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!bits\+\_\+per\+\_\+word@{bits\+\_\+per\+\_\+word}}
+\index{bits\+\_\+per\+\_\+word@{bits\+\_\+per\+\_\+word}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{bits\+\_\+per\+\_\+word}{bits\_per\_word}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::bits\+\_\+per\+\_\+word = 8 $\ast$ sizeof(\mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+the number of bits in one word (64) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a13866977deadcb098f2e5053025d12f0}\label{classforte_1_1_bit_array_a13866977deadcb098f2e5053025d12f0}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!nbits@{nbits}}
+\index{nbits@{nbits}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{nbits}{nbits}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::nbits = N\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+the total number of bits (must be a multiple of 64) 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}\label{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!nwords\+\_\+@{nwords\+\_\+}}
+\index{nwords\+\_\+@{nwords\+\_\+}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{nwords\+\_\+}{nwords\_}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+constexpr size\+\_\+t \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::nwords\+\_\+ = \mbox{\hyperlink{classforte_1_1_bit_array_a95b9ef6120acba58b0131afb94538411}{bits\+\_\+to\+\_\+words}}(\mbox{\hyperlink{classforte_1_1_bit_array_a13866977deadcb098f2e5053025d12f0}{nbits}})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+the number of words used to store the bits 
+
+\mbox{\Hypertarget{classforte_1_1_bit_array_a3c8589dce264f70e98857d6e9eed1245}\label{classforte_1_1_bit_array_a3c8589dce264f70e98857d6e9eed1245}} 
+\index{forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}!words\+\_\+@{words\+\_\+}}
+\index{words\+\_\+@{words\+\_\+}!forte\+::\+Bit\+Array@{forte\+::\+Bit\+Array}}
+\subsubsection{\texorpdfstring{words\+\_\+}{words\_}}
+{\footnotesize\ttfamily template$<$size\+\_\+t N$>$ \\
+std\+::array$<$\mbox{\hyperlink{classforte_1_1_bit_array_a7f3b4ebbbe4bc80ce60cc6614cb565da}{word\+\_\+t}}, \mbox{\hyperlink{classforte_1_1_bit_array_aeaa8016f00f9ffc5822081f7e45656e8}{nwords\+\_\+}}$>$ \mbox{\hyperlink{classforte_1_1_bit_array}{forte\+::\+Bit\+Array}}$<$ N $>$\+::words\+\_\+ = \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The bits stored as a vector of words (initialized to zero at construction) 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{bitarray_8hpp}{bitarray.\+hpp}}\end{DoxyCompactItemize}

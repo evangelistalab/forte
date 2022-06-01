@@ -1,0 +1,163 @@
+\hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d}{}\section{forte\+:\+:C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD Class Reference}
+\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d}\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+
+
+{\ttfamily \#include $<$casscf\+\_\+orb\+\_\+grad.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_ac61ecacaaa036b564784770e14b9cf4a}{C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints)
+\begin{DoxyCompactList}\small\item\em Constructor of the A\+O-\/based \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} class. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a4dca7f7727dd1db00e53fe8889c6263b}{evaluate}} (psi\+::\+Shared\+Vector x, psi\+::\+Shared\+Vector g, bool do\+\_\+g=true)
+\begin{DoxyCompactList}\small\item\em Evaluate the energy and orbital gradient. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_ae1ec0431b302e773ee96fdb060926888}{hess\+\_\+diag}} (psi\+::\+Shared\+Vector x, psi\+::\+Shared\+Vector h0)
+\begin{DoxyCompactList}\small\item\em Evaluate the diagonal orbital Hessian. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a3cab4efed9ba2074faa0f839942643b6}{set\+\_\+rdms}} (\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \&rdms)
+\begin{DoxyCompactList}\small\item\em Set \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} used for orbital optimization. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_acdd6accf6713d21c0120fa11db860452}{active\+\_\+space\+\_\+ints}} ()
+\begin{DoxyCompactList}\small\item\em Return active space integrals for CI. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a481ef4e93b34e4bea58958b3272910d3}{nrot}} ()
+\begin{DoxyCompactList}\small\item\em Return the number of nonredundant orbital rotations. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a8de4e9ec4929e587f36cd93d002c5d71}{Ca\+\_\+initial}} ()
+\begin{DoxyCompactList}\small\item\em Return the initial (not optimized) MO coefficients. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a67df009b090569815681edd6aa24c922}{Ca}} ()
+\begin{DoxyCompactList}\small\item\em Return the optimized MO coefficients. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a62eb3d13f76a9a3398a0a443c33dc42c}{fock}} ()
+\begin{DoxyCompactList}\small\item\em Return the generalized Fock matrix. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_aa1fc98eedabab33244848f27c027a723}{canonicalize\+\_\+final}} (psi\+::\+Shared\+Matrix U)
+\begin{DoxyCompactList}\small\item\em Canonicalize the final orbitals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_aa77c144e764615ff260c1322374fb96e}{compute\+\_\+nuclear\+\_\+gradient}} ()
+\begin{DoxyCompactList}\small\item\em Compute nuclear gradient. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_ac61ecacaaa036b564784770e14b9cf4a}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_ac61ecacaaa036b564784770e14b9cf4a}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\index{C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D()}{CASSCF\_ORB\_GRAD()}}
+{\footnotesize\ttfamily forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints }\end{DoxyParamCaption})}
+
+
+
+Constructor of the A\+O-\/based \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} class. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em options} & The \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} pointer \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} pointer of Forte \\
+\hline
+{\em ints} & The Forte\+Integral pointer\\
+\hline
+\end{DoxyParams}
+Implementation notes\+: See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-\/95 (1997) 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_acdd6accf6713d21c0120fa11db860452}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_acdd6accf6713d21c0120fa11db860452}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!active\+\_\+space\+\_\+ints@{active\+\_\+space\+\_\+ints}}
+\index{active\+\_\+space\+\_\+ints@{active\+\_\+space\+\_\+ints}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{active\+\_\+space\+\_\+ints()}{active\_space\_ints()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::active\+\_\+space\+\_\+ints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Return active space integrals for CI. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a67df009b090569815681edd6aa24c922}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a67df009b090569815681edd6aa24c922}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!Ca@{Ca}}
+\index{Ca@{Ca}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{Ca()}{Ca()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::\+Ca (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the optimized MO coefficients. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a8de4e9ec4929e587f36cd93d002c5d71}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a8de4e9ec4929e587f36cd93d002c5d71}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!Ca\+\_\+initial@{Ca\+\_\+initial}}
+\index{Ca\+\_\+initial@{Ca\+\_\+initial}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{Ca\+\_\+initial()}{Ca\_initial()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::\+Ca\+\_\+initial (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the initial (not optimized) MO coefficients. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_aa1fc98eedabab33244848f27c027a723}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_aa1fc98eedabab33244848f27c027a723}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!canonicalize\+\_\+final@{canonicalize\+\_\+final}}
+\index{canonicalize\+\_\+final@{canonicalize\+\_\+final}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{canonicalize\+\_\+final()}{canonicalize\_final()}}
+{\footnotesize\ttfamily void forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::canonicalize\+\_\+final (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Matrix}]{U }\end{DoxyParamCaption})}
+
+
+
+Canonicalize the final orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_aa77c144e764615ff260c1322374fb96e}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_aa77c144e764615ff260c1322374fb96e}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!compute\+\_\+nuclear\+\_\+gradient@{compute\+\_\+nuclear\+\_\+gradient}}
+\index{compute\+\_\+nuclear\+\_\+gradient@{compute\+\_\+nuclear\+\_\+gradient}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{compute\+\_\+nuclear\+\_\+gradient()}{compute\_nuclear\_gradient()}}
+{\footnotesize\ttfamily void forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::compute\+\_\+nuclear\+\_\+gradient (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute nuclear gradient. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a4dca7f7727dd1db00e53fe8889c6263b}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a4dca7f7727dd1db00e53fe8889c6263b}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!evaluate@{evaluate}}
+\index{evaluate@{evaluate}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{evaluate()}{evaluate()}}
+{\footnotesize\ttfamily double forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::evaluate (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{x,  }\item[{psi\+::\+Shared\+Vector}]{g,  }\item[{bool}]{do\+\_\+g = {\ttfamily true} }\end{DoxyParamCaption})}
+
+
+
+Evaluate the energy and orbital gradient. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a62eb3d13f76a9a3398a0a443c33dc42c}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a62eb3d13f76a9a3398a0a443c33dc42c}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!fock@{fock}}
+\index{fock@{fock}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{fock()}{fock()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::fock (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the generalized Fock matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_ae1ec0431b302e773ee96fdb060926888}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_ae1ec0431b302e773ee96fdb060926888}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!hess\+\_\+diag@{hess\+\_\+diag}}
+\index{hess\+\_\+diag@{hess\+\_\+diag}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{hess\+\_\+diag()}{hess\_diag()}}
+{\footnotesize\ttfamily void forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::hess\+\_\+diag (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{x,  }\item[{psi\+::\+Shared\+Vector}]{h0 }\end{DoxyParamCaption})}
+
+
+
+Evaluate the diagonal orbital Hessian. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a481ef4e93b34e4bea58958b3272910d3}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a481ef4e93b34e4bea58958b3272910d3}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!nrot@{nrot}}
+\index{nrot@{nrot}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{nrot()}{nrot()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::nrot (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Return the number of nonredundant orbital rotations. 
+
+\mbox{\Hypertarget{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a3cab4efed9ba2074faa0f839942643b6}\label{classforte_1_1_c_a_s_s_c_f___o_r_b___g_r_a_d_a3cab4efed9ba2074faa0f839942643b6}} 
+\index{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}!set\+\_\+rdms@{set\+\_\+rdms}}
+\index{set\+\_\+rdms@{set\+\_\+rdms}!forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD@{forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+AD}}
+\subsubsection{\texorpdfstring{set\+\_\+rdms()}{set\_rdms()}}
+{\footnotesize\ttfamily void forte\+::\+C\+A\+S\+S\+C\+F\+\_\+\+O\+R\+B\+\_\+\+G\+R\+A\+D\+::set\+\_\+rdms (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \&}]{rdms }\end{DoxyParamCaption})}
+
+
+
+Set \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} used for orbital optimization. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{casscf__orb__grad_8h}{casscf\+\_\+orb\+\_\+grad.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{casscf__orb__grad_8cc}{casscf\+\_\+orb\+\_\+grad.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{casscf__orb__grad__deriv_8cc}{casscf\+\_\+orb\+\_\+grad\+\_\+deriv.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,58 @@
+\hypertarget{classforte_1_1_m_c_s_c_f__2_s_t_e_p}{}\section{forte\+:\+:M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP Class Reference}
+\label{classforte_1_1_m_c_s_c_f__2_s_t_e_p}\index{forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP@{forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP}}
+
+
+{\ttfamily \#include $<$mcscf\+\_\+2step.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_m_c_s_c_f__2_s_t_e_p_a62cf1dcfa0b09d87ad929055e9017a78}{M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP}} (const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&state\+\_\+weights\+\_\+map, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{forte\+::\+S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints)
+\begin{DoxyCompactList}\small\item\em Constructor of the A\+O-\/based \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} class. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_m_c_s_c_f__2_s_t_e_p_acbb534fe26a165a5385044879e6c1ae2}{compute\+\_\+energy}} ()
+\begin{DoxyCompactList}\small\item\em Compute the M\+C\+S\+CF energy. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_m_c_s_c_f__2_s_t_e_p_a62cf1dcfa0b09d87ad929055e9017a78}\label{classforte_1_1_m_c_s_c_f__2_s_t_e_p_a62cf1dcfa0b09d87ad929055e9017a78}} 
+\index{forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP@{forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP}!M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP@{M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP}}
+\index{M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP@{M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP}!forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP@{forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP}}
+\subsubsection{\texorpdfstring{M\+C\+S\+C\+F\+\_\+2\+S\+T\+E\+P()}{MCSCF\_2STEP()}}
+{\footnotesize\ttfamily forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+E\+P\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP (\begin{DoxyParamCaption}\item[{const std\+::map$<$ \mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}, std\+::vector$<$ double $>$$>$ \&}]{state\+\_\+weights\+\_\+map,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{forte\+::\+S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints }\end{DoxyParamCaption})}
+
+
+
+Constructor of the A\+O-\/based \mbox{\hyperlink{classforte_1_1_c_a_s_s_c_f}{C\+A\+S\+S\+CF}} class. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+\_\+weights\+\_\+map} & The state to weights map of Forte \\
+\hline
+{\em options} & The \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} pointer \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} pointer of Forte \\
+\hline
+{\em scf\+\_\+info} & The S\+C\+F\+\_\+\+I\+N\+FO pointer of Forte \\
+\hline
+{\em ints} & The Forte\+Integral pointer\\
+\hline
+\end{DoxyParams}
+Implementation notes\+: See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-\/95 (1997) 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_m_c_s_c_f__2_s_t_e_p_acbb534fe26a165a5385044879e6c1ae2}\label{classforte_1_1_m_c_s_c_f__2_s_t_e_p_acbb534fe26a165a5385044879e6c1ae2}} 
+\index{forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP@{forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP@{forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+EP}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+M\+C\+S\+C\+F\+\_\+2\+S\+T\+E\+P\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the M\+C\+S\+CF energy. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{mcscf__2step_8h}{mcscf\+\_\+2step.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/casscf/\mbox{\hyperlink{mcscf__2step_8cc}{mcscf\+\_\+2step.\+cc}}\end{DoxyCompactItemize}

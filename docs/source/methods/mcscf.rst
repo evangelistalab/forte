@@ -267,14 +267,14 @@ The maximum number of macro iterations.
 The maximum number of micro iterations.
 
 * Type: int
-* Default: 50
+* Default: 40
 
 **CASSCF_MICRO_MINITER**
 
 The minimum number of micro iterations.
 
 * Type: int
-* Default: 15
+* Default: 6
 
 **CASSCF_E_CONVERGENCE**
 
@@ -300,7 +300,7 @@ If a value in the orbital update vector is greater than this number,
 the update vector will be scaled by this number / max value.
 
 * Type: double
-* Default: 0.5
+* Default: 0.2
 
 **CASSCF_DIIS_START**
 
@@ -308,14 +308,14 @@ The iteration number to start DIIS on orbital rotation matrix R.
 DIIS will not be used if this number is smaller than 1.
 
 * Type: int
-* Default: 2
+* Default: 15
 
 **CASSCF_DIIS_MIN_VEC**
 
 The minimum number of DIIS vectors allowed for DIIS extrapolation.
 
 * Type: int
-* Default: 2
+* Default: 3
 
 **CASSCF_DIIS_MAX_VEC**
 
@@ -361,6 +361,13 @@ Turn off orbital optimization procedure if true.
 
 * Type: Boolean
 * Default: False
+
+**CASSCF_DIE_IF_NOT_CONVERGED**
+
+Stop Forte if MCSCF did not converge.
+
+* Type: Boolean
+* Default: True
 
 Expert Options
 ~~~~~~~~~~~~~~~

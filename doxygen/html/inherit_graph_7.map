@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classforte_1_1_bit_array.html" title="This class represents an array of N bits. The bits are stored in groups called &quot;words&quot;. Each word contains 64 bits stored as 64&#45;bit unsigned integers. " alt="" coords="5,42,141,69"/>
+<area shape="rect" id="node2" href="$classforte_1_1_determinant_impl.html" title="forte::DeterminantImpl\l\&lt; Norb2 \&gt;" alt="" coords="206,5,359,47"/>
+<area shape="rect" id="node3" href="$classforte_1_1_determinant_impl.html" title="A class to represent a Slater determinant with N spin orbitals. " alt="" coords="189,71,376,98"/>
+</map>

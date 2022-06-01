@@ -1,0 +1,105 @@
+\hypertarget{classforte_1_1_s_c_f_info}{}\section{forte\+:\+:S\+C\+F\+Info Class Reference}
+\label{classforte_1_1_s_c_f_info}\index{forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}}
+
+
+{\ttfamily \#include $<$scf\+\_\+info.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_s_c_f_info_a56e6edb474dc1190fd2a3846275e2727}{S\+C\+F\+Info}} (const psi\+::\+Dimension \&\mbox{\hyperlink{classforte_1_1_s_c_f_info_a6724509a53cf02da7b2ceae0dcf5974a}{doccpi}}, const psi\+::\+Dimension \&\mbox{\hyperlink{classforte_1_1_s_c_f_info_aa41db174bb41206fe98b4a5068e43fd4}{soccpi}}, double \mbox{\hyperlink{classforte_1_1_s_c_f_info_ac2c9c172c0a76720d80c2aae2fe0fb92}{reference\+\_\+energy}}, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ \mbox{\hyperlink{classforte_1_1_s_c_f_info_aa28a836920447e78d806523759d46d7e}{epsilon\+\_\+a}}, std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ \mbox{\hyperlink{classforte_1_1_s_c_f_info_ae7bece269ec34eee0f9e47bd07d69a44}{epsilon\+\_\+b}})
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_s_c_f_info_a8d7c54510805b10fe84b88e6d9888832}{S\+C\+F\+Info}} (psi\+::\+Shared\+Wavefunction wfn)
+\begin{DoxyCompactList}\small\item\em Constructor based on Psi4 Wavefunction. \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_s_c_f_info_a6724509a53cf02da7b2ceae0dcf5974a}{doccpi}} ()
+\begin{DoxyCompactList}\small\item\em return doccpi \end{DoxyCompactList}\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_s_c_f_info_aa41db174bb41206fe98b4a5068e43fd4}{soccpi}} ()
+\begin{DoxyCompactList}\small\item\em return soccpi \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_s_c_f_info_ac2c9c172c0a76720d80c2aae2fe0fb92}{reference\+\_\+energy}} ()
+\begin{DoxyCompactList}\small\item\em return energy \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ \mbox{\hyperlink{classforte_1_1_s_c_f_info_aa28a836920447e78d806523759d46d7e}{epsilon\+\_\+a}} ()
+\begin{DoxyCompactList}\small\item\em alpha orbital energy \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ \mbox{\hyperlink{classforte_1_1_s_c_f_info_ae7bece269ec34eee0f9e47bd07d69a44}{epsilon\+\_\+b}} ()
+\begin{DoxyCompactList}\small\item\em beta orbital energy \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_s_c_f_info_a56e6edb474dc1190fd2a3846275e2727}\label{classforte_1_1_s_c_f_info_a56e6edb474dc1190fd2a3846275e2727}} 
+\index{forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}!S\+C\+F\+Info@{S\+C\+F\+Info}}
+\index{S\+C\+F\+Info@{S\+C\+F\+Info}!forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}}
+\subsubsection{\texorpdfstring{S\+C\+F\+Info()}{SCFInfo()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+S\+C\+F\+Info\+::\+S\+C\+F\+Info (\begin{DoxyParamCaption}\item[{const psi\+::\+Dimension \&}]{doccpi,  }\item[{const psi\+::\+Dimension \&}]{soccpi,  }\item[{double}]{reference\+\_\+energy,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{epsilon\+\_\+a,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$}]{epsilon\+\_\+b }\end{DoxyParamCaption})}
+
+
+
+Constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_s_c_f_info_a8d7c54510805b10fe84b88e6d9888832}\label{classforte_1_1_s_c_f_info_a8d7c54510805b10fe84b88e6d9888832}} 
+\index{forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}!S\+C\+F\+Info@{S\+C\+F\+Info}}
+\index{S\+C\+F\+Info@{S\+C\+F\+Info}!forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}}
+\subsubsection{\texorpdfstring{S\+C\+F\+Info()}{SCFInfo()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+S\+C\+F\+Info\+::\+S\+C\+F\+Info (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Wavefunction}]{wfn }\end{DoxyParamCaption})}
+
+
+
+Constructor based on Psi4 Wavefunction. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_s_c_f_info_a6724509a53cf02da7b2ceae0dcf5974a}\label{classforte_1_1_s_c_f_info_a6724509a53cf02da7b2ceae0dcf5974a}} 
+\index{forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}!doccpi@{doccpi}}
+\index{doccpi@{doccpi}!forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}}
+\subsubsection{\texorpdfstring{doccpi()}{doccpi()}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+S\+C\+F\+Info\+::doccpi (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+return doccpi 
+
+\mbox{\Hypertarget{classforte_1_1_s_c_f_info_aa28a836920447e78d806523759d46d7e}\label{classforte_1_1_s_c_f_info_aa28a836920447e78d806523759d46d7e}} 
+\index{forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}!epsilon\+\_\+a@{epsilon\+\_\+a}}
+\index{epsilon\+\_\+a@{epsilon\+\_\+a}!forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}}
+\subsubsection{\texorpdfstring{epsilon\+\_\+a()}{epsilon\_a()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ forte\+::\+S\+C\+F\+Info\+::epsilon\+\_\+a (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+alpha orbital energy 
+
+\mbox{\Hypertarget{classforte_1_1_s_c_f_info_ae7bece269ec34eee0f9e47bd07d69a44}\label{classforte_1_1_s_c_f_info_ae7bece269ec34eee0f9e47bd07d69a44}} 
+\index{forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}!epsilon\+\_\+b@{epsilon\+\_\+b}}
+\index{epsilon\+\_\+b@{epsilon\+\_\+b}!forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}}
+\subsubsection{\texorpdfstring{epsilon\+\_\+b()}{epsilon\_b()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$ forte\+::\+S\+C\+F\+Info\+::epsilon\+\_\+b (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+beta orbital energy 
+
+\mbox{\Hypertarget{classforte_1_1_s_c_f_info_ac2c9c172c0a76720d80c2aae2fe0fb92}\label{classforte_1_1_s_c_f_info_ac2c9c172c0a76720d80c2aae2fe0fb92}} 
+\index{forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}!reference\+\_\+energy@{reference\+\_\+energy}}
+\index{reference\+\_\+energy@{reference\+\_\+energy}!forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}}
+\subsubsection{\texorpdfstring{reference\+\_\+energy()}{reference\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+S\+C\+F\+Info\+::reference\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+return energy 
+
+\mbox{\Hypertarget{classforte_1_1_s_c_f_info_aa41db174bb41206fe98b4a5068e43fd4}\label{classforte_1_1_s_c_f_info_aa41db174bb41206fe98b4a5068e43fd4}} 
+\index{forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}!soccpi@{soccpi}}
+\index{soccpi@{soccpi}!forte\+::\+S\+C\+F\+Info@{forte\+::\+S\+C\+F\+Info}}
+\subsubsection{\texorpdfstring{soccpi()}{soccpi()}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+S\+C\+F\+Info\+::soccpi (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+return soccpi 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{scf__info_8h}{scf\+\_\+info.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{scf__info_8cc}{scf\+\_\+info.\+cc}}\end{DoxyCompactItemize}

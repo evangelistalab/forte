@@ -1,0 +1,25 @@
+<map id="/Users/fevange/Source/forte/src/mrdsrg&#45;spin&#45;adapted/sa_mrpt3.cc" name="/Users/fevange/Source/forte/src/mrdsrg&#45;spin&#45;adapted/sa_mrpt3.cc">
+<area shape="rect" id="node3" href="$timer_8h.html" title="helpers/timer.h" alt="" coords="1829,109,1940,136"/>
+<area shape="rect" id="node6" href="$printing_8h.html" title="helpers/printing.h" alt="" coords="2445,601,2569,628"/>
+<area shape="rect" id="node9" href="$sa__mrpt3_8h.html" title="sa_mrpt3.h" alt="" coords="1964,109,2053,136"/>
+<area shape="rect" id="node10" href="$sa__dsrgpt_8h.html" title="sa_dsrgpt.h" alt="" coords="1957,184,2049,211"/>
+<area shape="rect" id="node11" href="$sadsrg_8h.html" title="sadsrg.h" alt="" coords="1391,259,1464,285"/>
+<area shape="rect" id="node18" href="$forte__options_8h.html" title="base_classes/forte\l_options.h" alt="" coords="1417,512,1550,553"/>
+<area shape="rect" id="node20" href="$dynamic__correlation__solver_8h.html" title="base_classes/dynamic\l_correlation_solver.h" alt="" coords="1349,333,1505,375"/>
+<area shape="rect" id="node21" href="$integrals_8h.html" title="integrals/integrals.h" alt="" coords="1027,519,1164,546"/>
+<area shape="rect" id="node24" href="$active__space__integrals_8h.html" title="integrals/active_space\l_integrals.h" alt="" coords="927,423,1080,464"/>
+<area shape="rect" id="node31" href="$rdms_8h.html" title="base_classes/rdms.h" alt="" coords="755,430,902,457"/>
+<area shape="rect" id="node32" href="$mo__space__info_8h.html" title="base_classes/mo_space\l_info.h" alt="" coords="1631,423,1799,464"/>
+<area shape="rect" id="node35" href="$blockedtensorfactory_8h.html" title="helpers/blockedtensorfactory.h" alt="" coords="1104,430,1308,457"/>
+<area shape="rect" id="node36" href="$dsrg__mem_8h.html" title="mrdsrg&#45;helper/dsrg\l_mem.h" alt="" coords="1688,333,1823,375"/>
+<area shape="rect" id="node37" href="$dsrg__source_8h.html" title="mrdsrg&#45;helper/dsrg\l_source.h" alt="" coords="1899,333,2033,375"/>
+<area shape="rect" id="node38" href="$dsrg__time_8h.html" title="mrdsrg&#45;helper/dsrg\l_time.h" alt="" coords="2109,512,2244,553"/>
+<area shape="rect" id="node40" href="$dsrg__tensors_8h.html" title="mrdsrg&#45;helper/dsrg\l_tensors.h" alt="" coords="444,423,579,464"/>
+<area shape="rect" id="node41" href="$dsrg__transformed_8h.html" title="mrdsrg&#45;helper/dsrg\l_transformed.h" alt="" coords="761,333,896,375"/>
+<area shape="rect" id="node25" href="$determinant_8h.html" title="sparse_ci/determinant.h" alt="" coords="153,519,317,546"/>
+<area shape="rect" id="node27" href="$determinant_8hpp.html" title="determinant.hpp" alt="" coords="59,601,177,628"/>
+<area shape="rect" id="node28" href="$bitarray_8hpp.html" title="bitarray.hpp" alt="" coords="31,676,123,703"/>
+<area shape="rect" id="node30" href="$bitwise__operations_8hpp.html" title="bitwise_operations.hpp" alt="" coords="81,751,240,777"/>
+<area shape="rect" id="node33" href="$symmetry_8h.html" title="helpers/symmetry.h" alt="" coords="1702,519,1841,546"/>
+<area shape="rect" id="node34" href="$string__algorithms_8h.html" title="helpers/string_algorithms.h" alt="" coords="1680,601,1863,628"/>
+</map>

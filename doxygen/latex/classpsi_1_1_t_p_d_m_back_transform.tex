@@ -1,0 +1,155 @@
+\hypertarget{classpsi_1_1_t_p_d_m_back_transform}{}\section{psi\+:\+:T\+P\+D\+M\+Back\+Transform Class Reference}
+\label{classpsi_1_1_t_p_d_m_back_transform}\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+
+
+{\ttfamily \#include $<$backtransform\+\_\+tpdm.\+h$>$}
+
+
+
+Inheritance diagram for psi\+:\+:T\+P\+D\+M\+Back\+Transform\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=211pt]{classpsi_1_1_t_p_d_m_back_transform__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for psi\+:\+:T\+P\+D\+M\+Back\+Transform\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=211pt]{classpsi_1_1_t_p_d_m_back_transform__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_a1137d921d3764f2bb73644e3b069eb6c}{T\+P\+D\+M\+Back\+Transform}} (Shared\+Wavefunction wfn, \mbox{\hyperlink{namespacepsi_ad84f5058fdd5b69df3b06b9959251147}{Space\+Vec}} spaces, Transformation\+Type transformation\+Type=Integral\+Transform\+::\+Transformation\+Type\+::\+Restricted, Output\+Type output\+Type=Integral\+Transform\+::\+Output\+Type\+::\+D\+P\+D\+Only, M\+O\+Ordering mo\+Ordering=Integral\+Transform\+::\+M\+O\+Ordering\+::\+Q\+T\+Order, Frozen\+Orbitals frozen\+Orbitals=Integral\+Transform\+::\+Frozen\+Orbitals\+::\+Occ\+And\+Vir, bool initialize=true)
+\item 
+void \mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_a2c6ef8ed232f71dbd235cfec99c0f08b}{backtransform\+\_\+density}} ()
+\item 
+void \mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_adfa9267d945476f9490bc6c512a03fb3}{set\+\_\+\+Ca\+\_\+additional}} (Shared\+Matrix Ca)
+\begin{DoxyCompactList}\small\item\em Set additional orbital coefficients. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_a8870b94142cc7d7226745f834f234ad4}{presort\+\_\+mo\+\_\+tpdm\+\_\+unrestricted}} ()
+\begin{DoxyCompactList}\small\item\em Presort MO 2-\/\+R\+DM using unrestricted formalism (indexing change of Psi4) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_a5a3988253310d2705630ec8f4aae5e31}{backtransform\+\_\+tpdm\+\_\+unrestricted}} ()
+\begin{DoxyCompactList}\small\item\em Back-\/transform MO 2-\/\+R\+DM using unrestricted formalism (a copy of Psi4 libtrans) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_a0a6e7b4afda5fe697f961e6301bea794}{presort\+\_\+mo\+\_\+tpdm\+\_\+restricted}} ()
+\begin{DoxyCompactList}\small\item\em Presort MO 2-\/\+R\+DM using restricted formalism (indexing change of Psi4) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_a4143c3efc0247dda9bfc8cea00b81c2d}{backtransform\+\_\+tpdm\+\_\+restricted}} ()
+\begin{DoxyCompactList}\small\item\em Back-\/transform MO 2-\/\+R\+DM using restricted formalism (a copy of Psi4 libtrans) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+Shared\+Matrix \mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_a5cc1fd173565060a44911109c9436ad8}{Ca\+\_\+forte\+\_\+}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classpsi_1_1_t_p_d_m_back_transform_a1137d921d3764f2bb73644e3b069eb6c}\label{classpsi_1_1_t_p_d_m_back_transform_a1137d921d3764f2bb73644e3b069eb6c}} 
+\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}!T\+P\+D\+M\+Back\+Transform@{T\+P\+D\+M\+Back\+Transform}}
+\index{T\+P\+D\+M\+Back\+Transform@{T\+P\+D\+M\+Back\+Transform}!psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+\subsubsection{\texorpdfstring{T\+P\+D\+M\+Back\+Transform()}{TPDMBackTransform()}}
+{\footnotesize\ttfamily T\+P\+D\+M\+Back\+Transform\+::\+T\+P\+D\+M\+Back\+Transform (\begin{DoxyParamCaption}\item[{Shared\+Wavefunction}]{wfn,  }\item[{\mbox{\hyperlink{namespacepsi_ad84f5058fdd5b69df3b06b9959251147}{Space\+Vec}}}]{spaces,  }\item[{Transformation\+Type}]{transformation\+Type = {\ttfamily IntegralTransform\+:\+:TransformationType\+:\+:Restricted},  }\item[{Output\+Type}]{output\+Type = {\ttfamily IntegralTransform\+:\+:OutputType\+:\+:DPDOnly},  }\item[{M\+O\+Ordering}]{mo\+Ordering = {\ttfamily IntegralTransform\+:\+:MOOrdering\+:\+:QTOrder},  }\item[{Frozen\+Orbitals}]{frozen\+Orbitals = {\ttfamily IntegralTransform\+:\+:FrozenOrbitals\+:\+:OccAndVir},  }\item[{bool}]{initialize = {\ttfamily true} }\end{DoxyParamCaption})}
+
+Set up a transformation involving four MO spaces
+
+
+\begin{DoxyParams}{Parameters}
+{\em wfn} & A (shared pointer to a) wavefunction object with the orbital info \\
+\hline
+{\em spaces} & A vector containing smart pointers to the unique space(s) involved in any transformations that this object will perform \\
+\hline
+{\em transformation\+Type} & The type of transformation, described by the enum Transformation\+Type \\
+\hline
+{\em mo\+Ordering} & The ordering convention of the resulting integrals, see enum M\+O\+Ordering. This only affects I\+WL output. \\
+\hline
+{\em output\+Type} & The storage format of the transformed integrals, see enum Output\+Type \\
+\hline
+{\em frozen\+Orbitals} & Which orbitals are to be excluded from the transformation, see enum Frozen\+Orbitals \\
+\hline
+{\em initialize} & Whether to initialize during construction or not. Useful if some options need to be tweaked before initialization. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classpsi_1_1_t_p_d_m_back_transform_a2c6ef8ed232f71dbd235cfec99c0f08b}\label{classpsi_1_1_t_p_d_m_back_transform_a2c6ef8ed232f71dbd235cfec99c0f08b}} 
+\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}!backtransform\+\_\+density@{backtransform\+\_\+density}}
+\index{backtransform\+\_\+density@{backtransform\+\_\+density}!psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+\subsubsection{\texorpdfstring{backtransform\+\_\+density()}{backtransform\_density()}}
+{\footnotesize\ttfamily void T\+P\+D\+M\+Back\+Transform\+::backtransform\+\_\+density (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Back-\/transform the MO 2-\/\+R\+DM to AO This is a modified version of \mbox{\hyperlink{classpsi_1_1_t_p_d_m_back_transform_a2c6ef8ed232f71dbd235cfec99c0f08b}{backtransform\+\_\+density()}} of Psi4 libtrans. \mbox{\Hypertarget{classpsi_1_1_t_p_d_m_back_transform_a4143c3efc0247dda9bfc8cea00b81c2d}\label{classpsi_1_1_t_p_d_m_back_transform_a4143c3efc0247dda9bfc8cea00b81c2d}} 
+\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}!backtransform\+\_\+tpdm\+\_\+restricted@{backtransform\+\_\+tpdm\+\_\+restricted}}
+\index{backtransform\+\_\+tpdm\+\_\+restricted@{backtransform\+\_\+tpdm\+\_\+restricted}!psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+\subsubsection{\texorpdfstring{backtransform\+\_\+tpdm\+\_\+restricted()}{backtransform\_tpdm\_restricted()}}
+{\footnotesize\ttfamily void T\+P\+D\+M\+Back\+Transform\+::backtransform\+\_\+tpdm\+\_\+restricted (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Back-\/transform MO 2-\/\+R\+DM using restricted formalism (a copy of Psi4 libtrans) 
+
+\mbox{\Hypertarget{classpsi_1_1_t_p_d_m_back_transform_a5a3988253310d2705630ec8f4aae5e31}\label{classpsi_1_1_t_p_d_m_back_transform_a5a3988253310d2705630ec8f4aae5e31}} 
+\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}!backtransform\+\_\+tpdm\+\_\+unrestricted@{backtransform\+\_\+tpdm\+\_\+unrestricted}}
+\index{backtransform\+\_\+tpdm\+\_\+unrestricted@{backtransform\+\_\+tpdm\+\_\+unrestricted}!psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+\subsubsection{\texorpdfstring{backtransform\+\_\+tpdm\+\_\+unrestricted()}{backtransform\_tpdm\_unrestricted()}}
+{\footnotesize\ttfamily void T\+P\+D\+M\+Back\+Transform\+::backtransform\+\_\+tpdm\+\_\+unrestricted (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Back-\/transform MO 2-\/\+R\+DM using unrestricted formalism (a copy of Psi4 libtrans) 
+
+\mbox{\Hypertarget{classpsi_1_1_t_p_d_m_back_transform_a0a6e7b4afda5fe697f961e6301bea794}\label{classpsi_1_1_t_p_d_m_back_transform_a0a6e7b4afda5fe697f961e6301bea794}} 
+\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}!presort\+\_\+mo\+\_\+tpdm\+\_\+restricted@{presort\+\_\+mo\+\_\+tpdm\+\_\+restricted}}
+\index{presort\+\_\+mo\+\_\+tpdm\+\_\+restricted@{presort\+\_\+mo\+\_\+tpdm\+\_\+restricted}!psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+\subsubsection{\texorpdfstring{presort\+\_\+mo\+\_\+tpdm\+\_\+restricted()}{presort\_mo\_tpdm\_restricted()}}
+{\footnotesize\ttfamily void T\+P\+D\+M\+Back\+Transform\+::presort\+\_\+mo\+\_\+tpdm\+\_\+restricted (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Presort MO 2-\/\+R\+DM using restricted formalism (indexing change of Psi4) 
+
+\mbox{\Hypertarget{classpsi_1_1_t_p_d_m_back_transform_a8870b94142cc7d7226745f834f234ad4}\label{classpsi_1_1_t_p_d_m_back_transform_a8870b94142cc7d7226745f834f234ad4}} 
+\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}!presort\+\_\+mo\+\_\+tpdm\+\_\+unrestricted@{presort\+\_\+mo\+\_\+tpdm\+\_\+unrestricted}}
+\index{presort\+\_\+mo\+\_\+tpdm\+\_\+unrestricted@{presort\+\_\+mo\+\_\+tpdm\+\_\+unrestricted}!psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+\subsubsection{\texorpdfstring{presort\+\_\+mo\+\_\+tpdm\+\_\+unrestricted()}{presort\_mo\_tpdm\_unrestricted()}}
+{\footnotesize\ttfamily void T\+P\+D\+M\+Back\+Transform\+::presort\+\_\+mo\+\_\+tpdm\+\_\+unrestricted (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Presort MO 2-\/\+R\+DM using unrestricted formalism (indexing change of Psi4) 
+
+\mbox{\Hypertarget{classpsi_1_1_t_p_d_m_back_transform_adfa9267d945476f9490bc6c512a03fb3}\label{classpsi_1_1_t_p_d_m_back_transform_adfa9267d945476f9490bc6c512a03fb3}} 
+\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}!set\+\_\+\+Ca\+\_\+additional@{set\+\_\+\+Ca\+\_\+additional}}
+\index{set\+\_\+\+Ca\+\_\+additional@{set\+\_\+\+Ca\+\_\+additional}!psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+\subsubsection{\texorpdfstring{set\+\_\+\+Ca\+\_\+additional()}{set\_Ca\_additional()}}
+{\footnotesize\ttfamily void psi\+::\+T\+P\+D\+M\+Back\+Transform\+::set\+\_\+\+Ca\+\_\+additional (\begin{DoxyParamCaption}\item[{Shared\+Matrix}]{Ca }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set additional orbital coefficients. 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classpsi_1_1_t_p_d_m_back_transform_a5cc1fd173565060a44911109c9436ad8}\label{classpsi_1_1_t_p_d_m_back_transform_a5cc1fd173565060a44911109c9436ad8}} 
+\index{psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}!Ca\+\_\+forte\+\_\+@{Ca\+\_\+forte\+\_\+}}
+\index{Ca\+\_\+forte\+\_\+@{Ca\+\_\+forte\+\_\+}!psi\+::\+T\+P\+D\+M\+Back\+Transform@{psi\+::\+T\+P\+D\+M\+Back\+Transform}}
+\subsubsection{\texorpdfstring{Ca\+\_\+forte\+\_\+}{Ca\_forte\_}}
+{\footnotesize\ttfamily Shared\+Matrix psi\+::\+T\+P\+D\+M\+Back\+Transform\+::\+Ca\+\_\+forte\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+Additional orbital coefficients, different from wavefunction e.\+g., M\+C\+S\+CF with frozen HF orbitals 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/gradient\+\_\+tpdm/\mbox{\hyperlink{backtransform__tpdm_8h}{backtransform\+\_\+tpdm.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/gradient\+\_\+tpdm/\mbox{\hyperlink{backtransform__tpdm_8cc}{backtransform\+\_\+tpdm.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/gradient\+\_\+tpdm/\mbox{\hyperlink{integraltransform__tpdm__restricted_8cc}{integraltransform\+\_\+tpdm\+\_\+restricted.\+cc}}\item 
+/\+Users/fevange/\+Source/forte/src/gradient\+\_\+tpdm/\mbox{\hyperlink{integraltransform__tpdm__unrestricted_8cc}{integraltransform\+\_\+tpdm\+\_\+unrestricted.\+cc}}\end{DoxyCompactItemize}

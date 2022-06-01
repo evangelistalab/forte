@@ -1,0 +1,24 @@
+2022-05-30:14:24:04,595 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0, 0, 2, 1, 1], 'D_CONVERGENCE': 1e-06, 'E_CONVERGENCE': 1e-08, 'G_CONVERGENCE': 'GAU_VERYTIGHT', 'MAXITER': 100, 'FINDIF__POINTS': 5, 'REFERENCE': 'ROHF', 'SOCC': [1, 0, 0, 0, 0, 0, 0, 0], 'function_kwargs': {}}
+2022-05-30:14:24:04,597 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=cc-pvdz, molecule=N2p, nre=22.74533624809649
+2022-05-30:14:24:05,367 INFO     [psi4.driver.driver:502] Return energy(): -108.58182681324993
+2022-05-30:14:24:05,383 INFO     [psi4.driver.task_planner:270] PLANNING FD:  dermode=(1, 0) keywords={'DOCC': [2, 0, 0, 0, 0, 2, 1, 1], 'D_CONVERGENCE': 1e-06, 'E_CONVERGENCE': 1e-08, 'G_CONVERGENCE': 'GAU_VERYTIGHT', 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 100, 'FINDIF__POINTS': 5, 'REFERENCE': 'ROHF', 'SOCC': [1, 0, 0, 0, 0, 0, 0, 0], 'function_kwargs': {}} findif_kw={'findif_stencil_size': 5, 'findif_step_size': 0.005, 'findif_verbose': 1} kw={'ref_wfn': <psi4.core.ROHF object at 0x12bd374f0>, 'opt_iter': True}
+2022-05-30:14:24:05,384 INFO     [psi4.driver.driver_findif:258] 
+         ----------------------------------------------------------
+                                   FINDIF
+                     R. A. King and Jonathon Misiewicz
+         ----------------------------------------------------------
+
+
+2022-05-30:14:24:05,384 INFO     [psi4.driver.driver_findif:267]   Using finite-differences of energies to determine gradients.
+    Generating geometries for use with 5-point formula.
+    Displacement size will be 5.00e-03.
+
+2022-05-30:14:24:05,384 INFO     [psi4.driver.driver_findif:286]     Number of atoms is 2.
+    Number of symmetric SALCs is 1.
+    Translations projected? 1. Rotations projected? 1.
+
+2022-05-30:14:24:05,384 INFO     [psi4.driver.driver_findif:362]     Number of geometries (including reference) is 5.
+
+2022-05-30:14:24:06,213 INFO     [psi4.driver.task_base:154] <<< JSON launch ... d2h 22.74533624809649
+2022-05-30:14:24:06,610 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0, 0, 2, 1, 1], 'D_CONVERGENCE': 1e-06, 'E_CONVERGENCE': 1e-08, 'G_CONVERGENCE': 'GAU_VERYTIGHT', 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 100, 'PARENT_SYMMETRY': 'D2H', 'FINDIF__POINTS': 5, 'REFERENCE': 'ROHF', 'SOCC': [1, 0, 0, 0, 0, 0, 0, 0], 'function_kwargs': {}}
+2022-05-30:14:24:06,612 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=cc-pvdz, molecule=N2p, nre=22.74533624809649

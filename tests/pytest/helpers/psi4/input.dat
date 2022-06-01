@@ -1,0 +1,12 @@
+molecule{
+    H
+    F 1 1.0
+    symmetry c1
+}
+
+set scf_type pk
+set mp2_type conv
+set basis 6-31G
+set e_convergence 11
+set d_convergence 6
+energy('mp2')

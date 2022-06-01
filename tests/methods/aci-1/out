@@ -1,0 +1,1381 @@
+
+
+  Module FORTE Options:
+  ----------------------------------------------------------------------------
+  ACI_ADD_AIMED_DEGENERATE          => TRUE            
+  ACI_APPROXIMATE_RDM               => FALSE           
+  ACI_AVERAGE_OFFSET                => 0               
+  ACI_CONVERGENCE                   => 1e-09           
+  ACI_LOW_MEM_SCREENING             => FALSE           
+  ACI_MAX_MEM                       => 1000            
+  ACI_NBATCH                        => 0               
+  ACI_NFROZEN_CORE                  => 0               
+  ACI_NO                            => FALSE           
+  ACI_NO_THRESHOLD                  => 0.02            
+  ACI_N_AVERAGE                     => 1               
+  ACI_PQ_FUNCTION                   => AVERAGE         
+  ACI_PRESCREEN_THRESHOLD           => 1e-12           
+  ACI_PRINT_NO                      => TRUE            
+  ACI_PRINT_REFS                    => FALSE           
+  ACI_PRINT_WEIGHTS                 => FALSE           
+  ACI_REF_RELAX                     => FALSE           
+  ACI_RELAXED_SPIN                  => FALSE           
+  ACI_RELAX_SIGMA                   => 0.01            
+  ACI_ROOTS_PER_CORE                => 1               
+  ACI_SCALE_SIGMA                   => 0.5             
+  ACI_SCREEN_ALG                    => AVERAGE         
+  ACI_SPIN_PROJECTION               => 0               
+  ACI_SPIN_TOL                      => 0.02            
+  ACTIVE                            => (empty)         
+  ACTIVE_GUESS_SIZE                 => 1000            
+  ACTIVE_REF_TYPE                   => CAS             
+  ACTIVE_SPACE_SOLVER               => NONE            
+  AO_DSRG_MRPT2                     => FALSE           
+  ASCI_CDET                         => 200             
+  ASCI_E_CONVERGENCE                => 1e-05           
+  ASCI_PRESCREEN_THRESHOLD          => 1e-12           
+  ASCI_TDET                         => 2000            
+  AVAS                              => FALSE           
+  AVAS_DIAGONALIZE                  => TRUE            
+  AVAS_NUM_ACTIVE                   => 0               
+  AVAS_NUM_ACTIVE_OCC               => 0               
+  AVAS_NUM_ACTIVE_VIR               => 0               
+  AVAS_SIGMA                        => 0.98            
+  AVG_STATE                         => [  ]            
+  AVG_WEIGHT                        => [  ]            
+  BASIS                             => (empty)         
+  BASIS_RELATIVISTIC                => (empty)         
+  CALC_TYPE                         => SS              
+  CASSCF_CI_FREQ                    => 1               
+  CASSCF_CI_SOLVER                  => CAS             
+  CASSCF_CI_STEP                    => FALSE           
+  CASSCF_CI_STEP_START              => -1              
+  CASSCF_DEBUG_PRINTING             => FALSE           
+  CASSCF_DIIS_FREQ                  => 1               
+  CASSCF_DIIS_MAX_VEC               => 8               
+  CASSCF_DIIS_NORM                  => 0.001           
+  CASSCF_DIIS_START                 => 3               
+  CASSCF_DO_DIIS                    => TRUE            
+  CASSCF_E_CONVERGENCE              => 1e-06           
+  CASSCF_G_CONVERGENCE              => 0.0001          
+  CASSCF_MAXITER                    => 30              
+  CASSCF_MAX_ROTATION               => 0.5             
+  CASSCF_MULTIPLICITY               => 0               
+  CASSCF_REFERENCE                  => FALSE           
+  CASSCF_SCALE_ROTATION             => TRUE            
+  CASSCF_SOSCF                      => FALSE           
+  CCVV_ALGORITHM                    => FLY_AMBIT       
+  CCVV_BATCH_NUMBER                 => -1              
+  CCVV_SOURCE                       => NORMAL          
+  CHARGE                            => 0               
+  CHOLESKY_TOLERANCE                => (empty)         
+  CINO                              => FALSE           
+  CINO_AUTO                         => FALSE           
+  CINO_NROOT                        => 1               
+  CINO_ROOTS_PER_IRREP              => [  ]            
+  CINO_THRESHOLD                    => 0.99            
+  CINO_TYPE                         => CIS             
+  CORRELATION_SOLVER                => NONE            
+  CORR_LEVEL                        => PT2             
+  DERTYPE                           => (empty)         
+  DF_BASIS_MP2                      => (empty)         
+  DF_INTS_IO                        => (empty)         
+  DIAG_ALGORITHM                    => SPARSE          
+  DIIS_MAX_VECS                     => (empty)         
+  DIIS_MIN_VECS                     => (empty)         
+  DL_COLLAPSE_PER_ROOT              => 2               
+  DL_GUESS_SIZE                     => 50              
+  DL_MAXITER                        => 100             
+  DL_SUBSPACE_PER_ROOT              => 10              
+  DSRGPT                            => TRUE            
+  DSRG_DIIS_FREQ                    => 1               
+  DSRG_DIIS_MAX_VEC                 => 6               
+  DSRG_DIIS_MIN_VEC                 => 2               
+  DSRG_DIIS_START                   => 2               
+  DSRG_DIPOLE                       => FALSE           
+  DSRG_DUMP_AMPS                    => FALSE           
+  DSRG_HBAR_SEQ                     => FALSE           
+  DSRG_MAXITER                      => 50              
+  DSRG_MRPT2_DEBUG                  => FALSE           
+  DSRG_MRPT3_BATCHED                => FALSE           
+  DSRG_MULTI_STATE                  => SA_FULL         
+  DSRG_NIVO                         => FALSE           
+  DSRG_POWER                        => 2               
+  DSRG_PT2_H0TH                     => FDIAG           
+  DSRG_READ_AMPS                    => FALSE           
+  DSRG_RESTART_AMPS                 => TRUE            
+  DSRG_RSC_NCOMM                    => 20              
+  DSRG_RSC_THRESHOLD                => 1e-12           
+  DSRG_S                            => 1e+10           
+  DSRG_TRANS_TYPE                   => UNITARY         
+  DWMS_ALGORITHM                    => SA              
+  DWMS_CORRLV                       => PT2             
+  DWMS_DELTA_AMP                    => FALSE           
+  DWMS_E_CONVERGENCE                => 1e-07           
+  DWMS_ITERATE                      => FALSE           
+  DWMS_MAXITER                      => 10              
+  DWMS_REFERENCE                    => CASCI           
+  DWMS_ZETA                         => 0               
+  D_CONVERGENCE                     => (empty)         
+  EMBEDDING                         => FALSE           
+  EMBEDDING_ADJUST_B_DOCC           => 0               
+  EMBEDDING_ADJUST_B_UOCC           => 0               
+  EMBEDDING_CUTOFF_METHOD           => THRESHOLD       
+  EMBEDDING_REFERENCE               => CASSCF          
+  EMBEDDING_SEMICANONICALIZE_ACTIVE => TRUE            
+  EMBEDDING_SEMICANONICALIZE_FROZEN => TRUE            
+  EMBEDDING_THRESHOLD               => 0.5             
+  EMBEDDING_VIRTUAL_SPACE           => ASET            
+  E_CONVERGENCE                     => (empty)         
+  FCIMO_ACTV_TYPE                   => COMPLETE        
+  FCIMO_CISD_NOHF                   => TRUE            
+  FCIMO_IPEA                        => NONE            
+  FCIMO_PRINT_CIVEC                 => 0.05            
+  FCI_MAXITER                       => 30              
+  FCI_TEST_RDMS                     => FALSE           
+  FORCE_DIAG_METHOD                 => FALSE           
+  FORM_HBAR3                        => FALSE           
+  FORM_MBAR3                        => FALSE           
+  FROZEN_DOCC                       => (empty)         
+  FROZEN_UOCC                       => (empty)         
+  FULL_MRPT2                        => FALSE           
+  GAMMA                             => 1               
+  IGNORE_MEMORY_WARNINGS            => FALSE           
+  INTEGRAL_SCREENING                => 1e-12           
+  INTERNAL_AMP                      => NONE            
+  INTERNAL_AMP_SELECT               => AUTO            
+  INTRUDER_TAMP                     => 0.1             
+  INTS_TOLERANCE                    => (empty)         
+  INT_TYPE                          => CONVENTIONAL    
+  ISA_B                             => 0.02            
+  JOB_TYPE                          => NEWDRIVER       
+  LOCALIZE                          => PIPEK_MEZEY     
+  LOCALIZE_SPACE                    => [  ]            
+  MAXITER                           => (empty)         
+  MAXITER_RELAX_REF                 => 15              
+  MEMORY_SUMMARY                    => FALSE           
+  MINAO_BASIS                       => (empty)         
+  MONITOR_SA_SOLUTION               => FALSE           
+  MRCINO                            => FALSE           
+  MRCINO_AUTO                       => FALSE           
+  MRCINO_NROOT                      => 1               
+  MRCINO_ROOTS_PER_IRREP            => [  ]            
+  MRCINO_THRESHOLD                  => 0.99            
+  MRCINO_TYPE                       => CIS             
+  MS                                => 0               
+  MULTIPLICITY                      => 0               
+  NAT_ACT                           => FALSE           
+  NAT_ORBS_PRINT                    => FALSE           
+  NROOT                             => 1               
+  NROOTPI                           => [  ]            
+  NTAMP                             => 15              
+  NTRIAL_PER_ROOT                   => 10              
+  NUM_A_DOCC                        => 0               
+  NUM_A_UOCC                        => 0               
+  N_GUESS_VEC                       => 10              
+  OPTIMIZE_FROZEN_CORE              => FALSE           
+  ORBITAL_TYPE                      => CANONICAL       
+  ORB_ROTATION_ALGORITHM            => DIAGONAL        
+  PAO_FIX_VIRTUAL_NUMBER            => FALSE           
+  PAO_THRESHOLD                     => 1e-08           
+  PCI_ADAPTIVE_BETA                 => FALSE           
+  PCI_CHEBYSHEV_ORDER               => 5               
+  PCI_COLINEAR_THRESHOLD            => 1e-06           
+  PCI_DL_COLLAPSE_PER_ROOT          => 2               
+  PCI_DL_SUBSPACE_PER_ROOT          => 8               
+  PCI_DYNAMIC_PRESCREENING          => FALSE           
+  PCI_ENERGY_ESTIMATE_FREQ          => 1               
+  PCI_ENERGY_ESTIMATE_THRESHOLD     => 1e-06           
+  PCI_EVAR_MAX_ERROR                => 0               
+  PCI_E_CONVERGENCE                 => 1e-08           
+  PCI_FAST_EVAR                     => FALSE           
+  PCI_FUNCTIONAL                    => MAX             
+  PCI_FUNCTIONAL_ORDER              => 1               
+  PCI_GENERATOR                     => WALL-CHEBYSHEV  
+  PCI_GUESS_SPAWNING_THRESHOLD      => -1              
+  PCI_INITIATOR_APPROX              => FALSE           
+  PCI_INITIATOR_APPROX_FACTOR       => 1               
+  PCI_KRYLOV_ORDER                  => 5               
+  PCI_MAXBETA                       => 1000            
+  PCI_MAX_DAVIDSON_ITER             => 12              
+  PCI_MAX_GUESS_SIZE                => 10000           
+  PCI_NROOT                         => 1               
+  PCI_PERTURB_ANALYSIS              => FALSE           
+  PCI_POST_DIAGONALIZE              => FALSE           
+  PCI_PRINT_FULL_WAVEFUNCTION       => FALSE           
+  PCI_REFERENCE_SPAWNING            => FALSE           
+  PCI_R_CONVERGENCE                 => 1               
+  PCI_SCHWARZ_PRESCREENING          => FALSE           
+  PCI_SIMPLE_PRESCREENING           => FALSE           
+  PCI_SPAWNING_THRESHOLD            => 0.001           
+  PCI_STOP_HIGHER_NEW_LOW           => FALSE           
+  PCI_SYMM_APPROX_H                 => FALSE           
+  PCI_TAU                           => 1               
+  PCI_USE_INTER_NORM                => FALSE           
+  PCI_USE_SHIFT                     => FALSE           
+  PCI_VAR_ESTIMATE                  => FALSE           
+  PI_ACTIVE_SPACE                   => FALSE           
+  PRINT                             => (empty)         
+  PRINT_1BODY_EVALS                 => FALSE           
+  PRINT_DENOM2                      => FALSE           
+  PRINT_IAOS                        => TRUE            
+  PRINT_INTS                        => FALSE           
+  PRINT_NO                          => FALSE           
+  PRINT_TIME_PROFILE                => FALSE           
+  PT2_MAX_MEM                       => 1               
+  REFERENCE                         => (empty)         
+  RELAX_E_CONVERGENCE               => 1e-08           
+  RELAX_REF                         => NONE            
+  RESTRICTED_DOCC                   => (empty)         
+  RESTRICTED_DOCC_JK                => TRUE            
+  RESTRICTED_UOCC                   => (empty)         
+  ROOT                              => 0               
+  ROOT_SYM                          => 0               
+  ROTATE_MOS                        => [  ]            
+  R_CONVERGENCE                     => (empty)         
+  SCF_TYPE                          => (empty)         
+  SCI_CORE_EX                       => FALSE           
+  SCI_DIRECT_RDMS                   => FALSE           
+  SCI_ENFORCE_SPIN_COMPLETE         => TRUE            
+  SCI_ENFORCE_SPIN_COMPLETE_P       => FALSE           
+  SCI_EXCITED_ALGORITHM             => NONE            
+  SCI_FIRST_ITER_ROOTS              => FALSE           
+  SCI_MAX_CYCLE                     => 20              
+  SCI_PREITERATIONS                 => 0               
+  SCI_PROJECT_OUT_SPIN_CONTAMINANTS => TRUE            
+  SCI_QUIET_MODE                    => FALSE           
+  SCI_SAVE_FINAL_WFN                => FALSE           
+  SCI_TEST_RDMS                     => FALSE           
+  SEMI_CANONICAL                    => TRUE            
+  SIGMA                             => 0.01            
+  SIGMA_VECTOR_MAX_MEMORY           => 67108864        
+  SMART_DSRG_S                      => DSRG_S          
+  SOURCE                            => STANDARD        
+  SPIN_ANALYSIS                     => FALSE           
+  SPIN_AVG_DENSITY                  => FALSE           
+  SPIN_BASIS                        => LOCAL           
+  SPIN_MAT_TO_FILE                  => FALSE           
+  SPIN_PROJECT_FULL                 => FALSE           
+  SPIN_TEST                         => FALSE           
+  SRG_COMM                          => STANDARD        
+  SRG_DT                            => 0.001           
+  SRG_ODEINT                        => FEHLBERG78      
+  SRG_ODEINT_ABSERR                 => 1e-12           
+  SRG_ODEINT_RELERR                 => 1e-12           
+  SRG_SMAX                          => 10              
+  SUBSPACE                          => [  ]            
+  T1_AMP                            => DSRG            
+  TAYLOR_THRESHOLD                  => 3               
+  THREEPDC                          => MK              
+  THREEPDC_ALGORITHM                => CORE            
+  THREE_MRPT2_TIMINGS               => FALSE           
+  TWOPDC                            => MK              
+  T_ALGORITHM                       => DSRG            
+  UNPAIRED_DENSITY                  => FALSE           
+  USE_DMRGSCF                       => FALSE           
+
+
+
+  Module SCF Options:
+  ----------------------------------------------------------------------------
+
+  Module = SCF
+  Key = SCF_TYPE
+  Value = pk
+
+ Got A 
+
+
+  Module SCF Options:
+  ----------------------------------------------------------------------------
+  SCF_TYPE => PK      !
+  Module = SCF
+  Key = REFERENCE
+  Value = rohf
+
+ Got A 
+
+Scratch directory: /tmp/
+
+*** tstart() called on CHE-FEVANGE-01I (2)
+*** at Sat Jul 11 19:27:16 2020
+
+   => Loading Basis Set <=
+
+    Name: DZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry LI         line    20 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/dz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                             ROHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         LI           0.000000000000     0.000000000000    -1.000000000000     7.016003436600
+         LI           0.000000000000     0.000000000000     1.000000000000     7.016003436600
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
+  Rotational constants: A = ************  B =  36016.16030  C =  36016.16030 [MHz]
+  Nuclear repulsion =    2.381297448014999
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 6
+  Nalpha       = 3
+  Nbeta        = 3
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is GWH.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: DZ
+    Blend: DZ
+    Number of shells: 12
+    Number of basis function: 20
+    Number of Cartesian functions: 20
+    Spherical Harmonics?: false
+    Max angular momentum: 1
+
+   => Loading Basis Set <=
+
+    Name: (DZ AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-2 entry LI         line    54 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             26
+      Number of atomic orbitals:        20
+      Number of basis functions:        20
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 44310 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 6.5960170734E-03.
+  Reciprocal condition number of the overlap matrix is 1.7658990716E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Generalized Wolfsberg-Helmholtz.
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         6       6       1       1       1       0
+     B1g        0       0       0       0       0       0
+     B2g        2       2       0       0       0       0
+     B3g        2       2       0       0       0       0
+     Au         0       0       0       0       0       0
+     B1u        6       6       2       2       2       0
+     B2u        2       2       0       0       0       0
+     B3u        2       2       0       0       0       0
+   -------------------------------------------------------
+    Total      20      20       3       3       3       0
+   -------------------------------------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+    Occupation by irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]
+
+   @DF-ROHF iter   1:   -13.86328592226885   -1.38633e+01   9.38367e-02 DIIS
+   @DF-ROHF iter   2:   -14.83151256644319   -9.68227e-01   5.72002e-03 DIIS
+   @DF-ROHF iter   3:   -14.83897650580172   -7.46394e-03   1.05869e-03 DIIS
+   @DF-ROHF iter   4:   -14.83973801876335   -7.61513e-04   3.60085e-04 DIIS
+   @DF-ROHF iter   5:   -14.83984352118056   -1.05502e-04   5.52298e-05 DIIS
+   @DF-ROHF iter   6:   -14.83984643708391   -2.91590e-06   9.06964e-06 DIIS
+   @DF-ROHF iter   7:   -14.83984651201009   -7.49262e-08   4.58804e-08 DIIS
+   @DF-ROHF iter   8:   -14.83984651201064   -5.50671e-13   5.89178e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -2.470948     1B1u   -2.465815     2Ag    -0.194380  
+
+    Singly Occupied:                                                      
+
+    
+
+    Virtual:                                                              
+
+       2B1u    0.012721     1B2u    0.026034     1B3u    0.026034  
+       3Ag     0.049075     1B2g    0.069563     1B3g    0.069563  
+       3B1u    0.080420     4Ag     0.130086     2B2u    0.137741  
+       2B3u    0.137741     5Ag     0.171764     2B2g    0.242777  
+       2B3g    0.242777     4B1u    0.246004     5B1u    0.480486  
+       6Ag     1.695539     6B1u    1.801802  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]
+
+  @DF-ROHF Final Energy:   -14.83984651201064
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              2.3812974480149989
+    One-Electron Energy =                 -24.1800018801031698
+    Two-Electron Energy =                   6.9588579200775307
+    Total Energy =                        -14.8398465120106415
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on CHE-FEVANGE-01I (2) at Sat Jul 11 19:27:17 2020
+Module time:
+	user time   =       0.33 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.33 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+
+  Module SCF Options:
+  ----------------------------------------------------------------------------
+  ACTIVE                        => (empty)       
+  BASIS                         => DZ           !
+  BASIS_GUESS                   => (empty)       
+  BASIS_RELATIVISTIC            => (empty)       
+  BENCH                         => (empty)       
+  CC_TYPE                       => (empty)       
+  CHOLESKY_TOLERANCE            => (empty)       
+  CI_TYPE                       => (empty)       
+  CUBEPROP_BASIS_FUNCTIONS      => (empty)       
+  CUBEPROP_FILEPATH             => (empty)       
+  CUBEPROP_ISOCONTOUR_THRESHOLD => (empty)       
+  CUBEPROP_ORBITALS             => (empty)       
+  CUBEPROP_TASKS                => (empty)       
+  CUBIC_BASIS_TOLERANCE         => (empty)       
+  CUBIC_BLOCK_MAX_POINTS        => (empty)       
+  CUBIC_GRID_OVERAGE            => (empty)       
+  CUBIC_GRID_SPACING            => (empty)       
+  DAMPING_CONVERGENCE           => (empty)       
+  DAMPING_PERCENTAGE            => (empty)       
+  DEBUG                         => (empty)       
+  DERTYPE                       => (empty)       
+  DFT_ALPHA                     => (empty)       
+  DFT_ALPHA_C                   => (empty)       
+  DFT_BASIS_TOLERANCE           => (empty)       
+  DFT_BLOCK_MAX_POINTS          => (empty)       
+  DFT_BLOCK_MAX_RADIUS          => (empty)       
+  DFT_BLOCK_MIN_POINTS          => (empty)       
+  DFT_BLOCK_SCHEME              => (empty)       
+  DFT_BS_RADIUS_ALPHA           => (empty)       
+  DFT_DENSITY_TOLERANCE         => (empty)       
+  DFT_DISPERSION_PARAMETERS     => (empty)       
+  DFT_GRAC_ALPHA                => (empty)       
+  DFT_GRAC_BETA                 => (empty)       
+  DFT_GRAC_C_FUNC               => (empty)       
+  DFT_GRAC_SHIFT                => (empty)       
+  DFT_GRAC_X_FUNC               => (empty)       
+  DFT_GRID_NAME                 => (empty)       
+  DFT_NUCLEAR_SCHEME            => (empty)       
+  DFT_OMEGA                     => (empty)       
+  DFT_OMEGA_C                   => (empty)       
+  DFT_PRUNING_ALPHA             => (empty)       
+  DFT_PRUNING_SCHEME            => (empty)       
+  DFT_RADIAL_POINTS             => (empty)       
+  DFT_RADIAL_SCHEME             => (empty)       
+  DFT_SPHERICAL_POINTS          => (empty)       
+  DFT_SPHERICAL_SCHEME          => (empty)       
+  DFT_V2_RHO_CUTOFF             => (empty)       
+  DFT_VV10_B                    => (empty)       
+  DFT_VV10_C                    => (empty)       
+  DFT_VV10_POSTSCF              => (empty)       
+  DFT_VV10_RADIAL_POINTS        => (empty)       
+  DFT_VV10_RHO_CUTOFF           => (empty)       
+  DFT_VV10_SPHERICAL_POINTS     => (empty)       
+  DFT_WEIGHTS_TOLERANCE         => (empty)       
+  DF_BASIS_CC                   => (empty)       
+  DF_BASIS_GUESS                => (empty)       
+  DF_BASIS_SAD                  => (empty)       
+  DF_BASIS_SCF                  => (empty)       
+  DF_BUMP_R0                    => (empty)       
+  DF_BUMP_R1                    => (empty)       
+  DF_DOMAINS                    => (empty)       
+  DF_FITTING_CONDITION          => (empty)       
+  DF_INTS_IO                    => (empty)       
+  DF_INTS_NUM_THREADS           => (empty)       
+  DF_METRIC                     => (empty)       
+  DF_SCF_GUESS                  => (empty)       
+  DF_THETA                      => (empty)       
+  DIE_IF_NOT_CONVERGED          => (empty)       
+  DIIS                          => (empty)       
+  DIIS_MAX_VECS                 => (empty)       
+  DIIS_MIN_VECS                 => (empty)       
+  DIIS_RMS_ERROR                => (empty)       
+  DIIS_START                    => (empty)       
+  DISTRIBUTED_MATRIX            => (empty)       
+  DKH_ORDER                     => (empty)       
+  DOCC                          => (empty)       
+  D_CONVERGENCE                 => 1e-08        !
+  EXTERN                        => (empty)       
+  EXTERNAL_POTENTIAL_SYMMETRY   => (empty)       
+  E_CONVERGENCE                 => 1e-10        !
+  FAIL_ON_MAXITER               => (empty)       
+  FOLLOW_STEP_INCREMENT         => (empty)       
+  FOLLOW_STEP_SCALE             => (empty)       
+  FRAC_DIIS                     => (empty)       
+  FRAC_LOAD                     => (empty)       
+  FRAC_OCC                      => (empty)       
+  FRAC_RENORMALIZE              => (empty)       
+  FRAC_START                    => (empty)       
+  FRAC_VAL                      => (empty)       
+  FREEZE_CORE                   => (empty)       
+  FROZEN_DOCC                   => (empty)       
+  FROZEN_UOCC                   => (empty)       
+  GUESS                         => GWH          !
+  GUESS_MIX                     => (empty)       
+  GUESS_PERSIST                 => (empty)       
+  INTEGRAL_PACKAGE              => (empty)       
+  INTS_TOLERANCE                => (empty)       
+  LITERAL_CFOUR                 => (empty)       
+  LOCAL_CONVERGENCE             => (empty)       
+  LOCAL_MAXITER                 => (empty)       
+  MAT_NUM_COLUMN_PRINT          => (empty)       
+  MAXITER                       => (empty)       
+  MAX_ATTEMPTS                  => (empty)       
+  MAX_MEM_BUF                   => (empty)       
+  MOLDEN_WITH_VIRTUAL           => (empty)       
+  MOLDEN_WRITE                  => (empty)       
+  MOM_OCC                       => (empty)       
+  MOM_START                     => (empty)       
+  MOM_VIR                       => (empty)       
+  MP2_TYPE                      => (empty)       
+  MP_TYPE                       => (empty)       
+  NL_DISPERSION_PARAMETERS      => (empty)       
+  NUM_FROZEN_DOCC               => (empty)       
+  NUM_FROZEN_UOCC               => (empty)       
+  NUM_GPUS                      => (empty)       
+  ONEPOT_GRID_READ              => (empty)       
+  PARALLEL                      => (empty)       
+  PARENT_SYMMETRY               => (empty)       
+  PCM                           => (empty)       
+  PE                            => (empty)       
+  PERTURB_DIPOLE                => (empty)       
+  PERTURB_H                     => (empty)       
+  PERTURB_MAGNITUDE             => (empty)       
+  PERTURB_WITH                  => (empty)       
+  PHI_POINTS                    => (empty)       
+  PK_ALGO                       => (empty)       
+  PK_ALL_NONSYM                 => (empty)       
+  PK_MAX_BUCKETS                => (empty)       
+  PK_NO_INCORE                  => (empty)       
+  PRINT                         => (empty)       
+  PRINT_BASIS                   => (empty)       
+  PRINT_MOS                     => (empty)       
+  PRINT_NOONS                   => (empty)       
+  PROCESS_GRID                  => (empty)       
+  PROPERTIES                    => (empty)       
+  PROPERTIES_ORIGIN             => (empty)       
+  PUREAM                        => (empty)       
+  QCHF                          => (empty)       
+  QC_MODULE                     => (empty)       
+  RADIUS                        => (empty)       
+  RAS1                          => (empty)       
+  RAS2                          => (empty)       
+  RAS3                          => (empty)       
+  RAS4                          => (empty)       
+  REFERENCE                     => ROHF         !
+  RELATIVISTIC                  => (empty)       
+  RESTRICTED_DOCC               => (empty)       
+  RESTRICTED_UOCC               => (empty)       
+  R_POINTS                      => (empty)       
+  SAD_CHOL_TOLERANCE            => (empty)       
+  SAD_D_CONVERGENCE             => (empty)       
+  SAD_E_CONVERGENCE             => (empty)       
+  SAD_FRAC_OCC                  => (empty)       
+  SAD_MAXITER                   => (empty)       
+  SAD_PRINT                     => (empty)       
+  SAD_SCF_TYPE                  => (empty)       
+  SAD_SPIN_AVERAGE              => (empty)       
+  SAPT                          => (empty)       
+  SAVE_JK                       => (empty)       
+  SAVE_UHF_NOS                  => (empty)       
+  SCF_MEM_SAFETY_FACTOR         => (empty)       
+  SCF_PROPERTIES                => (empty)       
+  SCF_TYPE                      => PK           !
+  SOCC                          => (empty)       
+  SOSCF                         => (empty)       
+  SOSCF_CONV                    => (empty)       
+  SOSCF_MAX_ITER                => (empty)       
+  SOSCF_MIN_ITER                => (empty)       
+  SOSCF_PRINT                   => (empty)       
+  SOSCF_START_CONVERGENCE       => (empty)       
+  STABILITY_ANALYSIS            => (empty)       
+  S_CHOLESKY_TOLERANCE          => (empty)       
+  S_ORTHOGONALIZATION           => (empty)       
+  S_TOLERANCE                   => (empty)       
+  TDSCF_GUESS                   => (empty)       
+  TDSCF_MAXITER                 => (empty)       
+  TDSCF_PRINT                   => (empty)       
+  TDSCF_R_CONVERGENCE           => (empty)       
+  TDSCF_STATES                  => (empty)       
+  TDSCF_TDA                     => (empty)       
+  TDSCF_TRIPLETS                => (empty)       
+  THETA_POINTS                  => (empty)       
+  THICKNESS                     => (empty)       
+  TILE_SZ                       => (empty)       
+  UHF_NOONS                     => (empty)       
+  WCOMBINE                      => (empty)       
+  WFN                           => (empty)       
+  WRITER_FILE_LABEL             => (empty)       
+
+  Module = SCF
+  Key = GUESS
+  Value = AUTO
+
+ Got A 
+
+
+  Module SCF Options:
+  ----------------------------------------------------------------------------
+  ACTIVE                        => (empty)       
+  BASIS                         => DZ           !
+  BASIS_GUESS                   => (empty)       
+  BASIS_RELATIVISTIC            => (empty)       
+  BENCH                         => (empty)       
+  CC_TYPE                       => (empty)       
+  CHOLESKY_TOLERANCE            => (empty)       
+  CI_TYPE                       => (empty)       
+  CUBEPROP_BASIS_FUNCTIONS      => (empty)       
+  CUBEPROP_FILEPATH             => (empty)       
+  CUBEPROP_ISOCONTOUR_THRESHOLD => (empty)       
+  CUBEPROP_ORBITALS             => (empty)       
+  CUBEPROP_TASKS                => (empty)       
+  CUBIC_BASIS_TOLERANCE         => (empty)       
+  CUBIC_BLOCK_MAX_POINTS        => (empty)       
+  CUBIC_GRID_OVERAGE            => (empty)       
+  CUBIC_GRID_SPACING            => (empty)       
+  DAMPING_CONVERGENCE           => (empty)       
+  DAMPING_PERCENTAGE            => (empty)       
+  DEBUG                         => (empty)       
+  DERTYPE                       => (empty)       
+  DFT_ALPHA                     => (empty)       
+  DFT_ALPHA_C                   => (empty)       
+  DFT_BASIS_TOLERANCE           => (empty)       
+  DFT_BLOCK_MAX_POINTS          => (empty)       
+  DFT_BLOCK_MAX_RADIUS          => (empty)       
+  DFT_BLOCK_MIN_POINTS          => (empty)       
+  DFT_BLOCK_SCHEME              => (empty)       
+  DFT_BS_RADIUS_ALPHA           => (empty)       
+  DFT_DENSITY_TOLERANCE         => (empty)       
+  DFT_DISPERSION_PARAMETERS     => (empty)       
+  DFT_GRAC_ALPHA                => (empty)       
+  DFT_GRAC_BETA                 => (empty)       
+  DFT_GRAC_C_FUNC               => (empty)       
+  DFT_GRAC_SHIFT                => (empty)       
+  DFT_GRAC_X_FUNC               => (empty)       
+  DFT_GRID_NAME                 => (empty)       
+  DFT_NUCLEAR_SCHEME            => (empty)       
+  DFT_OMEGA                     => (empty)       
+  DFT_OMEGA_C                   => (empty)       
+  DFT_PRUNING_ALPHA             => (empty)       
+  DFT_PRUNING_SCHEME            => (empty)       
+  DFT_RADIAL_POINTS             => (empty)       
+  DFT_RADIAL_SCHEME             => (empty)       
+  DFT_SPHERICAL_POINTS          => (empty)       
+  DFT_SPHERICAL_SCHEME          => (empty)       
+  DFT_V2_RHO_CUTOFF             => (empty)       
+  DFT_VV10_B                    => (empty)       
+  DFT_VV10_C                    => (empty)       
+  DFT_VV10_POSTSCF              => (empty)       
+  DFT_VV10_RADIAL_POINTS        => (empty)       
+  DFT_VV10_RHO_CUTOFF           => (empty)       
+  DFT_VV10_SPHERICAL_POINTS     => (empty)       
+  DFT_WEIGHTS_TOLERANCE         => (empty)       
+  DF_BASIS_CC                   => (empty)       
+  DF_BASIS_GUESS                => (empty)       
+  DF_BASIS_SAD                  => (empty)       
+  DF_BASIS_SCF                  => (empty)       
+  DF_BUMP_R0                    => (empty)       
+  DF_BUMP_R1                    => (empty)       
+  DF_DOMAINS                    => (empty)       
+  DF_FITTING_CONDITION          => (empty)       
+  DF_INTS_IO                    => (empty)       
+  DF_INTS_NUM_THREADS           => (empty)       
+  DF_METRIC                     => (empty)       
+  DF_SCF_GUESS                  => (empty)       
+  DF_THETA                      => (empty)       
+  DIE_IF_NOT_CONVERGED          => (empty)       
+  DIIS                          => (empty)       
+  DIIS_MAX_VECS                 => (empty)       
+  DIIS_MIN_VECS                 => (empty)       
+  DIIS_RMS_ERROR                => (empty)       
+  DIIS_START                    => (empty)       
+  DISTRIBUTED_MATRIX            => (empty)       
+  DKH_ORDER                     => (empty)       
+  DOCC                          => (empty)       
+  D_CONVERGENCE                 => 1e-08        !
+  EXTERN                        => (empty)       
+  EXTERNAL_POTENTIAL_SYMMETRY   => (empty)       
+  E_CONVERGENCE                 => 1e-10        !
+  FAIL_ON_MAXITER               => (empty)       
+  FOLLOW_STEP_INCREMENT         => (empty)       
+  FOLLOW_STEP_SCALE             => (empty)       
+  FRAC_DIIS                     => (empty)       
+  FRAC_LOAD                     => (empty)       
+  FRAC_OCC                      => (empty)       
+  FRAC_RENORMALIZE              => (empty)       
+  FRAC_START                    => (empty)       
+  FRAC_VAL                      => (empty)       
+  FREEZE_CORE                   => (empty)       
+  FROZEN_DOCC                   => (empty)       
+  FROZEN_UOCC                   => (empty)       
+  GUESS                         => GWH          !
+  GUESS_MIX                     => (empty)       
+  GUESS_PERSIST                 => (empty)       
+  INTEGRAL_PACKAGE              => (empty)       
+  INTS_TOLERANCE                => (empty)       
+  LITERAL_CFOUR                 => (empty)       
+  LOCAL_CONVERGENCE             => (empty)       
+  LOCAL_MAXITER                 => (empty)       
+  MAT_NUM_COLUMN_PRINT          => (empty)       
+  MAXITER                       => (empty)       
+  MAX_ATTEMPTS                  => (empty)       
+  MAX_MEM_BUF                   => (empty)       
+  MOLDEN_WITH_VIRTUAL           => (empty)       
+  MOLDEN_WRITE                  => (empty)       
+  MOM_OCC                       => (empty)       
+  MOM_START                     => (empty)       
+  MOM_VIR                       => (empty)       
+  MP2_TYPE                      => (empty)       
+  MP_TYPE                       => (empty)       
+  NL_DISPERSION_PARAMETERS      => (empty)       
+  NUM_FROZEN_DOCC               => (empty)       
+  NUM_FROZEN_UOCC               => (empty)       
+  NUM_GPUS                      => (empty)       
+  ONEPOT_GRID_READ              => (empty)       
+  PARALLEL                      => (empty)       
+  PARENT_SYMMETRY               => (empty)       
+  PCM                           => (empty)       
+  PE                            => (empty)       
+  PERTURB_DIPOLE                => (empty)       
+  PERTURB_H                     => (empty)       
+  PERTURB_MAGNITUDE             => (empty)       
+  PERTURB_WITH                  => (empty)       
+  PHI_POINTS                    => (empty)       
+  PK_ALGO                       => (empty)       
+  PK_ALL_NONSYM                 => (empty)       
+  PK_MAX_BUCKETS                => (empty)       
+  PK_NO_INCORE                  => (empty)       
+  PRINT                         => (empty)       
+  PRINT_BASIS                   => (empty)       
+  PRINT_MOS                     => (empty)       
+  PRINT_NOONS                   => (empty)       
+  PROCESS_GRID                  => (empty)       
+  PROPERTIES                    => (empty)       
+  PROPERTIES_ORIGIN             => (empty)       
+  PUREAM                        => (empty)       
+  QCHF                          => (empty)       
+  QC_MODULE                     => (empty)       
+  RADIUS                        => (empty)       
+  RAS1                          => (empty)       
+  RAS2                          => (empty)       
+  RAS3                          => (empty)       
+  RAS4                          => (empty)       
+  REFERENCE                     => ROHF         !
+  RELATIVISTIC                  => (empty)       
+  RESTRICTED_DOCC               => (empty)       
+  RESTRICTED_UOCC               => (empty)       
+  R_POINTS                      => (empty)       
+  SAD_CHOL_TOLERANCE            => (empty)       
+  SAD_D_CONVERGENCE             => (empty)       
+  SAD_E_CONVERGENCE             => (empty)       
+  SAD_FRAC_OCC                  => (empty)       
+  SAD_MAXITER                   => (empty)       
+  SAD_PRINT                     => (empty)       
+  SAD_SCF_TYPE                  => (empty)       
+  SAD_SPIN_AVERAGE              => (empty)       
+  SAPT                          => (empty)       
+  SAVE_JK                       => (empty)       
+  SAVE_UHF_NOS                  => (empty)       
+  SCF_MEM_SAFETY_FACTOR         => (empty)       
+  SCF_PROPERTIES                => (empty)       
+  SCF_TYPE                      => PK           !
+  SOCC                          => (empty)       
+  SOSCF                         => (empty)       
+  SOSCF_CONV                    => (empty)       
+  SOSCF_MAX_ITER                => (empty)       
+  SOSCF_MIN_ITER                => (empty)       
+  SOSCF_PRINT                   => (empty)       
+  SOSCF_START_CONVERGENCE       => (empty)       
+  STABILITY_ANALYSIS            => (empty)       
+  S_CHOLESKY_TOLERANCE          => (empty)       
+  S_ORTHOGONALIZATION           => (empty)       
+  S_TOLERANCE                   => (empty)       
+  TDSCF_GUESS                   => (empty)       
+  TDSCF_MAXITER                 => (empty)       
+  TDSCF_PRINT                   => (empty)       
+  TDSCF_R_CONVERGENCE           => (empty)       
+  TDSCF_STATES                  => (empty)       
+  TDSCF_TDA                     => (empty)       
+  TDSCF_TRIPLETS                => (empty)       
+  THETA_POINTS                  => (empty)       
+  THICKNESS                     => (empty)       
+  TILE_SZ                       => (empty)       
+  UHF_NOONS                     => (empty)       
+  WCOMBINE                      => (empty)       
+  WFN                           => (empty)       
+  WRITER_FILE_LABEL             => (empty)       
+
+  Module = SCF
+  Key = DF_INTS_IO
+  Value = NONE
+
+ Got A 
+
+
+  Module SCF Options:
+  ----------------------------------------------------------------------------
+  ACTIVE                        => (empty)       
+  BASIS                         => DZ           !
+  BASIS_GUESS                   => (empty)       
+  BASIS_RELATIVISTIC            => (empty)       
+  BENCH                         => (empty)       
+  CC_TYPE                       => (empty)       
+  CHOLESKY_TOLERANCE            => (empty)       
+  CI_TYPE                       => (empty)       
+  CUBEPROP_BASIS_FUNCTIONS      => (empty)       
+  CUBEPROP_FILEPATH             => (empty)       
+  CUBEPROP_ISOCONTOUR_THRESHOLD => (empty)       
+  CUBEPROP_ORBITALS             => (empty)       
+  CUBEPROP_TASKS                => (empty)       
+  CUBIC_BASIS_TOLERANCE         => (empty)       
+  CUBIC_BLOCK_MAX_POINTS        => (empty)       
+  CUBIC_GRID_OVERAGE            => (empty)       
+  CUBIC_GRID_SPACING            => (empty)       
+  DAMPING_CONVERGENCE           => (empty)       
+  DAMPING_PERCENTAGE            => (empty)       
+  DEBUG                         => (empty)       
+  DERTYPE                       => (empty)       
+  DFT_ALPHA                     => (empty)       
+  DFT_ALPHA_C                   => (empty)       
+  DFT_BASIS_TOLERANCE           => (empty)       
+  DFT_BLOCK_MAX_POINTS          => (empty)       
+  DFT_BLOCK_MAX_RADIUS          => (empty)       
+  DFT_BLOCK_MIN_POINTS          => (empty)       
+  DFT_BLOCK_SCHEME              => (empty)       
+  DFT_BS_RADIUS_ALPHA           => (empty)       
+  DFT_DENSITY_TOLERANCE         => (empty)       
+  DFT_DISPERSION_PARAMETERS     => (empty)       
+  DFT_GRAC_ALPHA                => (empty)       
+  DFT_GRAC_BETA                 => (empty)       
+  DFT_GRAC_C_FUNC               => (empty)       
+  DFT_GRAC_SHIFT                => (empty)       
+  DFT_GRAC_X_FUNC               => (empty)       
+  DFT_GRID_NAME                 => (empty)       
+  DFT_NUCLEAR_SCHEME            => (empty)       
+  DFT_OMEGA                     => (empty)       
+  DFT_OMEGA_C                   => (empty)       
+  DFT_PRUNING_ALPHA             => (empty)       
+  DFT_PRUNING_SCHEME            => (empty)       
+  DFT_RADIAL_POINTS             => (empty)       
+  DFT_RADIAL_SCHEME             => (empty)       
+  DFT_SPHERICAL_POINTS          => (empty)       
+  DFT_SPHERICAL_SCHEME          => (empty)       
+  DFT_V2_RHO_CUTOFF             => (empty)       
+  DFT_VV10_B                    => (empty)       
+  DFT_VV10_C                    => (empty)       
+  DFT_VV10_POSTSCF              => (empty)       
+  DFT_VV10_RADIAL_POINTS        => (empty)       
+  DFT_VV10_RHO_CUTOFF           => (empty)       
+  DFT_VV10_SPHERICAL_POINTS     => (empty)       
+  DFT_WEIGHTS_TOLERANCE         => (empty)       
+  DF_BASIS_CC                   => (empty)       
+  DF_BASIS_GUESS                => (empty)       
+  DF_BASIS_SAD                  => (empty)       
+  DF_BASIS_SCF                  => (empty)       
+  DF_BUMP_R0                    => (empty)       
+  DF_BUMP_R1                    => (empty)       
+  DF_DOMAINS                    => (empty)       
+  DF_FITTING_CONDITION          => (empty)       
+  DF_INTS_IO                    => (empty)       
+  DF_INTS_NUM_THREADS           => (empty)       
+  DF_METRIC                     => (empty)       
+  DF_SCF_GUESS                  => (empty)       
+  DF_THETA                      => (empty)       
+  DIE_IF_NOT_CONVERGED          => (empty)       
+  DIIS                          => (empty)       
+  DIIS_MAX_VECS                 => (empty)       
+  DIIS_MIN_VECS                 => (empty)       
+  DIIS_RMS_ERROR                => (empty)       
+  DIIS_START                    => (empty)       
+  DISTRIBUTED_MATRIX            => (empty)       
+  DKH_ORDER                     => (empty)       
+  DOCC                          => (empty)       
+  D_CONVERGENCE                 => 1e-08        !
+  EXTERN                        => (empty)       
+  EXTERNAL_POTENTIAL_SYMMETRY   => (empty)       
+  E_CONVERGENCE                 => 1e-10        !
+  FAIL_ON_MAXITER               => (empty)       
+  FOLLOW_STEP_INCREMENT         => (empty)       
+  FOLLOW_STEP_SCALE             => (empty)       
+  FRAC_DIIS                     => (empty)       
+  FRAC_LOAD                     => (empty)       
+  FRAC_OCC                      => (empty)       
+  FRAC_RENORMALIZE              => (empty)       
+  FRAC_START                    => (empty)       
+  FRAC_VAL                      => (empty)       
+  FREEZE_CORE                   => (empty)       
+  FROZEN_DOCC                   => (empty)       
+  FROZEN_UOCC                   => (empty)       
+  GUESS                         => GWH          !
+  GUESS_MIX                     => (empty)       
+  GUESS_PERSIST                 => (empty)       
+  INTEGRAL_PACKAGE              => (empty)       
+  INTS_TOLERANCE                => (empty)       
+  LITERAL_CFOUR                 => (empty)       
+  LOCAL_CONVERGENCE             => (empty)       
+  LOCAL_MAXITER                 => (empty)       
+  MAT_NUM_COLUMN_PRINT          => (empty)       
+  MAXITER                       => (empty)       
+  MAX_ATTEMPTS                  => (empty)       
+  MAX_MEM_BUF                   => (empty)       
+  MOLDEN_WITH_VIRTUAL           => (empty)       
+  MOLDEN_WRITE                  => (empty)       
+  MOM_OCC                       => (empty)       
+  MOM_START                     => (empty)       
+  MOM_VIR                       => (empty)       
+  MP2_TYPE                      => (empty)       
+  MP_TYPE                       => (empty)       
+  NL_DISPERSION_PARAMETERS      => (empty)       
+  NUM_FROZEN_DOCC               => (empty)       
+  NUM_FROZEN_UOCC               => (empty)       
+  NUM_GPUS                      => (empty)       
+  ONEPOT_GRID_READ              => (empty)       
+  PARALLEL                      => (empty)       
+  PARENT_SYMMETRY               => (empty)       
+  PCM                           => (empty)       
+  PE                            => (empty)       
+  PERTURB_DIPOLE                => (empty)       
+  PERTURB_H                     => (empty)       
+  PERTURB_MAGNITUDE             => (empty)       
+  PERTURB_WITH                  => (empty)       
+  PHI_POINTS                    => (empty)       
+  PK_ALGO                       => (empty)       
+  PK_ALL_NONSYM                 => (empty)       
+  PK_MAX_BUCKETS                => (empty)       
+  PK_NO_INCORE                  => (empty)       
+  PRINT                         => (empty)       
+  PRINT_BASIS                   => (empty)       
+  PRINT_MOS                     => (empty)       
+  PRINT_NOONS                   => (empty)       
+  PROCESS_GRID                  => (empty)       
+  PROPERTIES                    => (empty)       
+  PROPERTIES_ORIGIN             => (empty)       
+  PUREAM                        => (empty)       
+  QCHF                          => (empty)       
+  QC_MODULE                     => (empty)       
+  RADIUS                        => (empty)       
+  RAS1                          => (empty)       
+  RAS2                          => (empty)       
+  RAS3                          => (empty)       
+  RAS4                          => (empty)       
+  REFERENCE                     => ROHF         !
+  RELATIVISTIC                  => (empty)       
+  RESTRICTED_DOCC               => (empty)       
+  RESTRICTED_UOCC               => (empty)       
+  R_POINTS                      => (empty)       
+  SAD_CHOL_TOLERANCE            => (empty)       
+  SAD_D_CONVERGENCE             => (empty)       
+  SAD_E_CONVERGENCE             => (empty)       
+  SAD_FRAC_OCC                  => (empty)       
+  SAD_MAXITER                   => (empty)       
+  SAD_PRINT                     => (empty)       
+  SAD_SCF_TYPE                  => (empty)       
+  SAD_SPIN_AVERAGE              => (empty)       
+  SAPT                          => (empty)       
+  SAVE_JK                       => (empty)       
+  SAVE_UHF_NOS                  => (empty)       
+  SCF_MEM_SAFETY_FACTOR         => (empty)       
+  SCF_PROPERTIES                => (empty)       
+  SCF_TYPE                      => PK           !
+  SOCC                          => (empty)       
+  SOSCF                         => (empty)       
+  SOSCF_CONV                    => (empty)       
+  SOSCF_MAX_ITER                => (empty)       
+  SOSCF_MIN_ITER                => (empty)       
+  SOSCF_PRINT                   => (empty)       
+  SOSCF_START_CONVERGENCE       => (empty)       
+  STABILITY_ANALYSIS            => (empty)       
+  S_CHOLESKY_TOLERANCE          => (empty)       
+  S_ORTHOGONALIZATION           => (empty)       
+  S_TOLERANCE                   => (empty)       
+  TDSCF_GUESS                   => (empty)       
+  TDSCF_MAXITER                 => (empty)       
+  TDSCF_PRINT                   => (empty)       
+  TDSCF_R_CONVERGENCE           => (empty)       
+  TDSCF_STATES                  => (empty)       
+  TDSCF_TDA                     => (empty)       
+  TDSCF_TRIPLETS                => (empty)       
+  THETA_POINTS                  => (empty)       
+  THICKNESS                     => (empty)       
+  TILE_SZ                       => (empty)       
+  UHF_NOONS                     => (empty)       
+  WCOMBINE                      => (empty)       
+  WFN                           => (empty)       
+  WRITER_FILE_LABEL             => (empty)       
+
+  Module = SCF
+  Key = REFERENCE
+  Value = ROHF
+
+ Got A 
+
+
+  Module FORTE Options:
+  ----------------------------------------------------------------------------
+  ACI_ADD_AIMED_DEGENERATE          => TRUE            
+  ACI_APPROXIMATE_RDM               => FALSE           
+  ACI_AVERAGE_OFFSET                => 0               
+  ACI_CONVERGENCE                   => 1e-09           
+  ACI_LOW_MEM_SCREENING             => FALSE           
+  ACI_MAX_MEM                       => 1000            
+  ACI_NBATCH                        => 0               
+  ACI_NFROZEN_CORE                  => 0               
+  ACI_NO                            => FALSE           
+  ACI_NO_THRESHOLD                  => 0.02            
+  ACI_N_AVERAGE                     => 1               
+  ACI_PQ_FUNCTION                   => AVERAGE         
+  ACI_PRESCREEN_THRESHOLD           => 1e-12           
+  ACI_PRINT_NO                      => TRUE            
+  ACI_PRINT_REFS                    => FALSE           
+  ACI_PRINT_WEIGHTS                 => FALSE           
+  ACI_REF_RELAX                     => FALSE           
+  ACI_RELAXED_SPIN                  => FALSE           
+  ACI_RELAX_SIGMA                   => 0.01            
+  ACI_ROOTS_PER_CORE                => 1               
+  ACI_SCALE_SIGMA                   => 0.5             
+  ACI_SCREEN_ALG                    => AVERAGE         
+  ACI_SPIN_PROJECTION               => 0               
+  ACI_SPIN_TOL                      => 0.02            
+  ACTIVE                            => (empty)         
+  ACTIVE_GUESS_SIZE                 => 1000            
+  ACTIVE_REF_TYPE                   => CAS             
+  ACTIVE_SPACE_SOLVER               => NONE            
+  AO_DSRG_MRPT2                     => FALSE           
+  ASCI_CDET                         => 200             
+  ASCI_E_CONVERGENCE                => 1e-05           
+  ASCI_PRESCREEN_THRESHOLD          => 1e-12           
+  ASCI_TDET                         => 2000            
+  AVAS                              => FALSE           
+  AVAS_DIAGONALIZE                  => TRUE            
+  AVAS_NUM_ACTIVE                   => 0               
+  AVAS_NUM_ACTIVE_OCC               => 0               
+  AVAS_NUM_ACTIVE_VIR               => 0               
+  AVAS_SIGMA                        => 0.98            
+  AVG_STATE                         => [  ]            
+  AVG_WEIGHT                        => [  ]            
+  BASIS                             => DZ             !
+  BASIS_RELATIVISTIC                => (empty)         
+  CALC_TYPE                         => SS              
+  CASSCF_CI_FREQ                    => 1               
+  CASSCF_CI_SOLVER                  => CAS             
+  CASSCF_CI_STEP                    => FALSE           
+  CASSCF_CI_STEP_START              => -1              
+  CASSCF_DEBUG_PRINTING             => FALSE           
+  CASSCF_DIIS_FREQ                  => 1               
+  CASSCF_DIIS_MAX_VEC               => 8               
+  CASSCF_DIIS_NORM                  => 0.001           
+  CASSCF_DIIS_START                 => 3               
+  CASSCF_DO_DIIS                    => TRUE            
+  CASSCF_E_CONVERGENCE              => 1e-06           
+  CASSCF_G_CONVERGENCE              => 0.0001          
+  CASSCF_MAXITER                    => 30              
+  CASSCF_MAX_ROTATION               => 0.5             
+  CASSCF_MULTIPLICITY               => 0               
+  CASSCF_REFERENCE                  => FALSE           
+  CASSCF_SCALE_ROTATION             => TRUE            
+  CASSCF_SOSCF                      => FALSE           
+  CCVV_ALGORITHM                    => FLY_AMBIT       
+  CCVV_BATCH_NUMBER                 => -1              
+  CCVV_SOURCE                       => NORMAL          
+  CHARGE                            => 0               
+  CHOLESKY_TOLERANCE                => (empty)         
+  CINO                              => FALSE           
+  CINO_AUTO                         => FALSE           
+  CINO_NROOT                        => 1               
+  CINO_ROOTS_PER_IRREP              => [  ]            
+  CINO_THRESHOLD                    => 0.99            
+  CINO_TYPE                         => CIS             
+  CORRELATION_SOLVER                => NONE            
+  CORR_LEVEL                        => PT2             
+  DERTYPE                           => (empty)         
+  DF_BASIS_MP2                      => (empty)         
+  DF_INTS_IO                        => (empty)         
+  DIAG_ALGORITHM                    => SPARSE          
+  DIIS_MAX_VECS                     => (empty)         
+  DIIS_MIN_VECS                     => (empty)         
+  DL_COLLAPSE_PER_ROOT              => 2               
+  DL_GUESS_SIZE                     => 50              
+  DL_MAXITER                        => 100             
+  DL_SUBSPACE_PER_ROOT              => 10              
+  DSRGPT                            => TRUE            
+  DSRG_DIIS_FREQ                    => 1               
+  DSRG_DIIS_MAX_VEC                 => 6               
+  DSRG_DIIS_MIN_VEC                 => 2               
+  DSRG_DIIS_START                   => 2               
+  DSRG_DIPOLE                       => FALSE           
+  DSRG_DUMP_AMPS                    => FALSE           
+  DSRG_HBAR_SEQ                     => FALSE           
+  DSRG_MAXITER                      => 50              
+  DSRG_MRPT2_DEBUG                  => FALSE           
+  DSRG_MRPT3_BATCHED                => FALSE           
+  DSRG_MULTI_STATE                  => SA_FULL         
+  DSRG_NIVO                         => FALSE           
+  DSRG_POWER                        => 2               
+  DSRG_PT2_H0TH                     => FDIAG           
+  DSRG_READ_AMPS                    => FALSE           
+  DSRG_RESTART_AMPS                 => TRUE            
+  DSRG_RSC_NCOMM                    => 20              
+  DSRG_RSC_THRESHOLD                => 1e-12           
+  DSRG_S                            => 1e+10           
+  DSRG_TRANS_TYPE                   => UNITARY         
+  DWMS_ALGORITHM                    => SA              
+  DWMS_CORRLV                       => PT2             
+  DWMS_DELTA_AMP                    => FALSE           
+  DWMS_E_CONVERGENCE                => 1e-07           
+  DWMS_ITERATE                      => FALSE           
+  DWMS_MAXITER                      => 10              
+  DWMS_REFERENCE                    => CASCI           
+  DWMS_ZETA                         => 0               
+  D_CONVERGENCE                     => 1e-08          !
+  EMBEDDING                         => FALSE           
+  EMBEDDING_ADJUST_B_DOCC           => 0               
+  EMBEDDING_ADJUST_B_UOCC           => 0               
+  EMBEDDING_CUTOFF_METHOD           => THRESHOLD       
+  EMBEDDING_REFERENCE               => CASSCF          
+  EMBEDDING_SEMICANONICALIZE_ACTIVE => TRUE            
+  EMBEDDING_SEMICANONICALIZE_FROZEN => TRUE            
+  EMBEDDING_THRESHOLD               => 0.5             
+  EMBEDDING_VIRTUAL_SPACE           => ASET            
+  E_CONVERGENCE                     => 1e-10          !
+  FCIMO_ACTV_TYPE                   => COMPLETE        
+  FCIMO_CISD_NOHF                   => TRUE            
+  FCIMO_IPEA                        => NONE            
+  FCIMO_PRINT_CIVEC                 => 0.05            
+  FCI_MAXITER                       => 30              
+  FCI_TEST_RDMS                     => FALSE           
+  FORCE_DIAG_METHOD                 => FALSE           
+  FORM_HBAR3                        => FALSE           
+  FORM_MBAR3                        => FALSE           
+  FROZEN_DOCC                       => (empty)         
+  FROZEN_UOCC                       => (empty)         
+  FULL_MRPT2                        => FALSE           
+  GAMMA                             => 1               
+  IGNORE_MEMORY_WARNINGS            => FALSE           
+  INTEGRAL_SCREENING                => 1e-12           
+  INTERNAL_AMP                      => NONE            
+  INTERNAL_AMP_SELECT               => AUTO            
+  INTRUDER_TAMP                     => 0.1             
+  INTS_TOLERANCE                    => (empty)         
+  INT_TYPE                          => CONVENTIONAL    
+  ISA_B                             => 0.02            
+  JOB_TYPE                          => NEWDRIVER       
+  LOCALIZE                          => PIPEK_MEZEY     
+  LOCALIZE_SPACE                    => [  ]            
+  MAXITER                           => (empty)         
+  MAXITER_RELAX_REF                 => 15              
+  MEMORY_SUMMARY                    => FALSE           
+  MINAO_BASIS                       => (empty)         
+  MONITOR_SA_SOLUTION               => FALSE           
+  MRCINO                            => FALSE           
+  MRCINO_AUTO                       => FALSE           
+  MRCINO_NROOT                      => 1               
+  MRCINO_ROOTS_PER_IRREP            => [  ]            
+  MRCINO_THRESHOLD                  => 0.99            
+  MRCINO_TYPE                       => CIS             
+  MS                                => 0               
+  MULTIPLICITY                      => 0               
+  NAT_ACT                           => FALSE           
+  NAT_ORBS_PRINT                    => FALSE           
+  NROOT                             => 1               
+  NROOTPI                           => [  ]            
+  NTAMP                             => 15              
+  NTRIAL_PER_ROOT                   => 10              
+  NUM_A_DOCC                        => 0               
+  NUM_A_UOCC                        => 0               
+  N_GUESS_VEC                       => 10              
+  OPTIMIZE_FROZEN_CORE              => FALSE           
+  ORBITAL_TYPE                      => CANONICAL       
+  ORB_ROTATION_ALGORITHM            => DIAGONAL        
+  PAO_FIX_VIRTUAL_NUMBER            => FALSE           
+  PAO_THRESHOLD                     => 1e-08           
+  PCI_ADAPTIVE_BETA                 => FALSE           
+  PCI_CHEBYSHEV_ORDER               => 5               
+  PCI_COLINEAR_THRESHOLD            => 1e-06           
+  PCI_DL_COLLAPSE_PER_ROOT          => 2               
+  PCI_DL_SUBSPACE_PER_ROOT          => 8               
+  PCI_DYNAMIC_PRESCREENING          => FALSE           
+  PCI_ENERGY_ESTIMATE_FREQ          => 1               
+  PCI_ENERGY_ESTIMATE_THRESHOLD     => 1e-06           
+  PCI_EVAR_MAX_ERROR                => 0               
+  PCI_E_CONVERGENCE                 => 1e-08           
+  PCI_FAST_EVAR                     => FALSE           
+  PCI_FUNCTIONAL                    => MAX             
+  PCI_FUNCTIONAL_ORDER              => 1               
+  PCI_GENERATOR                     => WALL-CHEBYSHEV  
+  PCI_GUESS_SPAWNING_THRESHOLD      => -1              
+  PCI_INITIATOR_APPROX              => FALSE           
+  PCI_INITIATOR_APPROX_FACTOR       => 1               
+  PCI_KRYLOV_ORDER                  => 5               
+  PCI_MAXBETA                       => 1000            
+  PCI_MAX_DAVIDSON_ITER             => 12              
+  PCI_MAX_GUESS_SIZE                => 10000           
+  PCI_NROOT                         => 1               
+  PCI_PERTURB_ANALYSIS              => FALSE           
+  PCI_POST_DIAGONALIZE              => FALSE           
+  PCI_PRINT_FULL_WAVEFUNCTION       => FALSE           
+  PCI_REFERENCE_SPAWNING            => FALSE           
+  PCI_R_CONVERGENCE                 => 1               
+  PCI_SCHWARZ_PRESCREENING          => FALSE           
+  PCI_SIMPLE_PRESCREENING           => FALSE           
+  PCI_SPAWNING_THRESHOLD            => 0.001           
+  PCI_STOP_HIGHER_NEW_LOW           => FALSE           
+  PCI_SYMM_APPROX_H                 => FALSE           
+  PCI_TAU                           => 1               
+  PCI_USE_INTER_NORM                => FALSE           
+  PCI_USE_SHIFT                     => FALSE           
+  PCI_VAR_ESTIMATE                  => FALSE           
+  PI_ACTIVE_SPACE                   => FALSE           
+  PRINT                             => (empty)         
+  PRINT_1BODY_EVALS                 => FALSE           
+  PRINT_DENOM2                      => FALSE           
+  PRINT_IAOS                        => TRUE            
+  PRINT_INTS                        => FALSE           
+  PRINT_NO                          => FALSE           
+  PRINT_TIME_PROFILE                => FALSE           
+  PT2_MAX_MEM                       => 1               
+  REFERENCE                         => (empty)         
+  RELAX_E_CONVERGENCE               => 1e-08           
+  RELAX_REF                         => NONE            
+  RESTRICTED_DOCC                   => (empty)         
+  RESTRICTED_DOCC_JK                => TRUE            
+  RESTRICTED_UOCC                   => (empty)         
+  ROOT                              => 0               
+  ROOT_SYM                          => 0               
+  ROTATE_MOS                        => [  ]            
+  R_CONVERGENCE                     => (empty)         
+  SCF_TYPE                          => (empty)         
+  SCI_CORE_EX                       => FALSE           
+  SCI_DIRECT_RDMS                   => FALSE           
+  SCI_ENFORCE_SPIN_COMPLETE         => TRUE            
+  SCI_ENFORCE_SPIN_COMPLETE_P       => FALSE           
+  SCI_EXCITED_ALGORITHM             => NONE            
+  SCI_FIRST_ITER_ROOTS              => FALSE           
+  SCI_MAX_CYCLE                     => 20              
+  SCI_PREITERATIONS                 => 0               
+  SCI_PROJECT_OUT_SPIN_CONTAMINANTS => TRUE            
+  SCI_QUIET_MODE                    => FALSE           
+  SCI_SAVE_FINAL_WFN                => FALSE           
+  SCI_TEST_RDMS                     => FALSE           
+  SEMI_CANONICAL                    => TRUE            
+  SIGMA                             => 0.01            
+  SIGMA_VECTOR_MAX_MEMORY           => 67108864        
+  SMART_DSRG_S                      => DSRG_S          
+  SOURCE                            => STANDARD        
+  SPIN_ANALYSIS                     => FALSE           
+  SPIN_AVG_DENSITY                  => FALSE           
+  SPIN_BASIS                        => LOCAL           
+  SPIN_MAT_TO_FILE                  => FALSE           
+  SPIN_PROJECT_FULL                 => FALSE           
+  SPIN_TEST                         => FALSE           
+  SRG_COMM                          => STANDARD        
+  SRG_DT                            => 0.001           
+  SRG_ODEINT                        => FEHLBERG78      
+  SRG_ODEINT_ABSERR                 => 1e-12           
+  SRG_ODEINT_RELERR                 => 1e-12           
+  SRG_SMAX                          => 10              
+  SUBSPACE                          => [  ]            
+  T1_AMP                            => DSRG            
+  TAYLOR_THRESHOLD                  => 3               
+  THREEPDC                          => MK              
+  THREEPDC_ALGORITHM                => CORE            
+  THREE_MRPT2_TIMINGS               => FALSE           
+  TWOPDC                            => MK              
+  T_ALGORITHM                       => DSRG            
+  UNPAIRED_DENSITY                  => FALSE           
+  USE_DMRGSCF                       => FALSE           
+
+  Module = FORTE
+  Key = ACTIVE_SPACE_SOLVER
+  Value = aci
+
+ Got A 

@@ -1,0 +1,54 @@
+\hypertarget{pci_8h}{}\section{/\+Users/fevange/\+Source/forte/src/pci/pci.h File Reference}
+\label{pci_8h}\index{/\+Users/fevange/\+Source/forte/src/pci/pci.\+h@{/\+Users/fevange/\+Source/forte/src/pci/pci.\+h}}
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$functional$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/wavefunction.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/physconst.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fci/fci\+\_\+vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}forte-\/def.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/forte\+\_\+options.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/hash\+\_\+vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}integrals/integrals.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sparse\+\_\+ci/sparse\+\_\+ci\+\_\+solver.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sparse\+\_\+ci/determinant.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/state\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sci/sci.\+h\char`\"{}}\newline
+Include dependency graph for pci.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{pci_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=346pt]{pci_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classforte_1_1_projector_c_i}{forte\+::\+Projector\+CI}}
+\begin{DoxyCompactList}\small\item\em The Sparse\+Path\+Integral\+CI class This class implements an a sparse path-\/integral F\+CI algorithm. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+using \mbox{\hyperlink{namespaceforte_aee00ff2f656f0aa613d3f9f1ba01cad5}{forte\+::det\+\_\+hashvec}} = \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Determinant, Determinant\+::\+Hash $>$
+\begin{DoxyCompactList}\small\item\em A class to store sparse configuration interaction wave functions Stores a hash of determinants. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{namespaceforte_a99040cd0205d9e5fca84c0f210154b3c}{forte\+::\+Generator\+Type}} \{ \mbox{\hyperlink{namespaceforte_a99040cd0205d9e5fca84c0f210154b3cab1e7d8b444a60675fd38b1ce43cfa385}{forte\+::\+Wall\+Chebyshev\+Generator}}, 
+\mbox{\hyperlink{namespaceforte_a99040cd0205d9e5fca84c0f210154b3cac69b9f32915d8ea65b25f9c443b8653b}{forte\+::\+D\+L\+Generator}}
+ \}
+\end{DoxyCompactItemize}

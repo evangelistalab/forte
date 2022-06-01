@@ -12,33 +12,46 @@ Conventional integrals
 Conventional integrals are the default choice for Forte. When this
 option is selected, Forte will compute and store the two-electron
 integrals in the molecular orbital (MO) basis :math:`\phi_p`.
-:raw-latex:`\begin{equation}
-\langle pq | rs \rangle = \int dx_1 dx_2 \phi_p^*(x_1) \phi_q^*(x_2) r_{12}^{-1} \phi_r(x_1) \phi_s(x_2)
-\end{equation}`
+
+.. math::
+
+
+   \langle pq | rs \rangle = \int dx_1 dx_2 \phi_p^*(x_1) \phi_q^*(x_2) r_{12}^{-1} \phi_r(x_1) \phi_s(x_2)
 
 These integrals are computed with Psi4’s ``IntegralTrasform`` class and
 written to disk. Forte will store three copies of these integrals, the
 antisymmetrized alpha-alpha and beta-beta integrals
-:raw-latex:`\begin{equation}
-\langle p_\alpha q_\alpha \| r_\alpha s_\alpha \rangle,  \langle p_\beta q_\beta \| r_\beta s_\beta \rangle,
-\end{equation}` and the alpha-beta integrals (not antisymmetrized)
-:raw-latex:`\begin{equation}
-\langle p_\alpha q_\beta | r_\alpha s_\beta \rangle,
-\end{equation}` for all values of :math:`p, q, r, s`. Storage of these
-integrals has a memory cost equal to :math:`3 N^4`, where :math:`N` is
-the number of orbitals that are correlated (frozen core and virtual
-orbitals excluded). Therefore, conventional integrals are viable for
-computations with at most 100-200 orbitals. For larger bases, density
-Fitting and Cholesky decomposition are instead recommended.
+
+.. math::
+
+
+   \langle p_\alpha q_\alpha \| r_\alpha s_\alpha \rangle,  \langle p_\beta q_\beta \| r_\beta s_\beta \rangle,
+
+and the alpha-beta integrals (not antisymmetrized)
+
+.. math::
+
+
+   \langle p_\alpha q_\beta | r_\alpha s_\beta \rangle,
+
+for all values of :math:`p, q, r, s`. Storage of these integrals has a
+memory cost equal to :math:`3 N^4`, where :math:`N` is the number of
+orbitals that are correlated (frozen core and virtual orbitals
+excluded). Therefore, conventional integrals are viable for computations
+with at most 100-200 orbitals. For larger bases, density Fitting and
+Cholesky decomposition are instead recommended.
 
 Density Fitting (DF) and Cholesky Decomposition (CD)
 ----------------------------------------------------
 
 The density fitting and Cholesky decomposition methods approximate
 two-electron integrals as products of three-index tensors
-:math:`b_{pr}^{P}` :raw-latex:`\begin{equation}
-\langle pq | rs \rangle = \sum_P^M b_{pr}^{P} b_{qs}^{P}
-\end{equation}`
+:math:`b_{pr}^{P}`
+
+.. math::
+
+
+   \langle pq | rs \rangle = \sum_P^M b_{pr}^{P} b_{qs}^{P}
 
 where :math:`M` is a quantity of the order :math:`3 N`.
 
@@ -46,9 +59,11 @@ where :math:`M` is a quantity of the order :math:`3 N`.
 two-electron integrals, but the DF/CD literature usually adopts
 chemist’s notation. The main difference between DF and CD is in the way
 the B tensors are defined. In DF, the :math:`b` tensor is defined as
-:raw-latex:`\begin{equation}
-b_{pq}^{Q} = \sum_p (pq | P)[(P | Q)^{-1/2}]_{PQ}
-\end{equation}`
+
+.. math::
+
+
+   b_{pq}^{Q} = \sum_p (pq | P)[(P | Q)^{-1/2}]_{PQ}
 
 where the indices :math:`P` and :math:`Q` refer to the auxiliary basis
 set.

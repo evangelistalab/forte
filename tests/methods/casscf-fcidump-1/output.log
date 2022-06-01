@@ -1,0 +1,3 @@
+2022-05-31:17:34:08,185 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [5, 0, 1, 1], 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'MAXITER': 300, 'REFERENCE': 'RHF', 'SCF_TYPE': 'OUT_OF_CORE', 'function_kwargs': {}}
+2022-05-31:17:34:08,187 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=cc-pcvdz, molecule=CO, nre=22.51817917744681
+2022-05-31:17:34:10,749 INFO     [psi4.driver.driver:502] Return energy(): -112.87183486293357

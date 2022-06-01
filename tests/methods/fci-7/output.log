@@ -1,0 +1,24 @@
+2022-05-31:17:37:17,734 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [3, 0, 0, 0], 'E_CONVERGENCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [0, 0, 1, 0], 'function_kwargs': {}}
+2022-05-31:17:37:17,736 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=6-31g, molecule=default, nre=6.0
+2022-05-31:17:37:17,818 INFO     [psi4.driver.driver:502] Return energy(): -37.43945401822141
+2022-05-31:17:37:17,831 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [3, 0, 0, 0], 'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [0, 0, 1, 0], 'function_kwargs': {}}
+2022-05-31:17:37:17,833 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=6-31g, molecule=default, nre=6.0
+2022-05-31:17:37:17,992 INFO     [psi4.driver.driver:502] Return energy(): -37.49081328115689
+2022-05-31:17:37:18,6 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [3, 0, 0, 0], 'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [0, 0, 1, 0], 'function_kwargs': {}}
+2022-05-31:17:37:18,8 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=6-31g, molecule=default, nre=6.0
+2022-05-31:17:37:18,135 INFO     [psi4.driver.driver:502] Return energy(): -37.49081328115643
+2022-05-31:17:37:18,150 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0], 'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [1, 0, 1, 0], 'function_kwargs': {}}
+2022-05-31:17:37:18,151 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=6-31g, molecule=default, nre=6.0
+2022-05-31:17:37:18,237 INFO     [psi4.driver.driver:502] Return energy(): -37.06669349804285
+2022-05-31:17:37:18,251 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0], 'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [1, 0, 1, 0], 'function_kwargs': {}}
+2022-05-31:17:37:18,253 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=6-31g, molecule=default, nre=6.0
+2022-05-31:17:37:18,328 INFO     [psi4.driver.driver:502] Return energy(): -37.06669349804283
+2022-05-31:17:37:18,343 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0], 'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [1, 0, 1, 0], 'function_kwargs': {}}
+2022-05-31:17:37:18,344 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=6-31g, molecule=default, nre=6.0
+2022-05-31:17:37:18,451 INFO     [psi4.driver.driver:502] Return energy(): -37.088876452204374
+2022-05-31:17:37:18,466 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0], 'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [1, 0, 1, 0], 'function_kwargs': {}}
+2022-05-31:17:37:18,468 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=6-31g, molecule=default, nre=6.0
+2022-05-31:17:37:18,553 INFO     [psi4.driver.driver:502] Return energy(): -37.08887645220441
+2022-05-31:17:37:18,568 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0], 'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [1, 0, 1, 0], 'function_kwargs': {}}
+2022-05-31:17:37:18,569 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=6-31g, molecule=default, nre=6.0
+2022-05-31:17:37:18,650 INFO     [psi4.driver.driver:502] Return energy(): -37.08887645220433

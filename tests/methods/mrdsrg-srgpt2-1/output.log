@@ -1,0 +1,6 @@
+2022-05-31:17:48:25,310 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0], 'D_CONVERGENCE': 1e-12, 'E_CONVERGENCE': 1e-12, 'MAXITER': 300, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [1, 0, 0, 1], 'function_kwargs': {}}
+2022-05-31:17:48:25,312 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=anonymous0866a820, molecule=default, nre=3.0313826109838984
+2022-05-31:17:48:25,398 INFO     [psi4.driver.driver:502] Return energy(): -15.61154653214597
+2022-05-31:17:48:25,411 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [2, 0, 0, 0], 'D_CONVERGENCE': 1e-12, 'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'MAXITER': 300, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'PK', 'SOCC': [1, 0, 0, 1], 'function_kwargs': {}}
+2022-05-31:17:48:25,413 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=anonymous0866a820, molecule=default, nre=3.0313826109838984
+2022-05-31:17:48:55,661 INFO     [psi4.driver.driver:502] Return energy(): -15.502129577806853

@@ -1,0 +1,434 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 undefined 
+
+                         Git: Rev {master} 67a0d70 dirty
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, and M. H. Lechner
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Friday, 26 March 2021 08:42AM
+
+    Process ID: 57805
+    Host:       CHE-FEVANGE
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+molecule {
+     H 0.0 0.0 0.0
+     H 0.0 0.0 1.5
+     H 0.0 0.0 3.0
+     H 0.0 0.0 4.5   
+}
+
+energy('cisd/sto-3g')
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+Scratch directory: /tmp/
+
+*** tstart() called on CHE-FEVANGE
+*** at Fri Mar 26 08:42:35 2021
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-4 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         H            0.000000000000     0.000000000000    -2.250000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -0.750000000000     1.007825032230
+         H            0.000000000000     0.000000000000     0.750000000000     1.007825032230
+         H            0.000000000000     0.000000000000     2.250000000000     1.007825032230
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.48682  C =      1.48682 [cm^-1]
+  Rotational constants: A = ************  B =  44573.78724  C =  44573.78724 [MHz]
+  Nuclear repulsion =    1.528734164157778
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 4
+  Nalpha       = 2
+  Nbeta        = 2
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-08
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 4
+    Number of basis function: 4
+    Number of Cartesian functions: 4
+    Spherical Harmonics?: true
+    Max angular momentum: 0
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   4
+      Number of AO shells:               4
+      Number of primitives:             12
+      Number of atomic orbitals:         4
+      Number of basis functions:         4
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 110 doubles for integral storage.
+  We computed 55 shell quartets total.
+  Whereas there are 55 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 7.2325760871E-01.
+  Reciprocal condition number of the overlap matrix is 5.6648671936E-01.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     Ag         2       2 
+     B1g        0       0 
+     B2g        0       0 
+     B3g        0       0 
+     Au         0       0 
+     B1u        2       2 
+     B2u        0       0 
+     B3u        0       0 
+   -------------------------
+    Total       4       4
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:    -1.16040476578115   -1.16040e+00   0.00000e+00 
+   @RHF iter   1:    -1.82433896749236   -6.63934e-01   1.50853e-02 DIIS
+   @RHF iter   2:    -1.82839461012814   -4.05564e-03   5.82984e-03 DIIS
+   @RHF iter   3:    -1.82912862456388   -7.34014e-04   8.75367e-04 DIIS
+   @RHF iter   4:    -1.82913740745860   -8.78289e-06   1.56417e-05 DIIS
+   @RHF iter   5:    -1.82913741203198   -4.57338e-09   8.33619e-08 DIIS
+   @RHF iter   6:    -1.82913741203213   -1.43441e-13   3.87610e-10 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -0.429165     1B1u   -0.298356  
+
+    Virtual:                                                              
+
+       2Ag     0.132726     2B1u    0.359861  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     1,    0,    0,    0,    0,    1,    0,    0 ]
+
+  @RHF Final Energy:    -1.82913741203213
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              1.5287341641577781
+    One-Electron Energy =                  -5.2607015884685921
+    Two-Electron Energy =                   1.9028300122786876
+    Total Energy =                         -1.8291374120321264
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on CHE-FEVANGE at Fri Mar 26 08:42:35 2021
+Module time:
+	user time   =       0.34 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.34 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+ MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of threads:                 1
+      Number of atoms:                   4
+      Number of AO shells:               4
+      Number of SO shells:               2
+      Number of primitives:             12
+      Number of atomic orbitals:         4
+      Number of basis functions:         4
+
+      Number of irreps:                  8
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [   2    0    0    0    0    2    0    0 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 31 non-zero two-electron integrals.
+        Stored in file 33.
+
+
+*** tstart() called on CHE-FEVANGE
+*** at Fri Mar 26 08:42:35 2021
+
+        ==> Transform all two-electron integrals <==
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+*** tstop() called on CHE-FEVANGE at Fri Mar 26 08:42:35 2021
+Module time:
+	user time   =       0.00 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.36 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+*** tstart() called on CHE-FEVANGE
+*** at Fri Mar 26 08:42:35 2021
+
+
+        **********************************************************
+        *                                                        *
+        *                   CCSD Integral Sort                   *
+        *                                                        *
+        **********************************************************
+
+
+        CC integral sort will use                      0.00 mb
+
+        Number of (ab|cd) temporary files:                2
+        Number of (ab|ci) temporary files:                3
+        Starting temporary file number:                 270
+
+        Initial sort........done.
+
+        Sort (IJ|KL)........done.
+        Sort (IJ|KA) 1/2....done.
+        Sort (IJ|KA) 2/2....done.
+        Sort (IA|JB)........done.
+        Sort (IJ|AB)........done.
+        Sort (IA|BC) 1/3....done.
+        Sort (IA|BC) 2/3....done.
+        Sort (IA|BC) 3/3....done.
+        Sort (AB|CD) 1/2....done.
+        Sort (AB|CD) 2/2....done.
+
+
+*** tstop() called on CHE-FEVANGE at Fri Mar 26 08:42:35 2021
+Module time:
+	user time   =       0.01 seconds =       0.00 minutes
+	system time =       0.05 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.37 seconds =       0.01 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+*** tstart() called on CHE-FEVANGE
+*** at Fri Mar 26 08:42:35 2021
+
+
+
+        *******************************************************
+        *                                                     *
+        *                        CISD                         *
+        *      Singles Doubles Configuration Interaction      *
+        *                                                     *
+        *                   Eugene DePrince                   *
+        *                                                     *
+        *******************************************************
+
+
+
+  ==> Input parameters <==
+
+        Freeze core orbitals?                  no
+        Use frozen natural orbitals?           no
+        r_convergence:                  1.000e-07
+        e_convergence:                  1.000e-06
+        Number of DIIS vectors:                 8
+        Number of frozen core orbitals:         0
+        Number of active occupied orbitals:     2
+        Number of active virtual orbitals:      2
+        Number of frozen virtual orbitals:      0
+
+  ==> Memory <==
+
+        available memory =                            500.00 mb
+        minimum memory requirements for QCISD =         0.00 mb
+        (T) algorithm:                                  0.00 mb (low-memory)
+        memory requirements for QCISD(T) =              0.00 mb
+
+  ==> Define tiling <==
+
+        v(ab,cd) diagrams will be evaluated in   1 blocks.
+        v(ab,ci) diagrams will be evaluated in   1 blocks over ov2.
+        v(ab,ci) diagrams will be evaluated in   1 blocks over ov.
+
+  Allocate cpu memory (     0.00 mb).....done.
+  Initialize cpu memory..................done.
+
+  Begin CISD iterations
+
+   Iter  DIIS          Energy       d(Energy)          |d(T)|     time
+      0   0 1   -0.0864514188   -0.0864514188    0.2755627054        0
+      1   1 1   -0.1222590600   -0.0358076412    0.1143652045        1
+      2   2 1   -0.1439526128   -0.0216935529    0.0566915724        0
+      3   3 1   -0.1511347895   -0.0071821766    0.0150506478        0
+      4   4 1   -0.1516666608   -0.0005318713    0.0117330583        0
+      5   5 1   -0.1526237135   -0.0009570527    0.0040970379        0
+      6   6 1   -0.1526857897   -0.0000620762    0.0005046743        0
+      7   7 1   -0.1526865741   -0.0000007844    0.0001249776        0
+      8   8 1   -0.1526866108   -0.0000000367    0.0000189688        0
+      9   8 2   -0.1526866116   -0.0000000008    0.0000036262        0
+     10   8 3   -0.1526866116   -0.0000000000    0.0000007423        0
+     11   8 4   -0.1526866116   -0.0000000000    0.0000000030        0
+
+  CISD iterations converged!
+
+  CISD variational energy:      -0.152686611597
+  CISD transition energy:       -0.152686611595
+
+        OS SCS-MP2 correlation energy:          -0.101534800407
+        SS SCS-MP2 correlation energy:          -0.000613028372
+        SCS-MP2 correlation energy:             -0.102147828779
+      * SCS-MP2 total energy:                   -1.931285240811
+
+        OS MP2 correlation energy:              -0.084612333673
+        SS MP2 correlation energy:              -0.001839085115
+        MP2 correlation energy:                 -0.086451418788
+      * MP2 total energy:                       -1.915588830820
+
+        OS CISD correlation energy:             -0.148480043994
+        SS CISD correlation energy:             -0.004206567601
+        CISD correlation energy:                -0.152686611597
+      * CISD total energy:                      -1.981824023630
+
+  Total time for CISD iterations:       0.06 s (user)
+                                        0.14 s (system)
+                                           1 s (total)
+
+  Time per iteration:                   0.01 s (user)
+                                        0.01 s (system)
+                                        0.09 s (total)
+
+*** tstop() called on CHE-FEVANGE at Fri Mar 26 08:42:36 2021
+Module time:
+	user time   =       0.06 seconds =       0.00 minutes
+	system time =       0.14 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.43 seconds =       0.01 minutes
+	system time =       0.21 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+    Psi4 stopped on: Friday, 26 March 2021 08:42AM
+    Psi4 wall time for execution: 0:00:00.73
+
+*** Psi4 exiting successfully. Buy a developer a beer!

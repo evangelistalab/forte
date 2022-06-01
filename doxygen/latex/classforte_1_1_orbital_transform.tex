@@ -1,0 +1,125 @@
+\hypertarget{classforte_1_1_orbital_transform}{}\section{forte\+:\+:Orbital\+Transform Class Reference}
+\label{classforte_1_1_orbital_transform}\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+
+
+{\ttfamily \#include $<$orbital\+\_\+transform.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Orbital\+Transform\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_orbital_transform__inherit__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_orbital_transform_ada3a71c5a0e8da563b984cfe6782e26f}{Orbital\+Transform}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info)
+\item 
+\mbox{\hyperlink{classforte_1_1_orbital_transform_ad8deeadcd87504802278f656b9d8abcd}{Orbital\+Transform}} ()=default
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classforte_1_1_orbital_transform_a5f537fe91199aaa005c923f32ec7d1ee}{$\sim$\+Orbital\+Transform}} ()=default
+\begin{DoxyCompactList}\small\item\em Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classforte_1_1_orbital_transform_a48704cbce9fd066ef7e58270bb413c25}{compute\+\_\+transformation}} ()=0
+\item 
+virtual psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_transform_aedd124480b35eba56653109578c05ec9}{get\+\_\+\+Ua}} ()=0
+\item 
+virtual psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_orbital_transform_aeb179f5b68883cf346dde354c05fd27b}{get\+\_\+\+Ub}} ()=0
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_orbital_transform_ac8ec571c856508d57f8a96f68e8eaffb}{ints\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_orbital_transform_ae1f7c618a926c324f20d67946ebec695}{mo\+\_\+space\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The M\+O\+Space info. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_orbital_transform_ada3a71c5a0e8da563b984cfe6782e26f}\label{classforte_1_1_orbital_transform_ada3a71c5a0e8da563b984cfe6782e26f}} 
+\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}!Orbital\+Transform@{Orbital\+Transform}}
+\index{Orbital\+Transform@{Orbital\+Transform}!forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+\subsubsection{\texorpdfstring{Orbital\+Transform()}{OrbitalTransform()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+Orbital\+Transform\+::\+Orbital\+Transform (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_transform_ad8deeadcd87504802278f656b9d8abcd}\label{classforte_1_1_orbital_transform_ad8deeadcd87504802278f656b9d8abcd}} 
+\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}!Orbital\+Transform@{Orbital\+Transform}}
+\index{Orbital\+Transform@{Orbital\+Transform}!forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+\subsubsection{\texorpdfstring{Orbital\+Transform()}{OrbitalTransform()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+Orbital\+Transform\+::\+Orbital\+Transform (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+Default constructor. 
+
+\mbox{\Hypertarget{classforte_1_1_orbital_transform_a5f537fe91199aaa005c923f32ec7d1ee}\label{classforte_1_1_orbital_transform_a5f537fe91199aaa005c923f32ec7d1ee}} 
+\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}!````~Orbital\+Transform@{$\sim$\+Orbital\+Transform}}
+\index{````~Orbital\+Transform@{$\sim$\+Orbital\+Transform}!forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+\subsubsection{\texorpdfstring{$\sim$\+Orbital\+Transform()}{~OrbitalTransform()}}
+{\footnotesize\ttfamily virtual forte\+::\+Orbital\+Transform\+::$\sim$\+Orbital\+Transform (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+
+
+Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_orbital_transform_a48704cbce9fd066ef7e58270bb413c25}\label{classforte_1_1_orbital_transform_a48704cbce9fd066ef7e58270bb413c25}} 
+\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}!compute\+\_\+transformation@{compute\+\_\+transformation}}
+\index{compute\+\_\+transformation@{compute\+\_\+transformation}!forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+\subsubsection{\texorpdfstring{compute\+\_\+transformation()}{compute\_transformation()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Orbital\+Transform\+::compute\+\_\+transformation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_c_i_n_o_a8ac65e808e51c30f613cea8fcdbec851}{forte\+::\+C\+I\+NO}}, \mbox{\hyperlink{classforte_1_1_m_r_c_i_n_o_a0011f9c5bf52e26c96c3283beca3355a}{forte\+::\+M\+R\+C\+I\+NO}}, \mbox{\hyperlink{classforte_1_1_localize_af4858fdaa807659ad06d30925038a4c1}{forte\+::\+Localize}}, and \mbox{\hyperlink{classforte_1_1_m_p2___n_o_s_a3c093d2809477add44a5d3df9df56587}{forte\+::\+M\+P2\+\_\+\+N\+OS}}.
+
+\mbox{\Hypertarget{classforte_1_1_orbital_transform_aedd124480b35eba56653109578c05ec9}\label{classforte_1_1_orbital_transform_aedd124480b35eba56653109578c05ec9}} 
+\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}!get\+\_\+\+Ua@{get\+\_\+\+Ua}}
+\index{get\+\_\+\+Ua@{get\+\_\+\+Ua}!forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+\subsubsection{\texorpdfstring{get\+\_\+\+Ua()}{get\_Ua()}}
+{\footnotesize\ttfamily virtual psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Transform\+::get\+\_\+\+Ua (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_c_i_n_o_a382fe0963a51a908790fda6a7aab0e7c}{forte\+::\+C\+I\+NO}}, \mbox{\hyperlink{classforte_1_1_localize_a9ee389a31b8856a670ff4854906979af}{forte\+::\+Localize}}, \mbox{\hyperlink{classforte_1_1_m_r_c_i_n_o_a75ca07096273157f61dc00db296944ee}{forte\+::\+M\+R\+C\+I\+NO}}, and \mbox{\hyperlink{classforte_1_1_m_p2___n_o_s_a7210e806a978b617b5b848dba3628726}{forte\+::\+M\+P2\+\_\+\+N\+OS}}.
+
+\mbox{\Hypertarget{classforte_1_1_orbital_transform_aeb179f5b68883cf346dde354c05fd27b}\label{classforte_1_1_orbital_transform_aeb179f5b68883cf346dde354c05fd27b}} 
+\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}!get\+\_\+\+Ub@{get\+\_\+\+Ub}}
+\index{get\+\_\+\+Ub@{get\+\_\+\+Ub}!forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+\subsubsection{\texorpdfstring{get\+\_\+\+Ub()}{get\_Ub()}}
+{\footnotesize\ttfamily virtual psi\+::\+Shared\+Matrix forte\+::\+Orbital\+Transform\+::get\+\_\+\+Ub (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_c_i_n_o_a24b4455c4b640b7bc01b0f12b0ecb655}{forte\+::\+C\+I\+NO}}, \mbox{\hyperlink{classforte_1_1_localize_add8ecbbd32ef5910a229d6a7225b4be9}{forte\+::\+Localize}}, \mbox{\hyperlink{classforte_1_1_m_r_c_i_n_o_a1a729beebcee99c34d9baa50af547d6e}{forte\+::\+M\+R\+C\+I\+NO}}, and \mbox{\hyperlink{classforte_1_1_m_p2___n_o_s_a2bb9cdbac921a47dd31b6796c8c8daa1}{forte\+::\+M\+P2\+\_\+\+N\+OS}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_orbital_transform_ac8ec571c856508d57f8a96f68e8eaffb}\label{classforte_1_1_orbital_transform_ac8ec571c856508d57f8a96f68e8eaffb}} 
+\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}!ints\+\_\+@{ints\+\_\+}}
+\index{ints\+\_\+@{ints\+\_\+}!forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+\subsubsection{\texorpdfstring{ints\+\_\+}{ints\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}}$>$ forte\+::\+Orbital\+Transform\+::ints\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_orbital_transform_ae1f7c618a926c324f20d67946ebec695}\label{classforte_1_1_orbital_transform_ae1f7c618a926c324f20d67946ebec695}} 
+\index{forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}!mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}}
+\index{mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}!forte\+::\+Orbital\+Transform@{forte\+::\+Orbital\+Transform}}
+\subsubsection{\texorpdfstring{mo\+\_\+space\+\_\+info\+\_\+}{mo\_space\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}$>$ forte\+::\+Orbital\+Transform\+::mo\+\_\+space\+\_\+info\+\_\+}
+
+
+
+The M\+O\+Space info. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{orbital__transform_8h}{orbital\+\_\+transform.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{orbital__transform_8cc}{orbital\+\_\+transform.\+cc}}\end{DoxyCompactItemize}

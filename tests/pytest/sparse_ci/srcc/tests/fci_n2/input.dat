@@ -1,0 +1,8 @@
+molecule n2{
+N
+N 1 1.3
+symmetry c1}
+
+set basis sto-3g
+set frozen_docc [2]
+energy('fci')

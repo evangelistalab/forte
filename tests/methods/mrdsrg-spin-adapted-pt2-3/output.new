@@ -1,0 +1,3908 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 undefined 
+
+                         Git: Rev {master} 2cb1154 dirty
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Saturday, 16 May 2020 05:09PM
+
+    Process ID: 90563
+    Host:       CHE-FEVANGE-01I (2)
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+Ecas_psi4_jk  = -229.495450424144593
+Ecas_forte_jk = -229.495450424145076
+Ept2_ur       = -230.143771791121878
+Ept2_pr       = -230.150516562986667
+
+molecule pbenzyne{
+  0 1
+   C   0.0000000000  -2.5451795941   0.0000000000
+   C   0.0000000000   2.5451795941   0.0000000000
+   C  -2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669   1.3508352528   0.0000000000
+   C  -2.2828001669   1.3508352528   0.0000000000
+   H  -4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459   2.3208602146   0.0000000000
+   H  -4.0782187459   2.3208602146   0.0000000000
+
+  units bohr
+}
+
+set globals{
+  basis                  cc-pvdz
+  df_basis_scf           cc-pvdz-jkfit
+  df_basis_mp2           cc-pvdz-jkfit
+  reference              rhf
+  scf_type               df
+  d_convergence          8
+  e_convergence          12
+  mcscf_type             df
+  mcscf_e_convergence    12
+  mcscf_r_convergence    8
+  mcscf_diis_start       8
+  mcscf_max_rot          0.2
+  docc                   [5,3,1,1,0,1,5,4]
+  restricted_docc        [5,3,0,0,0,0,4,4]
+  active                 [1,0,1,2,1,2,1,0]
+}
+Escf, wfn = energy('scf', return_wfn=True)
+#compare_values(Ecas_psi4_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (PSI4) energy")
+
+set forte{
+  job_type               casscf
+  casscf_ci_solver       fci
+  restricted_docc        [5,3,0,0,0,0,4,4]
+  active                 [1,0,1,2,1,2,1,0]
+  e_convergence          12
+  r_convergence          8
+  casscf_g_convergence   1e-8
+  casscf_e_convergence   1e-12
+  int_type               df
+}
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(Ecas_forte_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy")
+
+set forte{
+  job_type               newdriver
+  active_space_solver    cas
+  correlation_solver     sa-mrdsrg
+  corr_level             pt2
+  frozen_docc            [2,1,0,0,0,0,2,1]
+  restricted_docc        [3,2,0,0,0,0,2,3]
+  active                 [1,0,1,2,1,2,1,0]
+  dsrg_s                 0.5
+  relax_ref              once
+  e_convergence          12
+  r_convergence          8
+  int_type               diskdf
+}
+energy('forte', ref_wfn=wfn)
+Eupt2 = variable("UNRELAXED ENERGY")
+Eprpt2 = variable("PARTIALLY RELAXED ENERGY")
+compare_values(Ept2_ur, Eupt2, 9, "DSRG-MRPT2 unrelaxed energy")
+compare_values(Ept2_pr, Eprpt2, 9, "DSRG-MRPT2 partially relaxed energy")
+--------------------------------------------------------------------------
+
+  Memory set to 476.837 MiB by Python driver.
+
+Scratch directory: /tmp/
+
+*** tstart() called on CHE-FEVANGE-01I (2)
+*** at Sat May 16 17:09:44 2020
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-6  entry C          line   138 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz.gbs 
+    atoms 7-10 entry H          line    22 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    476 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D2h
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000    -2.545179594100     0.000000000000    12.000000000000
+         C           -0.000000000000     2.545179594100     0.000000000000    12.000000000000
+         C           -2.282800166900    -1.350835252800     0.000000000000    12.000000000000
+         C            2.282800166900    -1.350835252800     0.000000000000    12.000000000000
+         C            2.282800166900     1.350835252800     0.000000000000    12.000000000000
+         C           -2.282800166900     1.350835252800     0.000000000000    12.000000000000
+         H           -4.078218745900    -2.320860214600     0.000000000000     1.007825032230
+         H            4.078218745900    -2.320860214600     0.000000000000     1.007825032230
+         H            4.078218745900     2.320860214600     0.000000000000     1.007825032230
+         H           -4.078218745900     2.320860214600     0.000000000000     1.007825032230
+
+  Running in d2h symmetry.
+
+  Rotational constants: A =      0.22736  B =      0.18979  C =      0.10344 [cm^-1]
+  Rotational constants: A =   6816.18331  B =   5689.87778  C =   3101.15628 [MHz]
+  Nuclear repulsion =  186.022640325180561
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 40
+  Nalpha       = 20
+  Nbeta        = 20
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-08
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 48
+    Number of basis function: 104
+    Number of Cartesian functions: 110
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-6  entry C          line   121 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 7-10 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 0.349 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               357
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.2959
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 180
+    Number of basis function: 512
+    Number of Cartesian functions: 586
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 1.0351346449E-03.
+  Reciprocal condition number of the overlap matrix is 2.1290128188E-04.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     Ag        21      21 
+     B1g       17      17 
+     B2g        6       6 
+     B3g        8       8 
+     Au         6       6 
+     B1u        8       8 
+     B2u       21      21 
+     B3u       17      17 
+   -------------------------
+    Total     104     104
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:  -228.67335162697987   -2.28673e+02   0.00000e+00 
+   @DF-RHF iter   1:  -229.19552913088683   -5.22178e-01   8.40663e-03 DIIS
+   @DF-RHF iter   2:  -229.27086176241440   -7.53326e-02   3.65776e-03 DIIS
+   @DF-RHF iter   3:  -229.28278549962880   -1.19237e-02   7.73667e-04 DIIS
+   @DF-RHF iter   4:  -229.28383806070639   -1.05256e-03   1.20615e-04 DIIS
+   @DF-RHF iter   5:  -229.28386896139511   -3.09007e-05   5.77503e-05 DIIS
+   @DF-RHF iter   6:  -229.28387344175439   -4.48036e-06   1.48261e-05 DIIS
+   @DF-RHF iter   7:  -229.28387409437687   -6.52622e-07   3.76253e-06 DIIS
+   @DF-RHF iter   8:  -229.28387414458348   -5.02066e-08   8.57766e-07 DIIS
+   @DF-RHF iter   9:  -229.28387414685841   -2.27493e-09   1.43136e-07 DIIS
+   @DF-RHF iter  10:  -229.28387414691130   -5.28928e-11   2.80720e-08 DIIS
+   @DF-RHF iter  11:  -229.28387414691261   -1.30740e-12   4.96337e-09 DIIS
+   @DF-RHF iter  12:  -229.28387414691252    8.52651e-14   6.97075e-10 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag   -11.274332     1B3u  -11.274275     1B2u  -11.273446  
+       1B1g  -11.273346     2B2u  -11.263754     2Ag   -11.263687  
+       3Ag    -1.171083     2B3u   -1.038048     3B2u   -1.012377  
+       2B1g   -0.848585     4Ag    -0.803443     5Ag    -0.659439  
+       4B2u   -0.652327     3B3u   -0.644029     4B3u   -0.587118  
+       3B1g   -0.537405     1B1u   -0.522261     1B2g   -0.355958  
+       1B3g   -0.351979     5B2u   -0.270927  
+
+    Virtual:                                                              
+
+       6Ag    -0.038208     1Au     0.104884     2B1u    0.148162  
+       7Ag     0.190885     5B3u    0.206111     6B2u    0.233016  
+       4B1g    0.246546     2B3g    0.347879     8Ag     0.381268  
+       5B1g    0.430299     7B2u    0.483770     6B3u    0.488392  
+       8B2u    0.554491     7B3u    0.591548     9Ag     0.633168  
+       3B1u    0.662442    10Ag     0.683340     2B2g    0.712762  
+       6B1g    0.714961     3B3g    0.717922     8B3u    0.740157  
+       9B2u    0.741449    11Ag     0.743833     7B1g    0.776753  
+       2Au     0.797828    10B2u    0.810316     4B1u    0.820948  
+       9B3u    0.848768     8B1g    0.861048    12Ag     0.871244  
+       4B3g    0.901275    11B2u    0.973862    13Ag     0.981137  
+       5B1u    1.050718    12B2u    1.097151     9B1g    1.112899  
+      10B3u    1.120552     3B2g    1.139220     4B2g    1.216927  
+      10B1g    1.220771    11B3u    1.241640    13B2u    1.290097  
+      14Ag     1.295952     3Au     1.299897     5B3g    1.327556  
+       6B1u    1.395600    15Ag     1.420644    11B1g    1.496103  
+      14B2u    1.654838    12B3u    1.723453     4Au     1.738150  
+       7B1u    1.755378    16Ag     1.764100    15B2u    1.766004  
+       6B3g    1.797057    17Ag     1.868056    13B3u    1.869542  
+      16B2u    1.929514     5B2g    1.950260    12B1g    1.953514  
+       7B3g    2.029927    14B3u    2.070893     6B2g    2.104428  
+       8B1u    2.107624    15B3u    2.120111    18Ag     2.130375  
+      13B1g    2.134514    17B2u    2.164095     5Au     2.229477  
+      19Ag     2.230751    14B1g    2.247170    18B2u    2.281701  
+       8B3g    2.440493     6Au     2.509119    15B1g    2.623481  
+      16B3u    2.678624    20Ag     2.706079    17B3u    2.773130  
+      19B2u    2.863066    20B2u    2.914460    16B1g    2.965268  
+      21Ag     2.980043    17B1g    3.214495    21B2u    3.600298  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]
+
+  @DF-RHF Final Energy:  -229.28387414691252
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =            186.0226403251805607
+    One-Electron Energy =                -676.4573940256963169
+    Two-Electron Energy =                 261.1508795536032608
+    Total Energy =                       -229.2838741469125239
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on CHE-FEVANGE-01I (2) at Sat May 16 17:09:46 2020
+Module time:
+	user time   =       2.95 seconds =       0.05 minutes
+	system time =       0.17 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
+Total time:
+	user time   =       2.95 seconds =       0.05 minutes
+	system time =       0.17 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
+
+Scratch directory: /tmp/
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ-JKFIT
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-6  entry C          line   121 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 7-10 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-6  entry C          line    61 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 7-10 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: fixis - git commit: e588f84a
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 256 bits
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0     0     0     0     0
+    RESTRICTED_DOCC     5     3     0     0     0     0     4     4    16
+    ACTIVE              1     0     1     2     1     2     1     0     8
+    RESTRICTED_UOCC    15    14     5     6     5     6    16    13    80
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total              21    17     6     8     6     8    21    17   104
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                   104
+  Number of correlated molecular orbitals:        104
+  Number of frozen occupied orbitals:               0
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Density fitting
+
+
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.398 s.
+
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing density-fitted integrals:              2.000 s.
+
+                -----------------------------------------------
+                  Complete Active Space Self Consistent Field
+                                 Kevin Hannon
+                -----------------------------------------------
+
+     JK takes 2.30583 s to initialize while using DF
+
+  ==> CASSCF Iteration <==
+
+ iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.14265959 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.005 s
+  Total timing              =      0.017 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.387695442800  0.000  singlet
+      1     -229.225988126707  6.000  quintet
+      2     -229.213533975851  2.000  triplet
+      3     -229.208036465277  0.000  singlet
+      4     -229.200363653610  0.000  singlet
+      5     -229.186521152098  6.000  quintet
+      6     -229.154874138618  0.000  singlet
+      7     -229.143511801042  2.000  triplet
+      8     -229.117638910110  0.000  singlet
+      9     -229.112944621459  2.000  triplet
+     10     -229.028176961183  0.000  singlet
+     11     -229.012179726918  2.000  triplet
+     12     -229.003514490339  2.000  triplet
+     13     -228.927531457719  0.000  singlet
+     14     -228.927343167978  2.000  triplet
+     15     -228.889829835341  0.000  singlet
+     16     -228.860880245686  0.000  singlet
+     17     -228.778953646119  0.000  singlet
+     18     -228.777578078770  2.000  triplet
+     19     -228.577967319304  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.015 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 5
+  Projecting out root 7
+  Projecting out root 9
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 18
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.387695442800  -2.294e+02  +1.945e-01
+      2     -229.436564198904  -4.887e-02  +8.101e-02
+      3     -229.442769438555  -6.205e-03  +4.125e-02
+      4     -229.443947912970  -1.178e-03  +1.801e-02
+      5     -229.444151495972  -2.036e-04  +6.144e-03
+      6     -229.444174492801  -2.300e-05  +2.975e-03
+      7     -229.444181952100  -7.459e-06  +1.318e-03
+      8     -229.444183410669  -1.459e-06  +7.586e-04
+      9     -229.444183786961  -3.763e-07  +2.414e-04
+     10     -229.444183826252  -3.929e-08  +1.107e-04
+     11     -229.444183837144  -1.089e-08  +5.238e-05
+     12     -229.444183839378  -2.234e-09  +2.444e-05
+     13     -229.444183839840  -4.623e-10  +1.253e-05
+     14     -229.444183839954  -1.138e-10  +5.906e-06
+     15     -229.444183839978  -2.368e-11  +2.255e-06
+     16     -229.444183839981  -3.183e-12  +8.183e-07
+     17     -229.444183839982  -6.821e-13  +3.573e-07
+     18     -229.444183839982  -8.527e-14  +1.549e-07
+     19     -229.444183839982  +2.842e-14  +7.537e-08
+     20     -229.444183839982  -1.137e-13  +3.401e-08
+     21     -229.444183839982  +5.684e-14  +1.266e-08
+     22     -229.444183839982  +5.684e-14  +6.147e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 23 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.80507698
+    2 2 20 0 20 0      0.49448158
+    0 0 20 2 20 2      0.11270992
+
+    Total Energy:      -229.444183839981633
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.444183839982
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.971593      1B2g    1.916361      1B3g    1.914976  
+        1B2u    1.431799      1Ag     0.567923      1Au     0.086652  
+        2B1u    0.085320      2B3g    0.025377  
+
+
+ CAS took 0.335427 seconds.
+
+ FormFockIntermediates took 0.29445432 s.
+
+ FormOrbitalGradient took 0.00229092 s.
+
+ FormDiagHessian took 0.00134880 s.
+
+ Update function takes 0.29816326 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.309 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    0   0.006188797418   -229.444183839982   -229.444183839982    2.746085 s       ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.14785664 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.006 s
+  Total timing              =      0.019 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.413342943792  0.000  singlet
+      1     -229.261030433651  6.000  quintet
+      2     -229.253875360826  2.000  triplet
+      3     -229.251066714623  0.000  singlet
+      4     -229.226893031124  6.000  quintet
+      5     -229.194225225242  0.000  singlet
+      6     -229.178139866102  2.000  triplet
+      7     -229.151102428500  0.000  singlet
+      8     -229.142250242422  0.000  singlet
+      9     -229.125369321690  2.000  triplet
+     10     -229.026856631104  2.000  triplet
+     11     -228.991751307816  2.000  triplet
+     12     -228.979946530852  12.000  septet
+     13     -228.977521128585  0.000  singlet
+     14     -228.942919769299  6.000  quintet
+     15     -228.917447355825  0.000  singlet
+     16     -228.917012619541  2.000  triplet
+     17     -228.894247077499  2.000  triplet
+     18     -228.865026343093  0.000  singlet
+     19     -228.809613171415  6.000  quintet
+     20     -228.799854355633  2.000  triplet
+     21     -228.796981061532  0.000  singlet
+     22     -228.764818105808  2.000  triplet
+     23     -228.757074319700  6.000  quintet
+     24     -228.729410587333  2.000  triplet
+     25     -228.728968722996  0.000  singlet
+     26     -228.709541653543  0.000  singlet
+     27     -228.662986637057  6.000  quintet
+     28     -228.652227029642  2.000  triplet
+     29     -228.623082163716  2.000  triplet
+     30     -228.602958562467  0.000  singlet
+     31     -228.595313061419  6.000  quintet
+     32     -228.590044222128  2.000  triplet
+     33     -228.514367349816  0.000  singlet
+     34     -228.444024303654  2.000  triplet
+     35     -228.377383225416  2.000  triplet
+     36     -228.290637119789  0.000  singlet
+     37     -228.269217241446  2.000  triplet
+     38     -228.208030844060  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.070 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 6
+  Projecting out root 9
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.413342943791  -2.294e+02  +2.223e-01
+      2     -229.474861805600  -6.152e-02  +1.012e-01
+      3     -229.484320362615  -9.459e-03  +5.565e-02
+      4     -229.486235591750  -1.915e-03  +2.531e-02
+      5     -229.486589731402  -3.541e-04  +8.712e-03
+      6     -229.486631965175  -4.223e-05  +4.367e-03
+      7     -229.486645606752  -1.364e-05  +2.010e-03
+      8     -229.486648686307  -3.080e-06  +1.205e-03
+      9     -229.486649547799  -8.615e-07  +3.937e-04
+     10     -229.486649639539  -9.174e-08  +1.969e-04
+     11     -229.486649671935  -3.240e-08  +9.405e-05
+     12     -229.486649678684  -6.749e-09  +4.948e-05
+     13     -229.486649680336  -1.653e-09  +2.578e-05
+     14     -229.486649680799  -4.624e-10  +1.325e-05
+     15     -229.486649680906  -1.067e-10  +5.504e-06
+     16     -229.486649680924  -1.836e-11  +2.348e-06
+     17     -229.486649680929  -5.315e-12  +1.159e-06
+     18     -229.486649680930  -8.527e-13  +5.257e-07
+     19     -229.486649680930  -2.842e-13  +2.959e-07
+     20     -229.486649680930  +0.000e+00  +1.524e-07
+     21     -229.486649680930  -5.684e-14  +6.444e-08
+     22     -229.486649680930  +1.137e-13  +3.676e-08
+     23     -229.486649680930  +0.000e+00  +1.897e-08
+     24     -229.486649680930  -5.684e-14  +7.380e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 25 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.77169451
+    2 2 20 0 20 0      0.51739409
+    0 0 20 2 20 2      0.12459454
+    0 2 00 0 22 2      0.10249918
+
+    Total Energy:      -229.486649680930327
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.486649680930
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.959462      1B2g    1.894393      1B3g    1.888891  
+        1B2u    1.359963      1Ag     0.639923      2B1u    0.110650  
+        1Au     0.108891      2B3g    0.037827  
+
+
+ CAS took 0.416997 seconds.
+
+ FormFockIntermediates took 0.28170501 s.
+
+ FormOrbitalGradient took 0.00215082 s.
+
+ FormDiagHessian took 0.00133599 s.
+
+ Update function takes 0.28525718 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.303 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    1   0.003265685195   -0.042465840949   -229.486649680930    2.670052 s       ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.11988422 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.005 s
+  Total timing              =      0.017 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.418032077249  0.000  singlet
+      1     -229.260876760033  6.000  quintet
+      2     -229.254374047759  2.000  triplet
+      3     -229.252103275883  0.000  singlet
+      4     -229.225217762238  6.000  quintet
+      5     -229.181468155080  0.000  singlet
+      6     -229.174382094662  2.000  triplet
+      7     -229.144361836137  0.000  singlet
+      8     -229.129792752250  0.000  singlet
+      9     -229.119265698282  2.000  triplet
+     10     -229.021899297573  2.000  triplet
+     11     -228.972696818527  2.000  triplet
+     12     -228.972459123709  12.000  septet
+     13     -228.954000517625  0.000  singlet
+     14     -228.934784736019  6.000  quintet
+     15     -228.908257784979  2.000  triplet
+     16     -228.895131500225  0.000  singlet
+     17     -228.863448875885  2.000  triplet
+     18     -228.843037845723  0.000  singlet
+     19     -228.795980480281  6.000  quintet
+     20     -228.787778833285  2.000  triplet
+     21     -228.785897780585  0.000  singlet
+     22     -228.745781179172  6.000  quintet
+     23     -228.733119928512  2.000  triplet
+     24     -228.717355021648  2.000  triplet
+     25     -228.696162499231  0.000  singlet
+     26     -228.694654874196  0.000  singlet
+     27     -228.653231649089  6.000  quintet
+     28     -228.640443532961  2.000  triplet
+     29     -228.611000608456  2.000  triplet
+     30     -228.590205965381  0.000  singlet
+     31     -228.574761817467  2.000  triplet
+     32     -228.556827304423  6.000  quintet
+     33     -228.471190217496  0.000  singlet
+     34     -228.401037781009  2.000  triplet
+     35     -228.334991535748  2.000  triplet
+     36     -228.248514584921  0.000  singlet
+     37     -228.227443933315  2.000  triplet
+     38     -228.161919666305  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.069 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 6
+  Projecting out root 9
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.418032077249  -2.294e+02  +2.272e-01
+      2     -229.481098353079  -6.307e-02  +1.041e-01
+      3     -229.490811291221  -9.713e-03  +5.815e-02
+      4     -229.492816217213  -2.005e-03  +2.636e-02
+      5     -229.493184964429  -3.687e-04  +9.171e-03
+      6     -229.493229316300  -4.435e-05  +4.494e-03
+      7     -229.493243540031  -1.422e-05  +2.040e-03
+      8     -229.493246506313  -2.966e-06  +1.227e-03
+      9     -229.493247392517  -8.862e-07  +4.088e-04
+     10     -229.493247484753  -9.224e-08  +2.030e-04
+     11     -229.493247518846  -3.409e-08  +9.828e-05
+     12     -229.493247525918  -7.072e-09  +5.143e-05
+     13     -229.493247527701  -1.782e-09  +2.712e-05
+     14     -229.493247528191  -4.903e-10  +1.390e-05
+     15     -229.493247528306  -1.149e-10  +6.011e-06
+     16     -229.493247528327  -2.086e-11  +2.551e-06
+     17     -229.493247528333  -6.196e-12  +1.306e-06
+     18     -229.493247528334  -9.948e-13  +5.950e-07
+     19     -229.493247528334  -3.411e-13  +3.516e-07
+     20     -229.493247528334  -1.137e-13  +1.841e-07
+     21     -229.493247528334  +2.842e-14  +8.019e-08
+     22     -229.493247528335  -5.684e-14  +4.531e-08
+     23     -229.493247528334  +8.527e-14  +2.334e-08
+     24     -229.493247528334  +0.000e+00  +8.857e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 25 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.76219960
+    2 2 20 0 20 0      0.53006468
+    0 0 20 2 20 2      0.12370324
+    0 2 00 0 22 2      0.10274088
+
+    Total Energy:      -229.493247528334422
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.493247528334
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958855      1B2g    1.894305      1B3g    1.887806  
+        1B2u    1.329757      1Ag     0.670173      2B1u    0.111829  
+        1Au     0.108849      2B3g    0.038425  
+
+
+ CAS took 0.400759 seconds.
+
+ FormFockIntermediates took 0.28453137 s.
+
+ FormOrbitalGradient took 0.00218253 s.
+
+ FormDiagHessian took 0.00152296 s.
+
+ Update function takes 0.28831841 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.327 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    2   0.001599269320   -0.006597847404   -229.493247528334    2.704869 s       ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.14565860 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.012 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.006 s
+  Total timing              =      0.019 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.418978321196  0.000  singlet
+      1     -229.260519528405  6.000  quintet
+      2     -229.254394576493  2.000  triplet
+      3     -229.252412526691  0.000  singlet
+      4     -229.224659335028  6.000  quintet
+      5     -229.174560828231  0.000  singlet
+      6     -229.172540726368  2.000  triplet
+      7     -229.141215258236  0.000  singlet
+      8     -229.122694604157  0.000  singlet
+      9     -229.117126083399  2.000  triplet
+     10     -229.020144769829  2.000  triplet
+     11     -228.969964229752  12.000  septet
+     12     -228.962783258478  2.000  triplet
+     13     -228.943002834150  0.000  singlet
+     14     -228.931862149864  6.000  quintet
+     15     -228.904931066434  2.000  triplet
+     16     -228.883221511037  0.000  singlet
+     17     -228.847922533192  2.000  triplet
+     18     -228.832296591829  0.000  singlet
+     19     -228.791398091660  6.000  quintet
+     20     -228.783941474560  2.000  triplet
+     21     -228.782594138350  0.000  singlet
+     22     -228.742067735833  6.000  quintet
+     23     -228.717367137566  2.000  triplet
+     24     -228.713223642747  2.000  triplet
+     25     -228.690781534956  0.000  singlet
+     26     -228.678507361423  0.000  singlet
+     27     -228.649972941273  6.000  quintet
+     28     -228.636361270349  2.000  triplet
+     29     -228.606623740397  2.000  triplet
+     30     -228.585209380965  0.000  singlet
+     31     -228.569354393322  2.000  triplet
+     32     -228.538792312674  6.000  quintet
+     33     -228.450709992579  0.000  singlet
+     34     -228.381796298860  2.000  triplet
+     35     -228.315718183743  2.000  triplet
+     36     -228.229326439981  0.000  singlet
+     37     -228.208159987768  2.000  triplet
+     38     -228.141297853015  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.072 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 6
+  Projecting out root 9
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.418978321197  -2.294e+02  +2.288e-01
+      2     -229.482566280936  -6.359e-02  +1.049e-01
+      3     -229.492349560854  -9.783e-03  +5.902e-02
+      4     -229.494383829573  -2.034e-03  +2.679e-02
+      5     -229.494759198575  -3.754e-04  +9.350e-03
+      6     -229.494804440306  -4.524e-05  +4.534e-03
+      7     -229.494818735921  -1.430e-05  +2.046e-03
+      8     -229.494821636919  -2.901e-06  +1.231e-03
+      9     -229.494822530383  -8.935e-07  +4.163e-04
+     10     -229.494822623327  -9.294e-08  +2.060e-04
+     11     -229.494822658494  -3.517e-08  +1.012e-04
+     12     -229.494822665887  -7.393e-09  +5.293e-05
+     13     -229.494822667777  -1.890e-09  +2.807e-05
+     14     -229.494822668291  -5.147e-10  +1.427e-05
+     15     -229.494822668412  -1.205e-10  +6.303e-06
+     16     -229.494822668434  -2.242e-11  +2.665e-06
+     17     -229.494822668441  -6.537e-12  +1.388e-06
+     18     -229.494822668442  -1.137e-12  +6.352e-07
+     19     -229.494822668442  -3.411e-13  +3.825e-07
+     20     -229.494822668442  -1.705e-13  +2.011e-07
+     21     -229.494822668442  +5.684e-14  +8.847e-08
+     22     -229.494822668442  +0.000e+00  +4.949e-08
+     23     -229.494822668442  -5.684e-14  +2.556e-08
+     24     -229.494822668442  +5.684e-14  +9.703e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 25 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2      0.75649206
+    2 2 20 0 20 0     -0.53751896
+    0 0 20 2 20 2     -0.12293965
+    0 2 00 0 22 2     -0.10265821
+
+    Total Energy:      -229.494822668442396
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.494822668442
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958694      1B2g    1.894401      1B3g    1.887206  
+        1B2u    1.311534      1Ag     0.688413      2B1u    0.112456  
+        1Au     0.108691      2B3g    0.038605  
+
+
+ CAS took 0.417848 seconds.
+
+ FormFockIntermediates took 0.28910041 s.
+
+ FormOrbitalGradient took 0.00231829 s.
+
+ FormDiagHessian took 0.00134143 s.
+
+ Update function takes 0.29284372 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.321 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    3   0.000852545494   -0.001575140108   -229.494822668442    2.697605 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.11675092 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.005 s
+  Total timing              =      0.017 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419207196178  0.000  singlet
+      1     -229.260503007881  6.000  quintet
+      2     -229.254582031088  2.000  triplet
+      3     -229.252751117230  0.000  singlet
+      4     -229.224710061375  6.000  quintet
+      5     -229.171836749074  2.000  triplet
+      6     -229.170915332574  0.000  singlet
+      7     -229.139777695665  0.000  singlet
+      8     -229.118719259632  0.000  singlet
+      9     -229.116597037060  2.000  triplet
+     10     -229.019763989254  2.000  triplet
+     11     -228.969315596329  12.000  septet
+     12     -228.957747409816  2.000  triplet
+     13     -228.937371702429  0.000  singlet
+     14     -228.930945759532  6.000  quintet
+     15     -228.903761322956  2.000  triplet
+     16     -228.877842568615  0.000  singlet
+     17     -228.840224296456  2.000  triplet
+     18     -228.827069686900  0.000  singlet
+     19     -228.789999762139  6.000  quintet
+     20     -228.782903510541  2.000  triplet
+     21     -228.781841734864  0.000  singlet
+     22     -228.741069836651  6.000  quintet
+     23     -228.712004931164  2.000  triplet
+     24     -228.709599842932  2.000  triplet
+     25     -228.689001814114  0.000  singlet
+     26     -228.670615589509  0.000  singlet
+     27     -228.649248117210  6.000  quintet
+     28     -228.635219774755  2.000  triplet
+     29     -228.605297083664  2.000  triplet
+     30     -228.583483461875  0.000  singlet
+     31     -228.567663546614  2.000  triplet
+     32     -228.530203012837  6.000  quintet
+     33     -228.440892714688  0.000  singlet
+     34     -228.372935324952  2.000  triplet
+     35     -228.306794469353  2.000  triplet
+     36     -228.220508560270  0.000  singlet
+     37     -228.199247016771  2.000  triplet
+     38     -228.131912207893  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.069 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 9
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419207196178  -2.294e+02  +2.293e-01
+      2     -229.482971380668  -6.376e-02  +1.052e-01
+      3     -229.492775686240  -9.804e-03  +5.933e-02
+      4     -229.494818093691  -2.042e-03  +2.697e-02
+      5     -229.495196568136  -3.785e-04  +9.424e-03
+      6     -229.495242171534  -4.560e-05  +4.548e-03
+      7     -229.495256462895  -1.429e-05  +2.046e-03
+      8     -229.495259327357  -2.864e-06  +1.230e-03
+      9     -229.495260222734  -8.954e-07  +4.200e-04
+     10     -229.495260316090  -9.336e-08  +2.074e-04
+     11     -229.495260351849  -3.576e-08  +1.030e-04
+     12     -229.495260359447  -7.598e-09  +5.378e-05
+     13     -229.495260361399  -1.952e-09  +2.860e-05
+     14     -229.495260361929  -5.301e-10  +1.447e-05
+     15     -229.495260362053  -1.234e-10  +6.462e-06
+     16     -229.495260362076  -2.356e-11  +2.726e-06
+     17     -229.495260362083  -6.906e-12  +1.431e-06
+     18     -229.495260362084  -1.137e-12  +6.576e-07
+     19     -229.495260362085  -4.832e-13  +3.993e-07
+     20     -229.495260362085  -5.684e-14  +2.102e-07
+     21     -229.495260362085  +0.000e+00  +9.288e-08
+     22     -229.495260362085  -2.842e-14  +5.168e-08
+     23     -229.495260362085  -8.527e-14  +2.674e-08
+     24     -229.495260362085  +5.684e-14  +1.019e-08
+     25     -229.495260362085  +5.684e-14  +5.531e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.75314708
+    2 2 20 0 20 0      0.54178646
+    0 0 20 2 20 2      0.12246326
+    0 2 00 0 22 2      0.10257798
+
+    Total Energy:      -229.495260362084792
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495260362085
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958643      1B2g    1.894456      1B3g    1.886823  
+        1B2u    1.300913      1Ag     0.699039      2B1u    0.112852  
+        1Au     0.108604      2B3g    0.038669  
+
+
+ CAS took 0.403014 seconds.
+
+ FormFockIntermediates took 0.28303811 s.
+
+ FormOrbitalGradient took 0.00214636 s.
+
+ FormDiagHessian took 0.00147950 s.
+
+ Update function takes 0.28673969 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.331 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    4   0.000455703911   -0.000437693642   -229.495260362085    2.653359 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.14422049 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.005 s
+  Total timing              =      0.018 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419225803750  0.000  singlet
+      1     -229.260559142820  6.000  quintet
+      2     -229.254748330904  2.000  triplet
+      3     -229.253000381862  0.000  singlet
+      4     -229.224877233314  6.000  quintet
+      5     -229.171550232662  2.000  triplet
+      6     -229.169056394342  0.000  singlet
+      7     -229.139072413485  0.000  singlet
+      8     -229.116678195986  0.000  singlet
+      9     -229.116474641577  2.000  triplet
+     10     -229.019712828053  2.000  triplet
+     11     -228.969275337274  12.000  septet
+     12     -228.955095635641  2.000  triplet
+     13     -228.934734161236  0.000  singlet
+     14     -228.930731776209  6.000  quintet
+     15     -228.903385280057  2.000  triplet
+     16     -228.874890371571  0.000  singlet
+     17     -228.836160402684  2.000  triplet
+     18     -228.824353254223  0.000  singlet
+     19     -228.789631909224  6.000  quintet
+     20     -228.782720428275  2.000  triplet
+     21     -228.781818672800  0.000  singlet
+     22     -228.740899673372  6.000  quintet
+     23     -228.711705182073  2.000  triplet
+     24     -228.705539630452  2.000  triplet
+     25     -228.688371623104  0.000  singlet
+     26     -228.666509107658  0.000  singlet
+     27     -228.649205902006  6.000  quintet
+     28     -228.634965805625  2.000  triplet
+     29     -228.604912099768  2.000  triplet
+     30     -228.582837762985  0.000  singlet
+     31     -228.567121197147  2.000  triplet
+     32     -228.525876599016  6.000  quintet
+     33     -228.435791416177  0.000  singlet
+     34     -228.368556533426  2.000  triplet
+     35     -228.302359006963  2.000  triplet
+     36     -228.216138619404  0.000  singlet
+     37     -228.194783685374  2.000  triplet
+     38     -228.127249652816  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.069 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 9
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419225803750  -2.294e+02  +2.295e-01
+      2     -229.483081092070  -6.386e-02  +1.053e-01
+      3     -229.492899231546  -9.818e-03  +5.948e-02
+      4     -229.494946714657  -2.047e-03  +2.708e-02
+      5     -229.495327394201  -3.807e-04  +9.469e-03
+      6     -229.495373266689  -4.587e-05  +4.559e-03
+      7     -229.495387577841  -1.431e-05  +2.047e-03
+      8     -229.495390428387  -2.851e-06  +1.231e-03
+      9     -229.495391326722  -8.983e-07  +4.225e-04
+     10     -229.495391420620  -9.390e-08  +2.086e-04
+     11     -229.495391456851  -3.623e-08  +1.041e-04
+     12     -229.495391464607  -7.756e-09  +5.438e-05
+     13     -229.495391466604  -1.997e-09  +2.896e-05
+     14     -229.495391467145  -5.413e-10  +1.462e-05
+     15     -229.495391467271  -1.258e-10  +6.566e-06
+     16     -229.495391467295  -2.410e-11  +2.769e-06
+     17     -229.495391467302  -6.906e-12  +1.460e-06
+     18     -229.495391467303  -1.222e-12  +6.725e-07
+     19     -229.495391467303  -3.979e-13  +4.101e-07
+     20     -229.495391467304  -1.421e-13  +2.161e-07
+     21     -229.495391467304  +0.000e+00  +9.573e-08
+     22     -229.495391467304  -8.527e-14  +5.312e-08
+     23     -229.495391467303  +1.421e-13  +2.751e-08
+     24     -229.495391467304  -1.137e-13  +1.051e-08
+     25     -229.495391467304  +0.000e+00  +5.707e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.75113994
+    2 2 20 0 20 0      0.54423777
+    0 0 20 2 20 2      0.12219920
+    0 2 00 0 22 2      0.10255917
+
+    Total Energy:      -229.495391467303563
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495391467304
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958601      1B2g    1.894438      1B3g    1.886512  
+        1B2u    1.294670      1Ag     0.705286      2B1u    0.113171  
+        1Au     0.108602      2B3g    0.038720  
+
+
+ CAS took 0.412666 seconds.
+
+ FormFockIntermediates took 0.28482650 s.
+
+ FormOrbitalGradient took 0.00215672 s.
+
+ FormDiagHessian took 0.00134023 s.
+
+ Update function takes 0.28838950 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.310 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    5   0.000252774090   -0.000131105219   -229.495391467304    2.657943 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.11630543 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.010 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.005 s
+  Total timing              =      0.017 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419190424249  0.000  singlet
+      1     -229.260673768787  6.000  quintet
+      2     -229.254992397240  2.000  triplet
+      3     -229.253341278709  0.000  singlet
+      4     -229.225168651437  6.000  quintet
+      5     -229.171272012995  2.000  triplet
+      6     -229.166913322859  0.000  singlet
+      7     -229.138274775938  0.000  singlet
+      8     -229.116492740286  2.000  triplet
+      9     -229.114239906322  0.000  singlet
+     10     -229.019780426568  2.000  triplet
+     11     -228.969377714033  12.000  septet
+     12     -228.952027596012  2.000  triplet
+     13     -228.931656990752  0.000  singlet
+     14     -228.930610079197  6.000  quintet
+     15     -228.903053466796  2.000  triplet
+     16     -228.871735545855  0.000  singlet
+     17     -228.831563872161  2.000  triplet
+     18     -228.821261847443  0.000  singlet
+     19     -228.789456398148  6.000  quintet
+     20     -228.782757239491  2.000  triplet
+     21     -228.782049515445  0.000  singlet
+     22     -228.740943455325  6.000  quintet
+     23     -228.711591374512  2.000  triplet
+     24     -228.700940831163  2.000  triplet
+     25     -228.687844944242  0.000  singlet
+     26     -228.661941416318  0.000  singlet
+     27     -228.649431088491  6.000  quintet
+     28     -228.634945597856  2.000  triplet
+     29     -228.604724482666  2.000  triplet
+     30     -228.582308729125  0.000  singlet
+     31     -228.566777822813  2.000  triplet
+     32     -228.521049780177  6.000  quintet
+     33     -228.430085475686  0.000  singlet
+     34     -228.363792458024  2.000  triplet
+     35     -228.297506750576  2.000  triplet
+     36     -228.211412918334  0.000  singlet
+     37     -228.189923946017  2.000  triplet
+     38     -228.122212303024  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.067 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419190424250  -2.294e+02  +2.297e-01
+      2     -229.483121608943  -6.393e-02  +1.054e-01
+      3     -229.492952230637  -9.831e-03  +5.962e-02
+      4     -229.495002481047  -2.050e-03  +2.719e-02
+      5     -229.495385537540  -3.831e-04  +9.513e-03
+      6     -229.495431674996  -4.614e-05  +4.569e-03
+      7     -229.495445998555  -1.432e-05  +2.047e-03
+      8     -229.495448832218  -2.834e-06  +1.232e-03
+      9     -229.495449733465  -9.012e-07  +4.254e-04
+     10     -229.495449827997  -9.453e-08  +2.099e-04
+     11     -229.495449864790  -3.679e-08  +1.056e-04
+     12     -229.495449872745  -7.954e-09  +5.510e-05
+     13     -229.495449874796  -2.051e-09  +2.939e-05
+     14     -229.495449875351  -5.551e-10  +1.479e-05
+     15     -229.495449875480  -1.289e-10  +6.690e-06
+     16     -229.495449875505  -2.481e-11  +2.819e-06
+     17     -229.495449875512  -7.134e-12  +1.493e-06
+     18     -229.495449875513  -1.307e-12  +6.904e-07
+     19     -229.495449875513  -3.979e-13  +4.229e-07
+     20     -229.495449875514  -1.421e-13  +2.230e-07
+     21     -229.495449875514  -5.684e-14  +9.909e-08
+     22     -229.495449875514  +0.000e+00  +5.481e-08
+     23     -229.495449875514  +5.684e-14  +2.843e-08
+     24     -229.495449875514  -2.842e-14  +1.090e-08
+     25     -229.495449875514  +0.000e+00  +5.920e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.74868469
+    2 2 20 0 20 0      0.54720157
+    0 0 20 2 20 2      0.12186773
+    0 2 00 0 22 2      0.10253938
+
+    Total Energy:      -229.495449875513600
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495449875514
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958559      1B2g    1.894427      1B3g    1.886107  
+        1B2u    1.287058      1Ag     0.712901      2B1u    0.113580  
+        1Au     0.108593      2B3g    0.038775  
+
+
+ CAS took 0.400855 seconds.
+
+ FormFockIntermediates took 0.27609477 s.
+
+ FormOrbitalGradient took 0.00216329 s.
+
+ FormDiagHessian took 0.00134657 s.
+
+ Update function takes 0.27967380 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.314 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    6   0.000036198249   -0.000058408210   -229.495449875514    2.612142 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.14733554 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.006 s
+  Total timing              =      0.018 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419184324063  0.000  singlet
+      1     -229.260725040289  6.000  quintet
+      2     -229.255050683831  2.000  triplet
+      3     -229.253405162068  0.000  singlet
+      4     -229.225254483409  6.000  quintet
+      5     -229.171310597502  2.000  triplet
+      6     -229.166894334319  0.000  singlet
+      7     -229.138275592940  0.000  singlet
+      8     -229.116567152057  2.000  triplet
+      9     -229.114211438210  0.000  singlet
+     10     -229.019848181559  2.000  triplet
+     11     -228.969503476470  12.000  septet
+     12     -228.951936218149  2.000  triplet
+     13     -228.931699333755  0.000  singlet
+     14     -228.930713382700  6.000  quintet
+     15     -228.903136378730  2.000  triplet
+     16     -228.871582801730  0.000  singlet
+     17     -228.831402723035  2.000  triplet
+     18     -228.821174664627  0.000  singlet
+     19     -228.789597618234  6.000  quintet
+     20     -228.782906592248  2.000  triplet
+     21     -228.782211075105  0.000  singlet
+     22     -228.741086413019  6.000  quintet
+     23     -228.711721762276  2.000  triplet
+     24     -228.700793016377  2.000  triplet
+     25     -228.687943160624  0.000  singlet
+     26     -228.661803638152  0.000  singlet
+     27     -228.649580149507  6.000  quintet
+     28     -228.635090421321  2.000  triplet
+     29     -228.604845483367  2.000  triplet
+     30     -228.582394765523  0.000  singlet
+     31     -228.566898873327  2.000  triplet
+     32     -228.520941924874  6.000  quintet
+     33     -228.429887410234  0.000  singlet
+     34     -228.363724947885  2.000  triplet
+     35     -228.297422360461  2.000  triplet
+     36     -228.211347428350  0.000  singlet
+     37     -228.189831160766  2.000  triplet
+     38     -228.122124056995  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.070 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419184324063  -2.294e+02  +2.296e-01
+      2     -229.483119114295  -6.393e-02  +1.054e-01
+      3     -229.492951523697  -9.832e-03  +5.963e-02
+      4     -229.495002539133  -2.051e-03  +2.720e-02
+      5     -229.495385947775  -3.834e-04  +9.518e-03
+      6     -229.495432133564  -4.619e-05  +4.571e-03
+      7     -229.495446469445  -1.434e-05  +2.048e-03
+      8     -229.495449304637  -2.835e-06  +1.232e-03
+      9     -229.495450206990  -9.024e-07  +4.258e-04
+     10     -229.495450301680  -9.469e-08  +2.101e-04
+     11     -229.495450338560  -3.688e-08  +1.058e-04
+     12     -229.495450346541  -7.981e-09  +5.519e-05
+     13     -229.495450348599  -2.058e-09  +2.944e-05
+     14     -229.495450349156  -5.568e-10  +1.481e-05
+     15     -229.495450349285  -1.291e-10  +6.704e-06
+     16     -229.495450349311  -2.518e-11  +2.826e-06
+     17     -229.495450349318  -7.020e-12  +1.497e-06
+     18     -229.495450349319  -1.279e-12  +6.924e-07
+     19     -229.495450349319  -4.832e-13  +4.243e-07
+     20     -229.495450349319  -8.527e-14  +2.238e-07
+     21     -229.495450349319  -2.842e-14  +9.945e-08
+     22     -229.495450349320  -5.684e-14  +5.500e-08
+     23     -229.495450349319  +1.137e-13  +2.854e-08
+     24     -229.495450349319  +2.842e-14  +1.094e-08
+     25     -229.495450349319  -5.684e-14  +5.943e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.74850475
+    2 2 20 0 20 0      0.54738729
+    0 0 20 2 20 2      0.12185061
+    0 2 00 0 22 2      0.10255344
+
+    Total Energy:      -229.495450349319441
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495450349319
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958550      1B2g    1.894412      1B3g    1.886045  
+        1B2u    1.286540      1Ag     0.713419      2B1u    0.113643  
+        1Au     0.108606      2B3g    0.038786  
+
+
+ CAS took 0.418659 seconds.
+
+ FormFockIntermediates took 0.29944005 s.
+
+ FormOrbitalGradient took 0.00224969 s.
+
+ FormDiagHessian took 0.00134183 s.
+
+ Update function takes 0.30310710 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.307 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    7   0.000017346001   -0.000000473806   -229.495450349319    2.732646 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.11991541 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.010 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.005 s
+  Total timing              =      0.017 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419191244232  0.000  singlet
+      1     -229.260756910638  6.000  quintet
+      2     -229.255085030743  2.000  triplet
+      3     -229.253440932444  0.000  singlet
+      4     -229.225301113210  6.000  quintet
+      5     -229.171339601205  2.000  triplet
+      6     -229.166904325232  0.000  singlet
+      7     -229.138290028679  0.000  singlet
+      8     -229.116624034614  2.000  triplet
+      9     -229.114206818369  0.000  singlet
+     10     -229.019893353466  2.000  triplet
+     11     -228.969559330655  12.000  septet
+     12     -228.951938070892  2.000  triplet
+     13     -228.931702953341  0.000  singlet
+     14     -228.930761323627  6.000  quintet
+     15     -228.903176616912  2.000  triplet
+     16     -228.871631654129  0.000  singlet
+     17     -228.831409163476  2.000  triplet
+     18     -228.821185887419  0.000  singlet
+     19     -228.789679159871  6.000  quintet
+     20     -228.782990155756  2.000  triplet
+     21     -228.782298677345  0.000  singlet
+     22     -228.741164754068  6.000  quintet
+     23     -228.711796355153  2.000  triplet
+     24     -228.700800534315  2.000  triplet
+     25     -228.688006385407  0.000  singlet
+     26     -228.661831939728  0.000  singlet
+     27     -228.649669208846  6.000  quintet
+     28     -228.635180253388  2.000  triplet
+     29     -228.604926391120  2.000  triplet
+     30     -228.582462064894  0.000  singlet
+     31     -228.566983597782  2.000  triplet
+     32     -228.520963067206  6.000  quintet
+     33     -228.429895929009  0.000  singlet
+     34     -228.363780742069  2.000  triplet
+     35     -228.297468448785  2.000  triplet
+     36     -228.211411929705  0.000  singlet
+     37     -228.189884131301  2.000  triplet
+     38     -228.122186165785  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.068 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419191244231  -2.294e+02  +2.296e-01
+      2     -229.483120152754  -6.393e-02  +1.053e-01
+      3     -229.492951921450  -9.832e-03  +5.962e-02
+      4     -229.495002584710  -2.051e-03  +2.720e-02
+      5     -229.495386021254  -3.834e-04  +9.518e-03
+      6     -229.495432206526  -4.619e-05  +4.571e-03
+      7     -229.495446543175  -1.434e-05  +2.048e-03
+      8     -229.495449378353  -2.835e-06  +1.232e-03
+      9     -229.495450280840  -9.025e-07  +4.258e-04
+     10     -229.495450375553  -9.471e-08  +2.101e-04
+     11     -229.495450412447  -3.689e-08  +1.058e-04
+     12     -229.495450420434  -7.987e-09  +5.520e-05
+     13     -229.495450422493  -2.059e-09  +2.945e-05
+     14     -229.495450423050  -5.573e-10  +1.481e-05
+     15     -229.495450423180  -1.293e-10  +6.707e-06
+     16     -229.495450423205  -2.504e-11  +2.827e-06
+     17     -229.495450423212  -7.276e-12  +1.498e-06
+     18     -229.495450423213  -1.307e-12  +6.928e-07
+     19     -229.495450423214  -4.547e-13  +4.246e-07
+     20     -229.495450423214  -1.137e-13  +2.239e-07
+     21     -229.495450423214  +0.000e+00  +9.952e-08
+     22     -229.495450423214  -8.527e-14  +5.504e-08
+     23     -229.495450423214  +1.421e-13  +2.856e-08
+     24     -229.495450423214  -1.137e-13  +1.095e-08
+     25     -229.495450423214  +8.527e-14  +5.948e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2      0.74845950
+    2 2 20 0 20 0     -0.54743564
+    0 0 20 2 20 2     -0.12184307
+    0 2 00 0 22 2     -0.10255786
+
+    Total Energy:      -229.495450423213896
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495450423214
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958550      1B2g    1.894415      1B3g    1.886026  
+        1B2u    1.286405      1Ag     0.713554      2B1u    0.113660  
+        1Au     0.108604      2B3g    0.038786  
+
+
+ CAS took 0.392581 seconds.
+
+ FormFockIntermediates took 0.28198431 s.
+
+ FormOrbitalGradient took 0.00229284 s.
+
+ FormDiagHessian took 0.00134815 s.
+
+ Update function takes 0.28569467 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.309 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    8   0.000001424702   -0.000000073894   -229.495450423214    2.610424 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.14698142 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.006 s
+  Total timing              =      0.018 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419191498888  0.000  singlet
+      1     -229.260756257610  6.000  quintet
+      2     -229.255084903211  2.000  triplet
+      3     -229.253441058856  0.000  singlet
+      4     -229.225301469690  6.000  quintet
+      5     -229.171337855514  2.000  triplet
+      6     -229.166903220938  0.000  singlet
+      7     -229.138286958064  0.000  singlet
+      8     -229.116624520188  2.000  triplet
+      9     -229.114204185406  0.000  singlet
+     10     -229.019890082815  2.000  triplet
+     11     -228.969557880101  12.000  septet
+     12     -228.951936290256  2.000  triplet
+     13     -228.931700999762  0.000  singlet
+     14     -228.930759195884  6.000  quintet
+     15     -228.903173729633  2.000  triplet
+     16     -228.871626737406  0.000  singlet
+     17     -228.831405763992  2.000  triplet
+     18     -228.821183049656  0.000  singlet
+     19     -228.789681373944  6.000  quintet
+     20     -228.782992805384  2.000  triplet
+     21     -228.782301845835  0.000  singlet
+     22     -228.741165060065  6.000  quintet
+     23     -228.711796436217  2.000  triplet
+     24     -228.700797341698  2.000  triplet
+     25     -228.688005148464  0.000  singlet
+     26     -228.661830788491  0.000  singlet
+     27     -228.649671234843  6.000  quintet
+     28     -228.635183541788  2.000  triplet
+     29     -228.604927634460  2.000  triplet
+     30     -228.582461771496  0.000  singlet
+     31     -228.566983897227  2.000  triplet
+     32     -228.520957727928  6.000  quintet
+     33     -228.429887183780  0.000  singlet
+     34     -228.363780211866  2.000  triplet
+     35     -228.297465123867  2.000  triplet
+     36     -228.211412722396  0.000  singlet
+     37     -228.189882379394  2.000  triplet
+     38     -228.122183963222  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.071 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419191498888  -2.294e+02  +2.296e-01
+      2     -229.483120086135  -6.393e-02  +1.053e-01
+      3     -229.492951800596  -9.832e-03  +5.962e-02
+      4     -229.495002561388  -2.051e-03  +2.720e-02
+      5     -229.495386017297  -3.835e-04  +9.519e-03
+      6     -229.495432206040  -4.619e-05  +4.571e-03
+      7     -229.495446543807  -1.434e-05  +2.048e-03
+      8     -229.495449379222  -2.835e-06  +1.233e-03
+      9     -229.495450281799  -9.026e-07  +4.258e-04
+     10     -229.495450376521  -9.472e-08  +2.101e-04
+     11     -229.495450413418  -3.690e-08  +1.058e-04
+     12     -229.495450421406  -7.988e-09  +5.520e-05
+     13     -229.495450423466  -2.060e-09  +2.945e-05
+     14     -229.495450424023  -5.572e-10  +1.482e-05
+     15     -229.495450424153  -1.293e-10  +6.708e-06
+     16     -229.495450424178  -2.510e-11  +2.827e-06
+     17     -229.495450424185  -7.077e-12  +1.498e-06
+     18     -229.495450424186  -1.279e-12  +6.929e-07
+     19     -229.495450424186  -5.116e-13  +4.246e-07
+     20     -229.495450424186  +0.000e+00  +2.240e-07
+     21     -229.495450424187  -8.527e-14  +9.953e-08
+     22     -229.495450424187  -8.527e-14  +5.504e-08
+     23     -229.495450424187  +1.421e-13  +2.856e-08
+     24     -229.495450424187  +0.000e+00  +1.096e-08
+     25     -229.495450424187  -2.842e-14  +5.948e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2      0.74846289
+    2 2 20 0 20 0     -0.54742947
+    0 0 20 2 20 2     -0.12184321
+    0 2 00 0 22 2     -0.10256006
+
+    Total Energy:      -229.495450424186544
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495450424187
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958550      1B2g    1.894416      1B3g    1.886023  
+        1B2u    1.286418      1Ag     0.713541      2B1u    0.113662  
+        1Au     0.108603      2B3g    0.038787  
+
+
+ CAS took 0.427803 seconds.
+
+ FormFockIntermediates took 0.28808634 s.
+
+ FormOrbitalGradient took 0.00216168 s.
+
+ FormDiagHessian took 0.00133251 s.
+
+ Update function takes 0.29164378 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.311 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+    9   0.000000350478   -0.000000000973   -229.495450424187    2.691271 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.12193679 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.005 s
+  Total timing              =      0.017 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419191391482  0.000  singlet
+      1     -229.260756219336  6.000  quintet
+      2     -229.255084881811  2.000  triplet
+      3     -229.253441031963  0.000  singlet
+      4     -229.225301245899  6.000  quintet
+      5     -229.171337715740  2.000  triplet
+      6     -229.166902634348  0.000  singlet
+      7     -229.138286890844  0.000  singlet
+      8     -229.116624304972  2.000  triplet
+      9     -229.114203785548  0.000  singlet
+     10     -229.019889881938  2.000  triplet
+     11     -228.969557823843  12.000  septet
+     12     -228.951935684838  2.000  triplet
+     13     -228.931701002174  0.000  singlet
+     14     -228.930759188451  6.000  quintet
+     15     -228.903173773346  2.000  triplet
+     16     -228.871625418179  0.000  singlet
+     17     -228.831404941036  2.000  triplet
+     18     -228.821182414589  0.000  singlet
+     19     -228.789681147252  6.000  quintet
+     20     -228.782992518068  2.000  triplet
+     21     -228.782301515385  0.000  singlet
+     22     -228.741164802954  6.000  quintet
+     23     -228.711796238569  2.000  triplet
+     24     -228.700796426867  2.000  triplet
+     25     -228.688005048270  0.000  singlet
+     26     -228.661829803278  0.000  singlet
+     27     -228.649670909827  6.000  quintet
+     28     -228.635183214233  2.000  triplet
+     29     -228.604927330068  2.000  triplet
+     30     -228.582461587165  0.000  singlet
+     31     -228.566983608657  2.000  triplet
+     32     -228.520956905977  6.000  quintet
+     33     -228.429886044713  0.000  singlet
+     34     -228.363779115960  2.000  triplet
+     35     -228.297464115331  2.000  triplet
+     36     -228.211411546470  0.000  singlet
+     37     -228.189881282417  2.000  triplet
+     38     -228.122182735671  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.070 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419191391481  -2.294e+02  +2.296e-01
+      2     -229.483120069244  -6.393e-02  +1.053e-01
+      3     -229.492951792242  -9.832e-03  +5.962e-02
+      4     -229.495002560347  -2.051e-03  +2.720e-02
+      5     -229.495386017195  -3.835e-04  +9.519e-03
+      6     -229.495432206076  -4.619e-05  +4.571e-03
+      7     -229.495446543843  -1.434e-05  +2.048e-03
+      8     -229.495449379252  -2.835e-06  +1.233e-03
+      9     -229.495450281827  -9.026e-07  +4.258e-04
+     10     -229.495450376549  -9.472e-08  +2.101e-04
+     11     -229.495450413447  -3.690e-08  +1.058e-04
+     12     -229.495450421435  -7.988e-09  +5.520e-05
+     13     -229.495450423494  -2.060e-09  +2.945e-05
+     14     -229.495450424052  -5.572e-10  +1.482e-05
+     15     -229.495450424181  -1.294e-10  +6.708e-06
+     16     -229.495450424206  -2.501e-11  +2.827e-06
+     17     -229.495450424213  -7.304e-12  +1.498e-06
+     18     -229.495450424215  -1.279e-12  +6.929e-07
+     19     -229.495450424215  -5.116e-13  +4.246e-07
+     20     -229.495450424215  -2.842e-14  +2.240e-07
+     21     -229.495450424215  -5.684e-14  +9.953e-08
+     22     -229.495450424215  -8.527e-14  +5.504e-08
+     23     -229.495450424215  +1.421e-13  +2.856e-08
+     24     -229.495450424215  -5.684e-14  +1.096e-08
+     25     -229.495450424215  +2.842e-14  +5.948e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.74846260
+    2 2 20 0 20 0      0.54742990
+    0 0 20 2 20 2      0.12184322
+    0 2 00 0 22 2      0.10255999
+
+    Total Energy:      -229.495450424215164
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495450424215
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958550      1B2g    1.894416      1B3g    1.886023  
+        1B2u    1.286417      1Ag     0.713542      2B1u    0.113662  
+        1Au     0.108603      2B3g    0.038787  
+
+
+ CAS took 0.407416 seconds.
+
+ FormFockIntermediates took 0.28978185 s.
+
+ FormOrbitalGradient took 0.00209605 s.
+
+ FormDiagHessian took 0.00121557 s.
+
+ Update function takes 0.29315834 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.340 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+   10   0.000000064644   -0.000000000029   -229.495450424215    2.760514 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.14618390 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.006 s
+  Total timing              =      0.018 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419191390767  0.000  singlet
+      1     -229.260756272166  6.000  quintet
+      2     -229.255084953349  2.000  triplet
+      3     -229.253441107676  0.000  singlet
+      4     -229.225301278517  6.000  quintet
+      5     -229.171337708023  2.000  triplet
+      6     -229.166902339709  0.000  singlet
+      7     -229.138286852424  0.000  singlet
+      8     -229.116624392824  2.000  triplet
+      9     -229.114203487125  0.000  singlet
+     10     -229.019889870698  2.000  triplet
+     11     -228.969557870863  12.000  septet
+     12     -228.951935389752  2.000  triplet
+     13     -228.931700720006  0.000  singlet
+     14     -228.930759228047  6.000  quintet
+     15     -228.903173803466  2.000  triplet
+     16     -228.871625009401  0.000  singlet
+     17     -228.831404534466  2.000  triplet
+     18     -228.821182122665  0.000  singlet
+     19     -228.789681262690  6.000  quintet
+     20     -228.782992630719  2.000  triplet
+     21     -228.782301632665  0.000  singlet
+     22     -228.741164876852  6.000  quintet
+     23     -228.711796319558  2.000  triplet
+     24     -228.700795995673  2.000  triplet
+     25     -228.688005116899  0.000  singlet
+     26     -228.661829449925  0.000  singlet
+     27     -228.649671020291  6.000  quintet
+     28     -228.635183340079  2.000  triplet
+     29     -228.604927424385  2.000  triplet
+     30     -228.582461667172  0.000  singlet
+     31     -228.566983701686  2.000  triplet
+     32     -228.520956462129  6.000  quintet
+     33     -228.429885441993  0.000  singlet
+     34     -228.363778745935  2.000  triplet
+     35     -228.297463706672  2.000  triplet
+     36     -228.211411194421  0.000  singlet
+     37     -228.189880895715  2.000  triplet
+     38     -228.122182326841  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.071 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419191390766  -2.294e+02  +2.296e-01
+      2     -229.483120068958  -6.393e-02  +1.053e-01
+      3     -229.492951790169  -9.832e-03  +5.962e-02
+      4     -229.495002559878  -2.051e-03  +2.720e-02
+      5     -229.495386017154  -3.835e-04  +9.519e-03
+      6     -229.495432206074  -4.619e-05  +4.571e-03
+      7     -229.495446543846  -1.434e-05  +2.048e-03
+      8     -229.495449379253  -2.835e-06  +1.233e-03
+      9     -229.495450281829  -9.026e-07  +4.258e-04
+     10     -229.495450376551  -9.472e-08  +2.101e-04
+     11     -229.495450413448  -3.690e-08  +1.058e-04
+     12     -229.495450421436  -7.988e-09  +5.520e-05
+     13     -229.495450423496  -2.060e-09  +2.945e-05
+     14     -229.495450424053  -5.573e-10  +1.482e-05
+     15     -229.495450424183  -1.293e-10  +6.708e-06
+     16     -229.495450424208  -2.498e-11  +2.827e-06
+     17     -229.495450424215  -7.248e-12  +1.498e-06
+     18     -229.495450424216  -1.279e-12  +6.929e-07
+     19     -229.495450424217  -5.116e-13  +4.246e-07
+     20     -229.495450424217  -2.842e-14  +2.240e-07
+     21     -229.495450424217  -5.684e-14  +9.953e-08
+     22     -229.495450424217  -8.527e-14  +5.504e-08
+     23     -229.495450424217  +1.137e-13  +2.856e-08
+     24     -229.495450424217  +0.000e+00  +1.096e-08
+     25     -229.495450424217  +0.000e+00  +5.948e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2      0.74846248
+    2 2 20 0 20 0     -0.54743007
+    0 0 20 2 20 2     -0.12184321
+    0 2 00 0 22 2     -0.10256001
+
+    Total Energy:      -229.495450424216784
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495450424217
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958550      1B2g    1.894416      1B3g    1.886023  
+        1B2u    1.286416      1Ag     0.713543      2B1u    0.113662  
+        1Au     0.108603      2B3g    0.038787  
+
+
+ CAS took 0.425688 seconds.
+
+ FormFockIntermediates took 0.29394140 s.
+
+ FormOrbitalGradient took 0.00270056 s.
+
+ FormDiagHessian took 0.00143114 s.
+
+ Update function takes 0.29822227 s
+ Integrals are about to be computed.
+  Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 44.30 MB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.310 s.
+
+ Integrals are about to be updated.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+   11   0.000000009117   -0.000000000002   -229.495450424217    2.726242 s  DIIS ~
+ CSO2SO takes   0.0001 s.
+
+ Transform Integrals takes 0.14740333 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.006 s
+  Total timing              =      0.018 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419191391161  0.000  singlet
+      1     -229.260756267932  6.000  quintet
+      2     -229.255084949296  2.000  triplet
+      3     -229.253441102803  0.000  singlet
+      4     -229.225301265800  6.000  quintet
+      5     -229.171337697694  2.000  triplet
+      6     -229.166902305199  0.000  singlet
+      7     -229.138286844528  0.000  singlet
+      8     -229.116624387716  2.000  triplet
+      9     -229.114203454150  0.000  singlet
+     10     -229.019889857977  2.000  triplet
+     11     -228.969557858761  12.000  septet
+     12     -228.951935383224  2.000  triplet
+     13     -228.931700687240  0.000  singlet
+     14     -228.930759217079  6.000  quintet
+     15     -228.903173793615  2.000  triplet
+     16     -228.871624989271  0.000  singlet
+     17     -228.831404518201  2.000  triplet
+     18     -228.821182117878  0.000  singlet
+     19     -228.789681252961  6.000  quintet
+     20     -228.782992618520  2.000  triplet
+     21     -228.782301618735  0.000  singlet
+     22     -228.741164863344  6.000  quintet
+     23     -228.711796307808  2.000  triplet
+     24     -228.700795978429  2.000  triplet
+     25     -228.688005108234  0.000  singlet
+     26     -228.661829436781  0.000  singlet
+     27     -228.649671008402  6.000  quintet
+     28     -228.635183329275  2.000  triplet
+     29     -228.604927414066  2.000  triplet
+     30     -228.582461659771  0.000  singlet
+     31     -228.566983691747  2.000  triplet
+     32     -228.520956437131  6.000  quintet
+     33     -228.429885413708  0.000  singlet
+     34     -228.363778720537  2.000  triplet
+     35     -228.297463680846  2.000  triplet
+     36     -228.211411169417  0.000  singlet
+     37     -228.189880872119  2.000  triplet
+     38     -228.122182300596  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.070 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419191391161  -2.294e+02  +2.296e-01
+      2     -229.483120068972  -6.393e-02  +1.053e-01
+      3     -229.492951789627  -9.832e-03  +5.962e-02
+      4     -229.495002559821  -2.051e-03  +2.720e-02
+      5     -229.495386017144  -3.835e-04  +9.519e-03
+      6     -229.495432206073  -4.619e-05  +4.571e-03
+      7     -229.495446543846  -1.434e-05  +2.048e-03
+      8     -229.495449379254  -2.835e-06  +1.233e-03
+      9     -229.495450281829  -9.026e-07  +4.258e-04
+     10     -229.495450376551  -9.472e-08  +2.101e-04
+     11     -229.495450413448  -3.690e-08  +1.058e-04
+     12     -229.495450421437  -7.988e-09  +5.520e-05
+     13     -229.495450423496  -2.060e-09  +2.945e-05
+     14     -229.495450424054  -5.574e-10  +1.482e-05
+     15     -229.495450424183  -1.293e-10  +6.708e-06
+     16     -229.495450424208  -2.495e-11  +2.827e-06
+     17     -229.495450424215  -7.134e-12  +1.498e-06
+     18     -229.495450424216  -1.279e-12  +6.929e-07
+     19     -229.495450424217  -4.832e-13  +4.246e-07
+     20     -229.495450424217  -5.684e-14  +2.240e-07
+     21     -229.495450424217  -5.684e-14  +9.953e-08
+     22     -229.495450424217  -1.137e-13  +5.504e-08
+     23     -229.495450424217  +1.421e-13  +2.856e-08
+     24     -229.495450424217  -1.137e-13  +1.096e-08
+     25     -229.495450424217  +8.527e-14  +5.948e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.74846251
+    2 2 20 0 20 0      0.54743003
+    0 0 20 2 20 2      0.12184321
+    0 2 00 0 22 2      0.10256001
+
+    Total Energy:      -229.495450424216784
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495450424217
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.006 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958550      1B2g    1.894416      1B3g    1.886023  
+        1B2u    1.286417      1Ag     0.713542      2B1u    0.113662  
+        1Au     0.108603      2B3g    0.038787  
+
+
+ CAS took 0.422937 seconds.
+
+ FormFockIntermediates took 0.28552824 s.
+
+ FormOrbitalGradient took 0.00216210 s.
+
+ FormDiagHessian took 0.00133560 s.
+
+ Update function takes 0.28910897 s
+   12   0.000000001832   0.000000000000   -229.495450424217    0.860101 s
+
+ A miracle has come to pass. The CASSCF iterations have converged.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 70
+  Number of beta strings        = 70
+  Number of alpha strings (N-3) = 8
+  Number of beta strings (N-3)  = 8
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.011 s
+  Timing for OO strings     =      0.003 s
+  Timing for VVOO strings   =      0.004 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.001 s
+  Timing for 2-hole strings =      0.003 s
+  Timing for 3-hole strings =      0.006 s
+  Total timing              =      0.018 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         660
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 12 x 12.   Memory: 0.000002 GB
+  Initial guess space is incomplete.
+  Adding 19 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -229.419191391161  0.000  singlet
+      1     -229.260756267932  6.000  quintet
+      2     -229.255084949296  2.000  triplet
+      3     -229.253441102803  0.000  singlet
+      4     -229.225301265800  6.000  quintet
+      5     -229.171337697694  2.000  triplet
+      6     -229.166902305199  0.000  singlet
+      7     -229.138286844528  0.000  singlet
+      8     -229.116624387716  2.000  triplet
+      9     -229.114203454150  0.000  singlet
+     10     -229.019889857977  2.000  triplet
+     11     -228.969557858761  12.000  septet
+     12     -228.951935383224  2.000  triplet
+     13     -228.931700687240  0.000  singlet
+     14     -228.930759217079  6.000  quintet
+     15     -228.903173793615  2.000  triplet
+     16     -228.871624989271  0.000  singlet
+     17     -228.831404518201  2.000  triplet
+     18     -228.821182117878  0.000  singlet
+     19     -228.789681252961  6.000  quintet
+     20     -228.782992618520  2.000  triplet
+     21     -228.782301618735  0.000  singlet
+     22     -228.741164863344  6.000  quintet
+     23     -228.711796307808  2.000  triplet
+     24     -228.700795978429  2.000  triplet
+     25     -228.688005108234  0.000  singlet
+     26     -228.661829436781  0.000  singlet
+     27     -228.649671008402  6.000  quintet
+     28     -228.635183329275  2.000  triplet
+     29     -228.604927414066  2.000  triplet
+     30     -228.582461659771  0.000  singlet
+     31     -228.566983691747  2.000  triplet
+     32     -228.520956437131  6.000  quintet
+     33     -228.429885413708  0.000  singlet
+     34     -228.363778720537  2.000  triplet
+     35     -228.297463680846  2.000  triplet
+     36     -228.211411169417  0.000  singlet
+     37     -228.189880872119  2.000  triplet
+     38     -228.122182300596  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.069 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 14
+  Projecting out root 15
+  Projecting out root 17
+  Projecting out root 19
+  Projecting out root 20
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 27
+  Projecting out root 28
+  Projecting out root 29
+  Projecting out root 31
+  Projecting out root 32
+  Projecting out root 34
+  Projecting out root 35
+  Projecting out root 37
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -229.419191391161  -2.294e+02  +2.296e-01
+      2     -229.483120068972  -6.393e-02  +1.053e-01
+      3     -229.492951789627  -9.832e-03  +5.962e-02
+      4     -229.495002559821  -2.051e-03  +2.720e-02
+      5     -229.495386017144  -3.835e-04  +9.519e-03
+      6     -229.495432206073  -4.619e-05  +4.571e-03
+      7     -229.495446543846  -1.434e-05  +2.048e-03
+      8     -229.495449379254  -2.835e-06  +1.233e-03
+      9     -229.495450281829  -9.026e-07  +4.258e-04
+     10     -229.495450376551  -9.472e-08  +2.101e-04
+     11     -229.495450413448  -3.690e-08  +1.058e-04
+     12     -229.495450421437  -7.988e-09  +5.520e-05
+     13     -229.495450423496  -2.060e-09  +2.945e-05
+     14     -229.495450424054  -5.574e-10  +1.482e-05
+     15     -229.495450424183  -1.293e-10  +6.708e-06
+     16     -229.495450424208  -2.495e-11  +2.827e-06
+     17     -229.495450424215  -7.134e-12  +1.498e-06
+     18     -229.495450424216  -1.279e-12  +6.929e-07
+     19     -229.495450424217  -4.832e-13  +4.246e-07
+     20     -229.495450424217  -5.684e-14  +2.240e-07
+     21     -229.495450424217  -5.684e-14  +9.953e-08
+     22     -229.495450424217  -1.137e-13  +5.504e-08
+     23     -229.495450424217  +1.421e-13  +2.856e-08
+     24     -229.495450424217  -1.137e-13  +1.096e-08
+     25     -229.495450424217  +8.527e-14  +5.948e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 26 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2     -0.74846251
+    2 2 20 0 20 0      0.54743003
+    0 0 20 2 20 2      0.12184321
+    0 2 00 0 22 2      0.10256001
+
+    Total Energy:      -229.495450424216784
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495450424217
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.007 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.958550      1B2g    1.894416      1B3g    1.886023  
+        1B2u    1.286417      1Ag     0.713542      2B1u    0.113662  
+        1Au     0.108603      2B3g    0.038787  
+
+ @E(CASSCF) =  -229.495450424217 
+
+
+  Time to prepare integrals:        2.009 seconds
+  Time to run job          :       35.938 seconds
+  Total                    :       35.938 seconds    CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy..........................PASSED
+
+Scratch directory: /tmp/
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ-JKFIT
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-6  entry C          line   121 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 7-10 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-6  entry C          line    61 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 7-10 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: fixis - git commit: e588f84a
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 256 bits
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         2     1     0     0     0     0     2     1     6
+    RESTRICTED_DOCC     3     2     0     0     0     0     2     3    10
+    ACTIVE              1     0     1     2     1     2     1     0     8
+    RESTRICTED_UOCC    15    14     5     6     5     6    16    13    80
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total              21    17     6     8     6     8    21    17   104
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                   104
+  Number of correlated molecular orbitals:         98
+  Number of frozen occupied orbitals:               6
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Disk-based density fitting
+
+
+ Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 0.041260 GB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+    Computing DF Integrals               ......Done. Timing        0.333033 s  DFHelper Memory: AOs need 0.045 GiB; user supplied 2.980 GiB. Using in-core AOs.
+
+
+  Frozen-core energy           -289.384740676411 a.u.
+  Timing for frozen one-body operator:                        1.380 s.
+  Resorting integrals after freezing core.
+ Resorting integrals takes   0.00004134s
+  Timing for freezing core and virtual orbitals:              1.386 s.
+  Timing for disk-based density-fitted integrals:             3.087 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     4
+    No. b electrons in active      =     4
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   21    17     6     8     6     8    21    17 ]
+    FROZEN CORE                   [    2     1     0     0     0     0     2     1 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [   19    16     6     8     6     8    19    16 ]
+    CORE                          [    3     2     0     0     0     0     2     3 ]
+    ACTIVE                        [    1     0     1     2     1     2     1     0 ]
+    VIRTUAL                       [   15    14     5     6     5     6    16    13 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000257 s
+  Forming determinants                ...  Done. Timing        0.000507 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     4
+    number of beta active electrons          =     4
+    root symmetry (zero based)               =     0
+    number of determinants                   =   660
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.006006 s
+        β          0.005812 s
+        αα         0.007149 s
+        ββ         0.007422 s
+        αβ         0.017833 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Initial guess determinants:         50
+
+  Spin-adaptation of the initial guess based on minimum spin-complete subset
+  Initial guess determinants do not form a spin-complete set. 44 determinants are missing
+
+  Guess determinants after screening: 24
+
+  Initial guess solutions
+  ========================
+  Number   2S+1   Selected
+  ------------------------
+    14       1       *
+     8       3        
+     2       5        
+  ========================
+
+  Setting initial guess and roots to project
+  Adding guess 0        2S+1 = 1    E = -300.260172
+  Adding guess 1        2S+1 = 1    E = -300.065495
+  Projecting out guess  2S+1 = 3    E = -300.070324
+  Projecting out guess  2S+1 = 5    E = -300.084471
+
+  Projecting out 2 solutions
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -300.260172370324  -3.003e+02  +2.267e-01
+      2     -300.319074815368  -5.890e-02  +1.036e-01
+      3     -300.327904849324  -8.830e-03  +5.929e-02
+      4     -300.330016867927  -2.112e-03  +2.883e-02
+      5     -300.330445858088  -4.290e-04  +1.394e-02
+      6     -300.330577525425  -1.317e-04  +6.785e-03
+      7     -300.330618410153  -4.088e-05  +2.529e-03
+      8     -300.330623568062  -5.158e-06  +1.309e-03
+      9     -300.330625008983  -1.441e-06  +8.163e-04
+     10     -300.330625497111  -4.881e-07  +5.336e-04
+     11     -300.330625641236  -1.441e-07  +2.726e-04
+     12     -300.330625702882  -6.165e-08  +1.623e-04
+     13     -300.330625728826  -2.594e-08  +1.090e-04
+     14     -300.330625736344  -7.518e-09  +5.977e-05
+     15     -300.330625739395  -3.051e-09  +3.038e-05
+     16     -300.330625740334  -9.395e-10  +2.339e-05
+     17     -300.330625740629  -2.944e-10  +1.229e-05
+     18     -300.330625740766  -1.370e-10  +7.396e-06
+     19     -300.330625740811  -4.559e-11  +4.709e-06
+     20     -300.330625740825  -1.359e-11  +2.533e-06
+     21     -300.330625740829  -4.604e-12  +1.223e-06
+     22     -300.330625740831  -1.421e-12  +9.811e-07
+     23     -300.330625740831  -5.684e-13  +5.275e-07
+     24     -300.330625740832  -5.684e-14  +3.549e-07
+     25     -300.330625740832  -2.274e-13  +2.441e-07
+     26     -300.330625740832  -5.684e-14  +1.291e-07
+     27     -300.330625740832  +0.000e+00  +7.181e-08
+     28     -300.330625740832  +0.000e+00  +6.259e-08
+     29     -300.330625740832  +0.000e+00  +3.261e-08
+     30     -300.330625740832  +0.000e+00  +2.249e-08
+     31     -300.330625740832  -1.137e-13  +1.629e-08
+     32     -300.330625740832  +0.000e+00  +8.670e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 33 iterations.
+  Davidson-Liu procedure took  0.220026 s  Done. Timing        0.268718 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2          0.7484625110
+    2 2 20 0 20 0         -0.5474300273
+    0 0 20 2 20 2         -0.1218432099
+    0 2 00 0 22 2         -0.1025600092
+    2 0 20 2 20 0          0.0945170745
+    2 2 00 0 22 0          0.0889691997
+    b 2 a0 0 2a b          0.0791487281
+    a 2 b0 0 2b a          0.0791487281
+    0 b a0 b 2a 2          0.0746986204
+    0 a b0 a 2b 2          0.0746986204
+    b 2 b0 0 2a a         -0.0616114512
+    a 2 a0 0 2b b         -0.0616114512
+    0 b b0 a 2a 2          0.0585016885
+    0 a a0 b 2b 2          0.0585016885
+    2 b a0 b 2a 0         -0.0574043745
+    2 a b0 a 2b 0         -0.0574043745
+    0 a 2b a b0 2         -0.0509351743
+    0 b 2a b a0 2         -0.0509351743
+
+    Total Energy:   -229.495450424216301
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -229.495450424216
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.011489 s
+ Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.028673 s
+ Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.092298 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+ Making a fock matrix 
+
+---------Blocking Information-------
+
+  39337984 / 375000000 = 0
+  Block_size = 512 num_block = 1
+  Took 0.763494 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0122847151   0.0241717706
+    Fb actv              0.0122847151   0.0241717706
+    ------------------------------------------------
+    Fa core              0.0057782699   0.0129187154
+    Fb core              0.0057782699   0.0129187154
+    ------------------------------------------------
+    Fa virt              0.0121624553   0.0783565639
+    Fb virt              0.0121624553   0.0783565639
+    ------------------------------------------------
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+  Number of auxiliary basis functions:  512
+  Need 0.041260 GB to store DF integrals
+  DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
+
+
+    Computing DF Integrals               ......Done. Timing        0.331976 s
+ Integrals are about to be updated.  DFHelper Memory: AOs need 0.045 GiB; user supplied 2.980 GiB. Using in-core AOs.
+
+
+  Frozen-core energy           -289.384740676411 a.u.
+  Timing for frozen one-body operator:                        1.397 s.
+  Resorting integrals after freezing core.
+ Resorting integrals takes   0.00003734s
+  Timing for freezing core and virtual orbitals:              1.402 s.
+
+  ==> RDMs Transformation to Semicanonical Basis <==
+
+    Transformed 1 RDM.
+    Transformed 2 RDM.
+    Transformed 3 RDM.
+  SemiCanonicalize takes 3.997748 s.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ 
+ Making a fock matrix 
+
+---------Blocking Information-------
+
+  39337984 / 375000000 = 0
+  Block_size = 512 num_block = 1Done
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.927578     0.246766
+    norm       2.433596     1.410839
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Fock core, active, virtual blocks (Fij, i != j)
+                      core          active         virtual
+    ------------------------------------------------------
+       max    0.0000000000    0.0000000000    0.0000000002
+    1-norm    0.0000000000    0.0000000000    0.0000000255
+    ------------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+                  --------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                  --------------------------------------------
+
+
+  ==> Computation Information <==
+
+    Integral type                                     DISKDF
+    Source operator                                 STANDARD
+    Core-Virtual source type                          NORMAL
+    Reference relaxation                                ONCE
+    Internal amplitudes                                 NONE
+    State type                                  SINGLE STATE
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+
+
+  ==> DSRG-MRPT2 Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   487.87 MB
+    Generalized Fock matrix                         77.62 KB
+    1-, 2-, and 3-density cumulants                  2.13 MB
+    2-electron (4-index) integrals                   4.55 MB
+    T2 cluster amplitudes                            9.10 MB
+    T1 cluster amplitudes                           12.67 KB
+    1- and 2-body Hbar                              33.28 KB
+    Local 3-index integrals                          3.21 MB
+    Local integrals for CCVV energy                757.76 KB
+    Local integrals for CAVV energy                  3.77 MB
+    Local integrals for CCAV energy                381.95 KB
+    Local integrals for forming Hbar                 1.17 MB
+    Max memory for local intermediates               3.77 MB
+    Memory currently available                     471.97 MB
+
+
+  ==> First-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    3   35   41   42   49   55   56   65
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  49   50] 0.0422927 [  56   58] 0.0417632 [  42   44] 0.0367009
+    [  49   52] 0.0294624 [  56   60] 0.0256979 [   3    8] 0.0243009
+    [  42   46] 0.0206932 [  42   48] 0.0205370 [   3   11] 0.0188633
+    [  56   61] 0.0146542 [  63   65] 0.0132084 [   3    7] 0.0120912
+    [   2    3] 0.0120058 [   3    9] 0.0118598 [  65   74] 0.0116732
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.103287949235243
+    Number of nonzero elements:                                   846
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [  42   65   60    3] 0.0221326 [  35   49   36   49] 0.0217515 [  41   56   43   56] 0.0212149
+    [  41   42   43   42] 0.0204897 [  35   42   36   42] 0.0199402 [  42    3   60   65] 0.0196927
+    [  55   42   57   42] 0.0193165 [  56   65   45    3] 0.0192163 [  41   41   43   41] 0.0190684
+    [   3   65    8   65] 0.0190284 [  35   35   36   35] 0.0189236 [   3    3    8    3] 0.0183015
+    [  41   65   43   65] 0.0181045 [   3    3   74   65] 0.0178952 [  41    3   43    3] 0.0178826
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.482092688088571
+    Number of nonzero elements:                                                               99004
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -229.495450411043464
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.015466324810079
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.015534591997813
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.014979348445716
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.663368986186796
+      - [Vr, T2] L1 contribution   =     -0.774952182515632
+      - [Vr, T2] L2 contribution   =      0.114315889210152
+      - [Vr, T2] L3 contribution   =     -0.002732692881316
+    DSRG-MRPT2 correlation energy  =     -0.648321370553346
+    DSRG-MRPT2 total energy        =   -230.143771781596797
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.000 s
+    Computing the 1-body term                ... Done. Timing    0.000 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.000 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.002 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     4
+    No. b electrons in active      =     4
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   21    17     6     8     6     8    21    17 ]
+    FROZEN CORE                   [    2     1     0     0     0     0     2     1 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [   19    16     6     8     6     8    19    16 ]
+    CORE                          [    3     2     0     0     0     0     2     3 ]
+    ACTIVE                        [    1     0     1     2     1     2     1     0 ]
+    VIRTUAL                       [   15    14     5     6     5     6    16    13 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000272 s
+  Forming determinants                ...  Done. Timing        0.000537 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     4
+    number of beta active electrons          =     4
+    root symmetry (zero based)               =     0
+    number of determinants                   =   660
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.006367 s
+        β          0.006034 s
+        αα         0.007253 s
+        ββ         0.007452 s
+        αβ         0.018747 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Initial guess determinants:         50
+
+  Spin-adaptation of the initial guess based on minimum spin-complete subset
+  Initial guess determinants do not form a spin-complete set. 47 determinants are missing
+
+  Guess determinants after screening: 27
+
+  Initial guess solutions
+  ========================
+  Number   2S+1   Selected
+  ------------------------
+    16       1       *
+     9       3        
+     2       5        
+  ========================
+
+  Setting initial guess and roots to project
+  Adding guess 0        2S+1 = 1    E = -299.293592
+  Adding guess 1        2S+1 = 1    E = -299.114642
+  Projecting out guess  2S+1 = 3    E = -299.118008
+  Projecting out guess  2S+1 = 5    E = -299.126109
+
+  Projecting out 2 solutions
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -299.293591890711  -2.993e+02  +1.424e-01
+      2     -299.321419889284  -2.783e-02  +5.030e-02
+      3     -299.323881692995  -2.462e-03  +2.323e-02
+      4     -299.324360331462  -4.786e-04  +9.984e-03
+      5     -299.324437905956  -7.757e-05  +4.544e-03
+      6     -299.324459467242  -2.156e-05  +2.108e-03
+      7     -299.324464585380  -5.118e-06  +7.649e-04
+      8     -299.324465149192  -5.638e-07  +3.518e-04
+      9     -299.324465295339  -1.461e-07  +1.828e-04
+     10     -299.324465330641  -3.530e-08  +9.905e-05
+     11     -299.324465338797  -8.156e-09  +4.778e-05
+     12     -299.324465341677  -2.880e-09  +2.320e-05
+     13     -299.324465342403  -7.256e-10  +1.347e-05
+     14     -299.324465342562  -1.590e-10  +6.114e-06
+     15     -299.324465342604  -4.263e-11  +3.030e-06
+     16     -299.324465342614  -9.379e-12  +1.751e-06
+     17     -299.324465342616  -2.387e-12  +8.428e-07
+     18     -299.324465342617  -7.958e-13  +3.894e-07
+     19     -299.324465342617  -2.842e-13  +2.333e-07
+     20     -299.324465342617  -5.684e-14  +1.060e-07
+     21     -299.324465342617  +0.000e+00  +5.311e-08
+     22     -299.324465342617  -1.137e-13  +3.383e-08
+     23     -299.324465342617  +0.000e+00  +1.651e-08
+     24     -299.324465342617  -5.684e-14  +8.466e-09
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 25 iterations.
+  Davidson-Liu procedure took  0.172567 s  Done. Timing        0.223034 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    0 2 20 0 20 2          0.7900625776
+    2 2 20 0 20 0         -0.5455760881
+    0 0 20 2 20 2         -0.0873718660
+    0 2 00 0 22 2         -0.0740898295
+    a 2 b0 0 2b a          0.0707406553
+    b 2 a0 0 2a b          0.0707406553
+    2 0 20 2 20 0          0.0646730459
+    2 2 00 0 22 0          0.0618839223
+    b 2 b0 0 2a a         -0.0576388682
+    a 2 a0 0 2b b         -0.0576388682
+
+    Total Energy:   -230.150516560885563
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -230.150516560886
+    ---------------------------------------------
+
+  => SA-MRDSRG Reference Relaxation Energy Summary <=
+
+                         Fixed Ref. (a.u.)              Relaxed Ref. (a.u.)
+           -------------------------------  -------------------------------
+    Iter.          Total Energy      Delta          Total Energy      Delta
+    -----------------------------------------------------------------------
+        1     -230.143771781597 -2.301e+02     -230.150516560886 -2.302e+02
+    -----------------------------------------------------------------------
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.000       0.001       0.000       0.000
+    -> C1       0.000       0.000       0.000       0.000
+    -> C2                   0.000       0.000       0.000
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        3.095 seconds
+  Time to run job          :       30.153 seconds
+  Total                    :       30.153 seconds    DSRG-MRPT2 unrelaxed energy.......................................FAILED
+Traceback (most recent call last):
+  File "/Users/fevange/Source/psi4/objdir-Debug/stage/bin/psi4", line 331, in <module>
+    exec(content)
+  File "<string>", line 83, in <module>
+  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/psi4/driver/qcdb/testing.py", line 104, in _mergedapis_compare_values
+    return qcel.testing.compare_values(expected, computed, **kwargs)
+  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/qcelemental/testing.py", line 166, in compare_values
+    return return_handler(allclose, label, message, return_message, quiet)
+  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/psi4/driver/p4util/testing.py", line 188, in _psi4_true_raise_handler
+    raise TestComparisonError(message)
+
+psi4.driver.p4util.exceptions.TestComparisonError: 	DSRG-MRPT2 unrelaxed energy: computed value (-230.14377178160) does not match (-230.14377179112) to atol=1e-09 by difference (0.00000000953).
+
+
+Printing out the relevant lines from the Psithon --> Python processed input file:
+    core.set_local_option("FORTE", "R_CONVERGENCE", 8)
+    core.set_local_option("FORTE", "INT_TYPE", "diskdf")
+    energy('forte', ref_wfn=wfn)
+    Eupt2 = variable("UNRELAXED ENERGY")
+    Eprpt2 = variable("PARTIALLY RELAXED ENERGY")
+--> compare_values(Ept2_ur, Eupt2, 9, "DSRG-MRPT2 unrelaxed energy")
+    compare_values(Ept2_pr, Eprpt2, 9, "DSRG-MRPT2 partially relaxed energy")
+
+!----------------------------------------------------------------------------------!
+!                                                                                  !
+!         DSRG-MRPT2 unrelaxed energy: computed value (-230.14377178160) does not  !
+! match (-230.14377179112) to atol=1e-09 by difference (0.00000000953).            !
+!                                                                                  !
+!----------------------------------------------------------------------------------!
+
+    Psi4 stopped on: Saturday, 16 May 2020 05:10PM
+    Psi4 wall time for execution: 0:01:14.37
+
+*** Psi4 encountered an error. Buy a developer more coffee!
+*** Resources and help at github.com/psi4/psi4.

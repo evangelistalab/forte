@@ -1,0 +1,47 @@
+\hypertarget{aosubspace_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/aosubspace.cc File Reference}
+\label{aosubspace_8cc}\index{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/aosubspace.\+cc@{/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/aosubspace.\+cc}}
+{\ttfamily \#include $<$map$>$}\newline
+{\ttfamily \#include $<$numeric$>$}\newline
+{\ttfamily \#include $<$regex$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$pybind11/pybind11.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/element\+\_\+to\+\_\+\+Z.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/integral.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/petitelist.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/wavefunction.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/masses.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}boost/format.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/string\+\_\+algorithms.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/forte\+\_\+options.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}aosubspace.\+h\char`\"{}}\newline
+Include dependency graph for aosubspace.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{aosubspace_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{aosubspace_8cc_a2f0a61645b1745abb4c74dfc9a7b93bc}{mysplit}} (const std\+::string \&input, const std\+::string \&regex)
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{namespaceforte_a260cadc0b3c66cd92c9b66fafed7982f}{forte\+::make\+\_\+aosubspace\+\_\+projector}} (psi\+::\+Shared\+Wavefunction wfn, std\+::shared\+\_\+ptr$<$ Forte\+Options $>$ options)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{aosubspace_8cc_a2f0a61645b1745abb4c74dfc9a7b93bc}\label{aosubspace_8cc_a2f0a61645b1745abb4c74dfc9a7b93bc}} 
+\index{aosubspace.\+cc@{aosubspace.\+cc}!mysplit@{mysplit}}
+\index{mysplit@{mysplit}!aosubspace.\+cc@{aosubspace.\+cc}}
+\subsubsection{\texorpdfstring{mysplit()}{mysplit()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::string $>$ mysplit (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{input,  }\item[{const std\+::string \&}]{regex }\end{DoxyParamCaption})}
+

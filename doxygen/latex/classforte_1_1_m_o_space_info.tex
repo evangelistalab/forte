@@ -1,0 +1,306 @@
+\hypertarget{classforte_1_1_m_o_space_info}{}\section{forte\+:\+:M\+O\+Space\+Info Class Reference}
+\label{classforte_1_1_m_o_space_info}\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+
+
+The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} class.  
+
+
+
+
+{\ttfamily \#include $<$mo\+\_\+space\+\_\+info.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_m_o_space_info_ae35cde14c423e8330c03c32863a2a708}{M\+O\+Space\+Info}} (const psi\+::\+Dimension \&nmopi, const std\+::string \&point\+\_\+group)
+\item 
+const std\+::vector$<$ std\+::string $>$ \& \mbox{\hyperlink{classforte_1_1_m_o_space_info_ade21c9d061b62614d2888f129bb8c8e0}{irrep\+\_\+labels}} () const
+\item 
+const std\+::string \& \mbox{\hyperlink{classforte_1_1_m_o_space_info_ab5acae63812eb49f7551c892821fb2ab}{irrep\+\_\+label}} (size\+\_\+t h) const
+\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_m_o_space_info_a066b51d0bed79d6a433eac5194f7f66d}{point\+\_\+group\+\_\+label}} () const
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classforte_1_1_m_o_space_info_a4b76861f449b11c9847efcc28c2e0c1b}{space\+\_\+names}} () const
+\item 
+std\+::map$<$ std\+::string, std\+::vector$<$ std\+::string $>$ $>$ \mbox{\hyperlink{classforte_1_1_m_o_space_info_ae95e8a5714111df520ec4b89058f9956}{composite\+\_\+space\+\_\+names}} () const
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_o_space_info_a7146ec7630439cf73c49ceb238fc12a6}{size}} (const std\+::string \&space)
+\item 
+psi\+::\+Dimension \mbox{\hyperlink{classforte_1_1_m_o_space_info_a99541e74c30572a6e2cf87e2a6fb7ebd}{dimension}} (const std\+::string \&space)
+\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_m_o_space_info_a8756f0a82f1d3dcd3db3b11fb52a80fc}{symmetry}} (const std\+::string \&space)
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_m_o_space_info_a4328ee82ef7ca2237b5f1b1055f18f41}{absolute\+\_\+mo}} (const std\+::string \&space)
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_m_o_space_info_ad7d1a1daec658c71eff4c20688fc4bd1}{corr\+\_\+absolute\+\_\+mo}} (const std\+::string \&space)
+\item 
+std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_m_o_space_info_a39e62f3f0cdad4fa40f98a86b0eaf5e2}{relative\+\_\+mo}} (const std\+::string \&space)
+\item 
+std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_m_o_space_info_a46b6bf53859758541d56259c818557d5}{get\+\_\+relative\+\_\+mo}} (const std\+::string \&space)
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{classforte_1_1_m_o_space_info_abd10f6754af5b1f8dfeb50307c5756d5}{pos\+\_\+in\+\_\+space}} (const std\+::string \&space, const std\+::string \&composite\+\_\+space)
+\item 
+psi\+::\+Slice \mbox{\hyperlink{classforte_1_1_m_o_space_info_aefa3be2af6a786b5b573f9f3130ed1fa}{range}} (const std\+::string \&space)
+\item 
+void \mbox{\hyperlink{classforte_1_1_m_o_space_info_a05576541580654229b4dbea3c9f39e24}{read\+\_\+options}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options)
+\begin{DoxyCompactList}\small\item\em Read the space info from forte options(inputs) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_o_space_info_ab22c8f0b84fdecdf94c583eb27ca4420}{read\+\_\+from\+\_\+map}} (std\+::map$<$ std\+::string, std\+::vector$<$ size\+\_\+t $>$$>$ \&mo\+\_\+space\+\_\+map)
+\begin{DoxyCompactList}\small\item\em Read the space info from a map of space name-\/dimension\+\_\+vector. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_o_space_info_a937878956cf4d68ab674a37ac69654c5}{set\+\_\+reorder}} (const std\+::vector$<$ size\+\_\+t $>$ \&reorder)
+\begin{DoxyCompactList}\small\item\em Reorder M\+Os according to the input indexing vector. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_m_o_space_info_aa41897ba003dab2da7e902e6e2198bd1}{compute\+\_\+space\+\_\+info}} ()
+\begin{DoxyCompactList}\small\item\em Process current \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}\+: calculate frozen core, count, and assign orbitals. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_m_o_space_info_a6701bf69495d5fbff58f897bf324ea8b}{nirrep}} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} class. 
+
+This class reads and holds information about orbital spaces The class defines two type of orbital spaces\+: elementary and composite.
+
+==$>$ E\+L\+E\+M\+E\+N\+T\+A\+RY S\+P\+A\+C\+ES $<$=== Within each elementary space, the orbitals are grouped into irreps according to Pitzer ordering, e.\+g.,
+
+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC = \mbox{[}A1 A1 A2 B1 B2\mbox{]}
+
+By default the following elementary spaces are defined 
+
+ Type Occupation Occupation Description \subsubsection*{in C\+A\+S/\+G\+AS in correlated }
+
+F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+CC 2 2 Frozen doubly occupied orbitals R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC 2 0-\/2 Restricted doubly occupied orbitals G\+A\+S1, G\+A\+S2, ... 0-\/2 0-\/2 Generalized active spaces R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+U\+O\+CC 0 0-\/2 Restricted unoccupied orbitals \subsection*{F\+R\+O\+Z\+E\+N\+\_\+\+U\+O\+CC 0 0 Frozen unoccupied orbitals }
+
+==$>$ C\+O\+M\+P\+O\+S\+I\+TE S\+P\+A\+C\+ES $<$===
+
+Composite spaces are formed by combining elementary spaces. The following table defines the most important composite spaces used in the \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} class 
+
+ A\+LL F\+R\+O\+Z\+EN C\+O\+R\+R\+E\+L\+A\+T\+ED A\+C\+T\+I\+VE G\+E\+N\+E\+R\+A\+L\+I\+Z\+ED G\+E\+N\+E\+R\+A\+L\+I\+Z\+ED C\+O\+RE V\+I\+R\+T\+U\+AL H\+O\+LE P\+A\+R\+T\+I\+C\+LE
+
+F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+CC $\ast$ $\ast$ R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC $\ast$ $\ast$ $\ast$ $\ast$ G\+A\+S1 -\/ G\+A\+S6 $\ast$ $\ast$ $\ast$ $\ast$ $\ast$ R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+U\+O\+CC $\ast$ $\ast$ $\ast$ $\ast$ \subsection*{F\+R\+O\+Z\+E\+N\+\_\+\+U\+O\+CC $\ast$ $\ast$ }
+
+By convention, orbitals within a composite space are blocked first by symmetry and then by elementary space (Pitzer ordering). For example if the restricted docc and active orbitals are
+
+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC = \mbox{[}A1 A1 $\vert$ A2 $\vert$ B1 $\vert$ B2\mbox{]} A\+C\+T\+I\+VE = \mbox{[}A1 $\vert$ B2\mbox{]}
+
+then in the composite space H\+O\+LE = R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC + A\+C\+T\+I\+VE the orbitals are arranged as
+
+H\+O\+LE = \mbox{[}A1 A1 A1 $\vert$ A2 $\vert$ B1 $\vert$ B2 B2\mbox{]} S\+P\+A\+CE R R A R R R A // R = R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC, A = A\+C\+T\+I\+VE
+
+==$>$ E\+X\+A\+M\+P\+LE $<$===
+
+The following is an example of how the orbitals are assigned when the user specifies the orbitals spaces as below
+
+Irrep A1(0) A2(1) B1(2) B2(3)
+
+Indexing\+:
+
+Absolute index in the full orbital space A\+LL $\vert$ 0 1 2 3 4 $\vert$ 5 6 7 8 9 $\vert$ 10 11 $\vert$ 12 13 $\vert$
+
+Absolute index in the space of non-\/frozen orbitals C\+O\+R\+R\+E\+L\+A\+T\+ED $\vert$ -\/ 0 1 2 3 $\vert$ -\/ 4 5 6 7 $\vert$ 8 -\/ $\vert$ 9 10 $\vert$
+
+Index relative to the irrep in the full orbital space R\+E\+L\+A\+T\+I\+VE $\vert$ 0 1 2 3 4 $\vert$ 0 1 2 3 4 $\vert$ 0 1 $\vert$ 0 1 $\vert$
+
+F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+CC $\ast$ $\ast$ R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+CC $\ast$ $\ast$ $\ast$ $\ast$ $\ast$ G\+A\+S1 $\ast$ $\ast$ G\+A\+S2 $\ast$ R\+E\+S\+T\+R\+I\+C\+E\+D\+\_\+\+U\+O\+CC $\ast$ $\ast$ $\ast$ F\+R\+O\+Z\+E\+N\+\_\+\+U\+O\+CC $\ast$
+
+This returns\+:
+
+size(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ 2 size(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ 5 size(\char`\"{}\+A\+C\+T\+I\+V\+E\char`\"{}) -\/$>$ 3 size(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ 3 size(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ 1
+
+dimension(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}1,1,0,0\mbox{]} dimension(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}1,2,1,1\mbox{]} dimension(\char`\"{}\+A\+C\+T\+I\+V\+E\char`\"{}) -\/$>$ \mbox{[}2,1,0,0\mbox{]} dimension(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}1,1,0,1\mbox{]} dimension(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}0,0,1,0\mbox{]}
+
+absolute\+\_\+mo(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}0,5\mbox{]} absolute\+\_\+mo(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}1,6,7,10,12\mbox{]} absolute\+\_\+mo(\char`\"{}\+G\+A\+S1\char`\"{}) -\/$>$ \mbox{[}2,8\mbox{]} absolute\+\_\+mo(\char`\"{}\+G\+A\+S2\char`\"{}) -\/$>$ \mbox{[}3\mbox{]} absolute\+\_\+mo(\char`\"{}\+A\+C\+T\+I\+V\+E\char`\"{}) -\/$>$ \mbox{[}2,3,8\mbox{]} absolute\+\_\+mo(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}4,9,13\mbox{]} absolute\+\_\+mo(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}11\mbox{]}
+
+corr\+\_\+abs\+\_\+mo(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}\mbox{]} corr\+\_\+abs\+\_\+mo(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}0,4,5,8,9\mbox{]} corr\+\_\+abs\+\_\+mo(\char`\"{}\+G\+A\+S1\char`\"{}) -\/$>$ \mbox{[}1,6\mbox{]} corr\+\_\+abs\+\_\+mo(\char`\"{}\+G\+A\+S2\char`\"{}) -\/$>$ \mbox{[}2\mbox{]} corr\+\_\+abs\+\_\+mo(\char`\"{}\+A\+C\+T\+I\+V\+E\char`\"{}) -\/$>$ \mbox{[}1,2,6\mbox{]} corr\+\_\+abs\+\_\+mo(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}3,7,10\mbox{]} corr\+\_\+abs\+\_\+mo(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}\mbox{]}
+
+relative\+\_\+mo(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}(0,0),(1,0)\mbox{]} relative\+\_\+mo(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+D\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}(0,1),(1,1),(1,2),(2,0),(3,0)\mbox{]} relative\+\_\+mo(\char`\"{}\+G\+A\+S1\char`\"{}) -\/$>$ \mbox{[}(0,2),(1,3)\mbox{]} relative\+\_\+mo(\char`\"{}\+G\+A\+S2\char`\"{}) -\/$>$ \mbox{[}(0,3)\mbox{]} relative\+\_\+mo(\char`\"{}\+A\+C\+T\+I\+V\+E\char`\"{}) -\/$>$ \mbox{[}(0,2),(0,3),(1,3)\mbox{]} relative\+\_\+mo(\char`\"{}\+R\+E\+S\+T\+R\+I\+C\+T\+E\+D\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}(0,4),(1,4),(3,1)\mbox{]} relative\+\_\+mo(\char`\"{}\+F\+R\+O\+Z\+E\+N\+\_\+\+U\+O\+C\+C\char`\"{}) -\/$>$ \mbox{[}(2,1)\mbox{]} 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_ae35cde14c423e8330c03c32863a2a708}\label{classforte_1_1_m_o_space_info_ae35cde14c423e8330c03c32863a2a708}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!M\+O\+Space\+Info@{M\+O\+Space\+Info}}
+\index{M\+O\+Space\+Info@{M\+O\+Space\+Info}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{M\+O\+Space\+Info()}{MOSpaceInfo()}}
+{\footnotesize\ttfamily forte\+::\+M\+O\+Space\+Info\+::\+M\+O\+Space\+Info (\begin{DoxyParamCaption}\item[{const psi\+::\+Dimension \&}]{nmopi,  }\item[{const std\+::string \&}]{point\+\_\+group }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a4328ee82ef7ca2237b5f1b1055f18f41}\label{classforte_1_1_m_o_space_info_a4328ee82ef7ca2237b5f1b1055f18f41}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!absolute\+\_\+mo@{absolute\+\_\+mo}}
+\index{absolute\+\_\+mo@{absolute\+\_\+mo}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{absolute\+\_\+mo()}{absolute\_mo()}}
+{\footnotesize\ttfamily std\+::vector$<$ size\+\_\+t $>$ forte\+::\+M\+O\+Space\+Info\+::absolute\+\_\+mo (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The list of the absolute index of the molecular orbitals in a space 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_ae95e8a5714111df520ec4b89058f9956}\label{classforte_1_1_m_o_space_info_ae95e8a5714111df520ec4b89058f9956}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!composite\+\_\+space\+\_\+names@{composite\+\_\+space\+\_\+names}}
+\index{composite\+\_\+space\+\_\+names@{composite\+\_\+space\+\_\+names}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{composite\+\_\+space\+\_\+names()}{composite\_space\_names()}}
+{\footnotesize\ttfamily std\+::map$<$std\+::string, std\+::vector$<$std\+::string$>$ $>$ forte\+::\+M\+O\+Space\+Info\+::composite\+\_\+space\+\_\+names (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+The names of the composite orbital spaces 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_aa41897ba003dab2da7e902e6e2198bd1}\label{classforte_1_1_m_o_space_info_aa41897ba003dab2da7e902e6e2198bd1}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!compute\+\_\+space\+\_\+info@{compute\+\_\+space\+\_\+info}}
+\index{compute\+\_\+space\+\_\+info@{compute\+\_\+space\+\_\+info}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{compute\+\_\+space\+\_\+info()}{compute\_space\_info()}}
+{\footnotesize\ttfamily void forte\+::\+M\+O\+Space\+Info\+::compute\+\_\+space\+\_\+info (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Process current \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}\+: calculate frozen core, count, and assign orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_ad7d1a1daec658c71eff4c20688fc4bd1}\label{classforte_1_1_m_o_space_info_ad7d1a1daec658c71eff4c20688fc4bd1}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!corr\+\_\+absolute\+\_\+mo@{corr\+\_\+absolute\+\_\+mo}}
+\index{corr\+\_\+absolute\+\_\+mo@{corr\+\_\+absolute\+\_\+mo}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{corr\+\_\+absolute\+\_\+mo()}{corr\_absolute\_mo()}}
+{\footnotesize\ttfamily std\+::vector$<$ size\+\_\+t $>$ forte\+::\+M\+O\+Space\+Info\+::corr\+\_\+absolute\+\_\+mo (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The list of the absolute index of the molecular orbitals in a space excluding the frozen core/virtual orbitals 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a99541e74c30572a6e2cf87e2a6fb7ebd}\label{classforte_1_1_m_o_space_info_a99541e74c30572a6e2cf87e2a6fb7ebd}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!dimension@{dimension}}
+\index{dimension@{dimension}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{dimension()}{dimension()}}
+{\footnotesize\ttfamily psi\+::\+Dimension forte\+::\+M\+O\+Space\+Info\+::dimension (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The psi\+::\+Dimension object for space 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a46b6bf53859758541d56259c818557d5}\label{classforte_1_1_m_o_space_info_a46b6bf53859758541d56259c818557d5}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!get\+\_\+relative\+\_\+mo@{get\+\_\+relative\+\_\+mo}}
+\index{get\+\_\+relative\+\_\+mo@{get\+\_\+relative\+\_\+mo}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{get\+\_\+relative\+\_\+mo()}{get\_relative\_mo()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ $>$ forte\+::\+M\+O\+Space\+Info\+::get\+\_\+relative\+\_\+mo (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The list of the relative index (h,p\+\_\+rel) of the molecular orbitals in space 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_ab5acae63812eb49f7551c892821fb2ab}\label{classforte_1_1_m_o_space_info_ab5acae63812eb49f7551c892821fb2ab}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!irrep\+\_\+label@{irrep\+\_\+label}}
+\index{irrep\+\_\+label@{irrep\+\_\+label}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{irrep\+\_\+label()}{irrep\_label()}}
+{\footnotesize\ttfamily const std\+::string\& forte\+::\+M\+O\+Space\+Info\+::irrep\+\_\+label (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{h }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+The label of each irrep h (e.\+g. h = 0 -\/$>$ \char`\"{}\+A1\char`\"{}) 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_ade21c9d061b62614d2888f129bb8c8e0}\label{classforte_1_1_m_o_space_info_ade21c9d061b62614d2888f129bb8c8e0}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!irrep\+\_\+labels@{irrep\+\_\+labels}}
+\index{irrep\+\_\+labels@{irrep\+\_\+labels}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{irrep\+\_\+labels()}{irrep\_labels()}}
+{\footnotesize\ttfamily const std\+::vector$<$std\+::string$>$\& forte\+::\+M\+O\+Space\+Info\+::irrep\+\_\+labels (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+A vector of labels of each irrep (e.\+g. \mbox{[}\char`\"{}\+A1\char`\"{},\char`\"{}\+A2\char`\"{}\mbox{]}) 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a6701bf69495d5fbff58f897bf324ea8b}\label{classforte_1_1_m_o_space_info_a6701bf69495d5fbff58f897bf324ea8b}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!nirrep@{nirrep}}
+\index{nirrep@{nirrep}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{nirrep()}{nirrep()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+O\+Space\+Info\+::nirrep (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+The number of irreps 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a066b51d0bed79d6a433eac5194f7f66d}\label{classforte_1_1_m_o_space_info_a066b51d0bed79d6a433eac5194f7f66d}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!point\+\_\+group\+\_\+label@{point\+\_\+group\+\_\+label}}
+\index{point\+\_\+group\+\_\+label@{point\+\_\+group\+\_\+label}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{point\+\_\+group\+\_\+label()}{point\_group\_label()}}
+{\footnotesize\ttfamily std\+::string forte\+::\+M\+O\+Space\+Info\+::point\+\_\+group\+\_\+label (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+The label of the molecular point groupo (e.\+g. \char`\"{}\+C2\+V\char`\"{}) 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_abd10f6754af5b1f8dfeb50307c5756d5}\label{classforte_1_1_m_o_space_info_abd10f6754af5b1f8dfeb50307c5756d5}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!pos\+\_\+in\+\_\+space@{pos\+\_\+in\+\_\+space}}
+\index{pos\+\_\+in\+\_\+space@{pos\+\_\+in\+\_\+space}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{pos\+\_\+in\+\_\+space()}{pos\_in\_space()}}
+{\footnotesize\ttfamily std\+::vector$<$ size\+\_\+t $>$ forte\+::\+M\+O\+Space\+Info\+::pos\+\_\+in\+\_\+space (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space,  }\item[{const std\+::string \&}]{composite\+\_\+space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The position of the orbitals in a space in a larger composite space 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_aefa3be2af6a786b5b573f9f3130ed1fa}\label{classforte_1_1_m_o_space_info_aefa3be2af6a786b5b573f9f3130ed1fa}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!range@{range}}
+\index{range@{range}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{range()}{range()}}
+{\footnotesize\ttfamily psi\+::\+Slice forte\+::\+M\+O\+Space\+Info\+::range (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The psi\+::\+Slice for a space counting started at absolute zero 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_ab22c8f0b84fdecdf94c583eb27ca4420}\label{classforte_1_1_m_o_space_info_ab22c8f0b84fdecdf94c583eb27ca4420}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!read\+\_\+from\+\_\+map@{read\+\_\+from\+\_\+map}}
+\index{read\+\_\+from\+\_\+map@{read\+\_\+from\+\_\+map}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{read\+\_\+from\+\_\+map()}{read\_from\_map()}}
+{\footnotesize\ttfamily void forte\+::\+M\+O\+Space\+Info\+::read\+\_\+from\+\_\+map (\begin{DoxyParamCaption}\item[{std\+::map$<$ std\+::string, std\+::vector$<$ size\+\_\+t $>$$>$ \&}]{mo\+\_\+space\+\_\+map }\end{DoxyParamCaption})}
+
+
+
+Read the space info from a map of space name-\/dimension\+\_\+vector. 
+
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a05576541580654229b4dbea3c9f39e24}\label{classforte_1_1_m_o_space_info_a05576541580654229b4dbea3c9f39e24}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!read\+\_\+options@{read\+\_\+options}}
+\index{read\+\_\+options@{read\+\_\+options}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{read\+\_\+options()}{read\_options()}}
+{\footnotesize\ttfamily void forte\+::\+M\+O\+Space\+Info\+::read\+\_\+options (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})}
+
+
+
+Read the space info from forte options(inputs) 
+
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a39e62f3f0cdad4fa40f98a86b0eaf5e2}\label{classforte_1_1_m_o_space_info_a39e62f3f0cdad4fa40f98a86b0eaf5e2}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!relative\+\_\+mo@{relative\+\_\+mo}}
+\index{relative\+\_\+mo@{relative\+\_\+mo}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{relative\+\_\+mo()}{relative\_mo()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ $>$ forte\+::\+M\+O\+Space\+Info\+::relative\+\_\+mo (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The list of the relative index (h,p\+\_\+rel) of the molecular orbitals in space 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a937878956cf4d68ab674a37ac69654c5}\label{classforte_1_1_m_o_space_info_a937878956cf4d68ab674a37ac69654c5}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!set\+\_\+reorder@{set\+\_\+reorder}}
+\index{set\+\_\+reorder@{set\+\_\+reorder}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{set\+\_\+reorder()}{set\_reorder()}}
+{\footnotesize\ttfamily void forte\+::\+M\+O\+Space\+Info\+::set\+\_\+reorder (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{reorder }\end{DoxyParamCaption})}
+
+
+
+Reorder M\+Os according to the input indexing vector. 
+
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a7146ec7630439cf73c49ceb238fc12a6}\label{classforte_1_1_m_o_space_info_a7146ec7630439cf73c49ceb238fc12a6}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!size@{size}}
+\index{size@{size}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+M\+O\+Space\+Info\+::size (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The number of orbitals in a space 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a4b76861f449b11c9847efcc28c2e0c1b}\label{classforte_1_1_m_o_space_info_a4b76861f449b11c9847efcc28c2e0c1b}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!space\+\_\+names@{space\+\_\+names}}
+\index{space\+\_\+names@{space\+\_\+names}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{space\+\_\+names()}{space\_names()}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::string$>$ forte\+::\+M\+O\+Space\+Info\+::space\+\_\+names (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+The names of the elementary orbital spaces 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classforte_1_1_m_o_space_info_a8756f0a82f1d3dcd3db3b11fb52a80fc}\label{classforte_1_1_m_o_space_info_a8756f0a82f1d3dcd3db3b11fb52a80fc}} 
+\index{forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}!symmetry@{symmetry}}
+\index{symmetry@{symmetry}!forte\+::\+M\+O\+Space\+Info@{forte\+::\+M\+O\+Space\+Info}}
+\subsubsection{\texorpdfstring{symmetry()}{symmetry()}}
+{\footnotesize\ttfamily std\+::vector$<$ int $>$ forte\+::\+M\+O\+Space\+Info\+::symmetry (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{space }\end{DoxyParamCaption})}
+
+\begin{DoxyReturn}{Returns}
+The symmetry of each orbital 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{mo__space__info_8h}{mo\+\_\+space\+\_\+info.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{mo__space__info_8cc}{mo\+\_\+space\+\_\+info.\+cc}}\end{DoxyCompactItemize}

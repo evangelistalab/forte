@@ -1,0 +1,367 @@
+\hypertarget{class_hash_vector}{}\section{Hash\+Vector$<$ Key, Hash $>$ Class Template Reference}
+\label{class_hash_vector}\index{Hash\+Vector$<$ Key, Hash $>$@{Hash\+Vector$<$ Key, Hash $>$}}
+
+
+{\ttfamily \#include $<$hash\+\_\+vector.\+h$>$}
+
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{class_hash_vector_1_1iterator}{iterator}}
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{class_hash_vector_a17eb88e2d8322b662ac5972e7ed7aa88}{Hash\+Vector}} ()
+\item 
+\mbox{\hyperlink{class_hash_vector_a8f4c8d505e5cedfe24463ccf267ec5f9}{Hash\+Vector}} (const std\+::vector$<$ Key $>$ \&other)
+\item 
+{\footnotesize template$<$class Hash\+\_\+2 $>$ }\\\mbox{\hyperlink{class_hash_vector_a673094903c45ef33c87f54cb5391210f}{Hash\+Vector}} (const std\+::unordered\+\_\+set$<$ Key, Hash\+\_\+2 $>$ \&other)
+\item 
+const Key \& \mbox{\hyperlink{class_hash_vector_a6ec9410b623647597aee298b8798b644}{operator\mbox{[}$\,$\mbox{]}}} (size\+\_\+t pos) const
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_a505bf3ce92bf251105596a8c97b533d3}{find}} (const Key \&key) const
+\item 
+const \mbox{\hyperlink{class_hash_vector_1_1iterator}{iterator}} \mbox{\hyperlink{class_hash_vector_af63968bed76e89e08246154e4c233dc1}{begin}} () const
+\item 
+const \mbox{\hyperlink{class_hash_vector_1_1iterator}{iterator}} \mbox{\hyperlink{class_hash_vector_a65851ab7117e4ebfe3de7cdd926bf1a3}{end}} () const
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_a13a560f124221dce8944f21ec88600f9}{size}} () const
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_a8a46270688ee2d936c131546487882cc}{max\+\_\+size}} () const
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_adcb769646427cc00272f07b65d488158}{capacity}} () const
+\item 
+void \mbox{\hyperlink{class_hash_vector_a7a31136b1ede5d312c60c863b8ead712}{clear}} ()
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_a24ee21cdb0db0bd29b86c7649eaa6b5e}{add}} (const Key \&key)
+\item 
+void \mbox{\hyperlink{class_hash_vector_afe9cb230bcd8339578a6662f92b32a4e}{erase\+\_\+by\+\_\+key}} (const Key \&key)
+\item 
+void \mbox{\hyperlink{class_hash_vector_a1524c108e36d8809d27c081434b9795d}{erase\+\_\+by\+\_\+index}} (size\+\_\+t index)
+\item 
+void \mbox{\hyperlink{class_hash_vector_ac4f12a12ccc7fcfa0535bf411bfe2fb9}{erase\+\_\+by\+\_\+key}} (std\+::vector$<$ Key $>$ keys)
+\item 
+void \mbox{\hyperlink{class_hash_vector_aa941ff27b9180bdfb6e5a32defe81f0a}{erase\+\_\+by\+\_\+index}} (std\+::vector$<$ size\+\_\+t $>$ indices)
+\item 
+std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector_a35f193e747a3005afce49dc6376cfafe}{erase\+\_\+by\+\_\+key\+\_\+move\+\_\+last}} (const Key \&key)
+\item 
+std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector_a9c95c963022cb33ba0dff610ac56e655}{erase\+\_\+by\+\_\+index\+\_\+move\+\_\+last}} (size\+\_\+t index)
+\item 
+void \mbox{\hyperlink{class_hash_vector_a1b1083a530fe2420b309e921a9467b33}{swap}} (\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&other)
+\item 
+{\footnotesize template$<$class Hash\+\_\+2 $>$ }\\std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector_ab01fbdc2f06fa662ba32745325687b34}{merge}} (const \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash\+\_\+2 $>$ \&source)
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector_a25a8f930a3a8bb4b63eb079148443ac4}{merge}} (const std\+::vector$<$ Key $>$ \&source)
+\item 
+{\footnotesize template$<$class Hash\+\_\+2 $>$ }\\void \mbox{\hyperlink{class_hash_vector_a49f4a94f737008dfc3298e55c419b83f}{merge}} (const std\+::unordered\+\_\+set$<$ Key, Hash\+\_\+2 $>$ \&source)
+\item 
+void \mbox{\hyperlink{class_hash_vector_a0ad83187e532c5ae897ba8d4edcdd2bc}{map\+\_\+order}} (const std\+::vector$<$ size\+\_\+t $>$ \&index\+\_\+map)
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_acff408f0ec8a936eeeccdc12d93e10d9}{bucket\+\_\+count}} () const
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_a6f77df9d2a526c3c025870e9c507a685}{max\+\_\+bucket\+\_\+count}} () const
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_a55b776a683a7bc4b8f56e2132ac9ee92}{bucket\+\_\+size}} (size\+\_\+t n) const
+\item 
+size\+\_\+t \mbox{\hyperlink{class_hash_vector_af296ee20435340b6cd0876e154779ecf}{bucket}} (const Key \&key) const
+\item 
+float \mbox{\hyperlink{class_hash_vector_a440d2b40184d79fd3e24fdb31137c3b9}{load\+\_\+factor}} () const
+\item 
+float \mbox{\hyperlink{class_hash_vector_a9c77cbee1053243f3019d1f013cedfc8}{max\+\_\+load\+\_\+factor}} () const
+\item 
+void \mbox{\hyperlink{class_hash_vector_a1bc6e963cddf7301a90dea11de9f0235}{max\+\_\+load\+\_\+factor}} (float ml)
+\item 
+void \mbox{\hyperlink{class_hash_vector_a7e281851a17203dd7dda859aeaa20c6a}{reserve}} (size\+\_\+t count)
+\item 
+void \mbox{\hyperlink{class_hash_vector_aa21f1dca09001c02ac4ed5090d137b43}{shrink\+\_\+to\+\_\+fit}} ()
+\item 
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector_a8384131d8bd1e720df5f09b11b3b7dda}{optimize}} ()
+\item 
+std\+::vector$<$ Key $>$ \mbox{\hyperlink{class_hash_vector_a37bd6de48acf712ae3936a6259c82899}{to\+Vector}} () const
+\item 
+std\+::vector$<$ std\+::pair$<$ Key, size\+\_\+t $>$ $>$ \mbox{\hyperlink{class_hash_vector_a35579dfa738189e4d372f85621c48733}{to\+Key\+Index}} () const
+\item 
+std\+::unordered\+\_\+set$<$ Key, Hash $>$ \mbox{\hyperlink{class_hash_vector_acdd566cb4429b25603131499168a0854}{to\+Unordered\+\_\+set}} () const
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const size\+\_\+t \mbox{\hyperlink{class_hash_vector_abf48a0c17475981e14aaa83fec37a1e8}{npos}} = S\+I\+Z\+E\+\_\+\+M\+AX
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{class_hash_vector_a17eb88e2d8322b662ac5972e7ed7aa88}\label{class_hash_vector_a17eb88e2d8322b662ac5972e7ed7aa88}} 
+\index{Hash\+Vector@{Hash\+Vector}!Hash\+Vector@{Hash\+Vector}}
+\index{Hash\+Vector@{Hash\+Vector}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{Hash\+Vector()}{HashVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+\mbox{\Hypertarget{class_hash_vector_a8f4c8d505e5cedfe24463ccf267ec5f9}\label{class_hash_vector_a8f4c8d505e5cedfe24463ccf267ec5f9}} 
+\index{Hash\+Vector@{Hash\+Vector}!Hash\+Vector@{Hash\+Vector}}
+\index{Hash\+Vector@{Hash\+Vector}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{Hash\+Vector()}{HashVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Key $>$ \&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+\mbox{\Hypertarget{class_hash_vector_a673094903c45ef33c87f54cb5391210f}\label{class_hash_vector_a673094903c45ef33c87f54cb5391210f}} 
+\index{Hash\+Vector@{Hash\+Vector}!Hash\+Vector@{Hash\+Vector}}
+\index{Hash\+Vector@{Hash\+Vector}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{Hash\+Vector()}{HashVector()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+template$<$class Hash\+\_\+2 $>$ \\
+\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}} (\begin{DoxyParamCaption}\item[{const std\+::unordered\+\_\+set$<$ Key, Hash\+\_\+2 $>$ \&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_hash_vector_a24ee21cdb0db0bd29b86c7649eaa6b5e}\label{class_hash_vector_a24ee21cdb0db0bd29b86c7649eaa6b5e}} 
+\index{Hash\+Vector@{Hash\+Vector}!add@{add}}
+\index{add@{add}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{add()}{add()}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::add (\begin{DoxyParamCaption}\item[{const Key \&}]{key }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_af63968bed76e89e08246154e4c233dc1}\label{class_hash_vector_af63968bed76e89e08246154e4c233dc1}} 
+\index{Hash\+Vector@{Hash\+Vector}!begin@{begin}}
+\index{begin@{begin}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{begin()}{begin()}}
+{\footnotesize\ttfamily template$<$class Key, class Hash = std\+::hash$<$\+Key$>$$>$ \\
+const \mbox{\hyperlink{class_hash_vector_1_1iterator}{iterator}} \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::begin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_hash_vector_af296ee20435340b6cd0876e154779ecf}\label{class_hash_vector_af296ee20435340b6cd0876e154779ecf}} 
+\index{Hash\+Vector@{Hash\+Vector}!bucket@{bucket}}
+\index{bucket@{bucket}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{bucket()}{bucket()}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::bucket (\begin{DoxyParamCaption}\item[{const Key \&}]{key }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_acff408f0ec8a936eeeccdc12d93e10d9}\label{class_hash_vector_acff408f0ec8a936eeeccdc12d93e10d9}} 
+\index{Hash\+Vector@{Hash\+Vector}!bucket\+\_\+count@{bucket\+\_\+count}}
+\index{bucket\+\_\+count@{bucket\+\_\+count}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{bucket\+\_\+count()}{bucket\_count()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::bucket\+\_\+count (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a55b776a683a7bc4b8f56e2132ac9ee92}\label{class_hash_vector_a55b776a683a7bc4b8f56e2132ac9ee92}} 
+\index{Hash\+Vector@{Hash\+Vector}!bucket\+\_\+size@{bucket\+\_\+size}}
+\index{bucket\+\_\+size@{bucket\+\_\+size}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{bucket\+\_\+size()}{bucket\_size()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::bucket\+\_\+size (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{n }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_adcb769646427cc00272f07b65d488158}\label{class_hash_vector_adcb769646427cc00272f07b65d488158}} 
+\index{Hash\+Vector@{Hash\+Vector}!capacity@{capacity}}
+\index{capacity@{capacity}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{capacity()}{capacity()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::capacity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a7a31136b1ede5d312c60c863b8ead712}\label{class_hash_vector_a7a31136b1ede5d312c60c863b8ead712}} 
+\index{Hash\+Vector@{Hash\+Vector}!clear@{clear}}
+\index{clear@{clear}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a65851ab7117e4ebfe3de7cdd926bf1a3}\label{class_hash_vector_a65851ab7117e4ebfe3de7cdd926bf1a3}} 
+\index{Hash\+Vector@{Hash\+Vector}!end@{end}}
+\index{end@{end}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{end()}{end()}}
+{\footnotesize\ttfamily template$<$class Key, class Hash = std\+::hash$<$\+Key$>$$>$ \\
+const \mbox{\hyperlink{class_hash_vector_1_1iterator}{iterator}} \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::end (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_hash_vector_a1524c108e36d8809d27c081434b9795d}\label{class_hash_vector_a1524c108e36d8809d27c081434b9795d}} 
+\index{Hash\+Vector@{Hash\+Vector}!erase\+\_\+by\+\_\+index@{erase\+\_\+by\+\_\+index}}
+\index{erase\+\_\+by\+\_\+index@{erase\+\_\+by\+\_\+index}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{erase\+\_\+by\+\_\+index()}{erase\_by\_index()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::erase\+\_\+by\+\_\+index (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{index }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_aa941ff27b9180bdfb6e5a32defe81f0a}\label{class_hash_vector_aa941ff27b9180bdfb6e5a32defe81f0a}} 
+\index{Hash\+Vector@{Hash\+Vector}!erase\+\_\+by\+\_\+index@{erase\+\_\+by\+\_\+index}}
+\index{erase\+\_\+by\+\_\+index@{erase\+\_\+by\+\_\+index}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{erase\+\_\+by\+\_\+index()}{erase\_by\_index()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::erase\+\_\+by\+\_\+index (\begin{DoxyParamCaption}\item[{std\+::vector$<$ size\+\_\+t $>$}]{indices }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a9c95c963022cb33ba0dff610ac56e655}\label{class_hash_vector_a9c95c963022cb33ba0dff610ac56e655}} 
+\index{Hash\+Vector@{Hash\+Vector}!erase\+\_\+by\+\_\+index\+\_\+move\+\_\+last@{erase\+\_\+by\+\_\+index\+\_\+move\+\_\+last}}
+\index{erase\+\_\+by\+\_\+index\+\_\+move\+\_\+last@{erase\+\_\+by\+\_\+index\+\_\+move\+\_\+last}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{erase\+\_\+by\+\_\+index\+\_\+move\+\_\+last()}{erase\_by\_index\_move\_last()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::erase\+\_\+by\+\_\+index\+\_\+move\+\_\+last (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{index }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_afe9cb230bcd8339578a6662f92b32a4e}\label{class_hash_vector_afe9cb230bcd8339578a6662f92b32a4e}} 
+\index{Hash\+Vector@{Hash\+Vector}!erase\+\_\+by\+\_\+key@{erase\+\_\+by\+\_\+key}}
+\index{erase\+\_\+by\+\_\+key@{erase\+\_\+by\+\_\+key}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{erase\+\_\+by\+\_\+key()}{erase\_by\_key()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::erase\+\_\+by\+\_\+key (\begin{DoxyParamCaption}\item[{const Key \&}]{key }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_ac4f12a12ccc7fcfa0535bf411bfe2fb9}\label{class_hash_vector_ac4f12a12ccc7fcfa0535bf411bfe2fb9}} 
+\index{Hash\+Vector@{Hash\+Vector}!erase\+\_\+by\+\_\+key@{erase\+\_\+by\+\_\+key}}
+\index{erase\+\_\+by\+\_\+key@{erase\+\_\+by\+\_\+key}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{erase\+\_\+by\+\_\+key()}{erase\_by\_key()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::erase\+\_\+by\+\_\+key (\begin{DoxyParamCaption}\item[{std\+::vector$<$ Key $>$}]{keys }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a35f193e747a3005afce49dc6376cfafe}\label{class_hash_vector_a35f193e747a3005afce49dc6376cfafe}} 
+\index{Hash\+Vector@{Hash\+Vector}!erase\+\_\+by\+\_\+key\+\_\+move\+\_\+last@{erase\+\_\+by\+\_\+key\+\_\+move\+\_\+last}}
+\index{erase\+\_\+by\+\_\+key\+\_\+move\+\_\+last@{erase\+\_\+by\+\_\+key\+\_\+move\+\_\+last}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{erase\+\_\+by\+\_\+key\+\_\+move\+\_\+last()}{erase\_by\_key\_move\_last()}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::erase\+\_\+by\+\_\+key\+\_\+move\+\_\+last (\begin{DoxyParamCaption}\item[{const Key \&}]{key }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a505bf3ce92bf251105596a8c97b533d3}\label{class_hash_vector_a505bf3ce92bf251105596a8c97b533d3}} 
+\index{Hash\+Vector@{Hash\+Vector}!find@{find}}
+\index{find@{find}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{find()}{find()}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::find (\begin{DoxyParamCaption}\item[{const Key \&}]{key }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a440d2b40184d79fd3e24fdb31137c3b9}\label{class_hash_vector_a440d2b40184d79fd3e24fdb31137c3b9}} 
+\index{Hash\+Vector@{Hash\+Vector}!load\+\_\+factor@{load\+\_\+factor}}
+\index{load\+\_\+factor@{load\+\_\+factor}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{load\+\_\+factor()}{load\_factor()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+float \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::load\+\_\+factor (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a0ad83187e532c5ae897ba8d4edcdd2bc}\label{class_hash_vector_a0ad83187e532c5ae897ba8d4edcdd2bc}} 
+\index{Hash\+Vector@{Hash\+Vector}!map\+\_\+order@{map\+\_\+order}}
+\index{map\+\_\+order@{map\+\_\+order}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{map\+\_\+order()}{map\_order()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::map\+\_\+order (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ size\+\_\+t $>$ \&}]{index\+\_\+map }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a6f77df9d2a526c3c025870e9c507a685}\label{class_hash_vector_a6f77df9d2a526c3c025870e9c507a685}} 
+\index{Hash\+Vector@{Hash\+Vector}!max\+\_\+bucket\+\_\+count@{max\+\_\+bucket\+\_\+count}}
+\index{max\+\_\+bucket\+\_\+count@{max\+\_\+bucket\+\_\+count}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{max\+\_\+bucket\+\_\+count()}{max\_bucket\_count()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::max\+\_\+bucket\+\_\+count (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a9c77cbee1053243f3019d1f013cedfc8}\label{class_hash_vector_a9c77cbee1053243f3019d1f013cedfc8}} 
+\index{Hash\+Vector@{Hash\+Vector}!max\+\_\+load\+\_\+factor@{max\+\_\+load\+\_\+factor}}
+\index{max\+\_\+load\+\_\+factor@{max\+\_\+load\+\_\+factor}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{max\+\_\+load\+\_\+factor()}{max\_load\_factor()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+float \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::max\+\_\+load\+\_\+factor (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a1bc6e963cddf7301a90dea11de9f0235}\label{class_hash_vector_a1bc6e963cddf7301a90dea11de9f0235}} 
+\index{Hash\+Vector@{Hash\+Vector}!max\+\_\+load\+\_\+factor@{max\+\_\+load\+\_\+factor}}
+\index{max\+\_\+load\+\_\+factor@{max\+\_\+load\+\_\+factor}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{max\+\_\+load\+\_\+factor()}{max\_load\_factor()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::max\+\_\+load\+\_\+factor (\begin{DoxyParamCaption}\item[{float}]{ml }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a8a46270688ee2d936c131546487882cc}\label{class_hash_vector_a8a46270688ee2d936c131546487882cc}} 
+\index{Hash\+Vector@{Hash\+Vector}!max\+\_\+size@{max\+\_\+size}}
+\index{max\+\_\+size@{max\+\_\+size}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{max\+\_\+size()}{max\_size()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::max\+\_\+size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_ab01fbdc2f06fa662ba32745325687b34}\label{class_hash_vector_ab01fbdc2f06fa662ba32745325687b34}} 
+\index{Hash\+Vector@{Hash\+Vector}!merge@{merge}}
+\index{merge@{merge}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+template$<$class Hash\+\_\+2 $>$ \\
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::merge (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash\+\_\+2 $>$ \&}]{source }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a25a8f930a3a8bb4b63eb079148443ac4}\label{class_hash_vector_a25a8f930a3a8bb4b63eb079148443ac4}} 
+\index{Hash\+Vector@{Hash\+Vector}!merge@{merge}}
+\index{merge@{merge}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::merge (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Key $>$ \&}]{source }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a49f4a94f737008dfc3298e55c419b83f}\label{class_hash_vector_a49f4a94f737008dfc3298e55c419b83f}} 
+\index{Hash\+Vector@{Hash\+Vector}!merge@{merge}}
+\index{merge@{merge}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{merge()}{merge()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily template$<$class Key, class Hash $>$ \\
+template$<$class Hash\+\_\+2 $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::merge (\begin{DoxyParamCaption}\item[{const std\+::unordered\+\_\+set$<$ Key, Hash\+\_\+2 $>$ \&}]{source }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a6ec9410b623647597aee298b8798b644}\label{class_hash_vector_a6ec9410b623647597aee298b8798b644}} 
+\index{Hash\+Vector@{Hash\+Vector}!operator\mbox{[}\mbox{]}@{operator[]}}
+\index{operator\mbox{[}\mbox{]}@{operator[]}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{operator[]()}{operator[]()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+const Key \& \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::operator\mbox{[}$\,$\mbox{]} (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a8384131d8bd1e720df5f09b11b3b7dda}\label{class_hash_vector_a8384131d8bd1e720df5f09b11b3b7dda}} 
+\index{Hash\+Vector@{Hash\+Vector}!optimize@{optimize}}
+\index{optimize@{optimize}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{optimize()}{optimize()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+std\+::vector$<$ size\+\_\+t $>$ \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::optimize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a7e281851a17203dd7dda859aeaa20c6a}\label{class_hash_vector_a7e281851a17203dd7dda859aeaa20c6a}} 
+\index{Hash\+Vector@{Hash\+Vector}!reserve@{reserve}}
+\index{reserve@{reserve}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{reserve()}{reserve()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::reserve (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{count }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_aa21f1dca09001c02ac4ed5090d137b43}\label{class_hash_vector_aa21f1dca09001c02ac4ed5090d137b43}} 
+\index{Hash\+Vector@{Hash\+Vector}!shrink\+\_\+to\+\_\+fit@{shrink\+\_\+to\+\_\+fit}}
+\index{shrink\+\_\+to\+\_\+fit@{shrink\+\_\+to\+\_\+fit}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{shrink\+\_\+to\+\_\+fit()}{shrink\_to\_fit()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::shrink\+\_\+to\+\_\+fit (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a13a560f124221dce8944f21ec88600f9}\label{class_hash_vector_a13a560f124221dce8944f21ec88600f9}} 
+\index{Hash\+Vector@{Hash\+Vector}!size@{size}}
+\index{size@{size}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a1b1083a530fe2420b309e921a9467b33}\label{class_hash_vector_a1b1083a530fe2420b309e921a9467b33}} 
+\index{Hash\+Vector@{Hash\+Vector}!swap@{swap}}
+\index{swap@{swap}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{swap()}{swap()}}
+{\footnotesize\ttfamily template$<$class Key, class Hash$>$ \\
+void \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::swap (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$ \&}]{other }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{class_hash_vector_a35579dfa738189e4d372f85621c48733}\label{class_hash_vector_a35579dfa738189e4d372f85621c48733}} 
+\index{Hash\+Vector@{Hash\+Vector}!to\+Key\+Index@{to\+Key\+Index}}
+\index{to\+Key\+Index@{to\+Key\+Index}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{to\+Key\+Index()}{toKeyIndex()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+std\+::vector$<$ std\+::pair$<$ Key, size\+\_\+t $>$ $>$ \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::to\+Key\+Index (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_acdd566cb4429b25603131499168a0854}\label{class_hash_vector_acdd566cb4429b25603131499168a0854}} 
+\index{Hash\+Vector@{Hash\+Vector}!to\+Unordered\+\_\+set@{to\+Unordered\+\_\+set}}
+\index{to\+Unordered\+\_\+set@{to\+Unordered\+\_\+set}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{to\+Unordered\+\_\+set()}{toUnordered\_set()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+std\+::unordered\+\_\+set$<$ Key, Hash $>$ \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::to\+Unordered\+\_\+set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{class_hash_vector_a37bd6de48acf712ae3936a6259c82899}\label{class_hash_vector_a37bd6de48acf712ae3936a6259c82899}} 
+\index{Hash\+Vector@{Hash\+Vector}!to\+Vector@{to\+Vector}}
+\index{to\+Vector@{to\+Vector}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{to\+Vector()}{toVector()}}
+{\footnotesize\ttfamily template$<$class Key , class Hash $>$ \\
+std\+::vector$<$ Key $>$ \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::to\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{class_hash_vector_abf48a0c17475981e14aaa83fec37a1e8}\label{class_hash_vector_abf48a0c17475981e14aaa83fec37a1e8}} 
+\index{Hash\+Vector@{Hash\+Vector}!npos@{npos}}
+\index{npos@{npos}!Hash\+Vector@{Hash\+Vector}}
+\subsubsection{\texorpdfstring{npos}{npos}}
+{\footnotesize\ttfamily template$<$class Key, class Hash = std\+::hash$<$\+Key$>$$>$ \\
+const size\+\_\+t \mbox{\hyperlink{class_hash_vector}{Hash\+Vector}}$<$ Key, Hash $>$\+::npos = S\+I\+Z\+E\+\_\+\+M\+AX\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/helpers/\mbox{\hyperlink{hash__vector_8h}{hash\+\_\+vector.\+h}}\end{DoxyCompactItemize}

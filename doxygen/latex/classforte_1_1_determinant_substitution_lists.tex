@@ -1,0 +1,289 @@
+\hypertarget{classforte_1_1_determinant_substitution_lists}{}\section{forte\+:\+:Determinant\+Substitution\+Lists Class Reference}
+\label{classforte_1_1_determinant_substitution_lists}\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+
+
+{\ttfamily \#include $<$determinant\+\_\+substitution\+\_\+lists.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a35a24415ca3d45669f01afcbb365b12d}{Determinant\+Substitution\+Lists}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ fci\+\_\+ints)
+\begin{DoxyCompactList}\small\item\em Default constructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a12f7a6930e9fff0d178a0899a115175a}{set\+\_\+quiet\+\_\+mode}} (bool mode)
+\begin{DoxyCompactList}\small\item\em Set print level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_ac3fca4f728b3acc5cff46ccbbaa1b1b5}{op\+\_\+s\+\_\+lists}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&wfn)
+\begin{DoxyCompactList}\small\item\em Build the coupling lists for one-\/particle operators. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_afbcf9837fbd1f0ba05c2959853896c00}{tp\+\_\+s\+\_\+lists}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&wfn)
+\begin{DoxyCompactList}\small\item\em Build the coupling lists for two-\/particle operators. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_ace6681417102c8cc027ea4287aa33b61}{three\+\_\+s\+\_\+lists}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&wfn)
+\begin{DoxyCompactList}\small\item\em Build the coupling lists for three-\/particle operators. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a7cafd675639529eccf9ccd59f9784579}{clear\+\_\+op\+\_\+s\+\_\+lists}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_aa2aa6b7311cb5ac250088c974acf4329}{clear\+\_\+tp\+\_\+s\+\_\+lists}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a70a51832932974071ae62cd720632b42}{build\+\_\+strings}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&wfn)
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a5c532b82288f789be57dce094e465b3e}{a\+\_\+list\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_ae1b8d28a3ab1de163ffbf0729c1ae5f9}{b\+\_\+list\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, short, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_ad2fcc8265c4039e46109946f77a7182b}{aa\+\_\+list\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, short, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_ad2f99a2ea3118e3fa5f84534fd6e271b}{bb\+\_\+list\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, short, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_ad2a5d042bcbe7a13223c5810d174a170}{ab\+\_\+list\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, short, short, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_ab4e96c9e2ccfee306a3bbb57f5441a35}{aaa\+\_\+list\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Three particle lists. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, short, short, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a08c21d0c7c5594b4e245761fc99a929c}{aab\+\_\+list\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, short, short, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a87d05dca8686a36a9d336c6df26a4655}{abb\+\_\+list\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::tuple$<$ size\+\_\+t, short, short, short $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a857c7d93e3f03e996721b830ba376748}{bbb\+\_\+list\+\_\+}}
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a6301c6fb71410edb4ce093ffcda12a98}{startup}} ()
+\begin{DoxyCompactList}\small\item\em Initialize important variables on construction. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ std\+::vector$<$ size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a10bf91f93f5c4fb8dd0280b8b0c11bb6}{beta\+\_\+strings\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ size\+\_\+t $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a5884d5c1087b3ed9183f351536ea8751}{alpha\+\_\+strings\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ int, size\+\_\+t $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a16a81f525203f43f3475b928efb6400c}{alpha\+\_\+a\+\_\+strings\+\_\+}}
+\item 
+std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ int, size\+\_\+t $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a4bd4848122963012767b87c93354dd53}{beta\+\_\+a\+\_\+strings\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a2bb4422644bbcf89fb814ec24318dcb3}{ncmo\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Number of active space orbitals. \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a86420e7b470288e43746541e22861569}{mo\+\_\+symmetry\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Active space symmetry. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_a9ad6af913034ae35c7c97d809076cc45}{quiet\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Print level. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_determinant_substitution_lists_ad02e691009f7764288979b75c8d7cc21}{fci\+\_\+ints\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The integrals. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a35a24415ca3d45669f01afcbb365b12d}\label{classforte_1_1_determinant_substitution_lists_a35a24415ca3d45669f01afcbb365b12d}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!Determinant\+Substitution\+Lists@{Determinant\+Substitution\+Lists}}
+\index{Determinant\+Substitution\+Lists@{Determinant\+Substitution\+Lists}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{Determinant\+Substitution\+Lists()}{DeterminantSubstitutionLists()}}
+{\footnotesize\ttfamily forte\+::\+Determinant\+Substitution\+Lists\+::\+Determinant\+Substitution\+Lists (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{fci\+\_\+ints }\end{DoxyParamCaption})}
+
+
+
+Default constructor. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a70a51832932974071ae62cd720632b42}\label{classforte_1_1_determinant_substitution_lists_a70a51832932974071ae62cd720632b42}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!build\+\_\+strings@{build\+\_\+strings}}
+\index{build\+\_\+strings@{build\+\_\+strings}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{build\+\_\+strings()}{build\_strings()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Substitution\+Lists\+::build\+\_\+strings (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{wfn }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a7cafd675639529eccf9ccd59f9784579}\label{classforte_1_1_determinant_substitution_lists_a7cafd675639529eccf9ccd59f9784579}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!clear\+\_\+op\+\_\+s\+\_\+lists@{clear\+\_\+op\+\_\+s\+\_\+lists}}
+\index{clear\+\_\+op\+\_\+s\+\_\+lists@{clear\+\_\+op\+\_\+s\+\_\+lists}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{clear\+\_\+op\+\_\+s\+\_\+lists()}{clear\_op\_s\_lists()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Substitution\+Lists\+::clear\+\_\+op\+\_\+s\+\_\+lists (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_aa2aa6b7311cb5ac250088c974acf4329}\label{classforte_1_1_determinant_substitution_lists_aa2aa6b7311cb5ac250088c974acf4329}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!clear\+\_\+tp\+\_\+s\+\_\+lists@{clear\+\_\+tp\+\_\+s\+\_\+lists}}
+\index{clear\+\_\+tp\+\_\+s\+\_\+lists@{clear\+\_\+tp\+\_\+s\+\_\+lists}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{clear\+\_\+tp\+\_\+s\+\_\+lists()}{clear\_tp\_s\_lists()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Substitution\+Lists\+::clear\+\_\+tp\+\_\+s\+\_\+lists (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_ac3fca4f728b3acc5cff46ccbbaa1b1b5}\label{classforte_1_1_determinant_substitution_lists_ac3fca4f728b3acc5cff46ccbbaa1b1b5}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!op\+\_\+s\+\_\+lists@{op\+\_\+s\+\_\+lists}}
+\index{op\+\_\+s\+\_\+lists@{op\+\_\+s\+\_\+lists}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{op\+\_\+s\+\_\+lists()}{op\_s\_lists()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Substitution\+Lists\+::op\+\_\+s\+\_\+lists (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{wfn }\end{DoxyParamCaption})}
+
+
+
+Build the coupling lists for one-\/particle operators. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a12f7a6930e9fff0d178a0899a115175a}\label{classforte_1_1_determinant_substitution_lists_a12f7a6930e9fff0d178a0899a115175a}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!set\+\_\+quiet\+\_\+mode@{set\+\_\+quiet\+\_\+mode}}
+\index{set\+\_\+quiet\+\_\+mode@{set\+\_\+quiet\+\_\+mode}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{set\+\_\+quiet\+\_\+mode()}{set\_quiet\_mode()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Substitution\+Lists\+::set\+\_\+quiet\+\_\+mode (\begin{DoxyParamCaption}\item[{bool}]{mode }\end{DoxyParamCaption})}
+
+
+
+Set print level. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a6301c6fb71410edb4ce093ffcda12a98}\label{classforte_1_1_determinant_substitution_lists_a6301c6fb71410edb4ce093ffcda12a98}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!startup@{startup}}
+\index{startup@{startup}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{startup()}{startup()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Substitution\+Lists\+::startup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Initialize important variables on construction. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_ace6681417102c8cc027ea4287aa33b61}\label{classforte_1_1_determinant_substitution_lists_ace6681417102c8cc027ea4287aa33b61}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!three\+\_\+s\+\_\+lists@{three\+\_\+s\+\_\+lists}}
+\index{three\+\_\+s\+\_\+lists@{three\+\_\+s\+\_\+lists}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{three\+\_\+s\+\_\+lists()}{three\_s\_lists()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Substitution\+Lists\+::three\+\_\+s\+\_\+lists (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{wfn }\end{DoxyParamCaption})}
+
+
+
+Build the coupling lists for three-\/particle operators. 
+
+A\+AB coupling
+
+A\+BB coupling
+
+B\+BB coupling \mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_afbcf9837fbd1f0ba05c2959853896c00}\label{classforte_1_1_determinant_substitution_lists_afbcf9837fbd1f0ba05c2959853896c00}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!tp\+\_\+s\+\_\+lists@{tp\+\_\+s\+\_\+lists}}
+\index{tp\+\_\+s\+\_\+lists@{tp\+\_\+s\+\_\+lists}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{tp\+\_\+s\+\_\+lists()}{tp\_s\_lists()}}
+{\footnotesize\ttfamily void forte\+::\+Determinant\+Substitution\+Lists\+::tp\+\_\+s\+\_\+lists (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{wfn }\end{DoxyParamCaption})}
+
+
+
+Build the coupling lists for two-\/particle operators. 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a5c532b82288f789be57dce094e465b3e}\label{classforte_1_1_determinant_substitution_lists_a5c532b82288f789be57dce094e465b3e}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!a\+\_\+list\+\_\+@{a\+\_\+list\+\_\+}}
+\index{a\+\_\+list\+\_\+@{a\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{a\+\_\+list\+\_\+}{a\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::pair$<$size\+\_\+t, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::a\+\_\+list\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_ad2fcc8265c4039e46109946f77a7182b}\label{classforte_1_1_determinant_substitution_lists_ad2fcc8265c4039e46109946f77a7182b}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!aa\+\_\+list\+\_\+@{aa\+\_\+list\+\_\+}}
+\index{aa\+\_\+list\+\_\+@{aa\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{aa\+\_\+list\+\_\+}{aa\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::tuple$<$size\+\_\+t, short, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::aa\+\_\+list\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_ab4e96c9e2ccfee306a3bbb57f5441a35}\label{classforte_1_1_determinant_substitution_lists_ab4e96c9e2ccfee306a3bbb57f5441a35}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!aaa\+\_\+list\+\_\+@{aaa\+\_\+list\+\_\+}}
+\index{aaa\+\_\+list\+\_\+@{aaa\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{aaa\+\_\+list\+\_\+}{aaa\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::tuple$<$size\+\_\+t, short, short, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::aaa\+\_\+list\+\_\+}
+
+
+
+Three particle lists. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a08c21d0c7c5594b4e245761fc99a929c}\label{classforte_1_1_determinant_substitution_lists_a08c21d0c7c5594b4e245761fc99a929c}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!aab\+\_\+list\+\_\+@{aab\+\_\+list\+\_\+}}
+\index{aab\+\_\+list\+\_\+@{aab\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{aab\+\_\+list\+\_\+}{aab\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::tuple$<$size\+\_\+t, short, short, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::aab\+\_\+list\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_ad2a5d042bcbe7a13223c5810d174a170}\label{classforte_1_1_determinant_substitution_lists_ad2a5d042bcbe7a13223c5810d174a170}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!ab\+\_\+list\+\_\+@{ab\+\_\+list\+\_\+}}
+\index{ab\+\_\+list\+\_\+@{ab\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{ab\+\_\+list\+\_\+}{ab\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::tuple$<$size\+\_\+t, short, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::ab\+\_\+list\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a87d05dca8686a36a9d336c6df26a4655}\label{classforte_1_1_determinant_substitution_lists_a87d05dca8686a36a9d336c6df26a4655}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!abb\+\_\+list\+\_\+@{abb\+\_\+list\+\_\+}}
+\index{abb\+\_\+list\+\_\+@{abb\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{abb\+\_\+list\+\_\+}{abb\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::tuple$<$size\+\_\+t, short, short, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::abb\+\_\+list\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a16a81f525203f43f3475b928efb6400c}\label{classforte_1_1_determinant_substitution_lists_a16a81f525203f43f3475b928efb6400c}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!alpha\+\_\+a\+\_\+strings\+\_\+@{alpha\+\_\+a\+\_\+strings\+\_\+}}
+\index{alpha\+\_\+a\+\_\+strings\+\_\+@{alpha\+\_\+a\+\_\+strings\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{alpha\+\_\+a\+\_\+strings\+\_\+}{alpha\_a\_strings\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::pair$<$int, size\+\_\+t$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::alpha\+\_\+a\+\_\+strings\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a5884d5c1087b3ed9183f351536ea8751}\label{classforte_1_1_determinant_substitution_lists_a5884d5c1087b3ed9183f351536ea8751}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!alpha\+\_\+strings\+\_\+@{alpha\+\_\+strings\+\_\+}}
+\index{alpha\+\_\+strings\+\_\+@{alpha\+\_\+strings\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{alpha\+\_\+strings\+\_\+}{alpha\_strings\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$size\+\_\+t$>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::alpha\+\_\+strings\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_ae1b8d28a3ab1de163ffbf0729c1ae5f9}\label{classforte_1_1_determinant_substitution_lists_ae1b8d28a3ab1de163ffbf0729c1ae5f9}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!b\+\_\+list\+\_\+@{b\+\_\+list\+\_\+}}
+\index{b\+\_\+list\+\_\+@{b\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{b\+\_\+list\+\_\+}{b\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::pair$<$size\+\_\+t, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::b\+\_\+list\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_ad2f99a2ea3118e3fa5f84534fd6e271b}\label{classforte_1_1_determinant_substitution_lists_ad2f99a2ea3118e3fa5f84534fd6e271b}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!bb\+\_\+list\+\_\+@{bb\+\_\+list\+\_\+}}
+\index{bb\+\_\+list\+\_\+@{bb\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{bb\+\_\+list\+\_\+}{bb\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::tuple$<$size\+\_\+t, short, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::bb\+\_\+list\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a857c7d93e3f03e996721b830ba376748}\label{classforte_1_1_determinant_substitution_lists_a857c7d93e3f03e996721b830ba376748}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!bbb\+\_\+list\+\_\+@{bbb\+\_\+list\+\_\+}}
+\index{bbb\+\_\+list\+\_\+@{bbb\+\_\+list\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{bbb\+\_\+list\+\_\+}{bbb\_list\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::tuple$<$size\+\_\+t, short, short, short$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::bbb\+\_\+list\+\_\+}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a4bd4848122963012767b87c93354dd53}\label{classforte_1_1_determinant_substitution_lists_a4bd4848122963012767b87c93354dd53}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!beta\+\_\+a\+\_\+strings\+\_\+@{beta\+\_\+a\+\_\+strings\+\_\+}}
+\index{beta\+\_\+a\+\_\+strings\+\_\+@{beta\+\_\+a\+\_\+strings\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{beta\+\_\+a\+\_\+strings\+\_\+}{beta\_a\_strings\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::pair$<$int, size\+\_\+t$>$ $>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::beta\+\_\+a\+\_\+strings\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a10bf91f93f5c4fb8dd0280b8b0c11bb6}\label{classforte_1_1_determinant_substitution_lists_a10bf91f93f5c4fb8dd0280b8b0c11bb6}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!beta\+\_\+strings\+\_\+@{beta\+\_\+strings\+\_\+}}
+\index{beta\+\_\+strings\+\_\+@{beta\+\_\+strings\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{beta\+\_\+strings\+\_\+}{beta\_strings\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$size\+\_\+t$>$ $>$ forte\+::\+Determinant\+Substitution\+Lists\+::beta\+\_\+strings\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_ad02e691009f7764288979b75c8d7cc21}\label{classforte_1_1_determinant_substitution_lists_ad02e691009f7764288979b75c8d7cc21}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!fci\+\_\+ints\+\_\+@{fci\+\_\+ints\+\_\+}}
+\index{fci\+\_\+ints\+\_\+@{fci\+\_\+ints\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{fci\+\_\+ints\+\_\+}{fci\_ints\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}}$>$ forte\+::\+Determinant\+Substitution\+Lists\+::fci\+\_\+ints\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a86420e7b470288e43746541e22861569}\label{classforte_1_1_determinant_substitution_lists_a86420e7b470288e43746541e22861569}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!mo\+\_\+symmetry\+\_\+@{mo\+\_\+symmetry\+\_\+}}
+\index{mo\+\_\+symmetry\+\_\+@{mo\+\_\+symmetry\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{mo\+\_\+symmetry\+\_\+}{mo\_symmetry\_}}
+{\footnotesize\ttfamily std\+::vector$<$int$>$ forte\+::\+Determinant\+Substitution\+Lists\+::mo\+\_\+symmetry\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Active space symmetry. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a2bb4422644bbcf89fb814ec24318dcb3}\label{classforte_1_1_determinant_substitution_lists_a2bb4422644bbcf89fb814ec24318dcb3}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!ncmo\+\_\+@{ncmo\+\_\+}}
+\index{ncmo\+\_\+@{ncmo\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{ncmo\+\_\+}{ncmo\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Determinant\+Substitution\+Lists\+::ncmo\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Number of active space orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_determinant_substitution_lists_a9ad6af913034ae35c7c97d809076cc45}\label{classforte_1_1_determinant_substitution_lists_a9ad6af913034ae35c7c97d809076cc45}} 
+\index{forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}!quiet\+\_\+@{quiet\+\_\+}}
+\index{quiet\+\_\+@{quiet\+\_\+}!forte\+::\+Determinant\+Substitution\+Lists@{forte\+::\+Determinant\+Substitution\+Lists}}
+\subsubsection{\texorpdfstring{quiet\+\_\+}{quiet\_}}
+{\footnotesize\ttfamily bool forte\+::\+Determinant\+Substitution\+Lists\+::quiet\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print level. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{determinant__substitution__lists_8h}{determinant\+\_\+substitution\+\_\+lists.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{determinant__substitution__lists_8cc}{determinant\+\_\+substitution\+\_\+lists.\+cc}}\end{DoxyCompactItemize}

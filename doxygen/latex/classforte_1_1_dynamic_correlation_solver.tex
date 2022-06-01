@@ -1,0 +1,401 @@
+\hypertarget{classforte_1_1_dynamic_correlation_solver}{}\section{forte\+:\+:Dynamic\+Correlation\+Solver Class Reference}
+\label{classforte_1_1_dynamic_correlation_solver}\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+
+
+{\ttfamily \#include $<$dynamic\+\_\+correlation\+\_\+solver.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Dynamic\+Correlation\+Solver\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_dynamic_correlation_solver__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Dynamic\+Correlation\+Solver\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=210pt]{classforte_1_1_dynamic_correlation_solver__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a37c8ad39f777f877d32735c342549f8a}{Dynamic\+Correlation\+Solver}} (\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} rdms, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ ints, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info)
+\item 
+virtual double \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_aff4c7ebdca64563939d6e3ab8a262150}{compute\+\_\+energy}} ()=0
+\begin{DoxyCompactList}\small\item\em Compute energy. \end{DoxyCompactList}\item 
+virtual std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a8a66ab912dd2c7c1d35c1428df5a494d}{compute\+\_\+\+Heff\+\_\+actv}} ()=0
+\begin{DoxyCompactList}\small\item\em Compute dressed Hamiltonian. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a80d76d03ef8046d71525943420c0cae6}{$\sim$\+Dynamic\+Correlation\+Solver}} ()=default
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_ab2096aa0b894db57cf747c86f1252e08}{set\+\_\+read\+\_\+amps\+\_\+cwd}} (bool read)
+\begin{DoxyCompactList}\small\item\em Set whether to read amplitudes or not manually. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a6c55258f31849caa086b226937f35245}{clean\+\_\+checkpoints}} ()
+\begin{DoxyCompactList}\small\item\em Clean up amplitudes checkpoint files. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_ac071ebcb164f9f4a0d573c65602e3f8a}{startup}} ()
+\begin{DoxyCompactList}\small\item\em Common settings. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a504b343c559a62b9d13ecf8cec44f3d2}{dump\+\_\+amps\+\_\+to\+\_\+disk}} ()
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$ \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a839aab2128d02f4a5c9e3a15cd6c4c00}{ints\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The molecular integrals. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_aa9356222050b3dbbf67483338434fa01}{mo\+\_\+space\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The MO space info. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a4b8e42e0c8ddbacdd12a70dbad089f17}{rdms\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} and cumulants of the reference wave function. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$ \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a4e278d36f4dae4c3828f351561748c6e}{scf\+\_\+info\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}}. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_aab1c4954021b18452cdd0d6a681473ee}{foptions\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_ae0e31a29aa63a9f11df1f08e903ef79f}{Enuc\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Nuclear repulsion energy. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a0f12440aa662e60a9348a375c8ab959a}{Efrzc\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Frozen core energy. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a3b2686df5f7abb843eeebb130dfc0827}{print\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Printing level. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a73a1949b72f47abf27cb7516719c2211}{ints\+\_\+type\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The integral type. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_ac481bf2ca528e1dadb34091d53e49423}{eri\+\_\+df\+\_\+}}
+\begin{DoxyCompactList}\small\item\em If E\+RI density fitted or Cholesky decomposed. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a216ac5f54981981b1720b0aac57fc7ba}{diis\+\_\+start\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Cycle number to start D\+I\+IS. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_ad58021bfd1f4c518d3d57183afdcd403}{diis\+\_\+min\+\_\+vec\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Minimum number of D\+I\+IS vectors. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a8f7c491f8d339d3ec9cba80ad02d10fa}{diis\+\_\+max\+\_\+vec\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Maximum number of D\+I\+IS vectors. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_acd0fdabf84f31c7d115a89b6b7fe9af6}{diis\+\_\+freq\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Frequency of extrapolating the current D\+I\+IS vectors. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a394952f010dae1c06893c03acca808e8}{t1\+\_\+file\+\_\+chk\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Checkpoint file for T1 amplitudes. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_aef52805c0fd6b82f19ea598cec8f3fc6}{t2\+\_\+file\+\_\+chk\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Checkpoint file for T2 amplitudes. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_ab651c3efceb41dfe20c9c55d3e6aeac5}{t1\+\_\+file\+\_\+cwd\+\_\+}}
+\begin{DoxyCompactList}\small\item\em File name for T1 amplitudes to be saved in current directory. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_aeffaac4dffe7b8a38b625f466edb8781}{t2\+\_\+file\+\_\+cwd\+\_\+}}
+\begin{DoxyCompactList}\small\item\em File name for T2 amplitudes to be saved in current directory. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_a94f8a814fc383e80ac628a6c08d0fff2}{dump\+\_\+amps\+\_\+cwd\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Dump amplitudes to current directory. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_dynamic_correlation_solver_aa1c91323000f21d7c2ba0af5ccb51df7}{read\+\_\+amps\+\_\+cwd\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Read amplitudes from current directory. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a37c8ad39f777f877d32735c342549f8a}\label{classforte_1_1_dynamic_correlation_solver_a37c8ad39f777f877d32735c342549f8a}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!Dynamic\+Correlation\+Solver@{Dynamic\+Correlation\+Solver}}
+\index{Dynamic\+Correlation\+Solver@{Dynamic\+Correlation\+Solver}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{Dynamic\+Correlation\+Solver()}{DynamicCorrelationSolver()}}
+{\footnotesize\ttfamily forte\+::\+Dynamic\+Correlation\+Solver\+::\+Dynamic\+Correlation\+Solver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}}]{rdms,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}} $>$}]{ints,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info }\end{DoxyParamCaption})}
+
+Constructor 
+\begin{DoxyParams}{Parameters}
+{\em ref\+\_\+wfn} & The reference wavefunction object \\
+\hline
+{\em options} & The main options object \\
+\hline
+{\em ints} & A pointer to an allocated integral object \\
+\hline
+{\em mo\+\_\+space\+\_\+info} & The \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} object \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a80d76d03ef8046d71525943420c0cae6}\label{classforte_1_1_dynamic_correlation_solver_a80d76d03ef8046d71525943420c0cae6}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!````~Dynamic\+Correlation\+Solver@{$\sim$\+Dynamic\+Correlation\+Solver}}
+\index{````~Dynamic\+Correlation\+Solver@{$\sim$\+Dynamic\+Correlation\+Solver}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{$\sim$\+Dynamic\+Correlation\+Solver()}{~DynamicCorrelationSolver()}}
+{\footnotesize\ttfamily virtual forte\+::\+Dynamic\+Correlation\+Solver\+::$\sim$\+Dynamic\+Correlation\+Solver (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+
+
+Destructor. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a6c55258f31849caa086b226937f35245}\label{classforte_1_1_dynamic_correlation_solver_a6c55258f31849caa086b226937f35245}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!clean\+\_\+checkpoints@{clean\+\_\+checkpoints}}
+\index{clean\+\_\+checkpoints@{clean\+\_\+checkpoints}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{clean\+\_\+checkpoints()}{clean\_checkpoints()}}
+{\footnotesize\ttfamily void forte\+::\+Dynamic\+Correlation\+Solver\+::clean\+\_\+checkpoints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Clean up amplitudes checkpoint files. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_aff4c7ebdca64563939d6e3ab8a262150}\label{classforte_1_1_dynamic_correlation_solver_aff4c7ebdca64563939d6e3ab8a262150}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily virtual double forte\+::\+Dynamic\+Correlation\+Solver\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Compute energy. 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_m_r_d_s_r_g___s_o_a5a73a7377c4a2be6ce0d875f9833d589}{forte\+::\+M\+R\+D\+S\+R\+G\+\_\+\+SO}}, \mbox{\hyperlink{classforte_1_1_s_o_m_r_d_s_r_g_a80e229a7a41f301ebab0b8d063f8e243}{forte\+::\+S\+O\+M\+R\+D\+S\+RG}}, \mbox{\hyperlink{classforte_1_1_s_a_d_s_r_g_aa3716848c396b296b99fff8d48751fd8}{forte\+::\+S\+A\+D\+S\+RG}}, \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t2_a0884f1a9e8f98eb3c272e9c6518e7691}{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T2}}, \mbox{\hyperlink{classforte_1_1_m_r_d_s_r_g_a6c9a82cec6600ecbf3b2a0b01d946223}{forte\+::\+M\+R\+D\+S\+RG}}, \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t3_a48a25a952206690bcf8125e583576052}{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T3}}, \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t_a83b7f20d255a4f1f33bb05d707846f85}{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+PT}}, \mbox{\hyperlink{classforte_1_1_t_h_r_e_e___d_s_r_g___m_r_p_t2_af7cee9b490ef09652f35cbfd48f8fe6a}{forte\+::\+T\+H\+R\+E\+E\+\_\+\+D\+S\+R\+G\+\_\+\+M\+R\+P\+T2}}, \mbox{\hyperlink{classforte_1_1_s_a___m_r_d_s_r_g_a9c86de209cdf7a12ed9cb99e9570fff5}{forte\+::\+S\+A\+\_\+\+M\+R\+D\+S\+RG}}, \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t2_ac9a4af8ba06295c2918dbc2640caab85}{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T2}}, \mbox{\hyperlink{classforte_1_1_s_a___m_r_p_t3_a566a1aa6f6d3cbb8acdac40cba928aaf}{forte\+::\+S\+A\+\_\+\+M\+R\+P\+T3}}, and \mbox{\hyperlink{classforte_1_1_m_a_s_t_e_r___d_s_r_g_a34011aaadcc79224071a4266a095591b}{forte\+::\+M\+A\+S\+T\+E\+R\+\_\+\+D\+S\+RG}}.
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a8a66ab912dd2c7c1d35c1428df5a494d}\label{classforte_1_1_dynamic_correlation_solver_a8a66ab912dd2c7c1d35c1428df5a494d}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!compute\+\_\+\+Heff\+\_\+actv@{compute\+\_\+\+Heff\+\_\+actv}}
+\index{compute\+\_\+\+Heff\+\_\+actv@{compute\+\_\+\+Heff\+\_\+actv}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+\+Heff\+\_\+actv()}{compute\_Heff\_actv()}}
+{\footnotesize\ttfamily virtual std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}}$>$ forte\+::\+Dynamic\+Correlation\+Solver\+::compute\+\_\+\+Heff\+\_\+actv (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Compute dressed Hamiltonian. 
+
+
+
+Implemented in \mbox{\hyperlink{classforte_1_1_m_r_d_s_r_g___s_o_a2c927466355d27797fb2a7b5ff478779}{forte\+::\+M\+R\+D\+S\+R\+G\+\_\+\+SO}}, \mbox{\hyperlink{classforte_1_1_s_o_m_r_d_s_r_g_a124b4ab351075d25eec777872e3322f5}{forte\+::\+S\+O\+M\+R\+D\+S\+RG}}, \mbox{\hyperlink{classforte_1_1_s_a_d_s_r_g_afd26cf60145a7e46f65fb07f44e93021}{forte\+::\+S\+A\+D\+S\+RG}}, \mbox{\hyperlink{classforte_1_1_d_s_r_g___m_r_p_t_a929556373e50b9baeefbdd461fd72124}{forte\+::\+D\+S\+R\+G\+\_\+\+M\+R\+PT}}, and \mbox{\hyperlink{classforte_1_1_m_a_s_t_e_r___d_s_r_g_a4c4e581766abada72d8e1742a7887d2a}{forte\+::\+M\+A\+S\+T\+E\+R\+\_\+\+D\+S\+RG}}.
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a504b343c559a62b9d13ecf8cec44f3d2}\label{classforte_1_1_dynamic_correlation_solver_a504b343c559a62b9d13ecf8cec44f3d2}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!dump\+\_\+amps\+\_\+to\+\_\+disk@{dump\+\_\+amps\+\_\+to\+\_\+disk}}
+\index{dump\+\_\+amps\+\_\+to\+\_\+disk@{dump\+\_\+amps\+\_\+to\+\_\+disk}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{dump\+\_\+amps\+\_\+to\+\_\+disk()}{dump\_amps\_to\_disk()}}
+{\footnotesize\ttfamily virtual void forte\+::\+Dynamic\+Correlation\+Solver\+::dump\+\_\+amps\+\_\+to\+\_\+disk (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+Dump the converged amplitudes to disk Iterative methods should override this function 
+
+Reimplemented in \mbox{\hyperlink{classforte_1_1_m_r_d_s_r_g_aee87aff2861a0aa4be1d6486d7054049}{forte\+::\+M\+R\+D\+S\+RG}}, and \mbox{\hyperlink{classforte_1_1_s_a___m_r_d_s_r_g_a53d329b17db498bf6c3e6c3984195bcb}{forte\+::\+S\+A\+\_\+\+M\+R\+D\+S\+RG}}.
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_ab2096aa0b894db57cf747c86f1252e08}\label{classforte_1_1_dynamic_correlation_solver_ab2096aa0b894db57cf747c86f1252e08}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!set\+\_\+read\+\_\+amps\+\_\+cwd@{set\+\_\+read\+\_\+amps\+\_\+cwd}}
+\index{set\+\_\+read\+\_\+amps\+\_\+cwd@{set\+\_\+read\+\_\+amps\+\_\+cwd}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+read\+\_\+amps\+\_\+cwd()}{set\_read\_amps\_cwd()}}
+{\footnotesize\ttfamily void forte\+::\+Dynamic\+Correlation\+Solver\+::set\+\_\+read\+\_\+amps\+\_\+cwd (\begin{DoxyParamCaption}\item[{bool}]{read }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set whether to read amplitudes or not manually. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_ac071ebcb164f9f4a0d573c65602e3f8a}\label{classforte_1_1_dynamic_correlation_solver_ac071ebcb164f9f4a0d573c65602e3f8a}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!startup@{startup}}
+\index{startup@{startup}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{startup()}{startup()}}
+{\footnotesize\ttfamily void forte\+::\+Dynamic\+Correlation\+Solver\+::startup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Common settings. 
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_acd0fdabf84f31c7d115a89b6b7fe9af6}\label{classforte_1_1_dynamic_correlation_solver_acd0fdabf84f31c7d115a89b6b7fe9af6}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!diis\+\_\+freq\+\_\+@{diis\+\_\+freq\+\_\+}}
+\index{diis\+\_\+freq\+\_\+@{diis\+\_\+freq\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{diis\+\_\+freq\+\_\+}{diis\_freq\_}}
+{\footnotesize\ttfamily int forte\+::\+Dynamic\+Correlation\+Solver\+::diis\+\_\+freq\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Frequency of extrapolating the current D\+I\+IS vectors. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a8f7c491f8d339d3ec9cba80ad02d10fa}\label{classforte_1_1_dynamic_correlation_solver_a8f7c491f8d339d3ec9cba80ad02d10fa}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!diis\+\_\+max\+\_\+vec\+\_\+@{diis\+\_\+max\+\_\+vec\+\_\+}}
+\index{diis\+\_\+max\+\_\+vec\+\_\+@{diis\+\_\+max\+\_\+vec\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{diis\+\_\+max\+\_\+vec\+\_\+}{diis\_max\_vec\_}}
+{\footnotesize\ttfamily int forte\+::\+Dynamic\+Correlation\+Solver\+::diis\+\_\+max\+\_\+vec\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Maximum number of D\+I\+IS vectors. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_ad58021bfd1f4c518d3d57183afdcd403}\label{classforte_1_1_dynamic_correlation_solver_ad58021bfd1f4c518d3d57183afdcd403}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!diis\+\_\+min\+\_\+vec\+\_\+@{diis\+\_\+min\+\_\+vec\+\_\+}}
+\index{diis\+\_\+min\+\_\+vec\+\_\+@{diis\+\_\+min\+\_\+vec\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{diis\+\_\+min\+\_\+vec\+\_\+}{diis\_min\_vec\_}}
+{\footnotesize\ttfamily int forte\+::\+Dynamic\+Correlation\+Solver\+::diis\+\_\+min\+\_\+vec\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Minimum number of D\+I\+IS vectors. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a216ac5f54981981b1720b0aac57fc7ba}\label{classforte_1_1_dynamic_correlation_solver_a216ac5f54981981b1720b0aac57fc7ba}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!diis\+\_\+start\+\_\+@{diis\+\_\+start\+\_\+}}
+\index{diis\+\_\+start\+\_\+@{diis\+\_\+start\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{diis\+\_\+start\+\_\+}{diis\_start\_}}
+{\footnotesize\ttfamily int forte\+::\+Dynamic\+Correlation\+Solver\+::diis\+\_\+start\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Cycle number to start D\+I\+IS. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a94f8a814fc383e80ac628a6c08d0fff2}\label{classforte_1_1_dynamic_correlation_solver_a94f8a814fc383e80ac628a6c08d0fff2}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!dump\+\_\+amps\+\_\+cwd\+\_\+@{dump\+\_\+amps\+\_\+cwd\+\_\+}}
+\index{dump\+\_\+amps\+\_\+cwd\+\_\+@{dump\+\_\+amps\+\_\+cwd\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{dump\+\_\+amps\+\_\+cwd\+\_\+}{dump\_amps\_cwd\_}}
+{\footnotesize\ttfamily bool forte\+::\+Dynamic\+Correlation\+Solver\+::dump\+\_\+amps\+\_\+cwd\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Dump amplitudes to current directory. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a0f12440aa662e60a9348a375c8ab959a}\label{classforte_1_1_dynamic_correlation_solver_a0f12440aa662e60a9348a375c8ab959a}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!Efrzc\+\_\+@{Efrzc\+\_\+}}
+\index{Efrzc\+\_\+@{Efrzc\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{Efrzc\+\_\+}{Efrzc\_}}
+{\footnotesize\ttfamily double forte\+::\+Dynamic\+Correlation\+Solver\+::\+Efrzc\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Frozen core energy. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_ae0e31a29aa63a9f11df1f08e903ef79f}\label{classforte_1_1_dynamic_correlation_solver_ae0e31a29aa63a9f11df1f08e903ef79f}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!Enuc\+\_\+@{Enuc\+\_\+}}
+\index{Enuc\+\_\+@{Enuc\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{Enuc\+\_\+}{Enuc\_}}
+{\footnotesize\ttfamily double forte\+::\+Dynamic\+Correlation\+Solver\+::\+Enuc\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Nuclear repulsion energy. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_ac481bf2ca528e1dadb34091d53e49423}\label{classforte_1_1_dynamic_correlation_solver_ac481bf2ca528e1dadb34091d53e49423}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!eri\+\_\+df\+\_\+@{eri\+\_\+df\+\_\+}}
+\index{eri\+\_\+df\+\_\+@{eri\+\_\+df\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{eri\+\_\+df\+\_\+}{eri\_df\_}}
+{\footnotesize\ttfamily bool forte\+::\+Dynamic\+Correlation\+Solver\+::eri\+\_\+df\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+If E\+RI density fitted or Cholesky decomposed. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_aab1c4954021b18452cdd0d6a681473ee}\label{classforte_1_1_dynamic_correlation_solver_aab1c4954021b18452cdd0d6a681473ee}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!foptions\+\_\+@{foptions\+\_\+}}
+\index{foptions\+\_\+@{foptions\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{foptions\+\_\+}{foptions\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}$>$ forte\+::\+Dynamic\+Correlation\+Solver\+::foptions\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}}. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a839aab2128d02f4a5c9e3a15cd6c4c00}\label{classforte_1_1_dynamic_correlation_solver_a839aab2128d02f4a5c9e3a15cd6c4c00}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!ints\+\_\+@{ints\+\_\+}}
+\index{ints\+\_\+@{ints\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{ints\+\_\+}{ints\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_forte_integrals}{Forte\+Integrals}}$>$ forte\+::\+Dynamic\+Correlation\+Solver\+::ints\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The molecular integrals. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a73a1949b72f47abf27cb7516719c2211}\label{classforte_1_1_dynamic_correlation_solver_a73a1949b72f47abf27cb7516719c2211}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!ints\+\_\+type\+\_\+@{ints\+\_\+type\+\_\+}}
+\index{ints\+\_\+type\+\_\+@{ints\+\_\+type\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{ints\+\_\+type\+\_\+}{ints\_type\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Dynamic\+Correlation\+Solver\+::ints\+\_\+type\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The integral type. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_aa9356222050b3dbbf67483338434fa01}\label{classforte_1_1_dynamic_correlation_solver_aa9356222050b3dbbf67483338434fa01}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}}
+\index{mo\+\_\+space\+\_\+info\+\_\+@{mo\+\_\+space\+\_\+info\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{mo\+\_\+space\+\_\+info\+\_\+}{mo\_space\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}}$>$ forte\+::\+Dynamic\+Correlation\+Solver\+::mo\+\_\+space\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The MO space info. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a3b2686df5f7abb843eeebb130dfc0827}\label{classforte_1_1_dynamic_correlation_solver_a3b2686df5f7abb843eeebb130dfc0827}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!print\+\_\+@{print\+\_\+}}
+\index{print\+\_\+@{print\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{print\+\_\+}{print\_}}
+{\footnotesize\ttfamily int forte\+::\+Dynamic\+Correlation\+Solver\+::print\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Printing level. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a4b8e42e0c8ddbacdd12a70dbad089f17}\label{classforte_1_1_dynamic_correlation_solver_a4b8e42e0c8ddbacdd12a70dbad089f17}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!rdms\+\_\+@{rdms\+\_\+}}
+\index{rdms\+\_\+@{rdms\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{rdms\+\_\+}{rdms\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} forte\+::\+Dynamic\+Correlation\+Solver\+::rdms\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} and cumulants of the reference wave function. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_aa1c91323000f21d7c2ba0af5ccb51df7}\label{classforte_1_1_dynamic_correlation_solver_aa1c91323000f21d7c2ba0af5ccb51df7}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!read\+\_\+amps\+\_\+cwd\+\_\+@{read\+\_\+amps\+\_\+cwd\+\_\+}}
+\index{read\+\_\+amps\+\_\+cwd\+\_\+@{read\+\_\+amps\+\_\+cwd\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{read\+\_\+amps\+\_\+cwd\+\_\+}{read\_amps\_cwd\_}}
+{\footnotesize\ttfamily bool forte\+::\+Dynamic\+Correlation\+Solver\+::read\+\_\+amps\+\_\+cwd\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Read amplitudes from current directory. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a4e278d36f4dae4c3828f351561748c6e}\label{classforte_1_1_dynamic_correlation_solver_a4e278d36f4dae4c3828f351561748c6e}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!scf\+\_\+info\+\_\+@{scf\+\_\+info\+\_\+}}
+\index{scf\+\_\+info\+\_\+@{scf\+\_\+info\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{scf\+\_\+info\+\_\+}{scf\_info\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}}$>$ forte\+::\+Dynamic\+Correlation\+Solver\+::scf\+\_\+info\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The \mbox{\hyperlink{classforte_1_1_s_c_f_info}{S\+C\+F\+Info}}. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_a394952f010dae1c06893c03acca808e8}\label{classforte_1_1_dynamic_correlation_solver_a394952f010dae1c06893c03acca808e8}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!t1\+\_\+file\+\_\+chk\+\_\+@{t1\+\_\+file\+\_\+chk\+\_\+}}
+\index{t1\+\_\+file\+\_\+chk\+\_\+@{t1\+\_\+file\+\_\+chk\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{t1\+\_\+file\+\_\+chk\+\_\+}{t1\_file\_chk\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Dynamic\+Correlation\+Solver\+::t1\+\_\+file\+\_\+chk\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Checkpoint file for T1 amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_ab651c3efceb41dfe20c9c55d3e6aeac5}\label{classforte_1_1_dynamic_correlation_solver_ab651c3efceb41dfe20c9c55d3e6aeac5}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!t1\+\_\+file\+\_\+cwd\+\_\+@{t1\+\_\+file\+\_\+cwd\+\_\+}}
+\index{t1\+\_\+file\+\_\+cwd\+\_\+@{t1\+\_\+file\+\_\+cwd\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{t1\+\_\+file\+\_\+cwd\+\_\+}{t1\_file\_cwd\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Dynamic\+Correlation\+Solver\+::t1\+\_\+file\+\_\+cwd\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+File name for T1 amplitudes to be saved in current directory. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_aef52805c0fd6b82f19ea598cec8f3fc6}\label{classforte_1_1_dynamic_correlation_solver_aef52805c0fd6b82f19ea598cec8f3fc6}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!t2\+\_\+file\+\_\+chk\+\_\+@{t2\+\_\+file\+\_\+chk\+\_\+}}
+\index{t2\+\_\+file\+\_\+chk\+\_\+@{t2\+\_\+file\+\_\+chk\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{t2\+\_\+file\+\_\+chk\+\_\+}{t2\_file\_chk\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Dynamic\+Correlation\+Solver\+::t2\+\_\+file\+\_\+chk\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Checkpoint file for T2 amplitudes. 
+
+\mbox{\Hypertarget{classforte_1_1_dynamic_correlation_solver_aeffaac4dffe7b8a38b625f466edb8781}\label{classforte_1_1_dynamic_correlation_solver_aeffaac4dffe7b8a38b625f466edb8781}} 
+\index{forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}!t2\+\_\+file\+\_\+cwd\+\_\+@{t2\+\_\+file\+\_\+cwd\+\_\+}}
+\index{t2\+\_\+file\+\_\+cwd\+\_\+@{t2\+\_\+file\+\_\+cwd\+\_\+}!forte\+::\+Dynamic\+Correlation\+Solver@{forte\+::\+Dynamic\+Correlation\+Solver}}
+\subsubsection{\texorpdfstring{t2\+\_\+file\+\_\+cwd\+\_\+}{t2\_file\_cwd\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Dynamic\+Correlation\+Solver\+::t2\+\_\+file\+\_\+cwd\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+File name for T2 amplitudes to be saved in current directory. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{dynamic__correlation__solver_8h}{dynamic\+\_\+correlation\+\_\+solver.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/\mbox{\hyperlink{dynamic__correlation__solver_8cc}{dynamic\+\_\+correlation\+\_\+solver.\+cc}}\end{DoxyCompactItemize}

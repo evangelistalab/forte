@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -53,9 +53,12 @@ void export_MOSpaceInfo(py::module& m) {
         .def("corr_absolute_mo", &MOSpaceInfo::corr_absolute_mo,
              "Return the list of the absolute index of the molecular orbitals in a correlated "
              "space")
+        .def("contained_in_space", &MOSpaceInfo::contained_in_space,
+             "Return True if a space is contained in another space")
         .def("pos_in_space", &MOSpaceInfo::pos_in_space,
              "Return the position of the orbitals in a space within another space")
         .def("relative_mo", &MOSpaceInfo::relative_mo, "Return the relative MOs")
+        .def("range", &MOSpaceInfo::range, "Return a psi::Slice object for the given space")
         .def("read_options", &MOSpaceInfo::read_options, "Read options")
         .def("read_from_map", &MOSpaceInfo::read_from_map,
              "Read the space info from a map {spacename -> dimension vector}")

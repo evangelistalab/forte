@@ -1,0 +1,55 @@
+\hypertarget{pci__sigma_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/pci/pci\+\_\+sigma.cc File Reference}
+\label{pci__sigma_8cc}\index{/\+Users/fevange/\+Source/forte/src/pci/pci\+\_\+sigma.\+cc@{/\+Users/fevange/\+Source/forte/src/pci/pci\+\_\+sigma.\+cc}}
+{\ttfamily \#include $<$cfloat$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$cstring$>$}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}integrals/active\+\_\+space\+\_\+integrals.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}pci\+\_\+sigma.\+h\char`\"{}}\newline
+Include dependency graph for pci\+\_\+sigma.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{pci__sigma_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{pci__sigma_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{pci__sigma_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{namespaceforte_aaa15ba3048914f75527569dad1866895}{forte\+::add}} (const det\+\_\+hashvec \&A, std\+::vector$<$ double $>$ \&Ca, double beta, const det\+\_\+hashvec \&B, const std\+::vector$<$ double $>$ Cb)
+\item 
+double \mbox{\hyperlink{namespaceforte_a33ed0ede38050d6118cebec8d960cc6b}{forte\+::dot}} (const det\+\_\+hashvec \&A, const std\+::vector$<$ double $>$ Ca, const det\+\_\+hashvec \&B, const std\+::vector$<$ double $>$ Cb)
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{namespaceforte_a65475f9b6cbbec2d3a20df202f8ad0c1}{forte\+::to\+\_\+std\+\_\+vector}} (psi\+::\+Shared\+Vector c)
+\item 
+void \mbox{\hyperlink{namespaceforte_ae4cd4c8022826599c3dda3710349723a}{forte\+::set\+\_\+psi\+\_\+\+Vector}} (psi\+::\+Shared\+Vector c\+\_\+psi, const std\+::vector$<$ double $>$ \&c\+\_\+vec)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{pci__sigma_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{pci__sigma_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{pci\+\_\+sigma.\+cc@{pci\+\_\+sigma.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!pci\+\_\+sigma.\+cc@{pci\+\_\+sigma.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{pci__sigma_8cc_a889ec205c635b219999c761b28cc39ba}\label{pci__sigma_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{pci\+\_\+sigma.\+cc@{pci\+\_\+sigma.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!pci\+\_\+sigma.\+cc@{pci\+\_\+sigma.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+

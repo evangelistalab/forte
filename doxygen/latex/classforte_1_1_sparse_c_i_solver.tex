@@ -1,0 +1,284 @@
+\hypertarget{classforte_1_1_sparse_c_i_solver}{}\section{forte\+:\+:Sparse\+C\+I\+Solver Class Reference}
+\label{classforte_1_1_sparse_c_i_solver}\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+
+
+The \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver}{Sparse\+C\+I\+Solver}} class This class diagonalizes the Hamiltonian in a basis of determinants.  
+
+
+
+
+{\ttfamily \#include $<$sparse\+\_\+ci\+\_\+solver.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a3d92d7bc72cd7959d9095740446ad4f5}{Sparse\+C\+I\+Solver}} ()
+\item 
+std\+::pair$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_aa81ea670ca5f9c488283df101c0a9e15}{diagonalize\+\_\+hamiltonian}} (const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&space, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_sigma_vector}{Sigma\+Vector}} $>$ sigma\+\_\+vec, int nroot, int multiplicity)
+\begin{DoxyCompactList}\small\item\em Diagonalize the Hamiltonian. \end{DoxyCompactList}\item 
+std\+::pair$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a6de972e8f7fafb70951db94bf5cd89bc}{diagonalize\+\_\+hamiltonian}} (const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&space, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_sigma_vector}{Sigma\+Vector}} $>$ sigma\+\_\+vec, int nroot, int multiplicity)
+\item 
+std\+::pair$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a0914242905e0c2483757b4b8ff213c41}{diagonalize\+\_\+hamiltonian\+\_\+full}} (const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&space, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints, int nroot, int multiplicity)
+\begin{DoxyCompactList}\small\item\em Diagonalize the full Hamiltonian. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_abf0bf012929ae40717c84464804960bc}{spin}} ()
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_af6b2886d5631f37463a8e9e903f19d40}{energy}} ()
+\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_aa8dd7b7d1055bd7a4da4f6d8142f3e30}{set\+\_\+parallel}} (bool parallel)
+\begin{DoxyCompactList}\small\item\em Enable/disable the parallel algorithms. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a2519c690bc3358ae5044751f82883ec5}{set\+\_\+print\+\_\+details}} (bool print\+\_\+details)
+\begin{DoxyCompactList}\small\item\em Enable/disable printing of details. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_acd0811057b8700a32534f7b7b2dd1f6c}{set\+\_\+spin\+\_\+project}} (bool value)
+\begin{DoxyCompactList}\small\item\em Enable/disable spin projection. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a9aebb57a279e852c9958fa5252f55b88}{set\+\_\+spin\+\_\+project\+\_\+full}} (bool value)
+\begin{DoxyCompactList}\small\item\em Enable/disable spin projection in full algorithm. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a57d0f61f1dd1102d3b53202b70848ac5}{set\+\_\+root\+\_\+project}} (bool value)
+\begin{DoxyCompactList}\small\item\em Enable/disable root projection. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a06e02001769ec8e69c48a0c52a36c979}{set\+\_\+e\+\_\+convergence}} (double value)
+\begin{DoxyCompactList}\small\item\em Set the energy convergence threshold. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a4851fbd54a168a4e3ff1e278790bea59}{set\+\_\+r\+\_\+convergence}} (double value)
+\begin{DoxyCompactList}\small\item\em Set the residual 2-\/norm convergence threshold. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a414c602c7fd2f5e05d8c15f0b925db51}{set\+\_\+maxiter\+\_\+davidson}} (int value)
+\begin{DoxyCompactList}\small\item\em The maximum number of iterations for the Davidson algorithm. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a98223e6d0c0f619f74fa1e2b2a0088b2}{set\+\_\+ncollapse\+\_\+per\+\_\+root}} (int value)
+\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_afb3b309aa3bca16bcfc5c19a32e15073}{set\+\_\+nsubspace\+\_\+per\+\_\+root}} (int value)
+\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_afb31b5630245596421d2dc4f2dd35221}{build\+\_\+full\+\_\+hamiltonian}} (const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&space, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{forte\+::\+Active\+Space\+Integrals}} $>$ as\+\_\+ints)
+\begin{DoxyCompactList}\small\item\em Build the full Hamiltonian matrix. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_ac543dcf856d538cd62441943ddca5b8d}{add\+\_\+bad\+\_\+states}} (std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$$>$ \&roots)
+\begin{DoxyCompactList}\small\item\em Add roots to project out during Davidson-\/\+Liu procedure. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a5285d4f39100503fc4fb3e2776949c7b}{set\+\_\+force\+\_\+diag}} (bool value)
+\begin{DoxyCompactList}\small\item\em Set option to force diagonalization type. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_aecd729bea29befdfca3226affbd26855}{set\+\_\+guess\+\_\+dimension}} (size\+\_\+t value)
+\begin{DoxyCompactList}\small\item\em Set the size of the guess space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_aa59f8d54206cae8250b22a172b17a7ae}{set\+\_\+initial\+\_\+guess}} (std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$ \&guess)
+\begin{DoxyCompactList}\small\item\em Set the initial guess. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_abe9a9189f93825c7552fcead934b9eee}{manual\+\_\+guess}} (bool value)
+\item 
+void \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver_a0d23704cf3ac07cf04021975046ba7e8}{set\+\_\+num\+\_\+vecs}} (size\+\_\+t value)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver}{Sparse\+C\+I\+Solver}} class This class diagonalizes the Hamiltonian in a basis of determinants. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a3d92d7bc72cd7959d9095740446ad4f5}\label{classforte_1_1_sparse_c_i_solver_a3d92d7bc72cd7959d9095740446ad4f5}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!Sparse\+C\+I\+Solver@{Sparse\+C\+I\+Solver}}
+\index{Sparse\+C\+I\+Solver@{Sparse\+C\+I\+Solver}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{Sparse\+C\+I\+Solver()}{SparseCISolver()}}
+{\footnotesize\ttfamily forte\+::\+Sparse\+C\+I\+Solver\+::\+Sparse\+C\+I\+Solver (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Diagonalize the Hamiltonian in a basis of determinants 
+\begin{DoxyParams}{Parameters}
+{\em space} & The basis for the CI given as a vector of Determinant objects \\
+\hline
+{\em nroot} & The number of solutions to find \\
+\hline
+{\em diag\+\_\+method} & The diagonalization algorithm \\
+\hline
+{\em multiplicity} & The spin multiplicity of the solution (2S + 1). 1 = singlet, 2 = doublet, ... \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_ac543dcf856d538cd62441943ddca5b8d}\label{classforte_1_1_sparse_c_i_solver_ac543dcf856d538cd62441943ddca5b8d}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!add\+\_\+bad\+\_\+states@{add\+\_\+bad\+\_\+states}}
+\index{add\+\_\+bad\+\_\+states@{add\+\_\+bad\+\_\+states}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{add\+\_\+bad\+\_\+states()}{add\_bad\_states()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::add\+\_\+bad\+\_\+states (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$$>$ \&}]{roots }\end{DoxyParamCaption})}
+
+
+
+Add roots to project out during Davidson-\/\+Liu procedure. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_afb31b5630245596421d2dc4f2dd35221}\label{classforte_1_1_sparse_c_i_solver_afb31b5630245596421d2dc4f2dd35221}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!build\+\_\+full\+\_\+hamiltonian@{build\+\_\+full\+\_\+hamiltonian}}
+\index{build\+\_\+full\+\_\+hamiltonian@{build\+\_\+full\+\_\+hamiltonian}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{build\+\_\+full\+\_\+hamiltonian()}{build\_full\_hamiltonian()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Sparse\+C\+I\+Solver\+::build\+\_\+full\+\_\+hamiltonian (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&}]{space,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{forte\+::\+Active\+Space\+Integrals}} $>$}]{as\+\_\+ints }\end{DoxyParamCaption})}
+
+
+
+Build the full Hamiltonian matrix. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_aa81ea670ca5f9c488283df101c0a9e15}\label{classforte_1_1_sparse_c_i_solver_aa81ea670ca5f9c488283df101c0a9e15}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!diagonalize\+\_\+hamiltonian@{diagonalize\+\_\+hamiltonian}}
+\index{diagonalize\+\_\+hamiltonian@{diagonalize\+\_\+hamiltonian}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+hamiltonian()}{diagonalize\_hamiltonian()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily std\+::pair$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ forte\+::\+Sparse\+C\+I\+Solver\+::diagonalize\+\_\+hamiltonian (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \&}]{space,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_sigma_vector}{Sigma\+Vector}} $>$}]{sigma\+\_\+vec,  }\item[{int}]{nroot,  }\item[{int}]{multiplicity }\end{DoxyParamCaption})}
+
+
+
+Diagonalize the Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a6de972e8f7fafb70951db94bf5cd89bc}\label{classforte_1_1_sparse_c_i_solver_a6de972e8f7fafb70951db94bf5cd89bc}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!diagonalize\+\_\+hamiltonian@{diagonalize\+\_\+hamiltonian}}
+\index{diagonalize\+\_\+hamiltonian@{diagonalize\+\_\+hamiltonian}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+hamiltonian()}{diagonalize\_hamiltonian()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily std\+::pair$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ forte\+::\+Sparse\+C\+I\+Solver\+::diagonalize\+\_\+hamiltonian (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&}]{space,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_sigma_vector}{Sigma\+Vector}} $>$}]{sigma\+\_\+vec,  }\item[{int}]{nroot,  }\item[{int}]{multiplicity }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a0914242905e0c2483757b4b8ff213c41}\label{classforte_1_1_sparse_c_i_solver_a0914242905e0c2483757b4b8ff213c41}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!diagonalize\+\_\+hamiltonian\+\_\+full@{diagonalize\+\_\+hamiltonian\+\_\+full}}
+\index{diagonalize\+\_\+hamiltonian\+\_\+full@{diagonalize\+\_\+hamiltonian\+\_\+full}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+hamiltonian\+\_\+full()}{diagonalize\_hamiltonian\_full()}}
+{\footnotesize\ttfamily std\+::pair$<$ std\+::shared\+\_\+ptr$<$ psi\+::\+Vector $>$, std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ $>$ forte\+::\+Sparse\+C\+I\+Solver\+::diagonalize\+\_\+hamiltonian\+\_\+full (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}} $>$ \&}]{space,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints,  }\item[{int}]{nroot,  }\item[{int}]{multiplicity }\end{DoxyParamCaption})}
+
+
+
+Diagonalize the full Hamiltonian. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_af6b2886d5631f37463a8e9e903f19d40}\label{classforte_1_1_sparse_c_i_solver_af6b2886d5631f37463a8e9e903f19d40}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!energy@{energy}}
+\index{energy@{energy}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{energy()}{energy()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Sparse\+C\+I\+Solver\+::energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_abe9a9189f93825c7552fcead934b9eee}\label{classforte_1_1_sparse_c_i_solver_abe9a9189f93825c7552fcead934b9eee}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!manual\+\_\+guess@{manual\+\_\+guess}}
+\index{manual\+\_\+guess@{manual\+\_\+guess}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{manual\+\_\+guess()}{manual\_guess()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::manual\+\_\+guess (\begin{DoxyParamCaption}\item[{bool}]{value }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a06e02001769ec8e69c48a0c52a36c979}\label{classforte_1_1_sparse_c_i_solver_a06e02001769ec8e69c48a0c52a36c979}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+e\+\_\+convergence@{set\+\_\+e\+\_\+convergence}}
+\index{set\+\_\+e\+\_\+convergence@{set\+\_\+e\+\_\+convergence}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+e\+\_\+convergence()}{set\_e\_convergence()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+e\+\_\+convergence (\begin{DoxyParamCaption}\item[{double}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the energy convergence threshold. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a5285d4f39100503fc4fb3e2776949c7b}\label{classforte_1_1_sparse_c_i_solver_a5285d4f39100503fc4fb3e2776949c7b}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+force\+\_\+diag@{set\+\_\+force\+\_\+diag}}
+\index{set\+\_\+force\+\_\+diag@{set\+\_\+force\+\_\+diag}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+force\+\_\+diag()}{set\_force\_diag()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+force\+\_\+diag (\begin{DoxyParamCaption}\item[{bool}]{value }\end{DoxyParamCaption})}
+
+
+
+Set option to force diagonalization type. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_aecd729bea29befdfca3226affbd26855}\label{classforte_1_1_sparse_c_i_solver_aecd729bea29befdfca3226affbd26855}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+guess\+\_\+dimension@{set\+\_\+guess\+\_\+dimension}}
+\index{set\+\_\+guess\+\_\+dimension@{set\+\_\+guess\+\_\+dimension}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+guess\+\_\+dimension()}{set\_guess\_dimension()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+guess\+\_\+dimension (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set the size of the guess space. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_aa59f8d54206cae8250b22a172b17a7ae}\label{classforte_1_1_sparse_c_i_solver_aa59f8d54206cae8250b22a172b17a7ae}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+initial\+\_\+guess@{set\+\_\+initial\+\_\+guess}}
+\index{set\+\_\+initial\+\_\+guess@{set\+\_\+initial\+\_\+guess}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+initial\+\_\+guess()}{set\_initial\_guess()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+initial\+\_\+guess (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::pair$<$ size\+\_\+t, double $>$$>$ \&}]{guess }\end{DoxyParamCaption})}
+
+
+
+Set the initial guess. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a414c602c7fd2f5e05d8c15f0b925db51}\label{classforte_1_1_sparse_c_i_solver_a414c602c7fd2f5e05d8c15f0b925db51}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+maxiter\+\_\+davidson@{set\+\_\+maxiter\+\_\+davidson}}
+\index{set\+\_\+maxiter\+\_\+davidson@{set\+\_\+maxiter\+\_\+davidson}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+maxiter\+\_\+davidson()}{set\_maxiter\_davidson()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+maxiter\+\_\+davidson (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+
+
+The maximum number of iterations for the Davidson algorithm. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a98223e6d0c0f619f74fa1e2b2a0088b2}\label{classforte_1_1_sparse_c_i_solver_a98223e6d0c0f619f74fa1e2b2a0088b2}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+ncollapse\+\_\+per\+\_\+root@{set\+\_\+ncollapse\+\_\+per\+\_\+root}}
+\index{set\+\_\+ncollapse\+\_\+per\+\_\+root@{set\+\_\+ncollapse\+\_\+per\+\_\+root}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+ncollapse\+\_\+per\+\_\+root()}{set\_ncollapse\_per\_root()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+ncollapse\+\_\+per\+\_\+root (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_afb3b309aa3bca16bcfc5c19a32e15073}\label{classforte_1_1_sparse_c_i_solver_afb3b309aa3bca16bcfc5c19a32e15073}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+nsubspace\+\_\+per\+\_\+root@{set\+\_\+nsubspace\+\_\+per\+\_\+root}}
+\index{set\+\_\+nsubspace\+\_\+per\+\_\+root@{set\+\_\+nsubspace\+\_\+per\+\_\+root}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+nsubspace\+\_\+per\+\_\+root()}{set\_nsubspace\_per\_root()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+nsubspace\+\_\+per\+\_\+root (\begin{DoxyParamCaption}\item[{int}]{value }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a0d23704cf3ac07cf04021975046ba7e8}\label{classforte_1_1_sparse_c_i_solver_a0d23704cf3ac07cf04021975046ba7e8}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+num\+\_\+vecs@{set\+\_\+num\+\_\+vecs}}
+\index{set\+\_\+num\+\_\+vecs@{set\+\_\+num\+\_\+vecs}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+num\+\_\+vecs()}{set\_num\_vecs()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+num\+\_\+vecs (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{value }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_aa8dd7b7d1055bd7a4da4f6d8142f3e30}\label{classforte_1_1_sparse_c_i_solver_aa8dd7b7d1055bd7a4da4f6d8142f3e30}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+parallel@{set\+\_\+parallel}}
+\index{set\+\_\+parallel@{set\+\_\+parallel}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+parallel()}{set\_parallel()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+parallel (\begin{DoxyParamCaption}\item[{bool}]{parallel }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Enable/disable the parallel algorithms. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a2519c690bc3358ae5044751f82883ec5}\label{classforte_1_1_sparse_c_i_solver_a2519c690bc3358ae5044751f82883ec5}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+print\+\_\+details@{set\+\_\+print\+\_\+details}}
+\index{set\+\_\+print\+\_\+details@{set\+\_\+print\+\_\+details}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+print\+\_\+details()}{set\_print\_details()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+print\+\_\+details (\begin{DoxyParamCaption}\item[{bool}]{print\+\_\+details }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Enable/disable printing of details. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a4851fbd54a168a4e3ff1e278790bea59}\label{classforte_1_1_sparse_c_i_solver_a4851fbd54a168a4e3ff1e278790bea59}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+r\+\_\+convergence@{set\+\_\+r\+\_\+convergence}}
+\index{set\+\_\+r\+\_\+convergence@{set\+\_\+r\+\_\+convergence}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+r\+\_\+convergence()}{set\_r\_convergence()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+r\+\_\+convergence (\begin{DoxyParamCaption}\item[{double}]{value }\end{DoxyParamCaption})}
+
+
+
+Set the residual 2-\/norm convergence threshold. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a57d0f61f1dd1102d3b53202b70848ac5}\label{classforte_1_1_sparse_c_i_solver_a57d0f61f1dd1102d3b53202b70848ac5}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+root\+\_\+project@{set\+\_\+root\+\_\+project}}
+\index{set\+\_\+root\+\_\+project@{set\+\_\+root\+\_\+project}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+root\+\_\+project()}{set\_root\_project()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+root\+\_\+project (\begin{DoxyParamCaption}\item[{bool}]{value }\end{DoxyParamCaption})}
+
+
+
+Enable/disable root projection. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_acd0811057b8700a32534f7b7b2dd1f6c}\label{classforte_1_1_sparse_c_i_solver_acd0811057b8700a32534f7b7b2dd1f6c}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+spin\+\_\+project@{set\+\_\+spin\+\_\+project}}
+\index{set\+\_\+spin\+\_\+project@{set\+\_\+spin\+\_\+project}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+spin\+\_\+project()}{set\_spin\_project()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+spin\+\_\+project (\begin{DoxyParamCaption}\item[{bool}]{value }\end{DoxyParamCaption})}
+
+
+
+Enable/disable spin projection. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_a9aebb57a279e852c9958fa5252f55b88}\label{classforte_1_1_sparse_c_i_solver_a9aebb57a279e852c9958fa5252f55b88}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!set\+\_\+spin\+\_\+project\+\_\+full@{set\+\_\+spin\+\_\+project\+\_\+full}}
+\index{set\+\_\+spin\+\_\+project\+\_\+full@{set\+\_\+spin\+\_\+project\+\_\+full}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+spin\+\_\+project\+\_\+full()}{set\_spin\_project\_full()}}
+{\footnotesize\ttfamily void forte\+::\+Sparse\+C\+I\+Solver\+::set\+\_\+spin\+\_\+project\+\_\+full (\begin{DoxyParamCaption}\item[{bool}]{value }\end{DoxyParamCaption})}
+
+
+
+Enable/disable spin projection in full algorithm. 
+
+\mbox{\Hypertarget{classforte_1_1_sparse_c_i_solver_abf0bf012929ae40717c84464804960bc}\label{classforte_1_1_sparse_c_i_solver_abf0bf012929ae40717c84464804960bc}} 
+\index{forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}!spin@{spin}}
+\index{spin@{spin}!forte\+::\+Sparse\+C\+I\+Solver@{forte\+::\+Sparse\+C\+I\+Solver}}
+\subsubsection{\texorpdfstring{spin()}{spin()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Sparse\+C\+I\+Solver\+::spin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sparse__ci__solver_8h}{sparse\+\_\+ci\+\_\+solver.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/\mbox{\hyperlink{sparse__ci__solver_8cc}{sparse\+\_\+ci\+\_\+solver.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,56 @@
+\hypertarget{so-mrdsrg_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/so/so-\/mrdsrg.cc File Reference}
+\label{so-mrdsrg_8cc}\index{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/so/so-\/mrdsrg.\+cc@{/\+Users/fevange/\+Source/forte/src/mrdsrg-\/so/so-\/mrdsrg.\+cc}}
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$numeric$>$}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/molecule.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libqt/qt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/blockedtensorfactory.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/printing.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/helpers.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}so-\/mrdsrg.\+h\char`\"{}}\newline
+Include dependency graph for so-\/mrdsrg.cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{so-mrdsrg_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{so-mrdsrg_8cc_a51faedec7f5e6e142bca9de384f73a80}{I\+SA}}(x)~(x $<$ nactv)
+\item 
+\#define \mbox{\hyperlink{so-mrdsrg_8cc_afb4022ac8a20f7ec3fb0abf23bbce3f6}{I\+SB}}(x)~(x $>$= nactv)
+\item 
+\#define \mbox{\hyperlink{so-mrdsrg_8cc_a4521467edec9387fad3ae8761f0f4b1d}{O\+FF}}(x)~(x $<$ nactv ? x \+: x -\/ nactv)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{so-mrdsrg_8cc_a51faedec7f5e6e142bca9de384f73a80}\label{so-mrdsrg_8cc_a51faedec7f5e6e142bca9de384f73a80}} 
+\index{so-\/mrdsrg.\+cc@{so-\/mrdsrg.\+cc}!I\+SA@{I\+SA}}
+\index{I\+SA@{I\+SA}!so-\/mrdsrg.\+cc@{so-\/mrdsrg.\+cc}}
+\subsubsection{\texorpdfstring{I\+SA}{ISA}}
+{\footnotesize\ttfamily \#define I\+SA(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(x $<$ nactv)}
+
+\mbox{\Hypertarget{so-mrdsrg_8cc_afb4022ac8a20f7ec3fb0abf23bbce3f6}\label{so-mrdsrg_8cc_afb4022ac8a20f7ec3fb0abf23bbce3f6}} 
+\index{so-\/mrdsrg.\+cc@{so-\/mrdsrg.\+cc}!I\+SB@{I\+SB}}
+\index{I\+SB@{I\+SB}!so-\/mrdsrg.\+cc@{so-\/mrdsrg.\+cc}}
+\subsubsection{\texorpdfstring{I\+SB}{ISB}}
+{\footnotesize\ttfamily \#define I\+SB(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(x $>$= nactv)}
+
+\mbox{\Hypertarget{so-mrdsrg_8cc_a4521467edec9387fad3ae8761f0f4b1d}\label{so-mrdsrg_8cc_a4521467edec9387fad3ae8761f0f4b1d}} 
+\index{so-\/mrdsrg.\+cc@{so-\/mrdsrg.\+cc}!O\+FF@{O\+FF}}
+\index{O\+FF@{O\+FF}!so-\/mrdsrg.\+cc@{so-\/mrdsrg.\+cc}}
+\subsubsection{\texorpdfstring{O\+FF}{OFF}}
+{\footnotesize\ttfamily \#define O\+FF(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(x $<$ nactv ? x \+: x -\/ nactv)}
+

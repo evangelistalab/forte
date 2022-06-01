@@ -1,0 +1,57 @@
+\hypertarget{casscf__orb__grad_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/casscf/casscf\+\_\+orb\+\_\+grad.cc File Reference}
+\label{casscf__orb__grad_8cc}\index{/\+Users/fevange/\+Source/forte/src/casscf/casscf\+\_\+orb\+\_\+grad.\+cc@{/\+Users/fevange/\+Source/forte/src/casscf/casscf\+\_\+orb\+\_\+grad.\+cc}}
+{\ttfamily \#include \char`\"{}psi4/psi4-\/dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/psifiles.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libqt/qt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/molecule.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/pointgrp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/wavefunction.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/basisset.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libiwl/iwl.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsio/psio.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/printing.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/lbfgs/lbfgs.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}integrals/integrals.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}integrals/active\+\_\+space\+\_\+integrals.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/rdms.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}casscf/casscf\+\_\+orb\+\_\+grad.\+h\char`\"{}}\newline
+Include dependency graph for casscf\+\_\+orb\+\_\+grad.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{casscf__orb__grad_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{casscf__orb__grad_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{casscf__orb__grad_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{casscf__orb__grad_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{casscf__orb__grad_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{casscf\+\_\+orb\+\_\+grad.\+cc@{casscf\+\_\+orb\+\_\+grad.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!casscf\+\_\+orb\+\_\+grad.\+cc@{casscf\+\_\+orb\+\_\+grad.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{casscf__orb__grad_8cc_a889ec205c635b219999c761b28cc39ba}\label{casscf__orb__grad_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{casscf\+\_\+orb\+\_\+grad.\+cc@{casscf\+\_\+orb\+\_\+grad.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!casscf\+\_\+orb\+\_\+grad.\+cc@{casscf\+\_\+orb\+\_\+grad.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+

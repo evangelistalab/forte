@@ -1,0 +1,206 @@
+\hypertarget{bitwise__operations_8hpp}{}\section{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/bitwise\+\_\+operations.hpp File Reference}
+\label{bitwise__operations_8hpp}\index{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/bitwise\+\_\+operations.\+hpp@{/\+Users/fevange/\+Source/forte/src/sparse\+\_\+ci/bitwise\+\_\+operations.\+hpp}}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{bitwise__operations_8hpp__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{bitwise__operations_8hpp_abf5401347c27d7035f710dd47b8fe014}{U\+S\+E\+\_\+builtin\+\_\+popcountll}}~1
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{bitwise__operations_8hpp_a33f5caf2ebea1c9c559c954739ee0b0e}{hash\+\_\+combine\+\_\+uint64}} (uint64\+\_\+t \&seed, size\+\_\+t value)
+\item 
+uint64\+\_\+t \mbox{\hyperlink{bitwise__operations_8hpp_a62962b17e119a3b8aad4d47021ca3d4b}{ui64\+\_\+bit\+\_\+count}} (uint64\+\_\+t x)
+\begin{DoxyCompactList}\small\item\em Count the number of bit set to 1 in a uint64\+\_\+t. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{bitwise__operations_8hpp_a5add002c5b7908df2007638dd51843a6}{ui64\+\_\+bit\+\_\+parity}} (uint64\+\_\+t x)
+\begin{DoxyCompactList}\small\item\em Count the number of bit set to 1 in a uint64\+\_\+t. \end{DoxyCompactList}\item 
+uint64\+\_\+t \mbox{\hyperlink{bitwise__operations_8hpp_aaaa992339b24062192cd7e37ef40cd32}{ui64\+\_\+find\+\_\+lowest\+\_\+one\+\_\+bit}} (uint64\+\_\+t x)
+\begin{DoxyCompactList}\small\item\em Bit-\/scan to find next set bit. \end{DoxyCompactList}\item 
+uint64\+\_\+t \mbox{\hyperlink{bitwise__operations_8hpp_a87d420240f6f8a42510e33059be42fec}{ui64\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit}} (uint64\+\_\+t x)
+\begin{DoxyCompactList}\small\item\em Clear the lowest bit set in a uint64\+\_\+t word. \end{DoxyCompactList}\item 
+uint64\+\_\+t \mbox{\hyperlink{bitwise__operations_8hpp_a72db6e972abd423ae3b2913a065b8bbf}{ui64\+\_\+find\+\_\+and\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit}} (uint64\+\_\+t \&x)
+\begin{DoxyCompactList}\small\item\em Find the index of the lowest bit set in a uint64\+\_\+t word and clear it. A modified version of x with the lowest bit set to 1 turned into a 0 is stored in x. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{bitwise__operations_8hpp_ad740e2fb18bb4ebd5ac6d0a12b7ccb4f}{ui64\+\_\+sign}} (uint64\+\_\+t x, int n)
+\begin{DoxyCompactList}\small\item\em Count the number of 1 from position 0 up to n -\/ 1 and return the parity of this number. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{bitwise__operations_8hpp_a0fc134a235530310d1aa73c03cd688a3}{ui64\+\_\+sign}} (uint64\+\_\+t x, int m, int n)
+\begin{DoxyCompactList}\small\item\em Count the number of 1 from position m + 1 up to n -\/ 1 and return the parity of this number. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{bitwise__operations_8hpp_a784cac7700bef5d91eb46a978f0abf99}{ui64\+\_\+sign\+\_\+reverse}} (uint64\+\_\+t x, int n)
+\begin{DoxyCompactList}\small\item\em Count the number of 1 from position n + 1 up to 63 and return the parity of this number. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{bitwise__operations_8hpp_abf5401347c27d7035f710dd47b8fe014}\label{bitwise__operations_8hpp_abf5401347c27d7035f710dd47b8fe014}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!U\+S\+E\+\_\+builtin\+\_\+popcountll@{U\+S\+E\+\_\+builtin\+\_\+popcountll}}
+\index{U\+S\+E\+\_\+builtin\+\_\+popcountll@{U\+S\+E\+\_\+builtin\+\_\+popcountll}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{U\+S\+E\+\_\+builtin\+\_\+popcountll}{USE\_builtin\_popcountll}}
+{\footnotesize\ttfamily \#define U\+S\+E\+\_\+builtin\+\_\+popcountll~1}
+
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{bitwise__operations_8hpp_a33f5caf2ebea1c9c559c954739ee0b0e}\label{bitwise__operations_8hpp_a33f5caf2ebea1c9c559c954739ee0b0e}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!hash\+\_\+combine\+\_\+uint64@{hash\+\_\+combine\+\_\+uint64}}
+\index{hash\+\_\+combine\+\_\+uint64@{hash\+\_\+combine\+\_\+uint64}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{hash\+\_\+combine\+\_\+uint64()}{hash\_combine\_uint64()}}
+{\footnotesize\ttfamily void hash\+\_\+combine\+\_\+uint64 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{seed,  }\item[{size\+\_\+t}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+a function to accumulate hash values of 64 bit unsigned integers based on boost/functional/hash/hash.\+hpp \mbox{\Hypertarget{bitwise__operations_8hpp_a62962b17e119a3b8aad4d47021ca3d4b}\label{bitwise__operations_8hpp_a62962b17e119a3b8aad4d47021ca3d4b}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!ui64\+\_\+bit\+\_\+count@{ui64\+\_\+bit\+\_\+count}}
+\index{ui64\+\_\+bit\+\_\+count@{ui64\+\_\+bit\+\_\+count}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{ui64\+\_\+bit\+\_\+count()}{ui64\_bit\_count()}}
+{\footnotesize\ttfamily uint64\+\_\+t ui64\+\_\+bit\+\_\+count (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Count the number of bit set to 1 in a uint64\+\_\+t. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & the uint64\+\_\+t integer to test \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the number of bits that are set to 1
+\end{DoxyReturn}
+If available, this function uses S\+S\+E4.\+2 instructions (\+\_\+mm\+\_\+popcnt\+\_\+u64) to speed up the evaluation. \mbox{\Hypertarget{bitwise__operations_8hpp_a5add002c5b7908df2007638dd51843a6}\label{bitwise__operations_8hpp_a5add002c5b7908df2007638dd51843a6}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!ui64\+\_\+bit\+\_\+parity@{ui64\+\_\+bit\+\_\+parity}}
+\index{ui64\+\_\+bit\+\_\+parity@{ui64\+\_\+bit\+\_\+parity}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{ui64\+\_\+bit\+\_\+parity()}{ui64\_bit\_parity()}}
+{\footnotesize\ttfamily double ui64\+\_\+bit\+\_\+parity (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Count the number of bit set to 1 in a uint64\+\_\+t. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & the uint64\+\_\+t integer to test \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the number of bits that are set to 1
+\end{DoxyReturn}
+If available, this function uses S\+S\+E4.\+2 instructions (\+\_\+mm\+\_\+popcnt\+\_\+u64) to speed up the evaluation. \mbox{\Hypertarget{bitwise__operations_8hpp_a87d420240f6f8a42510e33059be42fec}\label{bitwise__operations_8hpp_a87d420240f6f8a42510e33059be42fec}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!ui64\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit@{ui64\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit}}
+\index{ui64\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit@{ui64\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{ui64\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit()}{ui64\_clear\_lowest\_one\_bit()}}
+{\footnotesize\ttfamily uint64\+\_\+t ui64\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Clear the lowest bit set in a uint64\+\_\+t word. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & the uint64\+\_\+t word \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a modified version of x with the lowest bit set to 1 turned into a 0 
+\end{DoxyReturn}
+\mbox{\Hypertarget{bitwise__operations_8hpp_a72db6e972abd423ae3b2913a065b8bbf}\label{bitwise__operations_8hpp_a72db6e972abd423ae3b2913a065b8bbf}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!ui64\+\_\+find\+\_\+and\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit@{ui64\+\_\+find\+\_\+and\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit}}
+\index{ui64\+\_\+find\+\_\+and\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit@{ui64\+\_\+find\+\_\+and\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{ui64\+\_\+find\+\_\+and\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit()}{ui64\_find\_and\_clear\_lowest\_one\_bit()}}
+{\footnotesize\ttfamily uint64\+\_\+t ui64\+\_\+find\+\_\+and\+\_\+clear\+\_\+lowest\+\_\+one\+\_\+bit (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Find the index of the lowest bit set in a uint64\+\_\+t word and clear it. A modified version of x with the lowest bit set to 1 turned into a 0 is stored in x. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & the uint64\+\_\+t integer to test \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the index of the least significant 1-\/bit of x, or if x is zero, returns $\sim$0 
+\end{DoxyReturn}
+\mbox{\Hypertarget{bitwise__operations_8hpp_aaaa992339b24062192cd7e37ef40cd32}\label{bitwise__operations_8hpp_aaaa992339b24062192cd7e37ef40cd32}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!ui64\+\_\+find\+\_\+lowest\+\_\+one\+\_\+bit@{ui64\+\_\+find\+\_\+lowest\+\_\+one\+\_\+bit}}
+\index{ui64\+\_\+find\+\_\+lowest\+\_\+one\+\_\+bit@{ui64\+\_\+find\+\_\+lowest\+\_\+one\+\_\+bit}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{ui64\+\_\+find\+\_\+lowest\+\_\+one\+\_\+bit()}{ui64\_find\_lowest\_one\_bit()}}
+{\footnotesize\ttfamily uint64\+\_\+t ui64\+\_\+find\+\_\+lowest\+\_\+one\+\_\+bit (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Bit-\/scan to find next set bit. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & the uint64\+\_\+t integer to test \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the index of the least significant 1-\/bit of x, or if x is zero, returns $\sim$0 
+\end{DoxyReturn}
+\mbox{\Hypertarget{bitwise__operations_8hpp_ad740e2fb18bb4ebd5ac6d0a12b7ccb4f}\label{bitwise__operations_8hpp_ad740e2fb18bb4ebd5ac6d0a12b7ccb4f}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!ui64\+\_\+sign@{ui64\+\_\+sign}}
+\index{ui64\+\_\+sign@{ui64\+\_\+sign}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{ui64\+\_\+sign()}{ui64\_sign()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double ui64\+\_\+sign (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{x,  }\item[{int}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Count the number of 1 from position 0 up to n -\/ 1 and return the parity of this number. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & the uint64\+\_\+t integer to test \\
+\hline
+{\em n} & the end position (not counted) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the parity defined as parity = (-\/1)$^\wedge$(number of bits set between position 0 and n -\/ 1) 
+\end{DoxyReturn}
+\mbox{\Hypertarget{bitwise__operations_8hpp_a0fc134a235530310d1aa73c03cd688a3}\label{bitwise__operations_8hpp_a0fc134a235530310d1aa73c03cd688a3}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!ui64\+\_\+sign@{ui64\+\_\+sign}}
+\index{ui64\+\_\+sign@{ui64\+\_\+sign}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{ui64\+\_\+sign()}{ui64\_sign()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily double ui64\+\_\+sign (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{x,  }\item[{int}]{m,  }\item[{int}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Count the number of 1 from position m + 1 up to n -\/ 1 and return the parity of this number. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & the uint64\+\_\+t integer to test \\
+\hline
+{\em m} & the starting position (not counted) \\
+\hline
+{\em n} & the end position (not counted) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the parity defined as parity = (-\/1)$^\wedge$(number of bits set between position m + 1 and n -\/ 1) 
+\end{DoxyReturn}
+\mbox{\Hypertarget{bitwise__operations_8hpp_a784cac7700bef5d91eb46a978f0abf99}\label{bitwise__operations_8hpp_a784cac7700bef5d91eb46a978f0abf99}} 
+\index{bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}!ui64\+\_\+sign\+\_\+reverse@{ui64\+\_\+sign\+\_\+reverse}}
+\index{ui64\+\_\+sign\+\_\+reverse@{ui64\+\_\+sign\+\_\+reverse}!bitwise\+\_\+operations.\+hpp@{bitwise\+\_\+operations.\+hpp}}
+\subsubsection{\texorpdfstring{ui64\+\_\+sign\+\_\+reverse()}{ui64\_sign\_reverse()}}
+{\footnotesize\ttfamily double ui64\+\_\+sign\+\_\+reverse (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{x,  }\item[{int}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Count the number of 1 from position n + 1 up to 63 and return the parity of this number. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & the uint64\+\_\+t integer to test \\
+\hline
+{\em n} & the start position (not counted) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the parity defined as parity = (-\/1)$^\wedge$(number of bits set between position n + 1 and 63) 
+\end{DoxyReturn}

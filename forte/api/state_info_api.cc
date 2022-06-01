@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -55,6 +55,8 @@ void export_StateInfo(py::module& m) {
         .def("irrep", &StateInfo::irrep, "Irreducible representation")
         .def("multiplicity_label", &StateInfo::multiplicity_label, "Multiplicity label")
         .def("irrep_label", &StateInfo::irrep_label, "Symbol for irreducible representation")
+        .def("gas_min", &StateInfo::gas_min, "The minimum occupation of each gas state")
+        .def("gas_max", &StateInfo::gas_max, "The maximum occupation of each gas state")
         .def("__eq__", [](const StateInfo& a, const StateInfo& b) { return a == b; })
         .def("__lt__", [](const StateInfo& a, const StateInfo& b) { return a < b; })
         .def("__hash__", [](const StateInfo& a) { return a.hash(); });

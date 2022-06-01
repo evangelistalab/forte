@@ -1,0 +1,12 @@
+2022-05-31:17:34:06,5 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-09, 'FCI': 1, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:17:34:06,6 INFO     [psi4.driver.driver:499] Compute energy(): method=detci, basis=6-31g, molecule=HF, nre=3.1750632640200003
+2022-05-31:17:34:06,979 INFO     [psi4.driver.driver:502] Return energy(): -100.02602075516927
+2022-05-31:17:34:06,993 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-09, 'FCI': 1, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'RHF', 'SCF_TYPE': 'PK', 'function_kwargs': {}}
+2022-05-31:17:34:06,995 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=6-31g, molecule=HF, nre=3.1750632640200003
+2022-05-31:17:34:07,577 INFO     [psi4.driver.driver:502] Return energy(): -100.02602075523554
+2022-05-31:17:34:07,592 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_BASIS_SCF': 'CC-PVQZ-JKFIT', 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'FCI': 1, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
+2022-05-31:17:34:07,594 INFO     [psi4.driver.driver:499] Compute energy(): method=scf, basis=cc-pvqz, molecule=N, nre=0.0
+2022-05-31:17:34:07,726 INFO     [psi4.driver.driver:502] Return energy(): -54.40017283553787
+2022-05-31:17:34:07,739 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DF_BASIS_SCF': 'CC-PVQZ-JKFIT', 'D_CONVERGENCE': 0.9, 'E_CONVERGENCE': 0.9, 'FCI': 1, 'SCF__INTS_TOLERANCE': 1e-12, 'REFERENCE': 'ROHF', 'SCF_TYPE': 'DF', 'function_kwargs': {}}
+2022-05-31:17:34:07,741 INFO     [psi4.driver.driver:499] Compute energy(): method=forte, basis=cc-pvqz, molecule=N, nre=0.0
+2022-05-31:17:34:07,897 INFO     [psi4.driver.driver:502] Return energy(): -54.400172835537894

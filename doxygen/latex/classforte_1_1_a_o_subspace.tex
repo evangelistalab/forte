@@ -1,0 +1,138 @@
+\hypertarget{classforte_1_1_a_o_subspace}{}\section{forte\+:\+:A\+O\+Subspace Class Reference}
+\label{classforte_1_1_a_o_subspace}\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+
+
+The \mbox{\hyperlink{classforte_1_1_a_o_subspace}{A\+O\+Subspace}} class.  
+
+
+
+
+{\ttfamily \#include $<$aosubspace.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_a_o_subspace_aa7017771aa20fc9e5b8c18df5409dec7}{A\+O\+Subspace}} (std\+::shared\+\_\+ptr$<$ psi\+::\+Molecule $>$ molecule, std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ basis)
+\item 
+\mbox{\hyperlink{classforte_1_1_a_o_subspace_a94a2f7faa860318be2fc22cacd073856}{A\+O\+Subspace}} (std\+::vector$<$ std\+::string $>$ subspace\+\_\+str, std\+::shared\+\_\+ptr$<$ psi\+::\+Molecule $>$ molecule, std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ basis)
+\item 
+void \mbox{\hyperlink{classforte_1_1_a_o_subspace_aa3be8bc3fec6b8a04b01f5f49fb56aa5}{add\+\_\+subspace}} (std\+::string)
+\item 
+void \mbox{\hyperlink{classforte_1_1_a_o_subspace_aac4b4260b7081a4d1cdc6be0a96d3491}{find\+\_\+subspace}} ()
+\item 
+const std\+::vector$<$ int $>$ \& \mbox{\hyperlink{classforte_1_1_a_o_subspace_a25edf43d243fd8d8861b031e8b4bee27}{subspace}} ()
+\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_a_o_subspace_a516076d13d5f32ac3d50fdeffc66bfa9}{build\+\_\+projector}} (const std\+::vector$<$ int $>$ \&\mbox{\hyperlink{classforte_1_1_a_o_subspace_a25edf43d243fd8d8861b031e8b4bee27}{subspace}}, std\+::shared\+\_\+ptr$<$ psi\+::\+Molecule $>$ molecule, std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ min\+\_\+basis, std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$ large\+\_\+basis)
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classforte_1_1_a_o_subspace_abe1ed4a268100d4ad84da0d67f1a7f00}{aolabels}} (std\+::string str\+\_\+format=\char`\"{}\%2\$s\%3\$d (\%4\$d\%5\$s)\char`\"{}) const
+\item 
+const std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_a_o_info}{A\+O\+Info}} $>$ \& \mbox{\hyperlink{classforte_1_1_a_o_subspace_a5dc3be78b487ed49979849d6826b2b04}{aoinfo}} () const
+\begin{DoxyCompactList}\small\item\em Return a vector of \mbox{\hyperlink{classforte_1_1_a_o_info}{A\+O\+Info}} objects. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{classforte_1_1_a_o_subspace}{A\+O\+Subspace}} class. 
+
+Typical usage\+:
+
+// Find the AO subset std\+::shared\+\_\+ptr$<$psi\+::\+Wavefunction$>$ wfn = psi\+::\+Process\+::environment.\+wavefunction();
+
+std\+::vector$<$std\+::string$>$ subspace\+\_\+str; if (options\mbox{[}\char`\"{}\+S\+U\+B\+S\+P\+A\+C\+E\char`\"{}\mbox{]}.size() $>$ 0)\{ for (int entry = 0; entry $<$ (int)options\mbox{[}\char`\"{}\+S\+U\+B\+S\+P\+A\+C\+E\char`\"{}\mbox{]}.size(); ++entry)\{ std\+::string s = options\mbox{[}\char`\"{}\+S\+U\+B\+S\+P\+A\+C\+E\char`\"{}\mbox{]}\mbox{[}entry\mbox{]}.\mbox{\hyperlink{namespaceforte_ad34ed14298b7916ff1817d24c6e33cf1}{to\+\_\+string()}}; subspace\+\_\+str.\+push\+\_\+back(s); \} \}
+
+// Create an \mbox{\hyperlink{classforte_1_1_a_o_subspace}{A\+O\+Subspace}} object \mbox{\hyperlink{classforte_1_1_a_o_subspace}{A\+O\+Subspace}} aosub(subspace\+\_\+str,wfn-\/$>$molecule(),wfn-\/$>$basisset());
+
+// Compute the subspaces aosub.\+find\+\_\+subspace();
+
+// Get the subspaces std\+::vector$<$int$>$ subspace = aosub.\+subspace();
+
+// Build a projector psi\+::\+Shared\+Matrix Ps = aosub.\+build\+\_\+projector(subspace,molecule,min\+\_\+basis,basis);
+
+Syntax\+:
+
+Subspaces are specified by a string of the form \char`\"{}$<$element$>$$<$range$>$$<$ao set$>$\char`\"{}
+
+$<$element$>$ -\/ the symbol of the element, e.\+g. \textquotesingle{}Fe\textquotesingle{}, \textquotesingle{}C\textquotesingle{}
+
+$<$range$>$ -\/ the range of the atoms selected. Possible choices are\+: 1) \textquotesingle{}\textquotesingle{} (empty)\+: all atoms that match $<$element$>$ are selected 2) \textquotesingle{}i\textquotesingle{} \+: select the i-\/th atom of type $<$element$>$ 3) \textquotesingle{}i-\/j\textquotesingle{} \+: select atoms i through j (included) of type $<$element$>$
+
+$<$ao set$>$=\char`\"{}\char`\"{}$>$ -\/ the set of atomic orbitals to select. Possible choices are\+: 1) \textquotesingle{}\textquotesingle{} (empty)\+: select all basis functions 2) \textquotesingle{}(nl)\textquotesingle{} \+: select the n-\/th level with angular momentum l e.\+g. \textquotesingle{}(1s)\textquotesingle{}, \textquotesingle{}(2s)\textquotesingle{}, \textquotesingle{}(2p)\textquotesingle{},... n = 1, 2, 3, ... l = \textquotesingle{}s\textquotesingle{}, \textquotesingle{}p\textquotesingle{}, \textquotesingle{}d\textquotesingle{}, \textquotesingle{}f\textquotesingle{}, \textquotesingle{}g\textquotesingle{}, ... 3) \textquotesingle{}(nlm)\textquotesingle{} \+: select the n-\/th level with angular momentum l and component m e.\+g. \textquotesingle{}(2pz)\textquotesingle{}, \textquotesingle{}(3dzz)\textquotesingle{}, \textquotesingle{}(3dxx-\/yy)\textquotesingle{} n = 1, 2, 3, ... l = \textquotesingle{}s\textquotesingle{}, \textquotesingle{}p\textquotesingle{}, \textquotesingle{}d\textquotesingle{}, \textquotesingle{}f\textquotesingle{}, \textquotesingle{}g\textquotesingle{}, ... m = \textquotesingle{}x\textquotesingle{}, \textquotesingle{}y\textquotesingle{}, \textquotesingle{}z\textquotesingle{}, \textquotesingle{}xy\textquotesingle{}, \textquotesingle{}xz\textquotesingle{}, \textquotesingle{}yz\textquotesingle{}, \textquotesingle{}zz\textquotesingle{}, \textquotesingle{}xx-\/yy\textquotesingle{}
+
+Valid options include\+:
+
+\mbox{[}\char`\"{}\+C\char`\"{}\mbox{]} -\/ all carbon atoms \mbox{[}\char`\"{}\+C\char`\"{},\char`\"{}\+N\char`\"{}\mbox{]} -\/ all carbon and nitrogen atoms \mbox{[}\char`\"{}\+C1\char`\"{}\mbox{]} -\/ carbon atom \#1 \mbox{[}\char`\"{}\+C1-\/3\char`\"{}\mbox{]} -\/ carbon atoms \#1, \#2, \#3 \mbox{[}\char`\"{}\+C(2p)\char`\"{}\mbox{]} -\/ the 2p subset of all carbon atoms \mbox{[}\char`\"{}\+C(1s,2s)\char`\"{}\mbox{]} -\/ the 1s/2s subsets of all carbon atoms \mbox{[}\char`\"{}\+C1-\/3(2s)\char`\"{}\mbox{]} -\/ the 2s subsets of carbon atoms \#1, \#2, \#3 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_a_o_subspace_aa7017771aa20fc9e5b8c18df5409dec7}\label{classforte_1_1_a_o_subspace_aa7017771aa20fc9e5b8c18df5409dec7}} 
+\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}!A\+O\+Subspace@{A\+O\+Subspace}}
+\index{A\+O\+Subspace@{A\+O\+Subspace}!forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+\subsubsection{\texorpdfstring{A\+O\+Subspace()}{AOSubspace()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily forte\+::\+A\+O\+Subspace\+::\+A\+O\+Subspace (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Molecule $>$}]{molecule,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{basis }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_a_o_subspace_a94a2f7faa860318be2fc22cacd073856}\label{classforte_1_1_a_o_subspace_a94a2f7faa860318be2fc22cacd073856}} 
+\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}!A\+O\+Subspace@{A\+O\+Subspace}}
+\index{A\+O\+Subspace@{A\+O\+Subspace}!forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+\subsubsection{\texorpdfstring{A\+O\+Subspace()}{AOSubspace()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily forte\+::\+A\+O\+Subspace\+::\+A\+O\+Subspace (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::string $>$}]{subspace\+\_\+str,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Molecule $>$}]{molecule,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{basis }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_a_o_subspace_aa3be8bc3fec6b8a04b01f5f49fb56aa5}\label{classforte_1_1_a_o_subspace_aa3be8bc3fec6b8a04b01f5f49fb56aa5}} 
+\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}!add\+\_\+subspace@{add\+\_\+subspace}}
+\index{add\+\_\+subspace@{add\+\_\+subspace}!forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+\subsubsection{\texorpdfstring{add\+\_\+subspace()}{add\_subspace()}}
+{\footnotesize\ttfamily void forte\+::\+A\+O\+Subspace\+::add\+\_\+subspace (\begin{DoxyParamCaption}\item[{std\+::string}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_a_o_subspace_a5dc3be78b487ed49979849d6826b2b04}\label{classforte_1_1_a_o_subspace_a5dc3be78b487ed49979849d6826b2b04}} 
+\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}!aoinfo@{aoinfo}}
+\index{aoinfo@{aoinfo}!forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+\subsubsection{\texorpdfstring{aoinfo()}{aoinfo()}}
+{\footnotesize\ttfamily const std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_a_o_info}{A\+O\+Info}} $>$ \& forte\+::\+A\+O\+Subspace\+::aoinfo (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return a vector of \mbox{\hyperlink{classforte_1_1_a_o_info}{A\+O\+Info}} objects. 
+
+\mbox{\Hypertarget{classforte_1_1_a_o_subspace_abe1ed4a268100d4ad84da0d67f1a7f00}\label{classforte_1_1_a_o_subspace_abe1ed4a268100d4ad84da0d67f1a7f00}} 
+\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}!aolabels@{aolabels}}
+\index{aolabels@{aolabels}!forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+\subsubsection{\texorpdfstring{aolabels()}{aolabels()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::string $>$ forte\+::\+A\+O\+Subspace\+::aolabels (\begin{DoxyParamCaption}\item[{std\+::string}]{str\+\_\+format = {\ttfamily \char`\"{}\%2\$s\%3\$d~(\%4\$d\%5\$s)\char`\"{}} }\end{DoxyParamCaption}) const}
+
+Return a vector of labels for each atomic orbital. This function accepts an optional argument that indicates the formatting that will be fed to boost\+::format.
+
+The field available for printing are\+:
+\begin{DoxyEnumerate}
+\item Atom number (int)
+\item Atom label, e.\+g. \char`\"{}\+C\char`\"{} (string)
+\item Atom count, e.\+g. 3 = third atom of a given kind (int)
+\item Energy level (n), 2 = 2s or 2p (int)
+\item l/m label, e.\+g. \char`\"{}2px\char`\"{} (string)
+\end{DoxyEnumerate}
+
+\begin{DoxyItemize}
+\item str\+\_\+format A string that specifies the output formatting \end{DoxyItemize}
+\mbox{\Hypertarget{classforte_1_1_a_o_subspace_a516076d13d5f32ac3d50fdeffc66bfa9}\label{classforte_1_1_a_o_subspace_a516076d13d5f32ac3d50fdeffc66bfa9}} 
+\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}!build\+\_\+projector@{build\+\_\+projector}}
+\index{build\+\_\+projector@{build\+\_\+projector}!forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+\subsubsection{\texorpdfstring{build\+\_\+projector()}{build\_projector()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+A\+O\+Subspace\+::build\+\_\+projector (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ int $>$ \&}]{subspace,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Molecule $>$}]{molecule,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{min\+\_\+basis,  }\item[{std\+::shared\+\_\+ptr$<$ psi\+::\+Basis\+Set $>$}]{large\+\_\+basis }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_a_o_subspace_aac4b4260b7081a4d1cdc6be0a96d3491}\label{classforte_1_1_a_o_subspace_aac4b4260b7081a4d1cdc6be0a96d3491}} 
+\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}!find\+\_\+subspace@{find\+\_\+subspace}}
+\index{find\+\_\+subspace@{find\+\_\+subspace}!forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+\subsubsection{\texorpdfstring{find\+\_\+subspace()}{find\_subspace()}}
+{\footnotesize\ttfamily void forte\+::\+A\+O\+Subspace\+::find\+\_\+subspace (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_a_o_subspace_a25edf43d243fd8d8861b031e8b4bee27}\label{classforte_1_1_a_o_subspace_a25edf43d243fd8d8861b031e8b4bee27}} 
+\index{forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}!subspace@{subspace}}
+\index{subspace@{subspace}!forte\+::\+A\+O\+Subspace@{forte\+::\+A\+O\+Subspace}}
+\subsubsection{\texorpdfstring{subspace()}{subspace()}}
+{\footnotesize\ttfamily const std\+::vector$<$ int $>$ \& forte\+::\+A\+O\+Subspace\+::subspace (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{aosubspace_8h}{aosubspace.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/orbital-\/helpers/\mbox{\hyperlink{aosubspace_8cc}{aosubspace.\+cc}}\end{DoxyCompactItemize}

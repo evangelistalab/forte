@@ -1,0 +1,332 @@
+\hypertarget{classforte_1_1_excited_state_solver}{}\section{forte\+:\+:Excited\+State\+Solver Class Reference}
+\label{classforte_1_1_excited_state_solver}\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+
+
+{\ttfamily \#include $<$excited\+\_\+state\+\_\+solver.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Excited\+State\+Solver\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=211pt]{classforte_1_1_excited_state_solver__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Excited\+State\+Solver\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classforte_1_1_excited_state_solver__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_excited_state_solver_ad0bd62104f32a74a473498b86f351217}{Excited\+State\+Solver}} (\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} \mbox{\hyperlink{classforte_1_1_active_space_method_a609f005cc7d3a1bc03ae517002eb19dc}{state}}, size\+\_\+t \mbox{\hyperlink{classforte_1_1_active_space_method_aa2bafc732bd7023fd32fbd263ef2e903}{nroot}}, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_selected_c_i_method}{Selected\+C\+I\+Method}} $>$ sci)
+\item 
+virtual \mbox{\hyperlink{classforte_1_1_excited_state_solver_a188c2390abb69d46932b0f3dec9ded23}{$\sim$\+Excited\+State\+Solver}} ()=default
+\begin{DoxyCompactList}\small\item\em Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classforte_1_1_excited_state_solver_a35b840324fb9e080eda46f29e544c86a}{compute\+\_\+energy}} () override
+\begin{DoxyCompactList}\small\item\em Compute the energy and return it. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ \mbox{\hyperlink{classforte_1_1_excited_state_solver_a67a061a196cc9e492fabc1b6c7995409}{rdms}} (const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&root\+\_\+list, int max\+\_\+rdm\+\_\+level) override
+\begin{DoxyCompactList}\small\item\em Returns the reduced density matrices up to a given level (max\+\_\+rdm\+\_\+level) \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ \mbox{\hyperlink{classforte_1_1_excited_state_solver_a8fa122b902c65b75470e34cdd475acaf}{transition\+\_\+rdms}} (const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&root\+\_\+list, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} $>$ method2, int max\+\_\+rdm\+\_\+level) override
+\item 
+virtual void \mbox{\hyperlink{classforte_1_1_excited_state_solver_ac32716228ebaa1dfda75cf48db544e5f}{set\+\_\+options}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_excited_state_solver_aa6a0c135e584b27da5ad2bc6bf6d9cc3}{set\+\_\+excitation\+\_\+algorithm}} (std\+::string ex\+\_\+alg)
+\begin{DoxyCompactList}\small\item\em Set excitation algorithm. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_excited_state_solver_a50494c293ba4bed55b8ce4c7585c93ee}{set\+\_\+core\+\_\+excitation}} (bool core\+\_\+ex)
+\begin{DoxyCompactList}\small\item\em Set core excitation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_excited_state_solver_a17b7c4372d65beda0704a9fb94e358aa}{set\+\_\+quiet}} (bool quiet)
+\begin{DoxyCompactList}\small\item\em Set the printing level. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \mbox{\hyperlink{classforte_1_1_excited_state_solver_af298efddc513251183107bb72d744443}{final\+\_\+wfn\+\_\+}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_excited_state_solver_a505b5254f0c2f79ea4e68399e920f86c}{nact\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The number of active orbitals. \end{DoxyCompactList}\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_selected_c_i_method}{Selected\+C\+I\+Method}} $>$ \mbox{\hyperlink{classforte_1_1_excited_state_solver_a0e955b7e55dbe66bb00cde9c7a1f471a}{sci\+\_\+}}
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_sparse_c_i_solver}{Sparse\+C\+I\+Solver}} $>$ \mbox{\hyperlink{classforte_1_1_excited_state_solver_aa95a33586d406350f679c8ecd0558bc6}{sparse\+\_\+solver\+\_\+}}
+\item 
+std\+::string \mbox{\hyperlink{classforte_1_1_excited_state_solver_af06c1d8815fb1689fe1b61eadc989b4a}{ex\+\_\+alg\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Algorithm for computing excited states. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_excited_state_solver_acbbb9da97416aeb1810c9cb0a4d6926d}{core\+\_\+ex\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Type of excited state to compute. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_excited_state_solver_ad3075448f2724d563f6f9d49b44d4f69}{quiet\+\_\+mode\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Control amount of printing. \end{DoxyCompactList}\item 
+std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, double $>$ $>$ $>$ \mbox{\hyperlink{classforte_1_1_excited_state_solver_aed69b2410026b59edb0d7fcb0b2eb3c2}{old\+\_\+roots\+\_\+}}
+\begin{DoxyCompactList}\small\item\em Storage of past roots. \end{DoxyCompactList}\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_excited_state_solver_a1f54bc7ffb16c953c37d5fcfeaa3fea2}{multistate\+\_\+pt2\+\_\+energy\+\_\+correction\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The P\+T2 energy correction. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ psi\+::\+Matrix $>$ \mbox{\hyperlink{classforte_1_1_excited_state_solver_aab92da68a704a3dcc3da707aa04dded6}{evecs\+\_\+}}
+\begin{DoxyCompactList}\small\item\em The CI coeffiecients. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_excited_state_solver_a958750ea8478270d12b38953633903f2}{direct\+\_\+rdms\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Computes \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} without coupling lists. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_excited_state_solver_ac5ec17f14aeabf5a2c249fe337c5f982}{test\+\_\+rdms\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Run test for the \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_excited_state_solver_a40b5014e260497ddebc51a2bc3474a88}{save\+\_\+final\+\_\+wfn\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Print final wavefunction to file. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_excited_state_solver_a0533f1272e6a2418f4f8c3d798560b99}{first\+\_\+iter\+\_\+roots\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Compute all roots on first iteration? \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_excited_state_solver_a0b359d79d59555aa1906cb0e5b6fc86a}{full\+\_\+pt2\+\_\+}} = false
+\begin{DoxyCompactList}\small\item\em Do full E\+N-\/\+M\+R\+P\+T2 correction? \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_ad0bd62104f32a74a473498b86f351217}\label{classforte_1_1_excited_state_solver_ad0bd62104f32a74a473498b86f351217}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!Excited\+State\+Solver@{Excited\+State\+Solver}}
+\index{Excited\+State\+Solver@{Excited\+State\+Solver}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{Excited\+State\+Solver()}{ExcitedStateSolver()}}
+{\footnotesize\ttfamily forte\+::\+Excited\+State\+Solver\+::\+Excited\+State\+Solver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}}]{state,  }\item[{size\+\_\+t}]{nroot,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints,  }\item[{std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_selected_c_i_method}{Selected\+C\+I\+Method}} $>$}]{sci }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a188c2390abb69d46932b0f3dec9ded23}\label{classforte_1_1_excited_state_solver_a188c2390abb69d46932b0f3dec9ded23}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!````~Excited\+State\+Solver@{$\sim$\+Excited\+State\+Solver}}
+\index{````~Excited\+State\+Solver@{$\sim$\+Excited\+State\+Solver}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{$\sim$\+Excited\+State\+Solver()}{~ExcitedStateSolver()}}
+{\footnotesize\ttfamily virtual forte\+::\+Excited\+State\+Solver\+::$\sim$\+Excited\+State\+Solver (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+
+
+Virtual destructor to enable deletion of a Derived$\ast$ through a Base$\ast$. 
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a35b840324fb9e080eda46f29e544c86a}\label{classforte_1_1_excited_state_solver_a35b840324fb9e080eda46f29e544c86a}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!compute\+\_\+energy@{compute\+\_\+energy}}
+\index{compute\+\_\+energy@{compute\+\_\+energy}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{compute\+\_\+energy()}{compute\_energy()}}
+{\footnotesize\ttfamily double forte\+::\+Excited\+State\+Solver\+::compute\+\_\+energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Compute the energy and return it. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_active_space_method_a99736e2b94405371b224b0750569b077}{forte\+::\+Active\+Space\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a67a061a196cc9e492fabc1b6c7995409}\label{classforte_1_1_excited_state_solver_a67a061a196cc9e492fabc1b6c7995409}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!rdms@{rdms}}
+\index{rdms@{rdms}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{rdms()}{rdms()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ forte\+::\+Excited\+State\+Solver\+::rdms (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&}]{root\+\_\+list,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Returns the reduced density matrices up to a given level (max\+\_\+rdm\+\_\+level) 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_active_space_method_a0b2c4903551a7602db815d67349ba7c9}{forte\+::\+Active\+Space\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a50494c293ba4bed55b8ce4c7585c93ee}\label{classforte_1_1_excited_state_solver_a50494c293ba4bed55b8ce4c7585c93ee}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!set\+\_\+core\+\_\+excitation@{set\+\_\+core\+\_\+excitation}}
+\index{set\+\_\+core\+\_\+excitation@{set\+\_\+core\+\_\+excitation}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+core\+\_\+excitation()}{set\_core\_excitation()}}
+{\footnotesize\ttfamily void forte\+::\+Excited\+State\+Solver\+::set\+\_\+core\+\_\+excitation (\begin{DoxyParamCaption}\item[{bool}]{core\+\_\+ex }\end{DoxyParamCaption})}
+
+
+
+Set core excitation. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_aa6a0c135e584b27da5ad2bc6bf6d9cc3}\label{classforte_1_1_excited_state_solver_aa6a0c135e584b27da5ad2bc6bf6d9cc3}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!set\+\_\+excitation\+\_\+algorithm@{set\+\_\+excitation\+\_\+algorithm}}
+\index{set\+\_\+excitation\+\_\+algorithm@{set\+\_\+excitation\+\_\+algorithm}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+excitation\+\_\+algorithm()}{set\_excitation\_algorithm()}}
+{\footnotesize\ttfamily void forte\+::\+Excited\+State\+Solver\+::set\+\_\+excitation\+\_\+algorithm (\begin{DoxyParamCaption}\item[{std\+::string}]{ex\+\_\+alg }\end{DoxyParamCaption})}
+
+
+
+Set excitation algorithm. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_ac32716228ebaa1dfda75cf48db544e5f}\label{classforte_1_1_excited_state_solver_ac32716228ebaa1dfda75cf48db544e5f}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!set\+\_\+options@{set\+\_\+options}}
+\index{set\+\_\+options@{set\+\_\+options}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+options()}{set\_options()}}
+{\footnotesize\ttfamily void forte\+::\+Excited\+State\+Solver\+::set\+\_\+options (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Set options from an option object 
+\begin{DoxyParams}{Parameters}
+{\em options} & the options passed in \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classforte_1_1_active_space_method_a9416a627f550d4d56f6b8ffe7478ed89}{forte\+::\+Active\+Space\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a17b7c4372d65beda0704a9fb94e358aa}\label{classforte_1_1_excited_state_solver_a17b7c4372d65beda0704a9fb94e358aa}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!set\+\_\+quiet@{set\+\_\+quiet}}
+\index{set\+\_\+quiet@{set\+\_\+quiet}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{set\+\_\+quiet()}{set\_quiet()}}
+{\footnotesize\ttfamily void forte\+::\+Excited\+State\+Solver\+::set\+\_\+quiet (\begin{DoxyParamCaption}\item[{bool}]{quiet }\end{DoxyParamCaption})}
+
+
+
+Set the printing level. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a8fa122b902c65b75470e34cdd475acaf}\label{classforte_1_1_excited_state_solver_a8fa122b902c65b75470e34cdd475acaf}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!transition\+\_\+rdms@{transition\+\_\+rdms}}
+\index{transition\+\_\+rdms@{transition\+\_\+rdms}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{transition\+\_\+rdms()}{transition\_rdms()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} $>$ forte\+::\+Excited\+State\+Solver\+::transition\+\_\+rdms (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::pair$<$ size\+\_\+t, size\+\_\+t $>$$>$ \&}]{root\+\_\+list,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_method}{Active\+Space\+Method}} $>$}]{method2,  }\item[{int}]{max\+\_\+rdm\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Returns the transition reduced density matrices between roots of different symmetry up to a given level (max\+\_\+rdm\+\_\+level) 
+
+Implements \mbox{\hyperlink{classforte_1_1_active_space_method_a4460069915e56a1994d3a4a4e78bdb30}{forte\+::\+Active\+Space\+Method}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_acbbb9da97416aeb1810c9cb0a4d6926d}\label{classforte_1_1_excited_state_solver_acbbb9da97416aeb1810c9cb0a4d6926d}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!core\+\_\+ex\+\_\+@{core\+\_\+ex\+\_\+}}
+\index{core\+\_\+ex\+\_\+@{core\+\_\+ex\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{core\+\_\+ex\+\_\+}{core\_ex\_}}
+{\footnotesize\ttfamily bool forte\+::\+Excited\+State\+Solver\+::core\+\_\+ex\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Type of excited state to compute. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a958750ea8478270d12b38953633903f2}\label{classforte_1_1_excited_state_solver_a958750ea8478270d12b38953633903f2}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!direct\+\_\+rdms\+\_\+@{direct\+\_\+rdms\+\_\+}}
+\index{direct\+\_\+rdms\+\_\+@{direct\+\_\+rdms\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{direct\+\_\+rdms\+\_\+}{direct\_rdms\_}}
+{\footnotesize\ttfamily bool forte\+::\+Excited\+State\+Solver\+::direct\+\_\+rdms\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Computes \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}} without coupling lists. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_aab92da68a704a3dcc3da707aa04dded6}\label{classforte_1_1_excited_state_solver_aab92da68a704a3dcc3da707aa04dded6}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!evecs\+\_\+@{evecs\+\_\+}}
+\index{evecs\+\_\+@{evecs\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{evecs\+\_\+}{evecs\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$psi\+::\+Matrix$>$ forte\+::\+Excited\+State\+Solver\+::evecs\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The CI coeffiecients. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_af06c1d8815fb1689fe1b61eadc989b4a}\label{classforte_1_1_excited_state_solver_af06c1d8815fb1689fe1b61eadc989b4a}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!ex\+\_\+alg\+\_\+@{ex\+\_\+alg\+\_\+}}
+\index{ex\+\_\+alg\+\_\+@{ex\+\_\+alg\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{ex\+\_\+alg\+\_\+}{ex\_alg\_}}
+{\footnotesize\ttfamily std\+::string forte\+::\+Excited\+State\+Solver\+::ex\+\_\+alg\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Algorithm for computing excited states. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_af298efddc513251183107bb72d744443}\label{classforte_1_1_excited_state_solver_af298efddc513251183107bb72d744443}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!final\+\_\+wfn\+\_\+@{final\+\_\+wfn\+\_\+}}
+\index{final\+\_\+wfn\+\_\+@{final\+\_\+wfn\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{final\+\_\+wfn\+\_\+}{final\_wfn\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} forte\+::\+Excited\+State\+Solver\+::final\+\_\+wfn\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a0533f1272e6a2418f4f8c3d798560b99}\label{classforte_1_1_excited_state_solver_a0533f1272e6a2418f4f8c3d798560b99}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!first\+\_\+iter\+\_\+roots\+\_\+@{first\+\_\+iter\+\_\+roots\+\_\+}}
+\index{first\+\_\+iter\+\_\+roots\+\_\+@{first\+\_\+iter\+\_\+roots\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{first\+\_\+iter\+\_\+roots\+\_\+}{first\_iter\_roots\_}}
+{\footnotesize\ttfamily bool forte\+::\+Excited\+State\+Solver\+::first\+\_\+iter\+\_\+roots\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Compute all roots on first iteration? 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a0b359d79d59555aa1906cb0e5b6fc86a}\label{classforte_1_1_excited_state_solver_a0b359d79d59555aa1906cb0e5b6fc86a}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!full\+\_\+pt2\+\_\+@{full\+\_\+pt2\+\_\+}}
+\index{full\+\_\+pt2\+\_\+@{full\+\_\+pt2\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{full\+\_\+pt2\+\_\+}{full\_pt2\_}}
+{\footnotesize\ttfamily bool forte\+::\+Excited\+State\+Solver\+::full\+\_\+pt2\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Do full E\+N-\/\+M\+R\+P\+T2 correction? 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a1f54bc7ffb16c953c37d5fcfeaa3fea2}\label{classforte_1_1_excited_state_solver_a1f54bc7ffb16c953c37d5fcfeaa3fea2}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!multistate\+\_\+pt2\+\_\+energy\+\_\+correction\+\_\+@{multistate\+\_\+pt2\+\_\+energy\+\_\+correction\+\_\+}}
+\index{multistate\+\_\+pt2\+\_\+energy\+\_\+correction\+\_\+@{multistate\+\_\+pt2\+\_\+energy\+\_\+correction\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{multistate\+\_\+pt2\+\_\+energy\+\_\+correction\+\_\+}{multistate\_pt2\_energy\_correction\_}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ forte\+::\+Excited\+State\+Solver\+::multistate\+\_\+pt2\+\_\+energy\+\_\+correction\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The P\+T2 energy correction. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a505b5254f0c2f79ea4e68399e920f86c}\label{classforte_1_1_excited_state_solver_a505b5254f0c2f79ea4e68399e920f86c}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!nact\+\_\+@{nact\+\_\+}}
+\index{nact\+\_\+@{nact\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{nact\+\_\+}{nact\_}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Excited\+State\+Solver\+::nact\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The number of active orbitals. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_aed69b2410026b59edb0d7fcb0b2eb3c2}\label{classforte_1_1_excited_state_solver_aed69b2410026b59edb0d7fcb0b2eb3c2}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!old\+\_\+roots\+\_\+@{old\+\_\+roots\+\_\+}}
+\index{old\+\_\+roots\+\_\+@{old\+\_\+roots\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{old\+\_\+roots\+\_\+}{old\_roots\_}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$std\+::pair$<$\mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, double$>$ $>$ $>$ forte\+::\+Excited\+State\+Solver\+::old\+\_\+roots\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Storage of past roots. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_ad3075448f2724d563f6f9d49b44d4f69}\label{classforte_1_1_excited_state_solver_ad3075448f2724d563f6f9d49b44d4f69}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!quiet\+\_\+mode\+\_\+@{quiet\+\_\+mode\+\_\+}}
+\index{quiet\+\_\+mode\+\_\+@{quiet\+\_\+mode\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{quiet\+\_\+mode\+\_\+}{quiet\_mode\_}}
+{\footnotesize\ttfamily bool forte\+::\+Excited\+State\+Solver\+::quiet\+\_\+mode\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Control amount of printing. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a40b5014e260497ddebc51a2bc3474a88}\label{classforte_1_1_excited_state_solver_a40b5014e260497ddebc51a2bc3474a88}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!save\+\_\+final\+\_\+wfn\+\_\+@{save\+\_\+final\+\_\+wfn\+\_\+}}
+\index{save\+\_\+final\+\_\+wfn\+\_\+@{save\+\_\+final\+\_\+wfn\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{save\+\_\+final\+\_\+wfn\+\_\+}{save\_final\_wfn\_}}
+{\footnotesize\ttfamily bool forte\+::\+Excited\+State\+Solver\+::save\+\_\+final\+\_\+wfn\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Print final wavefunction to file. 
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_a0e955b7e55dbe66bb00cde9c7a1f471a}\label{classforte_1_1_excited_state_solver_a0e955b7e55dbe66bb00cde9c7a1f471a}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!sci\+\_\+@{sci\+\_\+}}
+\index{sci\+\_\+@{sci\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{sci\+\_\+}{sci\_}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_selected_c_i_method}{Selected\+C\+I\+Method}}$>$ forte\+::\+Excited\+State\+Solver\+::sci\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_aa95a33586d406350f679c8ecd0558bc6}\label{classforte_1_1_excited_state_solver_aa95a33586d406350f679c8ecd0558bc6}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!sparse\+\_\+solver\+\_\+@{sparse\+\_\+solver\+\_\+}}
+\index{sparse\+\_\+solver\+\_\+@{sparse\+\_\+solver\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{sparse\+\_\+solver\+\_\+}{sparse\_solver\_}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classforte_1_1_sparse_c_i_solver}{Sparse\+C\+I\+Solver}}$>$ forte\+::\+Excited\+State\+Solver\+::sparse\+\_\+solver\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classforte_1_1_excited_state_solver_ac5ec17f14aeabf5a2c249fe337c5f982}\label{classforte_1_1_excited_state_solver_ac5ec17f14aeabf5a2c249fe337c5f982}} 
+\index{forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}!test\+\_\+rdms\+\_\+@{test\+\_\+rdms\+\_\+}}
+\index{test\+\_\+rdms\+\_\+@{test\+\_\+rdms\+\_\+}!forte\+::\+Excited\+State\+Solver@{forte\+::\+Excited\+State\+Solver}}
+\subsubsection{\texorpdfstring{test\+\_\+rdms\+\_\+}{test\_rdms\_}}
+{\footnotesize\ttfamily bool forte\+::\+Excited\+State\+Solver\+::test\+\_\+rdms\+\_\+ = false\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Run test for the \mbox{\hyperlink{classforte_1_1_r_d_ms}{R\+D\+Ms}}. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/ci\+\_\+ex\+\_\+states/\mbox{\hyperlink{excited__state__solver_8h}{excited\+\_\+state\+\_\+solver.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/ci\+\_\+ex\+\_\+states/\mbox{\hyperlink{excited__state__solver_8cc}{excited\+\_\+state\+\_\+solver.\+cc}}\end{DoxyCompactItemize}

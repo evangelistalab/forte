@@ -1,0 +1,51 @@
+\hypertarget{integrals__psi4__interface_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/integrals/integrals\+\_\+psi4\+\_\+interface.cc File Reference}
+\label{integrals__psi4__interface_8cc}\index{/\+Users/fevange/\+Source/forte/src/integrals/integrals\+\_\+psi4\+\_\+interface.\+cc@{/\+Users/fevange/\+Source/forte/src/integrals/integrals\+\_\+psi4\+\_\+interface.\+cc}}
+{\ttfamily \#include \char`\"{}psi4/psi4-\/dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libfock/jk.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/basisset.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/integral.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/molecule.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/wavefunction.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/printing.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/timer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}integrals/integrals.\+h\char`\"{}}\newline
+Include dependency graph for integrals\+\_\+psi4\+\_\+interface.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{integrals__psi4__interface_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{integrals__psi4__interface_8cc_a59e73060d1552ccda56039c7f3d25a84}{omp\+\_\+get\+\_\+max\+\_\+threads}}()~1
+\item 
+\#define \mbox{\hyperlink{integrals__psi4__interface_8cc_a889ec205c635b219999c761b28cc39ba}{omp\+\_\+get\+\_\+thread\+\_\+num}}()~0
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{integrals__psi4__interface_8cc_a59e73060d1552ccda56039c7f3d25a84}\label{integrals__psi4__interface_8cc_a59e73060d1552ccda56039c7f3d25a84}} 
+\index{integrals\+\_\+psi4\+\_\+interface.\+cc@{integrals\+\_\+psi4\+\_\+interface.\+cc}!omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}}
+\index{omp\+\_\+get\+\_\+max\+\_\+threads@{omp\+\_\+get\+\_\+max\+\_\+threads}!integrals\+\_\+psi4\+\_\+interface.\+cc@{integrals\+\_\+psi4\+\_\+interface.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+max\+\_\+threads}{omp\_get\_max\_threads}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+max\+\_\+threads(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~1}
+
+\mbox{\Hypertarget{integrals__psi4__interface_8cc_a889ec205c635b219999c761b28cc39ba}\label{integrals__psi4__interface_8cc_a889ec205c635b219999c761b28cc39ba}} 
+\index{integrals\+\_\+psi4\+\_\+interface.\+cc@{integrals\+\_\+psi4\+\_\+interface.\+cc}!omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}}
+\index{omp\+\_\+get\+\_\+thread\+\_\+num@{omp\+\_\+get\+\_\+thread\+\_\+num}!integrals\+\_\+psi4\+\_\+interface.\+cc@{integrals\+\_\+psi4\+\_\+interface.\+cc}}
+\subsubsection{\texorpdfstring{omp\+\_\+get\+\_\+thread\+\_\+num}{omp\_get\_thread\_num}}
+{\footnotesize\ttfamily \#define omp\+\_\+get\+\_\+thread\+\_\+num(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})~0}
+

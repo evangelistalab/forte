@@ -1,0 +1,43 @@
+\hypertarget{disk__io_8h}{}\section{/\+Users/fevange/\+Source/forte/src/helpers/disk\+\_\+io.h File Reference}
+\label{disk__io_8h}\index{/\+Users/fevange/\+Source/forte/src/helpers/disk\+\_\+io.\+h@{/\+Users/fevange/\+Source/forte/src/helpers/disk\+\_\+io.\+h}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$chrono$>$}\newline
+{\ttfamily \#include $<$map$>$}\newline
+{\ttfamily \#include $<$numeric$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$pybind11/pybind11.\+h$>$}\newline
+{\ttfamily \#include $<$pybind11/numpy.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}ambit/tensor.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}ambit/blocked\+\_\+tensor.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/matrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libmints/vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libqt/qt.\+h\char`\"{}}\newline
+Include dependency graph for disk\+\_\+io.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{disk__io_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{disk__io_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{namespaceforte_a9a44938bf4a0b18941d672c803c4cd44}{forte\+::write\+\_\+disk\+\_\+vector\+\_\+double}} (const std\+::string \&filename, const std\+::vector$<$ double $>$ \&data, bool overwrite=false)
+\begin{DoxyCompactList}\small\item\em Save a vector of double to file. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespaceforte_ac1ea79f74345126170235a50418524ad}{forte\+::read\+\_\+disk\+\_\+vector\+\_\+double}} (const std\+::string \&filename, std\+::vector$<$ double $>$ \&data)
+\begin{DoxyCompactList}\small\item\em Read a vector of double from file. \end{DoxyCompactList}\end{DoxyCompactItemize}

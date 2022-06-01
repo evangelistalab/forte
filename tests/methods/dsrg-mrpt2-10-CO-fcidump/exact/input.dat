@@ -1,0 +1,50 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refcasscf    = -112.881481489289456
+refpt2       = -113.10564937040 #-113.10564937477
+refpt2_relax = -113.10890275212
+refdm        =    0.078159
+refdm_relax  =    0.008678
+
+molecule CO{
+  0 1
+  C
+  O  1 1.128
+}
+
+set {
+  basis                  cc-pcvdz
+  reference              rhf
+  scf_type               out_of_core
+  maxiter                300
+  e_convergence          10
+  d_convergence          8
+  docc                   [5,0,1,1]
+}
+
+Ecasscf, wfn_cas = energy('scf', return_wfn=True)
+#compare_values(refcasscf,variable("CURRENT ENERGY"),10,"CASSCF energy")
+
+set forte {
+  correlation_solver   dsrg-mrpt2
+  active_space_solver  cas
+  frozen_docc        [0,0,0,0]
+  frozen_uocc        [0,0,0,0]
+  restricted_docc    [2,0,0,0]
+  active             [4,0,2,2]
+  root_sym           0
+  nroot              1
+  dsrg_s             0.5
+  relax_ref          once
+  dsrg_dipole        true
+  e_convergence      12
+  r_convergence      10
+}
+
+Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
+#compare_values(refpt2,variable("UNRELAXED ENERGY"),9,"DSRG-MRPT2 unrelaxed energy")
+#compare_values(refpt2_relax,variable("PARTIALLY RELAXED ENERGY"),9,"DSRG-MRPT2 partially relaxed energy")
+#compare_values(refdm,variable("UNRELAXED DIPOLE"),5,"DSRG-MRPT2 dipole moment unrelaxed ref")
+#compare_values(refdm_relax,variable("PARTIALLY RELAXED DIPOLE"),5,"DSRG-MRPT2 dipole moment partially relaxed ref")

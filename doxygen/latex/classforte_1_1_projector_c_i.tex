@@ -1,0 +1,292 @@
+\hypertarget{classforte_1_1_projector_c_i}{}\section{forte\+:\+:Projector\+CI Class Reference}
+\label{classforte_1_1_projector_c_i}\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+
+
+The Sparse\+Path\+Integral\+CI class This class implements an a sparse path-\/integral F\+CI algorithm.  
+
+
+
+
+{\ttfamily \#include $<$pci.\+h$>$}
+
+
+
+Inheritance diagram for forte\+:\+:Projector\+CI\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=204pt]{classforte_1_1_projector_c_i__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for forte\+:\+:Projector\+CI\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=204pt]{classforte_1_1_projector_c_i__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_projector_c_i_a478bdd78ee2686f927839e726b38de52}{Projector\+CI}} (\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}} state, size\+\_\+t nroot, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{forte\+::\+S\+C\+F\+Info}} $>$ scf\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$ mo\+\_\+space\+\_\+info, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$ as\+\_\+ints)
+\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_af6605360f58baeccb1877dedcb2ff866}{set\+\_\+options}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$ options) override
+\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_a9ef4c662c6582ba4ec1a9ab9bd806b6e}{print\+\_\+info}} () override
+\begin{DoxyCompactList}\small\item\em Print the banner and starting information. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_a40fddd83a1450b2553f8347f82affca7}{pre\+\_\+iter\+\_\+preparation}} () override
+\begin{DoxyCompactList}\small\item\em Pre-\/iter preparation, usually includes preparing an initial reference. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_a2fc4f3f5094af2886237188e33f0f8ec}{diagonalize\+\_\+\+P\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Step 1. Diagonalize the Hamiltonian in the P space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_a8818efb18539867d404b98e13b0a7390}{find\+\_\+q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Step 2. Find determinants in the Q space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_ae61e5b098015659c30198655fe0b2679}{diagonalize\+\_\+\+P\+Q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Step 3. Diagonalize the Hamiltonian in the P + Q space. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classforte_1_1_projector_c_i_a92835e4b67f74340959ef8c4503ce241}{check\+\_\+convergence}} () override
+\begin{DoxyCompactList}\small\item\em Step 4. Check convergence. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_a2f37b3d1e1751cc6bea1177a70be675c}{prune\+\_\+\+P\+Q\+\_\+to\+\_\+P}} () override
+\begin{DoxyCompactList}\small\item\em Step 5. Prune the P + Q space to get an updated P space. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_a9d7d491168cfe782b51d3393f4b77630}{post\+\_\+iter\+\_\+process}} () override
+\begin{DoxyCompactList}\small\item\em Post-\/iter process. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_projector_c_i_af52dd5970339c390a9884b1cdad0a1d7}{set\+\_\+method\+\_\+variables}} (std\+::string ex\+\_\+alg, size\+\_\+t nroot\+\_\+method, size\+\_\+t root, const std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, double $>$$>$$>$ \&old\+\_\+roots) override
+\begin{DoxyCompactList}\small\item\em Set the class variable. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} \mbox{\hyperlink{classforte_1_1_projector_c_i_aa666615f222bd2263b1199910b2bbbcc}{get\+\_\+\+P\+Q\+\_\+space}} () override
+\begin{DoxyCompactList}\small\item\em Getters. \end{DoxyCompactList}\item 
+psi\+::\+Shared\+Matrix \mbox{\hyperlink{classforte_1_1_projector_c_i_a3c3dd33031ea7f0764c34db25e8d03a4}{get\+\_\+\+P\+Q\+\_\+evecs}} () override
+\item 
+psi\+::\+Shared\+Vector \mbox{\hyperlink{classforte_1_1_projector_c_i_ad6e48a524b58412a569858c9c2b1c232}{get\+\_\+\+P\+Q\+\_\+evals}} () override
+\item 
+size\+\_\+t \mbox{\hyperlink{classforte_1_1_projector_c_i_ad4774357cde1564dd6a2f17bb0452174}{get\+\_\+ref\+\_\+root}} () override
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classforte_1_1_projector_c_i_aa812688cd77719876ea535f49b835c57}{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}} () override
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The Sparse\+Path\+Integral\+CI class This class implements an a sparse path-\/integral F\+CI algorithm. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a478bdd78ee2686f927839e726b38de52}\label{classforte_1_1_projector_c_i_a478bdd78ee2686f927839e726b38de52}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!Projector\+CI@{Projector\+CI}}
+\index{Projector\+CI@{Projector\+CI}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{Projector\+C\+I()}{ProjectorCI()}}
+{\footnotesize\ttfamily forte\+::\+Projector\+C\+I\+::\+Projector\+CI (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classforte_1_1_state_info}{State\+Info}}}]{state,  }\item[{size\+\_\+t}]{nroot,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_s_c_f_info}{forte\+::\+S\+C\+F\+Info}} $>$}]{scf\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_m_o_space_info}{M\+O\+Space\+Info}} $>$}]{mo\+\_\+space\+\_\+info,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_active_space_integrals}{Active\+Space\+Integrals}} $>$}]{as\+\_\+ints }\end{DoxyParamCaption})}
+
+Constructor 
+\begin{DoxyParams}{Parameters}
+{\em ref\+\_\+wfn} & The reference wavefunction object \\
+\hline
+{\em options} & The main options object \\
+\hline
+{\em ints} & A pointer to an allocated integral object \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a92835e4b67f74340959ef8c4503ce241}\label{classforte_1_1_projector_c_i_a92835e4b67f74340959ef8c4503ce241}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!check\+\_\+convergence@{check\+\_\+convergence}}
+\index{check\+\_\+convergence@{check\+\_\+convergence}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{check\+\_\+convergence()}{check\_convergence()}}
+{\footnotesize\ttfamily bool forte\+::\+Projector\+C\+I\+::check\+\_\+convergence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 4. Check convergence. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_acc10aa488c79c2abec46a9093ecf5a52}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a2fc4f3f5094af2886237188e33f0f8ec}\label{classforte_1_1_projector_c_i_a2fc4f3f5094af2886237188e33f0f8ec}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!diagonalize\+\_\+\+P\+\_\+space@{diagonalize\+\_\+\+P\+\_\+space}}
+\index{diagonalize\+\_\+\+P\+\_\+space@{diagonalize\+\_\+\+P\+\_\+space}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+\+P\+\_\+space()}{diagonalize\_P\_space()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::diagonalize\+\_\+\+P\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 1. Diagonalize the Hamiltonian in the P space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a7b2b41da889659f03361f625c6df44d2}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_ae61e5b098015659c30198655fe0b2679}\label{classforte_1_1_projector_c_i_ae61e5b098015659c30198655fe0b2679}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!diagonalize\+\_\+\+P\+Q\+\_\+space@{diagonalize\+\_\+\+P\+Q\+\_\+space}}
+\index{diagonalize\+\_\+\+P\+Q\+\_\+space@{diagonalize\+\_\+\+P\+Q\+\_\+space}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{diagonalize\+\_\+\+P\+Q\+\_\+space()}{diagonalize\_PQ\_space()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::diagonalize\+\_\+\+P\+Q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 3. Diagonalize the Hamiltonian in the P + Q space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a9f01588d22401cd2631a09940ea7db50}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a8818efb18539867d404b98e13b0a7390}\label{classforte_1_1_projector_c_i_a8818efb18539867d404b98e13b0a7390}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!find\+\_\+q\+\_\+space@{find\+\_\+q\+\_\+space}}
+\index{find\+\_\+q\+\_\+space@{find\+\_\+q\+\_\+space}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{find\+\_\+q\+\_\+space()}{find\_q\_space()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::find\+\_\+q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 2. Find determinants in the Q space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_aff521efa08edfafb479f32e03a70c118}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_aa812688cd77719876ea535f49b835c57}\label{classforte_1_1_projector_c_i_aa812688cd77719876ea535f49b835c57}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction@{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}}
+\index{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction@{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction()}{get\_multistate\_pt2\_energy\_correction()}}
+{\footnotesize\ttfamily std\+::vector$<$ double $>$ forte\+::\+Projector\+C\+I\+::get\+\_\+multistate\+\_\+pt2\+\_\+energy\+\_\+correction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_abbe18ea3e5f1a77df13a38764aeef62c}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_ad6e48a524b58412a569858c9c2b1c232}\label{classforte_1_1_projector_c_i_ad6e48a524b58412a569858c9c2b1c232}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!get\+\_\+\+P\+Q\+\_\+evals@{get\+\_\+\+P\+Q\+\_\+evals}}
+\index{get\+\_\+\+P\+Q\+\_\+evals@{get\+\_\+\+P\+Q\+\_\+evals}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+evals()}{get\_PQ\_evals()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Vector forte\+::\+Projector\+C\+I\+::get\+\_\+\+P\+Q\+\_\+evals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a675d28ae66341b8cfabb2953c936621c}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a3c3dd33031ea7f0764c34db25e8d03a4}\label{classforte_1_1_projector_c_i_a3c3dd33031ea7f0764c34db25e8d03a4}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!get\+\_\+\+P\+Q\+\_\+evecs@{get\+\_\+\+P\+Q\+\_\+evecs}}
+\index{get\+\_\+\+P\+Q\+\_\+evecs@{get\+\_\+\+P\+Q\+\_\+evecs}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+evecs()}{get\_PQ\_evecs()}}
+{\footnotesize\ttfamily psi\+::\+Shared\+Matrix forte\+::\+Projector\+C\+I\+::get\+\_\+\+P\+Q\+\_\+evecs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a5e5212836aa0dc35f98238d1f426abed}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_aa666615f222bd2263b1199910b2bbbcc}\label{classforte_1_1_projector_c_i_aa666615f222bd2263b1199910b2bbbcc}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!get\+\_\+\+P\+Q\+\_\+space@{get\+\_\+\+P\+Q\+\_\+space}}
+\index{get\+\_\+\+P\+Q\+\_\+space@{get\+\_\+\+P\+Q\+\_\+space}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+\+P\+Q\+\_\+space()}{get\_PQ\_space()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classforte_1_1_determinant_hash_vec}{Determinant\+Hash\+Vec}} forte\+::\+Projector\+C\+I\+::get\+\_\+\+P\+Q\+\_\+space (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Getters. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a2c29d8700d6887860850f77b9246ec9f}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_ad4774357cde1564dd6a2f17bb0452174}\label{classforte_1_1_projector_c_i_ad4774357cde1564dd6a2f17bb0452174}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!get\+\_\+ref\+\_\+root@{get\+\_\+ref\+\_\+root}}
+\index{get\+\_\+ref\+\_\+root@{get\+\_\+ref\+\_\+root}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{get\+\_\+ref\+\_\+root()}{get\_ref\_root()}}
+{\footnotesize\ttfamily size\+\_\+t forte\+::\+Projector\+C\+I\+::get\+\_\+ref\+\_\+root (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_aa95ed581568b2d580c17ab166e85a11a}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a9d7d491168cfe782b51d3393f4b77630}\label{classforte_1_1_projector_c_i_a9d7d491168cfe782b51d3393f4b77630}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!post\+\_\+iter\+\_\+process@{post\+\_\+iter\+\_\+process}}
+\index{post\+\_\+iter\+\_\+process@{post\+\_\+iter\+\_\+process}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{post\+\_\+iter\+\_\+process()}{post\_iter\_process()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::post\+\_\+iter\+\_\+process (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Post-\/iter process. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a23ea3389ac1c62dee811decc5bea507f}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a40fddd83a1450b2553f8347f82affca7}\label{classforte_1_1_projector_c_i_a40fddd83a1450b2553f8347f82affca7}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!pre\+\_\+iter\+\_\+preparation@{pre\+\_\+iter\+\_\+preparation}}
+\index{pre\+\_\+iter\+\_\+preparation@{pre\+\_\+iter\+\_\+preparation}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{pre\+\_\+iter\+\_\+preparation()}{pre\_iter\_preparation()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::pre\+\_\+iter\+\_\+preparation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Pre-\/iter preparation, usually includes preparing an initial reference. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_af92b210415034874fcf2faac8b00eca9}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a9ef4c662c6582ba4ec1a9ab9bd806b6e}\label{classforte_1_1_projector_c_i_a9ef4c662c6582ba4ec1a9ab9bd806b6e}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!print\+\_\+info@{print\+\_\+info}}
+\index{print\+\_\+info@{print\+\_\+info}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{print\+\_\+info()}{print\_info()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::print\+\_\+info (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Print the banner and starting information. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a95680d60059b29c763b5f87f9add48e2}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_a2f37b3d1e1751cc6bea1177a70be675c}\label{classforte_1_1_projector_c_i_a2f37b3d1e1751cc6bea1177a70be675c}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!prune\+\_\+\+P\+Q\+\_\+to\+\_\+P@{prune\+\_\+\+P\+Q\+\_\+to\+\_\+P}}
+\index{prune\+\_\+\+P\+Q\+\_\+to\+\_\+P@{prune\+\_\+\+P\+Q\+\_\+to\+\_\+P}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{prune\+\_\+\+P\+Q\+\_\+to\+\_\+\+P()}{prune\_PQ\_to\_P()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::prune\+\_\+\+P\+Q\+\_\+to\+\_\+P (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Step 5. Prune the P + Q space to get an updated P space. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a245f5fcd64ee44acf7b065981380f8dd}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_af52dd5970339c390a9884b1cdad0a1d7}\label{classforte_1_1_projector_c_i_af52dd5970339c390a9884b1cdad0a1d7}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!set\+\_\+method\+\_\+variables@{set\+\_\+method\+\_\+variables}}
+\index{set\+\_\+method\+\_\+variables@{set\+\_\+method\+\_\+variables}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+method\+\_\+variables()}{set\_method\_variables()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::set\+\_\+method\+\_\+variables (\begin{DoxyParamCaption}\item[{std\+::string}]{ex\+\_\+alg,  }\item[{size\+\_\+t}]{nroot\+\_\+method,  }\item[{size\+\_\+t}]{root,  }\item[{const std\+::vector$<$ std\+::vector$<$ std\+::pair$<$ \mbox{\hyperlink{namespaceforte_a2076c63fd7b8732004d9e1442ce527c1}{Determinant}}, double $>$$>$$>$ \&}]{old\+\_\+roots }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Set the class variable. 
+
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_a37f95503d0241387195dc7d412fc6e78}{forte\+::\+Selected\+C\+I\+Method}}.
+
+\mbox{\Hypertarget{classforte_1_1_projector_c_i_af6605360f58baeccb1877dedcb2ff866}\label{classforte_1_1_projector_c_i_af6605360f58baeccb1877dedcb2ff866}} 
+\index{forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}!set\+\_\+options@{set\+\_\+options}}
+\index{set\+\_\+options@{set\+\_\+options}!forte\+::\+Projector\+CI@{forte\+::\+Projector\+CI}}
+\subsubsection{\texorpdfstring{set\+\_\+options()}{set\_options()}}
+{\footnotesize\ttfamily void forte\+::\+Projector\+C\+I\+::set\+\_\+options (\begin{DoxyParamCaption}\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classforte_1_1_forte_options}{Forte\+Options}} $>$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Set options from an option object 
+\begin{DoxyParams}{Parameters}
+{\em options} & the options passed in \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classforte_1_1_selected_c_i_method_ad03bbde3a0443ca9b01ff9605f2e06e0}{forte\+::\+Selected\+C\+I\+Method}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/pci/\mbox{\hyperlink{pci_8h}{pci.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/pci/\mbox{\hyperlink{pci_8cc}{pci.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,23 @@
+aci:
+  long:
+  - aci-full-pt2-2
+  - cis-aci-1
+  medium:
+  - aci-2
+  - aci-11
+  - aci-13
+  - aci-17
+  short:
+  - aci-1
+  - aci-3
+  - aci-8
+  - aci-12
+  - aci-14
+dsrg-mrpt2:
+  long:
+  - aci-dsrg-mrpt2-5
+  medium:
+  - aci-dsrg-mrpt2-4
+gasci:
+  short:
+  - gasaci-1

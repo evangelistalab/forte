@@ -1,0 +1,45 @@
+\hypertarget{forte__options_8cc}{}\section{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/forte\+\_\+options.cc File Reference}
+\label{forte__options_8cc}\index{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/forte\+\_\+options.\+cc@{/\+Users/fevange/\+Source/forte/src/base\+\_\+classes/forte\+\_\+options.\+cc}}
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/\+Psi\+Out\+Stream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/libpsi4util/process.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}psi4/liboptions/liboptions.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/forte\+\_\+options.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}base\+\_\+classes/mo\+\_\+space\+\_\+info.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/helpers.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}helpers/string\+\_\+algorithms.\+h\char`\"{}}\newline
+Include dependency graph for forte\+\_\+options.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{forte__options_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespaceforte}{forte}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+py\+::object \mbox{\hyperlink{namespaceforte_a1f1e8fac233e0761c98d87f879ceef93}{forte\+::process\+\_\+psi4\+\_\+array\+\_\+data}} (psi\+::\+Data \&data)
+\item 
+std\+::string \mbox{\hyperlink{namespaceforte_adb089a7fca4b9438c8567ac2aad19ff9}{forte\+::rst\+\_\+bold}} (const std\+::string \&s)
+\item 
+std\+::string \mbox{\hyperlink{namespaceforte_a4aee7d3c65f8b1486e248c1b70f60f97}{forte\+::option\+\_\+formatter}} (const std\+::string \&type, const std\+::string \&label, const std\+::string \&default\+\_\+value, const std\+::string \&description, const std\+::string \&allowed\+\_\+values)
+\item 
+py\+::dict \mbox{\hyperlink{namespaceforte_aef5ff6d138664503d4ab9593ab649f26}{forte\+::make\+\_\+dict\+\_\+entry}} (const std\+::string \&type, const std\+::string \&group, py\+::object default\+\_\+value, const std\+::string \&description)
+\item 
+py\+::dict \mbox{\hyperlink{namespaceforte_a66e62ab4e148d491468404a5658303d1}{forte\+::make\+\_\+dict\+\_\+entry}} (const std\+::string \&type, const std\+::string \&group, py\+::object default\+\_\+value, py\+::list allowed\+\_\+values, const std\+::string \&description)
+\item 
+void \mbox{\hyperlink{namespaceforte_ac876390be637f4d5b66bdee731dbce66}{forte\+::check\+\_\+options\+\_\+none}} (py\+::object obj, const std\+::string \&type, const std\+::string \&label)
+\item 
+void \mbox{\hyperlink{namespaceforte_a773a0cefeb3383fa161b9429b2fcf716}{forte\+::throw\+\_\+options\+\_\+get\+\_\+error}} (const std\+::string \&correct\+\_\+type, const std\+::string \&label, const std\+::string \&type)
+\item 
+void \mbox{\hyperlink{namespaceforte_a6ab9850b9eb81ebf20b8041581f5e88f}{forte\+::set\+\_\+gen\+\_\+list}} (const std\+::string \&label, py\+::list val)
+\item 
+void \mbox{\hyperlink{namespaceforte_acbfd686ccc14f5aef30974a61fd051a4}{forte\+::set\+\_\+int\+\_\+vec}} (const std\+::string \&label)
+\item 
+void \mbox{\hyperlink{namespaceforte_a99500940bf19abec0b2b0d8c8a571164}{forte\+::set\+\_\+double\+\_\+vec}} (const std\+::string \&label, const std\+::vector$<$ double $>$ \&val)
+\end{DoxyCompactItemize}

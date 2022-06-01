@@ -1,0 +1,47 @@
+#! This tests the Adaptive-CI procedure using energy selection
+#! Generated using commit GITCOMMIT
+#
+
+import forte
+
+refscf = -14.839846512738 #TEST
+refaci = -14.88807877074 #-14.88916699377 #TEST
+refaci_spin = 0.0
+
+molecule li2{
+   Li
+   Li 1 2.0000
+}
+
+set {
+  basis DZ
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+}
+
+set mcscf {
+  reference rhf
+  docc = [2,0,0,0,0,1,0,0]
+}
+
+set forte {
+  active_space_solver aci
+  frozen_docc = [0,0,0,0,0,0,0,0]
+  sigma 0.002
+  sci_enforce_spin_complete false
+  sci_enforce_spin_complete_p true
+  nroot 1
+  charge 0
+  r_convergence 1
+  diag_algorithm full
+}
+
+energy('mcscf')
+
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+
+energy('forte')
+compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+#compare_values(refaci_spin, variable("ACI SPIN"),9, "ACI spin") #TEST

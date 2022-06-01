@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -52,7 +52,6 @@
 #include "omp.h"
 #endif
 using namespace ambit;
-
 
 namespace forte {
 
@@ -115,16 +114,16 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     /// Since the integrals compute Fa_, need to make sure Fa is distributed to
     /// all cores
     if (my_proc != 0) {
-        Fa_.resize(ncmo_);
-        Fb_.resize(ncmo_);
+        Fa_.resize(no_);
+        Fb_.resize(no_);
     }
     local_timer F_BCAST;
-    MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&Fb_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&Fa_[0], no_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&Fb_[0], no_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     if (debug_print)
         printf("\n P%d done with F_BCAST: %8.8f s", my_proc, F_BCAST.get());
     if (debug_print)
-        printf("\n P%d ncmo_: %d nthree_: %d virtual_: %d core_: %d", my_proc, ncmo_, nthree_,
+        printf("\n P%d no_: %d nthree_: %d virtual_: %d core_: %d", my_proc, no_, nthree_,
                virtual_, core_);
 
     if (memory_input > int_mem_int) {
@@ -154,7 +153,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         printf("\n Number of blocks can not be larger than core_ on P%d", my_proc);
         printf("\n num_block: %d core_: %d on P%d", num_block, core_, my_proc);
         throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
-                           "num_block or check source code");
+                                "num_block or check source code");
     }
     if (num_block < num_proc) {
         outfile->Printf("\n Set number of processors larger");
@@ -643,7 +642,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
         printf("\n P%d says that num_block is %d", my_proc, num_block);
         outfile->Printf("\n Number of blocks can not be larger than core_");
         throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
-                           "num_block or check source code");
+                                "num_block or check source code");
     }
 
     if (num_block < num_proc) {
@@ -654,9 +653,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     }
     if (debug_print) {
         printf("\n P%d is complete with all block information", my_proc);
-        printf("\n P%d num_block: %d core_: %d virtual_: %d nthree_: %d ncmo_: "
+        printf("\n P%d num_block: %d core_: %d virtual_: %d nthree_: %d no_: "
                "%d num_proc: %d block_size: %d",
-               my_proc, num_block, core_, virtual_, nthree_, ncmo_, num_proc, block_size);
+               my_proc, num_block, core_, virtual_, nthree_, no_, num_proc, block_size);
     }
 
     /// Race condition if each thread access ambit tensors
@@ -721,8 +720,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     if (debug_print)
         printf("\n P%d done with allocatating tensor", my_proc);
     if (my_proc != 0) {
-        Fa_.resize(ncmo_);
-        Fb_.resize(ncmo_);
+        Fa_.resize(no_);
+        Fb_.resize(no_);
     }
     if (my_proc == 0) {
         std::vector<size_t> virt_mos = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
@@ -734,8 +733,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     local_timer F_Bcast;
     if (debug_print)
         printf("\n F_Bcast for F about to start on P%d", my_proc);
-    MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&Fb_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&Fa_[0], no_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&Fb_[0], no_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     if (debug_print)
         printf("\n F_Bcast for F end on P%d", my_proc);
     if (debug_print)
@@ -968,7 +967,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     if (num_block > virtual_) {
         outfile->Printf("\n Number of blocks can not be larger than core_");
         throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
-                           "num_block or check source code");
+                                "num_block or check source code");
     }
 
     if (num_block >= 1) {
@@ -1150,6 +1149,5 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
 }
 #endif
 } // namespace forte
-
 
 #endif

@@ -1,0 +1,64 @@
+\hypertarget{classforte_1_1_r_o_s_e_n_b_r_o_c_k}{}\section{forte\+:\+:R\+O\+S\+E\+N\+B\+R\+O\+CK Class Reference}
+\label{classforte_1_1_r_o_s_e_n_b_r_o_c_k}\index{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK@{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK}}
+
+
+{\ttfamily \#include $<$rosenbrock.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a99d9bcc9e0aafcc81061e765502af3a7}{R\+O\+S\+E\+N\+B\+R\+O\+CK}} (int n)
+\begin{DoxyCompactList}\small\item\em Constructor of the Rosenbrock function. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a7b88dafdddd2cb15f10bd7dad7d83f37}{evaluate}} (psi\+::\+Shared\+Vector x, psi\+::\+Shared\+Vector g, bool do\+\_\+g=true)
+\begin{DoxyCompactList}\small\item\em Compute the function value and gradients. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a537d1edd545f8ada23022f77f39ae856}{hess\+\_\+diag}} (psi\+::\+Shared\+Vector x, psi\+::\+Shared\+Vector h0)
+\begin{DoxyCompactList}\small\item\em Compute the diagonal Hessian. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a99d9bcc9e0aafcc81061e765502af3a7}\label{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a99d9bcc9e0aafcc81061e765502af3a7}} 
+\index{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK@{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK}!R\+O\+S\+E\+N\+B\+R\+O\+CK@{R\+O\+S\+E\+N\+B\+R\+O\+CK}}
+\index{R\+O\+S\+E\+N\+B\+R\+O\+CK@{R\+O\+S\+E\+N\+B\+R\+O\+CK}!forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK@{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK}}
+\subsubsection{\texorpdfstring{R\+O\+S\+E\+N\+B\+R\+O\+C\+K()}{ROSENBROCK()}}
+{\footnotesize\ttfamily forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+C\+K\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK (\begin{DoxyParamCaption}\item[{int}]{n }\end{DoxyParamCaption})}
+
+
+
+Constructor of the Rosenbrock function. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em n} & the size of the problem (must be even) \\
+\hline
+{\em do\+\_\+h0} & compute diagonal Hessian or not\\
+\hline
+\end{DoxyParams}
+Implementation notes\+: See Wikipedia \href{https://en.wikipedia.org/wiki/Rosenbrock_function}{\tt https\+://en.\+wikipedia.\+org/wiki/\+Rosenbrock\+\_\+function} 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a7b88dafdddd2cb15f10bd7dad7d83f37}\label{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a7b88dafdddd2cb15f10bd7dad7d83f37}} 
+\index{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK@{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK}!evaluate@{evaluate}}
+\index{evaluate@{evaluate}!forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK@{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK}}
+\subsubsection{\texorpdfstring{evaluate()}{evaluate()}}
+{\footnotesize\ttfamily double forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+C\+K\+::evaluate (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{x,  }\item[{psi\+::\+Shared\+Vector}]{g,  }\item[{bool}]{do\+\_\+g = {\ttfamily true} }\end{DoxyParamCaption})}
+
+
+
+Compute the function value and gradients. 
+
+\mbox{\Hypertarget{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a537d1edd545f8ada23022f77f39ae856}\label{classforte_1_1_r_o_s_e_n_b_r_o_c_k_a537d1edd545f8ada23022f77f39ae856}} 
+\index{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK@{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK}!hess\+\_\+diag@{hess\+\_\+diag}}
+\index{hess\+\_\+diag@{hess\+\_\+diag}!forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK@{forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+CK}}
+\subsubsection{\texorpdfstring{hess\+\_\+diag()}{hess\_diag()}}
+{\footnotesize\ttfamily void forte\+::\+R\+O\+S\+E\+N\+B\+R\+O\+C\+K\+::hess\+\_\+diag (\begin{DoxyParamCaption}\item[{psi\+::\+Shared\+Vector}]{x,  }\item[{psi\+::\+Shared\+Vector}]{h0 }\end{DoxyParamCaption})}
+
+
+
+Compute the diagonal Hessian. 
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/fevange/\+Source/forte/src/helpers/lbfgs/\mbox{\hyperlink{rosenbrock_8h}{rosenbrock.\+h}}\item 
+/\+Users/fevange/\+Source/forte/src/helpers/lbfgs/\mbox{\hyperlink{rosenbrock_8cc}{rosenbrock.\+cc}}\end{DoxyCompactItemize}

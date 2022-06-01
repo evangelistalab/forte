@@ -1,0 +1,5 @@
+2022-05-31:17:34:22,366 INFO     [psi4.driver.task_planner:266] PLANNING Atomic:  keywords={'DOCC': [3, 0, 0, 0, 0, 2, 1, 1], 'D_CONVERGENCE': 1e-08, 'E_CONVERGENCE': 1e-10, 'MAXITER': 100, 'REFERENCE': 'RHF', 'SCF_TYPE': 'DIRECT', 'function_kwargs': {}}
+2022-05-31:17:34:22,367 INFO     [psi4.driver.driver:617] Compute gradient(): method=forte, basis=cc-pvdz, molecule=N2, nre=25.929683322829995
+2022-05-31:17:34:23,474 INFO     [psi4.driver.driver:620] Return gradient(): -109.04437432067834
+2022-05-31:17:34:23,474 INFO     [psi4.driver.driver:621] [[ 0.         0.         0.4932042]
+ [ 0.         0.        -0.4932042]]
