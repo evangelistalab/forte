@@ -13,9 +13,10 @@ Charge and spin multiplicity
 The molecular charge (:math:`Q`), is defined as the sum of the charge of
 the nuclei (:math:`Z_A`) minus the number of electrons
 
-:raw-latex:`\begin{equation}
-Q = \sum_A Z_A - N_\text{el}.
-\end{equation}`
+.. math::
+
+
+   Q = \sum_A Z_A - N_\text{el}.
 
 Recall that, in the absence of an external field, an electronic state is
 an eigenfunction of the spin squared operator :math:`\hat{S}^2` and the
@@ -124,42 +125,24 @@ arranged according to Cotton’s book (*Chemical Applications of Group
 Theory*). This ordering is reproduced in the following table and is the
 same as used in Psi4:
 
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Point | Irrep | Irrep | Irrep | Irrep | Irrep | Irrep | Irrep | Irrep |
-| group | 0     | 1     | 2     | 3     | 4     | 5     | 6     | 7     |
-+=======+=======+=======+=======+=======+=======+=======+=======+=======+
-| :     | :mat  |       |       |       |       |       |       |       |
-| math: | h:`A` |       |       |       |       |       |       |       |
-| `C_1` |       |       |       |       |       |       |       |       |
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| :     | :math | :     |       |       |       |       |       |       |
-| math: | :`A'` | math: |       |       |       |       |       |       |
-| `C_s` |       | `A''` |       |       |       |       |       |       |
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| :     | :ma   | :ma   |       |       |       |       |       |       |
-| math: | th:`A | th:`A |       |       |       |       |       |       |
-| `C_i` | _{g}` | _{u}` |       |       |       |       |       |       |
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| :     | :mat  | :mat  |       |       |       |       |       |       |
-| math: | h:`A` | h:`B` |       |       |       |       |       |       |
-| `C_2` |       |       |       |       |       |       |       |       |
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| :mat  | :ma   | :ma   | :ma   | :ma   |       |       |       |       |
-| h:`C_ | th:`A | th:`B | th:`A | th:`B |       |       |       |       |
-| {2h}` | _{g}` | _{g}` | _{u}` | _{u}` |       |       |       |       |
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| :mat  | :ma   | :ma   | :ma   | :ma   |       |       |       |       |
-| h:`C_ | th:`A | th:`B | th:`A | th:`B |       |       |       |       |
-| {2v}` | _{1}` | _{1}` | _{2}` | _{2}` |       |       |       |       |
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| :     | :mat  | :ma   | :ma   | :ma   |       |       |       |       |
-| math: | h:`A` | th:`B | th:`B | th:`B |       |       |       |       |
-| `D_2` |       | _{1}` | _{2}` | _{3}` |       |       |       |       |
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| :mat  | :ma   | :mat  | :mat  | :mat  | :ma   | :mat  | :mat  | :mat  |
-| h:`D_ | th:`A | h:`B_ | h:`B_ | h:`B_ | th:`A | h:`B_ | h:`B_ | h:`B_ |
-| {2h}` | _{g}` | {1g}` | {2g}` | {3g}` | _{u}` | {1u}` | {2u}` | {3u}` |
-+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+============== ============= ============== ==============
+============== ============= ============== ==============
+==============
+Point group    Irrep 0       Irrep 1        Irrep 2        Irrep 3        Irrep 4       Irrep 5        Irrep 6        Irrep 7
+============== ============= ============== ==============
+============== ============= ============== ==============
+==============
+:math:`C_1`    :math:`A`                                                                                             
+:math:`C_s`    :math:`A'`    :math:`A''`                                                                             
+:math:`C_i`    :math:`A_{g}` :math:`A_{u}`                                                                           
+:math:`C_2`    :math:`A`     :math:`B`                                                                               
+:math:`C_{2h}` :math:`A_{g}` :math:`B_{g}`  :math:`A_{u}`  :math:`B_{u}`                                             
+:math:`C_{2v}` :math:`A_{1}` :math:`B_{1}`  :math:`A_{2}`  :math:`B_{2}`                                             
+:math:`D_2`    :math:`A`     :math:`B_{1}`  :math:`B_{2}`  :math:`B_{3}`                                             
+:math:`D_{2h}` :math:`A_{g}` :math:`B_{1g}` :math:`B_{2g}` :math:`B_{3g}` :math:`A_{u}` :math:`B_{1u}` :math:`B_{2u}` :math:`B_{3u}`
+============== ============= ============== ==============
+============== ============= ============== ==============
+==============
 
 By default, Forte targets a total symmetric state (e.g., :math:`A_1`,
 :math:`A_{g}`, …). To specify a state with a different irreducible
@@ -198,31 +181,18 @@ spaces:
 
 The following table summarizes the properties of these orbital spaces:
 
-+----------------+----------------+----------------+----------------+
-| Space          | Occupation in  | Occupation in  | Description    |
-|                | CAS/GAS        | correlated     |                |
-|                |                | methods        |                |
-+================+================+================+================+
-| `              | 2              | 2              | Frozen doubly  |
-| `FROZEN_DOCC`` |                |                | occupied       |
-|                |                |                | orbitals       |
-+----------------+----------------+----------------+----------------+
-| ``RES          | 2              | 0-2            | Restricted     |
-| TRICTED_DOCC`` |                |                | doubly         |
-|                |                |                | occupied       |
-|                |                |                | orbitals       |
-+----------------+----------------+----------------+----------------+
-| ``GAS1``,      | 0-2            | 0-2            | Generalized    |
-| ``GAS2``, …    |                |                | active spaces  |
-+----------------+----------------+----------------+----------------+
-| ``RES          | 0              | 0-2            | Restricted     |
-| TRICTED_UOCC`` |                |                | unoccupied     |
-|                |                |                | orbitals       |
-+----------------+----------------+----------------+----------------+
-| `              | 0              | 0              | Frozen         |
-| `FROZEN_UOCC`` |                |                | unoccupied     |
-|                |                |                | orbitals       |
-+----------------+----------------+----------------+----------------+
+===================== =====================
+================================ ===================================
+Space                 Occupation in CAS/GAS Occupation in correlated methods Description
+===================== =====================
+================================ ===================================
+``FROZEN_DOCC``       2                     2                                Frozen doubly occupied orbitals
+``RESTRICTED_DOCC``   2                     0-2                              Restricted doubly occupied orbitals
+``GAS1``, ``GAS2``, … 0-2                   0-2                              Generalized active spaces
+``RESTRICTED_UOCC``   0                     0-2                              Restricted unoccupied orbitals
+``FROZEN_UOCC``       0                     0                                Frozen unoccupied orbitals
+===================== =====================
+================================ ===================================
 
 **Note**: Forte makes a distinction between elementary and ``composite``
 orbital spaces. The spaces defined above are all elementary, except for
@@ -251,7 +221,7 @@ Theory*).
 The following is an example of a computation on BeH\ :math:`_2`. This
 system has 6 electrons. We freeze the Be 1s-like orbital, which has
 A\ :math:`_1` symmetry. The 2a\ :math:`_1` orbital is restricted doubly
-occupied and the 3a\ :math:`_1`/1b\ :math:`_2` orbitals belong to the
+occupied and the 3a\ :math:`_1`/1b:math:`_2` orbitals belong to the
 active space. The remaining orbitals belong to the ``RESTRICTED_UOCC``
 set and no virtual orbitals are frozen:
 

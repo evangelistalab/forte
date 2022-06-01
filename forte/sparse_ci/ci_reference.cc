@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -196,6 +196,7 @@ CI_Reference::gas_double_criterion() {
         aa_criterion;
     std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>
         bb_criterion;
+
     std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>
         ab_criterion;
     for (size_t gas_config = 0; gas_config < gas_config_number; ++gas_config) {
@@ -257,7 +258,7 @@ CI_Reference::gas_double_criterion() {
     return std::make_tuple(aa_criterion, bb_criterion, ab_criterion);
 }
 
-void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool include_rhf) {
     // Special case. If there are no active orbitals return an empty determinant
     if (nact_ == 0) {
         Determinant det;
@@ -268,7 +269,8 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
     Determinant det(get_occupation());
     outfile->Printf("\n  %s", str(det, nact_).c_str());
 
-    ref_space.push_back(det);
+    if (include_rhf)
+        ref_space.push_back(det);
 
     if ((ref_type_ == "CIS") or (ref_type_ == "CISD")) {
         std::vector<int> aocc = det.get_alfa_occ(nact_);
@@ -546,6 +548,39 @@ CI_Reference::build_occ_string(size_t norb, size_t nele, const std::vector<int>&
     return out;
 }
 
+std::vector<std::vector<std::vector<bool>>>
+CI_Reference::build_occ_string_subspace(size_t norb, size_t nele, const std::vector<int>& symmetry,
+                                        size_t sub_orb, std::vector<size_t> eps_idx) {
+    if (nele > norb) {
+        throw psi::PSIEXCEPTION("Invalid number of electron / orbital to build occ string.");
+    }
+
+    std::vector<std::vector<std::vector<bool>>> out(nirrep_, std::vector<std::vector<bool>>());
+
+    std::vector<bool> occ_tmp(norb, false);
+    for (size_t i = 0; i < nele; ++i) {
+        occ_tmp[i] = true;
+    }
+
+    // Orbitals in the subspace
+    size_t start_index = nele > sub_orb ? nele - sub_orb : 0;
+    size_t end_index = std::min(norb, (nele + sub_orb));
+
+    do {
+        int sym = 0;
+        std::vector<bool> occ_eps_ordered(norb, false);
+        for (size_t p = 0; p < norb; ++p) {
+            if (occ_tmp[p]) {
+                size_t pp = eps_idx[p];
+                occ_eps_ordered[pp] = true;
+                sym ^= symmetry[pp];
+            }
+        }
+        out[sym].emplace_back(occ_eps_ordered.begin(), occ_eps_ordered.end());
+    } while (std::prev_permutation(occ_tmp.begin() + start_index, occ_tmp.begin() + end_index));
+    return out;
+}
+
 void CI_Reference::build_doci_reference(std::vector<Determinant>& ref_space) {
     if (root_sym_ != 0) {
         outfile->Printf("\n  State must be totally symmetric for DOCI.");
@@ -619,9 +654,27 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 
     std::vector<std::vector<size_t>> rel_gas_mos;     // relative indices within active
     std::vector<std::vector<double>> rel_gas_eps(12); // ngas of SCF orbital energies
+    std::vector<std::vector<size_t>> gas_eps_idx(
+        12); // The index of orbitals in ascending order of orbital energies in each gas
     std::map<int, int> gas_nonzero_to_full;
     auto epsilon_a = scf_info_->epsilon_a();
     auto epsilon_b = scf_info_->epsilon_b();
+
+    // Find the sorted_indexes of a vector
+    auto argsort = [&](const std::vector<double>& v) {
+        // initialize original index locations
+        std::vector<size_t> idx(v.size());
+        std::iota(idx.begin(), idx.end(), 0);
+
+        // sort indexes based on comparing values in v
+        // using std::stable_sort instead of std::sort
+        // to avoid unnecessary index re-orderings
+        // when v contains elements of equal values
+        std::stable_sort(idx.begin(), idx.end(),
+                         [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
+
+        return idx;
+    };
 
     for (int gas = 0, gas_i = 0; gas < 6; ++gas) {
         std::string space_name = "GAS" + std::to_string(gas + 1);
@@ -636,6 +689,8 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         }
         rel_gas_eps[2 * gas] = a_eps;
         rel_gas_eps[2 * gas + 1] = b_eps;
+        gas_eps_idx[2 * gas] = argsort(a_eps);
+        gas_eps_idx[2 * gas + 1] = argsort(b_eps);
 
         if (norbs == 0)
             continue;
@@ -733,51 +788,88 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     timer timer_gas("Build GAS determinants");
     print_h2("Building GAS Determinants");
     for (size_t config = 0, size = gas_electrons_.size(); config < size; ++config) {
+        size_t max_sub_orb = 0;
 
-        // build alpha or beta strings (ngas of nirrep of aufbau occupation)
-        std::vector<std::vector<std::vector<bool>>> a_tmp, b_tmp;
+        // Make sure only one ref is selected.
+        if (!ref_space.empty()) {
+            break;
+        }
 
+        // Calculate the maximum subspace size (HOMO-Max_sub_orb to LOMO+Max_sub_orb)
+        // For each gas this is the maximum number between occupied and unoccupied orbitals
         for (int gas = 0; gas < 6; ++gas) {
             auto space_name = "GAS" + std::to_string(gas + 1);
             auto norb = mo_space_info_->size(space_name);
             if (norb == 0)
                 continue;
-
             auto sym = mo_space_info_->symmetry(space_name);
+            size_t max_gas_orb = 0;
 
-            // alpha aufbau string of each irrep
-            auto strings = build_occ_string(norb, gas_electrons_[config][2 * gas], sym);
-            a_tmp.push_back(aufbau_gas_occ(strings, rel_gas_eps[2 * gas]));
-
-            // beta aufbau string of each irrep
-            strings = build_occ_string(norb, gas_electrons_[config][2 * gas + 1], sym);
-            b_tmp.push_back(aufbau_gas_occ(strings, rel_gas_eps[2 * gas + 1]));
-        }
-
-        // combine to a string of size nactv <energy, occupation>
-        auto a_strings = combine_aufbau_gas_occ(a_tmp, false);
-        auto b_strings = combine_aufbau_gas_occ(b_tmp, true);
-
-        // combine to determinant
-        double e_min = 0.0;
-        Determinant det_min;
-        for (int h = 0; h < nirrep_; ++h) {
-            const auto& a = a_strings[h];
-            const auto& b = b_strings[h ^ root_sym_];
-
-            double e = std::get<0>(a) + std::get<0>(b);
-            Determinant det(std::get<1>(a), std::get<1>(b));
-
-            if (e < e_min and (nalpha_ + nbeta_ - 2 * det.npair() + 1) >= multiplicity_) {
-                det_min = det;
-                e_min = e;
+            if (gas_electrons_[config][2 * gas] > gas_electrons_[config][2 * gas + 1]) {
+                max_gas_orb = std::max(gas_electrons_[config][2 * gas],
+                                       int(norb) - gas_electrons_[config][2 * gas + 1]);
+            } else {
+                max_gas_orb = std::max(gas_electrons_[config][2 * gas + 1],
+                                       int(norb) - gas_electrons_[config][2 * gas]);
+            }
+            if (max_gas_orb > max_sub_orb) {
+                max_sub_orb = max_gas_orb;
             }
         }
-        if (e_min != 0.0) {
-            ref_space.push_back(det_min);
-            outfile->Printf("\n    Reference determinant: %s", str(det_min, nact_).c_str());
-            break;
-        }
+
+        size_t sub_orb = 0;
+        // size of subspace (LUMO-sub_orb to HOMO+sub_orb)
+        // Increase subspace till find a determinant within in a subspace
+
+        do {
+            // build alpha or beta strings (ngas of nirrep of aufbau occupation)
+            std::vector<std::vector<std::vector<bool>>> a_tmp, b_tmp;
+            for (int gas = 0; gas < 6; ++gas) {
+                auto space_name = "GAS" + std::to_string(gas + 1);
+                auto norb = mo_space_info_->size(space_name);
+                if (norb == 0)
+                    continue;
+                auto sym = mo_space_info_->symmetry(space_name);
+
+                // alpha aufbau string of each irrep
+                auto strings = build_occ_string_subspace(norb, gas_electrons_[config][2 * gas], sym,
+                                                         sub_orb, gas_eps_idx[2 * gas]);
+                a_tmp.push_back(aufbau_gas_occ(strings, rel_gas_eps[2 * gas]));
+
+                // beta aufbau string of each irrep
+                strings = build_occ_string_subspace(norb, gas_electrons_[config][2 * gas + 1], sym,
+                                                    sub_orb, gas_eps_idx[2 * gas + 1]);
+                b_tmp.push_back(aufbau_gas_occ(strings, rel_gas_eps[2 * gas + 1]));
+            }
+
+            // combine to a string of size nactv <energy, occupation>
+            auto a_strings = combine_aufbau_gas_occ(a_tmp, false);
+            auto b_strings = combine_aufbau_gas_occ(b_tmp, true);
+
+            // combine to determinant
+            double e_min = 0.0;
+            Determinant det_min;
+            for (int h = 0; h < nirrep_; ++h) {
+                const auto& a = a_strings[h];
+                const auto& b = b_strings[h ^ root_sym_];
+
+                double e = std::get<0>(a) + std::get<0>(b);
+                double e_check = std::get<0>(a) * std::get<0>(b);
+                Determinant det(std::get<1>(a), std::get<1>(b));
+
+                if (e < e_min and (nalpha_ + nbeta_ - 2 * det.npair() + 1) >= multiplicity_ and
+                    e_check != 0) {
+                    det_min = det;
+                    e_min = e;
+                }
+            }
+            if (e_min != 0.0) {
+                ref_space.push_back(det_min);
+                outfile->Printf("\n    Reference determinant: %s", str(det_min, nact_).c_str());
+                break;
+            }
+            sub_orb++;
+        } while ((sub_orb < max_sub_orb) && (ref_space.empty()));
     }
 }
 

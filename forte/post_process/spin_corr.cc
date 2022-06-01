@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -40,7 +40,7 @@ using namespace psi;
 
 namespace forte {
 
-SpinCorr::SpinCorr(RDMs rdms, std::shared_ptr<ForteOptions> options,
+SpinCorr::SpinCorr(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<MOSpaceInfo> mo_space_info,
                    std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : rdms_(rdms), options_(options), mo_space_info_(mo_space_info), as_ints_(as_ints) {
@@ -54,8 +54,8 @@ std::pair<psi::SharedMatrix, psi::SharedMatrix> SpinCorr::compute_nos() {
 
     print_h2("Natural Orbitals");
 
-    auto g1a = rdms_.g1a();
-    auto g1b = rdms_.g1b();
+    auto g1a = rdms_->g1a();
+    auto g1b = rdms_->g1b();
 
     psi::SharedMatrix Ua, Ub;
 
@@ -223,42 +223,37 @@ void SpinCorr::spin_analysis() {
     Ua.iterate([&](const std::vector<size_t>& i, double& value) { value = UA->get(i[0], i[1]); });
     Ub.iterate([&](const std::vector<size_t>& i, double& value) { value = UB->get(i[0], i[1]); });
 
-    //    new_dim = nact;
-    // 1 rdms first
-    ambit::Tensor L1aT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact, nact});
-    ambit::Tensor L1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact, nact});
+    // rotate 1- and 2-RDMs to desired basis
+    auto L1aT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact, nact});
+    auto L1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact, nact});
 
-    auto ordm_a = rdms_.g1a();
-    auto ordm_b = rdms_.g1b();
-
-    auto trdm_aa = rdms_.g2aa();
-    auto trdm_ab = rdms_.g2ab();
-    auto trdm_bb = rdms_.g2bb();
-
+    auto ordm_a = rdms_->g1a();
+    auto ordm_b = rdms_->g1b();
     L1aT("pq") = Ua("ap") * ordm_a("ab") * Ua("bq");
     L1bT("pq") = Ub("ap") * ordm_b("ab") * Ub("bq");
-    // 2 rdms
-    ambit::Tensor L2aaT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact, nact, nact, nact});
-    ambit::Tensor L2abT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {nact, nact, nact, nact});
-    ambit::Tensor L2bbT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact, nact, nact, nact});
 
+    std::vector<size_t> dim4{nact, nact, nact, nact};
+    auto L2aaT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", dim4);
+    auto L2abT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", dim4);
+    auto L2bbT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", dim4);
+
+    auto trdm_aa = rdms_->g2aa();
+    auto trdm_ab = rdms_->g2ab();
+    auto trdm_bb = rdms_->g2bb();
     L2aaT("pqrs") = Ua("ap") * Ua("bq") * trdm_aa("abcd") * Ua("cr") * Ua("ds");
     L2abT("pqrs") = Ua("ap") * Ub("bq") * trdm_ab("abcd") * Ua("cr") * Ub("ds");
     L2bbT("pqrs") = Ub("ap") * Ub("bq") * trdm_bb("abcd") * Ub("cr") * Ub("ds");
 
     // Now form the spin correlation
-    psi::SharedMatrix spin_corr(new psi::Matrix("Spin Correlation", nact, nact));
-    psi::SharedMatrix spin_fluct(new psi::Matrix("Spin Fluctuation", nact, nact));
-    psi::SharedMatrix spin_z(new psi::Matrix("Spin-z Correlation", nact, nact));
+    auto spin_corr = std::make_shared<psi::Matrix>("Spin Correlation", nact, nact);
+    auto spin_fluct = std::make_shared<psi::Matrix>("Spin Fluctuation", nact, nact);
+    auto spin_z = std::make_shared<psi::Matrix>("Spin-z Correlation", nact, nact);
 
-    std::vector<double> l1a(L1aT.data());
-    std::vector<double> l1b(L1bT.data());
-    std::vector<double> l2aa(L2aaT.data());
-    std::vector<double> l2ab(L2abT.data());
-    std::vector<double> l2bb(L2bbT.data());
+    const auto& l1a = L1aT.data();
+    const auto& l1b = L1bT.data();
+    const auto& l2aa = L2aaT.data();
+    const auto& l2ab = L2abT.data();
+    const auto& l2bb = L2bbT.data();
     for (size_t i = 0; i < nact; ++i) {
         for (size_t j = 0; j < nact; ++j) {
             double value = (l2aa[i * nact3 + j * nact2 + i * nact + j] +
@@ -303,10 +298,10 @@ void SpinCorr::spin_analysis() {
     // spin_corr->print();
     spin_fluct->print();
     spin_z->print();
-    psi::SharedMatrix spin_evecs(new psi::Matrix(nact, nact));
-    psi::SharedVector spin_evals(new Vector(nact));
-    psi::SharedMatrix spin_evecs2(new psi::Matrix(nact, nact));
-    psi::SharedVector spin_evals2(new Vector(nact));
+    auto spin_evecs = std::make_shared<psi::Matrix>(nact, nact);
+    auto spin_evals = std::make_shared<psi::Vector>(nact);
+    auto spin_evecs2 = std::make_shared<psi::Matrix>(nact, nact);
+    auto spin_evals2 = std::make_shared<psi::Vector>(nact);
 
     //    spin_corr->diagonalize(spin_evecs, spin_evals);
     //    spin_evals->print();
@@ -366,7 +361,7 @@ void SpinCorr::spin_analysis() {
     }
 }
 
-void perform_spin_analysis(RDMs rdms, std::shared_ptr<ForteOptions> options,
+void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     SpinCorr spin(rdms, options, mo_space_info, as_ints);

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -266,7 +266,7 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     int ms = wavefunction_multiplicity_ - 1;
     std::vector<Determinant> reference_vec;
     CI_Reference ref(scf_info_, options, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
-                     wavefunction_symmetry_,state_);
+                     wavefunction_symmetry_, state_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];

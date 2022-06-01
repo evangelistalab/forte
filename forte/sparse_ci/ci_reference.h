@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -89,8 +89,6 @@ class CI_Reference {
 
     std::string ref_type_;
 
-    void build_ci_reference(std::vector<Determinant>& ref_space);
-
     Determinant get_occupation();
 
     void get_gas_occupation();
@@ -113,6 +111,13 @@ class CI_Reference {
     /// @return nirrep of vector of occupation
     std::vector<std::vector<std::vector<bool>>> build_occ_string(size_t norb, size_t nele,
                                                                  const std::vector<int>& symmetry);
+
+    /// Compute the occupation string for a given number of electrons and orbitals
+    /// Only compute the FCI determinants in a subspace from LUMO-sub_orb to HOMO+sub_orb
+    /// @return nirrep of vector of occupation
+    std::vector<std::vector<std::vector<bool>>>
+    build_occ_string_subspace(size_t norb, size_t nele, const std::vector<int>& symmetry,
+                              size_t sub_orb, std::vector<size_t> eps_idx);
 
     /// Compute the cartesian product of occupation strings
     /// @arg vector of vector of occupation
@@ -142,6 +147,9 @@ class CI_Reference {
 
     /// Build the doubly occupied CI reference
     void build_doci_reference(std::vector<Determinant>& ref_space);
+
+    /// Build active-space CIS/CID/CISD reference
+    void build_ci_reference(std::vector<Determinant>& ref_space, bool include_rhf = true);
 
     /// Build the complete GAS reference
     void build_gas_reference(std::vector<Determinant>& ref_space);

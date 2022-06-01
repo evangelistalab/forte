@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -49,7 +49,7 @@ StateVector SparseFactExp::compute(const SparseOperator& sop, const StateVector&
         if (sop.is_antihermitian()) {
             result = compute_cached(sop, state, inverse, screen_thresh);
         } else {
-            result = compute_on_the_fly_excitation(sop, state, inverse, screen_thresh);                                     
+            result = compute_on_the_fly_excitation(sop, state, inverse, screen_thresh);
         }
     }
     timings_["total"] += t.get();
@@ -192,6 +192,9 @@ StateVector SparseFactExp::compute_exp(const SparseOperator& sop, const StateVec
         for (const auto& coupling : d_couplings) {
             const size_t d_idx = std::get<0>(coupling);
             const size_t new_d_idx = std::get<1>(coupling);
+            // special case of number operator
+            if (d_idx == new_d_idx)
+                continue;
             const double f = amp * std::get<2>(coupling);
             const double c = state_c[d_idx];
             // do not apply this operator to this determinant if we expect the new determinant

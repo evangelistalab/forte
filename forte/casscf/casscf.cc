@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -55,7 +55,6 @@
 #ifdef HAVE_CHEMPS2
 #include "dmrg/dmrgsolver.h"
 #endif
-#include "psi4/libdiis/diisentry.h"
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
 
@@ -185,10 +184,11 @@ double CASSCF::compute_energy() {
     psi::SharedMatrix Sstep;
 
     // Setup the DIIS manager
-    auto diis_manager = std::make_shared<DIISManager>(
-        diis_max_vec, "MCSCF DIIS", DIISManager::RemovalPolicy::OldestAdded, DIISManager::StoragePolicy::InCore);
-    diis_manager->set_error_vector_size(1, DIISEntry::InputType::Matrix, S.get());
-    diis_manager->set_vector_size(1, DIISEntry::InputType::Matrix, S.get());
+    auto diis_manager = std::make_shared<DIISManager>(diis_max_vec, "MCSCF DIIS",
+                                                      DIISManager::RemovalPolicy::OldestAdded,
+                                                      DIISManager::StoragePolicy::InCore);
+    diis_manager->set_error_vector_size(S.get());
+    diis_manager->set_vector_size(S.get());
 
     int diis_count = 0;
 
@@ -270,12 +270,12 @@ double CASSCF::compute_energy() {
 
         // TODO:  Add options controlled.  Iteration and g_norm
         if (do_diis and (iter >= diis_start or g_norm < diis_gradient_norm)) {
-            diis_manager->add_entry(2, Sstep.get(), S.get());
+            diis_manager->add_entry(Sstep.get(), S.get());
             diis_count++;
         }
 
         if (do_diis and iter > diis_start and (diis_count % diis_freq == 0)) {
-            diis_manager->extrapolate(1, S.get());
+            diis_manager->extrapolate(S.get());
         }
         psi::SharedMatrix Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 
@@ -312,11 +312,11 @@ double CASSCF::compute_energy() {
     ints_->wfn()->Ca()->copy(Ca);
 
     // semicanonicalize
-    if (options_->get_str("CASSCF_FINAL_ORBITAL") != "UNSPECIFIED" or
-        options_->get_str("DERTYPE") == "FIRST") {
+    auto final_orbital_type = options_->get_str("CASSCF_FINAL_ORBITAL");
+    if (final_orbital_type != "UNSPECIFIED" or options_->get_str("DERTYPE") == "FIRST") {
 
         SemiCanonical semi(mo_space_info_, ints_, options_);
-        semi.semicanonicalize(cas_ref_, 1, true, false);
+        semi.semicanonicalize(cas_ref_, true, final_orbital_type == "NATURAL", false);
 
         auto U = semi.Ua();
 
@@ -351,15 +351,14 @@ void CASSCF::diagonalize_hamiltonian() {
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print_);
     const auto state_energies_map = active_space_solver->compute_energy();
-    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map_, 2);
+    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     E_casscf_ = compute_average_state_energy(state_energies_map, state_weights_map_);
 
     // Compute 1-RDM
-    gamma1_ = cas_ref_.g1a().clone();
-    gamma1_("ij") += cas_ref_.g1b()("ij");
+    gamma1_ = cas_ref_->SF_G1();
 
     // Compute 2-RDM
-    gamma2_ = cas_ref_.SFg2();
+    gamma2_ = cas_ref_->SF_G2();
 }
 
 std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {

@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 from forte.core import flog
 from forte.molecule import Molecule
 from forte.basis import Basis
-from forte.forte import StateInfo
-from forte.forte import Symmetry
-from forte.forte import make_ints_from_psi4
+from ._forte import StateInfo
+from ._forte import Symmetry
+from ._forte import make_ints_from_psi4
 
 
 class Model(ABC):

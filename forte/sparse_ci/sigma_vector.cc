@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -71,7 +71,8 @@ SigmaVectorFull::SigmaVectorFull(const DeterminantHashVec& space,
                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space, fci_ints, SigmaVectorType::Full, "SigmaVectorFull") {}
 
-void SigmaVectorFull::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& /*roots*/) {}
+void SigmaVectorFull::add_bad_roots(
+    std::vector<std::vector<std::pair<size_t, double>>>& /*roots*/) {}
 
 void SigmaVectorFull::get_diagonal(psi::Vector& /*diag*/) {}
 

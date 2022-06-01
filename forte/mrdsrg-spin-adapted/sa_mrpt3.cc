@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -37,7 +37,7 @@ using namespace psi;
 
 namespace forte {
 
-SA_MRPT3::SA_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+SA_MRPT3::SA_MRPT3(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : SA_DSRGPT(rdms, scf_info, options, ints, mo_space_info) {
@@ -96,7 +96,6 @@ void SA_MRPT3::build_ints() {
 
     print_done(t.stop());
 }
-
 
 void SA_MRPT3::init_amps() {
     timer t("Initialize T1 and T2");

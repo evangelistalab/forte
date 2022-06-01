@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <numeric>
 
-#include "catch.hpp"
+#include "catch_amalgamated.hpp"
 
 #include "forte/sparse_ci/determinant.h"
 #include "forte/sparse_ci/determinant.hpp"
@@ -55,10 +55,6 @@ std::vector<int> get_complementary_occupation(const std::vector<int>& occupation
     std::set_difference(all.begin(), all.end(), occupation.begin(), occupation.end(),
                         std::inserter(result, result.begin()));
     return result;
-}
-
-unsigned int Factorial(unsigned int number) {
-    return number <= 1 ? number : Factorial(number - 1) * number;
 }
 
 // ==> TESTS <==

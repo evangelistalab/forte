@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -96,7 +96,7 @@ void Psi4Integrals::setup_psi4_ints() {
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
     auto rotate_mos_list = options_->get_int_list("ROTATE_MOS");
-    if (rotate_mos_list.size() > 0) {
+    if (!rotate_mos_list.empty()) {
         rotate_mos();
     }
 
@@ -196,7 +196,7 @@ void Psi4Integrals::make_psi4_JK() {
         throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
     }
 
-    JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+    JK_->set_cutoff(options_->get_double("INTS_TOLERANCE"));
     jk_initialize();
     JK_->print_header();
 }
@@ -259,7 +259,7 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
 }
 
 void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                    std::shared_ptr<psi::Matrix> Cb) {
+                                    std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
 
     // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
     Ca_->copy(Ca);
@@ -280,18 +280,20 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     wfn_->Cb()->copy(Cb_);
 
     // 3. Re-transform the integrals
-    aptei_idx_ = nmo_;
-    transform_one_electron_integrals();
-    int my_proc = 0;
+    if (re_transform) {
+        aptei_idx_ = nmo_;
+        transform_one_electron_integrals();
+        int my_proc = 0;
 #ifdef HAVE_GA
-    my_proc = GA_Nodeid();
+        my_proc = GA_Nodeid();
 #endif
-    if (my_proc == 0) {
-        local_timer int_timer;
-        outfile->Printf("\n  Integrals are about to be updated.");
-        gather_integrals();
-        freeze_core_orbitals();
-        outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
+        if (my_proc == 0) {
+            local_timer int_timer;
+            outfile->Printf("\n  Integrals are about to be updated.");
+            gather_integrals();
+            freeze_core_orbitals();
+            outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
+        }
     }
 }
 
@@ -315,7 +317,7 @@ void Psi4Integrals::rotate_mos() {
         outfile->Printf("\n Check ROTATE_MOS array");
         outfile->Printf("\nFormat should be in group of 3s");
         outfile->Printf("\n Irrep, rotate_1, rotate_2, irrep, rotate_3, rotate_4");
-        throw psi::PSIEXCEPTION("User specifed ROTATE_MOS incorrectly.  Check output for notes");
+        throw psi::PSIEXCEPTION("User specified ROTATE_MOS incorrectly.  Check output for notes");
     }
     int orbital_rotate_group = (size_mo_rotate / 3);
     std::vector<std::vector<int>> rotate_mo_list;
@@ -327,7 +329,7 @@ void Psi4Integrals::rotate_mos() {
         if (rotate_mo_group[0] > nirrep_) {
             outfile->Printf("\n Irrep:%d does not match wfn_ symmetry:%d", rotate_mo_group[0],
                             nirrep_);
-            throw psi::PSIEXCEPTION("Irrep does not match wavefunction symmetry");
+            throw psi::PSIEXCEPTION("Irrep does not match wave function symmetry");
         }
 
         rotate_mo_group[1] = rotate_mos_list[offset_a + 1] - 1;
@@ -400,14 +402,14 @@ Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::Shar
     }
 
     if (resort) {
-        // figure out the correspondance between C1 and Pitzer
+        // figure out the correspondence between C1 and Pitzer
         std::vector<std::tuple<double, int, int>> order;
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < nmopi_[h]; ++i) {
-                order.push_back(std::tuple<double, int, int>(epsilon->get(h, i), i, h));
+                order.emplace_back(epsilon->get(h, i), i, h);
             }
         }
-        std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
+        std::sort(order.begin(), order.end());
 
         std::vector<int> irrep_offset(nirrep_, 0);
         for (int h = 1, sum = 0; h < nirrep_; ++h) {
@@ -475,7 +477,7 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
      * u,v,r,s: AO indices; i: MO indices
      */
     if (JK_status_ == JKStatus::finalized) {
-        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
         jk_initialize(0.7);
     }
 
@@ -659,7 +661,7 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
 
 psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g1) {
     if (JK_status_ == JKStatus::finalized) {
-        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
         jk_initialize(0.7);
     }
 
@@ -710,7 +712,7 @@ psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g
 std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
     if (JK_status_ == JKStatus::finalized) {
-        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
         jk_initialize(0.7);
     }
 

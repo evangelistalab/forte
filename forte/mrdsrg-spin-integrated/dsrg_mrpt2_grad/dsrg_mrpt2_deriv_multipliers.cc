@@ -12,7 +12,7 @@ namespace forte {
 
 void DSRG_MRPT2::set_tau() {
     outfile->Printf("\n    Initializing multipliers for two-body amplitude.. ");
-    Tau2 = BTF_->build(CoreTensor, "Tau2", {"hhpp","hHpP"});
+    Tau2 = BTF_->build(CoreTensor, "Tau2", {"hhpp", "hHpP"});
     // Tau * Delta
     // <[V, T2]> (C_2)^4
     if (PT2_TERM) {
@@ -41,8 +41,7 @@ void DSRG_MRPT2::set_tau() {
         Tau2["uVeF"] += 0.25 * V_["eFxY"] * Lambda2_["xYuV"];
         Tau2["uVeZ"] += 0.25 * V_["eWxY"] * Eta1_["ZW"] * Lambda2_["xYuV"];
         Tau2["uVzE"] += 0.25 * V_["wExY"] * Eta1_["zw"] * Lambda2_["xYuV"];
-        Tau2["u,V,z,U1"] +=
-            0.25    * V_["w,A1,x,Y"] * Eta1_["zw"] * Eta1_["U1,A1"] * Lambda2_["xYuV"];
+        Tau2["u,V,z,U1"] += 0.25 * V_["w,A1,x,Y"] * Eta1_["zw"] * Eta1_["U1,A1"] * Lambda2_["xYuV"];
     }
     // <[V, T2]> C_4 (C_2)^2 HH
     if (X2_TERM) {
@@ -51,7 +50,7 @@ void DSRG_MRPT2::set_tau() {
         Tau2["mWxY"] += 0.25 * V_["uVmZ"] * Gamma1_["ZW"] * Lambda2_["xYuV"];
         Tau2["wMxY"] += 0.25 * V_["uVzM"] * Gamma1_["zw"] * Lambda2_["xYuV"];
         Tau2["w,A1,x,Y"] +=
-            0.25    * V_["u,V,z,U1"] * Gamma1_["zw"] * Gamma1_["U1,A1"] * Lambda2_["xYuV"];
+            0.25 * V_["u,V,z,U1"] * Gamma1_["zw"] * Gamma1_["U1,A1"] * Lambda2_["xYuV"];
     }
     // <[V, T2]> C_4 (C_2)^2 PH
     if (X3_TERM) {
@@ -90,14 +89,14 @@ void DSRG_MRPT2::set_tau() {
     // <[V, T2]> C_6 C_2
     if (X4_TERM) {
         /**************************************** α β α β ****************************************/
-        Tau2.block("cAaA")("mWxY") -= 0.125 * V_.block("aaca")("uvmz") * rdms_.L3aab()("xzYuvW");
-        Tau2.block("cAaA")("mWxY") += 0.250 * V_.block("aAcA")("uVmZ") * rdms_.L3abb()("xYZuVW");
-        Tau2.block("aCaA")("wMxY") += 0.125 * V_.block("AAAC")("UVZM") * rdms_.L3abb()("xYZwUV");
-        Tau2.block("aCaA")("wMxY") += 0.250 * V_.block("aAaC")("uVzM") * rdms_.L3aab()("xzYuwV");  
-        Tau2.block("aAvA")("xYeW") += 0.125 * V_.block("vaaa")("ezuv") * rdms_.L3aab()("xzYuvW");
-        Tau2.block("aAvA")("xYeW") -= 0.250 * V_.block("vAaA")("eZuV") * rdms_.L3abb()("xYZuVW");
-        Tau2.block("aAaV")("xYwE") -= 0.125 * V_.block("AVAA")("ZEUV") * rdms_.L3abb()("xYZwUV");
-        Tau2.block("aAaV")("xYwE") -= 0.250 * V_.block("aVaA")("zEuV") * rdms_.L3aab()("xzYuwV");
+        Tau2.block("cAaA")("mWxY") -= 0.125 * V_.block("aaca")("uvmz") * rdms_->L3aab()("xzYuvW");
+        Tau2.block("cAaA")("mWxY") += 0.250 * V_.block("aAcA")("uVmZ") * rdms_->L3abb()("xYZuVW");
+        Tau2.block("aCaA")("wMxY") += 0.125 * V_.block("AAAC")("UVZM") * rdms_->L3abb()("xYZwUV");
+        Tau2.block("aCaA")("wMxY") += 0.250 * V_.block("aAaC")("uVzM") * rdms_->L3aab()("xzYuwV");
+        Tau2.block("aAvA")("xYeW") += 0.125 * V_.block("vaaa")("ezuv") * rdms_->L3aab()("xzYuvW");
+        Tau2.block("aAvA")("xYeW") -= 0.250 * V_.block("vAaA")("eZuV") * rdms_->L3abb()("xYZuVW");
+        Tau2.block("aAaV")("xYwE") -= 0.125 * V_.block("AVAA")("ZEUV") * rdms_->L3abb()("xYZwUV");
+        Tau2.block("aAaV")("xYwE") -= 0.250 * V_.block("aVaA")("zEuV") * rdms_->L3aab()("xzYuwV");
     }
     if (CORRELATION_TERM) {
         /******************** α β α β ********************/
@@ -166,10 +165,10 @@ void DSRG_MRPT2::set_tau() {
     // <[V, T2]> C_6 C_2
     if (X4_TERM) {
         /**************************************** α α α α ****************************************/
-        temp.block("caaa")("mwxy") += 0.0625 * V_.block("aaca")("uvmz") * rdms_.L3aaa()("xyzuvw");
-        temp.block("caaa")("mwxy") -= 0.125  * V_.block("aAcA")("uVmZ") * rdms_.L3aab()("xyZuwV");
-        temp.block("aava")("xyew") -= 0.0625 * V_.block("vaaa")("ezuv") * rdms_.L3aaa()("xyzuvw");
-        temp.block("aava")("xyew") += 0.125  * V_.block("vAaA")("eZuV") * rdms_.L3aab()("xyZuwV");
+        temp.block("caaa")("mwxy") += 0.0625 * V_.block("aaca")("uvmz") * rdms_->L3aaa()("xyzuvw");
+        temp.block("caaa")("mwxy") -= 0.125 * V_.block("aAcA")("uVmZ") * rdms_->L3aab()("xyZuwV");
+        temp.block("aava")("xyew") -= 0.0625 * V_.block("vaaa")("ezuv") * rdms_->L3aaa()("xyzuvw");
+        temp.block("aava")("xyew") += 0.125 * V_.block("vAaA")("eZuV") * rdms_->L3aab()("xyZuwV");
     }
     if (CORRELATION_TERM) {
         /******************** α α α α ********************/
@@ -239,11 +238,11 @@ void DSRG_MRPT2::set_sigma_xi() {
         Xi2["ia"] = Xi["ia"] * Eeps1["ia"];
         Xi3["ia"] = Xi["ia"] * Eeps1_m1["ia"];
 
-        sigma3_xi3["ia"] =  Sigma3["ia"];
+        sigma3_xi3["ia"] = Sigma3["ia"];
         sigma3_xi3["ia"] += Xi3["ia"];
-        sigma2_xi3["ia"] =  Sigma2["ia"];
+        sigma2_xi3["ia"] = Sigma2["ia"];
         sigma2_xi3["ia"] += Xi3["ia"];
-        sigma1_xi1_xi2["ia"] =  2 * s_ * Sigma1["ia"];
+        sigma1_xi1_xi2["ia"] = 2 * s_ * Sigma1["ia"];
         sigma1_xi1_xi2["ia"] += Xi1["ia"];
         sigma1_xi1_xi2["ia"] -= 2 * s_ * Xi2["ia"];
     }
@@ -253,23 +252,23 @@ void DSRG_MRPT2::set_sigma_xi() {
     for (const std::string& block : blocklabels) {
         sigma3_xi3.block(capital_blocks[block])("pq") = sigma3_xi3.block(block)("pq");
         sigma2_xi3.block(capital_blocks[block])("pq") = sigma2_xi3.block(block)("pq");
-        sigma1_xi1_xi2.block(capital_blocks[block])("pq") = sigma1_xi1_xi2.block(block)("pq"); 
+        sigma1_xi1_xi2.block(capital_blocks[block])("pq") = sigma1_xi1_xi2.block(block)("pq");
     }
     outfile->Printf("Done");
 }
 
 void DSRG_MRPT2::set_kappa() {
     outfile->Printf("\n    Initializing multipliers for renormalize ERIs ... ");
-    Kappa = BTF_->build(CoreTensor, "Kappa", {"hhpp","hHpP"});
+    Kappa = BTF_->build(CoreTensor, "Kappa", {"hhpp", "hHpP"});
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
     // <[V, T2]> (C_2)^4
     if (PT2_TERM) {
         /************************************ α α α α ************************************/
-        temp["mnev"] += 0.125  * T2_["mneu"] * Eta1_["uv"];
-        temp["muew"] += 0.250  * T2_["mvez"] * Gamma1_["uv"] * Eta1_["zw"];
-        temp["uxew"] += 0.125  * T2_["vyez"] * Gamma1_["uv"] * Gamma1_["xy"] * Eta1_["zw"];
-        temp["muef"] += 0.125  * T2_["mvef"] * Gamma1_["uv"];
-        temp["muwy"] += 0.125  * T2_["mvzx"] * Gamma1_["uv"] * Eta1_["zw"] * Eta1_["xy"];
+        temp["mnev"] += 0.125 * T2_["mneu"] * Eta1_["uv"];
+        temp["muew"] += 0.250 * T2_["mvez"] * Gamma1_["uv"] * Eta1_["zw"];
+        temp["uxew"] += 0.125 * T2_["vyez"] * Gamma1_["uv"] * Gamma1_["xy"] * Eta1_["zw"];
+        temp["muef"] += 0.125 * T2_["mvef"] * Gamma1_["uv"];
+        temp["muwy"] += 0.125 * T2_["mvzx"] * Gamma1_["uv"] * Eta1_["zw"] * Eta1_["xy"];
         temp["mnef"] += 0.0625 * T2_["mnef"];
         temp["mnvy"] += 0.0625 * T2_["mnux"] * Eta1_["uv"] * Eta1_["xy"];
         temp["uxef"] += 0.0625 * T2_["vyef"] * Gamma1_["uv"] * Gamma1_["xy"];
@@ -294,18 +293,18 @@ void DSRG_MRPT2::set_kappa() {
     // <[V, T2]> C_4 (C_2)^2 PP
     if (X1_TERM) {
         /****************************** α α α α ******************************/
-        temp["xyew"] += 0.0625  * T2_["uvez"] * Eta1_["zw"] * Lambda2_["xyuv"];
+        temp["xyew"] += 0.0625 * T2_["uvez"] * Eta1_["zw"] * Lambda2_["xyuv"];
         temp["xyef"] += 0.03125 * T2_["uvef"] * Lambda2_["xyuv"];
 
         /****************************** α β α β ******************************/
-        Kappa["xYeF"] += 0.25   * T2_["uVeF"] * Lambda2_["xYuV"];
-        Kappa["xYeW"] += 0.25   * T2_["uVeZ"] * Eta1_["ZW"] * Lambda2_["xYuV"];
-        Kappa["xYwE"] += 0.25   * T2_["uVzE"] * Eta1_["zw"] * Lambda2_["xYuV"];
+        Kappa["xYeF"] += 0.25 * T2_["uVeF"] * Lambda2_["xYuV"];
+        Kappa["xYeW"] += 0.25 * T2_["uVeZ"] * Eta1_["ZW"] * Lambda2_["xYuV"];
+        Kappa["xYwE"] += 0.25 * T2_["uVzE"] * Eta1_["zw"] * Lambda2_["xYuV"];
     }
     // <[V, T2]> C_4 (C_2)^2 HH
     if (X2_TERM) {
         /******************************* α α α α *******************************/
-        temp["mzuv"] += 0.0625  * T2_["mwxy"] * Gamma1_["zw"] * Lambda2_["xyuv"];
+        temp["mzuv"] += 0.0625 * T2_["mwxy"] * Gamma1_["zw"] * Lambda2_["xyuv"];
         temp["mnuv"] += 0.03125 * T2_["mnxy"] * Lambda2_["xyuv"];
 
         /******************************* α β α β *******************************/
@@ -346,20 +345,20 @@ void DSRG_MRPT2::set_kappa() {
     // <[V, T2]> C_6 C_2
     if (X4_TERM) {
         /**************************************** α α α α ****************************************/
-        temp.block("caaa")("mzuv") += 0.0625 * T2_.block("caaa")("mwxy") * rdms_.L3aaa()("xyzuvw");
-        temp.block("caaa")("mzuv") -= 0.125  * T2_.block("cAaA")("mWxY") * rdms_.L3aab()("xzYuvW");
-        temp.block("aava")("uvez") -= 0.0625 * T2_.block("aava")("xyew") * rdms_.L3aaa()("xyzuvw");
-        temp.block("aava")("uvez") += 0.125  * T2_.block("aAvA")("xYeW") * rdms_.L3aab()("xzYuvW");
+        temp.block("caaa")("mzuv") += 0.0625 * T2_.block("caaa")("mwxy") * rdms_->L3aaa()("xyzuvw");
+        temp.block("caaa")("mzuv") -= 0.125 * T2_.block("cAaA")("mWxY") * rdms_->L3aab()("xzYuvW");
+        temp.block("aava")("uvez") -= 0.0625 * T2_.block("aava")("xyew") * rdms_->L3aaa()("xyzuvw");
+        temp.block("aava")("uvez") += 0.125 * T2_.block("aAvA")("xYeW") * rdms_->L3aab()("xzYuvW");
 
         /**************************************** α β α β ****************************************/
-        Kappa.block("cAaA")("mZuV") -= 0.125 * T2_.block("caaa")("mwxy") * rdms_.L3aab()("xyZuwV");
-        Kappa.block("cAaA")("mZuV") += 0.250 * T2_.block("cAaA")("mWxY") * rdms_.L3abb()("xYZuVW");
-        Kappa.block("aCaA")("zMuV") += 0.125 * T2_.block("ACAA")("WMXY") * rdms_.L3abb()("zXYuVW");
-        Kappa.block("aCaA")("zMuV") += 0.250 * T2_.block("aCaA")("wMxY") * rdms_.L3aab()("xzYuwV");
-        Kappa.block("aAvA")("uVeZ") += 0.125 * T2_.block("aava")("xyew") * rdms_.L3aab()("xyZuwV");
-        Kappa.block("aAvA")("uVeZ") -= 0.250 * T2_.block("aAvA")("xYeW") * rdms_.L3abb()("xYZuVW");
-        Kappa.block("aAaV")("uVzE") -= 0.125 * T2_.block("AAAV")("XYWE") * rdms_.L3abb()("zXYuVW");
-        Kappa.block("aAaV")("uVzE") -= 0.250 * T2_.block("aAaV")("xYwE") * rdms_.L3aab()("xzYuwV");
+        Kappa.block("cAaA")("mZuV") -= 0.125 * T2_.block("caaa")("mwxy") * rdms_->L3aab()("xyZuwV");
+        Kappa.block("cAaA")("mZuV") += 0.250 * T2_.block("cAaA")("mWxY") * rdms_->L3abb()("xYZuVW");
+        Kappa.block("aCaA")("zMuV") += 0.125 * T2_.block("ACAA")("WMXY") * rdms_->L3abb()("zXYuVW");
+        Kappa.block("aCaA")("zMuV") += 0.250 * T2_.block("aCaA")("wMxY") * rdms_->L3aab()("xzYuwV");
+        Kappa.block("aAvA")("uVeZ") += 0.125 * T2_.block("aava")("xyew") * rdms_->L3aab()("xyZuwV");
+        Kappa.block("aAvA")("uVeZ") -= 0.250 * T2_.block("aAvA")("xYeW") * rdms_->L3abb()("xYZuVW");
+        Kappa.block("aAaV")("uVzE") -= 0.125 * T2_.block("AAAV")("XYWE") * rdms_->L3abb()("zXYuVW");
+        Kappa.block("aAaV")("uVzE") -= 0.250 * T2_.block("aAaV")("xYwE") * rdms_->L3aab()("xzYuwV");
     }
     // <[V, T1]>
     if (X6_TERM) {
@@ -367,7 +366,7 @@ void DSRG_MRPT2::set_kappa() {
         temp["xyev"] += 0.125 * T1_["ue"] * Lambda2_["xyuv"];
         temp["myuv"] -= 0.125 * T1_["mx"] * Lambda2_["xyuv"];
 
-        /********************* α β α β *********************/     
+        /********************* α β α β *********************/
         Kappa["xYeV"] += 0.25 * T1_["ue"] * Lambda2_["xYuV"];
         Kappa["yXvE"] += 0.25 * T1_["UE"] * Lambda2_["yXvU"];
         Kappa["mYuV"] -= 0.25 * T1_["mx"] * Lambda2_["xYuV"];

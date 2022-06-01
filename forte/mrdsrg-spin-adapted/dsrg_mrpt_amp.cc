@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,7 +34,6 @@
 #include "dsrg_mrpt.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
-
 
 using namespace psi;
 
@@ -356,9 +355,10 @@ void DSRG_MRPT::print_intruder(const std::string& name,
             double down = fi + fj - fa - fb;
             double v = datapair.second;
 
-            output += "\n" + indent + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                                          i % j % a % b % v % fi % fj % fa % fb % down);
+            output += "\n" + indent +
+                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
+                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
+                          i % j % a % b % v % fi % fj % fa % fb % down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -373,4 +373,3 @@ void DSRG_MRPT::print_intruder(const std::string& name,
     outfile->Printf("\n%s", output.c_str());
 }
 } // namespace forte
-

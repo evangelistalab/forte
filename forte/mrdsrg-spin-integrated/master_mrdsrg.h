@@ -30,8 +30,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MASTER_DSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MASTER_DSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~MASTER_DSRG();
@@ -265,8 +266,15 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Gamma1_;
     /// One-hole density matrix
     ambit::BlockedTensor Eta1_;
-    /// Two-body denisty cumulant
+    /// Two-body density cumulant
     ambit::BlockedTensor Lambda2_;
+    /// Three-body density cumulants
+    ambit::Tensor L3aaa_;
+    ambit::Tensor L3aab_;
+    ambit::Tensor L3abb_;
+    ambit::Tensor L3bbb_;
+    /// Whether to compute 3-cumulant contributions
+    bool do_cu3_;
 
     // ==> Fock matrix related <==
 

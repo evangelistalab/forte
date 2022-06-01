@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,7 +29,6 @@
 #ifndef _memory_h_
 #define _memory_h_
 
-
 namespace forte {
 
 /**
@@ -38,8 +37,7 @@ namespace forte {
  * @param n The number of elements for storage
  * @return A pair (size, "unit") with the size given in appropriate unit (B, KB, MB, GB, TB, PB)
  */
-template <typename T>
-std::pair<double, std::string> to_xb2(size_t nele) {
+template <typename T> std::pair<double, std::string> to_xb2(size_t nele) {
     constexpr size_t type_size = sizeof(T);
     // map the size
     std::map<std::string, double> to_XB;
@@ -63,6 +61,6 @@ std::pair<double, std::string> to_xb2(size_t nele) {
     return out;
 }
 
-}
+} // namespace forte
 
 #endif // _memory_h_

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -73,7 +73,7 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
 // * @param name The abbreviated name of the BlockedTensor BT
 // * @return The master file name (with absolute path) that handles all blocks
 // */
-//std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
+// std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
 //                          const std::string& file_prefix);
 
 ///**
@@ -81,13 +81,13 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
 // * @param BT The BlockedTensor to be filled
 // * @param filename The master file name (with absolute path) that stores file names for all blocks
 // */
-//void read_disk_BT(ambit::BlockedTensor& BT, const std::string& filename);
+// void read_disk_BT(ambit::BlockedTensor& BT, const std::string& filename);
 
 ///**
 // * @brief Delete all files written by write_disk_BT
 // * @param filename The master file name (with absolute path) that stores file names for all blocks
 // */
-//void delete_disk_BT(const std::string& filename);
+// void delete_disk_BT(const std::string& filename);
 
 } // namespace forte
 
