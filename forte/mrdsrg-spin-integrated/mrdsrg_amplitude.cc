@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -54,11 +54,11 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
     struct stat buf;
     if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
         outfile->Printf("\n    Reading T2 amplitudes from current directory ...");
-        ambit::load(T2, t2_file_cwd_);
+        T2.load(t2_file_cwd_);
         outfile->Printf(" Done.");
     } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
         outfile->Printf("\n    Reading previous T2 amplitudes from scratch directory ...");
-        ambit::load(T2, t2_file_chk_);
+        T2.load(t2_file_chk_);
         outfile->Printf(" Done.");
     } else {
         if (ccvv_source == "ZERO") {
@@ -70,17 +70,22 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
 
     if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
         outfile->Printf("\n    Reading T1 amplitudes from current directory ...");
-        ambit::load(T1, t1_file_cwd_);
+        T1.load(t1_file_cwd_);
         outfile->Printf(" Done.");
     } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
         outfile->Printf("\n    Reading previous T1 amplitudes from scratch directory ...");
-        ambit::load(T1, t1_file_chk_);
+        T1.load(t1_file_chk_);
         outfile->Printf(" Done.");
     } else {
-        if (ccvv_source == "ZERO") {
-            guess_t1_nocv(F, T2, T1);
-        } else if (ccvv_source == "NORMAL") {
-            guess_t1_std(F, T2, T1);
+        if (foptions_->get_str("DSRG_T1_AMPS_GUESS") == "ZERO") {
+            outfile->Printf("\n    Use zero T1 amplitudes as requested!");
+            T1.zero();
+        } else {
+            if (ccvv_source == "ZERO") {
+                guess_t1_nocv(F, T2, T1);
+            } else if (ccvv_source == "NORMAL") {
+                guess_t1_std(F, T2, T1);
+            }
         }
     }
 
@@ -96,11 +101,11 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
     struct stat buf;
     if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
         outfile->Printf("\n    Reading T2 amplitudes from current directory ...");
-        ambit::load(T2, t2_file_cwd_);
+        T2.load(t2_file_cwd_);
         outfile->Printf(" Done.");
     } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
         outfile->Printf("\n    Reading previous T2 amplitudes from scratch directory ...");
-        ambit::load(T2, t2_file_chk_);
+        T2.load(t2_file_chk_);
         outfile->Printf(" Done.");
     } else {
         if (ccvv_source == "ZERO") {
@@ -112,11 +117,11 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
 
     if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
         outfile->Printf("\n    Reading T1 amplitudes from current directory ...");
-        ambit::load(T1, t1_file_cwd_);
+        T1.load(t1_file_cwd_);
         outfile->Printf(" Done.");
     } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
         outfile->Printf("\n    Reading previous T1 amplitudes from scratch directory ...");
-        ambit::load(T1, t1_file_chk_);
+        T1.load(t1_file_chk_);
         outfile->Printf(" Done.");
     } else {
         if (ccvv_source == "ZERO") {
@@ -1526,16 +1531,16 @@ void MRDSRG::dump_amps_to_disk() {
     // dump to psi4 scratch directory for reference relaxation
     if (restart_amps_ and (relax_ref_ != "NONE")) {
         outfile->Printf("\n    Dumping amplitudes to scratch directory ...");
-        ambit::save(T1_, t1_file_chk_);
-        ambit::save(T2_, t2_file_chk_);
+        T1_.save(t1_file_chk_);
+        T2_.save(t2_file_chk_);
         outfile->Printf(" Done.");
     }
 
     // dump amplitudes to the current directory
     if (dump_amps_cwd_) {
         outfile->Printf("\n    Dumping amplitudes to current directory ...");
-        ambit::save(T1_, t1_file_cwd_);
-        ambit::save(T2_, t2_file_cwd_);
+        T1_.save( t1_file_cwd_);
+        T2_.save(t2_file_cwd_);
         outfile->Printf(" Done.");
     }
 }

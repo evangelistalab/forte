@@ -98,10 +98,12 @@ class CMakeBuild(build_ext):
         cmake_args += [f'-DMAX_DET_ORB={self.max_det_orb}']
         cmake_args += [f'-DENABLE_CODECOV={str(self.enable_codecov).upper()}']
         cmake_args += [f'-DENABLE_ForteTests=TRUE']
-        cmake_args += self.cmake_config_options.split()
+        # The below line is needed in some OSX cases.
+        #cmake_args += ['-DCMAKE_OSX_SYSROOT=' + os.environ["CONDA_BUILD_SYSROOT"]]
+        cmake_args += self.split_options(self.cmake_config_options)
 
         # define build arguments
-        build_args = self.cmake_build_options.split()
+        build_args = self.split_options(self.cmake_build_options)
         build_args.append(f'-j{self.nprocs}')
 
         # call cmake and build
@@ -109,6 +111,40 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args)
 
         print()  # Add empty line for nicer output
+
+    @staticmethod
+    def split_options(options):
+        """
+        Split the given string of options
+        :param options: a string of options
+        :return: split options in lists
+
+        For example, the input is
+        '-DOpenMP_iomp5_LIBRARY=/usr/local/lib/libomp.dylib '
+        '-DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp=iomp5 -I/usr/local/lib/" '
+        '-DOpenMP_CXX_LIB_NAMES=iomp5'
+
+        The output should give
+        ['-DOpenMP_iomp5_LIBRARY=/usr/local/lib/libomp.dylib',
+         '-DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp=iomp5 -I/usr/local/lib/"',
+         '-DOpenMP_CXX_LIB_NAMES=iomp5']
+        """
+        out = []
+        temp = ""
+        for i in options.split():
+            if i.count('"') != 1:
+                if not temp:
+                    out.append(i)
+                else:
+                    temp += f" {i}"
+            else:
+                if not temp:
+                    temp += i
+                else:
+                    temp += f" {i}"
+                    out.append(temp)
+                    temp = ""
+        return out
 
 
 setup(

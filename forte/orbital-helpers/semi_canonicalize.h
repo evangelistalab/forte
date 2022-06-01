@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -44,26 +44,23 @@ class ForteOptions;
 
 /**
  * @brief The SemiCanonical class
- * Computes semi-canonical orbitals
+ * Computes semi-canonical orbitals for given 1RDMs
  */
 class SemiCanonical {
   public:
     /**
      * @brief SemiCanonical Constructor
      * @param options ForteOptions
-     * @param ints ForteInegrals
+     * @param ints ForteIntegrals
      * @param mo_space_info MOSpaceInfo
      * @param quiet_banner Method banner is not printed if set to true
      */
     SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<ForteOptions> options, bool quiet_banner = false);
+                  std::shared_ptr<ForteOptions> options, bool quiet = false);
 
     /// Transforms integrals and RDMs
-    RDMs semicanonicalize(RDMs& rdms, const int& max_rdm_level = 3, const bool& build_fock = true,
+    void semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock = true, const bool& nat_orb = false,
                           const bool& transform = true);
-
-    /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
-    RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms, const int& max_rdm_level);
 
     /// Return the alpha rotation matrix
     psi::SharedMatrix Ua() { return Ua_; }
@@ -72,31 +69,48 @@ class SemiCanonical {
     psi::SharedMatrix Ub() { return Ub_; }
 
     /// Return the alpha rotation matrix in the active space
-    ambit::Tensor Ua_t() { return Ua_t_; }
+    ambit::Tensor Ua_t() const { return Ua_t_.clone(); }
 
     /// Return the beta rotation matrix in the active space
-    ambit::Tensor Ub_t() { return Ub_t_; }
+    ambit::Tensor Ub_t() const { return Ub_t_.clone(); }
+
+    /// Return if the orbital ordering and phases are fixed successfully
+    bool fix_orbital_success() const { return fix_orbital_success_; }
 
   private:
+    /// startup function to find dimensions and variables
     void startup();
 
+    /// read ForteOptions
+    void read_options(const std::shared_ptr<ForteOptions>& foptions);
+
+    /// Forte MOSpaceInfo
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// Forte integral
     std::shared_ptr<ForteIntegrals> ints_;
 
-    // Dimension for all orbitals (number of MOs per irrep)
+    /// Print level
+    int print_;
+
+    /// Mix the frozen and restricted orbitals together
+    bool inactive_mix_;
+    /// Mix all GAS orbitals together
+    bool active_mix_;
+
+    /// Dimension for all orbitals (number of MOs per irrep)
     psi::Dimension nmopi_;
 
-    // Blocks map
+    /// Blocks map
     std::map<std::string, psi::Dimension> mo_dims_;
 
-    // Offset of GAS orbitals within ACTIVE
+    /// Offset of GAS orbitals within ACTIVE
     std::map<std::string, psi::Dimension> actv_offsets_;
 
-    // Number of active MOs
+    /// Number of active MOs
     size_t nact_;
 
-    // Number of irreps
+    /// Number of irreps
     size_t nirrep_;
 
     /// Unitary matrix for alpha orbital rotation
@@ -111,17 +125,29 @@ class SemiCanonical {
     /// Set Ua_, Ub_, Ua_t_, and Ub_t_ to identity
     void set_U_to_identity();
 
-    /// Check Fock matrix, return true if semicanonicalized
-    bool check_fock_matrix();
+    /// Check if orbitals are semicanonicalized
+    bool check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_orb);
+
     /// Thresholds for Fock matrix testing
     double threshold_tight_;
     double threshold_loose_;
+
+    /// Blocks of Fock or 1RDM to be checked and diagonalized
+    std::map<std::string, std::shared_ptr<psi::Matrix>> mats_;
+    /// Prepare blocks of Fock or 1RDM to be checked
+    void prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, const bool& nat_orb);
 
     /// If certain Fock blocks need to be diagonalized
     std::map<std::string, bool> checked_results_;
 
     /// Builds unitary matrices used to diagonalize diagonal blocks of Fock
-    void build_transformation_matrices();
+    void build_transformation_matrices(const bool& semi);
+
+    /// Fill ambit::Tensor Ua_t_ (Ub_t_) using psi::SharedMatrix Ua_ (Ub_)
+    void fill_Uactv(const psi::SharedMatrix& U, ambit::Tensor& Ut);
+
+    /// Successfully fix the orbital ordering and phases
+    bool fix_orbital_success_;
 };
 } // namespace forte
 

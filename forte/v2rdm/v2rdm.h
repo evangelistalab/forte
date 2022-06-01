@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -56,14 +56,14 @@ class V2RDM : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    V2RDM(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-          std::shared_ptr<MOSpaceInfo> mo_space_info);
+    V2RDM(psi::SharedWavefunction ref_wfn, psi::Options& options,
+          std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~V2RDM();
 
     /// Returns the reference object of forte
-    RDMs reference();
+    std::shared_ptr<RDMs> reference();
 
   protected:
     /// Start-up function called in the constructor
@@ -122,6 +122,6 @@ class V2RDM : public psi::Wavefunction {
     /// 3PDM: file_3pdm_aaa, file_3pdm_aab, file_3pdm_abb, file_3pdm_bbb
     void write_density_to_file();
 };
-}
+} // namespace forte
 
 #endif // V2RDM_H

@@ -49,7 +49,7 @@ e_convergence       8
 d_convergence       8
 }
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, Escf, 8, "SCF energy")
+compare_values(refscf, Escf, 7, "SCF energy")
 
 set forte {
 job_type            none
@@ -82,4 +82,4 @@ restricted_docc     [16,6,9,12]
 active              [2,2,1,2]
 }
 Ecasci, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(reffci, Ecasci, 8, "CASCI(10e,7o) energy")
+compare_values(reffci, Ecasci, 7, "CASCI(10e,7o) energy")

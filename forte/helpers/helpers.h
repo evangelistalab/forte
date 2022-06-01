@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -52,6 +52,11 @@ namespace py = pybind11;
 class Options;
 
 namespace forte {
+
+/// Spin cases for 1-, 2-, and 3-body tensors
+enum class Spin1 {a, b};
+enum class Spin2 {aa, ab, bb};
+enum class Spin3 {aaa, aab, abb, bbb};
 
 /**
  * @brief Convert an ambit tensor to a numpy ndarray.
@@ -129,6 +134,25 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
 //  */
 // std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_of_tasks,
 //                                                                    size_t nproc);
+
+template <typename T>
+std::vector<std::vector<T>> split_vector(const std::vector<T>& vec, size_t max_length) {
+    std::vector<std::vector<T>> out_vec;
+    size_t vec_size = vec.size();
+
+    size_t n_even = vec_size / max_length;
+    for (size_t i = 0, begin = 0, end = max_length; i < n_even; ++i) {
+        out_vec.push_back(std::vector<T>(vec.begin() + begin, vec.begin() + end));
+        begin = end;
+        end += max_length;
+    }
+
+    if (vec_size % max_length) {
+        out_vec.push_back(std::vector<T>(vec.begin() + n_even * max_length, vec.end()));
+    }
+
+    return out_vec;
+}
 
 template <typename T, typename Compare>
 std::vector<std::size_t> sort_permutation(const std::vector<T>& vec, Compare& compare) {

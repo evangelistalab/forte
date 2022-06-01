@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,7 +41,7 @@ using namespace psi;
 
 namespace forte {
 
-SA_MRDSRG::SA_MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+SA_MRDSRG::SA_MRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : SADSRG(rdms, scf_info, options, ints, mo_space_info) {
@@ -75,6 +75,7 @@ void SA_MRDSRG::read_options() {
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
 
     restart_amps_ = foptions_->get_bool("DSRG_RESTART_AMPS");
+    t1_guess_ = foptions_->get_str("DSRG_T1_AMPS_GUESS");
 }
 
 void SA_MRDSRG::startup() {
@@ -130,11 +131,13 @@ void SA_MRDSRG::print_options() {
         {"Integral type", ints_type_},
         {"Source operator", source_},
         {"Reference relaxation", relax_ref_},
-        {"Core-Virtual source type", ccvv_source_}};
+        {"3RDM algorithm", L3_algorithm_},
+        {"Core-Virtual source type", ccvv_source_},
+        {"T1 amplitudes initial guess", t1_guess_}};
 
     if (internal_amp_ != "NONE") {
-        calculation_info_string.push_back({"Internal amplitudes levels", internal_amp_});
-        calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
+        calculation_info_string.emplace_back("Internal amplitudes levels", internal_amp_);
+        calculation_info_string.emplace_back("Internal amplitudes selection", internal_amp_select_);
     }
 
     std::vector<std::pair<std::string, bool>> calculation_info_bool{

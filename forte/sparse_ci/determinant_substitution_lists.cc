@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -59,7 +59,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
     alpha_strings_.clear();
     alpha_a_strings_.clear();
 
-    // First build a map from beta strings to determinants
+    // Build a map from beta strings to determinants
     const det_hashvec& wfn_map = wfn.wfn_hash();
     {
         det_hash<size_t> beta_str_hash;
@@ -83,6 +83,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
         }
     }
 
+    // Build a map from alpha strings to determinants
     {
         det_hash<size_t> alfa_str_hash;
         size_t nalfa = 0;
@@ -105,7 +106,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
         }
     }
 
-    // Next build a map from annihilated alpha strings to determinants
+    // Build a map from annihilated alpha strings to determinants
     det_hash<size_t> alfa_str_hash;
     size_t naalpha = 0;
     for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
@@ -173,9 +174,10 @@ void DeterminantSubstitutionLists::lists_1a(const DeterminantHashVec& wfn) {
                 tmp[detJ_add].emplace_back(index, sign > 0.0 ? (ii + 1) : (-ii - 1));
             }
         }
-
-        for (const auto& vec : tmp) {
-            if (!vec.empty()) {
+        // size_t idx = 0;
+        for (auto& vec : tmp) {
+            // ignore (N-1)-electron det. only coupled to itself
+            if (vec.size() > 1) {
                 a_list_.push_back(vec);
             }
             auto s = vec.size();
@@ -291,7 +293,6 @@ void DeterminantSubstitutionLists::lists_2aa(const DeterminantHashVec& wfn) {
                 }
             }
         }
-
         for (auto& vec : tmp) {
             if (!vec.empty()) {
                 aa_list_.push_back(vec);
@@ -352,7 +353,6 @@ void DeterminantSubstitutionLists::lists_2ab(const DeterminantHashVec& wfn) {
                 tmp[detJ_add].emplace_back(idx, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
             }
         }
-
         for (auto& vec : tmp) {
             if (!vec.empty()) {
                 ab_list_.push_back(vec);
@@ -370,7 +370,6 @@ void DeterminantSubstitutionLists::lists_2ab(const DeterminantHashVec& wfn) {
     for (const auto& p: vec_size) {
         outfile->Printf("\n  %8zu %10zu", p.first, p.second);
     }
-
 
     if (!quiet_) {
         outfile->Printf("\n        αβ         %.3e seconds", timer_ab.stop());
@@ -415,12 +414,10 @@ void DeterminantSubstitutionLists::lists_2bb(const DeterminantHashVec& wfn) {
                     } else {
                         detJ_add = it->second;
                     }
-
                     tmp[detJ_add].emplace_back(idx, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
                 }
             }
-        }
-
+        }       
         for (auto& vec : tmp) {
             if (!vec.empty()) {
                 bb_list_.push_back(vec);

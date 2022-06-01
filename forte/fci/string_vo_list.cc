@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,7 +41,6 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "string_lists.h"
-
 
 namespace forte {
 
@@ -143,7 +142,6 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 }
 } // namespace forte
 
-
 ///**
 // * Generate all the pairs of strings I,J connected by a^{+}_p a_q
 // * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
@@ -152,10 +150,10 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 // void StringLists::make_kh_list(GraphPtr graph, KHList& list) {
 //    int n = graph->nbits();
 //    int k = graph->nones();
-//    outfile->Printf("\n n = %d, k = %d, ncmo_ = %d",n,k,ncmo_);
+//    outfile->Printf("\n n = %d, k = %d, no_ = %d",n,k,no_);
 //    if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-//        bool* I = new bool[ncmo_];
-//        bool* J = new bool[ncmo_];
+//        bool* I = new bool[no_];
+//        bool* J = new bool[no_];
 //        for (int h_I = 0; h_I < nirrep_; ++h_I) {
 //            // Generate the strings 1111100000
 //            //                      { k }{n-k}
@@ -171,11 +169,11 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 //                        J[i] = I[i];
 
 //                    // apply a^{+}_p a_q I
-//                    for (int q = 0; q < ncmo_; ++q) {
+//                    for (int q = 0; q < no_; ++q) {
 //                        if (J[q]) {
 //                            J[q] = false;
 //                            short q_sign = string_sign(J, q);
-//                            for (int p = 0; p < ncmo_; ++p) {
+//                            for (int p = 0; p < no_; ++p) {
 //                                if (not J[p]) {
 //                                    short pq_sign = q_sign * string_sign(J, p);
 //                                    J[p] = true;

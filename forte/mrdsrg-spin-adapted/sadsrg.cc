@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -46,8 +46,9 @@ using namespace psi;
 
 namespace forte {
 
-SADSRG::SADSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+SADSRG::SADSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
     n_threads_ = omp_get_max_threads();
@@ -127,7 +128,7 @@ void SADSRG::startup() {
 void SADSRG::build_fock_from_ints() {
     local_timer lt;
     print_contents("Computing Fock matrix and cleaning JK");
-    ints_->make_fock_matrix(rdms_.g1a(), rdms_.g1b());
+    ints_->make_fock_matrix(rdms_->g1a(), rdms_->g1b());
     ints_->jk_finalize();
     print_done(lt.get());
 }
@@ -169,6 +170,8 @@ void SADSRG::read_options() {
     ccvv_source_ = foptions_->get_str("CCVV_SOURCE");
 
     do_cu3_ = foptions_->get_str("THREEPDC") != "ZERO";
+    L3_algorithm_ = foptions_->get_str("DSRG_3RDM_ALGORITHM");
+    store_cu3_ = do_cu3_ and (L3_algorithm_ == "EXPLICIT");
 
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
@@ -260,7 +263,7 @@ void SADSRG::check_init_memory() {
     // densities already stored by RDMs
     auto na = actv_mos_.size();
     n_ele += na * na + na * na * na * na;
-    if (do_cu3_) {
+    if (store_cu3_) {
         n_ele += na * na * na * na * na * na;
     }
 
@@ -294,7 +297,7 @@ void SADSRG::check_init_memory() {
     dsrg_mem_.add_print_entry("Memory assigned by the user", mem_sys_);
     dsrg_mem_.add_print_entry("Memory available for MR-DSRG", mem_left);
     dsrg_mem_.add_entry("Generalized Fock matrix", {"g", "gg"});
-    if (do_cu3_) {
+    if (store_cu3_) {
         dsrg_mem_.add_entry("1-, 2-, and 3-density cumulants", {"aa", "aa", "aaaa", "aaaaaa"});
     } else {
         dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
@@ -314,7 +317,7 @@ void SADSRG::init_density() {
 void SADSRG::fill_density() {
     // 1-particle density (make a copy)
     ambit::Tensor L1a = L1_.block("aa");
-    L1a("pq") = rdms_.SF_L1()("pq");
+    L1a("pq") = rdms_->SF_L1()("pq");
 
     // 1-hole density
     ambit::Tensor E1a = Eta1_.block("aa");
@@ -322,9 +325,12 @@ void SADSRG::fill_density() {
         [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
     E1a("pq") -= L1a("pq");
 
-    // 2-body density cumulants (make a copy)
-    ambit::Tensor L2aa = L2_.block("aaaa");
-    L2aa("pqrs") = rdms_.SF_L2()("pqrs");
+    // 2-body density cumulants
+    L2_.block("aaaa")("pqrs") = rdms_->SF_L2()("pqrs");
+
+    // 3-body density cumulants
+    if (store_cu3_)
+        L3_ = rdms_->SF_L3();
 }
 
 void SADSRG::init_fock() {
@@ -495,10 +501,10 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
      * where A = L3["stupqr"], B = L3["stuqrp"], C = L3["sturpq"], D = L3["stuqpr"].
      */
     double scalar3 = 0.0;
-    //    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
-    //    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
-    //    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
-    //    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
+    //    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * rdms_->L3aaa()("xyzuvw");
+    //    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * rdms_->L3bbb()("XYZUVW");
+    //    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * rdms_->L3aab()("xyZuvW");
+    //    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * rdms_->L3abb()("xYZuVW");
 
     //    // TODO: form one-body intermediate for scalar and 1-body
     //    scalar3 += 0.25 * H3["xyzuvw"] * Lambda2_["uvxy"] * Gamma1_["wz"];
@@ -708,9 +714,9 @@ void SADSRG::print_cumulant_summary() {
     maxes[0] = L2_.norm(0);
     norms[0] = L2_.norm(2);
 
-    if (do_cu3_) {
-        maxes[1] = rdms_.SF_L3().norm(0);
-        norms[1] = rdms_.SF_L3().norm(2);
+    if (store_cu3_) {
+        maxes[1] = L3_.norm(0);
+        norms[1] = L3_.norm(2);
     } else {
         maxes[1] = 0.0;
         norms[1] = 0.0;

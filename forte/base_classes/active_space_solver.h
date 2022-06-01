@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,6 +41,8 @@
 namespace ambit {
 class BlockedTensor;
 }
+#include "base_classes/rdms.h"
+#include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
 
@@ -49,7 +51,6 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class RDMs;
 class SCFInfo;
 
 /**
@@ -88,6 +89,9 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
+    /// Compute permanent dipole moments
+    void compute_dipole_moment();
+
     /// Compute the oscillator strengths assuming same orbitals
     void compute_fosc_same_orbs();
 
@@ -98,9 +102,9 @@ class ActiveSpaceSolver {
 
     /// Compute RDMs of all states in the given map
     /// First entry of the pair corresponds to bra and the second is the ket.
-    std::vector<RDMs> rdms(
+    std::vector<std::shared_ptr<RDMs>> rdms(
         std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
-        int max_rdm_level);
+        int max_rdm_level, RDMsType rdm_type);
 
     /// Compute a generalized RDM for a given state
     /// This will compute the quantity
@@ -132,8 +136,18 @@ class ActiveSpaceSolver {
     void generalized_sigma(const StateInfo& state, psi::SharedVector x, psi::SharedVector sigma);
 
     /// Compute the state-averaged reference
-    RDMs compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                              int max_rdm_level);
+    std::shared_ptr<RDMs>
+    compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                         int max_rdm_level, RDMsType rdm_type);
+
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap <Ψ(N-1)|Ψ'(N-1)>, where the (N-1)-electron wave function is given by
+    /// Ψ(N-1) = h_{pσ} (t) |Ψ (N)> = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ(N)>.
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ(N)| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ(N)>
+    std::map<StateInfo, std::vector<double>>
+    compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket);
 
     /// Print a summary of the computation information
     void print_options();
@@ -145,6 +159,9 @@ class ActiveSpaceSolver {
     const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
         return state_energies_map_;
     }
+
+    /// Return a map of StateInfo to the CI wave functions (deterministic determinant space)
+    std::map<StateInfo, psi::SharedMatrix> state_ci_wfn_map() const;
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
     /// @param as_ints the pointer to a set of acitve-space integrals
@@ -169,6 +186,11 @@ class ActiveSpaceSolver {
 
     /// Return the eigen vectors for a given state
     std::vector<ambit::Tensor> eigenvectors(const StateInfo& state) const;
+    /// Set unitary matrices for changing orbital basis in RDMs when computing dipole moments
+    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
+        Ua_actv_ = Ua;
+        Ub_actv_ = Ub;
+    }
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
@@ -213,19 +235,6 @@ class ActiveSpaceSolver {
     /// A map of state symmetries to the file name of wave function stored on disk
     std::map<StateInfo, std::string> state_filename_map_;
 
-    /// Average spin multiplets for RDMs
-    /// If true, the weight of a state will be averaged by its multiplicity.
-    /// Moreover, all its ms components will be computed by the solver.
-    bool ms_avg_;
-
-    /// Compute the state-averaged reference when spin multiplets are also averaged
-    RDMs compute_avg_rdms_ms_avg(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                                 int max_rdm_level);
-
-    /// Compute the state-averaged reference when spin multiplets are also averaged
-    RDMs compute_avg_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                          int max_rdm_level);
-
     /// A variable to control printing information
     int print_ = 1;
 
@@ -237,6 +246,12 @@ class ActiveSpaceSolver {
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
+
+    /// Unitary matrices for orbital rotations used to compute dipole moments
+    /// The issue is dipole integrals are transformed to semi-canonical orbital basis,
+    /// while active-space integrals are in the original orbital basis
+    ambit::Tensor Ua_actv_;
+    ambit::Tensor Ub_actv_;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

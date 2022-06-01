@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -106,7 +106,7 @@ class FCIVector {
     double compute_spin2();
 
     /// Print the natural_orbitals from FCIWFN
-    /// Assume user specifed active space
+    /// Assume user specified active space
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
 
     /// Return the elements with the smallest value
@@ -201,27 +201,31 @@ class FCIVector {
     void H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
 
     // 1-RDM elements are stored in the format
-    // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]    
+    // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]
 
-    /// Compute the matrix elements of the same 1-RDM <a^+_{p} a_{q}>    
+    /// Compute the matrix elements of the same 1-RDM <a^+_{p} a_{q}>
     void compute_1rdm(std::vector<double>& rdm, bool alfa);
 
     // 2-RDM elements are stored in the format
     // <a^+_{p} a^+_{q} a_{s} a_r> -> rdm[tei_index(p,q,r,s)]
 
-    /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all indices alpha or beta)
+    /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all indices
+    /// alpha or beta)
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
     /// Compute the matrix elements of the alpha-beta 2-RDM <a^+_{pa} a^+_{qb} a_{sb} a_{ra}>
     void compute_2rdm_ab(std::vector<double>& rdm);
-    
+
     // 3-RDM elements are stored in the format
     // <a^+_p a^+_q a^+_r a_u a_t a_s> -> rdm[six_index(p,q,r,s,t,u)]
 
-    /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a_s a_r> (with all indices alpha or beta)
+    /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a_s a_r> (with all indices
+    /// alpha or beta)
     void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
-    /// Compute the matrix elements of the alpha-alpha-beta 3-RDM <a^+_{pa} a^+_{qa} a^+_{rb} a_{ub} a_{ta} a_{sa}>
+    /// Compute the matrix elements of the alpha-alpha-beta 3-RDM <a^+_{pa} a^+_{qa} a^+_{rb} a_{ub}
+    /// a_{ta} a_{sa}>
     void compute_3rdm_aab(std::vector<double>& rdm);
-    /// Compute the matrix elements of the alpha-beta-beta 3-RDM <a^+_{pa} a^+_{qb} a^+_{rb} a_{ub} a_{tb} a_{sa}>
+    /// Compute the matrix elements of the alpha-beta-beta 3-RDM <a^+_{pa} a^+_{qb} a^+_{rb} a_{ub}
+    /// a_{tb} a_{sa}>
     void compute_3rdm_abb(std::vector<double>& rdm);
 };
 } // namespace forte

@@ -1,0 +1,58 @@
+#Test the gas_single on extremely large active space 
+import forte
+memory 20gb
+
+eaci = -372.255483914429 #TEST 
+eacipt2 = -372.753293769531 #TEST
+
+molecule c10h8{
+ C     0.000000    -1.393067    -1.231044
+ C     0.000000    -0.702809    -2.416050
+ C     0.000000     0.702809    -2.416050
+ C     0.000000     1.393067    -1.231044
+ C     0.000000     0.710935     0.000000
+ C     0.000000    -0.710935     0.000000
+ H     0.000000     1.237902    -3.350343
+ H     0.000000    -1.237902    -3.350343
+ H     0.000000    -2.471956    -1.228907
+ H     0.000000     2.471956    -1.228907
+ C     0.000000    -1.393067     1.231044
+ C     0.000000     1.393067     1.231044
+ C     0.000000    -0.702809     2.416050
+ C     0.000000     0.702809     2.416050
+ H     0.000000    -2.471956     1.228907
+ H     0.000000    -1.237902     3.350343
+ H     0.000000     1.237902     3.350343
+ H     0.000000     2.471956     1.228907
+}
+
+set basis cc-pvdz
+
+set {
+scf_type            df
+reference           rohf
+e_convergence       8
+d_convergence       8
+}
+
+set forte {
+  int_type df
+  ms 0.0
+  multiplicity 1
+  root_sym 0
+  gas1 [3,0,0,2,0,2,3,0]
+  gas2 [3,0,0,2,0,2,3,0]
+  gas3 [7,3,2,7,2,7,7,3]
+  gas1max [19]
+  gas1min [19]
+  gas2max [20] 
+  gas2min [20]
+  active_ref_type gas_single
+  active_space_solver aci
+  sigma 0.5
+}
+energy('forte')
+
+compare_values(eaci, variable("ACI ENERGY"), 7, "ACI energy") #TEST
+compare_values(eacipt2, variable("ACI+PT2 ENERGY"), 7, "ACI+PT2 energy") #TEST
+

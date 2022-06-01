@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -52,8 +52,9 @@ class MRDSRG : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+           std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~MRDSRG();
@@ -326,10 +327,6 @@ class MRDSRG : public MASTER_DSRG {
 
     /// Shared pointer of DIISManager object from Psi4
     std::shared_ptr<psi::DIISManager> diis_manager_;
-    /// Amplitudes pointers
-    std::vector<double*> amp_ptrs_;
-    /// Residual pointers
-    std::vector<double*> res_ptrs_;
     /// Initialize DIISManager
     void diis_manager_init();
     /// Add entry for DIISManager

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -61,10 +61,10 @@ void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) 
     struct stat buf;
     if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
         print_contents("Reading T2 from current dir");
-        ambit::load(T2, t2_file_cwd_);
+        T2.load(t2_file_cwd_);
     } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
         print_contents("Reading previous T2 from scratch dir");
-        ambit::load(T2, t2_file_chk_);
+        T2.load(t2_file_chk_);
     } else {
         print_contents("Computing T2 amplitudes from PT2");
         if (eri_df_) {
@@ -132,55 +132,61 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
     struct stat buf;
     if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
         print_contents("Reading T1 from current dir");
-        ambit::load(T1, t1_file_cwd_);
+        T1.load(t1_file_cwd_);
     } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
         print_contents("Reading previous T1 from scratch dir");
-        ambit::load(T1, t1_file_chk_);
+        T1.load(t1_file_chk_);
     } else {
-        print_contents("Computing T1 amplitudes from PT2");
+        if (t1_guess_ == "ZERO") {
+            print_contents("Zeroing T1 amplitudes as requested");
+            T1.zero();
+        } else {
+            print_contents("Computing T1 amplitudes from PT2");
 
-        T1["ia"] = F["ia"];
-        T1["ia"] += T2["ivaw"] * F["wu"] * L1_["uv"];
-        T1["ia"] -= 0.5 * T2["ivwa"] * F["wu"] * L1_["uv"];
-        T1["ia"] -= T2["iwau"] * F["vw"] * L1_["uv"];
-        T1["ia"] += 0.5 * T2["iwua"] * F["vw"] * L1_["uv"];
+            T1["ia"] = F["ia"];
+            T1["ia"] += T2["ivaw"] * F["wu"] * L1_["uv"];
+            T1["ia"] -= 0.5 * T2["ivwa"] * F["wu"] * L1_["uv"];
+            T1["ia"] -= T2["iwau"] * F["vw"] * L1_["uv"];
+            T1["ia"] += 0.5 * T2["iwua"] * F["vw"] * L1_["uv"];
 
-        // transform to semi-canonical basis
-        BlockedTensor tempX;
-        if (!semi_canonical_) {
-            tempX = ambit::BlockedTensor::build(tensor_type_, "Temp T1", T1.block_labels());
-            tempX["jb"] = U_["ji"] * T1["ia"] * U_["ba"];
-            T1["ia"] = tempX["ia"];
+            // transform to semi-canonical basis
+            BlockedTensor tempX;
+            if (!semi_canonical_) {
+                tempX = ambit::BlockedTensor::build(tensor_type_, "Temp T1", T1.block_labels());
+                tempX["jb"] = U_["ji"] * T1["ia"] * U_["ba"];
+                T1["ia"] = tempX["ia"];
+            }
+
+            // special case for CV block
+            std::vector<std::string> T1blocks(T1.block_labels());
+            if (ccvv_source_ == "ZERO") {
+                T1blocks.erase(std::remove(T1blocks.begin(), T1blocks.end(), "cv"), T1blocks.end());
+                T1.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
+                    size_t i0 = core_mos_[i[0]];
+                    size_t i1 = virt_mos_[i[1]];
+
+                    value /= Fdiag_[i0] - Fdiag_[i1];
+                });
+            }
+
+            for (const std::string& block : T1blocks) {
+                T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+                    size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                    size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                    value *=
+                        dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
+                });
+            }
+
+            // transform back to non-canonical basis
+            if (!semi_canonical_) {
+                tempX["jb"] = U_["ij"] * T1["ia"] * U_["ab"];
+                T1["ia"] = tempX["ia"];
+            }
+
+            // zero internal amplitudes
+            internal_amps_T1(T1);
         }
-
-        // special case for CV block
-        std::vector<std::string> T1blocks(T1.block_labels());
-        if (ccvv_source_ == "ZERO") {
-            T1blocks.erase(std::remove(T1blocks.begin(), T1blocks.end(), "cv"), T1blocks.end());
-            T1.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = core_mos_[i[0]];
-                size_t i1 = virt_mos_[i[1]];
-
-                value /= Fdiag_[i0] - Fdiag_[i1];
-            });
-        }
-
-        for (const std::string& block : T1blocks) {
-            T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                value *= dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
-            });
-        }
-
-        // transform back to non-canonical basis
-        if (!semi_canonical_) {
-            tempX["jb"] = U_["ij"] * T1["ia"] * U_["ab"];
-            T1["ia"] = tempX["ia"];
-        }
-
-        // zero internal amplitudes
-        internal_amps_T1(T1);
     }
 
     // norms
@@ -417,8 +423,8 @@ void SA_MRDSRG::dump_amps_to_disk() {
     if (restart_amps_ and (relax_ref_ != "NONE")) {
         local_timer lt;
         print_contents("Dumping amplitudes to scratch dir");
-        ambit::save(T1_, t1_file_chk_);
-        ambit::save(T2_, t2_file_chk_);
+        T1_.save(t1_file_chk_);
+        T2_.save(t2_file_chk_);
         print_done(lt.get());
     }
 
@@ -426,8 +432,8 @@ void SA_MRDSRG::dump_amps_to_disk() {
     if (dump_amps_cwd_) {
         local_timer lt;
         print_contents("Dumping amplitudes to current dir");
-        ambit::save(T1_, t1_file_cwd_);
-        ambit::save(T2_, t2_file_cwd_);
+        T1_.save(t1_file_cwd_);
+        T2_.save(t2_file_cwd_);
         print_done(lt.get());
     }
 }

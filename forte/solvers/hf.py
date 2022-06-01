@@ -2,7 +2,7 @@ from forte.core import flog
 
 from forte.solvers.solver import Feature, Solver
 from forte.model import MolecularModel
-from forte.forte import SCFInfo
+from forte import SCFInfo
 
 
 class HF(Solver):

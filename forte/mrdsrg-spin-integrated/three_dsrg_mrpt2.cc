@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -80,7 +80,7 @@ bool THREE_DSRG_MRPT2::have_omp_ = true;
 bool THREE_DSRG_MRPT2::have_omp_ = false;
 #endif
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                                    std::shared_ptr<ForteOptions> options,
                                    std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -1504,7 +1504,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
     outfile->Printf("\n    %-40s  ...", "Computing [V, T2] λ3");
     double E = 0.0;
 
-    if (foptions_->get_str("THREEPDC") != "ZERO") {
+    if (do_cu3_) {
         if (foptions_->get_str("THREEPDC_ALGORITHM") == "CORE") {
 
             /* Note: internal amplitudes are included already
@@ -1514,13 +1514,13 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaaaa"});
             temp["uvwxyz"] += V_["uviz"] * T2_["iwxy"];
             temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];
-            E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
+            E += 0.25 * temp.block("aaaaaa")("uvwxyz") * L3aaa_("xyzuvw");
 
             // bbb
             temp = BTF_->build(tensor_type_, "temp", {"AAAAAA"});
             temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];
             temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];
-            E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
+            E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * L3bbb_("XYZUVW");
 
             // aab
             temp = BTF_->build(tensor_type_, "temp", {"aaAaaA"});
@@ -1532,7 +1532,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             temp["uvWxyZ"] -= V_["vaxy"] * T2_["uWaZ"];
             temp["uvWxyZ"] -= 2.0 * V_["vAxZ"] * T2_["uWyA"];
 
-            E += 0.50 * temp.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
+            E += 0.50 * temp.block("aaAaaA")("uvWxyZ") * L3aab_("xyZuvW");
 
             // abb
             temp = BTF_->build(tensor_type_, "temp", {"aAAaAA"});
@@ -1544,7 +1544,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             temp["uVWxYZ"] -= V_["WAYZ"] * T2_["uVxA"];
             temp["uVWxYZ"] -= 2.0 * V_["aWxY"] * T2_["uVaZ"];
 
-            E += 0.50 * temp.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
+            E += 0.50 * temp.block("aAAaAA")("uVWxYZ") * L3abb_("xYZuVW");
 
         } else if (foptions_->get_str("THREEPDC_ALGORITHM") == "BATCH") {
 
@@ -1563,19 +1563,19 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             //            ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
             //            ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
             //            ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
-            //            Lambda3_aaa("pqrstu") = rdms_.L3aaa()("pqrstu");
-            //            Lambda3_aaA("pqrstu") = rdms_.L3aab()("pqrstu");
-            //            Lambda3_aAA("pqrstu") = rdms_.L3abb()("pqrstu");
-            //            Lambda3_AAA("pqrstu") = rdms_.L3bbb()("pqrstu");
+            //            Lambda3_aaa("pqrstu") = L3aaa_("pqrstu");
+            //            Lambda3_aaA("pqrstu") = L3aab_("pqrstu");
+            //            Lambda3_aAA("pqrstu") = L3abb_("pqrstu");
+            //            Lambda3_AAA("pqrstu") = L3bbb_("pqrstu");
 
             //            if (print_ > 3){
             //                Lambda3.print(stdout);
             //            }
 
-            //            Lambda3_aaa("pqrstu") = rdms_.L3aaa()("pqrstu");
-            //            Lambda3_aaA("pqrstu") = rdms_.L3aab()("pqrstu");
-            //            Lambda3_aAA("pqrstu") = rdms_.L3abb()("pqrstu");
-            //            Lambda3_AAA("pqrstu") = rdms_.L3bbb()("pqrstu");
+            //            Lambda3_aaa("pqrstu") = L3aaa_("pqrstu");
+            //            Lambda3_aaA("pqrstu") = L3aab_("pqrstu");
+            //            Lambda3_aAA("pqrstu") = L3abb_("pqrstu");
+            //            Lambda3_AAA("pqrstu") = L3bbb_("pqrstu");
             //            size_t size = Lambda3_aaa.data().size();
             //            std::string path = PSIOManager::shared_object()->get_default_path();
             //            FILE* fl3aaa = fopen((path + "forte.l3aaa.bin").c_str(), "w+");
@@ -1839,7 +1839,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
                 }
                 double factor = (m < n) ? 2.0 : 1.0;
 
-                // alpha-aplha
+                // alpha-alpha
                 BefVec[thread].zero();
                 BefJKVec[thread].zero();
                 RDVec[thread].zero();

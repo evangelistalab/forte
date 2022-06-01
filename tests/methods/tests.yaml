@@ -16,6 +16,7 @@ aci:
       - aci-18
       - aci_scf-1
       - aci-full-pt2-1
+      - aci-20
    medium:
       - aci-6
       - aci-10
@@ -67,6 +68,8 @@ casscf:
    short:
       - casscf-7
       - df-casscf-1
+      - df-casscf-2-rdm
+      - df-casscf-3-edge
       - casscf-fcidump-1
       - casscf-gradient-1
       - casscf-gradient-3
@@ -81,7 +84,7 @@ casscf:
       - casscf-9
       - casscf-gradient-2
       - casscf-opt-1
-      - casscf-opt-2
+      # - casscf-opt-2
    long:
       - casscf-8
 cd-dsrg-mrpt2:
@@ -145,7 +148,7 @@ dsrg-mrpt2:
    - dsrg-mrpt2-13
    - aci-dsrg-mrpt2-3
    - dsrg-mrpt2-fcidump-1
-   - dsrg-mrpt2-grad-findiff-1
+   # - dsrg-mrpt2-grad-findiff-1
    - dsrg-mrpt2-gradient-1
    - dsrg-mrpt2-gradient-df-1
   medium:
@@ -154,13 +157,13 @@ dsrg-mrpt2:
    - dsrg-mrpt2-5
    - dsrg-mrpt2-6
    - dsrg-mrpt2-7-casscf-natorbs
-#  - dsrg-mrpt2-9-xms
+   #  - dsrg-mrpt2-9-xms
    - dsrg-mrpt2-11-sa-C2H4
    - aci-dsrg-mrpt2-1
    - aci-dsrg-mrpt2-2
    - aci-dsrg-mrpt2-4
    - dsrg-mrpt2-10-CO-fcidump
-   - dsrg-mrpt2-opt-findiff-1
+   # - dsrg-mrpt2-opt-findiff-1
    - dsrg-mrpt2-gradient-2
    - dsrg-mrpt2-gradient-df-2
   long:
@@ -168,7 +171,7 @@ dsrg-mrpt2:
    - dsrg-mrpt2-4
    - dsrg-mrpt2-12-localized-actv
    - aci-dsrg-mrpt2-5
-   - dsrg-mrpt2-opt-findiff-2
+   # - dsrg-mrpt2-opt-findiff-2
    - dsrg-mrpt2-gradient-3
    - dsrg-mrpt2-gradient-df-3
   unused:
@@ -228,7 +231,6 @@ fci:
    long:
       - fci-6
       - fci-7 # moved to pytest
-      - fci-10
       - fci-ex-1 # moved to pytest
       - fci-rdms-1 # moved to pytest
       - fci-one-electron # moved to pytest
@@ -237,11 +239,14 @@ gasci:
       - gasci-1
       - gasaci-1
       - gasaci-4
+      - gasci-dsrg-mrpt2-2
    medium:
       - gasci-2
       - gasci-3
       - gasaci-2
       - gasaci-3
+   long:
+      - gasaci-5
 gasscf:
    short:
       - gasscf-1
@@ -272,6 +277,9 @@ integrals:
 l-bfgs:
    short:
       - l-bfgs_rosenbrock
+mp2-nos:
+   short:
+      - mp2-nos-1
 mr-dsrg-pt2:
    short:
       - mr-dsrg-pt2-1

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -51,10 +51,10 @@
 #include <macdecls.h>
 #endif
 
-
 namespace forte {
 
-ParallelDFMO::ParallelDFMO(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<psi::BasisSet> auxiliary)
+ParallelDFMO::ParallelDFMO(std::shared_ptr<psi::BasisSet> primary,
+                           std::shared_ptr<psi::BasisSet> auxiliary)
     : primary_(primary), auxiliary_(auxiliary) {
     memory_ = psi::Process::environment.get_memory();
 }
@@ -201,8 +201,10 @@ void ParallelDFMO::transform_integrals() {
     // => Temporary Tensors <= //
 
     // > Three-index buffers < //
-    std::shared_ptr<psi::Matrix> Amn(new psi::Matrix("(A|mn)", max_rows, nso * (unsigned long int)nso));
-    std::shared_ptr<psi::Matrix> Ami(new psi::Matrix("(A|mi)", max_rows, nso * (unsigned long int)max1));
+    std::shared_ptr<psi::Matrix> Amn(
+        new psi::Matrix("(A|mn)", max_rows, nso * (unsigned long int)nso));
+    std::shared_ptr<psi::Matrix> Ami(
+        new psi::Matrix("(A|mi)", max_rows, nso * (unsigned long int)max1));
     std::shared_ptr<psi::Matrix> Aia(new psi::Matrix("(A|ia)", naux, max12));
     double** Amnp = Amn->pointer();
     double** Amip = Ami->pointer();
@@ -365,8 +367,9 @@ void ParallelDFMO::J_one_half() {
 
     // if(GA_Nodeid() == 0)
     {
-        std::shared_ptr<IntegralFactory> Jfactory(new IntegralFactory(
-            auxiliary_, psi::BasisSet::zero_ao_basis_set(), auxiliary_, psi::BasisSet::zero_ao_basis_set()));
+        std::shared_ptr<IntegralFactory> Jfactory(
+            new IntegralFactory(auxiliary_, psi::BasisSet::zero_ao_basis_set(), auxiliary_,
+                                psi::BasisSet::zero_ao_basis_set()));
         std::vector<std::shared_ptr<TwoBodyAOInt>> Jeri;
         for (int thread = 0; thread < nthread; thread++) {
             Jeri.push_back(std::shared_ptr<TwoBodyAOInt>(Jfactory->eri()));
@@ -425,6 +428,5 @@ void ParallelDFMO::J_one_half() {
     }
 }
 } // namespace forte
-
 
 #endif

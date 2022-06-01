@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -63,14 +63,15 @@ class FCISolver : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// Returns the reduced density matrices up to a given rank (max_rdm_level)
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            int max_rdm_level, RDMsType type) override;
 
     /// Returns the transition reduced density matrices between roots of different symmetry up to a
     /// given level (max_rdm_level)
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType type) override;
 
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options) override;
@@ -93,8 +94,10 @@ class FCISolver : public ActiveSpaceMethod {
     void set_print_no(bool value) { print_no_ = value; }
     /// Return a FCIVector
     std::shared_ptr<FCIVector> get_FCIWFN() { return C_; }
-    /// Return eigen vectors
+    /// Return eigen vectors (n_DL_guesses x ndets)
     psi::SharedMatrix evecs() { return eigen_vecs_; }
+    /// Return the CI wave functions for current state symmetry (ndets x nroots)
+    psi::SharedMatrix ci_wave_functions() override;
     /// Return string lists
     std::shared_ptr<StringLists> lists() { return lists_; }
     /// Return symmetry

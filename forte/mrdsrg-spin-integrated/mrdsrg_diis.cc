@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -101,110 +101,23 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
 
 void MRDSRG::diis_manager_init() {
     diis_manager_ = std::make_shared<DIISManager>(diis_max_vec_, "MRDSRG DIIS",
-                                                  DIISManager::RemovalPolicy::LargestError, DIISManager::StoragePolicy::OnDisk);
+                                                  DIISManager::RemovalPolicy::LargestError,
+                                                  DIISManager::StoragePolicy::OnDisk);
 
-    amp_ptrs_.clear();
-    res_ptrs_.clear();
+    diis_manager_->set_error_vector_size(DT1_, DT2_);
 
-    std::vector<std::string> blocks{
-        "ca",   "cv",   "av",   "CA",   "CV",   "AV",   "ccaa", "ccav", "ccva", "ccvv", "caaa",
-        "caav", "cava", "cavv", "acaa", "acav", "acva", "acvv", "aaav", "aava", "aavv", "cCaA",
-        "cCaV", "cCvA", "cCvV", "cAaA", "cAaV", "cAvA", "cAvV", "aCaA", "aCaV", "aCvA", "aCvV",
-        "aAaV", "aAvA", "aAvV", "CCAA", "CCAV", "CCVA", "CCVV", "CAAA", "CAAV", "CAVA", "CAVV",
-        "ACAA", "ACAV", "ACVA", "ACVV", "AAAV", "AAVA", "AAVV"};
-
-    std::vector<size_t> sizes(51);
-    for (int i = 0; i < 51; ++i) {
-        auto block = blocks[i];
-        if (block.size() == 2) {
-            sizes[i] = T1_.block(block).numel();
-            amp_ptrs_.push_back(T1_.block(block).data().data());
-            res_ptrs_.push_back(DT1_.block(block).data().data());
-        } else {
-            sizes[i] = T2_.block(block).numel();
-            amp_ptrs_.push_back(T2_.block(block).data().data());
-            res_ptrs_.push_back(DT2_.block(block).data().data());
-        }
-    }
-
-    diis_manager_->set_error_vector_size(
-        51, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1], DIISEntry::InputType::Pointer,
-        sizes[2], DIISEntry::InputType::Pointer, sizes[3], DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer,
-        sizes[5], DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7], DIISEntry::InputType::Pointer,
-        sizes[8], DIISEntry::InputType::Pointer, sizes[9], DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer,
-        sizes[11], DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13], DIISEntry::InputType::Pointer,
-        sizes[14], DIISEntry::InputType::Pointer, sizes[15], DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer,
-        sizes[17], DIISEntry::InputType::Pointer, sizes[18], DIISEntry::InputType::Pointer, sizes[19], DIISEntry::InputType::Pointer,
-        sizes[20], DIISEntry::InputType::Pointer, sizes[21], DIISEntry::InputType::Pointer, sizes[22], DIISEntry::InputType::Pointer,
-        sizes[23], DIISEntry::InputType::Pointer, sizes[24], DIISEntry::InputType::Pointer, sizes[25], DIISEntry::InputType::Pointer,
-        sizes[26], DIISEntry::InputType::Pointer, sizes[27], DIISEntry::InputType::Pointer, sizes[28], DIISEntry::InputType::Pointer,
-        sizes[29], DIISEntry::InputType::Pointer, sizes[30], DIISEntry::InputType::Pointer, sizes[31], DIISEntry::InputType::Pointer,
-        sizes[32], DIISEntry::InputType::Pointer, sizes[33], DIISEntry::InputType::Pointer, sizes[34], DIISEntry::InputType::Pointer,
-        sizes[35], DIISEntry::InputType::Pointer, sizes[36], DIISEntry::InputType::Pointer, sizes[37], DIISEntry::InputType::Pointer,
-        sizes[38], DIISEntry::InputType::Pointer, sizes[39], DIISEntry::InputType::Pointer, sizes[40], DIISEntry::InputType::Pointer,
-        sizes[41], DIISEntry::InputType::Pointer, sizes[42], DIISEntry::InputType::Pointer, sizes[43], DIISEntry::InputType::Pointer,
-        sizes[44], DIISEntry::InputType::Pointer, sizes[45], DIISEntry::InputType::Pointer, sizes[46], DIISEntry::InputType::Pointer,
-        sizes[47], DIISEntry::InputType::Pointer, sizes[48], DIISEntry::InputType::Pointer, sizes[49], DIISEntry::InputType::Pointer,
-        sizes[50]);
-
-    diis_manager_->set_vector_size(
-        51, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1], DIISEntry::InputType::Pointer,
-        sizes[2], DIISEntry::InputType::Pointer, sizes[3], DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer,
-        sizes[5], DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7], DIISEntry::InputType::Pointer,
-        sizes[8], DIISEntry::InputType::Pointer, sizes[9], DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer,
-        sizes[11], DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13], DIISEntry::InputType::Pointer,
-        sizes[14], DIISEntry::InputType::Pointer, sizes[15], DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer,
-        sizes[17], DIISEntry::InputType::Pointer, sizes[18], DIISEntry::InputType::Pointer, sizes[19], DIISEntry::InputType::Pointer,
-        sizes[20], DIISEntry::InputType::Pointer, sizes[21], DIISEntry::InputType::Pointer, sizes[22], DIISEntry::InputType::Pointer,
-        sizes[23], DIISEntry::InputType::Pointer, sizes[24], DIISEntry::InputType::Pointer, sizes[25], DIISEntry::InputType::Pointer,
-        sizes[26], DIISEntry::InputType::Pointer, sizes[27], DIISEntry::InputType::Pointer, sizes[28], DIISEntry::InputType::Pointer,
-        sizes[29], DIISEntry::InputType::Pointer, sizes[30], DIISEntry::InputType::Pointer, sizes[31], DIISEntry::InputType::Pointer,
-        sizes[32], DIISEntry::InputType::Pointer, sizes[33], DIISEntry::InputType::Pointer, sizes[34], DIISEntry::InputType::Pointer,
-        sizes[35], DIISEntry::InputType::Pointer, sizes[36], DIISEntry::InputType::Pointer, sizes[37], DIISEntry::InputType::Pointer,
-        sizes[38], DIISEntry::InputType::Pointer, sizes[39], DIISEntry::InputType::Pointer, sizes[40], DIISEntry::InputType::Pointer,
-        sizes[41], DIISEntry::InputType::Pointer, sizes[42], DIISEntry::InputType::Pointer, sizes[43], DIISEntry::InputType::Pointer,
-        sizes[44], DIISEntry::InputType::Pointer, sizes[45], DIISEntry::InputType::Pointer, sizes[46], DIISEntry::InputType::Pointer,
-        sizes[47], DIISEntry::InputType::Pointer, sizes[48], DIISEntry::InputType::Pointer, sizes[49], DIISEntry::InputType::Pointer,
-        sizes[50]);
+    diis_manager_->set_vector_size(T1_, T2_);
 }
 
 void MRDSRG::diis_manager_add_entry() {
-    diis_manager_->add_entry(
-        102, res_ptrs_[0], res_ptrs_[1], res_ptrs_[2], res_ptrs_[3], res_ptrs_[4], res_ptrs_[5],
-        res_ptrs_[6], res_ptrs_[7], res_ptrs_[8], res_ptrs_[9], res_ptrs_[10], res_ptrs_[11],
-        res_ptrs_[12], res_ptrs_[13], res_ptrs_[14], res_ptrs_[15], res_ptrs_[16], res_ptrs_[17],
-        res_ptrs_[18], res_ptrs_[19], res_ptrs_[20], res_ptrs_[21], res_ptrs_[22], res_ptrs_[23],
-        res_ptrs_[24], res_ptrs_[25], res_ptrs_[26], res_ptrs_[27], res_ptrs_[28], res_ptrs_[29],
-        res_ptrs_[30], res_ptrs_[31], res_ptrs_[32], res_ptrs_[33], res_ptrs_[34], res_ptrs_[35],
-        res_ptrs_[36], res_ptrs_[37], res_ptrs_[38], res_ptrs_[39], res_ptrs_[40], res_ptrs_[41],
-        res_ptrs_[42], res_ptrs_[43], res_ptrs_[44], res_ptrs_[45], res_ptrs_[46], res_ptrs_[47],
-        res_ptrs_[48], res_ptrs_[49], res_ptrs_[50], amp_ptrs_[0], amp_ptrs_[1], amp_ptrs_[2],
-        amp_ptrs_[3], amp_ptrs_[4], amp_ptrs_[5], amp_ptrs_[6], amp_ptrs_[7], amp_ptrs_[8],
-        amp_ptrs_[9], amp_ptrs_[10], amp_ptrs_[11], amp_ptrs_[12], amp_ptrs_[13], amp_ptrs_[14],
-        amp_ptrs_[15], amp_ptrs_[16], amp_ptrs_[17], amp_ptrs_[18], amp_ptrs_[19], amp_ptrs_[20],
-        amp_ptrs_[21], amp_ptrs_[22], amp_ptrs_[23], amp_ptrs_[24], amp_ptrs_[25], amp_ptrs_[26],
-        amp_ptrs_[27], amp_ptrs_[28], amp_ptrs_[29], amp_ptrs_[30], amp_ptrs_[31], amp_ptrs_[32],
-        amp_ptrs_[33], amp_ptrs_[34], amp_ptrs_[35], amp_ptrs_[36], amp_ptrs_[37], amp_ptrs_[38],
-        amp_ptrs_[39], amp_ptrs_[40], amp_ptrs_[41], amp_ptrs_[42], amp_ptrs_[43], amp_ptrs_[44],
-        amp_ptrs_[45], amp_ptrs_[46], amp_ptrs_[47], amp_ptrs_[48], amp_ptrs_[49], amp_ptrs_[50]);
+    diis_manager_->add_entry(DT1_, DT2_, T1_, T2_);
 }
 
 void MRDSRG::diis_manager_extrapolate() {
-    diis_manager_->extrapolate(
-        51, amp_ptrs_[0], amp_ptrs_[1], amp_ptrs_[2], amp_ptrs_[3], amp_ptrs_[4], amp_ptrs_[5],
-        amp_ptrs_[6], amp_ptrs_[7], amp_ptrs_[8], amp_ptrs_[9], amp_ptrs_[10], amp_ptrs_[11],
-        amp_ptrs_[12], amp_ptrs_[13], amp_ptrs_[14], amp_ptrs_[15], amp_ptrs_[16], amp_ptrs_[17],
-        amp_ptrs_[18], amp_ptrs_[19], amp_ptrs_[20], amp_ptrs_[21], amp_ptrs_[22], amp_ptrs_[23],
-        amp_ptrs_[24], amp_ptrs_[25], amp_ptrs_[26], amp_ptrs_[27], amp_ptrs_[28], amp_ptrs_[29],
-        amp_ptrs_[30], amp_ptrs_[31], amp_ptrs_[32], amp_ptrs_[33], amp_ptrs_[34], amp_ptrs_[35],
-        amp_ptrs_[36], amp_ptrs_[37], amp_ptrs_[38], amp_ptrs_[39], amp_ptrs_[40], amp_ptrs_[41],
-        amp_ptrs_[42], amp_ptrs_[43], amp_ptrs_[44], amp_ptrs_[45], amp_ptrs_[46], amp_ptrs_[47],
-        amp_ptrs_[48], amp_ptrs_[49], amp_ptrs_[50]);
+    diis_manager_->extrapolate(T1_, T2_);
 }
 
 void MRDSRG::diis_manager_cleanup() {
-    amp_ptrs_.clear();
-    res_ptrs_.clear();
     diis_manager_->reset_subspace();
     diis_manager_->delete_diis_file();
 }

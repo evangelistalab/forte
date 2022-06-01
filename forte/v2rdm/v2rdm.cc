@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -56,8 +56,8 @@ struct dm3 {
     double val;
 };
 
-V2RDM::V2RDM(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-             std::shared_ptr<MOSpaceInfo> mo_space_info)
+V2RDM::V2RDM(psi::SharedWavefunction ref_wfn, psi::Options& options,
+             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -371,9 +371,8 @@ double V2RDM::compute_ref_energy() {
     /* Eref = sum_{m} h^{m}_{m} + 0.5 * sum_{mn} v^{mn}_{mn}
               + \sum_{uv} ( h^{u}_{v} + \sum_{m} v^{mu}_{mv} ) * D^{v}_{u}
               + 0.25 * \sum_{uvxy} v^{xy}_{uv} * D^{uv}_{xy} */
-    double Eref =
-        frozen_core_energy_ +
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    double Eref = frozen_core_energy_ + molecule_->nuclear_repulsion_energy(
+                                            reference_wavefunction_->get_dipole_field_strength());
     size_t ncore = core_mos_.size();
     size_t nactv = actv_mos_.size();
 
@@ -460,12 +459,13 @@ double V2RDM::compute_ref_energy() {
     return Eref;
 }
 
-RDMs V2RDM::reference() {
+std::shared_ptr<RDMs> V2RDM::reference() {
     std::string str = "Converting to RDMs";
     outfile->Printf("\n  %-45s ...", str.c_str());
     // if 3-RDMs are needed
     if (options_.get_str("THREEPDC") != "ZERO") {
-        RDMs return_ref(D1a_, D1b_, D2_[0], D2_[1], D2_[3], D3_[0], D3_[1], D3_[2], D3_[3]);   
+        auto return_ref = std::make_shared<RDMsSpinDependent>(D1a_, D1b_, D2_[0], D2_[1], D2_[3],
+                                                              D3_[0], D3_[1], D3_[2], D3_[3]);
         if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
             write_density_to_file();
         }
@@ -473,8 +473,7 @@ RDMs V2RDM::reference() {
         outfile->Printf("    Done.");
         return return_ref;
     } else {
-        
-        RDMs return_ref(D1a_, D1b_, D2_[0], D2_[1], D2_[3]);   
+        auto return_ref = std::make_shared<RDMsSpinDependent>(D1a_, D1b_, D2_[0], D2_[1], D2_[3]);
         if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
             write_density_to_file();
         }
@@ -554,4 +553,4 @@ void V2RDM::write_density_to_file() {
 
     outfile->Printf("    Done.");
 }
-}
+} // namespace forte

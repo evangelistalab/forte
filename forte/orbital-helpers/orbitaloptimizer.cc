@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -826,7 +826,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         C_active_ao->print();
     // std::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     // JK_fock->set_memory(psi::Process::environment.get_memory() * 0.8);
-    // JK_fock->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+    // JK_fock->set_cutoff(options_->get_double("INTS_TOLERANCE"));
     // JK_fock->initialize();
     // JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);

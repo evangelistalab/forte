@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -65,7 +65,7 @@ class SparseHamiltonian {
     /// @param screen_thresh a threshold to select which elements of H are applied to the state
     StateVector compute_on_the_fly(const StateVector& state, double screen_thresh);
 
-    /// @return timings for this class    
+    /// @return timings for this class
     std::map<std::string, double> timings() const;
 
   private:
@@ -81,10 +81,10 @@ class SparseHamiltonian {
     /// A map that holds the list of the determinants obtained after applying H
     DeterminantHashVec sigma_hash_;
     /// A vector of determinant couplings
-    std::map<Determinant,std::vector<std::pair<size_t, double>>> couplings_;
+    std::map<Determinant, std::vector<std::pair<size_t, double>>> couplings_;
     // std::vector<std::tuple<size_t, size_t, double>> couplings_;
     /// A map that stores timing information
-    std::map<std::string,double> timings_;
+    std::map<std::string, double> timings_;
 };
 
 } // namespace forte

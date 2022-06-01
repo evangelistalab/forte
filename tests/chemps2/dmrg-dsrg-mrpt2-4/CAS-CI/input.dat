@@ -1,0 +1,37 @@
+import forte
+refcasscf = -109.103502339029362
+refdsrg   = -109.259741815477554
+
+molecule N2 {
+N  0.0000  0.0000  0.0000
+N  0.0000  0.0000  2.1180
+units au
+}
+
+set {
+basis          cc-pvdz
+reference      rhf
+e_convergence  1e-12
+d_convergence  1e-8
+scf_type       pk
+ints_tolerance 0.0
+mcscf_e_convergence 1e-12
+mcscf_r_convergence 1e-6
+mcscf_diis_start    25
+restricted_docc     [1,0,0,0,0,1,0,0]
+active              [2,0,1,1,0,2,1,1]
+}
+
+ecasscf, wfn = energy("casscf", return_wfn=True)
+compare_values(refcasscf, ecasscf, 6, "CASSCF(10,8) Energy")
+
+set forte {
+int_type                  cholesky
+cholesky_tolerance        1e-10
+active_space_solver       fci
+correlation_solver        sa-mrdsrg
+dsrg_s                    0.5
+}
+
+edsrg = energy('forte', ref_wfn=wfn)
+compare_values(refdsrg, edsrg, 6, "DSRG-MRPT2/CASSCF(10,8) Energy")

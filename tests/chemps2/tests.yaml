@@ -1,0 +1,20 @@
+dmrgci:
+  short:
+    - dmrgci-1
+    - dmrgci-2
+    - dmrgci-3
+    - dmrgci-4
+dmrgscf:
+  short:
+    - dmrgscf-1
+  medium:
+    - dmrgscf-2
+  long:
+    - dmrgscf-3
+dmrg-dsrg-mrpt2:
+  short:
+    - dmrg-dsrg-mrpt2-1
+    - dmrg-dsrg-mrpt2-2
+    - dmrg-dsrg-mrpt2-4
+  medium:
+    - dmrg-dsrg-mrpt2-3
