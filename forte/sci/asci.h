@@ -147,8 +147,6 @@ class ASCI : public SelectedCIMethod {
 
     /// Order of RDM to compute
     int rdm_level_ = 1;
-    /// A Vector to store spin of each root
-    std::vector<std::pair<double, double>> root_spin_vec_;
 
     /// Timing variables
     double build_H_;

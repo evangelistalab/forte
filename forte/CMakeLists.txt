@@ -55,11 +55,11 @@ include(cmake/clang-cxx-dev-tools.cmake)
 include(cmake/git-version.cmake)
 
 # Check if we can compile with SSE4.2
-check_cxx_compiler_flag("-msse4.2" SSE42_FLAG)
-if(SSE42_FLAG)
-    message("-- Adding SSE4.2 Flag")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
-endif()
+# check_cxx_compiler_flag("-msse4.2" SSE42_FLAG)
+# if(SSE42_FLAG)
+#     message("-- Adding SSE4.2 Flag")
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
+# endif()
 add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
 if(ENABLE_CODECOV)

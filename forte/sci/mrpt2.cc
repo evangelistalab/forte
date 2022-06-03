@@ -52,7 +52,7 @@ namespace forte {
 MRPT2::MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
              psi::SharedMatrix evecs, psi::SharedVector evals, int nroot)
-    : mo_space_info_(mo_space_info), as_ints_(as_ints), reference_(reference), options_(options),
+    : reference_(reference), options_(options), as_ints_(as_ints), mo_space_info_(mo_space_info),
       evecs_(evecs), evals_(evals), nroot_(nroot) {
     outfile->Printf("\n  ==> Full EN-MRPT2 correction  <==");
     //    print_method_banner(
