@@ -102,6 +102,7 @@ class DynamicCorrelationSolver {
     std::shared_ptr<ForteOptions> foptions_;
 
     /// The CI coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
     std::vector<ambit::Tensor> ci_vectors_;
     /// Active space solver
     std::shared_ptr<ActiveSpaceSolver> as_solver_ = nullptr;
