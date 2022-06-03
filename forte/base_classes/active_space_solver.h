@@ -152,7 +152,7 @@ class ActiveSpaceSolver {
     /// Print a summary of the computation information
     void print_options();
 
-    /// Return a map of StateInfo to the number of determinant space
+    /// Return a map StateInfo -> size of the determinant space
     std::map<StateInfo, size_t> state_space_size_map() const;
 
     /// Return a map of StateInfo to the computed nroots of energies
