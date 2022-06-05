@@ -146,7 +146,10 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
     if ref_wfn is None:
         ref_type = options.get_str('REF_TYPE')
-        p4print('\n  No reference wave function provided for Forte.' f' Computing {ref_type} orbitals using Psi4 ...\n')
+        p4print(
+            '\n  No reference wave function provided for Forte.'
+            f' Computing {ref_type} orbitals using Psi4 ...\n'
+        )
 
         # no warning printing for MCSCF
         job_type = options.get_str('JOB_TYPE')
@@ -371,17 +374,23 @@ def make_ints_from_fcidump(fcidump, options, mo_space_info):
     )
 
 
-def prepare_forte_options():
+def prepare_forte_options(kwargs):
     """
     Return a ForteOptions object.
     """
-    # Get the option object
-    psi4_options = psi4.core.get_options()
-    psi4_options.set_current_module('FORTE')
-
-    # Get the forte option object
     options = forte.forte_options
-    options.get_options_from_psi4(psi4_options)
+
+    options_dict = kwargs.get('forte_options')
+
+    if options_dict is None:
+        # Get the option object
+        psi4_options = psi4.core.get_options()
+        psi4_options.set_current_module('FORTE')
+
+        # Get the forte option object
+        options.get_options_from_psi4(psi4_options)
+    else:
+        options.set_from_dict(options_dict)
 
     return options
 
@@ -468,7 +477,7 @@ def run_forte(name, **kwargs):
     # my_proc, n_nodes = my_proc_n_nodes
 
     # Build Forte options
-    options = prepare_forte_options()
+    options = prepare_forte_options(kwargs)
 
     # Print the banner
     forte.banner()
@@ -514,7 +523,8 @@ def run_forte(name, **kwargs):
 
     if (options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':
-            raise Exception('Forte: the CASSCF code cannot use integrals read' ' from a FCIDUMP file')
+            raise Exception('Forte: the CASSCF code cannot use integrals read'
+                            ' from a FCIDUMP file')
 
         casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
@@ -593,7 +603,7 @@ def gradient_forte(name, **kwargs):
     psi4.core.set_global_option('DERTYPE', 'FIRST')
 
     # Build Forte options
-    options = prepare_forte_options()
+    options = prepare_forte_options(kwargs)
 
     # Print the banner
     forte.banner()
@@ -655,8 +665,10 @@ def gradient_forte(name, **kwargs):
     ]
     max_key_size = max(len(k) for k, v in times)
     for key, value in times:
-        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} :' f' {value:12.3f} seconds')
-    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} :' f' {end - time_pre_ints:12.3f} seconds\n')
+        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} :'
+                            f' {value:12.3f} seconds')
+    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} :'
+                        f' {end - time_pre_ints:12.3f} seconds\n')
 
     # Dump orbitals if needed
     if options.get_bool('DUMP_ORBITALS'):
