@@ -374,14 +374,17 @@ def make_ints_from_fcidump(fcidump, options, mo_space_info):
     )
 
 
-def prepare_forte_options(kwargs):
+def prepare_forte_options(options_dict=None):
     """
     Return a ForteOptions object.
+
+    Parameters
+    ----------
+    options_dict : dict
+        An optional dictionary used to define the options
     """
     options = forte.forte_options
-
-    options_dict = kwargs.get('forte_options')
-
+    # if no options_dict is provided then read from psi4
     if options_dict is None:
         # Get the option object
         psi4_options = psi4.core.get_options()
@@ -477,7 +480,7 @@ def run_forte(name, **kwargs):
     # my_proc, n_nodes = my_proc_n_nodes
 
     # Build Forte options
-    options = prepare_forte_options(kwargs)
+    options = prepare_forte_options(kwargs.get('forte_options'))
 
     # Print the banner
     forte.banner()
@@ -603,7 +606,7 @@ def gradient_forte(name, **kwargs):
     psi4.core.set_global_option('DERTYPE', 'FIRST')
 
     # Build Forte options
-    options = prepare_forte_options(kwargs)
+    options = prepare_forte_options(kwargs.get('forte_options'))
 
     # Print the banner
     forte.banner()
