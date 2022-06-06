@@ -152,10 +152,19 @@ class SA_MRDSRG : public SADSRG {
     /// Update T1 using projective conditions
     void update_t1_proj();
 
-    /// Transformation matrix to orthogonalize T1 (core-actv)
-    ambit::Tensor Xca_;
-    /// Transformation matrix to orthogonalize T1 (actv-virt)
-    ambit::Tensor Xav_;
+    /// Denominator of T1 core-actv block in orthogonalized basis
+    ambit::Tensor Aca_;
+    /// Residual of T1 core-actv block update in orthogonalized basis
+    ambit::Tensor Oca_;
+    /// Denominator of T1 actv-virt block in orthogonalized basis
+    ambit::Tensor Aav_;
+    /// Residual of T1 actv-virt block update in orthogonalized basis
+    ambit::Tensor Oav_;
+
+    /// Compute core-actv block denominator for projective T1 update
+    void compute_proj_denom_ca();
+    /// Compute actv-virt block denominator for projective T1 update
+    void compute_proj_denom_av();
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();

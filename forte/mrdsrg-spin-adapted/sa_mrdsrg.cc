@@ -71,7 +71,7 @@ void SA_MRDSRG::read_options() {
     rsc_ncomm_ = foptions_->get_int("DSRG_RSC_NCOMM");
     rsc_conv_ = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
-    maxiter_ = foptions_->get_int("MAXITER");
+    maxiter_ = foptions_->get_int("DSRG_MAXITER");
     e_conv_ = foptions_->get_double("E_CONVERGENCE");
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
 
@@ -108,63 +108,14 @@ void SA_MRDSRG::startup() {
     t2_file_cwd_ = "forte.mrdsrg.adapted.t2.bin";
 
     // build transformation matrix to orthogonalize T1 excited basis
-    if (t1_type_ == "MANY_BODY") { // TODO: NEED TO CHANGE
-        auto nirrep = mo_space_info_->nirrep();
-        auto nactv = mo_space_info_->size("ACTIVE");
+    if (t1_type_ == "PROJECT") {
+        // allocate residuals in orthogonal basis
+        Oca_ = ambit::Tensor::build(tensor_type_, "Omega ca", {core_mos_.size(), Xca_.dim(1)});
+        Oav_ = ambit::Tensor::build(tensor_type_, "Omega av", {Xav_.dim(1), virt_mos_.size()});
 
-        auto& G1data = L1_.block("aa").data();
-        auto& E1data = Eta1_.block("aa").data();
-
-        auto dim_actv = mo_space_info_->dimension("ACTIVE");
-        auto P1 = std::make_shared<psi::Matrix>("1PRDM", dim_actv, dim_actv);
-        auto H1 = std::make_shared<psi::Matrix>("1HRDM", dim_actv, dim_actv);
-
-        for (size_t h = 0, offset = 0; h < nirrep; ++h) {
-            for (size_t p = 0; p < dim_actv[h]; ++p) {
-                for (size_t q = 0; q < dim_actv[h]; ++q) {
-                    P1->set(h, p, q, 0.5 * G1data[(p + offset) * nactv + q + offset]);
-                    H1->set(h, p, q, 0.5 * E1data[(p + offset) * nactv + q + offset]);
-                }
-            }
-            offset += dim_actv[h];
-        }
-
-        double threshold = 5.0e-5;
-
-        auto Uh = std::make_shared<psi::Matrix>("UP NO", dim_actv, dim_actv);
-        auto Xh = H1->canonical_orthogonalization(threshold, Uh);
-
-        auto Up = std::make_shared<psi::Matrix>("UP NO", dim_actv, dim_actv);
-        auto Xp = P1->canonical_orthogonalization(threshold, Up);
-
-        // put in ambit tensor form
-        auto dim_h = Xh->colspi();
-        size_t hsize = static_cast<size_t>(dim_h.sum());
-        Xca_ = ambit::Tensor::build(tensor_type_, "X ca", {nactv, hsize});
-        auto& Xca_data = Xca_.data();
-        for (size_t h = 0, offset_p = 0, offset_q = 0; h < nirrep; ++h) {
-            for (size_t p = 0; p < dim_actv[h]; ++p) {
-                for (size_t q = 0; q < dim_h[h]; ++q) {
-                    Xca_data[(p + offset_p) * hsize + q + offset_q] = Xh->get(h, p, q);
-                }
-            }
-            offset_p += dim_actv[h];
-            offset_q += dim_h[h];
-        }
-
-        auto dim_p = Xp->colspi();
-        size_t psize = static_cast<size_t>(dim_p.sum());
-        Xav_ = ambit::Tensor::build(tensor_type_, "X av", {nactv, psize});
-        auto& Xav_data = Xav_.data();
-        for (size_t h = 0, offset_p = 0, offset_q = 0; h < nirrep; ++h) {
-            for (size_t p = 0; p < dim_actv[h]; ++p) {
-                for (size_t q = 0; q < dim_p[h]; ++q) {
-                    Xav_data[(p + offset_p) * psize + q + offset_q] = Xp->get(h, p, q);
-                }
-            }
-            offset_p += dim_actv[h];
-            offset_q += dim_p[h];
-        }
+        // compute denominators
+        compute_proj_denom_ca();
+        compute_proj_denom_av();
     }
 }
 

@@ -398,6 +398,14 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Condition for T1 amplitudes
     std::string t1_type_;
+    /// Cutoff to remove internally contracted singles
+    double t1_proj_cutoff_;
+    /// Transformation matrix to orthogonalize T1 (core-actv)
+    ambit::Tensor Xca_;
+    /// Transformation matrix to orthogonalize T1 (actv-virt)
+    ambit::Tensor Xav_;
+    /// Build transformation matrix to orthogonalize T1
+    void build_transformations_orthogonal_t1();
 
     /// Single excitation amplitudes
     ambit::BlockedTensor T1_;

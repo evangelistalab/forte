@@ -126,6 +126,9 @@ void SADSRG::startup() {
 
     // all methods need T1 amplitudes
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+    if (t1_type_ == "PROJECT") {
+        build_transformations_orthogonal_t1();
+    }
 }
 
 void SADSRG::build_fock_from_ints() {
@@ -191,6 +194,7 @@ void SADSRG::read_options() {
     brueckner_conv_ = foptions_->get_double("BRUECKNER_CONVERGENCE");
 
     t1_type_ = foptions_->get_str("DSRG_T1_AMPS_TYPE");
+    t1_proj_cutoff_ = foptions_->get_double("DSRG_T1_AMPS_PROJ_CUTOFF");
 
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
@@ -736,6 +740,90 @@ void SADSRG::print_cumulant_summary() {
     outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
     outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
     outfile->Printf("\n    %s", dash.c_str());
+}
+
+void SADSRG::build_transformations_orthogonal_t1() {
+    auto nirrep = mo_space_info_->nirrep();
+    auto nactv = mo_space_info_->size("ACTIVE");
+    auto dim_actv = mo_space_info_->dimension("ACTIVE");
+
+    // put 1RDM in psi4 matrix form
+    auto& L1data = L1_.block("aa").data();
+    auto L1mat = std::make_shared<psi::Matrix>("1RDM", dim_actv, dim_actv);
+    for (size_t h = 0, offset = 0; h < nirrep; ++h) {
+        for (size_t p = 0; p < dim_actv[h]; ++p) {
+            for (size_t q = 0; q < dim_actv[h]; ++q) {
+                L1mat->set(h, p, q, 0.5 * L1data[(p + offset) * nactv + q + offset]);
+            }
+        }
+        offset += dim_actv[h];
+    }
+
+    // diagonalize 1RDM
+    auto U = std::make_shared<psi::Matrix>("U NO", dim_actv, dim_actv);
+    auto s = std::make_shared<psi::Vector>("s", dim_actv);
+    L1mat->diagonalize(U, s, descending);
+
+    // apply linear dependency cutoff
+    psi::Dimension rank_part(nirrep), rank_hole(nirrep);
+    for (int h = 0; h < nirrep; ++h) {
+        if (!dim_actv[h])
+            continue;
+        auto keep_part = 0, keep_hole = 0;
+        for (int i = 0; i < dim_actv[h]; ++i) {
+            keep_part += (s->get(h, i) > t1_proj_cutoff_ ? 1 : 0);
+            keep_hole += ((1.0 - s->get(h, i)) > t1_proj_cutoff_ ? 1 : 0);
+        }
+        rank_part[h] = keep_part;
+        rank_hole[h] = keep_hole;
+    }
+
+    // compute transformation matrix X = U s^-1/2
+    auto Xp = std::make_shared<psi::Matrix>("Xp = U n^-1/2", dim_actv, rank_part);
+    for (int h = 0; h < nirrep; ++h) {
+        if (!dim_actv[h] or !rank_part[h])
+            continue;
+        for (int i = 0; i < rank_part[h]; ++i) {
+            auto col = U->get_column(h, i);
+            col->scale(pow(s->get(h, i), -0.5));
+            Xp->set_column(h, i, col);
+        }
+    }
+
+    auto Xh = std::make_shared<psi::Matrix>("Xh = U (1 - n)^-1/2", dim_actv, rank_hole);
+    for (int h = 0; h < nirrep; ++h) {
+        if (!dim_actv[h] or !rank_hole[h])
+            continue;
+        for (int i = 0; i < rank_hole[h]; ++i) {
+            auto col = U->get_column(h, dim_actv[h] - i - 1);
+            col->scale(pow(1.0 - s->get(h, dim_actv[h] - i - 1), -0.5));
+            Xh->set_column(h, i, col);
+        }
+    }
+
+    // put transformation matrix in ambit form
+    size_t psize = rank_part.sum();
+    size_t hsize = rank_hole.sum();
+
+    Xav_ = ambit::Tensor::build(tensor_type_, "Xav", {nactv, psize});
+    Xca_ = ambit::Tensor::build(tensor_type_, "Xca", {nactv, hsize});
+
+    auto& Xav_data = Xav_.data();
+    auto& Xca_data = Xca_.data();
+
+    for (size_t h = 0, offset_p = 0, offset_part = 0, offset_hole = 0; h < nirrep; ++h) {
+        for (size_t p = 0; p < dim_actv[h]; ++p) {
+            for (size_t q = 0; q < rank_part[h]; ++q) {
+                Xav_data[(p + offset_p) * psize + q + offset_part] = Xp->get(h, p, q);
+            }
+            for (size_t q = 0; q < rank_hole[h]; ++q) {
+                Xca_data[(p + offset_p) * hsize + q + offset_part] = Xh->get(h, p, q);
+            }
+        }
+        offset_p += dim_actv[h];
+        offset_part += rank_part[h];
+        offset_hole += rank_hole[h];
+    }
 }
 
 std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {

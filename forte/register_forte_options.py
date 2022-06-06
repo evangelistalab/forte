@@ -755,6 +755,9 @@ def register_dsrg_options(options):
     options.add_str("DSRG_T1_AMPS_TYPE", "MANY_BODY", ["MANY_BODY", "PROJECT"],
                     "T1 conditions for MRDSRG")
 
+    options.add_double("DSRG_T1_AMPS_PROJ_CUTOFF", 0.05,
+                       "Cutoff for removal linear dependencies of internally contracted singles")
+
     options.add_bool("DSRG_BRUECKNER", False,
                      "Rotate orbitals such that MRDSRG T1 amplitudes become zero")
 
