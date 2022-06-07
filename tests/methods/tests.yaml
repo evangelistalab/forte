@@ -148,7 +148,7 @@ dsrg-mrpt2:
       - dsrg-mrpt2-13
       - aci-dsrg-mrpt2-3
       - dsrg-mrpt2-fcidump-1
-      # - dsrg-mrpt2-grad-findiff-1
+      - dsrg-mrpt2-grad-findiff-1
    medium:
       - dsrg-mrpt2-1
       - dsrg-mrpt2-2
