@@ -526,8 +526,7 @@ def run_forte(name, **kwargs):
 
     if (options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':
-            raise Exception('Forte: the CASSCF code cannot use integrals read'
-                            ' from a FCIDUMP file')
+            raise Exception('Forte: the CASSCF code cannot use integrals read from a FCIDUMP file')
 
         casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()

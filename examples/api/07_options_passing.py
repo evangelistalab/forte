@@ -1,5 +1,5 @@
-# examples/api/02_rohf_fci.py
-"""Example of a FCI computation on the triplet state of methylene using ROHF orbitals"""
+# examples/api/07_options_passing.py
+"""Example of passing options as a dictionary in an energy call"""
 
 import numpy as np
 import psi4
@@ -29,10 +29,8 @@ psi4.set_options(
 efci = psi4.energy('forte')
 np.isclose(efci,-38.924726774489)
 
-psi4.set_options({'forte__multiplicity': 1, 'forte__root_sym': 0, 'forte__nroot': 2})
-efci = psi4.energy('forte')
+efci = psi4.energy('forte',forte_options={'multiplicity': 1, 'root_sym': 0, 'nroot': 2})
 np.isclose(efci,-38.866616413802)
 
-psi4.set_options({'forte__multiplicity': 1, 'forte__root_sym': 0, 'forte__nroot': 2, 'forte__root': 1})
-efci = psi4.energy('forte')
+efci = psi4.energy('forte',forte_options={'multiplicity': 1, 'root_sym': 0, 'nroot': 2, 'root' : 1})
 np.isclose(efci,-38.800424868719)
