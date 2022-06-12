@@ -87,6 +87,9 @@ class CASSCF_ORB_GRAD {
     /// Return the generalized Fock matrix
     psi::SharedMatrix fock() { return Fock_; }
 
+    /// Build and return the generalized Fock matrix
+    psi::SharedMatrix fock(std::shared_ptr<RDMs> rdms);
+
     /// Canonicalize the final orbitals
     void canonicalize_final(const psi::SharedMatrix& U);
 

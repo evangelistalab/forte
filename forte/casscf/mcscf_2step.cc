@@ -355,12 +355,18 @@ double MCSCF_2STEP::compute_energy() {
         print_macro_iteration(history);
     }
 
+    // perform final CI using converged orbitals
+    energy_ = diagonalize_hamiltonian(
+        as_solver, cas_grad.active_space_ints(),
+        {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+
     if (ints_->integral_type() != Custom) {
         auto final_orbs = options_->get_str("CASSCF_FINAL_ORBITAL");
 
         if (final_orbs != "UNSPECIFIED" or der_type_ == "FIRST") {
             // fix orbitals for redundant pairs
-            auto F = cas_grad.fock();
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
+            auto F = cas_grad.fock(rdms);
             ints_->set_fock_matrix(F, F);
 
             SemiCanonical semi(mo_space_info_, ints_, options_);
@@ -368,13 +374,14 @@ double MCSCF_2STEP::compute_energy() {
 
             cas_grad.canonicalize_final(semi.Ua());
 
+            // TODO: need to implement the transformation of CI coefficients due to orbital changes
             // re-diagonalize Hamiltonian
-            if (not is_single_reference()) {
-                auto fci_ints = cas_grad.active_space_ints();
-                energy_ = diagonalize_hamiltonian(
-                    as_solver, fci_ints,
-                    {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
-            }
+            // if (not is_single_reference()) {
+            //     auto fci_ints = cas_grad.active_space_ints();
+            //     energy_ = diagonalize_hamiltonian(
+            //         as_solver, fci_ints,
+            //         {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+            // }
         }
 
         // pass to wave function
