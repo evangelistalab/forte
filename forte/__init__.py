@@ -59,6 +59,3 @@ if 'psi4' in sys.modules:
     psi_options = psi4.core.get_options()
     psi_options.set_current_module('FORTE')
     forte_options.push_options_to_psi4(psi_options)
-
-    # Set options to psi4 values
-    forte.register_psi_options(psi_options, forte_options)

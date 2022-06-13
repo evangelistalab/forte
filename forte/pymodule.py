@@ -384,8 +384,6 @@ def prepare_forte_options():
     options = forte.forte_options
     options.get_options_from_psi4(psi4_options)
 
-    forte.register_psi_options(psi4_options, options)
-
     return options
 
 
