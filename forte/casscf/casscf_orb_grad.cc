@@ -43,8 +43,9 @@
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libpsio/psio.hpp"
 
-#include "helpers/printing.h"
+#include "helpers/helpers.h"
 #include "helpers/lbfgs/lbfgs.h"
+#include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
@@ -663,24 +664,13 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
 
 psi::SharedMatrix CASSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
     // put spin-summed 1RDM to psi4 Matrix
-    auto rdm1 = std::make_shared<psi::Matrix>("1RDM", nactvpi_, nactvpi_);
-    auto D1 = rdms->SF_G1();
-    const auto& d1_data = D1.data();
-    for (int h = 0, offset = 0; h < nirrep_; ++h) {
-        for (int u = 0; u < nactvpi_[h]; ++u) {
-            size_t nu = u + offset;
-            for (int v = 0; v < nactvpi_[h]; ++v) {
-                rdm1->set(h, u, v, d1_data[nu * nactv_ + v + offset]);
-            }
-        }
-        offset += nactvpi_[h];
-    }
+    auto rdm1 = tensor_to_matrix(rdms->SF_G1(), nactvpi_);
 
     // use ForteIntegrals to build Fock
-    auto Fock = std::make_shared<psi::Matrix>("Fock", Fock_->rowspi(), Fock_->colspi());
     auto Ftuple = ints_->make_fock_inactive(psi::Dimension(nirrep_), ndoccpi_);
-    std::tie(Fock, std::ignore, std::ignore) = Ftuple;
+    auto Fock = std::get<0>(Ftuple);
     Fock->add(ints_->make_fock_active_restricted(rdm1));
+    Fock->set_name("Fock");
 
     return Fock;
 }
