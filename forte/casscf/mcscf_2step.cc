@@ -232,6 +232,7 @@ double MCSCF_2STEP::compute_energy() {
         // start iterations
         lbfgs_param->maxiter = micro_miniter_;
         bool dump_wfn = ci_type_ == "DETCI";
+        bool skip_de_conv = ci_type_.find("DMRG") != std::string::npos;
         std::vector<CASSCF_HISTORY> history;
 
         for (int macro = 1; macro <= maxiter_; ++macro) {
@@ -276,12 +277,12 @@ double MCSCF_2STEP::compute_energy() {
                 break;
             }
 
-            bool is_e_conv =
-                std::fabs(de) < e_conv_ and std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_;
+            bool is_de_conv = skip_de_conv or std::fabs(de) < e_conv_;
+            bool is_e_conv = std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_;
             bool is_g_conv = g_rms < g_conv_ or lbfgs.converged();
             bool is_diis_conv = !do_diis_ or macro < diis_start_ + diis_min_vec_ or
                                 diis_manager.subspace_size() > 1;
-            if (is_e_conv and is_g_conv and is_diis_conv) {
+            if (is_de_conv and is_e_conv and is_g_conv and is_diis_conv) {
                 psi::outfile->Printf(
                     "\n\n  A miracle has come to pass: MCSCF iterations have converged!");
                 converged = true;
