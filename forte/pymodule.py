@@ -384,6 +384,17 @@ def prepare_forte_options():
     options = forte.forte_options
     options.get_options_from_psi4(psi4_options)
 
+    # Set options to psi4 values
+    options.add_double("INTS_TOLERANCE",
+                       psi4_options.get_double("INTS_TOLERANCE"),
+                       "Schwarz screening threshold")
+    options.add_double("DF_FITTING_CONDITION",
+                       psi4_options.get_double("DF_FITTING_CONDITION"),
+                       "Threshold for DF fitting condition")
+    options.add_double("CHOLESKY_TOLERANCE",
+                       psi4_options.get_double("CHOLESKY_TOLERANCE"),
+                       "The tolerance for Cholesky integrals")
+
     return options
 
 
