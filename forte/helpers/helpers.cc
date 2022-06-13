@@ -114,7 +114,7 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
 
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     if (nele == 0)
-        return {0, "B"};
+        return {0.0, "B"};
 
     // map the size
     std::map<std::string, double> to_XB;
