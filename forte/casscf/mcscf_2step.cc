@@ -395,6 +395,11 @@ double MCSCF_2STEP::compute_energy() {
 
         // for nuclear gradient
         if (der_type_ == "FIRST") {
+            // TODO: remove this re-diagonalization if CI transformation is impelementd
+            diagonalize_hamiltonian(
+                as_solver, cas_grad.active_space_ints(),
+                {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+
             // recompute gradient due to canonicalization
             rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
             cas_grad.set_rdms(rdms);
