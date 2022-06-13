@@ -362,6 +362,9 @@ class CASSCF_ORB_GRAD {
     /// Grab part of the orbital coefficients
     psi::SharedMatrix C_subset(const std::string& name, psi::SharedMatrix C,
                                psi::Dimension dim_start, psi::Dimension dim_end);
+
+    /// Threshold for numerical zero
+    double numerical_zero_ = 1.0e-15;
 };
 } // namespace forte
 

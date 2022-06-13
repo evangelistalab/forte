@@ -708,7 +708,7 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     dR->subtract(R_);
 
     // incoming x consistent with R_, no need to update orbitals
-    if (dR->absmax() < 1.0e-15)
+    if (dR->absmax() < numerical_zero_)
         return false;
 
     // officially save progress of dR
