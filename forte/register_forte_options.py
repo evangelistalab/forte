@@ -1,4 +1,24 @@
-# -*- coding: utf-8 -*-
+def register_psi_options(psi_options, forte_options):
+    forte_options.add_str("BASIS", psi_options.get_str("BASIS"), "The primary basis set")
+    forte_options.add_str("BASIS_RELATIVISTIC",
+                          psi_options.get_str("BASIS_RELATIVISTIC"),
+                          "The basis set used to run relativistic computations")
+    forte_options.add_str("DF_INTS_IO",
+                          psi_options.get_str("DF_INTS_IO"),
+                          ["NONE", "SAVE", "LOAD"],
+                          "IO caching for CP corrections")
+    forte_options.add_str("DF_BASIS_MP2",
+                          psi_options.get_str("DF_BASIS_MP2"),
+                          "Auxiliary basis set for density fitting computations")
+    forte_options.add_double("INTS_TOLERANCE",
+                             psi_options.get_double("INTS_TOLERANCE"),
+                             "Schwarz screening threshold")
+    forte_options.add_double("DF_FITTING_CONDITION",
+                             psi_options.get_double("DF_FITTING_CONDITION"),
+                             "Threshold for DF fitting condition")
+    forte_options.add_double("CHOLESKY_TOLERANCE",
+                             psi_options.get_double("CHOLESKY_TOLERANCE"),
+                             "The tolerance for Cholesky integrals")
 
 
 def register_forte_options(options):
@@ -24,7 +44,6 @@ def register_forte_options(options):
     register_localize_options(options)
     register_casscf_options(options)
     register_old_options(options)
-    register_psi_options(options)
     register_gas_options(options)
     register_dmrg_options(options)
 
@@ -944,13 +963,6 @@ def register_old_options(options):
     )
     #    /*- The end value of the integration parameter s -*/
     options.add_double("SRG_SMAX", 10.0, "The end value of the integration parameter s")
-
-
-def register_psi_options(options):
-    options.add_str('BASIS', '', 'The primary basis set')
-    options.add_str('BASIS_RELATIVISTIC', '', 'The basis set used to run relativistic computations')
-    options.add_str("DF_INTS_IO", "NONE", ['NONE', 'SAVE', 'LOAD'], 'IO caching for CP corrections')
-    options.add_str('DF_BASIS_MP2', '', 'Auxiliary basis set for density fitting computations')
 
 
 def register_gas_options(options):

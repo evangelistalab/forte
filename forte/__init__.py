@@ -61,12 +61,4 @@ if 'psi4' in sys.modules:
     forte_options.push_options_to_psi4(psi_options)
 
     # Set options to psi4 values
-    forte_options.add_double("INTS_TOLERANCE",
-                             psi_options.get_double("INTS_TOLERANCE"),
-                             "Schwarz screening threshold")
-    forte_options.add_double("DF_FITTING_CONDITION",
-                             psi_options.get_double("DF_FITTING_CONDITION"),
-                             "Threshold for DF fitting condition")
-    forte_options.add_double("CHOLESKY_TOLERANCE",
-                             psi_options.get_double("CHOLESKY_TOLERANCE"),
-                             "The tolerance for Cholesky integrals")
+    forte.register_psi_options(psi_options, forte_options)

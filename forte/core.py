@@ -50,10 +50,13 @@ def clean_options():
     # register options defined in Forte in the forte_options object
     forte.register_forte_options(forte.forte_options)
 
-    # Push the options defined in forte_options to psi
+    # push the options defined in forte_options to psi
     psi_options = psi4.core.get_options()
     psi_options.set_current_module('FORTE')
     forte.forte_options.push_options_to_psi4(psi_options)
+
+    # set some psi options to forte
+    forte.register_psi_options(psi_options, forte.forte_options)
 
 
 class ForteManager(object):
