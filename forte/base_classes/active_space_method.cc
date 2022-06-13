@@ -363,6 +363,7 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
     std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
     std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
+
     print_h2("Transition Reduced Density Matrix Analysis for " + title);
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         auto root1 = root_list[i].first;
