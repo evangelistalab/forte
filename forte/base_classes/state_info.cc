@@ -69,7 +69,7 @@ const std::vector<size_t>& StateInfo::gas_min() const { return gas_min_; }
 const std::vector<size_t>& StateInfo::gas_max() const { return gas_max_; }
 
 bool StateInfo::operator<(const StateInfo& rhs) const {
-    // Make sure the roots are in correct energy order
+    // Make sure the roots are in increasing energy order for core-excited state calcualtions
     if ((gas_min_ == rhs.gas_min_) && (gas_max_ == rhs.gas_max_)) {
         return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) <
                std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
