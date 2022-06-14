@@ -1,12 +1,12 @@
 #! Test AO Subspace regular expression on 3d orbitals
 
-refscf = -1646.626167484472944
+refscf = -1646.626157157988700
 ref_occ = {
     'RESTRICTED_DOCC': np.array([14, 6, 8, 11]),
     'ACTIVE': np.array([7, 3, 4, 4]),
     'RESTRICTED_UOCC': np.array([33, 19, 23, 27])
 }
-reffci = -1646.665078750586872
+reffci = -1646.665990803128580
 
 import forte
 memory 2 gb
@@ -42,11 +42,13 @@ assign Fe cc-pvdz
 }
 
 set {
-scf_type            df
-reference           rhf
-docc                [18,7,10,13]
-e_convergence       8
-d_convergence       8
+scf_type             df
+reference            rhf
+docc                 [18,7,10,13]
+e_convergence        8
+d_convergence        8
+df_fitting_condition 1.0e-15
+ints_tolerance       1.0e-15
 }
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, Escf, 7, "SCF energy")

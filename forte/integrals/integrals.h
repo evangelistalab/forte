@@ -600,6 +600,11 @@ class Psi4Integrals : public ForteIntegrals {
 
   protected:
     void freeze_core_orbitals() override;
+
+    // threshold for DF fitting condition (Psi4)
+    double df_fitting_cutoff_;
+    // threshold for Schwarz cutoff (Psi4)
+    double schwarz_cutoff_;
 };
 
 } // namespace forte

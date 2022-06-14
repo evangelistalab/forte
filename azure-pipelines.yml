@@ -23,7 +23,7 @@ jobs:
         APT_INSTALL: 'gfortran'
         ENABLE_CHEMPS2: 'ON'
 
-      gcc_py37_orb128:
+      gcc_py38_orb128:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
