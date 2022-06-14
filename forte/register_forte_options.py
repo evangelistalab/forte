@@ -570,8 +570,6 @@ def register_integral_options(options):
         'The number of singly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.'
     )
 
-    options.add_double("CHOLESKY_TOLERANCE", 1.0e-6, "The tolerance for cholesky integrals")
-    options.add_double("INTS_TOLERANCE", 1.0e-12, "The tolerance for cholesky integrals")
     options.add_bool("PRINT_INTS", False, "Print the one- and two-electron integrals?")
 
 
@@ -725,7 +723,7 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_MRPT3_BATCHED", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
-    options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+    options.add_bool("IGNORE_MEMORY_ERRORS", False, "Continue running DSRG-MRPT3 even if memory exceeds")
 
     options.add_int(
         "DSRG_DIIS_START", 2, "Iteration cycle to start adding error vectors for"
@@ -966,9 +964,11 @@ def register_old_options(options):
 def register_psi_options(options):
     options.add_str('BASIS', '', 'The primary basis set')
     options.add_str('BASIS_RELATIVISTIC', '', 'The basis set used to run relativistic computations')
-    options.add_double("INTS_TOLERANCE", 1.0E-12, 'Schwarz screening threshold')
     options.add_str("DF_INTS_IO", "NONE", ['NONE', 'SAVE', 'LOAD'], 'IO caching for CP corrections')
     options.add_str('DF_BASIS_MP2', '', 'Auxiliary basis set for density fitting computations')
+    options.add_double("INTS_TOLERANCE", 1.0e-12, "Schwarz screening threshold")
+    options.add_double("DF_FITTING_CONDITION", 1.0e-10, "Eigenvalue threshold for RI basis")
+    options.add_double("CHOLESKY_TOLERANCE", 1.0e-6, "Tolerance for Cholesky integrals")
 
 
 def register_gas_options(options):

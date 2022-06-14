@@ -175,7 +175,8 @@ class MolecularModel(Model):
         if self.int_type == 'DF':
             import psi4
             aux_basis = psi4.core.BasisSet.build(
-                self.molecule, 'DF_BASIS_MP2', self.corr_aux_basis, 'RIFIT', self.basis
+                self.molecule, 'DF_BASIS_MP2', self.corr_aux_basis, 'RIFIT', self.basis,
+                puream=data.psi_wfn.basisset().has_puream()
             )
             data.psi_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
         # get the appropriate integral object

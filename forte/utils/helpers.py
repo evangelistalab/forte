@@ -213,7 +213,7 @@ def prepare_forte_objects(
     if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(
             wfn.molecule(), 'DF_BASIS_MP2', psi4.core.get_global_option('DF_BASIS_MP2'), 'RIFIT',
-            psi4.core.get_global_option('BASIS')
+            psi4.core.get_global_option('BASIS'), puream=wfn.basisset().has_puream()
         )
         wfn.set_basisset('DF_BASIS_MP2', aux_basis)
 
