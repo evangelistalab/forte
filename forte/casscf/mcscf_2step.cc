@@ -376,13 +376,6 @@ double MCSCF_2STEP::compute_energy() {
             cas_grad.canonicalize_final(semi.Ua());
 
             // TODO: need to implement the transformation of CI coefficients due to orbital changes
-            // re-diagonalize Hamiltonian
-            // if (not is_single_reference()) {
-            //     auto fci_ints = cas_grad.active_space_ints();
-            //     energy_ = diagonalize_hamiltonian(
-            //         as_solver, fci_ints,
-            //         {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
-            // }
         }
 
         // pass to wave function
@@ -397,9 +390,11 @@ double MCSCF_2STEP::compute_energy() {
         // for nuclear gradient
         if (der_type_ == "FIRST") {
             // TODO: remove this re-diagonalization if CI transformation is impelementd
-            diagonalize_hamiltonian(
-                as_solver, cas_grad.active_space_ints(),
-                {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+            if (not is_single_reference()) {
+                diagonalize_hamiltonian(
+                    as_solver, cas_grad.active_space_ints(),
+                    {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+            }
 
             // recompute gradient due to canonicalization
             rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
