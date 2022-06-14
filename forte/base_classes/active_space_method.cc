@@ -358,8 +358,6 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // Doing SVD for transition reduced density matrix
-
-    // Several necessary matrix and constants for LAPACK SVD
     std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
     std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
     std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));

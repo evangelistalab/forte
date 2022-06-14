@@ -71,9 +71,8 @@ const std::vector<size_t>& StateInfo::gas_max() const { return gas_max_; }
 bool StateInfo::operator<(const StateInfo& rhs) const {
     // Make sure the roots are in correct energy order
     if ((gas_min_ == rhs.gas_min_) && (gas_max_ == rhs.gas_max_)) {
-        return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_) <
-               std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_,
-                        rhs.gas_min_, rhs.gas_max_);
+        return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) <
+               std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
     } else if (gas_max_ == rhs.gas_max_) {
         return gas_min_ > rhs.gas_min_;
     } else {
