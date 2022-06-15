@@ -35,6 +35,7 @@ import pathlib
 import numpy as np
 import psi4
 import forte
+from .register_forte_options import *
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
@@ -393,6 +394,11 @@ def prepare_forte_options(options_dict=None):
         # Get the forte option object
         options.get_options_from_psi4(psi4_options)
     else:
+        psi4.core.print_out(
+            f'\n  Forte will use options passed as a dictionary. Option read from psi4 will be ignored\n'
+        )
+        options = forte.ForteOptions()
+        register_forte_options(options)
         options.set_from_dict(options_dict)
 
     return options

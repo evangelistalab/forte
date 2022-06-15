@@ -21,6 +21,13 @@ set {
   e_convergence 12
 }
 
+set forte {
+  restricted_docc [1,0,0,0]
+  active [3,0,1,1]
+  root_sym 1
+  ms 1.0
+}
+
 energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 

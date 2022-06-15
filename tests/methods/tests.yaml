@@ -4,6 +4,9 @@
 # different types of tests (short, long, unused). This is done so that the
 # test script can run certain subsets of all tests.
 #
+api:
+   short:
+      - pass_options
 aci:
    short:
       - aci-2
