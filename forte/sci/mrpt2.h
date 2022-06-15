@@ -57,10 +57,10 @@ class MRPT2 {
     std::vector<double> compute_energy();
 
   private:
-    // The active space integrals
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
     // The options (needed only for memory/binning)
     std::shared_ptr<ForteOptions> options_;
+    // The active space integrals
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
     // MoSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     // The sCI expansion coefficients

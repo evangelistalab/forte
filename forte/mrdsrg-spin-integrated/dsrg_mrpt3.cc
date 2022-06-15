@@ -1648,7 +1648,7 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector4("Reference", dm_ref_);
     print_vector4("DSRG-MRPT2", Mbar0_pt2_);
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
-    double t = print_vector4("DSRG-MRPT3", Mbar0_);
+    print_vector4("DSRG-MRPT3", Mbar0_);
 
     auto dipole_array = std::make_shared<Matrix>(1, 3);
     dipole_array->set(0, 0, Mbar0_[0] + dm_nuc_[0]);

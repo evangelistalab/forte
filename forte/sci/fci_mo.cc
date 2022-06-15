@@ -343,16 +343,16 @@ std::vector<double> FCI_MO::compute_ss_energies() {
     }
     print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
-//    if (integral_->integral_type() != Custom) {
-//        // compute dipole moments
-//        compute_permanent_dipole();
-//
-//        // compute oscillator strength
-//        if (nroot_ > 1) {
-//            compute_transition_dipole();
-//            compute_oscillator_strength();
-//        }
-//    }
+    //    if (integral_->integral_type() != Custom) {
+    //        // compute dipole moments
+    //        compute_permanent_dipole();
+    //
+    //        // compute oscillator strength
+    //        if (nroot_ > 1) {
+    //            compute_transition_dipole();
+    //            compute_oscillator_strength();
+    //        }
+    //    }
 
     double Eref = eigen_[root_].second;
     Eref_ = Eref;
@@ -1930,7 +1930,6 @@ FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rd
     psi::SharedMatrix evecs = prepare_for_rdm();
 
     std::vector<size_t> dim6(6, nactv_);
-    bool do_3rdm = (max_rdm_level == 3) and (options_->get_str("THREEPDC") != "ZERO");
 
     for (auto& roots : root_list) {
         int root1 = roots.first;
@@ -2070,8 +2069,6 @@ void FCI_MO::build_dets321() {
         const auto& bvir = detI.get_beta_vir(nactv_);
         auto naocc = aocc.size();
         auto nbocc = bocc.size();
-        auto navir = avir.size();
-        auto nbvir = bvir.size();
 
         // u alpha
         for (size_t _u = 0; _u < naocc; ++_u) {

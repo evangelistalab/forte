@@ -139,8 +139,8 @@ class ActiveSpaceMethod {
     /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
     /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
     virtual std::vector<double>
-    compute_complementary_H2caa_overlap(const std::vector<size_t>& roots, ambit::Tensor Tbra,
-                                        ambit::Tensor Tket) {
+    compute_complementary_H2caa_overlap(const std::vector<size_t>& /*roots*/,
+                                        ambit::Tensor /*Tbra*/, ambit::Tensor /*Tket*/) {
         throw std::runtime_error(
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }

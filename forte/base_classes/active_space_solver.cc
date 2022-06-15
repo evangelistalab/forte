@@ -361,7 +361,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         state_weights_map[state_this] = weights;
     } else {
         double sum_of_weights = 0.0;
-        size_t nstates = 0;
         size_t nentry = avg_state.size();
         for (size_t i = 0; i < nentry; ++i) {
             py::list avg_state_list = avg_state[i];
@@ -462,7 +461,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
                                  irrep_label, gas_min, gas_max);
             state_weights_map[state_this] = weights;
-            nstates += nstates_this;
         }
 
         // normalize weights

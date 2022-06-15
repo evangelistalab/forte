@@ -325,7 +325,6 @@ bool RDMs::_bypass_rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub,
     auto nactv = Ua.dim(0);
     const auto& Ua_data = Ua.data();
     const auto& Ub_data = Ub.data();
-    auto threshold = 1.0e-12;
 
     for (size_t i = 0; i < nactv; ++i) {
         auto va_ii = std::fabs(1.0 - std::fabs(Ua_data[i * nactv + i]));

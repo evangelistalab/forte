@@ -4,6 +4,9 @@
 # different types of tests (short, long, unused). This is done so that the
 # test script can run certain subsets of all tests.
 #
+api:
+   short:
+      - pass_options
 aci:
    short:
       - aci-2
@@ -148,7 +151,7 @@ dsrg-mrpt2:
       - dsrg-mrpt2-13
       - aci-dsrg-mrpt2-3
       - dsrg-mrpt2-fcidump-1
-      # - dsrg-mrpt2-grad-findiff-1
+      - dsrg-mrpt2-grad-findiff-1
    medium:
       - dsrg-mrpt2-1
       - dsrg-mrpt2-2
@@ -161,13 +164,13 @@ dsrg-mrpt2:
       - aci-dsrg-mrpt2-2
       - aci-dsrg-mrpt2-4
       - dsrg-mrpt2-10-CO-fcidump
-      # - dsrg-mrpt2-opt-findiff-1
+      - dsrg-mrpt2-opt-findiff-1
    long:
       - dsrg-mrpt2-3
       - dsrg-mrpt2-4
       - dsrg-mrpt2-12-localized-actv
       - aci-dsrg-mrpt2-5
-      # - dsrg-mrpt2-opt-findiff-2
+      - dsrg-mrpt2-opt-findiff-2
    unused:
       - dsrg-mrpt2-uno
 dsrg-mrpt3:
