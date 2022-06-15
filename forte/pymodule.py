@@ -673,10 +673,8 @@ def gradient_forte(name, **kwargs):
     ]
     max_key_size = max(len(k) for k, v in times)
     for key, value in times:
-        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} :'
-                            f' {value:12.3f} seconds')
-    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} :'
-                        f' {end - time_pre_ints:12.3f} seconds\n')
+        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} : {value:12.3f} seconds')
+    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} : {end - time_pre_ints:12.3f} seconds\n')
 
     # Dump orbitals if needed
     if options.get_bool('DUMP_ORBITALS'):
