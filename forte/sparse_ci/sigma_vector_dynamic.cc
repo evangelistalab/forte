@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -672,7 +672,6 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const String& detIa,
     size_t limit = H_IJ_list_thread_limit_[task_id];
     String Ib;
     String Jb;
-    String IJb;
 
     size_t group_num_elements = 0;
     for (const auto& detJa : sorted_half_dets) {

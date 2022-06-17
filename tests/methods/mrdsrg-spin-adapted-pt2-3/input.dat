@@ -1,10 +1,10 @@
 import forte
 
 memory 500 mb
-Ecas_psi4_jk  = -229.495450424144593
-Ecas_forte_jk = -229.495450424145076
-Ept2_ur       = -230.143766443102606
-Ept2_pr       = -230.150511595148799
+Ecas_psi4_jk  = -229.495450424153915
+Ecas_forte_jk = -229.495450424152438
+Ept2_ur       = -230.143766445112647
+Ept2_pr       = -230.150511597031681
 
 molecule pbenzyne{
   0 1
@@ -30,6 +30,7 @@ set globals{
   scf_type               df
   d_convergence          8
   e_convergence          12
+  ints_tolerance         0.0
   mcscf_type             df
   mcscf_e_convergence    12
   mcscf_r_convergence    8
@@ -42,7 +43,7 @@ set globals{
 Escf, wfn = energy('scf', return_wfn=True)
 
 set forte{
-  job_type               casscf
+  job_type               mcscf_two_step
   casscf_ci_solver       fci
   restricted_docc        [5,3,0,0,0,0,4,4]
   active                 [1,0,1,2,1,2,1,0]
@@ -52,6 +53,7 @@ set forte{
   casscf_e_convergence   1e-12
   int_type               df
   fci_maxiter            50
+  casscf_final_orbital   unspecified
 }
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(Ecas_forte_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy")
@@ -70,9 +72,10 @@ set forte{
   r_convergence          9
   int_type               diskdf
   fci_maxiter            50
+  semi_canonical_mix_inactive true
 }
 energy('forte', ref_wfn=wfn)
 Eupt2 = variable("UNRELAXED ENERGY")
 Eprpt2 = variable("PARTIALLY RELAXED ENERGY")
-compare_values(Ept2_ur, Eupt2, 9, "DSRG-MRPT2 unrelaxed energy")
-compare_values(Ept2_pr, Eprpt2, 9, "DSRG-MRPT2 partially relaxed energy")
+compare_values(Ept2_ur, Eupt2, 8, "DSRG-MRPT2 unrelaxed energy")
+compare_values(Ept2_pr, Eprpt2, 8, "DSRG-MRPT2 partially relaxed energy")

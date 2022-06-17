@@ -31,29 +31,29 @@ import forte
 import numpy as np
 
 
-def read_orbitals():
+def read_orbitals(filename='forte_Ca.npz'):
     """ Read orbitals from file. """
-    psi4.core.print_out("\n\n  Forte: Read orbitals from file forte_Ca.npz ...")
+    psi4.core.print_out(f"\n\n  Forte: Read orbitals from file {filename} ...")
     try:
-        Ca_loaded = np.load('forte_Ca.npz')
+        Ca_loaded = np.load(filename)
         nirrep = len(Ca_loaded.files)
         Ca_list = [Ca_loaded[f'arr_{i}'] for i in range(nirrep)]  # to list
         Ca_mat = psi4.core.Matrix.from_array(Ca_list)
         psi4.core.print_out(" Done\n")
         return Ca_mat
     except FileNotFoundError:
-        psi4.core.print_out(f" File NOT found!\n")
+        psi4.core.print_out(f" File {filename} NOT found!\n")
         return None
 
 
-def dump_orbitals(wfn):
+def dump_orbitals(wfn, filename='forte_Ca.npz'):
     """ Dump orbitals to file. """
-    psi4.core.print_out("\n\n  Forte: Dump orbitals to file forte_Ca.npz ...")
+    psi4.core.print_out(f"\n\n  Forte: Dump orbitals to file filename ...")
 
     Ca = wfn.Ca()
     Ca = [Ca.to_array()] if wfn.nirrep() == 1 else Ca.to_array()
 
-    with open('forte_Ca.npz', 'wb') as f:
+    with open(filename, 'wb') as f:
         np.savez_compressed(f, *Ca)
 
     psi4.core.print_out(" Done\n")
@@ -69,24 +69,23 @@ def orbital_projection(ref_wfn, options, mo_space_info):
 
     Return a Forte MOSpaceInfo object
     """
-    # parse the subspace planes for pi orbitals
-    from .aosubspace import parse_subspace_pi_planes
-    pi_planes = parse_subspace_pi_planes(ref_wfn.molecule(), options.get_list("SUBSPACE_PI_PLANES"))
-
-    # Create the AO subspace projector
-    ps = forte.make_aosubspace_projector(ref_wfn, options, pi_planes)
-
-    # Apply the projector to rotate orbitals
     if options.get_bool("AVAS"):
+        # Find the subspace projector
+        # - Parse the subspace planes for pi orbitals
+        from .aosubspace import parse_subspace_pi_planes
+        pi_planes = parse_subspace_pi_planes(ref_wfn.molecule(), options.get_list("SUBSPACE_PI_PLANES"))
+
+        # - Create the AO subspace projector
+        ps = forte.make_aosubspace_projector(ref_wfn, options, pi_planes)
+
+        # Apply the projector to rotate orbitals
         forte.make_avas(ref_wfn, options, ps)
 
     # Create the fragment(embedding) projector and apply to rotate orbitals
     if options.get_bool("EMBEDDING"):
         forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"])
-        fragment_projector, fragment_nbf = forte.make_fragment_projector(
-            ref_wfn, options)
-        return forte.make_embedding(ref_wfn, options, fragment_projector,
-                                    fragment_nbf, mo_space_info)
+        fragment_projector, fragment_nbf = forte.make_fragment_projector(ref_wfn)
+        return forte.make_embedding(ref_wfn, options, fragment_projector, fragment_nbf, mo_space_info)
     else:
         return mo_space_info
 
@@ -217,9 +216,7 @@ def ortho_orbs_psi4(wfn1, wfn2, semi=True):
 
     nirrep = wfn2.nirrep()
 
-    orbital_spaces = ["FROZEN_DOCC", "RESTRICTED_DOCC",
-                      "ACTIVE",
-                      "RESTRICTED_UOCC", "FROZEN_UOCC"]
+    orbital_spaces = ["FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC", "FROZEN_UOCC"]
     dims = {space: None for space in orbital_spaces}
     dims["RESTRICTED_UOCC"] = wfn2.nmopi()
 
@@ -303,7 +300,7 @@ def canonicalX(S):
     shalf_inv = psi4.core.Matrix("s^(-1/2)", rdim, rdim)
     for h in range(nirrep):
         for i in range(rdim[h]):
-            shalf_inv.set(h, i, i, evals.get(h, i) ** -0.5)
+            shalf_inv.set(h, i, i, evals.get(h, i)**-0.5)
 
     X = psi4.core.doublet(evecs, shalf_inv, False, False)
     return X

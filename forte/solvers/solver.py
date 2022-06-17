@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from enum import Enum, auto
 
-from forte.forte import StateInfo
+from forte import StateInfo
 from forte.core import flog, increase_log_depth
 from forte.solvers.callback_handler import CallbackHandler
 from forte.data import Data
@@ -292,9 +292,5 @@ class Solver(Node):
         # Get the forte option object
         options = forte.forte_options
         options.get_options_from_psi4(psi4_options)
-
-        # Averaging spin multiplets if doing spin-adapted computation
-        if options.get_str('CORRELATION_SOLVER') in ('SA-MRDSRG', 'SA_MRDSRG'):
-            options.set_bool('SPIN_AVG_DENSITY', True)
 
         return options

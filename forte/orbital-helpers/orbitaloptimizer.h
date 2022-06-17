@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -102,7 +102,7 @@ class OrbitalOptimizer {
     /// Solution of g + Hx = 0 (with diagonal H), so x = - g / H
     psi::SharedMatrix approx_solve();
     /// Exponentiate the orbital rotation parameter and use this to update your
-    /// MOCoefficient
+    /// MO coefficients
     psi::SharedMatrix rotate_orbitals(psi::SharedMatrix C, psi::SharedMatrix S);
     /// The norm of the orbital gradient
     double orbital_gradient_norm() { return (g_->rms()); }

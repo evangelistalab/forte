@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -60,7 +60,7 @@ class MCSRGPT2_MO {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MCSRGPT2_MO(RDMs reference, std::shared_ptr<ForteOptions> options,
+    MCSRGPT2_MO(std::shared_ptr<RDMs> reference, std::shared_ptr<ForteOptions> options,
                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -84,7 +84,7 @@ class MCSRGPT2_MO {
     std::shared_ptr<ForteIntegrals> integral_;
 
     /// RDMs
-    RDMs reference_;
+    std::shared_ptr<RDMs> reference_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -147,7 +147,7 @@ class MCSRGPT2_MO {
     d6 L3bbb_;
 
     /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
-    void fill_naive_cumulants(RDMs ref, const int level);
+    void fill_naive_cumulants(std::shared_ptr<RDMs> ref, const int level);
     /// Fill in non-tensor quantities D1a_ and D1b_ using ambit tensors
     void fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b);
     /// Fill in non-tensor quantities L2aa_, L2ab_, and L2bb_ using ambit tensors

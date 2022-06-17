@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -37,6 +37,7 @@
 #include "integrals/integrals.h"
 
 #include "orbital-helpers/localize.h"
+#include "orbital-helpers/semi_canonicalize.h"
 
 namespace py = pybind11;
 
@@ -60,13 +61,30 @@ void export_Localize(py::module& m) {
         .def("compute_transformation", &Localize::compute_transformation,
              "Compute the transformation")
         .def("set_orbital_space",
-             (void (Localize::*)(std::vector<int>&)) & Localize::set_orbital_space,
+             (void(Localize::*)(std::vector<int>&)) & Localize::set_orbital_space,
              "Compute the transformation")
         .def("set_orbital_space",
-             (void (Localize::*)(std::vector<std::string>&)) & Localize::set_orbital_space,
+             (void(Localize::*)(std::vector<std::string>&)) & Localize::set_orbital_space,
              "Compute the transformation")
         .def("get_Ua", &Localize::get_Ua, "Get Ua rotation")
         .def("get_Ub", &Localize::get_Ub, "Get Ub rotation");
+}
+
+/// export SemiCanonical class
+void export_SemiCanonical(py::module& m) {
+    py::class_<SemiCanonical>(m, "SemiCanonical")
+        .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,
+                      std::shared_ptr<ForteOptions>, bool>(),
+             "mo_space_info"_a, "ints"_a, "options"_a, "quiet"_a = false)
+        .def("semicanonicalize", &SemiCanonical::semicanonicalize, "RDMs"_a, "build_fock"_a = true,
+             "nat_orb"_a = false, "transform"_a = true,
+             "Semicanonicalize the orbitals and transform the integrals and reference")
+        .def("Ua", &SemiCanonical::Ua, "Return the alpha rotation matrix")
+        .def("Ub", &SemiCanonical::Ub, "Return the alpha rotation matrix")
+        .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
+        .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space")
+        .def("fix_orbital_success", &SemiCanonical::fix_orbital_success,
+             "Return if the orbital ordering and phases are fixed successfully");
 }
 
 } // namespace forte

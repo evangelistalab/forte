@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -32,8 +32,10 @@
 #include <vector>
 #include <unordered_set>
 
+#include "base_classes/rdms.h"
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
@@ -43,7 +45,6 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class RDMs;
 class SCFInfo;
 
 /**
@@ -122,31 +123,53 @@ class ActiveSpaceMethod {
      * @param max_rdm_level the maximum RDM rank
      * @return
      */
-    virtual std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                   int max_rdm_level) = 0;
+    virtual std::vector<std::shared_ptr<RDMs>>
+    rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+         RDMsType type) = 0;
 
-    virtual std::vector<RDMs>
+    virtual std::vector<std::shared_ptr<RDMs>>
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) = 0;
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType type) = 0;
+
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
+    /// h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
+    virtual std::vector<double>
+    compute_complementary_H2caa_overlap(const std::vector<size_t>& /*roots*/,
+                                        ambit::Tensor /*Tbra*/, ambit::Tensor /*Tket*/) {
+        throw std::runtime_error(
+            "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
+    }
 
     /// Set options from an option object
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
+    /// Compute permanent dipole moments
+    std::vector<std::vector<double>>
+    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
     /// Compute transition dipole moments assuming same orbitals
     std::vector<std::vector<double>>
     compute_transition_dipole_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                        std::shared_ptr<ActiveSpaceMethod> method2);
+                                        std::shared_ptr<ActiveSpaceMethod> method2,
+                                        const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Compute oscillator strength assuming same orbitals
     std::vector<double>
     compute_oscillator_strength_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2);
+                                          std::shared_ptr<ActiveSpaceMethod> method2,
+                                          const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Dump the wave function to file
     /// @param file name
     virtual void dump_wave_function(const std::string&) {
-        throw std::runtime_error("Not yet implemented!");
+        throw std::runtime_error("ActiveSpaceMethod::dump_wave_function: Not yet implemented!");
     }
 
     /// Read the wave function from file
@@ -154,7 +177,12 @@ class ActiveSpaceMethod {
     /// @return the number of active orbitals, the set of determinants, CI coefficients
     virtual std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
     read_wave_function(const std::string&) {
-        throw std::runtime_error("Not yet implemented!");
+        throw std::runtime_error("ActiveSpaceMethod::read_wave_function: Not yet implemented!");
+    }
+
+    /// @return the CI wave functions for the current StateInfo (deterministic determinant space)
+    virtual psi::SharedMatrix ci_wave_functions() {
+        throw std::runtime_error("ActiveSpaceMethod::ci_wave_functions: Not yet implemented!");
     }
 
     // ==> Base Class Functionality (inherited by derived classes) <==
@@ -203,7 +231,7 @@ class ActiveSpaceMethod {
     /// Set if we dump the wave function to disk
     void set_dump_wfn(bool dump);
 
-    /// Set the file name for stroing wave function on disk
+    /// Set the file name for storing wave function on disk
     /// @param name the wave function file name
     void set_wfn_filename(const std::string& name);
 
@@ -289,9 +317,10 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);
 
-std::vector<RDMs> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
-                                  std::shared_ptr<ActiveSpaceMethod> m2,
-                                  std::vector<std::pair<size_t, size_t>>, int max_rdm_level);
+// std::vector<std::shared_ptr<RDMs>> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
+//                                                    std::shared_ptr<ActiveSpaceMethod> m2,
+//                                                    std::vector<std::pair<size_t, size_t>>,
+//                                                    int max_rdm_level);
 
 } // namespace forte
 

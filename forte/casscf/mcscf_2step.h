@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -142,12 +142,16 @@ class MCSCF_2STEP {
     double energy_;
 
     /// Solve CI coefficients for the current orbitals
+    /// @param as_solver the pointer of ActiveSpaceSolver
     /// @param fci_ints the pointer of ActiveSpaceIntegrals
     /// @param params the parameters <print level, e_conv, r_conv, read_wfn_guess, dump_wfn>
-    /// @return <ActiveSpaceSolver, averaged energy>
-    std::tuple<std::unique_ptr<ActiveSpaceSolver>, double>
-    diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                            const std::tuple<int, double, double, bool, bool>& params);
+    /// @return averaged energy
+    double diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
+                                   std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                   const std::tuple<int, double, double, bool, bool>& params);
+
+    /// Test if we are doing a single-reference orbital optimization
+    bool is_single_reference();
 
     /// Class to store iteration data
     struct CASSCF_HISTORY {
@@ -159,8 +163,11 @@ class MCSCF_2STEP {
         int n_micro;  // number of micro iteration
     };
 
+    /// Test energy history and return if the energies are converging or not
+    bool test_history(const std::vector<CASSCF_HISTORY>& history, const int& n_samples);
+
     /// Print iteration information
-    void print_macro_iteration(std::vector<CASSCF_HISTORY>& history);
+    void print_macro_iteration(const std::vector<CASSCF_HISTORY>& history);
 };
 
 std::unique_ptr<MCSCF_2STEP>

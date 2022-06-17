@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -50,8 +50,9 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG::MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+MRDSRG::MRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"Multireference Driven Similarity Renormalization Group",
@@ -171,10 +172,11 @@ void MRDSRG::print_options() {
         {"Adaptive DSRG flow type", foptions_->get_str("SMART_DSRG_S")},
         {"Reference relaxation", relax_ref_},
         {"DSRG transformation type", dsrg_trans_type_},
-        {"Core-Virtual source type", foptions_->get_str("CCVV_SOURCE")}};
+        {"Core-Virtual source type", foptions_->get_str("CCVV_SOURCE")},
+        {"T1 amplitudes initial guess", foptions_->get_str("DSRG_T1_AMPS_GUESS")}};
 
     if (corrlv_string_ == "PT2") {
-        calculation_info_string.push_back({"PT2 0-order Hamiltonian", pt2_h0th_});
+        calculation_info_string.emplace_back("PT2 0-order Hamiltonian", pt2_h0th_);
     }
 
     std::vector<std::pair<std::string, bool>> calculation_info_bool{
@@ -388,16 +390,16 @@ void MRDSRG::print_cumulant_summary() {
 
     // 3-body
     maxes.clear();
-    maxes.push_back(rdms_.L3aaa().norm(0));
-    maxes.push_back(rdms_.L3aab().norm(0));
-    maxes.push_back(rdms_.L3abb().norm(0));
-    maxes.push_back(rdms_.L3bbb().norm(0));
+    maxes.push_back(L3aaa_.norm(0));
+    maxes.push_back(L3aab_.norm(0));
+    maxes.push_back(L3abb_.norm(0));
+    maxes.push_back(L3bbb_.norm(0));
 
     norms.clear();
-    norms.push_back(rdms_.L3aaa().norm(2));
-    norms.push_back(rdms_.L3aab().norm(2));
-    norms.push_back(rdms_.L3abb().norm(2));
-    norms.push_back(rdms_.L3bbb().norm(2));
+    norms.push_back(L3aaa_.norm(2));
+    norms.push_back(L3aab_.norm(2));
+    norms.push_back(L3abb_.norm(2));
+    norms.push_back(L3bbb_.norm(2));
 
     dash = std::string(8 + 13 * 4, '-');
     outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");

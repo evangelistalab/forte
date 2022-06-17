@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -116,7 +116,6 @@ void ASCI::startup() {
 
     t_det_ = options_->get_int("ASCI_TDET");
     c_det_ = options_->get_int("ASCI_CDET");
-    root_spin_vec_.resize(nroot_);
 }
 
 void ASCI::print_info() {

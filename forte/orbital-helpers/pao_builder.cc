@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -43,7 +43,7 @@ namespace forte {
 
 PAObuilder::PAObuilder(const psi::SharedMatrix C, psi::Dimension noccpi,
                        std::shared_ptr<BasisSet> basis)
-    : C_(C), noccpi_(noccpi), basis_(basis) {
+    : basis_(basis), C_(C), noccpi_(noccpi) {
     startup();
 }
 

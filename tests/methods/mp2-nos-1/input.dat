@@ -1,0 +1,74 @@
+# Test RMP2 natural orbitals
+mp2_corr_ref = -1.802862266979274
+
+import forte
+memory 4 gb
+
+molecule anthracene{
+  C      3.6609      0.5848      0.0000
+  C      3.6110     -0.8397      0.0000
+  C      2.4165     -1.4895      0.0000
+  C      1.1870     -0.7528      0.0000
+  C      2.5148      1.3166      0.0000
+  C      1.2368      0.6679      0.0000
+  C     -0.0491     -1.4032      0.0000
+  C     -1.2369     -0.6678      0.0000
+  C      0.0492      1.4033      0.0000
+  C     -1.1871      0.7528      0.0000
+  C     -2.5148     -1.3167      0.0000
+  C     -3.6609     -0.5848      0.0000
+  C     -3.6110      0.8395      0.0000
+  C     -2.4165      1.4895      0.0000
+  H      4.6397      1.0755      0.0000
+  H      4.5529     -1.3980      0.0000
+  H      2.3680     -2.5843      0.0000
+  H      2.5432      2.4122      0.0000
+  H     -0.0876     -2.4995      0.0000
+  H      0.0876      2.4996      0.0000
+  H     -2.5431     -2.4122      0.0000
+  H     -4.6397     -1.0756      0.0000
+  H     -4.5531      1.3975      0.0000
+  H     -2.3682      2.5844      0.0000
+}
+
+set {
+scf_type df
+basis def2-svp
+maxiter 100
+docc [40,7]
+d_convergence 6
+}
+
+set forte {
+job_type none
+int_type diskdf
+orbital_type mp2no
+nat_act true
+nat_orbs_print true
+mp2no_occ_threshold 0.98
+mp2no_vir_threshold 0.02
+frozen_docc [14,0]
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+Emp2, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(mp2_corr_ref, variable("MP2 CORRELATION ENERGY"), 6, "MP2 correlation energy")
+
+# test MP2 unrelaxed 1RDM
+D1o_a = variable("MP2 1RDM OO ALPHA")
+D1v_a = variable("MP2 1RDM VV ALPHA")
+
+files = {'D1o': D1o_a, 'D1v': D1v_a}
+
+# dump files
+#for name, data in files.items():
+#    with open(name + '.npz', 'wb') as f:
+#        np.savez_compressed(f, *(data.to_array()))
+
+# read files
+for name in files:
+    M_loaded = np.load(name + '.npz')
+    nirrep = len(M_loaded.files)
+    M_list = [M_loaded[f'arr_{i}'] for i in range(nirrep)]
+    M = psi4.core.Matrix.from_array(M_list)
+    compare_matrices(M, files[name], 6, 'MP2 unrelaxed 1RDM: ' + name.upper())
