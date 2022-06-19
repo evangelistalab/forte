@@ -221,21 +221,36 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * MO indices list, dimension of different MOs, CI-related variables etc.
      */
     void set_global_variables();
+    /// # of MOs
     size_t nmo;
+    /// # of core MOs
     size_t ncore;
+    /// # of virtual MOs
     size_t nvirt;
+    /// # of active MOs
     size_t na;
+    /// # of auxiliary orbitals
     size_t naux;
+    /// # of irreps
     size_t nirrep;
 
+    /// <[V, T2]> (C_2)^4
     const bool PT2_TERM         = true;
+    /// <[V, T2]> C_4 (C_2)^2 PP
     const bool X1_TERM          = true;
+    /// <[V, T2]> C_4 (C_2)^2 HH
     const bool X2_TERM          = true;
+    /// <[V, T2]> C_4 (C_2)^2 PH
     const bool X3_TERM          = true;
+    /// <[V, T2]> C_6 C_2
     const bool X4_TERM          = true;
+    /// <[F, T2]>
     const bool X5_TERM          = true;
+    /// <[V, T1]>
     const bool X6_TERM          = true;
+    /// <[F, T1]>
     const bool X7_TERM          = true;
+    /// If the correlation contribution is considered
     const bool CORRELATION_TERM = true;
     /**
      * Initializing the DSRG-related auxiliary tensors.
@@ -412,24 +427,38 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// a vector with all entries equal 1
     ambit::BlockedTensor one_vec;
 
-    // Lagrange multiplier
-    std::vector<double> b;
-    ambit::BlockedTensor temp_z;
-    ambit::BlockedTensor Z;
-    ambit::BlockedTensor Z_b;
+    /*** Lagrange multipliers ***/
+    /// multiplier related to T2 amplitudes
     ambit::BlockedTensor Tau2;
+    /// multiplier related to modified ERIs
     ambit::BlockedTensor Kappa;
+    /// multiplier related to modified one-body quantities
+    /// sigma : one-body amplitudes
+    /// xi : modified one-body integrals
     ambit::BlockedTensor sigma3_xi3;
     ambit::BlockedTensor sigma2_xi3;
     ambit::BlockedTensor sigma1_xi1_xi2;
-
+    /// multiplier related to orbital response (symmetrized)
+    ambit::BlockedTensor Z;
+    /// unsymmetrized Z components
+    ambit::BlockedTensor temp_z;
+    /// multiplier related to normalized CI coefficients
     double Alpha;
+    /// multiplier related to CI response
     ambit::Tensor x_ci;
+
+
+    /// Linear system Ax=b
+    std::vector<double> b;
+    /// orbital contribution to the b
+    ambit::BlockedTensor Z_b;
+    /// V["pmqm"], V["pMqM"], V["PmQm"], V["PMQM"]
     ambit::BlockedTensor V_pmqm;
-
+    /// CI coefficients
     ambit::Tensor ci;
-
+    /// c_i < \phi_i | p+ q | \phi_j > x_j
     ambit::BlockedTensor Gamma1_tilde;
+    /// c_i < \phi_i | p+ q+ s r | \phi_j > x_j
     ambit::BlockedTensor Gamma2_tilde;
 
     // => Amplitude <= //

@@ -194,13 +194,11 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             }
         });
     }
-
     /*------------------------------------------------------------------*
      |                                                                  |
      |  Adding the CI contribution to the b of the Linear System Ax=b.  |
      |                                                                  |
      *------------------------------------------------------------------*/
-
     auto b_ck = ambit::Tensor::build(ambit::CoreTensor, "ci equations b part", {ndets});
 
     // Solving the multiplier Alpha (the CI normalization condition)
