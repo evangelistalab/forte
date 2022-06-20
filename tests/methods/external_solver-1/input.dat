@@ -1,3 +1,5 @@
+# This test case uses RDMs generated externally to compute the unrelaxed LDSRG(2) energy
+
 import forte
 
 refe = -1.159592141760552
@@ -27,5 +29,5 @@ set forte {
   dsrg_s               0.5
 }
 
-e = energy('forte')
-compare_values(refe, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+energy('forte')
+compare_values(refe, variable("CURRENT ENERGY"),9, "LDSRG(2) energy (external RDM)")
