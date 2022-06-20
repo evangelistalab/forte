@@ -25,4 +25,4 @@ set forte {
 }
 
 energy('forte')
-compare_values(refe, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+compare_values(refe, variable("CURRENT ENERGY"),9, "DSRG-MRPT2 energy (external RDM)")

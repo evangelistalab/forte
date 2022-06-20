@@ -214,8 +214,9 @@ embedding:
       - embedding-2
 
 external_solver:
-   medium:
+   short:
       - external_solver-1
+   medium:
       - external_solver-2
 
 fci:
