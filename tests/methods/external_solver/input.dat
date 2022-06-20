@@ -1,28 +1,31 @@
 import forte
 
+refe = -1.159592141760552
+
 molecule {
 0 1
 H
-H 1 0.75
+H 1 0.7
+
 }
 
 set {
-  basis sto-3g
-# basis dz
-  scf_type pk
-  e_convergence 12
+  basis              cc-pvdz
+  scf_type           pk
+  e_convergence      12
 }
 
 set forte {
-  active_space_solver external
-# active_space_solver fci
-# correlation_solver dsrg-mrpt2
-# relax_ref once
-# active [1,0,0,0,0,1,0,0]
-# restricted_docc [0,0,0,0,0,0,0,0]
+  job_type             newdriver
+  active_space_solver  external
+  read_wfn             true
+  correlation_solver   sa-mrdsrg
+  corr_level           ldsrg2
+  e_convergence        8
+  active               [1, 0, 0, 0, 0, 1, 0, 0]
+  restricted_docc      [0, 0, 0, 0, 0, 0, 0, 0]
+  dsrg_s               0.5
 }
 
-#energy('scf')
-#compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
-energy('forte')
-#compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+e = energy('forte')
+compare_values(refe, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
