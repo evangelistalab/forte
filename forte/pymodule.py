@@ -466,8 +466,9 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     if active_space_solver_type == 'EXTERNAL':
         write_external_active_space_file(as_ints, state_map, mo_space_info)
         if not os.path.isfile('rdms.json'):
-            print('\nExternal solver wrote integrals to disk')
-            psi4.core.print_out('\nExternal solver wrote integrals to disk')
+            msg = '\n  rdms.json file not present: External solver wrote integrals to disk'
+            print(msg)
+            psi4.core.print_out(msg)
             # finish the computation
             exit()
     # if rdms.json exists, then run "external" as_solver to compute energy

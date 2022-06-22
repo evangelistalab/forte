@@ -218,6 +218,13 @@ class ProcedureDSRG:
                 write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
                 print('External solver wrote DSRG dressed integrals to disk')
                 psi4.core.print_out('External solver wrote DSRG dressed integrals to disk')
+
+                if self.options.get_bool("EXTERNAL_PARTIAL_RELAX"):
+                    active_space_solver_2 = forte.make_active_space_solver(
+                        'FCI', state_map, self.scf_info, self.mo_space_info, ints_dressed, self.options
+                    )
+                    active_space_solver_2.compute_energy()
+
                 exit()
 
             # Spit out contracted SA-DSRG energy

@@ -172,6 +172,8 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
 
     file = {}
 
+    file['nso'] = {"data": 2 * nact, "description": "number of active spin orbitals"}
+
     state_energies_map = active_space_solver.state_energies_map()
     for state, energies in state_energies_map.items():
         file['energy'] = {"data": energies[0], "description": "energy"}

@@ -90,6 +90,11 @@ def register_driver_options(options):
 
     options.add_bool("READ_WFN", False, "Read Ca.json for external computations")
 
+    options.add_bool(
+        "EXTERNAL_PARTIAL_RELAX", False,
+        "Perform a FCI computation (relaxation step) after building the DSRG effective Hamiltonian from when using an external active space solver"
+    )
+
     options.add_int("PRINT", 1, "Set the print level.")
 
     options.add_bool("READ_ORBITALS", False, "Read orbitals from file if true")
