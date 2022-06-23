@@ -16,7 +16,7 @@ class DressedQuantity {
     DressedQuantity(double scalar, ambit::Tensor a, ambit::Tensor b, ambit::Tensor aa,
                     ambit::Tensor ab, ambit::Tensor bb, ambit::Tensor aaa, ambit::Tensor aab,
                     ambit::Tensor abb, ambit::Tensor bbb);
-    double contract_with_rdms(RDMs rdms);
+    double contract_with_rdms(std::shared_ptr<RDMs> rdms);
 
   private:
     size_t max_body_;

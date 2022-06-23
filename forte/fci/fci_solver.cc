@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -79,6 +79,17 @@ void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
 void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
+
+psi::SharedMatrix FCISolver::ci_wave_functions() {
+    if (eigen_vecs_ == nullptr)
+        return std::make_shared<psi::Matrix>();
+
+    auto evecs = std::make_shared<psi::Matrix>("FCI Eigenvectors", eigen_vecs_->ncol(), nroot_);
+    for (int i = 0, size = static_cast<int>(nroot_); i < size; ++i) {
+        evecs->set_column(0, i, eigen_vecs_->get_row(0, i));
+    }
+    return evecs;
+}
 
 void FCISolver::startup() {
     // Create the string lists
@@ -511,11 +522,20 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                  int max_rdm_level) {
-    std::vector<RDMs> refs;
-    if (max_rdm_level <= 0)
-        return refs;
+std::vector<std::shared_ptr<RDMs>>
+FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+                RDMsType type) {
+    if (max_rdm_level <= 0) {
+        auto nroots = root_list.size();
+        if (type == RDMsType::spin_dependent) {
+            return std::vector<std::shared_ptr<RDMs>>(nroots,
+                                                      std::make_shared<RDMsSpinDependent>());
+        } else {
+            return std::vector<std::shared_ptr<RDMs>>(nroots, std::make_shared<RDMsSpinFree>());
+        }
+    }
+
+    std::vector<std::shared_ptr<RDMs>> refs;
 
     // loop over all the pairs of references
     for (auto& roots : root_list) {
@@ -536,6 +556,9 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
         ambit::Tensor g1a, g1b;
         ambit::Tensor g2aa, g2ab, g2bb;
         ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
+
+        // TODO: the following needs clean-up/optimization for spin-free RDMs
+        // TODO: put RDMs directly as ambit Tensor in FCIVector?
 
         if (max_rdm_level >= 1) {
             // One-particle density matrices in the active space
@@ -620,23 +643,45 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
                 });
             }
         }
-        if (max_rdm_level == 1) {
-            refs.emplace_back(g1a, g1b);
-        }
-        if (max_rdm_level == 2) {
-            refs.emplace_back(g1a, g1b, g2aa, g2ab, g2bb);
-        }
-        if (max_rdm_level == 3) {
-            refs.emplace_back(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+
+        if (type == RDMsType::spin_dependent) {
+            if (max_rdm_level == 1) {
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b));
+            }
+            if (max_rdm_level == 2) {
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb));
+            }
+            if (max_rdm_level == 3) {
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb,
+                                                                      g3aaa, g3aab, g3abb, g3bbb));
+            }
+        } else {
+            g1a("pq") += g1b("pq");
+            if (max_rdm_level > 1) {
+                g2aa("pqrs") += g2ab("pqrs") + g2ab("qpsr");
+                g2aa("pqrs") += g2bb("pqrs");
+            }
+            if (max_rdm_level > 2) {
+                g3aaa("pqrstu") += g3aab("pqrstu") + g3aab("prqsut") + g3aab("qrptus");
+                g3aaa("pqrstu") += g3abb("pqrstu") + g3abb("qprtsu") + g3abb("rpqust");
+                g3aaa("pqrstu") += g3bbb("pqrstu");
+            }
+            if (max_rdm_level == 1)
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a));
+            if (max_rdm_level == 2)
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a, g2aa));
+            if (max_rdm_level == 3)
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a, g2aa, g3aaa));
         }
     }
     return refs;
 }
 
-std::vector<RDMs>
+std::vector<std::shared_ptr<RDMs>>
 FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                           std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
-    std::vector<RDMs> refs;
+                           std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/,
+                           RDMsType /*rdm_type*/) {
+    std::vector<std::shared_ptr<RDMs>> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;
 }

@@ -10,3 +10,4 @@ Tutorials
    nb_04_multistate
    nb_05_examples
    nb_06_integrals
+   nb_07_soints

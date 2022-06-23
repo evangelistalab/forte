@@ -1,4 +1,4 @@
-#! Generated using commit GITCOMMIT
+# Test FCI on differnt spin Ms values for doublet CH and triplet CH+
 
 import forte
 
@@ -21,8 +21,8 @@ set {
   socc [0,0,1,0]
 }
 
-energy('scf')
-compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+Escf_doublet, wfn0 = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy on doublet Pi of CH")
 
 set forte {
   active_space_solver fci
@@ -30,8 +30,8 @@ set forte {
   ms = 0.5
 }
 
-energy('forte')
-compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy (M_S =  1/2)") #TEST
+energy('forte', ref_wfn=wfn0)
+compare_values(reffci, variable("CURRENT ENERGY"), 11, "FCI energy (M_S =  1/2)")
 
 set forte {
   active_space_solver fci
@@ -39,8 +39,8 @@ set forte {
   ms = -0.5
 }
 
-energy('forte')
-compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy (M_S = -1/2)") #TEST
+energy('forte', ref_wfn=wfn0)
+compare_values(reffci, variable("CURRENT ENERGY"), 11, "FCI energy (M_S = -1/2)")
 
 clean()
 
@@ -56,6 +56,15 @@ H 1 1.0
 units bohr
 }
 
+set {
+  basis 6-31G
+  scf_type pk
+  reference rohf
+  e_convergence 12
+  docc [2,0,0,0]
+  socc [1,0,1,0]
+}
+
 scf_triplet = energy('scf')
 compare_values(refscf_triplet, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
@@ -65,23 +74,22 @@ set forte {
   ms = 1.0
 }
 
-energy('forte')
-compare_values(reffci_triplet, variable("CURRENT ENERGY"),11, "FCI energy (M_S =  1)") #TEST
+Escf_triplet, wfn1 = energy('scf', return_wfn=True)
+compare_values(refscf_triplet, variable("CURRENT ENERGY"), 11, "SCF energy on triplet Pi of CH+")
 
 set forte {
   active_space_solver fci
   root_sym 3
-  ms = 0.0
+  ms = 1.0
 }
 
-energy('forte')
-compare_values(reffci_triplet, variable("CURRENT ENERGY"),11, "FCI energy (M_S =  0)") #TEST
+energy('forte', ref_wfn=wfn1)
+compare_values(reffci_triplet, variable("CURRENT ENERGY"), 11, "FCI energy (M_S =  1)")
 
-set forte {
-  active_space_solver fci
-  root_sym 3
-  ms = -1.0
-}
+set forte ms 0.0
+energy('forte', ref_wfn=wfn1)
+compare_values(reffci_triplet, variable("CURRENT ENERGY"), 11, "FCI energy (M_S =  0)")
 
-energy('forte')
-compare_values(reffci_triplet, variable("CURRENT ENERGY"),11, "FCI energy (M_S = -1)") #TEST
+set forte ms -1.0
+energy('forte', ref_wfn=wfn1)
+compare_values(reffci_triplet, variable("CURRENT ENERGY"), 11, "FCI energy (M_S = -1)")

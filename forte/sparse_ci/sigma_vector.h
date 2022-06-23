@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -69,7 +69,8 @@ class SigmaVector {
     virtual void compute_sigma(std::shared_ptr<psi::Vector> sigma,
                                std::shared_ptr<psi::Vector> b) = 0;
     virtual void get_diagonal(psi::Vector& diag) = 0;
-    virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
+    virtual void
+    add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& /*bad_states*/) {}
     virtual double compute_spin(const std::vector<double>& c) = 0;
 
   protected:

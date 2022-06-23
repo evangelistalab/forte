@@ -1,0 +1,28 @@
+import forte
+
+refe = -1.147065798915086
+
+molecule {
+0 1
+H
+H 1 0.75
+}
+
+set {
+  basis dz
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  active_space_solver external
+  read_wfn true
+  correlation_solver dsrg-mrpt2
+  relax_ref once
+  active [1,0,0,0,0,1,0,0]
+  restricted_docc [0,0,0,0,0,0,0,0]
+  threepdc zero
+}
+
+energy('forte')
+compare_values(refe, variable("CURRENT ENERGY"),9, "DSRG-MRPT2 energy (external RDM)")

@@ -12,7 +12,7 @@ jobs:
   strategy:
     maxParallel: 4
     matrix:
-      gcc_py39_orb64:
+      gcc_py39_orb64_dmrg:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
@@ -21,16 +21,18 @@ jobs:
         PSI_BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
         APT_INSTALL: 'gfortran'
+        ENABLE_CHEMPS2: 'ON'
 
-      gcc_py37_orb128:
+      gcc_py38_orb128:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.7'
+        PYTHON_VER: '3.8'
         BUILD_TYPE: 'RelWithDebInfo'
-        PSI_BUILD_TYPE: 'Debug'        
+        PSI_BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 128
         APT_INSTALL: 'gfortran'
+        ENABLE_CHEMPS2: 'OFF'
 
   steps:
   - bash: |
@@ -91,31 +93,16 @@ jobs:
         psi4/label/dev::libxc \
         psi4/label/dev::chemps2 \
         psi4/label/dev::dkh \
-        psi4/label/dev::gdma \
-        psi4/label/dev::pcmsolver \
-        psi4/label/dev::simint \
-        psi4/label/dev::dftd3 \
-        psi4/label/dev::gcp \
-        psi4/label/dev::resp \
-        psi4/label/dev::pycppe \
-        psi4/label/dev::pylibefp \
-        psi4/label/dev::snsmp2 \
-        psi4/label/dev::fockci \
-        psi4/label/dev::mp2d \
         blas=*=mkl \
         mkl-include \
         networkx \
-        pytest \
         eigen \
-        mpfr \
+        pytest \
         pytest-xdist \
         conda-forge::qcelemental \
-        conda-forge::qcengine \
-        conda-forge::pymdi \
-        adcc::adcc
+        conda-forge::qcengine
       source activate p4env
       conda install -c conda-forge \
-        cmake \
         hdf5 \
         boost \
         mkl-devel \
@@ -124,10 +111,11 @@ jobs:
         pytest-cov \
         pytest-xdist \
         pytest-shutil \
+        py-cpuinfo \
+        scipy \
         codecov \
         lcov
       which python
-      pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
     displayName: 'Configure Environment'
 
@@ -146,7 +134,9 @@ jobs:
       PSI4BIN_DIR=$(Build.SourcesDirectory)/build/psi4bin
       echo "##vso[task.setvariable variable=PSI4BIN_DIR]${PSI4BIN_DIR}"
       echo "Psi4 bin directory: $PSI4BIN_DIR"
-      cmake -Spsi4 -Bpsi4obj \
+      mkdir psi4obj
+      cd psi4obj
+      cmake -H. -B$(Build.SourcesDirectory)/build/psi4obj \
         -DCMAKE_INSTALL_PREFIX=${PSI4BIN_DIR} \
         -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
@@ -156,8 +146,10 @@ jobs:
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_BUILD_TYPE=${PSI_BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
-        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DCMAKE_CXX_STANDARD=17
+        -DCMAKE_CXX_STANDARD=17 \
+        -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
+        -DENABLE_ecpint=ON \
+        $(Build.SourcesDirectory)/build/psi4
     displayName: 'Configure Psi4 Build'
 
   - bash: |
@@ -176,7 +168,7 @@ jobs:
   - bash: |
       STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
       echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
-      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build/forte:{PYTHONPATH}"
+      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build/forte:$(Build.SourcesDirectory)/build/ambit-bin/lib:${PYTHONPATH}"
       echo "##vso[task.setvariable variable=PATH]${PSI4BIN_DIR}/bin:${PATH}"
     displayName: 'Add Psi4 to PATH and PYTHONPATH'
 
@@ -226,7 +218,9 @@ jobs:
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
         -DENABLE_CODECOV=ON \
+        -DEIGEN3_INCLUDE_DIR=$CONDA_PREFIX/include/eigen3 \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
 
@@ -234,9 +228,9 @@ jobs:
       source activate p4env
       cd build/forte
       make -j2 VERBOSE=1
-      file forte/forte*.so
-      ldd forte/forte*.so
-      readelf -d forte/forte*.so
+      file forte/_forte*.so
+      ldd forte/_forte*.so
+      readelf -d forte/_forte*.so
     displayName: 'Build Forte'
 
   - bash: |
@@ -252,5 +246,5 @@ jobs:
       python -c "import forte; forte.banner()"
 
       cd forte
-      bash tools/forte_codecov $MAX_DET_ORB
+      bash tools/forte_codecov $MAX_DET_ORB $ENABLE_CHEMPS2
     displayName: 'Run Forte tests'

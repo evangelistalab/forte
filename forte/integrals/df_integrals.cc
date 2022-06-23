@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -180,7 +180,7 @@ void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
 void DFIntegrals::gather_integrals() {
 
     if (print_ > 0) {
-        outfile->Printf("\n  Computing density fitted integrals \n");
+        outfile->Printf("\n  Computing density fitted integrals\n");
     }
 
     std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
@@ -235,6 +235,8 @@ void DFIntegrals::gather_integrals() {
             throw psi::PSIEXCEPTION(msg);
         }
     }
+    df->set_schwarz_cutoff(schwarz_cutoff_);
+    df->set_fitting_condition(df_fitting_cutoff_);
     df->set_memory(static_cast<size_t>(mem));
     df->set_nthreads(omp_get_max_threads());
     df->set_print_lvl(1);

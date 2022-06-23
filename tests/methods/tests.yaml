@@ -4,6 +4,9 @@
 # different types of tests (short, long, unused). This is done so that the
 # test script can run certain subsets of all tests.
 #
+api:
+   short:
+      - pass_options
 aci:
    short:
       - aci-2
@@ -16,6 +19,7 @@ aci:
       - aci-18
       - aci_scf-1
       - aci-full-pt2-1
+      - aci-20
    medium:
       - aci-6
       - aci-10
@@ -67,6 +71,8 @@ casscf:
    short:
       - casscf-7
       - df-casscf-1
+      - df-casscf-2-rdm
+      - df-casscf-3-edge
       - casscf-fcidump-1
       - casscf-gradient-1
       - casscf-gradient-3
@@ -81,7 +87,7 @@ casscf:
       - casscf-9
       - casscf-gradient-2
       - casscf-opt-1
-      - casscf-opt-2
+      # - casscf-opt-2
    long:
       - casscf-8
 cd-dsrg-mrpt2:
@@ -206,6 +212,13 @@ embedding:
       - embedding-5
    medium:
       - embedding-2
+
+external_solver:
+   short:
+      - external_solver-1
+   medium:
+      - external_solver-2
+
 fci:
    short:
       - fci-1 # moved to pytest
@@ -230,11 +243,14 @@ gasci:
       - gasci-1
       - gasaci-1
       - gasaci-4
+      - gasci-dsrg-mrpt2-2
    medium:
       - gasci-2
       - gasci-3
       - gasaci-2
       - gasaci-3
+   long:
+      - gasaci-5
 gasscf:
    short:
       - gasscf-1
@@ -265,6 +281,9 @@ integrals:
 l-bfgs:
    short:
       - l-bfgs_rosenbrock
+mp2-nos:
+   short:
+      - mp2-nos-1
 mr-dsrg-pt2:
    short:
       - mr-dsrg-pt2-1

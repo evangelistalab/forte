@@ -204,34 +204,52 @@ double ExternalActiveSpaceMethod::compute_energy() {
     return energy;
 }
 
-std::vector<RDMs>
+std::vector<std::shared_ptr<RDMs>>
 ExternalActiveSpaceMethod::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                int max_rdm_level) {
-    // throw std::runtime_error("ExternalActiveSpaceMethod::rdms is not implemented!");
-    std::vector<RDMs> refs;
+                                int max_rdm_level, RDMsType type) {
+    std::vector<std::shared_ptr<RDMs>> refs;
 
-    if (max_rdm_level <= 0)
-        return refs;
-
-    if (max_rdm_level == 1) {
-        refs.push_back(RDMs(g1a_, g1b_));
+    if (type == RDMsType::spin_dependent) {
+        if (max_rdm_level == 1) {
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a_, g1b_));
+        }
+        if (max_rdm_level == 2) {
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a_, g1b_, g2aa_, g2ab_, g2bb_));
+        }
+        if (max_rdm_level == 3) {
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a_, g1b_, g2aa_, g2ab_, g2bb_,
+                                                                  g3aaa_, g3aab_, g3abb_, g3bbb_));
+        }
+    } else {
+        ambit::Tensor g1sf, g2sf, g3sf;
+        g1sf = g1a_.clone();
+        g1sf("pq") += g1b_("pq");
+        if (max_rdm_level > 1) {
+            g2sf = g2aa_.clone();
+            g2sf("pqrs") += g2ab_("pqrs") + g2ab_("qpsr");
+            g2sf("pqrs") += g2bb_("pqrs");
+        }
+        if (max_rdm_level > 2) {
+            g3sf = g3aaa_.clone();
+            g3sf("pqrstu") += g3aab_("pqrstu") + g3aab_("prqsut") + g3aab_("qrptus");
+            g3sf("pqrstu") += g3abb_("pqrstu") + g3abb_("qprtsu") + g3abb_("rpqust");
+            g3sf("pqrstu") += g3bbb_("pqrstu");
+        }
+        if (max_rdm_level == 1)
+            refs.emplace_back(std::make_shared<RDMsSpinFree>(g1sf));
+        if (max_rdm_level == 2)
+            refs.emplace_back(std::make_shared<RDMsSpinFree>(g1sf, g2sf));
+        if (max_rdm_level == 3)
+            refs.emplace_back(std::make_shared<RDMsSpinFree>(g1sf, g2sf, g3sf));
     }
-    if (max_rdm_level == 2) {
-        refs.push_back(RDMs(g1a_, g1b_, g2aa_, g2ab_, g2bb_));
-    }
-    if (max_rdm_level == 3) {
-        refs.push_back(RDMs(g1a_, g1b_, g2aa_, g2ab_, g2bb_, g3aaa_, g3aab_, g3abb_, g3bbb_));
-    }
-
     return refs;
 }
 
-std::vector<RDMs> ExternalActiveSpaceMethod::transition_rdms(
-    const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-    std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
-    std::vector<RDMs> refs;
+std::vector<std::shared_ptr<RDMs>>
+ExternalActiveSpaceMethod::transition_rdms(const std::vector<std::pair<size_t, size_t>>&,
+                                           std::shared_ptr<ActiveSpaceMethod>, int, RDMsType) {
     throw std::runtime_error("ExternalActiveSpaceMethod::transition_rdms is not implemented!");
-    return refs;
+    return std::vector<std::shared_ptr<RDMs>>();
 }
 
 } // namespace forte

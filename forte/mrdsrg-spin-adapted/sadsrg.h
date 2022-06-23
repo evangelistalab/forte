@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,6 +31,7 @@
 
 #include "ambit/blocked_tensor.h"
 
+#include "base_classes/active_space_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
 
 #include "helpers/blockedtensorfactory.h"
@@ -50,8 +51,9 @@ class SADSRG : public DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    SADSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    SADSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+           std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~SADSRG();
@@ -90,6 +92,10 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Compute contributions from 3 cumulant
     bool do_cu3_;
+    /// Explicitly store 3 cumulants
+    bool store_cu3_;
+    /// Three-body density cumulant algorithm
+    std::string L3_algorithm_;
 
     /// Multi-state computation if true
     bool multi_state_;
@@ -217,8 +223,10 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor L1_;
     /// One-hole density matrix
     ambit::BlockedTensor Eta1_;
-    /// Two-body denisty cumulant
+    /// Two-body density cumulant
     ambit::BlockedTensor L2_;
+    /// Two-body density cumulant
+    ambit::Tensor L3_;
 
     // ==> Fock matrix related <==
 
@@ -371,7 +379,7 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Print done and timing
     void print_done(double t);
 
-    // ==> common aplitudes analysis and printing <==
+    // ==> common amplitudes analysis and printing <==
 
     /// Prune internal amplitudes for T1
     void internal_amps_T1(BlockedTensor& T1);

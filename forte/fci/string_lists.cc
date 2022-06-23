@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -37,8 +37,9 @@ using namespace psi;
 
 namespace forte {
 
-StringLists::StringLists(RequiredLists required_lists, psi::Dimension cmopi, std::vector<size_t> core_mo,
-                         std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print)
+StringLists::StringLists(RequiredLists required_lists, psi::Dimension cmopi,
+                         std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo, size_t na,
+                         size_t nb, int print)
     : required_lists_(required_lists), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo),
       na_(na), nb_(nb), print_(print) {
     startup();
@@ -163,7 +164,7 @@ void StringLists::startup() {
         outfile->Printf("\n\n  ==> String Lists <==\n");
         outfile->Printf("\n  Number of alpha electrons     = %zu", na_);
         outfile->Printf("\n  Number of beta electrons      = %zu", nb_);
-        outfile->Printf("\n  Number of alpha strings       = %zu", alfa_graph_->nstr());
+        outfile->Printf("\n  Number of alpha strings       = %zu", nas_);
         outfile->Printf("\n  Number of beta strings        = %zu", nbs_);
         if (na_ >= 3) {
             outfile->Printf("\n  Number of alpha strings (N-3) = %zu", alfa_graph_3h_->nstr());
@@ -345,5 +346,4 @@ void StringLists::print_string(bool* I, size_t n) {
 //  delete[] I;
 //  delete[] b;
 //*/
-}
-
+} // namespace forte

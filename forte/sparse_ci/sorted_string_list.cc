@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -37,8 +37,8 @@ namespace forte {
 SortedStringList::SortedStringList() {}
 
 SortedStringList::SortedStringList(const DeterminantHashVec& space,
-                                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                             DetSpinType sorted_string_spin) {
+                                   std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                   DetSpinType sorted_string_spin) {
     nmo_ = fci_ints->nmo();
     // Copy and sort the determinants
     auto dets = space.determinants();
@@ -108,13 +108,9 @@ SortedStringList::SortedStringList(const DeterminantHashVec& space,
 
 SortedStringList::~SortedStringList() {}
 
-const std::vector<Determinant>& SortedStringList::sorted_dets() const {
-    return sorted_dets_;
-}
+const std::vector<Determinant>& SortedStringList::sorted_dets() const { return sorted_dets_; }
 
-const std::vector<String>& SortedStringList::sorted_half_dets() const {
-    return sorted_half_dets_;
-}
+const std::vector<String>& SortedStringList::sorted_half_dets() const { return sorted_half_dets_; }
 
 const std::pair<size_t, size_t>& SortedStringList::range(const String& d) const {
     return first_string_range_.at(d);

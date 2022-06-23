@@ -11,12 +11,8 @@ set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 set(TargetOpenMP_FIND_COMPONENTS "CXX")
 
-# cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(psi4OptionsTools)
@@ -38,8 +34,11 @@ find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit 0.5 REQUIRED)
 
+set(DMRG_SOLVER "")
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
+    add_definitions(-DHAVE_CHEMPS2)
+    set(HAVE_CHEMPS2 true)
 endif()
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -55,13 +54,7 @@ endif()
 include(cmake/clang-cxx-dev-tools.cmake)
 include(cmake/git-version.cmake)
 
-# Check if we can compile with SSE4.2
-check_cxx_compiler_flag("-msse4.2" SSE42_FLAG)
-if(SSE42_FLAG)
-    message("-- Adding SSE4.2 Flag")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
-endif()
-add_compile_options(-Wall -Wextra -pedantic) # -Werror)
+add_compile_options(-Wall -Wextra -pedantic)
 
 if(ENABLE_CODECOV)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
@@ -74,8 +67,7 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings for C++17
 
 # List of CC files
-pybind11_add_module(forte
-api/ambit_api.cc
+pybind11_add_module(_forte
 api/cube_file_api.cc
 api/integrals_api.cc
 api/mospaceinfo_api.cc
@@ -103,7 +95,7 @@ casscf/mcscf_2step.cc
 ci_ex_states/excited_state_solver.cc
 ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc
-dmrg/dmrgscf.cc
+ci_rdm/ci_rdms_sf.cc
 dmrg/dmrgsolver.cc
 external/external_active_space_method.cc
 fci/binary_graph.cc
@@ -133,6 +125,7 @@ helpers/lbfgs/lbfgs.cc
 helpers/lbfgs/lbfgs_param.cc
 helpers/lbfgs/rosenbrock.cc
 helpers/printing.cc
+helpers/spinorbital_helpers.cc
 helpers/string_algorithms.cc
 integrals/active_space_integrals.cc
 integrals/cholesky_integrals.cc
@@ -168,7 +161,6 @@ mrdsrg-spin-adapted/sa_mrdsrg_amps.cc
 mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
 mrdsrg-spin-adapted/sa_mrpt2.cc
 mrdsrg-spin-adapted/sa_mrpt3.cc
-mrdsrg-spin-integrated/active_dsrgpt2.cc
 mrdsrg-spin-integrated/dsrg_mrpt2.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 mrdsrg-spin-integrated/dsrg_mrpt3.cc
@@ -226,30 +218,23 @@ sparse_ci/sparse_state_vector.cc
 v2rdm/v2rdm.cc
 )
 
-target_link_libraries(forte PRIVATE psi4::core)
-target_link_libraries(forte PRIVATE tgt::MathOpenMP)
+target_link_libraries(_forte PRIVATE psi4::core)
+target_link_libraries(_forte PRIVATE tgt::MathOpenMP)
 #set_target_properties(forte PROPERTIES PREFIX "")
-target_link_libraries(forte PRIVATE ambit::ambit)
+target_link_libraries(_forte PRIVATE ambit::ambit)
 if(TARGET CheMPS2::chemps2)
-    target_link_libraries(forte PRIVATE CheMPS2::chemps2)
+    target_link_libraries(_forte PRIVATE CheMPS2::chemps2)
     add_definitions(-DHAVE_CHEMPS2)
 endif()
 
-target_include_directories(forte PRIVATE .)
-
-# 64bit implementation
-if(MAX_DET_ORB)
-    add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
-else()
-    add_definitions(-DMAX_DET_ORB=64)
-endif()
+target_include_directories(_forte PRIVATE .)
 
 if(ENABLE_MPI)
-    target_link_libraries(forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
+    target_link_libraries(_forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
     #target_link_libraries(forte PRIVATE MPI::MPI_CXX)  # MPI option B
     #target_add_definitions(forte PRIVATE HAVE_MPI)  # MPI option B
 endif()
 
 if(ENABLE_GA)
-    target_link_libraries(forte PRIVATE GlobalArrays::ga)
+    target_link_libraries(_forte PRIVATE GlobalArrays::ga)
 endif()

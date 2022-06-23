@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -171,10 +171,11 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ(int norb) const {
         std::vector<int> occ;
-        if (norb > nbits_half) {
+        if (static_cast<size_t>(norb) > nbits_half) {
             throw std::range_error(
                 "Determinant::get_alfa_occ(int norb) was passed a value of norb (" +
-                std::to_string(norb) + "), which is larger than the maximum number of alpha orbitals (" +
+                std::to_string(norb) +
+                "), which is larger than the maximum number of alpha orbitals (" +
                 std::to_string(nbits_half) + ").");
         }
         for (int p = 0; p < norb; ++p) {
@@ -188,10 +189,11 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// Return a vector of occupied beta orbitals
     std::vector<int> get_beta_occ(int norb) const {
         std::vector<int> occ;
-        if (norb > nbits_half) {
+        if (static_cast<size_t>(norb) > nbits_half) {
             throw std::range_error(
                 "Determinant::get_beta_occ(int norb) was passed a value of norb (" +
-                std::to_string(norb) + "), which is larger than the maximum number of beta orbitals (" +
+                std::to_string(norb) +
+                "), which is larger than the maximum number of beta orbitals (" +
                 std::to_string(nbits_half) + ").");
         }
         for (int p = 0; p < norb; ++p) {
@@ -205,10 +207,11 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// Return a vector of virtual alpha orbitals
     std::vector<int> get_alfa_vir(int norb) const {
         std::vector<int> vir;
-        if (norb > nbits_half) {
+        if (static_cast<size_t>(norb) > nbits_half) {
             throw std::range_error(
                 "Determinant::get_alfa_occ(int norb) was passed a value of norb (" +
-                std::to_string(norb) + "), which is larger than the maximum number of alpha orbitals (" +
+                std::to_string(norb) +
+                "), which is larger than the maximum number of alpha orbitals (" +
                 std::to_string(nbits_half) + ").");
         }
         for (int p = 0; p < norb; ++p) {
@@ -222,10 +225,11 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// Return a vector of virtual beta orbitals
     std::vector<int> get_beta_vir(int norb) const {
         std::vector<int> vir;
-        if (norb > nbits_half) {
+        if (static_cast<size_t>(norb) > nbits_half) {
             throw std::range_error(
                 "Determinant::get_beta_occ(int norb) was passed a value of norb (" +
-                std::to_string(norb) + "), which is larger than the maximum number of beta orbitals (" +
+                std::to_string(norb) +
+                "), which is larger than the maximum number of beta orbitals (" +
                 std::to_string(nbits_half) + ").");
         }
         for (int p = 0; p < norb; ++p) {

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -509,6 +509,8 @@ void DISKDFIntegrals::gather_integrals() {
             throw psi::PSIEXCEPTION(msg);
         }
     }
+    df_->set_schwarz_cutoff(schwarz_cutoff_);
+    df_->set_fitting_condition(df_fitting_cutoff_);
     df_->set_memory(static_cast<size_t>(mem));
     df_->set_MO_core(false);
     df_->set_nthreads(omp_get_max_threads());
@@ -576,7 +578,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
             });
         }
     } else {
-        outfile->Printf("\n Not implemened for variable size in A");
+        outfile->Printf("\n Not implemented for variable size in A");
         throw psi::PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
     }
     return ReturnTensor;

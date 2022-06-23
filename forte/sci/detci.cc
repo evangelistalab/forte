@@ -10,6 +10,7 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "base_classes/rdms.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
@@ -29,8 +30,8 @@ DETCI::DETCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
 }
 
 void DETCI::startup() {
-    nirrep_ = mo_space_info_->nirrep();
-    nactv_ = mo_space_info_->size("ACTIVE");
+    nirrep_ = static_cast<int>(mo_space_info_->nirrep());
+    nactv_ = static_cast<int>(mo_space_info_->size("ACTIVE"));
     actv_dim_ = mo_space_info_->dimension("ACTIVE");
 
     multiplicity_ = state_.multiplicity();
@@ -39,12 +40,11 @@ void DETCI::startup() {
 
     state_label_ = state_.multiplicity_label() + " (Ms = " + get_ms_string(twice_ms_) + ") " +
                    state_.irrep_label();
-
-    set_options(options_);
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     actv_space_type_ = options->get_str("ACTIVE_REF_TYPE");
+    exclude_hf_in_cid_ = options->get_bool("DETCI_CISD_NO_HF");
 
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
@@ -69,7 +69,7 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
 DETCI::~DETCI() {
     // remove wave function file
     if (not dump_wfn_) {
-        if (std::remove(wfn_filename_.c_str()) != 0) {
+        if (!wfn_filename_.empty() and std::remove(wfn_filename_.c_str()) != 0) {
             outfile->Printf("\n  DETCI wave function %s not available.", state_.str().c_str());
             std::perror("Error when deleting DETCI wave function. See output file.");
         }
@@ -83,7 +83,7 @@ double DETCI::compute_energy() {
     build_determinant_space();
 
     // diagonalize Hamiltonian
-    diagoanlize_hamiltonian();
+    diagonalize_hamiltonian();
 
     // compute 1RDMs
     compute_1rdms();
@@ -92,9 +92,6 @@ double DETCI::compute_energy() {
     if (not quiet_) {
         print_ci_wfn();
     }
-
-    // compute dipole momemts
-    compute_permanent_dipole();
 
     // save wave functions by default
     dump_wave_function(wfn_filename_);
@@ -115,8 +112,10 @@ void DETCI::build_determinant_space() {
         ci_ref.build_gas_reference(dets);
     } else if (actv_space_type_ == "DOCI") {
         ci_ref.build_doci_reference(dets);
-    } else {
+    } else if (actv_space_type_ == "CAS") {
         ci_ref.build_cas_reference_full(dets);
+    } else {
+        ci_ref.build_ci_reference(dets, !exclude_hf_in_cid_);
     }
 
     auto size = dets.size();
@@ -141,7 +140,7 @@ void DETCI::build_determinant_space() {
     p_space_ = DeterminantHashVec(dets);
 }
 
-void DETCI::diagoanlize_hamiltonian() {
+void DETCI::diagonalize_hamiltonian() {
     timer tdiag("Diagonalize CI Hamiltonian");
     energies_ = std::vector<double>(nroot_);
 
@@ -164,6 +163,9 @@ void DETCI::diagoanlize_hamiltonian() {
         evals_->add(i, energy_offset);
         energies_[i] = evals_->get(i);
     }
+
+    // spin
+    spin2_ = solver->spin();
 
     outfile->Printf("\n\n  Done diagonalizing Hamiltonian, %.3e seconds.", tdiag.stop());
 }
@@ -188,11 +190,11 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     }
 
     solver->set_guess_dimension(dl_guess_size_);
-    if (initial_guess_.size()) {
+    if (not initial_guess_.empty()) {
         solver->set_initial_guess(initial_guess_);
     }
 
-    if (projected_roots_.size() != 0) {
+    if (not projected_roots_.empty()) {
         solver->set_root_project(true);
         solver->add_bad_states(projected_roots_);
     }
@@ -268,9 +270,9 @@ void DETCI::print_ci_wfn() {
             std::string dash = std::string(dash_size, '-');
             outfile->Printf("%16s\n    %s", "Coefficients", dash.c_str());
 
-            for (size_t i = 0, size = id.size(); i < size; ++i) {
-                auto det = p_space_.get_det(id[i]);
-                double ci = evecs_->get(id[i], N);
+            for (const int& i : id) {
+                auto det = p_space_.get_det(i);
+                double ci = evecs_->get(i, N);
 
                 outfile->Printf("\n    ");
                 for (int h = 0, offset = 0; h < nirrep_; ++h) {
@@ -309,7 +311,7 @@ void DETCI::print_ci_wfn() {
 
             // print orbital occupations
             outfile->Printf("\n\n    Occupation Numbers:");
-            for (int i = 0, size = vec_irrep_occupation.size(); i < size; ++i) {
+            for (int i = 0, size = static_cast<int>(vec_irrep_occupation.size()); i < size; ++i) {
                 if (i % 4 == 0) {
                     outfile->Printf("\n    ");
                 }
@@ -324,22 +326,24 @@ void DETCI::print_ci_wfn() {
 }
 
 void DETCI::dump_wave_function(const std::string& filename) {
+    timer t_dump("Dump DETCI WFN");
     std::ofstream file(filename);
-    file << "# DETCI: " << state_.str() << std::endl;
-    file << p_space_.size() << " " << nroot_ << std::endl;
+    file << "# DETCI: " << state_.str() << '\n';
+    file << p_space_.size() << " " << nroot_ << '\n';
+    file << std::scientific << std::setprecision(10);
     for (size_t I = 0, Isize = p_space_.size(); I < Isize; ++I) {
-        std::string det_str = str(p_space_.get_det(I), nactv_);
-        file << det_str;
+        file << str(p_space_.get_det(I), nactv_);
         for (size_t n = 0; n < nroot_; ++n) {
-            file << ", " << std::scientific << std::setprecision(12) << evecs_->get(I, n);
+            file << "," << std::setw(18) << evecs_->get(I, n);
         }
-        file << std::endl;
+        file << '\n';
     }
     file.close();
 }
 
 std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
 DETCI::read_wave_function(const std::string& filename) {
+    timer t_read("Read DETCI WFN");
     std::string line;
     std::ifstream file(filename);
 
@@ -352,7 +356,7 @@ DETCI::read_wave_function(const std::string& filename) {
     std::getline(file, line);
     if (line.find("DETCI") == std::string::npos) {
         outfile->Printf("\n  DETCI Error: Wave function file not from a previous DETCI!");
-        std::runtime_error("Failed read wave function: file not generated from DETCI.");
+        throw std::runtime_error("Failed read wave function: file not generated from DETCI.");
     }
 
     // read second line for number of determinants and number of roots
@@ -448,39 +452,68 @@ bool DETCI::read_initial_guess(const std::string& filename) {
         tmp.reserve(indices.size());
         for (const size_t I : indices) {
             const auto& det = dets[I];
-            tmp.push_back({p_space_[det], evecs->get(I, n) / norms[n]});
+            tmp.emplace_back(p_space_[det], evecs->get(I, n) / norms[n]);
         }
-        if (tmp.size())
+        if (not tmp.empty())
             initial_guess_.push_back(tmp);
     }
 
     return true;
 }
 
-std::vector<RDMs> DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                              int max_rdm_level) {
+std::vector<std::shared_ptr<RDMs>>
+DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+            RDMsType rdm_type) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
         throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
 
-    std::vector<RDMs> rdms;
+    std::vector<std::shared_ptr<RDMs>> rdms;
 
     for (auto& root_pair : root_list) {
         auto root1 = root_pair.first;
         auto root2 = root_pair.second;
 
-        auto D1 = compute_trans_1rdms_sosd(root1, root2);
+        if (rdm_type == RDMsType::spin_dependent) {
+            auto D1 = compute_trans_1rdms_sosd(root1, root2);
+            std::vector<ambit::Tensor> D2, D3;
+            if (max_rdm_level > 1)
+                D2 = compute_trans_2rdms_sosd(root1, root2);
+            if (max_rdm_level > 2)
+                D3 = compute_trans_3rdms_sosd(root1, root2);
 
-        if (max_rdm_level == 1) {
-            rdms.emplace_back(D1[0], D1[1]);
-        } else {
-            auto D2 = compute_trans_2rdms_sosd(root1, root2);
-
-            if (max_rdm_level == 2) {
-                rdms.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2]);
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(D1[0], D1[1]));
+            } else if (max_rdm_level == 2) {
+                rdms.emplace_back(
+                    std::make_shared<RDMsSpinDependent>(D1[0], D1[1], D2[0], D2[1], D2[2]));
             } else {
-                auto D3 = compute_trans_3rdms_sosd(root1, root2);
-                rdms.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(
+                    D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]));
+            }
+        } else {
+            CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+            ci_rdms.set_print(print_ci_rdms_);
+
+            auto D1 = ambit::Tensor::build(CoreTensor, "D1", std::vector<size_t>(2, nactv_));
+            ci_rdms.compute_1rdm_sf_op(D1.data());
+
+            ambit::Tensor D2, D3;
+            if (max_rdm_level > 1) {
+                D2 = ambit::Tensor::build(CoreTensor, "D2", std::vector<size_t>(4, nactv_));
+                ci_rdms.compute_2rdm_sf_op(D2.data());
+            }
+            if (max_rdm_level > 2) {
+                D3 = ambit::Tensor::build(CoreTensor, "D3", std::vector<size_t>(6, nactv_));
+                ci_rdms.compute_3rdm_sf_op(D3.data());
+            }
+
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1));
+            } else if (max_rdm_level == 2) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2));
+            } else {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2, D3));
             }
         }
     }
@@ -507,8 +540,8 @@ std::vector<ambit::Tensor> DETCI::compute_trans_1rdms_sosd(int root1, int root2)
         }
     } else {
         CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
-        ci_rdms.compute_1rdm_op(a_data, b_data);
         ci_rdms.set_print(print_ci_rdms_);
+        ci_rdms.compute_1rdm_op(a_data, b_data);
     }
 
     return {a, b};
@@ -548,115 +581,10 @@ std::vector<ambit::Tensor> DETCI::compute_trans_3rdms_sosd(int root1, int root2)
     return {aaa, aab, abb, bbb};
 }
 
-void DETCI::compute_permanent_dipole() {
-    std::string dash(68, '-');
-    if (not quiet_) {
-        print_h2("Permanent Dipole Moments [e a0] for " + state_label_);
-        psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z",
-                             "|DM|");
-        psi::outfile->Printf("\n    %s", dash.c_str());
-    }
-
-    auto ints = as_ints_->ints();
-    auto wfn = ints->wfn();
-    auto nmopi = mo_space_info_->dimension("ALL");
-    auto doccpi = mo_space_info_->dimension("INACTIVE_DOCC");
-
-    // obtain AO dipole from ForteIntegrals
-    auto aodipole_ints = ints->ao_dipole_ints();
-
-    // Nuclear dipole contribution
-    auto ndip = wfn->molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
-
-    // SO to AO transformer
-    auto sotoao(wfn->aotoso()->transpose());
-    int nao = sotoao->coldim();
-
-    // loop over states
-    for (size_t A = 0; A < nroot_; ++A) {
-        // transform 1-RDM to SO basis
-        auto Dt_so = std::make_shared<psi::Matrix>("Dt_SO " + std::to_string(A), nmopi, nmopi);
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int i = 0; i < doccpi[h]; ++i) {
-                Dt_so->set(h, i, i, 2.0);
-            }
-        }
-
-        auto Da = opdm_a_[A];
-        auto Db = opdm_a_[A];
-        for (size_t h = 0; h < size_t(nirrep_); ++h) {
-            size_t offset_m = doccpi[h];
-            for (int u = 0; u < actv_dim_[h]; ++u) {
-                size_t u_m = u + offset_m;
-                for (int v = 0; v < actv_dim_[h]; ++v) {
-                    Dt_so->set(h, u_m, v + offset_m, Da->get(h, u, v) + Db->get(h, u, v));
-                }
-            }
-        }
-        Dt_so->back_transform(ints->Ca());
-
-        // transform 1-RDM to AO basis
-        auto Dt_ao = std::make_shared<psi::Matrix>("Dt_AO " + std::to_string(A), nao, nao);
-        Dt_ao->remove_symmetry(Dt_so, sotoao);
-
-        // compute dipole moments
-        std::vector<double> dipole(4, 0.0);
-        for (int i = 0; i < 3; ++i) {
-            dipole[i] = ndip[i] + Dt_ao->vector_dot(aodipole_ints[i]);
-            dipole[3] += dipole[i] * dipole[i];
-        }
-        dipole[3] = std::sqrt(dipole[3]);
-
-        // printing
-        std::string name = std::to_string(A) + upper_string(state_.irrep_label());
-
-        if (not quiet_) {
-            psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dipole[0],
-                                 dipole[1], dipole[2], dipole[3]);
-        }
-
-        // push to Psi4 global environment
-        auto& globals = psi::Process::environment.globals;
-
-        std::vector<std::string> keys{
-            " <" + name + "|DM_X|" + name + ">", " <" + name + "|DM_Y|" + name + ">",
-            " <" + name + "|DM_Z|" + name + ">", " |<" + name + "|DM|" + name + ">|"};
-
-        std::string multi_label = upper_string(state_.multiplicity_label());
-        std::string label = multi_label + keys[3];
-
-        // try to fix states with different gas_min and gas_max
-        if (globals.find(label) != globals.end()) {
-            if (globals.find(label + " ENTRY 0") == globals.end()) {
-                std::string suffix = " ENTRY 0";
-                for (int i = 0; i < 4; ++i) {
-                    globals[multi_label + keys[i] + suffix] = globals[multi_label + keys[i]];
-                }
-            }
-
-            int n = 1;
-            std::string suffix = " ENTRY 1";
-            while (globals.find(label + suffix) != globals.end()) {
-                suffix = " ENTRY " + std::to_string(++n);
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                globals[multi_label + keys[i] + suffix] = dipole[i];
-            }
-        }
-
-        for (int i = 0; i < 4; ++i) {
-            globals[multi_label + keys[i]] = dipole[i];
-        }
-    }
-    if (not quiet_) {
-        psi::outfile->Printf("\n    %s", dash.c_str());
-    }
-}
-
-std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                         std::shared_ptr<ActiveSpaceMethod> method2,
-                                         int max_rdm_level) {
+std::vector<std::shared_ptr<RDMs>>
+DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                       std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                       RDMsType rdm_type) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
         throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
@@ -699,7 +627,7 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
     }
 
     // loop over roots and compute the transition RDMs
-    std::vector<RDMs> rdms;
+    std::vector<std::shared_ptr<RDMs>> rdms;
     for (const auto& roots_pair : root_list) {
         size_t root1 = roots_pair.first;
         size_t root2 = roots_pair.second + nroot_;
@@ -707,47 +635,76 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
         CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
         ci_rdms.set_print(false);
 
-        // compute 1-RDM
-        auto a = ambit::Tensor::build(CoreTensor, "TD1a", std::vector<size_t>(2, nactv_));
-        auto b = ambit::Tensor::build(CoreTensor, "TD1b", std::vector<size_t>(2, nactv_));
-        auto& a_data = a.data();
-        auto& b_data = b.data();
+        if (rdm_type == RDMsType::spin_dependent) {
+            // compute 1-RDM
+            auto a = ambit::Tensor::build(CoreTensor, "TD1a", std::vector<size_t>(2, nactv_));
+            auto b = ambit::Tensor::build(CoreTensor, "TD1b", std::vector<size_t>(2, nactv_));
+            auto& a_data = a.data();
+            auto& b_data = b.data();
 
-        ci_rdms.compute_1rdm_op(a_data, b_data);
+            ci_rdms.compute_1rdm_op(a_data, b_data);
 
-        if (max_rdm_level == 1) {
-            rdms.emplace_back(a, b);
-        } else {
-            ci_rdms.set_print(true);
-
-            // compute 2-RDM
-            std::vector<size_t> dim4(4, nactv_);
-            auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", dim4);
-            auto ab = ambit::Tensor::build(CoreTensor, "TD2ab", dim4);
-            auto bb = ambit::Tensor::build(CoreTensor, "TD2bb", dim4);
-            auto& aa_data = aa.data();
-            auto& ab_data = ab.data();
-            auto& bb_data = bb.data();
-
-            ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
-
-            if (max_rdm_level == 2) {
-                rdms.emplace_back(a, b, aa, ab, bb);
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b));
             } else {
-                // compute 3-RDM
-                std::vector<size_t> dim6(6, nactv_);
-                auto aaa = ambit::Tensor::build(CoreTensor, "TD3aaa", dim6);
-                auto aab = ambit::Tensor::build(CoreTensor, "TD3aab", dim6);
-                auto abb = ambit::Tensor::build(CoreTensor, "TD3abb", dim6);
-                auto bbb = ambit::Tensor::build(CoreTensor, "TD3bbb", dim6);
-                auto& aaa_data = aaa.data();
-                auto& aab_data = aab.data();
-                auto& abb_data = abb.data();
-                auto& bbb_data = bbb.data();
+                ci_rdms.set_print(true);
 
-                ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
+                // compute 2-RDM
+                std::vector<size_t> dim4(4, nactv_);
+                auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", dim4);
+                auto ab = ambit::Tensor::build(CoreTensor, "TD2ab", dim4);
+                auto bb = ambit::Tensor::build(CoreTensor, "TD2bb", dim4);
+                auto& aa_data = aa.data();
+                auto& ab_data = ab.data();
+                auto& bb_data = bb.data();
 
-                rdms.emplace_back(a, b, aa, ab, bb, aaa, aab, abb, bbb);
+                ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
+
+                if (max_rdm_level == 2) {
+                    rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb));
+                } else {
+                    // compute 3-RDM
+                    std::vector<size_t> dim6(6, nactv_);
+                    auto aaa = ambit::Tensor::build(CoreTensor, "TD3aaa", dim6);
+                    auto aab = ambit::Tensor::build(CoreTensor, "TD3aab", dim6);
+                    auto abb = ambit::Tensor::build(CoreTensor, "TD3abb", dim6);
+                    auto bbb = ambit::Tensor::build(CoreTensor, "TD3bbb", dim6);
+                    auto& aaa_data = aaa.data();
+                    auto& aab_data = aab.data();
+                    auto& abb_data = abb.data();
+                    auto& bbb_data = bbb.data();
+
+                    ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
+
+                    rdms.emplace_back(
+                        std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb, aaa, aab, abb, bbb));
+                }
+            }
+        } else {
+            // compute 1-RDM
+            auto D1 = ambit::Tensor::build(CoreTensor, "TD1", std::vector<size_t>(2, nactv_));
+            ci_rdms.compute_1rdm_sf_op(D1.data());
+
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1));
+            } else {
+                ci_rdms.set_print(true);
+
+                // compute 2-RDM
+                std::vector<size_t> dim4(4, nactv_);
+                auto D2 = ambit::Tensor::build(CoreTensor, "TD2", dim4);
+                ci_rdms.compute_2rdm_sf_op(D2.data());
+
+                if (max_rdm_level == 2) {
+                    rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2));
+                } else {
+                    // compute 3-RDM
+                    std::vector<size_t> dim6(6, nactv_);
+                    auto D3 = ambit::Tensor::build(CoreTensor, "TD3", dim6);
+                    ci_rdms.compute_3rdm_sf_op(D3.data());
+
+                    rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2, D3));
+                }
             }
         }
     }

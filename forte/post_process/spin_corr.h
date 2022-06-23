@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,25 +41,23 @@
 
 namespace forte {
 
-
 /**
  * @brief The SpinCorr class
- * This class computes the spin correlation from RDMs 
+ * This class computes the spin correlation from RDMs
  */
 class SpinCorr {
 
   public:
+    SpinCorr(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
+             std::shared_ptr<MOSpaceInfo> mo_space_info,
+             std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    SpinCorr(RDMs rdms, std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-            std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-    
     std::pair<psi::SharedMatrix, psi::SharedMatrix> compute_nos();
-    
-    void spin_analysis();
-    
-  private:
 
-    RDMs rdms_;
+    void spin_analysis();
+
+  private:
+    std::shared_ptr<RDMs> rdms_;
 
     std::shared_ptr<ForteOptions> options_;
 
@@ -74,7 +72,9 @@ class SpinCorr {
     psi::Dimension nactpi_;
 };
 
-void perform_spin_analysis(RDMs rdms, std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
+                           std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 } // namespace forte
 

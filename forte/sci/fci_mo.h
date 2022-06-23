@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -67,6 +67,8 @@ void set_FCI_MO_options(ForteOptions& foptions);
 class FCI_MO : public ActiveSpaceMethod {
 
   public:
+    using det_hash = std::unordered_map<Determinant, size_t, Determinant::Hash>;
+    using det_hash_it = det_hash::iterator;
     /**
      * @brief FCI_MO Constructor
      * @param ref_wfn The reference wavefunction object
@@ -113,19 +115,36 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<double> compute_ss_energies();
 
     /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            int max_rdm_level, RDMsType rdm_type) override;
 
     /// Returns the transition reduced density matrices between roots of different symmetry up to a
     /// given level (max_rdm_level)
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType rdm_type) override;
 
-    [[deprecated]] std::vector<RDMs>
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
+    /// h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
+    std::vector<double> compute_complementary_H2caa_overlap(const std::vector<size_t>& roots,
+                                                            ambit::Tensor Tbra,
+                                                            ambit::Tensor Tket) override;
+    std::vector<double>
+    compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>& roots,
+                                                  ambit::Tensor Tbra, ambit::Tensor Tket);
+    std::vector<double>
+    compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>& roots,
+                                                  ambit::Tensor Tbra, ambit::Tensor Tket);
+
+    [[deprecated]] std::vector<std::shared_ptr<RDMs>>
     reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level);
 
-    RDMs reference(int max_rdm_level) {
+    std::shared_ptr<RDMs> reference(int max_rdm_level) {
         std::vector<std::pair<size_t, size_t>> roots;
         roots.push_back(std::make_pair(0, 0));
         return reference(roots, max_rdm_level)[0];
@@ -133,14 +152,18 @@ class FCI_MO : public ActiveSpaceMethod {
 
     void set_options(std::shared_ptr<ForteOptions>) override {} // TODO implement
 
+    /// Return the CI wave functions for current state symmetry
+    psi::SharedMatrix ci_wave_functions() override;
+
     /// Compute densities or transition densities
     /// root1, root2 -- the ket and bra roots of p_space and eigen
     /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
     /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
     /// max_level -- max RDM level to be computed
     /// do_cumulant -- returned RDMs is filled by cumulants (not RDMs) if true
-    RDMs transition_reference(int root1, int root2, bool multi_state, int entry = 0,
-                              int max_level = 3, bool do_cumulant = false, bool disk = true);
+    std::shared_ptr<RDMs> transition_reference(int root1, int root2, bool multi_state,
+                                               int entry = 0, int max_level = 3,
+                                               bool do_cumulant = false, bool disk = true);
 
     /// Density files
     std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
@@ -198,9 +221,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Set number of roots
     void set_nroots(int nroot) { nroot_ = nroot; }
-
-    /// Quiet mode (no printing, for use with CASSCF)
-    void set_quite_mode(bool quiet) { quiet_ = quiet; }
 
     /// Set if localize orbitals
     void set_localize_actv(bool localize) { localize_actv_ = localize; }
@@ -290,8 +310,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Print Levels
     int print_;
-    /// Quiet mode (Do not print anything in FCI)
-    bool quiet_ = false;
 
     /// Nucear Repulsion Energy
     double e_nuc_;
@@ -442,14 +460,8 @@ class FCI_MO : public ActiveSpaceMethod {
                                              int rdm_level, int root1, int root2,
                                              const StateInfo& state2, bool disk);
 
-    /// Add wedge product of L1 to L2
-    void add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, ambit::Tensor& L2aa,
-                       ambit::Tensor& L2ab, ambit::Tensor& L2bb);
-    /// Add wedge product of L1 and L2 to L3
-    void add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
-                       const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
-                       const ambit::Tensor& L2bb, ambit::Tensor& L3aaa, ambit::Tensor& L3aab,
-                       ambit::Tensor& L3abb, ambit::Tensor& L3bbb);
+    ambit::Tensor compute_n_rdm_sf(const vecdet& p_space, psi::SharedMatrix evecs, int rdm_level,
+                                   int root1, int root2, const StateInfo& state2);
 
     /// Rotate the given CI vectors by XMS
     psi::SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
@@ -460,6 +472,34 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Compute 2- and 3-cumulants
     void compute_ref(const int& level, size_t root1, size_t root2);
+
+    /// Build a map from (N-1)-electron string to determinants
+    std::vector<std::vector<std::pair<int, size_t>>> am1_string_to_dets_;
+    std::vector<std::vector<std::pair<int, size_t>>> bm1_string_to_dets_;
+    void build_nm1_string_dets_map();
+
+    /// 3 to 1 determinants: z^+ v u |I>
+    det_hash dets321_a_; // u: alpha
+    det_hash dets321_b_; // u: beta
+
+    /// Build 3 to 1 lists: z^+ v u |I>
+    void build_dets321();
+    bool built_dets321_ = false;
+
+    /// 3 to 1 lists: |J> = z^+ v u |I>
+    /// J to vector of tuples (I, u, v, z, sign)
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        list321_aaa_;
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        list321_abb_;
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        list321_baa_;
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        list321_bbb_;
+
+    /// Build 3 to 1 lists: |J> = z^+ v u |I>
+    void build_lists321();
+    bool built_lists321_ = false;
 
     /// Orbital Extents
     /// returns a vector of irrep by # active orbitals in current irrep
@@ -482,11 +522,6 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute oscillator strength of same symmetry
     void compute_oscillator_strength();
 
-    /// Compute transition dipole when doing state averaging
-    void compute_transition_dipole_sa();
-    /// Compute oscillator strength when doing state averaging
-    void compute_oscillator_strength_sa();
-
     /// Compute dipole (or transition dipole) using DSRG transformed MO dipole integrals (dm)
     /// and densities (or transition densities, D)
     double ref_relaxed_dm_helper(const double& dm0, ambit::BlockedTensor& dm1,
@@ -502,7 +537,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Localize active orbitals
     bool localize_actv_;
-    void localize_actv_orbs();
 
     /// Print Determinants
     void print_det(const vecdet& dets);

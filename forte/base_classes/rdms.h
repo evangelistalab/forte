@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,6 +31,7 @@
 
 #include <vector>
 #include <ambit/tensor.h>
+#include "psi4/libmints/matrix.h"
 
 namespace forte {
 
@@ -40,140 +41,280 @@ class MOSpaceInfo;
 /**
  * @class RDMs
  *
- * @brief This class stores diagonal or transition reduced density matrices (RDMs) and
- *        reduced density cumulants (RDCs).
+ * @brief This class stores diagonal or transition reduced density matrices (RDMs).
  *
- * The n-body reduced density matrix between two states |A> and |B> is defined as
+ * The spin-orbital n-body reduced density matrix between two states |A> and |B> is defined as
  *
- *  RDM(p_1, p_2, ..., p_n, q_1, q_2, ..., q_n) = <A| a+(p1) ... a+(pn) a(qn) ... a(q1)  |B>
+ *   RDM(p_1, p_2, ..., p_n, q_1, q_2, ..., q_n) = <A| a+(p1) ... a+(pn) a(qn) ... a(q1) |B>
+ *
+ * Two types of RDMs can be created: spin-dependent and spin-free.
+ * The spin-dependent n-body RDMs are defined by
+ *
+ *   D(p1,σ1; ...; pn,σn; q1,σ1; ...; qn,σn) = <A| a+(p1,σ1) ... a+(pn,σn) a(qn,σn) ... a(q1,σ1) |B>
+ *
+ * where spins σ1 >= σ2 >= ... >= σn given that α > β.
+ * The spin-free n-body RDMs are defined using spin-dependent RDMs as
+ *
+ *   F(p1, ..., pn, q1, ..., qn) = sum_{σ1,...,σn} D(p1,σ1; ...; pn,σn; q1,σ1; ...; qn,σn)
  *
  * This class is constructed by passing the RDMs up to a given rank n (n <= 3). For example,
- * to pass the one- and two-body RDMs an object is initialized as
+ * to pass the spin-dependent one- and two-body RDMs an object is initialized as
  *
- * ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb;
- * // ...
- * // fill in g1a, g1b, ...
- * // ...
- * auto rdms = RDMs(g1a, g1b, g2aa, g2ab, g2bb);
+ * >>> ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb;
+ * >>> // ...
+ * >>> // fill in g1a, g1b, ...
+ * >>> // ...
+ * >>> std::shared_ptr<RDMs> rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb);
  *
  * From the RDMs it is possible to obtain the corresponding cumulants by calling appropriate member
- * functions. For example,
- * the alpha-alpha 2-body density cumulant can be obtained by calling
+ * functions. For example, the alpha-alpha 2-body density cumulant can be obtained by calling
  *
- * auto L2aa = rdms.L2aa();
+ * >>> auto L2aa = rdms->L2aa();
  *
- * @note Once passed in, the RDMs are assumed to be fixed and immutable.
+ * Given an orbital rotation matrix, the RDMs can be easily transformed to the new basis by calling
+ *
+ * >>> ambit::Tensor Ua, Ub; // orbital transformation for alpha and beta orbitals
+ * >>> ... fill in Ua and Ub ...
+ * >>> rdms->rotate(Ua, Ub);
+ *
+ * RDMs of the same spin type can be added together via AXPY
+ *
+ * >>> std::shared_ptr<RDMs> xrdms;
+ * >>> xrdms = std::make_shared<RDMsSpinDependent>(xg1a, xg1b, xg2aa, xg2ab, xg2bb);
+ * >>> rdm->axpy(xrdms, 0.5);
+ *
+ * which is equivalent to
+ * >>> g1a("pq") += 0.5 * xg1a("pq");
+ * >>> g1b("pq") += 0.5 * xg1b("pq");
+ * >>> g2aa("pqrs") += 0.5 * xg2aa("pqrs");
+ * >>> g2ab("pqrs") += 0.5 * xg2ab("pqrs");
+ * >>> g2bb("pqrs") += 0.5 * xg2bb("pqrs");
+ * >>> rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb);
  *
  */
+
+enum class RDMsType { spin_dependent, spin_free };
+
 class RDMs {
   public:
-    // ==> Class Constructors <==
+    /// Build a zero-valued RDMs object
+    static std::shared_ptr<RDMs> build(size_t max_rdm_level, size_t n_orbs, RDMsType type);
 
-    /// 0-rdm constructor
-    RDMs();
-    /// @brief Construct a RDMs object with the 1-rdm
-    RDMs(ambit::Tensor g1a, ambit::Tensor g1b);
-    /// @brief Construct a RDMs object with the 1- and 2-rdms
-    RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
-         ambit::Tensor g2bb);
-    /// @brief Construct a RDMs object with the 1-, 2-, and 3-rdms
-    RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
-         ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
-         ambit::Tensor g3bbb);
+    virtual ~RDMs(){};
 
-    /// @brief Construct a RDMs object with the 1-rdm assuming ms averaging
-    RDMs(bool ms_avg, ambit::Tensor g1a);
-    /// @brief Construct a RDMs object with the 1- and 2-rdms ms averaging
-    RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab);
-    /// @brief Construct a RDMs object with the 1-, 2-, and 3-rdms assuming ms averaging
-    RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab);
+    /// @return the max RDM level
+    size_t max_rdm_level() const { return max_rdm_; }
 
-    // ==> Class Interface <==
+    /// @return RDM type
+    RDMsType rdm_type() const { return type_; }
 
-    // Reduced density matrices (RDMs)
+    /// @return dimension of each index
+    size_t dim() const { return n_orbs_; }
+
+    /// Clone the current RDMs
+    virtual std::shared_ptr<RDMs> clone() = 0;
+
+    /// Scale the current RDMs with a factor
+    virtual void scale(double factor) = 0;
+
+    /// AXPY: this += a * rhs + this
+    virtual void axpy(std::shared_ptr<RDMs> rhs, double a) = 0;
+
+    /// Rotate the current RDMs using the input unitary matrices
+    virtual void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) = 0;
+
+    // static methods
+
+    /// Make alpha-alpha or beta-beta 2-RDC from 2-RDMs
+    static ambit::Tensor make_cumulant_L2aa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa);
+    /// Make alpha-beta 2-RDC from 2-RDMs
+    static ambit::Tensor make_cumulant_L2ab(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                            const ambit::Tensor& g2ab);
+    /// Make alpha-alpha-alpha or beta-beta-beta 3-RDC from 3-RDMs
+    static ambit::Tensor make_cumulant_L3aaa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa,
+                                             const ambit::Tensor& g3aaa);
+    /// Make alpha-alpha-beta 3-RDC from 3-RDMs
+    static ambit::Tensor make_cumulant_L3aab(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                             const ambit::Tensor& g2aa, const ambit::Tensor& g2ab,
+                                             const ambit::Tensor& g3aab);
+    /// Make alpha-beta-beta 3-RDC from 3-RDMs
+    static ambit::Tensor make_cumulant_L3abb(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                             const ambit::Tensor& g2ab, const ambit::Tensor& g2bb,
+                                             const ambit::Tensor& g3abb);
+
+    /// Spin-free 1-body to spin-dependent 1-body subject to Ms averaging
+    static ambit::Tensor sf1_to_sd1(const ambit::Tensor& G1);
+    /// Spin-free 2-body to spin-dependent 2-body subject to Ms averaging
+    static ambit::Tensor sf2_to_sd2aa(const ambit::Tensor& G2);
+    static ambit::Tensor sf2_to_sd2ab(const ambit::Tensor& G2);
+    /// Spin-free 3-body to spin-dependent 3-body subject to Ms averaging
+    static ambit::Tensor sf3_to_sd3aaa(const ambit::Tensor& G3);
+    static ambit::Tensor sf3_to_sd3aab(const ambit::Tensor& G3);
+    static ambit::Tensor sf3_to_sd3abb(const ambit::Tensor& G3);
+
+    // Spin-dependent reduced density matrices (RDMs)
 
     /// @return the alpha 1-RDM
-    ambit::Tensor g1a() const { return g1a_; }
+    virtual ambit::Tensor g1a() const = 0;
     /// @return the beta 1-RDM
-    ambit::Tensor g1b();
+    virtual ambit::Tensor g1b() const = 0;
     /// @return the alpha-alpha 2-RDM
-    ambit::Tensor g2aa();
+    virtual ambit::Tensor g2aa() const = 0;
     /// @return the alpha-beta 2-RDM
-    ambit::Tensor g2ab() const { return g2ab_; }
+    virtual ambit::Tensor g2ab() const = 0;
     /// @return the beta-beta 2-RDM
-    ambit::Tensor g2bb();
+    virtual ambit::Tensor g2bb() const = 0;
     /// @return the alpha-alpha-alpha 3-RDM
-    ambit::Tensor g3aaa();
+    virtual ambit::Tensor g3aaa() const = 0;
     /// @return the alpha-alpha-beta 3-RDM
-    ambit::Tensor g3aab() const { return g3aab_; }
+    virtual ambit::Tensor g3aab() const = 0;
     /// @return the alpha-beta-beta 3-RDM
-    ambit::Tensor g3abb();
+    virtual ambit::Tensor g3abb() const = 0;
     /// @return the beta-beta-beta 3-RDM
-    ambit::Tensor g3bbb();
+    virtual ambit::Tensor g3bbb() const = 0;
 
-    // Spin-free (spin-summed) RDMs
+    // Spin-free RDMs
 
+    /// @return the spin-free 1-RDM
+    virtual ambit::Tensor SF_G1() const = 0;
     /// @return the spin-free 2-RDM
-    /// If ms is NOT averaged, G2 will be computed using the definition (see SF_g2_ below).
-    /// If ms is averaged, G2 will be computed using only g2ab to avoid computing g2aa and g2bb.
-    ambit::Tensor SFg2();
+    virtual ambit::Tensor SF_G2() const = 0;
+    /// @return the spin-free 3-RDM
+    virtual ambit::Tensor SF_G3() const = 0;
 
-    // Reduced density cumulants
+    /// @return the spin-free 1-RDM in Psi4 Matrix format (nactv * nactv)
+    std::shared_ptr<psi::Matrix> SF_G1mat();
+    /// @return the spin-free 1-RDM in Psi4 Matrix format (nactvpi * nactvpi)
+    std::shared_ptr<psi::Matrix> SF_G1mat(const psi::Dimension& dim);
 
+    // Spin-dependent density cumulants
+
+    /// @return the alpha 1-RDC
+    virtual ambit::Tensor L1a() const = 0;
+    /// @return the beta 1-RDC
+    virtual ambit::Tensor L1b() const = 0;
     /// @return the alpha-alpha 2-RDC
-    ambit::Tensor L2aa();
+    virtual ambit::Tensor L2aa() const = 0;
     /// @return the alpha-beta 2-RDC
-    ambit::Tensor L2ab();
+    virtual ambit::Tensor L2ab() const = 0;
     /// @return the beta-beta 2-RDC
-    ambit::Tensor L2bb();
+    virtual ambit::Tensor L2bb() const = 0;
     /// @return the alpha-alpha-alpha 3-RDC
-    ambit::Tensor L3aaa();
+    virtual ambit::Tensor L3aaa() const = 0;
     /// @return the alpha-alpha-beta 3-RDC
-    ambit::Tensor L3aab();
+    virtual ambit::Tensor L3aab() const = 0;
     /// @return the alpha-beta-beta 3-RDC
-    ambit::Tensor L3abb();
+    virtual ambit::Tensor L3abb() const = 0;
     /// @return the beta-beta-beta 3-RDC
-    ambit::Tensor L3bbb();
+    virtual ambit::Tensor L3bbb() const = 0;
 
-    // Spin-free (spin-summed) density cumulants
+    // Spin-free density cumulants
 
     /// @return the spin-free 1-cumulant
-    ambit::Tensor SF_L1();
+    ambit::Tensor SF_L1() const;
     /// @return the spin-free 2-cumulant
-    ambit::Tensor SF_L2();
+    ambit::Tensor SF_L2() const;
     /// @return the spin-free 3-cumulant
-    ambit::Tensor SF_L3();
-
-    // class variables
-
-    size_t max_rdm_level() { return max_rdm_; }
-
-    bool ms_avg() { return ms_avg_; }
+    ambit::Tensor SF_L3() const;
 
   protected:
     // ==> Class Data <==
 
-    /// Assume averaging over spin multiplets
-    bool ms_avg_ = false;
-
     /// Maximum RDM/RDC rank stored by this object
     size_t max_rdm_ = 0;
 
-    // Reduced density matrices
+    /// RDM type
+    RDMsType type_;
 
-    /// Was g1b built?
-    bool have_g1b_ = false;
-    /// Was g2aa built?
-    bool have_g2aa_ = false;
-    /// Was g2bb built?
-    bool have_g2bb_ = false;
-    /// Was g3aaa built?
-    bool have_g3aaa_ = false;
-    /// Was g3abb built?
-    bool have_g3abb_ = false;
-    /// Was g3bbb built?
-    bool have_g3bbb_ = false;
+    /// Number of orbitals for each dimension
+    size_t n_orbs_ = 0;
 
+    /// Test if the RDM dimensions are valid
+    void _test_rdm_dims(const ambit::Tensor& T, const std::string& name) const;
+    /// Test if a function is asked for the correct level of RDMs
+    void _test_rdm_level(const size_t& level, const std::string& name) const;
+    /// Test if RDMs rotation can be bypassed (i.e., if Ua and Ub are identity matrices)
+    bool _bypass_rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub,
+                        const double& zero_threshold = 1.0e-12) const;
+};
+
+class RDMsSpinDependent : public RDMs {
+  public:
+    /// @brief Default constructor
+    RDMsSpinDependent();
+    /// @brief Construct a RDMsSpinDependent object with the 1-rdm
+    RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b);
+    /// @brief Construct a RDMsSpinDependent object with the 1- and 2-rdms
+    RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+                      ambit::Tensor g2bb);
+    /// @brief Construct a RDMsSpinDependent object with the 1-, 2-, and 3-rdms
+    RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+                      ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab,
+                      ambit::Tensor g3abb, ambit::Tensor g3bbb);
+
+    /// @return the alpha 1-RDM
+    ambit::Tensor g1a() const override;
+    /// @return the beta 1-RDM
+    ambit::Tensor g1b() const override;
+    /// @return the alpha-alpha 2-RDM
+    ambit::Tensor g2aa() const override;
+    /// @return the alpha-beta 2-RDM
+    ambit::Tensor g2ab() const override;
+    /// @return the beta-beta 2-RDM
+    ambit::Tensor g2bb() const override;
+    /// @return the alpha-alpha-alpha 3-RDM
+    ambit::Tensor g3aaa() const override;
+    /// @return the alpha-alpha-beta 3-RDM
+    ambit::Tensor g3aab() const override;
+    /// @return the alpha-beta-beta 3-RDM
+    ambit::Tensor g3abb() const override;
+    /// @return the beta-beta-beta 3-RDM
+    ambit::Tensor g3bbb() const override;
+
+    // Spin-free RDMs
+
+    /// @return the spin-free 1-RDM
+    ambit::Tensor SF_G1() const override;
+    /// @return the spin-free 2-RDM
+    ambit::Tensor SF_G2() const override;
+    /// @return the spin-free 3-RDM
+    ambit::Tensor SF_G3() const override;
+
+    // Spin-dependent density cumulants
+
+    ambit::Tensor L1a() const override;
+    /// @return the beta 1-RDC
+    ambit::Tensor L1b() const override;
+    /// @return the alpha-alpha 2-RDC
+    ambit::Tensor L2aa() const override;
+    /// @return the alpha-beta 2-RDC
+    ambit::Tensor L2ab() const override;
+    /// @return the beta-beta 2-RDC
+    ambit::Tensor L2bb() const override;
+    /// @return the alpha-alpha-alpha 3-RDC
+    ambit::Tensor L3aaa() const override;
+    /// @return the alpha-alpha-beta 3-RDC
+    ambit::Tensor L3aab() const override;
+    /// @return the alpha-beta-beta 3-RDC
+    ambit::Tensor L3abb() const override;
+    /// @return the beta-beta-beta 3-RDC
+    ambit::Tensor L3bbb() const override;
+
+    // class methods
+
+    /// Clone the current RDMs
+    std::shared_ptr<RDMs> clone() override;
+
+    /// Scale the current RDMs with a factor
+    void scale(double factor) override;
+
+    /// AXPY: this += a * rhs + this
+    void axpy(std::shared_ptr<RDMs> rhs, double a) override;
+
+    /// Rotate the current RDMs using the input unitary matrices
+    void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) override;
+
+  private:
     /// The alpha 1-RDM
     ambit::Tensor g1a_;
     /// The beta 1-RDM
@@ -192,168 +333,91 @@ class RDMs {
     ambit::Tensor g3abb_;
     /// The beta-beta-beta 3-RDM
     ambit::Tensor g3bbb_;
-
-    /// Spin-free (spin-summed) 2-RDM defined as
-    /// G2[pqrs] = g2aa[pqrs] + g2ab[pqrs] + g2ab[qpsr] + g2bb[pqrs]
-    ambit::Tensor SF_g2_;
-
-    // Reduced density cumulants
-
-    /// The alpha-alpha 2-RDC
-    ambit::Tensor L2aa_;
-    /// The alpha-beta 2-RDC
-    ambit::Tensor L2ab_;
-    /// The beta-beta 2-RDC
-    ambit::Tensor L2bb_;
-    /// The alpha-alpha-alpha 3-RDC
-    ambit::Tensor L3aaa_;
-    /// The alpha-alpha-beta 3-RDC
-    ambit::Tensor L3aab_;
-    /// The alpha-beta-beta 3-RDC
-    ambit::Tensor L3abb_;
-    /// The beta-beta-beta 3-RDC
-    ambit::Tensor L3bbb_;
-
-    /// Spin-free (spin-summed) 1-cumulant
-    ambit::Tensor SF_L1_;
-    /// Spin-free (spin-summed) 2-cumulant
-    ambit::Tensor SF_L2_;
-    /// Spin-free (spin-summed) 3-cumulant
-    ambit::Tensor SF_L3_;
-
-    /// Was L2aa built?
-    bool have_L2aa_ = false;
-    /// Was L2ab built?
-    bool have_L2ab_ = false;
-    /// Was L2bb built?
-    bool have_L2bb_ = false;
-    /// Was L3aaa built?
-    bool have_L3aaa_ = false;
-    /// Was L3aab built?
-    bool have_L3aab_ = false;
-    /// Was L3abb built?
-    bool have_L3abb_ = false;
-    /// Was L3bbb built?
-    bool have_L3bbb_ = false;
-
-    /// Was SF_L1_ built?
-    bool have_SF_L1_ = false;
-    /// Was SF_L2_ built?
-    bool have_SF_L2_ = false;
-    /// Was SF_L3_ built?
-    bool have_SF_L3_ = false;
-
-    /// Was SF_g2_ built?
-    bool have_SF_g2_ = false;
 };
 
-/**
- * @brief make_g2_high_spin_case Make the alpha-alpha or beta-beta 2-RDM from alpha-beta 2-RDM.
- * This function returns the aa or bb 2-RDM using the ab 2-RDM assuming ms averaging.
- * @param g2ab the alpha-beta 2-RDM
- * @return the alpha-alpha or beta-beta 2-RDM
- */
-ambit::Tensor make_g2_high_spin_case(const ambit::Tensor& g2ab);
+class RDMsSpinFree : public RDMs {
+  public:
+    /// @brief Default constructor
+    RDMsSpinFree();
+    /// @brief Construct a RDMsSpinFree object with the 1-rdm
+    RDMsSpinFree(ambit::Tensor G1);
+    /// @brief Construct a RDMsSpinFree object with the 1- and 2-rdms
+    RDMsSpinFree(ambit::Tensor G1, ambit::Tensor G2);
+    /// @brief Construct a RDMsSpinFree object with the 1-, 2-, and 3-rdms
+    RDMsSpinFree(ambit::Tensor G1, ambit::Tensor G2, ambit::Tensor G3);
 
-/**
- * @brief make_g3_high_spin_case Make the aaa or bbb 3-RDM from aab 3-RDM.
- * This function returns the aaa or bbb 3-RDM using the aab 3-RDM assuming ms averaging.
- * @param g3aab the alpha-alpha-beta 3-RDM
- * @return the alpha-alpha-alpha or beta-beta-beta 3-RDM
- */
-ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab);
+    /// @return the alpha 1-RDM
+    ambit::Tensor g1a() const override;
+    /// @return the beta 1-RDM
+    ambit::Tensor g1b() const override;
+    /// @return the alpha-alpha 2-RDM
+    ambit::Tensor g2aa() const override;
+    /// @return the alpha-beta 2-RDM
+    ambit::Tensor g2ab() const override;
+    /// @return the beta-beta 2-RDM
+    ambit::Tensor g2bb() const override;
+    /// @return the alpha-alpha-alpha 3-RDM
+    ambit::Tensor g3aaa() const override;
+    /// @return the alpha-alpha-beta 3-RDM
+    ambit::Tensor g3aab() const override;
+    /// @return the alpha-beta-beta 3-RDM
+    ambit::Tensor g3abb() const override;
+    /// @return the beta-beta-beta 3-RDM
+    ambit::Tensor g3bbb() const override;
 
-/**
- * @brief make_cumulant_L2aa_in_place Make the alpha-alpha 2-body cumulant.
- * This function replaces the tensor passed in (L2aa) containing the aa 2-RDM
- * with the cumulant.
- * @param g1a the alpha 1-RDM
- * @param L2aa the alpha-alpha 2-RDM
- */
-void make_cumulant_L2aa_in_place(const ambit::Tensor& L1a, ambit::Tensor& L2aa);
+    // Spin-free RDMs
 
-/**
+    /// @return the spin-free 1-RDM
+    ambit::Tensor SF_G1() const override;
+    /// @return the spin-free 2-RDM
+    ambit::Tensor SF_G2() const override;
+    /// @return the spin-free 3-RDM
+    ambit::Tensor SF_G3() const override;
 
- * @brief make_cumulant_L2ab_in_place Make the alpha-beta 2-body cumulant.
- * This function replaces the tensor passed in (L2ab) containing the ab 2-RDM
- * with the cumulant.
- * @param g1a the alpha 1-RDM
- * @param g1b the beta 1-RDM
- * @param L2ab The beta-beta 2-RDM
- */
-void make_cumulant_L2ab_in_place(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
-                                 ambit::Tensor& L2ab);
+    // Spin-dependent density cumulants
 
-/**
- * @brief make_cumulant_L2bb_in_place Make the beta-beta 2-body cumulant.
- * This function replaces the tensor passed in (L2bb) containing the bb 2-RDM
- * with the cumulant.
- * @param g1b the beta 1-RDM
- * @param L2bb the beta-beta 2-RDM
- */
-void make_cumulant_L2bb_in_place(const ambit::Tensor& L1b, ambit::Tensor& L2bb);
+    ambit::Tensor L1a() const override;
+    /// @return the beta 1-RDC
+    ambit::Tensor L1b() const override;
+    /// @return the alpha-alpha 2-RDC
+    ambit::Tensor L2aa() const override;
+    /// @return the alpha-beta 2-RDC
+    ambit::Tensor L2ab() const override;
+    /// @return the beta-beta 2-RDC
+    ambit::Tensor L2bb() const override;
+    /// @return the alpha-alpha-alpha 3-RDC
+    ambit::Tensor L3aaa() const override;
+    /// @return the alpha-alpha-beta 3-RDC
+    ambit::Tensor L3aab() const override;
+    /// @return the alpha-beta-beta 3-RDC
+    ambit::Tensor L3abb() const override;
+    /// @return the beta-beta-beta 3-RDC
+    ambit::Tensor L3bbb() const override;
 
-/**
- * @brief make_cumulant_L3aaa_in_place Make the aaa 3-body cumulant.
- * This function replaces the tensor passed in (L3aaa) containing the aaa 3-RDM
- * with the cumulant.
- * @param g1a alpha 1-RDM
- * @param L2aa alpha-alpha 2-RDC
- * @param L3aaa alpha-alpha-alpha 2-RDM
- */
-void make_cumulant_L3aaa_in_place(const ambit::Tensor& g1a, const ambit::Tensor& L2aa,
-                                  ambit::Tensor& L3aaa);
+    // class methods
 
-/**
- * @brief make_cumulant_L3aab_in_place Make the aab 3-body cumulant.
- * This function replaces the tensor passed in (L3aab) containing the aab 3-RDM
- * with the cumulant.
- * @param g1a alpha 1-RDM
- * @param g1b beta 1-RDM
- * @param L2aa alpha-alpha 2-RDC
- * @param L2ab alpha-beta 2-RDC
- * @param L3aab alpha-alpha-beta 3-RDM
- */
-void make_cumulant_L3aab_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
-                                  const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
-                                  ambit::Tensor& L3aab);
+    /// Clone the current RDMs
+    std::shared_ptr<RDMs> clone() override;
 
-/**
- * @brief make_cumulant_L3abb_in_place Make the abb 3-body cumulant.
- * This function replaces the tensor passed in (L3abb) containing the abb 3-RDM
- * with the cumulant.
- * @param g1a alpha 1-RDM
- * @param g1b beta 1-RDM
- * @param L2ab alpha-beta 2-RDC
- * @param L2bb beta-beta 2-RDC
- * @param L3abb alpha-beta-beta 3-RDM
- */
-void make_cumulant_L3abb_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
-                                  const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
-                                  ambit::Tensor& L3abb);
+    /// Scale the current RDMs with a factor
+    void scale(double factor) override;
 
-/**
- * @brief make_cumulant_L3bbb_in_place Make the bbb 3-body cumulant.
- * This function replaces the tensor passed in (L3bbb) containing the bbb 3-RDM
- * with the cumulant.
- * @param g1b beta 1-RDM
- * @param L2bb beta-beta 2-RDC
- * @param L3bbb beta-beta-beta 2-RDM
- */
-void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor& L2bb,
-                                  ambit::Tensor& L3bbb);
+    /// AXPY: this += a * rhs + this
+    void axpy(std::shared_ptr<RDMs> rhs, double a) override;
 
-/**
- * @brief compute_Eref_from_rdms Compute the energy of a wave function from its
- * density matrices stored in the RDMs object
- * @param ref the reference object
- * @param ints the integrals
- * @param mo_space_info information about the orbital spaces
- * @param Enuc the nucleaer repulsion energy
- * @return the reference energy
- */
-double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
-                              std::shared_ptr<MOSpaceInfo> mo_space_info);
+    /// Rotate the current RDMs using the input unitary matrices
+    void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) override;
+
+  private:
+    /// Spin-free (spin-summed) 1-RDM defined as G1[pq] = g1a[pq] + g1b[pq]
+    ambit::Tensor SF_G1_;
+    /// Spin-free (spin-summed) 2-RDM defined as
+    /// G2[pqrs] = g2aa[pqrs] + g2ab[pqrs] + g2ab[qpsr] + g2bb[pqrs]
+    ambit::Tensor SF_G2_;
+    /// Spin-free (spin-summed) 3-RDMs defined as G3[pqrstu] = g3aaa[pqrstu] + g3aab[pqrstu] +
+    /// g3aab[prqsut] + g3aab[qrptus] + g3abb[pqrstu] + g3abb[qprtsu] + g3abb[rpqust]
+    ambit::Tensor SF_G3_;
+};
 } // namespace forte
 
-#endif // _reference_h_
+#endif // _rdms_h_

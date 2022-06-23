@@ -199,6 +199,81 @@ This python file mirrors the psi4 input file.
 This computation is identical to the previous one and produces the exact
 same output (see ``examples/plugin/01_fci.out``).
 
+Passing options in Forte: psi4 interface vs. dictionaries (new)
+---------------------------------------------------------------
+
+In the previous sections, calcultation options were passed to Forte
+through psi4. An alternative way to pass options is illustrated in the
+following example (using the python API):
+
+.. code:: python
+
+   # examples/api/07_options_passing.py
+   """Example of passing options as a dictionary in an energy call"""
+
+   import psi4
+   import forte
+
+   psi4.geometry("""
+   0 3
+   C
+   H 1 1.085
+   H 1 1.085 2 135.5
+   """)
+
+   psi4.set_options({
+       'basis': 'DZ',
+       'scf_type': 'pk',
+       'e_convergence': 12,
+       'reference': 'rohf',
+   })
+
+   forte_options = {
+       'active_space_solver': 'fci',
+       'restricted_docc': [1, 0, 0, 0],
+       'active': [3, 0, 2, 2],
+       'multiplicity': 3,
+       'root_sym': 2,
+   }
+
+   efci1 = psi4.energy('forte', forte_options=forte_options)
+
+   forte_options['multiplicity'] = 1
+   forte_options['root_sym'] = 0
+   forte_options['nroot'] = 2
+   forte_options['root'] = 1
+
+   efci2 = psi4.energy('forte', forte_options=forte_options)
+
+-  Note how in this file we create a python dictionary
+   (``forte_options``) and pass it to the ``energy`` function as the
+   parameter ``forte_options``.
+
+-  Passing options via a dictionary takes priority over passing options
+   via psi4. This means that **any option previously passed via psi4 is
+   ignored**.
+
+-  This way of passing options is **safer** than the one based on psi4
+   because, unless the user intentionally passes the same dictionary in
+   the energy call, there is no memory effect where previously defined
+   options have an effect on all subsequent calls to ``energy``.
+
+-  Note how later in the file we call ``energy`` again but this time we
+   modify the options directly by modifying the dictionary
+
+.. code:: python
+
+   forte_options['multiplicity'] = 1
+   forte_options['root_sym'] = 0
+   forte_options['nroot'] = 2
+   forte_options['root'] = 1
+
+Here we change the multiplicity and symmetry of the target state, and
+compute two roots, reporting the energy of the second one.
+
+This computation is identical to the previous one and produces the exact
+same output (see ``examples/plugin/01_fci.out``).
+
 Test cases and Jupyter Tutorials
 --------------------------------
 
