@@ -343,17 +343,6 @@ std::vector<double> FCI_MO::compute_ss_energies() {
     }
     print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
-    //    if (integral_->integral_type() != Custom) {
-    //        // compute dipole moments
-    //        compute_permanent_dipole();
-    //
-    //        // compute oscillator strength
-    //        if (nroot_ > 1) {
-    //            compute_transition_dipole();
-    //            compute_oscillator_strength();
-    //        }
-    //    }
-
     double Eref = eigen_[root_].second;
     Eref_ = Eref;
     psi::Process::environment.globals["CURRENT ENERGY"] = Eref;
