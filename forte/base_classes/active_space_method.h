@@ -150,6 +150,9 @@ class ActiveSpaceMethod {
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }
 
+    /// Compute generalized RDM
+    ///     Gamma' = C_I <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param x: the X vector to be contracted with H_IJ
     virtual void generalized_rdms(size_t root, const std::vector<double>& X,
                                   ambit::BlockedTensor& result, bool c_right, int rdm_level,
                                   std::vector<std::string> spin) {
@@ -179,6 +182,7 @@ class ActiveSpaceMethod {
             "The function generalized_sigma is not implemented for this ActiveSpaceMethod type!");
     }
 
+    /// Return the space size
     virtual size_t space_size() {
         throw std::runtime_error(
             "The function space_size is not implemented for this ActiveSpaceMethod type!");
