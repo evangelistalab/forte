@@ -236,31 +236,34 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// <[V, T2]> (C_2)^4
     ///     1/4 * V'["klcd"] * T["ijab"] * Gamma["ki"] * Gamma["lj"] * Eta["ac"] * Eta["bd"]
-    const bool PT2_TERM         = true;
+    const bool PT2_TERM = true;
     /// <[V, T2]> C_4 (C_2)^2 PP
     ///     1/8 * V'["cdxy"] * T["uvab"] * Eta["ac"] * Eta["bd"] * Lambda["xyuv"]
-    const bool X1_TERM          = true;
+    const bool X1_TERM = true;
     /// <[V, T2]> C_4 (C_2)^2 HH
     ///     1/8 * V'["uvkl"] * T["ijxy"] * Gamma["ki"] * Gamma["lj"] * Lambda["xyuv"]
-    const bool X2_TERM          = true;
+    const bool X2_TERM = true;
     /// <[V, T2]> C_4 (C_2)^2 PH
     ///     V'["vbjx"] * T["ayiu"] * Gamma["ji"] * Eta["ab"] * Lambda["xyuv"]
-    const bool X3_TERM          = true;
+    const bool X3_TERM = true;
     /// <[V, T2]> C_6 C_2
     ///     1/4 * V'["uviz"] * T["iwxy"] * Lambda["xyzuvw"]
     ///   + 1/4 * V'["waxy"] * T["uvaz"] * Lambda["xyzuvw"]
-    const bool X4_TERM          = true;
+    const bool X4_TERM = true;
+    if (!do_cu3_) {
+        X4_TERM = false;
+    }
     /// <[F, T2]>
     ///     1/2 * F'["ex"] * T["uvey"] * Lambda["xyuv"]
     ///   - 1/2 * F'["vm"] * T["umxy"] * Lambda["xyuv"]
-    const bool X5_TERM          = true;
+    const bool X5_TERM = true;
     /// <[V, T1]>
     ///     1/2 V'["evxy"] * T["ue"] * Lambda["xyuv"]
     ///   - 1/2 V'["uvmy"] * T["mx"] * Lambda["xyuv"]
-    const bool X6_TERM          = true;
+    const bool X6_TERM = true;
     /// <[F, T1]>
     ///     F'["bj"] * T["ia"] * Gamma["ji"] * Eta["ab"]
-    const bool X7_TERM          = true;
+    const bool X7_TERM = true;
     /// If the correlation contribution is considered
     const bool CORRELATION_TERM = true;
     /**
