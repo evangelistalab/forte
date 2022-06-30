@@ -111,9 +111,9 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // DSRG-MRPT2 dipole moment
     auto mo_dipole_ints = ints_->mo_dipole_ints(true, true); // just take alpha spin
     std::map<char, std::vector<size_t>> idxmap_abs;
-    idxmap_abs = {{'c', core_all},
-                  {'a', actv_all},
-                  {'v', virt_all}};
+    idxmap_abs = {{'c', core_all_},
+                  {'a', actv_all_},
+                  {'v', virt_all_}};
     std::vector<double> dipole(4, 0.0);
     Vector3 dm_nuc =
         psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
@@ -154,15 +154,15 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["em"] += 0.5 * sigma3_xi3["me"];
     temp["EM"] += 0.5 * sigma3_xi3["ME"];   
 
-    for (size_t i = 0, size_c = core_all.size(); i < size_c; ++i) {
-        auto m = core_all[i];
-        for (size_t a = 0, size_v = virt_all.size(); a < size_v; ++a) {
-            auto e = virt_all[a];
+    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto m = core_all_[i];
+        for (size_t a = 0, size_v = virt_all_.size(); a < size_v; ++a) {
+            auto e = virt_all_[a];
             auto idx = a * ncore + i;
             auto z_a = Z.block("vc").data()[idx] + temp.block("vc").data()[idx];
             auto z_b = Z.block("VC").data()[idx] + temp.block("VC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
-                auto m1 = core_all[j];
+                auto m1 = core_all_[j];
 
                 d2aa.write_value(m, e, m1, m1, z_a, 0, "outfile", 0);
                 d2bb.write_value(m, e, m1, m1, z_b, 0, "outfile", 0);
@@ -182,15 +182,15 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["un"] += 0.5 * sigma3_xi3["nu"];
     temp["UN"] += 0.5 * sigma3_xi3["NU"];
 
-    for (size_t i = 0, size_c = core_all.size(); i < size_c; ++i) {
-        auto n = core_all[i];
-        for (size_t a = 0, size_a = actv_all.size(); a < size_a; ++a) {
-            auto u = actv_all[a];
+    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto n = core_all_[i];
+        for (size_t a = 0, size_a = actv_all_.size(); a < size_a; ++a) {
+            auto u = actv_all_[a];
             auto idx = a * ncore + i;
             auto z_a = temp.block("ac").data()[idx];
             auto z_b = temp.block("AC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
-                auto m1 = core_all[j];
+                auto m1 = core_all_[j];
                 if (n != m1) {
                     d2aa.write_value(u, n, m1, m1, z_a, 0, "outfile", 0);
                     d2bb.write_value(u, n, m1, m1, z_b, 0, "outfile", 0);
@@ -209,15 +209,15 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["ev"] += 0.5 * sigma3_xi3["ve"];
     temp["EV"] += 0.5 * sigma3_xi3["VE"];
 
-    for (size_t i = 0, size_a = actv_all.size(); i < size_a; ++i) {
-        auto v = actv_all[i];
-        for (size_t a = 0, size_v = virt_all.size(); a < size_v; ++a) {
-            auto e = virt_all[a];
+    for (size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
+        auto v = actv_all_[i];
+        for (size_t a = 0, size_v = virt_all_.size(); a < size_v; ++a) {
+            auto e = virt_all_[a];
             auto idx = a * na + i;
             auto z_a = temp.block("va").data()[idx];
             auto z_b = temp.block("VA").data()[idx];
-            for (size_t j = 0, size_c = core_all.size(); j < size_c; ++j) {
-                auto m1 = core_all[j];
+            for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
+                auto m1 = core_all_[j];
 
                 d2aa.write_value(v, e, m1, m1, z_a, 0, "outfile", 0);
                 d2bb.write_value(v, e, m1, m1, z_b, 0, "outfile", 0);
@@ -228,15 +228,15 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
-    for (size_t i = 0, size_c = core_all.size(); i < size_c; ++i) {
-        auto n = core_all[i];
+    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto n = core_all_[i];
         for (size_t k = 0; k < size_c; ++k) {
-            auto m = core_all[k];
+            auto m = core_all_[k];
             auto idx = k * ncore + i;
             auto z_a = Z.block("cc").data()[idx];
             auto z_b = Z.block("CC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
-                auto m1 = core_all[j];
+                auto m1 = core_all_[j];
                 double a1 = 0.5 * z_a, v2 = 0.5 * z_b, v3 = z_a + z_b;
 
                 if (m == n) {
@@ -263,10 +263,10 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     ci_g1_a("uv") += 0.5 * Gamma1_tilde.block("aa")("uv");
     ci_g1_b("UV") += 0.5 * Gamma1_tilde.block("AA")("UV");
 
-    for (size_t i = 0, size_a = actv_all.size(); i < size_a; ++i) {
-        auto v = actv_all[i];
+    for (size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
+        auto v = actv_all_[i];
         for (size_t k = 0; k < size_a; ++k) {
-            auto u = actv_all[k];
+            auto u = actv_all_[k];
             auto idx = k * na + i;
             auto z_a = Z.block("aa").data()[idx];
             auto z_b = Z.block("AA").data()[idx];
@@ -277,8 +277,8 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto a1 = z_a + gamma_a + ci_gamma_a;
             auto v2 = z_b + gamma_b + ci_gamma_b;
 
-            for (size_t j = 0, size_c = core_all.size(); j < size_c; ++j) {
-                auto m1 = core_all[j];
+            for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
+                auto m1 = core_all_[j];
 
                 d2aa.write_value(v, u, m1, m1, 0.5 * a1, 0, "outfile", 0);
                 d2bb.write_value(v, u, m1, m1, 0.5 * v2, 0, "outfile", 0);
@@ -289,15 +289,15 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
-    for (size_t i = 0, size_v = virt_all.size(); i < size_v; ++i) {
-        auto f = virt_all[i];
+    for (size_t i = 0, size_v = virt_all_.size(); i < size_v; ++i) {
+        auto f = virt_all_[i];
         for (size_t k = 0; k < size_v; ++k) {
-            auto e = virt_all[k];
+            auto e = virt_all_[k];
             auto idx = k * nvirt + i;
             auto z_a = Z.block("vv").data()[idx];
             auto z_b = Z.block("VV").data()[idx];
-            for (size_t j = 0, size_c = core_all.size(); j < size_c; ++j) {
-                auto m1 = core_all[j];
+            for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
+                auto m1 = core_all_[j];
 
                 d2aa.write_value(f, e, m1, m1, 0.5 * z_a, 0, "outfile", 0);
                 d2bb.write_value(f, e, m1, m1, 0.5 * z_b, 0, "outfile", 0);
@@ -308,17 +308,17 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
-    for (size_t i = 0, size_c = core_all.size(); i < size_c; ++i) {
-        auto n = core_all[i];
+    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto n = core_all_[i];
         for (size_t j = 0; j < size_c; ++j) {
-            auto m = core_all[j];
+            auto m = core_all_[j];
             auto idx = j * ncore + i;
             auto z_a = Z.block("cc").data()[idx];
             auto z_b = Z.block("CC").data()[idx];
-            for (size_t k = 0, size_a = actv_all.size(); k < size_a; ++k) {
-                auto a1 = actv_all[k];
+            for (size_t k = 0, size_a = actv_all_.size(); k < size_a; ++k) {
+                auto a1 = actv_all_[k];
                 for (size_t l = 0; l < size_a; ++l) {
-                    auto u1 = actv_all[l];
+                    auto u1 = actv_all_[l];
                     auto idx1 = l * na + k;
                     auto g_a = Gamma1_.block("aa").data()[idx1];
                     auto g_b = Gamma1_.block("AA").data()[idx1];
@@ -333,17 +333,17 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
-    for (size_t i = 0, size_v = virt_all.size(); i < size_v; ++i) {
-        auto f = virt_all[i];
+    for (size_t i = 0, size_v = virt_all_.size(); i < size_v; ++i) {
+        auto f = virt_all_[i];
         for (size_t j = 0; j < size_v; ++j) {
-            auto e = virt_all[j];
+            auto e = virt_all_[j];
             auto idx = j * nvirt + i;
             auto z_a = Z.block("vv").data()[idx];
             auto z_b = Z.block("VV").data()[idx];
-            for (size_t k = 0, size_a = actv_all.size(); k < size_a; ++k) {
-                auto a1 = actv_all[k];
+            for (size_t k = 0, size_a = actv_all_.size(); k < size_a; ++k) {
+                auto a1 = actv_all_[k];
                 for (size_t l = 0; l < size_a; ++l) {
-                    auto u1 = actv_all[l];
+                    auto u1 = actv_all_[l];
                     auto idx1 = l * na + k;
                     auto g_a = Gamma1_.block("aa").data()[idx1];
                     auto g_b = Gamma1_.block("AA").data()[idx1];

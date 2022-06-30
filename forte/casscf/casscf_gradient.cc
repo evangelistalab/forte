@@ -9,8 +9,6 @@
  * (5), Back-transform the TPDM.
  */
 
-#include "ambit/blocked_tensor.h"
-
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libmints/factory.h"
 #include "psi4/libmints/matrix.h"

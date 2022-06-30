@@ -235,20 +235,31 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     size_t nirrep;
 
     /// <[V, T2]> (C_2)^4
+    ///     1/4 * V'["klcd"] * T["ijab"] * Gamma["ki"] * Gamma["lj"] * Eta["ac"] * Eta["bd"]
     const bool PT2_TERM         = true;
     /// <[V, T2]> C_4 (C_2)^2 PP
+    ///     1/8 * V'["cdxy"] * T["uvab"] * Eta["ac"] * Eta["bd"] * Lambda["xyuv"]
     const bool X1_TERM          = true;
     /// <[V, T2]> C_4 (C_2)^2 HH
+    ///     1/8 * V'["uvkl"] * T["ijxy"] * Gamma["ki"] * Gamma["lj"] * Lambda["xyuv"]
     const bool X2_TERM          = true;
     /// <[V, T2]> C_4 (C_2)^2 PH
+    ///     V'["vbjx"] * T["ayiu"] * Gamma["ji"] * Eta["ab"] * Lambda["xyuv"]
     const bool X3_TERM          = true;
     /// <[V, T2]> C_6 C_2
+    ///     1/4 * V'["uviz"] * T["iwxy"] * Lambda["xyzuvw"]
+    ///   + 1/4 * V'["waxy"] * T["uvaz"] * Lambda["xyzuvw"]
     const bool X4_TERM          = true;
     /// <[F, T2]>
+    ///     1/2 * F'["ex"] * T["uvey"] * Lambda["xyuv"]
+    ///   - 1/2 * F'["vm"] * T["umxy"] * Lambda["xyuv"]
     const bool X5_TERM          = true;
     /// <[V, T1]>
+    ///     1/2 V'["evxy"] * T["ue"] * Lambda["xyuv"]
+    ///   - 1/2 V'["uvmy"] * T["mx"] * Lambda["xyuv"]
     const bool X6_TERM          = true;
     /// <[F, T1]>
+    ///     F'["bj"] * T["ia"] * Gamma["ji"] * Eta["ab"]
     const bool X7_TERM          = true;
     /// If the correlation contribution is considered
     const bool CORRELATION_TERM = true;
@@ -360,18 +371,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Size of determinants
     size_t ndets;
-    /// List of core MOs (Correlated)
-    std::vector<size_t> core_mos;
-    /// List of active MOs (Correlated)
-    std::vector<size_t> actv_mos;
-    /// List of virtual MOs (Correlated)
-    std::vector<size_t> virt_mos;
-    /// List of core MOs (Absolute)
-
-    std::vector<size_t> core_all;
-    /// List of active MOs (Absolute)
-    std::vector<size_t> actv_all;
-    std::vector<size_t> virt_all;
+    /// List of core MOs (including frozen orbitals)
+    std::vector<size_t> core_all_;
+    /// List of active MOs (including frozen orbitals)
+    std::vector<size_t> actv_all_;
+    /// List of virtual MOs (including frozen orbitals)
+    std::vector<size_t> virt_all_;
 
     
     // MO orbital partition info for solving the z-vector equation
@@ -380,16 +385,13 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::map<string, int> block_dim;
 
     /// List of relative core MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
+    std::vector<std::pair<unsigned long, unsigned long>>
         core_mos_relative;
     /// List of relative active MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
+    std::vector<std::pair<unsigned long, unsigned long>>
         actv_mos_relative;
     /// List of relative virtual MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
+    std::vector<std::pair<unsigned long, unsigned long>>
         virt_mos_relative;
 
     /// Dimension of different irreps
@@ -398,10 +400,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Gamma2_;
     /// Lagrangian tensor
     ambit::BlockedTensor W;
-    // core Hamiltonian
-    ambit::BlockedTensor H;
-    // DF integrals
-    ambit::BlockedTensor B;
     // DF metric J^(-1/2)
     ambit::BlockedTensor Jm12;
     // two-electron integrals

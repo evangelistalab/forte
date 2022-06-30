@@ -33,16 +33,16 @@
 #include <unordered_set>
 #include <ambit/tensor.h>
 
+namespace ambit {
+class BlockedTensor;
+}
+
 #include "base_classes/rdms.h"
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
-
-namespace ambit {
-class BlockedTensor;
-}
 
 namespace forte {
 

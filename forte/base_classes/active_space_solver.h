@@ -32,15 +32,14 @@
 #include <map>
 #include <vector>
 #include <string>
-
-#include "psi4/libmints/matrix.h"
-
-#include "base_classes/state_info.h"
 #include <ambit/tensor.h>
 
 namespace ambit {
 class BlockedTensor;
 }
+
+#include "psi4/libmints/matrix.h"
+#include "base_classes/state_info.h"
 #include "base_classes/rdms.h"
 #include "sparse_ci/determinant_hashvector.h"
 
