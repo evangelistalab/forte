@@ -358,10 +358,10 @@ void OrbitalOptimizer::orbital_gradient() {
             relative_gas_mo_.push_back(relative_mo);
         }
         auto active_frozen = options_->get_int_list("CASSCF_ACTIVE_FROZEN_ORBITAL");
-        std::vector<int> active;
-        for (int i = 0; i < na_; i++) {
-            active.push_back(i);
-        }
+
+        std::vector<int> active(na_);
+        std::iota(active.begin(), active.end(), 0);
+
         std::vector<int> unfrozen;
         std::set_difference(active.begin(), active.end(), active_frozen.begin(),
                             active_frozen.end(), std::inserter(unfrozen, unfrozen.begin()));

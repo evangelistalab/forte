@@ -89,8 +89,7 @@ class FragmentProjector {
 };
 
 // Helper function
-std::pair<psi::SharedMatrix, int> make_fragment_projector(psi::SharedWavefunction ref_wfn,
-                                                          std::shared_ptr<ForteOptions> options);
+std::pair<psi::SharedMatrix, int> make_fragment_projector(psi::SharedWavefunction ref_wfn);
 
 } // namespace forte
 #endif // _fragment_projector_h_

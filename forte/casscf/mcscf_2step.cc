@@ -232,6 +232,7 @@ double MCSCF_2STEP::compute_energy() {
         // start iterations
         lbfgs_param->maxiter = micro_miniter_;
         bool dump_wfn = ci_type_ == "DETCI";
+        bool skip_de_conv = ci_type_.find("DMRG") != std::string::npos;
         std::vector<CASSCF_HISTORY> history;
 
         for (int macro = 1; macro <= maxiter_; ++macro) {
@@ -276,12 +277,12 @@ double MCSCF_2STEP::compute_energy() {
                 break;
             }
 
-            bool is_e_conv =
-                std::fabs(de) < e_conv_ and std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_;
+            bool is_de_conv = skip_de_conv or std::fabs(de) < e_conv_;
+            bool is_e_conv = std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_;
             bool is_g_conv = g_rms < g_conv_ or lbfgs.converged();
             bool is_diis_conv = !do_diis_ or macro < diis_start_ + diis_min_vec_ or
                                 diis_manager.subspace_size() > 1;
-            if (is_e_conv and is_g_conv and is_diis_conv) {
+            if (is_de_conv and is_e_conv and is_g_conv and is_diis_conv) {
                 psi::outfile->Printf(
                     "\n\n  A miracle has come to pass: MCSCF iterations have converged!");
                 converged = true;
@@ -355,12 +356,18 @@ double MCSCF_2STEP::compute_energy() {
         print_macro_iteration(history);
     }
 
+    // perform final CI using converged orbitals
+    energy_ = diagonalize_hamiltonian(
+        as_solver, cas_grad.active_space_ints(),
+        {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+
     if (ints_->integral_type() != Custom) {
         auto final_orbs = options_->get_str("CASSCF_FINAL_ORBITAL");
 
         if (final_orbs != "UNSPECIFIED" or der_type_ == "FIRST") {
             // fix orbitals for redundant pairs
-            auto F = cas_grad.fock();
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
+            auto F = cas_grad.fock(rdms);
             ints_->set_fock_matrix(F, F);
 
             SemiCanonical semi(mo_space_info_, ints_, options_);
@@ -368,13 +375,7 @@ double MCSCF_2STEP::compute_energy() {
 
             cas_grad.canonicalize_final(semi.Ua());
 
-            // re-diagonalize Hamiltonian
-            if (not is_single_reference()) {
-                auto fci_ints = cas_grad.active_space_ints();
-                energy_ = diagonalize_hamiltonian(
-                    as_solver, fci_ints,
-                    {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
-            }
+            // TODO: need to implement the transformation of CI coefficients due to orbital changes
         }
 
         // pass to wave function
@@ -388,6 +389,13 @@ double MCSCF_2STEP::compute_energy() {
 
         // for nuclear gradient
         if (der_type_ == "FIRST") {
+            // TODO: remove this re-diagonalization if CI transformation is impelementd
+            if (not is_single_reference()) {
+                diagonalize_hamiltonian(
+                    as_solver, cas_grad.active_space_ints(),
+                    {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+            }
+
             // recompute gradient due to canonicalization
             rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
             cas_grad.set_rdms(rdms);

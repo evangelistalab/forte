@@ -209,8 +209,6 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Storage of past roots
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
 
-    /// A Vector to store spin of each root
-    std::vector<std::pair<double, double>> root_spin_vec_;
     /// Form initial guess space with correct spin? ****OBSOLETE?*****
     bool do_guess_;
     /// Spin-symmetrized evecs
@@ -309,7 +307,7 @@ class AdaptiveCI : public SelectedCIMethod {
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                       psi::SharedMatrix evecs, int nroot);
+                       psi::SharedMatrix evecs);
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,

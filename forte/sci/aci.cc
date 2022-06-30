@@ -92,13 +92,6 @@ void AdaptiveCI::startup() {
 
     spin_tol_ = options_->get_double("ACI_SPIN_TOL");
 
-    // set the initial S^2 guess as input multiplicity
-    int S = (multiplicity_ - 1.0) / 2.0;
-    int S2 = multiplicity_ - 1.0;
-    for (int n = 0; n < nroot_; ++n) {
-        root_spin_vec_.push_back(std::make_pair(S, S2));
-    }
-
     // get options for algorithm
     if (options_->get_str("ACI_PQ_FUNCTION") == "MAX") {
         average_function_ = AverageFunction::MaxF;
@@ -378,7 +371,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
 }
 
 void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                               psi::SharedMatrix evecs, int nroot) {
+                               psi::SharedMatrix evecs) {
     // Select the new reference space using the sorted CI coefficients
     P_space.clear();
 
@@ -808,7 +801,7 @@ void AdaptiveCI::prune_PQ_to_P() {
     // Step 5. Prune the P + Q space to get an updated P space
     print_h2("Pruning the Q space");
 
-    prune_q_space(PQ_space_, P_space_, PQ_evecs_, num_ref_roots_);
+    prune_q_space(PQ_space_, P_space_, PQ_evecs_);
 
     // Print information about the wave function
     if (!quiet_mode_) {
@@ -930,10 +923,7 @@ std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {
 }
 
 void AdaptiveCI::zero_multistate_pt2_energy_correction() {
-    multistate_pt2_energy_correction_.resize(nroot_);
-    for (int n = 0; n < nroot_; ++n) {
-        multistate_pt2_energy_correction_[n] = 0.0;
-    }
+    multistate_pt2_energy_correction_.assign(nroot_, 0.0);
 }
 
 void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs) {
@@ -942,11 +932,11 @@ void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evec
                                                   "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
     print_h2("GAS Contribution Analysis");
 
-    for (int n = 0; n < nroot_; ++n) {
+    for (size_t n = 0; n < nroot_; ++n) {
         DeterminantHashVec tmp;
         std::vector<double> tmp_evecs;
 
-        psi::outfile->Printf("\n  Root %d:", n);
+        psi::outfile->Printf("\n  Root %zu:", n);
 
         size_t max_dets = static_cast<size_t>(evecs->nrow());
         tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
@@ -1072,7 +1062,7 @@ void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix e
 
     psi::outfile->Printf("\n  ");
     psi::outfile->Printf("\n  Occupation Number Analysis ");
-    for (int n = 0; n < nroot_; ++n) {
+    for (size_t n = 0; n < nroot_; ++n) {
         DeterminantHashVec tmp;
         std::vector<double> tmp_evecs;
 
@@ -1145,9 +1135,6 @@ void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix e
                                        sqrt(alpha_occ[j] - alpha_occ[j] * alpha_occ[j]) /
                                        sqrt(alpha_occ[k] - alpha_occ[k] * alpha_occ[k]);
                     alpha_corr[k][j] = alpha_corr[j][k];
-                    //                    outfile->Printf("\n  The corr between %d and %d is
-                    //                    %.9f", j, k,
-                    //                                    alpha_corr[j][k]);
                     beta_corr[j][k] = (beta_occ_square[j][k] - beta_occ[j] * beta_occ[k]) /
                                       sqrt(beta_occ[j] - beta_occ[j] * beta_occ[j]) /
                                       sqrt(beta_occ[k] - beta_occ[k] * beta_occ[k]);
