@@ -459,6 +459,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             psi4.core.print_out(f"\n  ==> Coupling Coefficients for {state} <==")
             ci_vectors = active_space_solver.eigenvectors(state)
             dsrg_proc.compute_gradient(ci_vectors)
+        else:
+            psi4.core.print_out('\n  Semicanonical orbitals must be used!\n')
     else:
         average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
         return_en = average_energy

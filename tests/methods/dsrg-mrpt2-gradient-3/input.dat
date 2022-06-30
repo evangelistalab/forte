@@ -27,8 +27,6 @@ set {
   mcscf_r_convergence  8
 }
 
-set scf_type direct
-
 set forte {
   ref_type  casscf
   #                Ag B1g B2g B3g Au B1u B2u B3u

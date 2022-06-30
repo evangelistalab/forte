@@ -2,7 +2,7 @@
  * Set the constant vector b of the Linear System Ax=b.
  */
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "../dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 #include "helpers/timer.h"
 
 using namespace ambit;

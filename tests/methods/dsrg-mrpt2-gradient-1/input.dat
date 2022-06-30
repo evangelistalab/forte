@@ -31,8 +31,6 @@ set {
    g_convergence     gau_verytight
 }
 
-set scf_type direct
-
 set forte {
   REF_TYPE  CASSCF
   CASSCF_G_CONVERGENCE   1e-10
