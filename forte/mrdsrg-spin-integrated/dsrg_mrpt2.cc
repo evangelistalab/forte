@@ -84,10 +84,6 @@ void DSRG_MRPT2::startup() {
     F_["PQ"] = Fock_["PQ"];
     Fa_ = Fdiag_a_;
     Fb_ = Fdiag_b_;
-
-    if (!do_cu3_) {
-        X4_TERM = false;
-    }
   
     // Prepare Hbar
     if (relax_ref_ != "NONE" || multi_state_) {
