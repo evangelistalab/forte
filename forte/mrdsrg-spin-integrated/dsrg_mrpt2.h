@@ -249,7 +249,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// <[V, T2]> C_6 C_2
     ///     1/4 * V'["uviz"] * T["iwxy"] * Lambda["xyzuvw"]
     ///   + 1/4 * V'["waxy"] * T["uvaz"] * Lambda["xyzuvw"]
-    const bool X4_TERM = true;
+    const bool X4_TERM = do_cu3_;
     /// <[F, T2]>
     ///     1/2 * F'["ex"] * T["uvey"] * Lambda["xyuv"]
     ///   - 1/2 * F'["vm"] * T["umxy"] * Lambda["xyuv"]
