@@ -1372,15 +1372,27 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                cout<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
+            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                cout<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
+            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+        } else if (foptions_->get_str("CU_APPROX") == "CU"){
+            value = 0;
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
+            if (v_diffvalues.size() > 4) {
+                value = 0;
+            } else {
+                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            }
+            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
+            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
     });    
 
@@ -1417,17 +1429,29 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                cout<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
+            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                cout<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
+            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+        } else if (foptions_->get_str("CU_APPROX") == "CU"){
+            value = 0;
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
+            if (v_diffvalues.size() > 4) {
+                value = 0;
+            } else {
+                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            }
+            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
+            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
-    });
+    }); 
 
     E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * L3bbb_("XYZUVW");
 
@@ -1472,18 +1496,29 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                cout<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
+            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                cout<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
+            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+        } else if (foptions_->get_str("CU_APPROX") == "CU"){
+            value = 0;
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
+            if (v_diffvalues.size() > 4) {
+                value = 0;
+            } else {
+                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            }
+            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
+            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
-    });
-
+    }); 
 
     E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * L3aab_("xyZuvW");
 
@@ -1528,17 +1563,29 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                cout<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
+            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                cout<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
+            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+        } else if (foptions_->get_str("CU_APPROX") == "CU"){
+            value = 0;
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
+            if (v_diffvalues.size() > 4) {
+                value = 0;
+            } else {
+                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            }
+            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
+            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
-    });
+    }); 
 
     E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * L3abb_("xYZuVW");
 
