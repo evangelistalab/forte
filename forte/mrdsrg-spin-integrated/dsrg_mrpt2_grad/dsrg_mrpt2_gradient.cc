@@ -41,6 +41,9 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
 
 void DSRG_MRPT2::set_global_variables() {
     outfile->Printf("\n    Initializing Global Variables ................... ");
+    if (!do_cu3_) {
+        X4_TERM = false;
+    }
     nmo = mo_space_info_->size("CORRELATED");
     core_all_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
     actv_all_ = mo_space_info_->absolute_mo("ACTIVE");
