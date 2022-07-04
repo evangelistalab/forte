@@ -51,7 +51,7 @@ double slater_rules_single_alpha(String Ib, String Ia, String Ja,
 
     // Diagonal contribution
     double matrix_element = ints->oei_b(i, a);
-    for (int p = 0; p < N; ++p) {
+    for (size_t p = 0; p < N; ++p) {
         if (Ia.get_bit(p)) {
             matrix_element += ints->tei_aa(i, p, a, p);
         }
@@ -71,7 +71,7 @@ double slater_rules_single_beta(String Ia, String Ib, String Jb,
 
     // Diagonal contribution
     double matrix_element = ints->oei_b(i, a);
-    for (int p = 0; p < N; ++p) {
+    for (size_t p = 0; p < N; ++p) {
         if (Ia.get_bit(p)) {
             matrix_element += ints->tei_ab(p, i, p, a);
         }

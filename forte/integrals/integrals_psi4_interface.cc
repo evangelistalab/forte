@@ -70,6 +70,9 @@ Psi4Integrals::Psi4Integrals(std::shared_ptr<ForteOptions> options,
 }
 
 void Psi4Integrals::base_initialize_psi4() {
+    schwarz_cutoff_ = options_->get_double("INTS_TOLERANCE");
+    df_fitting_cutoff_ = options_->get_double("DF_FITTING_CONDITION");
+
     setup_psi4_ints();
     build_dipole_ints_ao();
 
@@ -196,7 +199,7 @@ void Psi4Integrals::make_psi4_JK() {
         throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
     }
 
-    JK_->set_cutoff(options_->get_double("INTS_TOLERANCE"));
+    JK_->set_cutoff(schwarz_cutoff_);
     jk_initialize();
     JK_->print_header();
 }

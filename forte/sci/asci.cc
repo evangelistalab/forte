@@ -116,7 +116,6 @@ void ASCI::startup() {
 
     t_det_ = options_->get_int("ASCI_TDET");
     c_det_ = options_->get_int("ASCI_CDET");
-    root_spin_vec_.resize(nroot_);
 }
 
 void ASCI::print_info() {

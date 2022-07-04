@@ -43,7 +43,7 @@ namespace forte {
 
 PAObuilder::PAObuilder(const psi::SharedMatrix C, psi::Dimension noccpi,
                        std::shared_ptr<BasisSet> basis)
-    : C_(C), noccpi_(noccpi), basis_(basis) {
+    : basis_(basis), C_(C), noccpi_(noccpi) {
     startup();
 }
 

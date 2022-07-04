@@ -444,7 +444,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
                 // Build determinant
                 Determinant det(core_det);
                 int sym = 0;
-                for (size_t p = 0; p < na; ++p) {
+                for (int p = 0; p < na; ++p) {
                     det.set_alfa_bit(active_subspace[p], tmp_det_a[p]);
                     det.set_beta_bit(active_subspace[p], tmp_det_b[p]);
                     if (tmp_det_a[p]) {
