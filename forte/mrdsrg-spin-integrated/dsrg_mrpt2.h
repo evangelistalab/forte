@@ -398,6 +398,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     psi::Dimension irrep_vec;
     /// Two-body denisty tensor
     ambit::BlockedTensor Gamma2_;
+    // core Hamiltonian
+    ambit::BlockedTensor H;
+    // DF integrals
+    ambit::BlockedTensor B;
     /// Lagrangian tensor
     ambit::BlockedTensor W;
     // DF metric J^(-1/2)
