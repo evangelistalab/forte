@@ -32,6 +32,7 @@ import math
 import warnings
 import pathlib
 
+from sys import exit
 import os
 import numpy as np
 import psi4

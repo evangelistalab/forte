@@ -223,9 +223,10 @@ class ProcedureDSRG:
                     active_space_solver_2 = forte.make_active_space_solver(
                         'FCI', state_map, self.scf_info, self.mo_space_info, ints_dressed, self.options
                     )
-                    active_space_solver_2.compute_energy()
-
-                exit()
+                    active_space_solver_2.set_Uactv(self.Ua, self.Ub)
+                    e_relax = list(active_space_solver_2.compute_energy().values())[0][0]
+                self.energies.append((e_dsrg, e_relax))
+                break
 
             # Spit out contracted SA-DSRG energy
             if self.do_multi_state and self.multi_state_type == "SA_SUB":

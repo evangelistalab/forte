@@ -128,8 +128,8 @@ void SemiCanonical::set_U_to_identity() {
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 }
 
-void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock, const bool& nat_orb,
-                                     const bool& transform) {
+void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock,
+                                     const bool& nat_orb, const bool& transform) {
     timer t_semi("semicanonicalize orbitals");
 
     print_h2("Semicanonicalize Orbitals");
@@ -209,6 +209,7 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
 
     if (print_) {
         outfile->Printf("\n    %s", dash.c_str());
+        outfile->Printf("\n\n    Canonicalization test %s\n", semi ? "passed" : "failed");
     }
 
     return semi;
