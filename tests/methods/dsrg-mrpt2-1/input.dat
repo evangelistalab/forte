@@ -67,10 +67,11 @@ set forte{
    active               [1,0,0,1]
    root_sym             0
    nroot                1
-   dsrg_s               1.0e10
+   dsrg_s               1e10
    dsrgpt               true
    multiplicity         1
    threepdc             zero
+#   laplace              true
 }
 
 scf_energy, wfn = energy('mcscf', return_wfn=True)

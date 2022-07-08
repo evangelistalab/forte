@@ -62,7 +62,7 @@ DSRG_MRPT2::DSRG_MRPT2(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Second-Order Perturbation Theory",
-                         "Chenyang Li, Kevin Hannon, Francesco Evangelista"});
+                         "Chenyang Li, Kevin Hannon, Shuhang Li, Francesco Evangelista"});
     outfile->Printf("\n    References:");
     outfile->Printf("\n      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.");
     outfile->Printf("\n      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.");
@@ -531,17 +531,18 @@ void DSRG_MRPT2::compute_t2() {
         T2_["IJCD"] = tempT2["IJAB"] * U_["DB"] * U_["CA"];
     }
 
+    // Add MP2 denominator
     T2_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
+                    value *= dsrg_source_->compute_mp2_denominator(Fa_[i[0]] + Fa_[i[1]] -
                                                                             Fa_[i[2]] - Fa_[i[3]]);
                 } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
+                    value *= dsrg_source_->compute_mp2_denominator(Fa_[i[0]] + Fb_[i[1]] -
                                                                             Fa_[i[2]] - Fb_[i[3]]);
                 } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
+                    value *= dsrg_source_->compute_mp2_denominator(Fb_[i[0]] + Fb_[i[1]] -
                                                                             Fb_[i[2]] - Fb_[i[3]]);
                 }
             } else {
@@ -549,6 +550,34 @@ void DSRG_MRPT2::compute_t2() {
             }
         });
 
+    // Save ccvv block in T2_ 
+    std::vector<double> temp_ccvv_t2(T2_.block("ccvv").data());
+
+    //Add s regularization
+    T2_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
+                    value *= dsrg_source_->compute_renormalized_numerator(Fa_[i[0]] + Fa_[i[1]] -
+                                                                            Fa_[i[2]] - Fa_[i[3]]);
+                } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
+                    value *= dsrg_source_->compute_renormalized_numerator(Fa_[i[0]] + Fb_[i[1]] -
+                                                                            Fa_[i[2]] - Fb_[i[3]]);
+                } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
+                    value *= dsrg_source_->compute_renormalized_numerator(Fb_[i[0]] + Fb_[i[1]] -
+                                                                            Fb_[i[2]] - Fb_[i[3]]);
+                }
+            } else {
+                value = 0.0;
+            }
+        }); 
+
+    // Delete regularization part for ccvv block.
+    if (foptions_->get_bool("LAPLACE")) {
+        outfile->Printf("Using Laplace transformation for T2 [ccvv] block");
+        T2_.block("ccvv").data() = temp_ccvv_t2;
+    }
+    
     // transform back to non-canonical basis
     if (!semi_canonical_) {
         BlockedTensor tempT2 =
@@ -747,18 +776,42 @@ void DSRG_MRPT2::compute_t1() {
         T1_["IA"] = tempT1["IA"];
     }
 
+    // Add MP2 denominator
     T1_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 if (spin[0] == AlphaSpin) {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
+                    value *= dsrg_source_->compute_mp2_denominator(Fa_[i[0]] - Fa_[i[1]]);
                 } else {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+                    value *= dsrg_source_->compute_mp2_denominator(Fb_[i[0]] - Fb_[i[1]]);
                 }
             } else {
                 value = 0.0;
             }
         });
+    
+    // Save ccvv block in T1_ 
+    std::vector<double> temp_ccvv_t1(T1_.block("cv").data());  
+
+    //Add s regularization
+    T1_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                if (spin[0] == AlphaSpin) {
+                    value *= dsrg_source_->compute_renormalized_numerator(Fa_[i[0]] - Fa_[i[1]]);
+                } else {
+                    value *= dsrg_source_->compute_renormalized_numerator(Fb_[i[0]] - Fb_[i[1]]);
+                }
+            } else {
+                value = 0.0;
+            }
+        });   
+
+    // Delete regularization part for cv block.
+    if (foptions_->get_bool("LAPLACE")) {
+        outfile->Printf("Using Laplace transformation for T1 [cv] block");
+        T1_.block("cv").data() = temp_ccvv_t1;
+    }       
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -836,6 +889,9 @@ void DSRG_MRPT2::renormalize_V() {
         V_["ABKL"] = tempV["ABIJ"] * U_["LJ"] * U_["KI"];
     }
 
+    // Save vvcc block in V_ 
+    std::vector<double> temp_vvcc_v(V_.block("vvcc").data()); 
+
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (std::fabs(value) > 1.0e-15) {
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
@@ -852,6 +908,12 @@ void DSRG_MRPT2::renormalize_V() {
             value = 0.0;
         }
     });
+
+    // Delete regularization part for vvcc block.
+    if (foptions_->get_bool("LAPLACE")) {
+        outfile->Printf("Using Laplace transformation for V [vvcc] block");
+        V_.block("vvcc").data() = temp_vvcc_v;
+    }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -946,9 +1008,18 @@ void DSRG_MRPT2::renormalize_F() {
         sum["AI"] = tempF["AI"];
     }
 
+    // Save vc block in F_ 
+    std::vector<double> temp_vc_f(F_.block("vc").data()); 
+
     // add to original Fock
     F_["ai"] += sum["ai"];
     F_["AI"] += sum["AI"];
+
+    // Delete regularization part for vc block.
+    if (foptions_->get_bool("LAPLACE")) {
+        outfile->Printf("Using Laplace transformation for F [vc] block");
+        F_.block("vc").data() = temp_vc_f;
+    }    
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }

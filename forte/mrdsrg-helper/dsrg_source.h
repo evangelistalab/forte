@@ -49,6 +49,15 @@ class DSRG_SOURCE {
     /// Renormalize denominator
     virtual double compute_renormalized_denominator(const double& D) = 0;
 
+    //Avoid using pure virtual function for these two functions. 
+    virtual double compute_renormalized_numerator(const double& D) {
+        return 0;
+    }
+    
+    virtual double compute_mp2_denominator(const double& D) {
+        return 0;
+    }
+
   protected:
     /// Flow parameter
     double s_;
@@ -75,6 +84,16 @@ class STD_SOURCE : public DSRG_SOURCE {
         } else {
             return (1.0 - std::exp(-s_ * D * D)) / D;
         }
+    }
+
+    /// Return MP2 denominator 1/D
+    virtual double compute_mp2_denominator(const double& D) {
+        return 1.0 / D;
+    }
+    
+    /// Return DSRG regularization part [1 - exp(-s * D^2)]
+    virtual double compute_renormalized_numerator(const double& D) {
+        return (1.0 - std::exp(-s_ * D * D)); 
     }
 
   private:
