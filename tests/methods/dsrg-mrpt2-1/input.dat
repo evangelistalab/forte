@@ -61,6 +61,7 @@ set mcscf{
 }
 
 set forte{
+   int_type df
    active_space_solver  fci
    correlation_solver   dsrg-mrpt2
    restricted_docc      [2,0,0,0]
@@ -71,7 +72,7 @@ set forte{
    dsrgpt               true
    multiplicity         1
    threepdc             zero
-#   laplace              true
+   laplace              true
 }
 
 scf_energy, wfn = energy('mcscf', return_wfn=True)

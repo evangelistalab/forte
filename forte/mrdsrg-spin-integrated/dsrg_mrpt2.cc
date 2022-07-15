@@ -38,7 +38,14 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/dipole.h"
+#include "psi4/lib3index/dftensor.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/vector.h"
 
+#include "orbital-helpers/ao_helper.h"
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "boost/format.hpp"
@@ -1016,12 +1023,106 @@ void DSRG_MRPT2::renormalize_F() {
     F_["AI"] += sum["AI"];
 
     // Delete regularization part for vc block.
+    // Shuhang Li To Do : use smarter way to delete the regularization part.
     if (foptions_->get_bool("LAPLACE")) {
         outfile->Printf("Using Laplace transformation for F [vc] block");
         F_.block("vc").data() = temp_vc_f;
     }    
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+}
+
+double DSRG_MRPT2::E_ccvv_laplace() {
+    std::string str = "Computing Laplace CCVV part (Shuhang Li test)";
+    outfile->Printf("\n    %-40s ...", str.c_str());
+    ncore_ = core_mos_.size();
+    nactive_ = actv_mos_.size();
+    nvirtual_ = virt_mos_.size();
+    nthree_ = ints_->nthree();    
+    double Ealpha = 0.0;
+    double Emixed = 0.0;
+    double Ebeta = 0.0;
+    psi::SharedMatrix Cwfn = ints_->Ca();
+    if (mo_space_info_->nirrep() != 1)
+        throw psi::PSIEXCEPTION("LT-DSRG-MPT2 does not work with symmetry");
+
+    /// Create the AtomicOrbitalHelper Class
+    psi::SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
+    psi::SharedVector epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
+    int core_count = 0;
+    for (auto m : core_mos_) {
+        epsilon_rdocc->set(core_count, Fa_[m]);
+        core_count++;
+    }
+    int virtual_count = 0;
+    for (auto e : virt_mos_) {
+        epsilon_virtual->set(virtual_count, Fa_[e]);
+        virtual_count++;
+    }
+    epsilon_rdocc->print();
+    epsilon_virtual->print();
+
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-10, nactive_);
+    std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
+
+    ao_helper.Compute_AO_Screen(primary);
+    ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
+    size_t weights = ao_helper.Weights();
+    psi::SharedMatrix AO_Screen = ao_helper.AO_Screen();
+    psi::SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
+    psi::SharedMatrix Occupied_Density = ao_helper.POcc();
+    psi::SharedMatrix Virtual_Density = ao_helper.PVir();
+    Occupied_Density->print();
+    Virtual_Density->print();
+    size_t nmo = mo_space_info_->dimension("ALL").sum();
+
+    ambit::Tensor POcc = ambit::Tensor::build(tensor_type_, "POcc", {weights, nmo, nmo});
+    ambit::Tensor PVir = ambit::Tensor::build(tensor_type_, "Pvir", {weights, nmo, nmo});
+    ambit::Tensor AO_Full = ambit::Tensor::build(tensor_type_, "Qso", {nmo, nmo, nmo, nmo});
+    ambit::Tensor DF_AO = ambit::Tensor::build(tensor_type_, "Qso", {nthree_, nmo, nmo});
+    ambit::Tensor DF_LTAO = ambit::Tensor::build(tensor_type_, "Qso", {weights, nthree_, nmo, nmo});
+    ambit::Tensor Full_LTAO =
+        ambit::Tensor::build(tensor_type_, "Qso", {weights, nmo, nmo, nmo, nmo});
+    ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew", {weights});
+    ambit::Tensor E_weight_mixed = ambit::Tensor::build(tensor_type_, "Ew", {weights});
+    // ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew",
+    // {weights});
+    DFTensor df_tensor(primary, auxiliary, Cwfn, ncore_, nvirtual_);
+    psi::SharedMatrix Qso = df_tensor.Qso();
+    DF_AO.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = Qso->get(i[0], i[1] * nmo + i[2]);
+    });
+    POcc.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = Occupied_Density->get(i[0], i[1] * nmo + i[2]);
+    });
+    PVir.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = Virtual_Density->get(i[0], i[1] * nmo + i[2]);
+    });
+
+    DF_LTAO("w,Q,m,e") = DF_AO("Q, mu, nu") * POcc("w, mu, m") * PVir("w, nu, e");
+    Full_LTAO("w, m, e, n, f") = DF_LTAO("w, Q, m, e") * DF_LTAO("w, Q, n, f");
+    AO_Full("m, e, n, f") = DF_AO("Q, m, e") * DF_AO("Q, n, f");
+    E_weight_mixed("w") = Full_LTAO("w, m, e, n, f") * AO_Full("m, e, n, f");
+
+    AO_Full("m, e, n, f") = DF_AO("Q, m, e") * DF_AO("Q, n, f");
+    AO_Full("m, e, n, f") -= DF_AO("Q, m, f") * DF_AO("Q, n, e");
+    Full_LTAO("w, m, e, n, f") = DF_LTAO("w, Q, m, e") * DF_LTAO("w, Q, n, f");
+    Full_LTAO("w, m, e, n, f") -= DF_LTAO("w, Q, m, f") * DF_LTAO("w, Q, n, e");
+    E_weight_alpha("w") = Full_LTAO("w,m,e,n,f") * AO_Full("m, e, n, f");
+    for (size_t w = 0; w < weights; w++) {
+        Ealpha -= E_weight_alpha.data()[w];
+        Ebeta -= E_weight_alpha.data()[w];
+        Emixed -= E_weight_mixed.data()[w];
+        std::cout << w << "w" << endl;
+        std::cout << E_weight_alpha.data()[w] << "alpha" << endl;
+        std::cout << E_weight_mixed.data()[w] << "mixed" << endl;
+    }
+    std::cout << Ealpha << "alpha" << endl;
+    std::cout << Ebeta << "beta" << endl;
+    std::cout << Emixed << "mixed" << endl;
+
+    return (0.25 * Ealpha + 0.25 * Ebeta + Emixed);
 }
 
 double DSRG_MRPT2::E_FT1() {
@@ -1151,10 +1252,19 @@ double DSRG_MRPT2::E_VT2_2() {
     outfile->Printf("\n    %-40s ...", str.c_str());
 
     double E = 0.0;
-    E += 0.25 * V_["efmn"] * T2_["mnef"];
-    E += 0.25 * V_["EFMN"] * T2_["MNEF"];
-    E += V_["eFmN"] * T2_["mNeF"];
+    if (foptions_->get_bool("LAPLACE")) {
+        double E_ccvv_lt = E_ccvv_laplace();
+        E += E_ccvv_lt;
+        std::cout << E_ccvv_lt << endl;
+    } else {
+        E += 0.25 * V_["efmn"] * T2_["mnef"];
+        std::cout << E << "alpha" << endl;
+        E += 0.25 * V_["EFMN"] * T2_["MNEF"];
+        E += V_["eFmN"] * T2_["mNeF"]; 
+        std::cout << E; 
+    }
 
+//    Calculates all but ccvv, cCvV, and CCVV energies
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
     temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
     temp["vu"] += V_["fEuM"] * T2_["vMfE"];
@@ -1443,27 +1553,27 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//               cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CU"){
             value = 0;
         } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
     });    
 
@@ -1500,27 +1610,27 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//               cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CU"){
             value = 0;
         } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
     }); 
 
@@ -1567,27 +1677,27 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CU"){
             value = 0;
         } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
     }); 
 
@@ -1634,27 +1744,27 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CU"){
             value = 0;
         } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+ //               cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+//            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
     }); 
 

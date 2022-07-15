@@ -151,6 +151,16 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<double> Fa_;
     std::vector<double> Fb_;
 
+    // LT-DSRG-MRPT2 related (Shuhang Li)
+    /// Number of core orbitals
+    size_t ncore_;
+    /// Number of active orbitals
+    size_t nactive_;
+    /// Number of virutal orbitals
+    size_t nvirtual_;
+    /// The number of auxiliary basis functions
+    size_t nthree_ = 0;
+
     // => DSRG related <= //
 
     /// Renormalize Fock matrix
@@ -222,6 +232,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     double compute_ref();
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate
     /// individual pieces of energy
+    double E_ccvv_laplace(); // LT-DSRG-MRPT2. Use quadratures for ccvv part in E_VT2_2.
     double E_FT1();
     double E_VT1();
     double E_FT2();
