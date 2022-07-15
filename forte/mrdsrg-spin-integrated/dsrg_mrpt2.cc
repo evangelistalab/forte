@@ -1114,13 +1114,7 @@ double DSRG_MRPT2::E_ccvv_laplace() {
         Ealpha -= E_weight_alpha.data()[w];
         Ebeta -= E_weight_alpha.data()[w];
         Emixed -= E_weight_mixed.data()[w];
-        std::cout << w << "w" << endl;
-        std::cout << E_weight_alpha.data()[w] << "alpha" << endl;
-        std::cout << E_weight_mixed.data()[w] << "mixed" << endl;
     }
-    std::cout << Ealpha << "alpha" << endl;
-    std::cout << Ebeta << "beta" << endl;
-    std::cout << Emixed << "mixed" << endl;
 
     return (0.25 * Ealpha + 0.25 * Ebeta + Emixed);
 }
@@ -1255,13 +1249,10 @@ double DSRG_MRPT2::E_VT2_2() {
     if (foptions_->get_bool("LAPLACE")) {
         double E_ccvv_lt = E_ccvv_laplace();
         E += E_ccvv_lt;
-        std::cout << E_ccvv_lt << endl;
     } else {
         E += 0.25 * V_["efmn"] * T2_["mnef"];
-        std::cout << E << "alpha" << endl;
         E += 0.25 * V_["EFMN"] * T2_["MNEF"];
         E += V_["eFmN"] * T2_["mNeF"]; 
-        std::cout << E; 
     }
 
 //    Calculates all but ccvv, cCvV, and CCVV energies

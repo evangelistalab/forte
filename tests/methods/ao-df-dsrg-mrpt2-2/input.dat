@@ -32,10 +32,10 @@ set forte{
    dsrg_s                0.5
    dsrgpt                true
    int_type              diskdf
-   job_type              three-dsrg-mrpt2
+   correlation_solver    dsrg-mrpt2
    print                 1
    active_space_solver              fci
-   ao_dsrg_mrpt2         true
+   laplace                true
 }
 ref_energy, refwfn = energy('scf', return_wfn=True)
 forte_energy = energy('forte', ref_wfn=refwfn)
