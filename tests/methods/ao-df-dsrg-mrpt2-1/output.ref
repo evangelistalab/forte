@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 undefined 
+                               Psi4 1.6a1.dev124 
 
-                         Git: Rev {master} 67a0d70 dirty
+                         Git: Rev {master} f27f78b dirty
 
 
     D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
@@ -19,7 +19,7 @@
                             Additional Code Authors
     E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
     J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
-    P. Verma, and M. H. Lechner
+    P. Verma, M. H. Lechner, and A. Jiang
 
              Previous Authors, Complete List of Code Contributors,
                        and Citations for Specific Modules
@@ -30,11 +30,11 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 16 March 2021 06:05PM
+    Psi4 started on: Monday, 18 July 2022 03:11PM
 
-    Process ID: 52549
-    Host:       CHE-FEVANGE
-    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4
+    Process ID: 28331
+    Host:       shuhangs-mbp.wireless.emory.edu
+    PSIDATADIR: /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -75,11 +75,11 @@ set forte{
    root_sym              0
    nroot                 1
    dsrg_s                10000000.0
-   dsrgpt                true
+#   dsrgpt                true
    int_type              df
-   job_type              three-dsrg-mrpt2
+   correlation_solver dsrg-mrpt2
    print                 0
-   AO_DSRG_MRPT2         true
+   laplace               true
    active_space_solver              fci
 }
 #
@@ -92,16 +92,16 @@ compare_values(df_mp2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 Scratch directory: /tmp/
 
-*** tstart() called on CHE-FEVANGE
-*** at Tue Mar 16 18:05:39 2021
+*** tstart() called on shuhangs-mbp.wireless.emory.edu
+*** at Mon Jul 18 15:11:05 2022
 
    => Loading Basis Set <=
 
     Name: 6-31G
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry O          line   117 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/6-31g.gbs 
-    atoms 2-3 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/6-31g.gbs 
+    atoms 1   entry O          line   117 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 2-3 entry H          line    26 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
 
 
          ---------------------------------------------------------
@@ -153,7 +153,7 @@ Scratch directory: /tmp/
   Basis Set: 6-31G
     Blend: 6-31G
     Number of shells: 9
-    Number of basis function: 13
+    Number of basis functions: 13
     Number of Cartesian functions: 13
     Spherical Harmonics?: false
     Max angular momentum: 1
@@ -163,8 +163,8 @@ Scratch directory: /tmp/
     Name: CC-PVDZ-RI
     Role: JKFIT
     Keyword: DF_BASIS_SCF
-    atoms 1   entry O          line   235 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-ri.gbs 
-    atoms 2-3 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 1   entry O          line   235 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 2-3 entry H          line    19 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
 
   ==> Integral Setup <==
 
@@ -187,7 +187,7 @@ Scratch directory: /tmp/
   Basis Set: CC-PVDZ-RI
     Blend: CC-PVDZ-RI
     Number of shells: 30
-    Number of basis function: 96
+    Number of basis functions: 96
     Number of Cartesian functions: 96
     Spherical Harmonics?: false
     Max angular momentum: 3
@@ -212,16 +212,16 @@ Scratch directory: /tmp/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:   -75.04951070428282   -7.50495e+01   0.00000e+00 
-   @DF-RHF iter   1:   -74.66153584721658    3.87975e-01   4.21920e-02 DIIS
-   @DF-RHF iter   2:   -74.75140388677254   -8.98680e-02   1.74957e-02 DIIS
-   @DF-RHF iter   3:   -74.76729695236374   -1.58931e-02   1.40477e-03 DIIS
-   @DF-RHF iter   4:   -74.76753761491133   -2.40663e-04   2.26011e-04 DIIS
-   @DF-RHF iter   5:   -74.76754135440072   -3.73949e-06   1.16819e-05 DIIS
-   @DF-RHF iter   6:   -74.76754136810987   -1.37092e-08   8.36331e-07 DIIS
-   @DF-RHF iter   7:   -74.76754136816785   -5.79803e-11   5.65743e-08 DIIS
-   @DF-RHF iter   8:   -74.76754136816805   -1.98952e-13   2.64647e-09 DIIS
-   @DF-RHF iter   9:   -74.76754136816821   -1.56319e-13   7.08860e-11 DIIS
+   @DF-RHF iter SAD:   -75.04951070430300   -7.50495e+01   0.00000e+00 
+   @DF-RHF iter   1:   -74.66153584723749    3.87975e-01   4.21920e-02 ADIIS/DIIS
+   @DF-RHF iter   2:   -74.75140388679392   -8.98680e-02   1.74957e-02 ADIIS/DIIS
+   @DF-RHF iter   3:   -74.76721693740616   -1.58131e-02   1.82999e-03 ADIIS/DIIS
+   @DF-RHF iter   4:   -74.76753758325654   -3.20646e-04   2.27066e-04 ADIIS/DIIS
+   @DF-RHF iter   5:   -74.76754135488218   -3.77163e-06   1.13485e-05 DIIS
+   @DF-RHF iter   6:   -74.76754136813678   -1.32546e-08   7.97646e-07 DIIS
+   @DF-RHF iter   7:   -74.76754136818931   -5.25375e-11   5.20156e-08 DIIS
+   @DF-RHF iter   8:   -74.76754136818951   -1.98952e-13   2.24809e-09 DIIS
+   @DF-RHF iter   9:   -74.76754136818950    1.42109e-14   7.06071e-11 DIIS
   Energy and wave function converged.
 
 
@@ -245,14 +245,14 @@ Scratch directory: /tmp/
               A 
     DOCC [     5 ]
 
-  @DF-RHF Final Energy:   -74.76754136816821
+  @DF-RHF Final Energy:   -74.76754136818950
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             16.5000000000000000
-    One-Electron Energy =                -133.7303534991596905
-    Two-Electron Energy =                  42.4628121309914803
-    Total Energy =                        -74.7675413681682102
+    One-Electron Energy =                -133.7303535000791044
+    Two-Electron Energy =                  42.4628121318895992
+    Total Energy =                        -74.7675413681895122
 
 Computation Completed
 
@@ -261,28 +261,30 @@ Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
 
 Properties computed using the SCF density matrix
 
-  Nuclear Dipole Moment: [e a0]
-     X:     0.0000      Y:     0.0000      Z:     0.0000
 
-  Electronic Dipole Moment: [e a0]
-     X:     0.0000      Y:    -0.0000      Z:     0.0000
+ Multipole Moments:
 
-  Dipole Moment: [e a0]
-     X:     0.0000      Y:    -0.0000      Z:     0.0000     Total:     0.0000
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
 
-  Dipole Moment: [D]
-     X:     0.0000      Y:    -0.0000      Z:     0.0000     Total:     0.0000
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :         -0.0000000            0.0000000           -0.0000000
+ Dipole Y            :         -0.0000000            0.0000000           -0.0000000
+ Dipole Z            :         -0.0000000            0.0000000           -0.0000000
+ Magnitude           :                                                    0.0000000
 
+ ------------------------------------------------------------------------------------
 
-*** tstop() called on CHE-FEVANGE at Tue Mar 16 18:05:40 2021
+*** tstop() called on shuhangs-mbp.wireless.emory.edu at Mon Jul 18 15:11:05 2022
 Module time:
-	user time   =       0.44 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.14 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.44 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.14 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 
 Scratch directory: /tmp/
 
@@ -290,7 +292,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: genop - git commit: 657e71d8
+    git branch: master - git commit: 18d41e5d
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -303,16 +305,16 @@ Scratch directory: /tmp/
   Preparing forte objects from a Psi4 Wavefunction object
   No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
 
-*** tstart() called on CHE-FEVANGE
-*** at Tue Mar 16 18:05:40 2021
+*** tstart() called on shuhangs-mbp.wireless.emory.edu
+*** at Mon Jul 18 15:11:05 2022
 
    => Loading Basis Set <=
 
     Name: 6-31G
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry O          line   117 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/6-31g.gbs 
-    atoms 2-3 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/6-31g.gbs 
+    atoms 1   entry O          line   117 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 2-3 entry H          line    26 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
 
 
          ---------------------------------------------------------
@@ -364,7 +366,7 @@ Scratch directory: /tmp/
   Basis Set: 6-31G
     Blend: 6-31G
     Number of shells: 9
-    Number of basis function: 13
+    Number of basis functions: 13
     Number of Cartesian functions: 13
     Spherical Harmonics?: false
     Max angular momentum: 1
@@ -374,8 +376,8 @@ Scratch directory: /tmp/
     Name: CC-PVDZ-RI
     Role: JKFIT
     Keyword: DF_BASIS_SCF
-    atoms 1   entry O          line   235 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-ri.gbs 
-    atoms 2-3 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 1   entry O          line   235 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 2-3 entry H          line    19 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
 
   ==> Integral Setup <==
 
@@ -398,7 +400,7 @@ Scratch directory: /tmp/
   Basis Set: CC-PVDZ-RI
     Blend: CC-PVDZ-RI
     Number of shells: 30
-    Number of basis function: 96
+    Number of basis functions: 96
     Number of Cartesian functions: 96
     Spherical Harmonics?: false
     Max angular momentum: 3
@@ -423,16 +425,16 @@ Scratch directory: /tmp/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:   -75.04951070428282   -7.50495e+01   0.00000e+00 
-   @DF-RHF iter   1:   -74.66153584721658    3.87975e-01   4.21920e-02 DIIS
-   @DF-RHF iter   2:   -74.75140388677254   -8.98680e-02   1.74957e-02 DIIS
-   @DF-RHF iter   3:   -74.76729695236374   -1.58931e-02   1.40477e-03 DIIS
-   @DF-RHF iter   4:   -74.76753761491133   -2.40663e-04   2.26011e-04 DIIS
-   @DF-RHF iter   5:   -74.76754135440072   -3.73949e-06   1.16819e-05 DIIS
-   @DF-RHF iter   6:   -74.76754136810987   -1.37092e-08   8.36331e-07 DIIS
-   @DF-RHF iter   7:   -74.76754136816785   -5.79803e-11   5.65743e-08 DIIS
-   @DF-RHF iter   8:   -74.76754136816805   -1.98952e-13   2.64647e-09 DIIS
-   @DF-RHF iter   9:   -74.76754136816821   -1.56319e-13   7.08860e-11 DIIS
+   @DF-RHF iter SAD:   -75.04951070430300   -7.50495e+01   0.00000e+00 
+   @DF-RHF iter   1:   -74.66153584723749    3.87975e-01   4.21920e-02 ADIIS/DIIS
+   @DF-RHF iter   2:   -74.75140388679392   -8.98680e-02   1.74957e-02 ADIIS/DIIS
+   @DF-RHF iter   3:   -74.76721693740616   -1.58131e-02   1.82999e-03 ADIIS/DIIS
+   @DF-RHF iter   4:   -74.76753758325654   -3.20646e-04   2.27066e-04 ADIIS/DIIS
+   @DF-RHF iter   5:   -74.76754135488218   -3.77163e-06   1.13485e-05 DIIS
+   @DF-RHF iter   6:   -74.76754136813678   -1.32546e-08   7.97646e-07 DIIS
+   @DF-RHF iter   7:   -74.76754136818931   -5.25375e-11   5.20156e-08 DIIS
+   @DF-RHF iter   8:   -74.76754136818951   -1.98952e-13   2.24809e-09 DIIS
+   @DF-RHF iter   9:   -74.76754136818950    1.42109e-14   7.06071e-11 DIIS
   Energy and wave function converged.
 
 
@@ -456,14 +458,14 @@ Scratch directory: /tmp/
               A 
     DOCC [     5 ]
 
-  @DF-RHF Final Energy:   -74.76754136816821
+  @DF-RHF Final Energy:   -74.76754136818950
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             16.5000000000000000
-    One-Electron Energy =                -133.7303534991596905
-    Two-Electron Energy =                  42.4628121309914803
-    Total Energy =                        -74.7675413681682102
+    One-Electron Energy =                -133.7303535000791044
+    Two-Electron Energy =                  42.4628121318895992
+    Total Energy =                        -74.7675413681895122
 
 Computation Completed
 
@@ -472,28 +474,30 @@ Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
 
 Properties computed using the SCF density matrix
 
-  Nuclear Dipole Moment: [e a0]
-     X:     0.0000      Y:     0.0000      Z:     0.0000
 
-  Electronic Dipole Moment: [e a0]
-     X:     0.0000      Y:    -0.0000      Z:     0.0000
+ Multipole Moments:
 
-  Dipole Moment: [e a0]
-     X:     0.0000      Y:    -0.0000      Z:     0.0000     Total:     0.0000
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
 
-  Dipole Moment: [D]
-     X:     0.0000      Y:    -0.0000      Z:     0.0000     Total:     0.0000
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :         -0.0000000            0.0000000           -0.0000000
+ Dipole Y            :         -0.0000000            0.0000000           -0.0000000
+ Dipole Z            :         -0.0000000            0.0000000           -0.0000000
+ Magnitude           :                                                    0.0000000
 
+ ------------------------------------------------------------------------------------
 
-*** tstop() called on CHE-FEVANGE at Tue Mar 16 18:05:40 2021
+*** tstop() called on shuhangs-mbp.wireless.emory.edu at Mon Jul 18 15:11:05 2022
 Module time:
-	user time   =       0.42 seconds =       0.01 minutes
+	user time   =       0.09 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.90 seconds =       0.01 minutes
-	system time =       0.03 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.24 seconds =       0.00 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
@@ -520,16 +524,16 @@ Total time:
     Name: CC-PVDZ-RI
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1   entry O          line   235 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-ri.gbs 
-    atoms 2-3 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 1   entry O          line   235 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 2-3 entry H          line    19 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1   entry O          line    81 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
-    atoms 2-3 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 1   entry O          line    81 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
 
 
   Forte will use psi4 integrals
@@ -539,7 +543,7 @@ Total time:
   Basis Set: 6-31G
     Blend: 6-31G
     Number of shells: 9
-    Number of basis function: 13
+    Number of basis functions: 13
     Number of Cartesian functions: 13
     Spherical Harmonics?: false
     Max angular momentum: 1
@@ -565,7 +569,7 @@ Total time:
   Basis Set: CC-PVDZ-RI
     Blend: CC-PVDZ-RI
     Number of shells: 30
-    Number of basis function: 84
+    Number of basis functions: 84
     Number of Cartesian functions: 96
     Spherical Harmonics?: true
     Max angular momentum: 3
@@ -599,43 +603,1313 @@ Total time:
 
 
 
-  Timing for computing density-fitted integrals:              0.037 s.
+  Timing for computing density-fitted integrals:              0.006 s.
 
-  Time to prepare integrals:        0.077 seconds
-  Time to run job          :        0.000 seconds
-  Total                    :        0.077 seconds
-    DSRG-MRPT2 energy.....................................................................FAILED
-Traceback (most recent call last):
-  File "/Users/fevange/Source/psi4/objdir-Debug/stage/bin/psi4", line 337, in <module>
-    exec(content)
-  File "<string>", line 51, in <module>
-  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/psi4/driver/qcdb/testing.py", line 104, in _mergedapis_compare_values
-    return qcel.testing.compare_values(expected, computed, **kwargs)
-  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/qcelemental/testing.py", line 173, in compare_values
-    return return_handler(allclose, label, message, return_message, quiet)
-  File "/Users/fevange/Source/psi4/objdir-Debug/stage/lib/psi4/driver/p4util/testing.py", line 189, in _psi4_true_raise_handler
-    raise TestComparisonError(message)
+  ==> Summary of Active Space Solver Input <==
 
-psi4.driver.p4util.exceptions.TestComparisonError: 	DSRG-MRPT2 energy: computed value (0.000000000000) does not match (-74.858749324165) to atol=1e-10 by difference (74.858749324165).
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+        A      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
 
 
-Printing out the relevant lines from the Psithon --> Python processed input file:
-    core.set_local_option("FORTE", "JOB_TYPE", "three-dsrg-mrpt2")
-    core.set_local_option("FORTE", "PRINT", 0)
-    core.set_local_option("FORTE", "AO_DSRG_MRPT2", "true")
-    core.set_local_option("FORTE", "ACTIVE_SPACE_SOLVER", "fci")
-    forte_energy = energy('forte')
---> compare_values(df_mp2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+  ==> Energy Summary <==
 
-!----------------------------------------------------------------------------------!
-!                                                                                  !
-!         DSRG-MRPT2 energy: computed value (0.000000000000) does not match        !
-!     (-74.858749324165) to atol=1e-10 by difference (74.858749324165).            !
-!                                                                                  !
-!----------------------------------------------------------------------------------!
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0      -74.767620686668   0.000000
+    --------------------------------------------------------
 
-    Psi4 stopped on: Tuesday, 16 March 2021 06:05PM
-    Psi4 wall time for execution: 0:00:01.15
+  ==> Semicanonicalize Orbitals <==
 
-*** Psi4 encountered an error. Buy a developer more coffee!
-*** Resources and help at github.com/psi4/psi4.
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    RESTRICTED_DOCC      0.0000117102   0.0000165607
+    RESTRICTED_UOCC      0.0001160785   0.0002721164
+    ------------------------------------------------
+  Integrals are about to be updated.  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.439 GiB. Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                              13
+    NAux:                             84
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                 0
+    DFH Avail. Memory [GiB]:       0.439
+    OpenMP threads:                    1
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-12
+    Q Shell Max:                       7
+
+
+
+  Integrals update took     0.006 s.
+  Orbital rotations on spin-dependent RDMs ...
+    Transformed 1 RDMs.
+    Transformed 2 RDMs.
+    Transformed 3 RDMs.
+  Timing for orbital canonicalization:                        0.122 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Computing Fock matrix and cleaning JK ........... Done
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Filling Fock matrix from ForteIntegrals ......... Done
+
+        ----------------------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+          Chenyang Li, Kevin Hannon, Shuhang Li, Francesco Evangelista
+        ----------------------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    int_type                                              DF
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                STATE-SPECIFIC
+    form Hbar3                                         FALSE
+    flow parameter                                 1.000e+07
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    ntamp                                                 15
+
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Block             Fa Max         Fa Mean           Fb Max         Fb Mean
+    -------------------------------------------------------------------------
+    CORE        0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    VIRTUAL     0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    -------------------------------------------------------------------------
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...Using Laplace transformation for T2 [ccvv] block  Done. Timing        0.000366 s
+    Computing T1 amplitudes                  ...Using Laplace transformation for T1 [cv] block  Done. Timing        0.000314 s
+    Renormalizing two-electron integrals     ...Using Laplace transformation for V [vvcc] block  Done. Timing        0.000104 s
+    Renormalizing Fock matrix elements       ...Using Laplace transformation for F [vc] block  Done. Timing        0.000339 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.000163 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.000420 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.000519 s
+    Computing <[V, T2]> (C_2)^4              ...
+    Computing Laplace CCVV part (Shuhang Li test) ...
+ # EPS_RDOCC #
+ Irrep: 1
+      1:  -20.513354199236115
+      2:   -1.584030294988336
+      3:   -1.189469325128693
+      4:   -0.557795058613095
+      5:   -0.557795058613070
+
+
+ # EPS_VIRTUAL #
+ Irrep: 1
+      1:    0.295262450344608
+      2:    0.330019694913907
+      3:    1.133464069796697
+      4:    1.133464069796757
+      5:    1.294106099704154
+      6:    1.354488657542654
+      7:    2.077074742876651
+      8:    3.885006309002007
+
+
+  ==> Laplace Denominator <==
+
+  This system has an intrinsic R = (E_HUMO - E_LOMO)/(E_LUMO - E_HOMO) of 2.8601E+01.
+  A 12 point minimax quadrature with R of 3E+01 will be used for the denominator.
+  The worst-case Chebyshev norm for this quadrature rule is 4.3370E-11.
+  Quadrature rule read from file /Users/shuhangli/source/laplace_env/psi4/objdir-Release/stage/share/psi4/quadratures/1_x/1_xk12_3E1.
+
+  ## DensityOccupied (Symmetry 0) ##
+  Irrep: 1 Size: 12 x 169
+
+                 1                   2                   3                   4                   5
+
+    1     0.33646146646306    -0.03315021611216     0.00000000000000     0.00000000000000    -0.00000000000001
+    2     0.23217719290164    -0.04376043714633     0.00000000000000     0.00000000000000    -0.00000000000002
+    3     0.09613974076855    -0.04921160611933     0.00000000000000     0.00000000000000    -0.00000000000002
+    4     0.03656531447390    -0.04855371266490     0.00000000000000     0.00000000000000    -0.00000000000003
+    5     0.02293057507770    -0.04315301870662     0.00000000000000     0.00000000000000    -0.00000000000002
+    6     0.01774242799961    -0.03450094113796     0.00000000000000     0.00000000000000    -0.00000000000002
+    7     0.01228820842921    -0.02391331432389     0.00000000000000     0.00000000000000    -0.00000000000002
+    8     0.00690929670245    -0.01344579286262     0.00000000000000     0.00000000000000    -0.00000000000001
+    9     0.00284792464030    -0.00554218562190     0.00000000000000     0.00000000000000    -0.00000000000001
+   10     0.00073512124735    -0.00143057802506     0.00000000000000     0.00000000000000    -0.00000000000000
+   11     0.00009048160959    -0.00017608116050     0.00000000000000     0.00000000000000    -0.00000000000000
+   12     0.00000286317128    -0.00000557185626     0.00000000000000     0.00000000000000    -0.00000000000000
+
+                 6                   7                   8                   9                  10
+
+    1    -0.02254108177556    -0.00000000000000     0.00000000000000    -0.00000000000009    -0.02220104122198
+    2    -0.02437263586188     0.00000000000000     0.00000000000000    -0.00000000000011    -0.02637965325968
+    3    -0.02321956762021     0.00000000000000     0.00000000000000    -0.00000000000012    -0.02738778820586
+    4    -0.02142890483910     0.00000000000000     0.00000000000000    -0.00000000000012    -0.02621673046890
+    5    -0.01880237269572     0.00000000000000     0.00000000000000    -0.00000000000010    -0.02316848994230
+    6    -0.01501754293412     0.00000000000000     0.00000000000000    -0.00000000000008    -0.01851510690246
+    7    -0.01040872934533     0.00000000000000     0.00000000000000    -0.00000000000006    -0.01283307242106
+    8    -0.00585253903345     0.00000000000000     0.00000000000000    -0.00000000000003    -0.00721568010304
+    9    -0.00241234250841     0.00000000000000     0.00000000000000    -0.00000000000001    -0.00297421200277
+   10    -0.00062268650256     0.00000000000000     0.00000000000000    -0.00000000000000    -0.00076771920381
+   11    -0.00007664269972     0.00000000000000     0.00000000000000    -0.00000000000000    -0.00009449389406
+   12    -0.00000242525722     0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000299013474
+
+                11                  12                  13                  14                  15
+
+    1     0.00001629963021    -0.02220104122190     0.00001629963037    -0.03315021611216     0.08103596929351
+    2    -0.00063752413961    -0.02637965325956    -0.00063752413941    -0.04376043714633     0.09600716727371
+    3    -0.00122980936110    -0.02738778820573    -0.00122980936090    -0.04921160611933     0.09943314837291
+    4    -0.00139459337977    -0.02621673046878    -0.00139459337957    -0.04855371266490     0.09508851501408
+    5    -0.00126921700079    -0.02316848994219    -0.00126921700061    -0.04315301870662     0.08401675718838
+    6    -0.00101657829356    -0.01851510690238    -0.00101657829343    -0.03450094113796     0.06714104397709
+    7    -0.00070464072788    -0.01283307242100    -0.00070464072779    -0.02391331432389     0.04653635516102
+    8    -0.00039619998978    -0.00721568010301    -0.00039619998973    -0.01344579286262     0.02616609963091
+    9    -0.00016330862072    -0.00297421200276    -0.00016330862070    -0.00554218562190     0.01078533505874
+   10    -0.00004215407784    -0.00076771920381    -0.00004215407783    -0.00143057802506     0.00278396726139
+   11    -0.00000518848942    -0.00009449389406    -0.00000518848942    -0.00017608116050     0.00034266162181
+   12    -0.00000016418291    -0.00000299013474    -0.00000016418291    -0.00000557185626     0.00001084307541
+
+                16                  17                  18                  19                  20
+
+    1    -0.00000000000000     0.00000000000000    -0.00000000000009     0.03505682599929    -0.00000000000000
+    2    -0.00000000000000     0.00000000000000    -0.00000000000010     0.04164740570215    -0.00000000000000
+    3    -0.00000000000000     0.00000000000000    -0.00000000000011     0.04323235421836    -0.00000000000000
+    4    -0.00000000000000     0.00000000000000    -0.00000000000011     0.04138125746291    -0.00000000000000
+    5    -0.00000000000000     0.00000000000000    -0.00000000000010     0.03656939352220    -0.00000000000000
+    6    -0.00000000000000     0.00000000000000    -0.00000000000009     0.02922441692854    -0.00000000000000
+    7    -0.00000000000000     0.00000000000000    -0.00000000000007     0.02025584043101    -0.00000000000000
+    8    -0.00000000000000     0.00000000000000    -0.00000000000004     0.01138929633997    -0.00000000000000
+    9    -0.00000000000000     0.00000000000000    -0.00000000000002     0.00469452378622    -0.00000000000000
+   10    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00121177510550    -0.00000000000000
+   11    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00014915003803    -0.00000000000000
+   12    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000471965638    -0.00000000000000
+
+                21                  22                  23                  24                  25
+
+    1     0.00000000000000     0.00000000000020     0.04337066965080     0.00241424322396     0.04337066965045
+    2     0.00000000000000     0.00000000000024     0.05144523999650     0.00284632212919     0.05144523999609
+    3     0.00000000000000     0.00000000000025     0.05333475650760     0.00293579909938     0.05333475650717
+    4     0.00000000000000     0.00000000000024     0.05102495502210     0.00280288240830     0.05102495502169
+    5     0.00000000000000     0.00000000000021     0.04508728632109     0.00247573933365     0.04508728632072
+    6     0.00000000000000     0.00000000000017     0.03603121307962     0.00197841037710     0.03603121307932
+    7     0.00000000000000     0.00000000000012     0.02497371893490     0.00137126190118     0.02497371893468
+    8     0.00000000000000     0.00000000000007     0.01404202834357     0.00077102246874     0.01404202834344
+    9     0.00000000000000     0.00000000000003     0.00578794633996     0.00031780570206     0.00578794633990
+   10     0.00000000000000     0.00000000000001     0.00149401507078     0.00008203367491     0.00149401507076
+   11     0.00000000000000     0.00000000000000     0.00018388924118     0.00001009702681     0.00018388924117
+   12     0.00000000000000     0.00000000000000     0.00000581893268     0.00000031950711     0.00000581893268
+
+                26                  27                  28                  29                  30
+
+    1     0.00241424322356     0.00000000000000    -0.00000000000000     0.16455783398612     0.00000000000000
+    2     0.00284632212872     0.00000000000000    -0.00000000000000     0.20156172912732     0.00000000000000
+    3     0.00293579909888     0.00000000000000    -0.00000000000000     0.22206416278036     0.00000000000000
+    4     0.00280288240783     0.00000000000000    -0.00000000000000     0.23376914115774     0.00000000000000
+    5     0.00247573933323     0.00000000000000    -0.00000000000000     0.23794537995150     0.00000000000000
+    6     0.00197841037677     0.00000000000000    -0.00000000000000     0.23350888823151     0.00000000000000
+    7     0.00137126190094     0.00000000000000    -0.00000000000000     0.21805146507554     0.00000000000000
+    8     0.00077102246861     0.00000000000000    -0.00000000000000     0.18930645496434     0.00000000000000
+    9     0.00031780570200     0.00000000000000    -0.00000000000000     0.14748519754957     0.00000000000000
+   10     0.00008203367489     0.00000000000000    -0.00000000000000     0.09766136806004     0.00000000000000
+   11     0.00001009702681     0.00000000000000    -0.00000000000000     0.05012136097202     0.00000000000000
+   12     0.00000031950711     0.00000000000000    -0.00000000000000     0.01626524858136     0.00000000000000
+
+                31                  32                  33                  34                  35
+
+    1    -0.00000000000000     0.00000000000000     0.11782432142022    -0.00000000000000     0.00000000000000
+    2    -0.00000000000000     0.00000000000000     0.14431931548587    -0.00000000000000     0.00000000000001
+    3    -0.00000000000000     0.00000000000000     0.15899917164414    -0.00000000000000     0.00000000000001
+    4    -0.00000000000000     0.00000000000000     0.16738000105314    -0.00000000000000     0.00000000000001
+    5    -0.00000000000000     0.00000000000000     0.17037021118198    -0.00000000000000     0.00000000000001
+    6    -0.00000000000000     0.00000000000000     0.16719365851516    -0.00000000000000     0.00000000000001
+    7    -0.00000000000000     0.00000000000000     0.15612605784164    -0.00000000000000     0.00000000000001
+    8    -0.00000000000000     0.00000000000000     0.13554447124361     0.00000000000000     0.00000000000001
+    9    -0.00000000000000     0.00000000000000     0.10560021908329     0.00000000000000     0.00000000000000
+   10    -0.00000000000000     0.00000000000000     0.06992608095228     0.00000000000000     0.00000000000000
+   11    -0.00000000000000     0.00000000000000     0.03588717232195     0.00000000000000     0.00000000000000
+   12    -0.00000000000000     0.00000000000000     0.01164600815657     0.00000000000000     0.00000000000000
+
+                36                  37                  38                  39                  40
+
+    1    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+    2    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+    3    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+    4    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+    5    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+    6    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+    7    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+    8    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+    9    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000000
+   10    -0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000
+   11    -0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000
+   12    -0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000
+
+                41                  42                  43                  44                  45
+
+    1     0.00000000000000     0.00000000000000     0.16455783398601     0.00000000000000    -0.00000000000001
+    2     0.00000000000000     0.00000000000000     0.20156172912719     0.00000000000000    -0.00000000000001
+    3     0.00000000000000     0.00000000000000     0.22206416278022     0.00000000000000    -0.00000000000002
+    4     0.00000000000000     0.00000000000000     0.23376914115759     0.00000000000000    -0.00000000000002
+    5     0.00000000000000     0.00000000000000     0.23794537995136     0.00000000000000    -0.00000000000002
+    6     0.00000000000000     0.00000000000000     0.23350888823137     0.00000000000000    -0.00000000000002
+    7     0.00000000000000     0.00000000000000     0.21805146507541     0.00000000000000    -0.00000000000002
+    8     0.00000000000000     0.00000000000000     0.18930645496423     0.00000000000000    -0.00000000000001
+    9     0.00000000000000     0.00000000000000     0.14748519754949     0.00000000000000    -0.00000000000001
+   10     0.00000000000000     0.00000000000000     0.09766136805999     0.00000000000000    -0.00000000000001
+   11     0.00000000000000     0.00000000000000     0.05012136097199     0.00000000000000    -0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.01626524858135     0.00000000000000    -0.00000000000000
+
+                46                  47                  48                  49                  50
+
+    1    -0.00000000000000     0.11782432142024    -0.00000000000001    -0.00000000000000    -0.00000000000000
+    2    -0.00000000000000     0.14431931548589    -0.00000000000001    -0.00000000000000    -0.00000000000000
+    3    -0.00000000000000     0.15899917164417    -0.00000000000001    -0.00000000000000    -0.00000000000000
+    4    -0.00000000000000     0.16738000105317    -0.00000000000001    -0.00000000000000    -0.00000000000000
+    5    -0.00000000000000     0.17037021118201    -0.00000000000001    -0.00000000000000    -0.00000000000000
+    6    -0.00000000000000     0.16719365851519    -0.00000000000001    -0.00000000000000    -0.00000000000000
+    7    -0.00000000000000     0.15612605784167    -0.00000000000001    -0.00000000000000    -0.00000000000000
+    8     0.00000000000000     0.13554447124364    -0.00000000000001    -0.00000000000000    -0.00000000000000
+    9     0.00000000000000     0.10560021908332    -0.00000000000000    -0.00000000000000    -0.00000000000000
+   10     0.00000000000000     0.06992608095230    -0.00000000000000    -0.00000000000000    -0.00000000000000
+   11     0.00000000000000     0.03588717232196    -0.00000000000000    -0.00000000000000    -0.00000000000000
+   12     0.00000000000000     0.01164600815657    -0.00000000000000    -0.00000000000000    -0.00000000000000
+
+                51                  52                  53                  54                  55
+
+    1    -0.00000000000000     0.00000000000002    -0.00000000000001    -0.00000000000009    -0.00000000000000
+    2    -0.00000000000000     0.00000000000002    -0.00000000000002    -0.00000000000010    -0.00000000000000
+    3    -0.00000000000000     0.00000000000002    -0.00000000000002    -0.00000000000011    -0.00000000000000
+    4    -0.00000000000000     0.00000000000002    -0.00000000000003    -0.00000000000011    -0.00000000000000
+    5    -0.00000000000000     0.00000000000002    -0.00000000000002    -0.00000000000010    -0.00000000000000
+    6    -0.00000000000000     0.00000000000002    -0.00000000000002    -0.00000000000009    -0.00000000000000
+    7    -0.00000000000000     0.00000000000002    -0.00000000000002    -0.00000000000007    -0.00000000000000
+    8    -0.00000000000000     0.00000000000002    -0.00000000000001    -0.00000000000004    -0.00000000000000
+    9    -0.00000000000000     0.00000000000001    -0.00000000000001    -0.00000000000002    -0.00000000000000
+   10    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001    -0.00000000000000
+   11    -0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000000000000    -0.00000000000000
+   12    -0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000000000000    -0.00000000000000
+
+                56                  57                  58                  59                  60
+
+    1     0.00000000000000     0.13842678183061     0.00000000000009     0.00000000000000    -0.00000000000000
+    2     0.00000000000000     0.16623983844919     0.00000000000010     0.00000000000000    -0.00000000000000
+    3     0.00000000000000     0.17642394758331     0.00000000000011     0.00000000000000    -0.00000000000000
+    4     0.00000000000000     0.17510622539231     0.00000000000011     0.00000000000000    -0.00000000000000
+    5     0.00000000000000     0.16337564945437     0.00000000000010     0.00000000000000    -0.00000000000000
+    6     0.00000000000000     0.14128880863305     0.00000000000009     0.00000000000000    -0.00000000000000
+    7     0.00000000000000     0.10982033593792     0.00000000000007     0.00000000000000    -0.00000000000000
+    8     0.00000000000000     0.07297333830189     0.00000000000005     0.00000000000000    -0.00000000000000
+    9     0.00000000000000     0.03842036672870     0.00000000000002    -0.00000000000000    -0.00000000000000
+   10     0.00000000000000     0.01424614158585     0.00000000000001    -0.00000000000000     0.00000000000000
+   11     0.00000000000000     0.00303606141661     0.00000000000000    -0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00023511594219     0.00000000000000    -0.00000000000000     0.00000000000000
+
+                61                  62                  63                  64                  65
+
+    1    -0.01077202550688    -0.07432995544361    -0.03741287306359     0.07432995544383     0.03741287306350
+    2    -0.01293636792211    -0.08926451674649    -0.04492996146960     0.08926451674675     0.04492996146950
+    3    -0.01372886979138    -0.09473299884339    -0.04768244026931     0.09473299884367     0.04768244026921
+    4    -0.01362632795038    -0.09402543177833    -0.04732629695360     0.09402543177861     0.04732629695349
+    5    -0.01271348390718    -0.08772655539571    -0.04415585159089     0.08772655539598     0.04415585159079
+    6    -0.01099474126542    -0.07586675577870    -0.03818639856240     0.07586675577893     0.03818639856231
+    7    -0.00854594352519    -0.05896937405549    -0.02968135380965     0.05896937405567     0.02968135380959
+    8    -0.00567860244322    -0.03918392750897    -0.01972264475711     0.03918392750909     0.01972264475706
+    9    -0.00298977672465    -0.02063028634564    -0.01038394654899     0.02063028634570     0.01038394654896
+   10    -0.00110859906232    -0.00764964015862    -0.00385033213767     0.00764964015864     0.00385033213767
+   11    -0.00023625869639    -0.00163025035211    -0.00082056216934     0.00163025035212     0.00082056216933
+   12    -0.00001829613383    -0.00012624838399    -0.00006354523875     0.00012624838399     0.00006354523875
+
+                66                  67                  68                  69                  70
+
+    1    -0.02254108177556     0.03505682599929     0.00000000000000    -0.00000000000001     0.00000000000009
+    2    -0.02437263586188     0.04164740570215     0.00000000000000    -0.00000000000001     0.00000000000010
+    3    -0.02321956762021     0.04323235421836     0.00000000000000    -0.00000000000002     0.00000000000011
+    4    -0.02142890483910     0.04138125746291     0.00000000000000    -0.00000000000002     0.00000000000011
+    5    -0.01880237269572     0.03656939352220     0.00000000000000    -0.00000000000002     0.00000000000010
+    6    -0.01501754293412     0.02922441692854     0.00000000000000    -0.00000000000002     0.00000000000009
+    7    -0.01040872934533     0.02025584043101     0.00000000000000    -0.00000000000002     0.00000000000007
+    8    -0.00585253903345     0.01138929633997     0.00000000000000    -0.00000000000001     0.00000000000005
+    9    -0.00241234250841     0.00469452378622     0.00000000000000    -0.00000000000001     0.00000000000002
+   10    -0.00062268650256     0.00121177510550     0.00000000000000    -0.00000000000001     0.00000000000001
+   11    -0.00007664269972     0.00014915003803     0.00000000000000    -0.00000000000000     0.00000000000000
+   12    -0.00000242525722     0.00000471965638     0.00000000000000    -0.00000000000000     0.00000000000000
+
+                71                  72                  73                  74                  75
+
+    1     0.01537410983385     0.00000000000000    -0.00000000000001     0.00000000000008     0.01887574275575
+    2     0.01820329429296     0.00000000000000    -0.00000000000001     0.00000000000009     0.02239110056316
+    3     0.01884320864813     0.00000000000000    -0.00000000000001     0.00000000000010     0.02321449307472
+    4     0.01801616548821     0.00000000000000    -0.00000000000001     0.00000000000009     0.02220951057538
+    5     0.01591780139278     0.00000000000000    -0.00000000000001     0.00000000000008     0.01962510033262
+    6     0.01272049247538     0.00000000000000    -0.00000000000001     0.00000000000006     0.01568327594127
+    7     0.00881674276653     0.00000000000000    -0.00000000000001     0.00000000000004     0.01087028978963
+    8     0.00495740950884     0.00000000000000    -0.00000000000001     0.00000000000002     0.00611206195322
+    9     0.00204338144891     0.00000000000000    -0.00000000000001     0.00000000000001     0.00251931457095
+   10     0.00052744833845     0.00000000000000    -0.00000000000001     0.00000000000000     0.00065029869248
+   11     0.00006492041253     0.00000000000000    -0.00000000000000     0.00000000000000     0.00008004131647
+   12     0.00000205432089     0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000253280197
+
+                76                  77                  78                  79                  80
+
+    1     0.00101892702015     0.01887574275574     0.00101892702004    -0.00000000000000    -0.00000000000000
+    2     0.00121796302385     0.02239110056314     0.00121796302373     0.00000000000000    -0.00000000000000
+    3     0.00127078298985     0.02321449307470     0.00127078298972     0.00000000000000    -0.00000000000000
+    4     0.00121884762546     0.02220951057537     0.00121884762534     0.00000000000000    -0.00000000000000
+    5     0.00107753746650     0.01962510033262     0.00107753746639     0.00000000000000    -0.00000000000000
+    6     0.00086113966727     0.01568327594128     0.00086113966719     0.00000000000000    -0.00000000000000
+    7     0.00059686801894     0.01087028978964     0.00059686801889     0.00000000000000    -0.00000000000000
+    8     0.00033560230622     0.00611206195324     0.00033560230619     0.00000000000000    -0.00000000000000
+    9     0.00013833102258     0.00251931457096     0.00013833102258     0.00000000000000    -0.00000000000000
+   10     0.00003570672918     0.00065029869249     0.00003570672918     0.00000000000000    -0.00000000000000
+   11     0.00000439492443     0.00008004131648     0.00000439492443     0.00000000000000    -0.00000000000000
+   12     0.00000013907159     0.00000253280197     0.00000013907159     0.00000000000000    -0.00000000000000
+
+                81                  82                  83                  84                  85
+
+    1     0.11782432142022    -0.00000000000000     0.00000000000000     0.00000000000000     0.08436286733883
+    2     0.14431931548587    -0.00000000000000     0.00000000000000     0.00000000000000     0.10333342997446
+    3     0.15899917164414    -0.00000000000000     0.00000000000000     0.00000000000000     0.11384428836690
+    4     0.16738000105314    -0.00000000000000     0.00000000000000     0.00000000000000     0.11984500868592
+    5     0.17037021118198    -0.00000000000000     0.00000000000000     0.00000000000000     0.12198601571548
+    6     0.16719365851516    -0.00000000000000     0.00000000000000     0.00000000000000     0.11971158639567
+    7     0.15612605784164    -0.00000000000000     0.00000000000000     0.00000000000000     0.11178712295616
+    8     0.13554447124361     0.00000000000000     0.00000000000000     0.00000000000000     0.09705059285047
+    9     0.10560021908329     0.00000000000000    -0.00000000000000     0.00000000000000     0.07561034229683
+   10     0.06992608095228     0.00000000000000    -0.00000000000000     0.00000000000000     0.05006746162248
+   11     0.03588717232195     0.00000000000000    -0.00000000000000     0.00000000000000     0.02569541433610
+   12     0.01164600815657     0.00000000000000    -0.00000000000000     0.00000000000000     0.00833860640398
+
+                86                  87                  88                  89                  90
+
+    1    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+    2    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000000
+    3    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000000
+    4    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000000
+    5    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000000
+    6    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000000
+    7    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000000
+    8    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000000
+    9    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+   10    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+   11    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+   12     0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+
+                91                  92                  93                  94                  95
+
+    1    -0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000000     0.11782432142024
+    2    -0.00000000000001     0.00000000000000     0.00000000000000    -0.00000000000000     0.14431931548589
+    3    -0.00000000000001     0.00000000000000     0.00000000000000    -0.00000000000000     0.15899917164417
+    4    -0.00000000000001     0.00000000000000     0.00000000000000    -0.00000000000000     0.16738000105317
+    5    -0.00000000000001     0.00000000000000     0.00000000000000    -0.00000000000000     0.17037021118201
+    6    -0.00000000000001     0.00000000000000     0.00000000000000    -0.00000000000000     0.16719365851519
+    7    -0.00000000000001     0.00000000000000     0.00000000000000    -0.00000000000000     0.15612605784167
+    8    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.13554447124364
+    9    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.10560021908332
+   10    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.06992608095230
+   11    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.03588717232196
+   12    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.01164600815657
+
+                96                  97                  98                  99                 100
+
+    1    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.08436286733891    -0.00000000000000
+    2    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.10333342997456    -0.00000000000000
+    3    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.11384428836701    -0.00000000000001
+    4    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.11984500868604    -0.00000000000001
+    5    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.12198601571560    -0.00000000000001
+    6    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.11971158639579    -0.00000000000001
+    7    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.11178712295627    -0.00000000000001
+    8    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.09705059285056    -0.00000000000000
+    9    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.07561034229691    -0.00000000000000
+   10     0.00000000000000    -0.00000000000001    -0.00000000000000     0.05006746162253    -0.00000000000000
+   11     0.00000000000000    -0.00000000000000    -0.00000000000000     0.02569541433613    -0.00000000000000
+   12     0.00000000000000    -0.00000000000000     0.00000000000000     0.00833860640399    -0.00000000000000
+
+               101                 102                 103                 104                 105
+
+    1    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000009
+    2    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000011
+    3    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000012
+    4    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000002    -0.00000000000012
+    5    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000002    -0.00000000000010
+    6    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000002    -0.00000000000008
+    7    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000006
+    8    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000003
+    9    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000001
+   10    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000000
+   11    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+   12    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+
+               106                 107                 108                 109                 110
+
+    1     0.00000000000020     0.00000000000000    -0.00000000000001    -0.01077202550688     0.00000000000008
+    2     0.00000000000024     0.00000000000001    -0.00000000000001    -0.01293636792211     0.00000000000009
+    3     0.00000000000025     0.00000000000001    -0.00000000000001    -0.01372886979138     0.00000000000010
+    4     0.00000000000024     0.00000000000001    -0.00000000000001    -0.01362632795038     0.00000000000009
+    5     0.00000000000021     0.00000000000001    -0.00000000000001    -0.01271348390718     0.00000000000008
+    6     0.00000000000017     0.00000000000001    -0.00000000000001    -0.01099474126542     0.00000000000006
+    7     0.00000000000012     0.00000000000001    -0.00000000000001    -0.00854594352519     0.00000000000004
+    8     0.00000000000007     0.00000000000001    -0.00000000000001    -0.00567860244322     0.00000000000002
+    9     0.00000000000003     0.00000000000000    -0.00000000000000    -0.00298977672465     0.00000000000001
+   10     0.00000000000001     0.00000000000000    -0.00000000000000    -0.00110859906232     0.00000000000000
+   11     0.00000000000000     0.00000000000000    -0.00000000000000    -0.00023625869639     0.00000000000000
+   12     0.00000000000000     0.00000000000000    -0.00000000000000    -0.00001829613383    -0.00000000000000
+
+               111                 112                 113                 114                 115
+
+    1     0.00000000000000    -0.00000000000000     0.00083825204911     0.00578417099199     0.00291137609065
+    2     0.00000000000000    -0.00000000000000     0.00100667575581     0.00694634115273     0.00349633708575
+    3     0.00000000000000    -0.00000000000001     0.00106834626665     0.00737188473507     0.00371052809305
+    4     0.00000000000000    -0.00000000000001     0.00106036671738     0.00731682363799     0.00368281391209
+    5     0.00000000000000    -0.00000000000001     0.00098933147992     0.00682666085184     0.00343609779355
+    6     0.00000000000000    -0.00000000000001     0.00085558323170     0.00590376094551     0.00297156990787
+    7     0.00000000000000    -0.00000000000001     0.00066502392396     0.00458884901504     0.00230972862396
+    8     0.00000000000000    -0.00000000000000     0.00044189462150     0.00304919511246     0.00153476682458
+    9     0.00000000000000    -0.00000000000000     0.00023265693757     0.00160539722005     0.00080805271645
+   10     0.00000000000000    -0.00000000000000     0.00008626840282     0.00059527584054     0.00029962320476
+   11     0.00000000000000    -0.00000000000000     0.00001838506010     0.00012686199985     0.00006385409313
+   12     0.00000000000000    -0.00000000000000     0.00000142375932     0.00000982433308     0.00000494493135
+
+               116                 117                 118                 119                 120
+
+    1    -0.00578417099179    -0.00291137609063    -0.02220104122198     0.04337066965080    -0.00000000000000
+    2    -0.00694634115250    -0.00349633708572    -0.02637965325968     0.05144523999650    -0.00000000000000
+    3    -0.00737188473484    -0.00371052809302    -0.02738778820586     0.05333475650760    -0.00000000000000
+    4    -0.00731682363776    -0.00368281391207    -0.02621673046890     0.05102495502210    -0.00000000000000
+    5    -0.00682666085164    -0.00343609779353    -0.02316848994230     0.04508728632109    -0.00000000000000
+    6    -0.00590376094536    -0.00297156990785    -0.01851510690246     0.03603121307962    -0.00000000000000
+    7    -0.00458884901494    -0.00230972862395    -0.01283307242106     0.02497371893490    -0.00000000000000
+    8    -0.00304919511240    -0.00153476682457    -0.00721568010304     0.01404202834357    -0.00000000000000
+    9    -0.00160539722003    -0.00080805271645    -0.00297421200277     0.00578794633996    -0.00000000000000
+   10    -0.00059527584054    -0.00029962320476    -0.00076771920381     0.00149401507078    -0.00000000000000
+   11    -0.00012686199985    -0.00006385409313    -0.00009449389406     0.00018388924118    -0.00000000000000
+   12    -0.00000982433308    -0.00000494493135    -0.00000299013474     0.00000581893268    -0.00000000000000
+
+               121                 122                 123                 124                 125
+
+    1    -0.00000000000000    -0.07432995544361     0.01887574275575    -0.00000000000000    -0.00000000000000
+    2    -0.00000000000000    -0.08926451674649     0.02239110056316    -0.00000000000000    -0.00000000000000
+    3    -0.00000000000000    -0.09473299884339     0.02321449307472    -0.00000000000000    -0.00000000000000
+    4    -0.00000000000000    -0.09402543177833     0.02220951057538    -0.00000000000000    -0.00000000000000
+    5    -0.00000000000000    -0.08772655539571     0.01962510033262    -0.00000000000000    -0.00000000000000
+    6    -0.00000000000000    -0.07586675577870     0.01568327594127    -0.00000000000000    -0.00000000000000
+    7    -0.00000000000000    -0.05896937405549     0.01087028978963    -0.00000000000000    -0.00000000000000
+    8    -0.00000000000000    -0.03918392750897     0.00611206195322    -0.00000000000000    -0.00000000000000
+    9    -0.00000000000000    -0.02063028634564     0.00251931457095    -0.00000000000000    -0.00000000000000
+   10    -0.00000000000000    -0.00764964015862     0.00065029869248    -0.00000000000000    -0.00000000000000
+   11    -0.00000000000000    -0.00163025035211     0.00008004131647    -0.00000000000000    -0.00000000000000
+   12    -0.00000000000000    -0.00012624838399     0.00000253280197    -0.00000000000000    -0.00000000000000
+
+               126                 127                 128                 129                 130
+
+    1     0.00578417099199     0.06318605330567     0.02136754658732    -0.01663870608269    -0.01881105398503
+    2     0.00694634115273     0.07553897007809     0.02564177692558    -0.02032438042010    -0.02260960896905
+    3     0.00737188473507     0.07948986033302     0.02717531589032    -0.02224622700457    -0.02403202439170
+    4     0.00731682363799     0.07787058843027     0.02691596936850    -0.02310562530882    -0.02390889988531
+    5     0.00682666085184     0.07130192193101     0.02503858875991    -0.02290977421003    -0.02238146157907
+    6     0.00590376094551     0.06007372147428     0.02156636677792    -0.02140144542802    -0.01944294177013
+    7     0.00458884901504     0.04506646509213     0.01667365357990    -0.01826218978417    -0.01520187913143
+    8     0.00304919511246     0.02857593932405     0.01100408453435    -0.01350463998781    -0.01017654665048
+    9     0.00160539722005     0.01418378426416     0.00574633756409    -0.00797158544949    -0.00540523692328
+   10     0.00059527584054     0.00490933062021     0.00211150632931    -0.00330580527519    -0.00202345964261
+   11     0.00012686199985     0.00097406698571     0.00044602947000    -0.00077669878999    -0.00043519233808
+   12     0.00000982433308     0.00007091334382     0.00003429285739    -0.00006466788739    -0.00003394993063
+
+               131                 132                 133                 134                 135
+
+    1     0.00001629963021     0.00241424322396     0.00000000000001    -0.00000000000000    -0.03741287306359
+    2    -0.00063752413961     0.00284632212919     0.00000000000001    -0.00000000000000    -0.04492996146960
+    3    -0.00122980936110     0.00293579909938     0.00000000000001    -0.00000000000000    -0.04768244026931
+    4    -0.00139459337977     0.00280288240830     0.00000000000001    -0.00000000000000    -0.04732629695360
+    5    -0.00126921700079     0.00247573933365     0.00000000000001    -0.00000000000000    -0.04415585159089
+    6    -0.00101657829356     0.00197841037710     0.00000000000001    -0.00000000000000    -0.03818639856240
+    7    -0.00070464072788     0.00137126190118     0.00000000000001    -0.00000000000000    -0.02968135380965
+    8    -0.00039619998978     0.00077102246874     0.00000000000001    -0.00000000000000    -0.01972264475711
+    9    -0.00016330862072     0.00031780570206     0.00000000000001    -0.00000000000000    -0.01038394654899
+   10    -0.00004215407784     0.00008203367491     0.00000000000000    -0.00000000000000    -0.00385033213767
+   11    -0.00000518848942     0.00001009702681     0.00000000000000    -0.00000000000000    -0.00082056216934
+   12    -0.00000016418291     0.00000031950711     0.00000000000000    -0.00000000000000    -0.00006354523875
+
+               136                 137                 138                 139                 140
+
+    1     0.00101892702015     0.00000000000000    -0.00000000000000     0.00291137609065     0.02136754658732
+    2     0.00121796302385     0.00000000000001    -0.00000000000000     0.00349633708575     0.02564177692558
+    3     0.00127078298985     0.00000000000001    -0.00000000000000     0.00371052809305     0.02717531589032
+    4     0.00121884762546     0.00000000000001    -0.00000000000000     0.00368281391209     0.02691596936850
+    5     0.00107753746650     0.00000000000001    -0.00000000000000     0.00343609779355     0.02503858875991
+    6     0.00086113966727     0.00000000000001    -0.00000000000000     0.00297156990787     0.02156636677792
+    7     0.00059686801894     0.00000000000001    -0.00000000000000     0.00230972862396     0.01667365357990
+    8     0.00033560230622     0.00000000000001    -0.00000000000000     0.00153476682458     0.01100408453435
+    9     0.00013833102258     0.00000000000000    -0.00000000000000     0.00080805271645     0.00574633756409
+   10     0.00003570672918     0.00000000000000    -0.00000000000000     0.00029962320476     0.00211150632931
+   11     0.00000439492443     0.00000000000000    -0.00000000000000     0.00006385409313     0.00044602947000
+   12     0.00000013907159     0.00000000000000    -0.00000000000000     0.00000494493135     0.00003429285739
+
+               141                 142                 143                 144                 145
+
+    1     0.01018669626479    -0.01881105398495    -0.01003660232470    -0.02220104122190     0.04337066965045
+    2     0.01222974359361    -0.02260960896896    -0.01205687093262    -0.02637965325956     0.05144523999609
+    3     0.01297459940972    -0.02403202439161    -0.01279985061455    -0.02738778820573     0.05333475650717
+    4     0.01287370260754    -0.02390889988523    -0.01270823633632    -0.02621673046878     0.05102495502169
+    5     0.01200704762847    -0.02238146157901    -0.01186112656061    -0.02316848994219     0.04508728632072
+    6     0.01037900844992    -0.01944294177008    -0.01026241459375    -0.01851510690238     0.03603121307932
+    7     0.00806244292972    -0.01520187913140    -0.00798163044611    -0.01283307242100     0.02497371893468
+    8     0.00535319650947    -0.01017654665047    -0.00530775789570    -0.00721568010301     0.01404202834344
+    9     0.00281585385361    -0.00540523692329    -0.00279712463218    -0.00297421200276     0.00578794633990
+   10     0.00104305392860    -0.00202345964262    -0.00103821944371    -0.00076771920381     0.00149401507076
+   11     0.00022207244236    -0.00043519233808    -0.00022147739498    -0.00009449389406     0.00018388924117
+   12     0.00001718390887    -0.00003394993063    -0.00001716507938    -0.00000299013474     0.00000581893268
+
+               146                 147                 148                 149                 150
+
+    1    -0.00000000000000    -0.00000000000000     0.07432995544383     0.01887574275574    -0.00000000000000
+    2    -0.00000000000000    -0.00000000000000     0.08926451674675     0.02239110056314    -0.00000000000000
+    3    -0.00000000000000    -0.00000000000000     0.09473299884367     0.02321449307470    -0.00000000000000
+    4    -0.00000000000000    -0.00000000000000     0.09402543177861     0.02220951057537    -0.00000000000000
+    5    -0.00000000000000    -0.00000000000000     0.08772655539598     0.01962510033262    -0.00000000000000
+    6    -0.00000000000000    -0.00000000000000     0.07586675577893     0.01568327594128    -0.00000000000000
+    7    -0.00000000000000    -0.00000000000000     0.05896937405567     0.01087028978964    -0.00000000000000
+    8    -0.00000000000000    -0.00000000000000     0.03918392750909     0.00611206195324    -0.00000000000000
+    9    -0.00000000000000    -0.00000000000000     0.02063028634570     0.00251931457096    -0.00000000000000
+   10    -0.00000000000000    -0.00000000000000     0.00764964015864     0.00065029869249    -0.00000000000000
+   11    -0.00000000000000    -0.00000000000000     0.00163025035212     0.00008004131648    -0.00000000000000
+   12    -0.00000000000000    -0.00000000000000     0.00012624838399     0.00000253280197    -0.00000000000000
+
+               151                 152                 153                 154                 155
+
+    1    -0.00000000000000    -0.00578417099179    -0.01663870608269    -0.01881105398495     0.06318605330563
+    2    -0.00000000000000    -0.00694634115250    -0.02032438042010    -0.02260960896896     0.07553897007805
+    3    -0.00000000000000    -0.00737188473484    -0.02224622700457    -0.02403202439161     0.07948986033299
+    4    -0.00000000000000    -0.00731682363776    -0.02310562530882    -0.02390889988523     0.07787058843025
+    5    -0.00000000000000    -0.00682666085164    -0.02290977421003    -0.02238146157901     0.07130192193101
+    6    -0.00000000000000    -0.00590376094536    -0.02140144542802    -0.01944294177008     0.06007372147430
+    7    -0.00000000000000    -0.00458884901494    -0.01826218978417    -0.01520187913140     0.04506646509217
+    8    -0.00000000000000    -0.00304919511240    -0.01350463998781    -0.01017654665047     0.02857593932409
+    9    -0.00000000000000    -0.00160539722003    -0.00797158544949    -0.00540523692329     0.01418378426419
+   10    -0.00000000000000    -0.00059527584054    -0.00330580527519    -0.00202345964262     0.00490933062023
+   11    -0.00000000000000    -0.00012686199985    -0.00077669878999    -0.00043519233808     0.00097406698572
+   12    -0.00000000000000    -0.00000982433308    -0.00006466788739    -0.00003394993063     0.00007091334382
+
+               156                 157                 158                 159                 160
+
+    1     0.02136754658713     0.00001629963037     0.00241424322356    -0.00000000000001     0.00000000000002
+    2     0.02564177692537    -0.00063752413941     0.00284632212872    -0.00000000000001     0.00000000000002
+    3     0.02717531589010    -0.00122980936090     0.00293579909888    -0.00000000000001     0.00000000000002
+    4     0.02691596936829    -0.00139459337957     0.00280288240783    -0.00000000000001     0.00000000000002
+    5     0.02503858875973    -0.00126921700061     0.00247573933323    -0.00000000000001     0.00000000000002
+    6     0.02156636677777    -0.00101657829343     0.00197841037677    -0.00000000000001     0.00000000000002
+    7     0.01667365357980    -0.00070464072779     0.00137126190094    -0.00000000000001     0.00000000000002
+    8     0.01100408453430    -0.00039619998973     0.00077102246861    -0.00000000000001     0.00000000000002
+    9     0.00574633756407    -0.00016330862070     0.00031780570200    -0.00000000000001     0.00000000000001
+   10     0.00211150632931    -0.00004215407783     0.00008203367489    -0.00000000000000     0.00000000000001
+   11     0.00044602946999    -0.00000518848942     0.00001009702681    -0.00000000000000     0.00000000000000
+   12     0.00003429285739    -0.00000016418291     0.00000031950711    -0.00000000000000     0.00000000000000
+
+               161                 162                 163                 164                 165
+
+    1     0.03741287306350     0.00101892702004    -0.00000000000000     0.00000000000001    -0.00291137609063
+    2     0.04492996146950     0.00121796302373    -0.00000000000001     0.00000000000001    -0.00349633708572
+    3     0.04768244026921     0.00127078298972    -0.00000000000001     0.00000000000001    -0.00371052809302
+    4     0.04732629695349     0.00121884762534    -0.00000000000001     0.00000000000002    -0.00368281391207
+    5     0.04415585159079     0.00107753746639    -0.00000000000001     0.00000000000002    -0.00343609779353
+    6     0.03818639856231     0.00086113966719    -0.00000000000001     0.00000000000002    -0.00297156990785
+    7     0.02968135380959     0.00059686801889    -0.00000000000001     0.00000000000001    -0.00230972862395
+    8     0.01972264475706     0.00033560230619    -0.00000000000000     0.00000000000001    -0.00153476682457
+    9     0.01038394654896     0.00013833102258    -0.00000000000000     0.00000000000001    -0.00080805271645
+   10     0.00385033213767     0.00003570672918    -0.00000000000000     0.00000000000001    -0.00029962320476
+   11     0.00082056216933     0.00000439492443    -0.00000000000000     0.00000000000000    -0.00006385409313
+   12     0.00006354523875     0.00000013907159    -0.00000000000000     0.00000000000000    -0.00000494493135
+
+               166                 167                 168                 169
+
+    1    -0.01881105398503    -0.01003660232470     0.02136754658713     0.01018669626472
+    2    -0.02260960896905    -0.01205687093262     0.02564177692537     0.01222974359353
+    3    -0.02403202439170    -0.01279985061455     0.02717531589010     0.01297459940964
+    4    -0.02390889988531    -0.01270823633632     0.02691596936829     0.01287370260746
+    5    -0.02238146157907    -0.01186112656061     0.02503858875973     0.01200704762840
+    6    -0.01944294177013    -0.01026241459375     0.02156636677777     0.01037900844985
+    7    -0.01520187913143    -0.00798163044611     0.01667365357980     0.00806244292968
+    8    -0.01017654665048    -0.00530775789570     0.01100408453430     0.00535319650944
+    9    -0.00540523692328    -0.00279712463218     0.00574633756407     0.00281585385360
+   10    -0.00202345964261    -0.00103821944371     0.00211150632931     0.00104305392859
+   11    -0.00043519233808    -0.00022147739498     0.00044602946999     0.00022207244236
+   12    -0.00003394993063    -0.00001716507938     0.00003429285739     0.00001718390887
+
+
+
+  ## DensityVirtual (Symmetry 0) ##
+  Irrep: 1 Size: 12 x 169
+
+                 1                   2                   3                   4                   5
+
+    1     0.00412521830715    -0.04295017215586    -0.00000000000000    -0.00000000000000     0.00000000000001
+    2     0.00502369817868    -0.05034059500711    -0.00000000000000    -0.00000000000000     0.00000000000001
+    3     0.00548285666642    -0.05104201085521    -0.00000000000000    -0.00000000000000     0.00000000000001
+    4     0.00570916404454    -0.04721490413887    -0.00000000000000    -0.00000000000000     0.00000000000001
+    5     0.00576331641641    -0.03983139380172    -0.00000000000000    -0.00000000000000     0.00000000000001
+    6     0.00566841067151    -0.03002813626735    -0.00000000000000    -0.00000000000000     0.00000000000001
+    7     0.00543362172164    -0.01960887556057    -0.00000000000000    -0.00000000000000     0.00000000000001
+    8     0.00505901139844    -0.01089438365482    -0.00000000000000    -0.00000000000000     0.00000000000002
+    9     0.00452118032195    -0.00550015868362    -0.00000000000000    -0.00000000000000     0.00000000000002
+   10     0.00376918472346    -0.00308002706743    -0.00000000000000    -0.00000000000000     0.00000000000002
+   11     0.00278009949173    -0.00200023766647    -0.00000000000000    -0.00000000000000     0.00000000000001
+   12     0.00163601842526    -0.00115781507200    -0.00000000000000    -0.00000000000000     0.00000000000001
+
+                 6                   7                   8                   9                  10
+
+    1    -0.01316271007138     0.00000000000000    -0.00000000000000     0.00000000000009     0.01128508822832
+    2    -0.01939013126898     0.00000000000000    -0.00000000000000     0.00000000000010     0.01298466351705
+    3    -0.02785862716551     0.00000000000000    -0.00000000000000     0.00000000000010     0.01267569013962
+    4    -0.03926155201774     0.00000000000000    -0.00000000000000     0.00000000000009     0.01094853292537
+    5    -0.05329739350858    -0.00000000000000    -0.00000000000000     0.00000000000008     0.00813556208138
+    6    -0.06861790306509    -0.00000000000000    -0.00000000000000     0.00000000000007     0.00469082986625
+    7    -0.08240670811434    -0.00000000000000    -0.00000000000000     0.00000000000005     0.00132995647596
+    8    -0.09059535519274    -0.00000000000000    -0.00000000000000     0.00000000000004    -0.00109109006396
+    9    -0.08951535401640    -0.00000000000000    -0.00000000000000     0.00000000000002    -0.00208502444044
+   10    -0.07810744990534    -0.00000000000000    -0.00000000000000     0.00000000000001    -0.00195444496234
+   11    -0.05844408408611    -0.00000000000000    -0.00000000000000    -0.00000000000000    -0.00139789513299
+   12    -0.03449334482027    -0.00000000000000    -0.00000000000000    -0.00000000000001    -0.00080286309001
+
+                11                  12                  13                  14                  15
+
+    1     0.02511611753842     0.01128508822824     0.02511611753826    -0.04295017215586     1.55961691771652
+    2     0.03225382359887     0.01298466351696     0.03225382359867    -0.05034059500711     1.82297692522479
+    3     0.03851745037635     0.01267569013953     0.03851745037614    -0.05104201085521     1.83804871243925
+    4     0.04516655859546     0.01094853292530     0.04516655859526    -0.04721490413887     1.68329304944628
+    5     0.05230099370087     0.00813556208132     0.05230099370069    -0.03983139380172     1.39484546042294
+    6     0.05932508092808     0.00469082986620     0.05932508092792    -0.03002813626735     1.01622366466196
+    7     0.06486150846738     0.00132995647591     0.06486150846726    -0.01960887556057     0.61724923729082
+    8     0.06691937016674    -0.00109109006401     0.06691937016666    -0.01089438365482     0.28813900595206
+    9     0.06368731365870    -0.00208502444050     0.06368731365866    -0.00550015868362     0.09243658902805
+   10     0.05457106945866    -0.00195444496239     0.05457106945867    -0.00308002706743     0.01824657424493
+   11     0.04056232201589    -0.00139789513302     0.04056232201594    -0.00200023766647     0.00277591801413
+   12     0.02390108922429    -0.00080286309003     0.02390108922435    -0.00115781507200     0.00086069622643
+
+                16                  17                  18                  19                  20
+
+    1     0.00000000000000    -0.00000000000000     0.00000000000011    -1.94657318777043    -0.00000000000000
+    2     0.00000000000000    -0.00000000000000     0.00000000000020    -2.28308011138953    -0.00000000000000
+    3     0.00000000000000    -0.00000000000000     0.00000000000033    -2.31708256117632    -0.00000000000000
+    4     0.00000000000000    -0.00000000000000     0.00000000000047    -2.14425092824283    -0.00000000000000
+    5     0.00000000000000    -0.00000000000000     0.00000000000054    -1.80470851726667    -0.00000000000000
+    6     0.00000000000000    -0.00000000000000     0.00000000000051    -1.34455961546751    -0.00000000000000
+    7     0.00000000000000    -0.00000000000000     0.00000000000036    -0.84094794281456    -0.00000000000000
+    8     0.00000000000000    -0.00000000000000     0.00000000000016    -0.40139518193705    -0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000001    -0.11507374305859     0.00000000000000
+   10     0.00000000000000     0.00000000000000    -0.00000000000004     0.00930986070264     0.00000000000000
+   11     0.00000000000000     0.00000000000000    -0.00000000000004     0.03451040527802     0.00000000000000
+   12     0.00000000000000     0.00000000000000    -0.00000000000002     0.02401551871854     0.00000000000000
+
+                21                  22                  23                  24                  25
+
+    1    -0.00000000000000    -0.00000000000016    -0.47429889366807     0.72243383092152    -0.47429889366780
+    2    -0.00000000000000    -0.00000000000007    -0.54990119335524     0.84471859481707    -0.54990119335515
+    3    -0.00000000000000     0.00000000000014    -0.54557035290802     0.85208297882472    -0.54557035290837
+    4    -0.00000000000000     0.00000000000039    -0.48607936929501     0.78037771909873    -0.48607936929587
+    5    -0.00000000000000     0.00000000000057    -0.38464810216594     0.64548536763732    -0.38464810216720
+    6    -0.00000000000000     0.00000000000060    -0.25842224789303     0.46639776571350    -0.25842224789438
+    7    -0.00000000000000     0.00000000000043    -0.13382709788097     0.27448865049954    -0.13382709788205
+    8    -0.00000000000000     0.00000000000016    -0.04194165047535     0.11212052537741    -0.04194165047596
+    9    -0.00000000000000    -0.00000000000006     0.00057424573031     0.01228012601547     0.00057424573010
+   10     0.00000000000000    -0.00000000000014     0.00664969118467    -0.02517813000940     0.00664969118464
+   11     0.00000000000000    -0.00000000000013     0.00260642947738    -0.02689571060207     0.00260642947740
+   12     0.00000000000000    -0.00000000000007     0.00068316656133    -0.01680846228856     0.00068316656135
+
+                26                  27                  28                  29                  30
+
+    1     0.72243383092187    -0.00000000000000     0.00000000000000     0.32456849428036    -0.00000000000000
+    2     0.84471859481739    -0.00000000000000     0.00000000000000     0.39046452044723    -0.00000000000000
+    3     0.85208297882490    -0.00000000000000     0.00000000000000     0.41576179286190    -0.00000000000000
+    4     0.78037771909875    -0.00000000000000     0.00000000000000     0.41481574354798    -0.00000000000000
+    5     0.64548536763727    -0.00000000000000     0.00000000000000     0.39002528805441    -0.00000000000000
+    6     0.46639776571356    -0.00000000000000     0.00000000000000     0.34109961580162    -0.00000000000000
+    7     0.27448865049989    -0.00000000000000     0.00000000000000     0.26947646644613    -0.00000000000000
+    8     0.11212052537809    -0.00000000000000     0.00000000000000     0.18335726258619    -0.00000000000000
+    9     0.01228012601635    -0.00000000000000     0.00000000000000     0.09995035651747    -0.00000000000000
+   10    -0.02517813000858    -0.00000000000000     0.00000000000000     0.03901651853594    -0.00000000000000
+   11    -0.02689571060147    -0.00000000000000     0.00000000000000     0.00898882182066    -0.00000000000000
+   12    -0.01680846228825    -0.00000000000000     0.00000000000000     0.00079039726528    -0.00000000000000
+
+                31                  32                  33                  34                  35
+
+    1     0.00000000000000    -0.00000000000000    -0.36230703410845     0.00000000000000    -0.00000000000000
+    2     0.00000000000000    -0.00000000000000    -0.43586498634588     0.00000000000000    -0.00000000000001
+    3     0.00000000000000    -0.00000000000000    -0.46410364752559     0.00000000000000    -0.00000000000001
+    4     0.00000000000000    -0.00000000000000    -0.46304759825684     0.00000000000000    -0.00000000000001
+    5     0.00000000000000     0.00000000000000    -0.43537468310225     0.00000000000000    -0.00000000000001
+    6     0.00000000000000     0.00000000000000    -0.38076027807514     0.00000000000000    -0.00000000000001
+    7     0.00000000000000     0.00000000000000    -0.30080929307879     0.00000000000000    -0.00000000000000
+    8    -0.00000000000000     0.00000000000000    -0.20467675440014     0.00000000000000    -0.00000000000000
+    9    -0.00000000000000     0.00000000000000    -0.11157188040762     0.00000000000000    -0.00000000000000
+   10    -0.00000000000000     0.00000000000000    -0.04355308466812     0.00000000000000    -0.00000000000000
+   11    -0.00000000000000     0.00000000000000    -0.01003397874828     0.00000000000000    -0.00000000000000
+   12    -0.00000000000000     0.00000000000000    -0.00088229909556     0.00000000000000    -0.00000000000000
+
+                36                  37                  38                  39                  40
+
+    1    -0.00000000000000    -0.00000000000001     0.00000000000000     0.00000000000001    -0.00000000000000
+    2    -0.00000000000000    -0.00000000000001     0.00000000000000     0.00000000000001    -0.00000000000000
+    3    -0.00000000000000    -0.00000000000001     0.00000000000000     0.00000000000001    -0.00000000000000
+    4    -0.00000000000000    -0.00000000000001     0.00000000000000     0.00000000000001    -0.00000000000000
+    5    -0.00000000000000    -0.00000000000001     0.00000000000000     0.00000000000001    -0.00000000000000
+    6    -0.00000000000000    -0.00000000000001     0.00000000000000     0.00000000000001    -0.00000000000000
+    7    -0.00000000000000    -0.00000000000001     0.00000000000000     0.00000000000001    -0.00000000000000
+    8    -0.00000000000000    -0.00000000000001     0.00000000000000     0.00000000000001    -0.00000000000000
+    9    -0.00000000000000    -0.00000000000001    -0.00000000000000     0.00000000000000    -0.00000000000000
+   10    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+   11    -0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000
+   12    -0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000000
+
+                41                  42                  43                  44                  45
+
+    1    -0.00000000000000    -0.00000000000000     0.32456849428046    -0.00000000000000     0.00000000000001
+    2    -0.00000000000000    -0.00000000000000     0.39046452044735    -0.00000000000000     0.00000000000001
+    3    -0.00000000000000    -0.00000000000000     0.41576179286203    -0.00000000000000     0.00000000000002
+    4    -0.00000000000000    -0.00000000000000     0.41481574354811    -0.00000000000000     0.00000000000002
+    5    -0.00000000000000    -0.00000000000000     0.39002528805453    -0.00000000000000     0.00000000000002
+    6    -0.00000000000000    -0.00000000000000     0.34109961580172     0.00000000000000     0.00000000000002
+    7    -0.00000000000000    -0.00000000000000     0.26947646644620     0.00000000000000     0.00000000000001
+    8    -0.00000000000000    -0.00000000000000     0.18335726258623     0.00000000000000     0.00000000000001
+    9     0.00000000000000    -0.00000000000000     0.09995035651750     0.00000000000000     0.00000000000001
+   10     0.00000000000000    -0.00000000000000     0.03901651853595     0.00000000000000     0.00000000000001
+   11     0.00000000000000    -0.00000000000000     0.00898882182066     0.00000000000000     0.00000000000001
+   12     0.00000000000000    -0.00000000000000     0.00079039726528     0.00000000000000     0.00000000000001
+
+                46                  47                  48                  49                  50
+
+    1     0.00000000000000    -0.36230703410847     0.00000000000001     0.00000000000000     0.00000000000000
+    2     0.00000000000000    -0.43586498634591     0.00000000000001     0.00000000000000     0.00000000000000
+    3     0.00000000000000    -0.46410364752562     0.00000000000001     0.00000000000000     0.00000000000000
+    4     0.00000000000000    -0.46304759825686     0.00000000000001     0.00000000000000     0.00000000000000
+    5     0.00000000000000    -0.43537468310227     0.00000000000001     0.00000000000000    -0.00000000000000
+    6     0.00000000000000    -0.38076027807515     0.00000000000001     0.00000000000000    -0.00000000000000
+    7     0.00000000000000    -0.30080929307879     0.00000000000000     0.00000000000000    -0.00000000000000
+    8     0.00000000000000    -0.20467675440014     0.00000000000000     0.00000000000000    -0.00000000000000
+    9     0.00000000000000    -0.11157188040761     0.00000000000000     0.00000000000000    -0.00000000000001
+   10     0.00000000000000    -0.04355308466811     0.00000000000000     0.00000000000000    -0.00000000000001
+   11     0.00000000000000    -0.01003397874828     0.00000000000000     0.00000000000000    -0.00000000000000
+   12     0.00000000000000    -0.00088229909556     0.00000000000000     0.00000000000000    -0.00000000000000
+
+                51                  52                  53                  54                  55
+
+    1     0.00000000000000    -0.00000000000002     0.00000000000001     0.00000000000011     0.00000000000000
+    2     0.00000000000000    -0.00000000000002     0.00000000000001     0.00000000000020     0.00000000000000
+    3     0.00000000000000    -0.00000000000002     0.00000000000001     0.00000000000033     0.00000000000000
+    4    -0.00000000000000    -0.00000000000002     0.00000000000001     0.00000000000047     0.00000000000000
+    5    -0.00000000000000    -0.00000000000002     0.00000000000001     0.00000000000054     0.00000000000000
+    6    -0.00000000000000    -0.00000000000002     0.00000000000001     0.00000000000051     0.00000000000000
+    7    -0.00000000000000    -0.00000000000002     0.00000000000001     0.00000000000036     0.00000000000000
+    8     0.00000000000000    -0.00000000000002     0.00000000000002     0.00000000000016    -0.00000000000000
+    9     0.00000000000000    -0.00000000000001     0.00000000000002     0.00000000000001    -0.00000000000000
+   10     0.00000000000000    -0.00000000000001     0.00000000000002    -0.00000000000004    -0.00000000000000
+   11     0.00000000000000    -0.00000000000001     0.00000000000001    -0.00000000000004    -0.00000000000000
+   12     0.00000000000000    -0.00000000000000     0.00000000000001    -0.00000000000002    -0.00000000000000
+
+                56                  57                  58                  59                  60
+
+    1    -0.00000000000000     0.96035636262396    -0.00000000000014    -0.00000000000000     0.00000000000000
+    2    -0.00000000000000     1.07627562202976    -0.00000000000037    -0.00000000000000     0.00000000000000
+    3    -0.00000000000000     1.00490328802662    -0.00000000000075    -0.00000000000000     0.00000000000000
+    4    -0.00000000000000     0.82237819825864    -0.00000000000118    -0.00000000000000     0.00000000000000
+    5    -0.00000000000000     0.58966895546860    -0.00000000000151    -0.00000000000000    -0.00000000000000
+    6     0.00000000000000     0.36748588138140    -0.00000000000160    -0.00000000000000    -0.00000000000000
+    7     0.00000000000000     0.20201536173005    -0.00000000000138    -0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.10425126545056    -0.00000000000097    -0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.05309560488388    -0.00000000000059    -0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.02617480707841    -0.00000000000035    -0.00000000000000     0.00000000000000
+   11     0.00000000000000     0.01292335854933    -0.00000000000022    -0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00617823969392    -0.00000000000010    -0.00000000000000     0.00000000000000
+
+                61                  62                  63                  64                  65
+
+    1     0.60651653763713     1.08364941941259     0.22385165938334    -1.08364941941280    -0.22385165938321
+    2     0.61207693301588     1.18567169340708     0.21274581296594    -1.18567169340731    -0.21274581296563
+    3     0.44416093585909     1.05234763392785     0.12851850664352    -1.05234763392804    -0.12851850664291
+    4     0.18379007479430     0.78259362361759     0.01059915336062    -0.78259362361772    -0.01059915335967
+    5    -0.07974765956914     0.46551350835795    -0.09417207508818    -0.46551350835800     0.09417207508942
+    6    -0.25343716294141     0.19187246588851    -0.13774375532060    -0.19187246588849     0.13774375532195
+    7    -0.27840873440816     0.02690734026229    -0.09411395835959    -0.02690734026223     0.09411395836084
+    8    -0.17660830356937    -0.02605430900850     0.01306390746295     0.02605430900855    -0.01306390746196
+    9    -0.04262727768268    -0.02002707858558     0.11648081353927     0.02002707858560    -0.11648081353855
+   10     0.03898428950194    -0.00609434210567     0.15849066267841     0.00609434210566    -0.15849066267791
+   11     0.05334579447036    -0.00022587836041     0.13372457863355     0.00022587836040    -0.13372457863322
+   12     0.03304920391208     0.00051644265531     0.07617989114922    -0.00051644265531    -0.07617989114907
+
+                66                  67                  68                  69                  70
+
+    1    -0.01316271007138    -1.94657318777043    -0.00000000000000     0.00000000000001    -0.00000000000014
+    2    -0.01939013126898    -2.28308011138953    -0.00000000000000     0.00000000000001    -0.00000000000037
+    3    -0.02785862716551    -2.31708256117632    -0.00000000000000     0.00000000000002    -0.00000000000075
+    4    -0.03926155201774    -2.14425092824283    -0.00000000000000     0.00000000000002    -0.00000000000118
+    5    -0.05329739350858    -1.80470851726667     0.00000000000000     0.00000000000002    -0.00000000000151
+    6    -0.06861790306509    -1.34455961546751     0.00000000000000     0.00000000000002    -0.00000000000160
+    7    -0.08240670811434    -0.84094794281456     0.00000000000000     0.00000000000001    -0.00000000000138
+    8    -0.09059535519274    -0.40139518193705     0.00000000000000     0.00000000000001    -0.00000000000097
+    9    -0.08951535401640    -0.11507374305859     0.00000000000000     0.00000000000001    -0.00000000000059
+   10    -0.07810744990534     0.00930986070264     0.00000000000000     0.00000000000001    -0.00000000000035
+   11    -0.05844408408611     0.03451040527802     0.00000000000000     0.00000000000001    -0.00000000000022
+   12    -0.03449334482027     0.02401551871854     0.00000000000000     0.00000000000001    -0.00000000000010
+
+                71                  72                  73                  74                  75
+
+    1     7.62317507615675    -0.00000000000000     0.00000000000001    -0.00000000000022    -0.85027224488330
+    2     9.12999358966784    -0.00000000000000     0.00000000000001    -0.00000000000067    -1.03489969250533
+    3     9.64754165355485    -0.00000000000000     0.00000000000001    -0.00000000000145    -1.12435196803181
+    4     9.53182045380916    -0.00000000000000     0.00000000000001    -0.00000000000237    -1.15244366263572
+    5     8.87836928568578    -0.00000000000000     0.00000000000001    -0.00000000000318    -1.11746201831791
+    6     7.74450653536710    -0.00000000000000     0.00000000000001    -0.00000000000354    -1.00606170355214
+    7     6.24240463618176    -0.00000000000000     0.00000000000001    -0.00000000000322    -0.80793178192379
+    8     4.60285737845442    -0.00000000000000     0.00000000000001    -0.00000000000230    -0.54010128056736
+    9     3.13350137394659     0.00000000000000     0.00000000000001    -0.00000000000112    -0.26640709855377
+   10     2.04399961233184     0.00000000000000     0.00000000000001    -0.00000000000013    -0.07231256868424
+   11     1.30300630912302     0.00000000000000     0.00000000000000     0.00000000000038     0.00751982135111
+   12     0.73168645217084     0.00000000000000     0.00000000000000     0.00000000000044     0.01556385625112
+
+                76                  77                  78                  79                  80
+
+    1    -2.73095121293386    -0.85027224488307    -2.73095121293359     0.00000000000000    -0.00000000000000
+    2    -3.28532022532046    -1.03489969250434    -3.28532022531971     0.00000000000000    -0.00000000000000
+    3    -3.50241411726897    -1.12435196802951    -3.50241411726745     0.00000000000000    -0.00000000000000
+    4    -3.51283395602982    -1.15244366263185    -3.51283395602739     0.00000000000000    -0.00000000000000
+    5    -3.35343602369300    -1.11746201831269    -3.35343602368987    -0.00000000000000    -0.00000000000000
+    6    -3.04471650621931    -1.00606170354632    -3.04471650621605    -0.00000000000000    -0.00000000000000
+    7    -2.61876259188202    -0.80793178191844    -2.61876259187948    -0.00000000000000    -0.00000000000000
+    8    -2.13517241792049    -0.54010128056330    -2.13517241791946    -0.00000000000000    -0.00000000000000
+    9    -1.66586404054225    -0.26640709855117    -1.66586404054307    -0.00000000000000     0.00000000000000
+   10    -1.25007853822922    -0.07231256868275    -1.25007853823155    -0.00000000000000     0.00000000000000
+   11    -0.87261516786063     0.00751982135194    -0.87261516786356    -0.00000000000000     0.00000000000000
+   12    -0.50508568699817     0.01556385625156    -0.50508568700066    -0.00000000000000     0.00000000000000
+
+                81                  82                  83                  84                  85
+
+    1    -0.36230703410845     0.00000000000000    -0.00000000000000    -0.00000000000000     0.40443354570045
+    2    -0.43586498634588     0.00000000000000    -0.00000000000000    -0.00000000000000     0.48654429883847
+    3    -0.46410364752559     0.00000000000000    -0.00000000000000    -0.00000000000000     0.51806635276394
+    4    -0.46304759825684     0.00000000000000    -0.00000000000000    -0.00000000000000     0.51688751351991
+    5    -0.43537468310225     0.00000000000000    -0.00000000000000    -0.00000000000000     0.48599698658499
+    6    -0.38076027807514     0.00000000000000    -0.00000000000000    -0.00000000000000     0.42503240298040
+    7    -0.30080929307879     0.00000000000000    -0.00000000000000    -0.00000000000000     0.33578528023578
+    8    -0.20467675440014     0.00000000000000    -0.00000000000000    -0.00000000000000     0.22847512665109
+    9    -0.11157188040762     0.00000000000000    -0.00000000000000     0.00000000000000     0.12454467329003
+   10    -0.04355308466812     0.00000000000000    -0.00000000000000     0.00000000000000     0.04861713077656
+   11    -0.01003397874828     0.00000000000000    -0.00000000000000     0.00000000000000     0.01120065916644
+   12    -0.00088229909556     0.00000000000000    -0.00000000000000     0.00000000000000     0.00098488662376
+
+                86                  87                  88                  89                  90
+
+    1     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000
+    2     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000000
+    3     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000000
+    4     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000000
+    5     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000000
+    6     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000000
+    7     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000000
+    8     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000000
+    9     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000000
+   10     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000
+   11     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000
+   12     0.00000000000000    -0.00000000000000     0.00000000000000    -0.00000000000000     0.00000000000000
+
+                91                  92                  93                  94                  95
+
+    1     0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.36230703410847
+    2     0.00000000000001    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.43586498634591
+    3     0.00000000000001    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.46410364752562
+    4     0.00000000000001    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.46304759825686
+    5     0.00000000000001    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.43537468310227
+    6     0.00000000000001    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.38076027807515
+    7     0.00000000000001    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.30080929307879
+    8     0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.20467675440014
+    9     0.00000000000000    -0.00000000000000    -0.00000000000000     0.00000000000000    -0.11157188040761
+   10     0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000    -0.04355308466811
+   11     0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000    -0.01003397874828
+   12     0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000    -0.00088229909556
+
+                96                  97                  98                  99                 100
+
+    1     0.00000000000000     0.00000000000001     0.00000000000000     0.40443354570036     0.00000000000000
+    2     0.00000000000000     0.00000000000001     0.00000000000000     0.48654429883837     0.00000000000000
+    3     0.00000000000000     0.00000000000001     0.00000000000000     0.51806635276384     0.00000000000001
+    4     0.00000000000000     0.00000000000001     0.00000000000000     0.51688751351980     0.00000000000001
+    5    -0.00000000000000     0.00000000000001     0.00000000000000     0.48599698658488     0.00000000000001
+    6    -0.00000000000000     0.00000000000001     0.00000000000000     0.42503240298030     0.00000000000001
+    7     0.00000000000000     0.00000000000001     0.00000000000000     0.33578528023569     0.00000000000001
+    8     0.00000000000000     0.00000000000001     0.00000000000000     0.22847512665103     0.00000000000000
+    9     0.00000000000000     0.00000000000001     0.00000000000000     0.12454467329000     0.00000000000000
+   10     0.00000000000000     0.00000000000001     0.00000000000000     0.04861713077654     0.00000000000000
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.01120065916643     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00098488662375     0.00000000000000
+
+               101                 102                 103                 104                 105
+
+    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000009
+    2     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000010
+    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000001     0.00000000000010
+    4     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000002     0.00000000000009
+    5    -0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000002     0.00000000000008
+    6    -0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000002     0.00000000000007
+    7    -0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000002     0.00000000000005
+    8    -0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000000000002     0.00000000000004
+    9    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000002
+   10    -0.00000000000000     0.00000000000001    -0.00000000000000    -0.00000000000001     0.00000000000001
+   11    -0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000000000001    -0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000000000000    -0.00000000000001
+
+               106                 107                 108                 109                 110
+
+    1    -0.00000000000016    -0.00000000000000     0.00000000000001     0.60651653763713    -0.00000000000022
+    2    -0.00000000000007    -0.00000000000001     0.00000000000001     0.61207693301588    -0.00000000000067
+    3     0.00000000000014    -0.00000000000001     0.00000000000001     0.44416093585909    -0.00000000000145
+    4     0.00000000000039    -0.00000000000001     0.00000000000001     0.18379007479430    -0.00000000000237
+    5     0.00000000000057    -0.00000000000001     0.00000000000001    -0.07974765956914    -0.00000000000318
+    6     0.00000000000060    -0.00000000000001     0.00000000000001    -0.25343716294141    -0.00000000000354
+    7     0.00000000000043    -0.00000000000000     0.00000000000000    -0.27840873440816    -0.00000000000322
+    8     0.00000000000016    -0.00000000000000     0.00000000000000    -0.17660830356937    -0.00000000000230
+    9    -0.00000000000006    -0.00000000000000     0.00000000000000    -0.04262727768268    -0.00000000000112
+   10    -0.00000000000014    -0.00000000000000     0.00000000000000     0.03898428950194    -0.00000000000013
+   11    -0.00000000000013    -0.00000000000000     0.00000000000000     0.05334579447036     0.00000000000038
+   12    -0.00000000000007    -0.00000000000000     0.00000000000000     0.03304920391208     0.00000000000044
+
+               111                 112                 113                 114                 115
+
+    1    -0.00000000000000     0.00000000000000     5.99937694868048     2.50233583096006     5.07362362326874
+    2    -0.00000000000000     0.00000000000000     6.99798024895446     2.81400052672422     6.00049117417340
+    3    -0.00000000000000     0.00000000000001     7.05796007348481     2.64526580939947     6.20922580017615
+    4    -0.00000000000000     0.00000000000001     6.53556839070551     2.18938756708671     5.97710945907191
+    5    -0.00000000000000     0.00000000000001     5.62393382108436     1.59742722005452     5.42632858466598
+    6    -0.00000000000000     0.00000000000001     4.49458785238005     1.01935258400459     4.65131660593701
+    7    -0.00000000000000     0.00000000000001     3.30870993105034     0.57150056217024     3.74447090248396
+    8    -0.00000000000000     0.00000000000000     2.20686907064217     0.28805729623722     2.80857722508022
+    9    -0.00000000000000     0.00000000000000     1.31129286362759     0.12799795453127     1.96033049101278
+   10    -0.00000000000000     0.00000000000000     0.70978150745805     0.04487699125838     1.29395647250602
+   11    -0.00000000000000     0.00000000000000     0.37747542251032     0.01208421765923     0.80729780464418
+   12    -0.00000000000000     0.00000000000000     0.18632172590396     0.00355157351594     0.42298155415985
+
+               116                 117                 118                 119                 120
+
+    1    -2.50233583096023    -5.07362362326865     0.01128508822832    -0.47429889366807    -0.00000000000000
+    2    -2.81400052672432    -6.00049117417302     0.01298466351705    -0.54990119335524    -0.00000000000000
+    3    -2.64526580939936    -6.20922580017526     0.01267569013962    -0.54557035290802    -0.00000000000000
+    4    -2.18938756708628    -5.97710945907042     0.01094853292537    -0.48607936929501    -0.00000000000000
+    5    -1.59742722005372    -5.42632858466399     0.00813556208138    -0.38464810216594    -0.00000000000000
+    6    -1.01935258400344    -4.65131660593485     0.00469082986625    -0.25842224789303    -0.00000000000000
+    7    -0.57150056216890    -3.74447090248207     0.00132995647596    -0.13382709788097    -0.00000000000000
+    8    -0.28805729623596    -2.80857722507900    -0.00109109006396    -0.04194165047535    -0.00000000000000
+    9    -0.12799795453036    -1.96033049101235    -0.00208502444044     0.00057424573031    -0.00000000000000
+   10    -0.04487699125791    -1.29395647250624    -0.00195444496234     0.00664969118467    -0.00000000000000
+   11    -0.01208421765906    -0.80729780464474    -0.00139789513299     0.00260642947738    -0.00000000000000
+   12    -0.00355157351588    -0.42298155416041    -0.00080286309001     0.00068316656133    -0.00000000000000
+
+               121                 122                 123                 124                 125
+
+    1     0.00000000000000     1.08364941941259    -0.85027224488330     0.00000000000000     0.00000000000000
+    2     0.00000000000000     1.18567169340708    -1.03489969250533     0.00000000000000     0.00000000000000
+    3     0.00000000000000     1.05234763392785    -1.12435196803181     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.78259362361759    -1.15244366263572     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.46551350835795    -1.11746201831791     0.00000000000000    -0.00000000000000
+    6     0.00000000000000     0.19187246588851    -1.00606170355214     0.00000000000000    -0.00000000000000
+    7     0.00000000000000     0.02690734026229    -0.80793178192379     0.00000000000000    -0.00000000000000
+    8     0.00000000000000    -0.02605430900850    -0.54010128056736     0.00000000000000    -0.00000000000000
+    9     0.00000000000000    -0.02002707858558    -0.26640709855377     0.00000000000000    -0.00000000000000
+   10     0.00000000000000    -0.00609434210567    -0.07231256868424     0.00000000000000    -0.00000000000000
+   11     0.00000000000000    -0.00022587836041     0.00751982135111     0.00000000000000    -0.00000000000000
+   12     0.00000000000000     0.00051644265531     0.01556385625112     0.00000000000000     0.00000000000000
+
+               126                 127                 128                 129                 130
+
+    1     2.50233583096006     2.65869037722200     1.60424806344884    -1.17301880985579    -1.44679732403505
+    2     2.81400052672422     3.00495686520584     1.83047133627936    -1.24096257717184    -1.62840542064515
+    3     2.64526580939947     2.85249583210056     1.77169809836590    -1.01968916384030    -1.53261603300421
+    4     2.18938756708671     2.39826508160050     1.54137982345886    -0.63711776466354    -1.26929168954035
+    5     1.59742722005452     1.79075424952821     1.21875163389123    -0.22116006331854    -0.92407327340625
+    6     1.01935258400459     1.17803170557993     0.87824339985044     0.09738973353182    -0.58411081789327
+    7     0.57150056217024     0.68071223664087     0.57698841142071     0.23249949843630    -0.32131034551897
+    8     0.28805729623722     0.34621753268054     0.33767754984262     0.20064276912435    -0.16263514332858
+    9     0.12799795453127     0.14878379330236     0.15991160212489     0.10537837215334    -0.08535908040890
+   10     0.04487699125838     0.04707220037467     0.04911552030783     0.03502073600218    -0.05137542438434
+   11     0.01208421765923     0.00887633455695     0.00395484334934     0.00671238714931    -0.03362644358299
+   12     0.00355157351594     0.00092832714809    -0.00372676427010     0.00071137856296    -0.01902407749178
+
+               131                 132                 133                 134                 135
+
+    1     0.02511611753842     0.72243383092152    -0.00000000000001     0.00000000000000     0.22385165938334
+    2     0.03225382359887     0.84471859481707    -0.00000000000001     0.00000000000000     0.21274581296594
+    3     0.03851745037635     0.85208297882472    -0.00000000000001     0.00000000000000     0.12851850664352
+    4     0.04516655859546     0.78037771909873    -0.00000000000001     0.00000000000000     0.01059915336062
+    5     0.05230099370087     0.64548536763732    -0.00000000000001    -0.00000000000000    -0.09417207508818
+    6     0.05932508092808     0.46639776571350    -0.00000000000001    -0.00000000000000    -0.13774375532060
+    7     0.06486150846738     0.27448865049954    -0.00000000000001    -0.00000000000000    -0.09411395835959
+    8     0.06691937016674     0.11212052537741    -0.00000000000001    -0.00000000000000     0.01306390746295
+    9     0.06368731365870     0.01228012601547    -0.00000000000001    -0.00000000000001     0.11648081353927
+   10     0.05457106945866    -0.02517813000940    -0.00000000000000    -0.00000000000001     0.15849066267841
+   11     0.04056232201589    -0.02689571060207    -0.00000000000000    -0.00000000000000     0.13372457863355
+   12     0.02390108922429    -0.01680846228856    -0.00000000000000    -0.00000000000000     0.07617989114922
+
+               136                 137                 138                 139                 140
+
+    1    -2.73095121293386    -0.00000000000000     0.00000000000000     5.07362362326874     1.60424806344884
+    2    -3.28532022532046    -0.00000000000001     0.00000000000000     6.00049117417340     1.83047133627936
+    3    -3.50241411726897    -0.00000000000001     0.00000000000000     6.20922580017615     1.77169809836590
+    4    -3.51283395602982    -0.00000000000001     0.00000000000000     5.97710945907191     1.54137982345886
+    5    -3.35343602369300    -0.00000000000001     0.00000000000000     5.42632858466598     1.21875163389123
+    6    -3.04471650621931    -0.00000000000001     0.00000000000000     4.65131660593701     0.87824339985044
+    7    -2.61876259188202    -0.00000000000001     0.00000000000000     3.74447090248396     0.57698841142071
+    8    -2.13517241792049    -0.00000000000001     0.00000000000000     2.80857722508022     0.33767754984262
+    9    -1.66586404054225    -0.00000000000001     0.00000000000001     1.96033049101278     0.15991160212489
+   10    -1.25007853822922    -0.00000000000000     0.00000000000001     1.29395647250602     0.04911552030783
+   11    -0.87261516786063    -0.00000000000000     0.00000000000000     0.80729780464418     0.00395484334934
+   12    -0.50508568699817    -0.00000000000000     0.00000000000000     0.42298155415985    -0.00372676427010
+
+               141                 142                 143                 144                 145
+
+    1     6.58507146206962    -1.44679732403519    -4.18383060552557     0.01128508822824    -0.47429889366780
+    2     7.92132472358405    -1.62840542064550    -5.01363575968611     0.01298466351696    -0.54990119335515
+    3     8.45477074676975    -1.53261603300487    -5.31555379377494     0.01267569013953    -0.54557035290837
+    4     8.51980552392861    -1.26929168954134    -5.30670955942036     0.01094853292530    -0.48607936929587
+    5     8.22651942649368    -0.92407327340745    -5.06391602015661     0.00813556208132    -0.38464810216720
+    6     7.63172032811830    -0.58411081789444    -4.62929429226365     0.00469082986620    -0.25842224789438
+    7     6.78313402851285    -0.32131034551985    -4.03519882271708     0.00132995647591    -0.13382709788205
+    8     5.74975390546057    -0.16263514332910    -3.32542627618147    -0.00109109006401    -0.04194165047596
+    9     4.62866709598833    -0.08535908040921    -2.57162377593383    -0.00208502444050     0.00057424573010
+   10     3.50371805115875    -0.05137542438462    -1.85279534360822    -0.00195444496239     0.00664969118464
+   11     2.39542643389990    -0.03362644358325    -1.20089126928522    -0.00139789513302     0.00260642947740
+   12     1.31392641926318    -0.01902407749194    -0.61495882881674    -0.00080286309003     0.00068316656135
+
+               146                 147                 148                 149                 150
+
+    1     0.00000000000000     0.00000000000000    -1.08364941941280    -0.85027224488307     0.00000000000000
+    2     0.00000000000000     0.00000000000000    -1.18567169340731    -1.03489969250434     0.00000000000000
+    3     0.00000000000000     0.00000000000000    -1.05234763392804    -1.12435196802951     0.00000000000000
+    4     0.00000000000000    -0.00000000000000    -0.78259362361772    -1.15244366263185     0.00000000000000
+    5     0.00000000000000    -0.00000000000000    -0.46551350835800    -1.11746201831269     0.00000000000000
+    6     0.00000000000000    -0.00000000000000    -0.19187246588849    -1.00606170354632     0.00000000000000
+    7     0.00000000000000    -0.00000000000000    -0.02690734026223    -0.80793178191844     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.02605430900855    -0.54010128056330     0.00000000000000
+    9    -0.00000000000000     0.00000000000000     0.02002707858560    -0.26640709855117     0.00000000000000
+   10    -0.00000000000000     0.00000000000000     0.00609434210566    -0.07231256868275     0.00000000000000
+   11    -0.00000000000000     0.00000000000000     0.00022587836040     0.00751982135194     0.00000000000000
+   12     0.00000000000000     0.00000000000000    -0.00051644265531     0.01556385625156     0.00000000000000
+
+               151                 152                 153                 154                 155
+
+    1     0.00000000000000    -2.50233583096023    -1.17301880985579    -1.44679732403519     2.65869037722201
+    2     0.00000000000000    -2.81400052672432    -1.24096257717184    -1.62840542064550     3.00495686520575
+    3     0.00000000000000    -2.64526580939936    -1.01968916384030    -1.53261603300487     2.85249583210026
+    4     0.00000000000000    -2.18938756708628    -0.63711776466354    -1.26929168954134     2.39826508159991
+    5     0.00000000000000    -1.59742722005372    -0.22116006331854    -0.92407327340745     1.79075424952730
+    6     0.00000000000000    -1.01935258400344     0.09738973353182    -0.58411081789444     1.17803170557879
+    7     0.00000000000000    -0.57150056216890     0.23249949843630    -0.32131034551985     0.68071223663967
+    8    -0.00000000000000    -0.28805729623596     0.20064276912435    -0.16263514332910     0.34621753267954
+    9    -0.00000000000000    -0.12799795453036     0.10537837215334    -0.08535908040921     0.14878379330175
+   10    -0.00000000000000    -0.04487699125791     0.03502073600218    -0.05137542438462     0.04707220037444
+   11    -0.00000000000000    -0.01208421765906     0.00671238714931    -0.03362644358325     0.00887633455692
+   12     0.00000000000000    -0.00355157351588     0.00071137856296    -0.01902407749194     0.00092832714810
+
+               156                 157                 158                 159                 160
+
+    1     1.60424806344893     0.02511611753826     0.72243383092187     0.00000000000001    -0.00000000000002
+    2     1.83047133627912     0.03225382359867     0.84471859481739     0.00000000000001    -0.00000000000002
+    3     1.77169809836500     0.03851745037614     0.85208297882490     0.00000000000001    -0.00000000000002
+    4     1.54137982345712     0.04516655859526     0.78037771909875     0.00000000000001    -0.00000000000002
+    5     1.21875163388866     0.05230099370069     0.64548536763727     0.00000000000001    -0.00000000000002
+    6     0.87824339984730     0.05932508092792     0.46639776571356     0.00000000000001    -0.00000000000002
+    7     0.57698841141749     0.06486150846726     0.27448865049989     0.00000000000001    -0.00000000000002
+    8     0.33767754983980     0.06691937016666     0.11212052537809     0.00000000000001    -0.00000000000002
+    9     0.15991160212278     0.06368731365866     0.01228012601635     0.00000000000000    -0.00000000000001
+   10     0.04911552030646     0.05457106945867    -0.02517813000858     0.00000000000000    -0.00000000000001
+   11     0.00395484334853     0.04056232201594    -0.02689571060147     0.00000000000000    -0.00000000000001
+   12    -0.00372676427053     0.02390108922435    -0.01680846228825     0.00000000000000    -0.00000000000000
+
+               161                 162                 163                 164                 165
+
+    1    -0.22385165938321    -2.73095121293359     0.00000000000000    -0.00000000000001    -5.07362362326865
+    2    -0.21274581296563    -3.28532022531971     0.00000000000001    -0.00000000000001    -6.00049117417302
+    3    -0.12851850664291    -3.50241411726745     0.00000000000001    -0.00000000000001    -6.20922580017526
+    4    -0.01059915335967    -3.51283395602739     0.00000000000001    -0.00000000000002    -5.97710945907042
+    5     0.09417207508942    -3.35343602368987     0.00000000000001    -0.00000000000002    -5.42632858466399
+    6     0.13774375532195    -3.04471650621605     0.00000000000001    -0.00000000000002    -4.65131660593485
+    7     0.09411395836084    -2.61876259187948     0.00000000000001    -0.00000000000002    -3.74447090248207
+    8    -0.01306390746196    -2.13517241791946     0.00000000000000    -0.00000000000002    -2.80857722507900
+    9    -0.11648081353855    -1.66586404054307     0.00000000000000    -0.00000000000001    -1.96033049101235
+   10    -0.15849066267791    -1.25007853823155     0.00000000000000    -0.00000000000001    -1.29395647250624
+   11    -0.13372457863322    -0.87261516786356     0.00000000000000    -0.00000000000001    -0.80729780464474
+   12    -0.07617989114907    -0.50508568700066     0.00000000000000    -0.00000000000000    -0.42298155416041
+
+               166                 167                 168                 169
+
+    1    -1.44679732403505    -4.18383060552557     1.60424806344893     6.58507146206956
+    2    -1.62840542064515    -5.01363575968611     1.83047133627912     7.92132472358373
+    3    -1.53261603300421    -5.31555379377494     1.77169809836500     8.45477074676901
+    4    -1.26929168954035    -5.30670955942036     1.54137982345712     8.51980552392740
+    5    -0.92407327340625    -5.06391602015661     1.21875163388866     8.22651942649220
+    6    -0.58411081789327    -4.62929429226365     0.87824339984730     7.63172032811701
+    7    -0.32131034551897    -4.03519882271708     0.57698841141749     6.78313402851236
+    8    -0.16263514332858    -3.32542627618147     0.33767754983980     5.74975390546140
+    9    -0.08535908040890    -2.57162377593383     0.15991160212278     4.62866709599061
+   10    -0.05137542438434    -1.85279534360822     0.04911552030646     3.50371805116217
+   11    -0.03362644358299    -1.20089126928522     0.00395484334853     2.39542643390369
+   12    -0.01902407749178    -0.61495882881674    -0.00372676427053     1.31392641926639
+
+
+
+  ==> DF Tensor (by Rob Parrish) <==
+
+ => Primary Basis Set <= 
+
+  Basis Set: 6-31G
+    Blend: 6-31G
+    Number of shells: 9
+    Number of basis functions: 13
+    Number of Cartesian functions: 13
+    Spherical Harmonics?: false
+    Max angular momentum: 1
+
+ => Auxiliary Basis Set <= 
+
+  Basis Set: CC-PVDZ-RI
+    Blend: CC-PVDZ-RI
+    Number of shells: 30
+    Number of basis functions: 84
+    Number of Cartesian functions: 96
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  The DF Tensor (Qso) construction requires 0.000 GiB of memory. 
+
+ Done with AO helper class  Done. Timing        0.030807 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.000750 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.000735 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.002957 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.001298 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices: 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [  1      11    ]-0.000007 [  2       6    ] 0.000004 [  4       8    ]-0.000003 
+    [  3       7    ] 0.000003 [  1       9    ]-0.000003 [  2      12    ] 0.000002 
+    [  0      11    ]-0.000001 [  2      10    ] 0.000001 [  1       5    ] 0.000001 
+    [  0       5    ] 0.000001 [  0       9    ]-0.000000 [  3       8    ]-0.000000 
+    [  4       7    ]-0.000000 [  2       9    ] 0.000000 [  2      11    ]-0.000000 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 40)                    0.000010595072465.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [  1      11    ]-0.000007 [  2       6    ] 0.000004 [  4       8    ]-0.000003 
+    [  3       7    ] 0.000003 [  1       9    ]-0.000003 [  2      12    ] 0.000002 
+    [  0      11    ]-0.000001 [  2      10    ] 0.000001 [  1       5    ] 0.000001 
+    [  0       5    ] 0.000001 [  0       9    ]-0.000000 [  3       8    ]-0.000000 
+    [  4       7    ]-0.000000 [  2       9    ] 0.000000 [  2      11    ]-0.000000 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 35)                    0.000010595072465.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  3   4   7   8] 0.031185 [  2   4   8  10]-0.016262 [  2   3   7  10] 0.016262 
+    [  2   4   6   8] 0.012012 [  2   3   6   7]-0.012012 [  1   4   8  11]-0.010438 
+    [  1   3   7  11] 0.010438 [  1   4   5   8] 0.009379 [  1   3   5   7]-0.009379 
+    [  2   4   8  12]-0.008879 [  2   3   7  12] 0.008879 [  1   4   8   9]-0.006566 
+    [  1   3   7   9] 0.006566 [  1   2  10  11] 0.006012 [  1   2  11  12]-0.004958 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 520)                  0.101478374593765.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  4   4   8   8]-0.045929 [  3   3   7   7]-0.045929 [  3   4   7   8] 0.035968 
+    [  2   2   9   9]-0.019836 [  2   2  10  10]-0.015184 [  1   4   5   8] 0.014095 
+    [  1   3   5   7]-0.014095 [  2   4   6   8] 0.013772 [  2   3   6   7]-0.013772 
+    [  1   1  11  11]-0.013544 [  2   2  12  12]-0.013152 [  4   4   9   9]-0.012443 
+    [  3   3   9   9]-0.012443 [  1   2  11  12]-0.011011 [  1   1   9   9]-0.010409 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 640)                  0.126560501154852.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  3   4   7   8] 0.031185 [  2   4   8  10]-0.016262 [  2   3   7  10] 0.016262 
+    [  2   4   6   8] 0.012012 [  2   3   6   7]-0.012012 [  1   4   8  11]-0.010438 
+    [  1   3   7  11] 0.010438 [  1   4   5   8] 0.009379 [  1   3   5   7]-0.009379 
+    [  2   4   8  12]-0.008879 [  2   3   7  12] 0.008879 [  1   4   8   9]-0.006566 
+    [  1   3   7   9] 0.006566 [  1   2  10  11] 0.006012 [  1   2  11  12]-0.004958 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 420)                  0.101478374593765.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =    -74.767620686667840
+    <[F, T1]>                      =     -0.000000000701432
+    <[F, T2]>                      =      0.000000000000000
+    <[V, T1]>                      =      0.000000000000000
+    <[V, T2]> (C_2)^4              =     -0.091128636793528
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000000000000000
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000000000000000
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.000000000000000
+    <[V, T2]> C_6 C_2              =      0.000000000000000
+    <[V, T2]>                      =     -0.091128636793528
+    DSRG-MRPT2 correlation energy  =     -0.091128637494960
+    DSRG-MRPT2 total energy        =    -74.858749324162801
+    max(T1)                        =      0.000007493844394
+    max(T2)                        =      0.045928881372008
+    ||T1||                         =      0.000014983695174
+    ||T2||                         =      0.290974161792167
+
+  Energy took      0.039 s
+
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.000       0.000       0.001       0.037
+    -> C1       0.000       0.000       0.000       0.000
+    -> C2                   0.000       0.000       0.000
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        0.012 seconds
+  Time to run job          :        0.166 seconds
+  Total                    :        0.178 seconds
+    DSRG-MRPT2 energy.....................................................................PASSED
+
+    Psi4 stopped on: Monday, 18 July 2022 03:11PM
+    Psi4 wall time for execution: 0:00:00.96
+
+*** Psi4 exiting successfully. Buy a developer a beer!

@@ -544,47 +544,47 @@ void DSRG_MRPT2::compute_t2() {
             if (std::fabs(value) > 1.0e-15) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                     value *= dsrg_source_->compute_mp2_denominator(Fa_[i[0]] + Fa_[i[1]] -
-                                                                            Fa_[i[2]] - Fa_[i[3]]);
+                                                                   Fa_[i[2]] - Fa_[i[3]]);
                 } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
                     value *= dsrg_source_->compute_mp2_denominator(Fa_[i[0]] + Fb_[i[1]] -
-                                                                            Fa_[i[2]] - Fb_[i[3]]);
+                                                                   Fa_[i[2]] - Fb_[i[3]]);
                 } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
                     value *= dsrg_source_->compute_mp2_denominator(Fb_[i[0]] + Fb_[i[1]] -
-                                                                            Fb_[i[2]] - Fb_[i[3]]);
+                                                                   Fb_[i[2]] - Fb_[i[3]]);
                 }
             } else {
                 value = 0.0;
             }
         });
 
-    // Save ccvv block in T2_ 
+    // Save ccvv block in T2_
     std::vector<double> temp_ccvv_t2(T2_.block("ccvv").data());
 
-    //Add s regularization
+    // Add s regularization
     T2_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                     value *= dsrg_source_->compute_renormalized_numerator(Fa_[i[0]] + Fa_[i[1]] -
-                                                                            Fa_[i[2]] - Fa_[i[3]]);
+                                                                          Fa_[i[2]] - Fa_[i[3]]);
                 } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
                     value *= dsrg_source_->compute_renormalized_numerator(Fa_[i[0]] + Fb_[i[1]] -
-                                                                            Fa_[i[2]] - Fb_[i[3]]);
+                                                                          Fa_[i[2]] - Fb_[i[3]]);
                 } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
                     value *= dsrg_source_->compute_renormalized_numerator(Fb_[i[0]] + Fb_[i[1]] -
-                                                                            Fb_[i[2]] - Fb_[i[3]]);
+                                                                          Fb_[i[2]] - Fb_[i[3]]);
                 }
             } else {
                 value = 0.0;
             }
-        }); 
+        });
 
     // Delete regularization part for ccvv block.
     if (foptions_->get_bool("LAPLACE")) {
         outfile->Printf("Using Laplace transformation for T2 [ccvv] block");
         T2_.block("ccvv").data() = temp_ccvv_t2;
     }
-    
+
     // transform back to non-canonical basis
     if (!semi_canonical_) {
         BlockedTensor tempT2 =
@@ -796,11 +796,11 @@ void DSRG_MRPT2::compute_t1() {
                 value = 0.0;
             }
         });
-    
-    // Save ccvv block in T1_ 
-    std::vector<double> temp_ccvv_t1(T1_.block("cv").data());  
 
-    //Add s regularization
+    // Save ccvv block in T1_
+    std::vector<double> temp_ccvv_t1(T1_.block("cv").data());
+
+    // Add s regularization
     T1_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (std::fabs(value) > 1.0e-15) {
@@ -812,13 +812,13 @@ void DSRG_MRPT2::compute_t1() {
             } else {
                 value = 0.0;
             }
-        });   
+        });
 
     // Delete regularization part for cv block.
     if (foptions_->get_bool("LAPLACE")) {
         outfile->Printf("Using Laplace transformation for T1 [cv] block");
         T1_.block("cv").data() = temp_ccvv_t1;
-    }       
+    }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -896,8 +896,8 @@ void DSRG_MRPT2::renormalize_V() {
         V_["ABKL"] = tempV["ABIJ"] * U_["LJ"] * U_["KI"];
     }
 
-    // Save vvcc block in V_ 
-    std::vector<double> temp_vvcc_v(V_.block("vvcc").data()); 
+    // Save vvcc block in V_
+    std::vector<double> temp_vvcc_v(V_.block("vvcc").data());
 
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (std::fabs(value) > 1.0e-15) {
@@ -1015,8 +1015,8 @@ void DSRG_MRPT2::renormalize_F() {
         sum["AI"] = tempF["AI"];
     }
 
-    // Save vc block in F_ 
-    std::vector<double> temp_vc_f(F_.block("vc").data()); 
+    // Save vc block in F_
+    std::vector<double> temp_vc_f(F_.block("vc").data());
 
     // add to original Fock
     F_["ai"] += sum["ai"];
@@ -1038,10 +1038,9 @@ double DSRG_MRPT2::E_ccvv_laplace() {
     ncore_ = core_mos_.size();
     nactive_ = actv_mos_.size();
     nvirtual_ = virt_mos_.size();
-    nthree_ = ints_->nthree();    
-    double Ealpha = 0.0;
-    double Emixed = 0.0;
-    double Ebeta = 0.0;
+    nthree_ = ints_->nthree();
+    double E_J = 0.0;
+    double E_K = 0.0;
     psi::SharedMatrix Cwfn = ints_->Ca();
     if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("LT-DSRG-MPT2 does not work with symmetry");
@@ -1067,7 +1066,7 @@ double DSRG_MRPT2::E_ccvv_laplace() {
     std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
 
     ao_helper.Compute_AO_Screen(primary);
-    ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
+    ao_helper.Estimate_TransAO_Screen(primary, auxiliary); // TODO: add screening.
     size_t weights = ao_helper.Weights();
     psi::SharedMatrix AO_Screen = ao_helper.AO_Screen();
     psi::SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
@@ -1079,17 +1078,16 @@ double DSRG_MRPT2::E_ccvv_laplace() {
 
     ambit::Tensor POcc = ambit::Tensor::build(tensor_type_, "POcc", {weights, nmo, nmo});
     ambit::Tensor PVir = ambit::Tensor::build(tensor_type_, "Pvir", {weights, nmo, nmo});
-    ambit::Tensor AO_Full = ambit::Tensor::build(tensor_type_, "Qso", {nmo, nmo, nmo, nmo});
     ambit::Tensor DF_AO = ambit::Tensor::build(tensor_type_, "Qso", {nthree_, nmo, nmo});
-    ambit::Tensor DF_LTAO = ambit::Tensor::build(tensor_type_, "Qso", {weights, nthree_, nmo, nmo});
-    ambit::Tensor Full_LTAO =
-        ambit::Tensor::build(tensor_type_, "Qso", {weights, nmo, nmo, nmo, nmo});
-    ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew", {weights});
-    ambit::Tensor E_weight_mixed = ambit::Tensor::build(tensor_type_, "Ew", {weights});
-    // ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew",
-    // {weights});
+    ambit::Tensor X_AO = ambit::Tensor::build(tensor_type_, "Qwso", {weights, nthree_, nmo, nmo});
+    ambit::Tensor Y_AO = ambit::Tensor::build(tensor_type_, "Qwso", {weights, nthree_, nmo, nmo});
+    ambit::Tensor Z_AO = ambit::Tensor::build(tensor_type_, "QRw", {weights, nthree_, nthree_});
+    ambit::Tensor K_AO = ambit::Tensor::build(tensor_type_, "QRwso", {weights, nthree_, nthree_, nmo, nmo});
+    ambit::Tensor E_weight_J = ambit::Tensor::build(tensor_type_, "Ew", {weights});
+    ambit::Tensor E_weight_K = ambit::Tensor::build(tensor_type_, "Ew", {weights});
+
     DFTensor df_tensor(primary, auxiliary, Cwfn, ncore_, nvirtual_);
-    psi::SharedMatrix Qso = df_tensor.Qso();
+    psi::SharedMatrix Qso = df_tensor.Qso(); //Qso returns a vector.
     DF_AO.iterate([&](const std::vector<size_t>& i, double& value) {
         value = Qso->get(i[0], i[1] * nmo + i[2]);
     });
@@ -1100,23 +1098,20 @@ double DSRG_MRPT2::E_ccvv_laplace() {
         value = Virtual_Density->get(i[0], i[1] * nmo + i[2]);
     });
 
-    DF_LTAO("w,Q,m,e") = DF_AO("Q, mu, nu") * POcc("w, mu, m") * PVir("w, nu, e");
-    Full_LTAO("w, m, e, n, f") = DF_LTAO("w, Q, m, e") * DF_LTAO("w, Q, n, f");
-    AO_Full("m, e, n, f") = DF_AO("Q, m, e") * DF_AO("Q, n, f");
-    E_weight_mixed("w") = Full_LTAO("w, m, e, n, f") * AO_Full("m, e, n, f");
+    X_AO("w,Q,m,e") = DF_AO("Q,mu,e") * POcc("w,mu,m");
+    Y_AO("w,R,m,e") = DF_AO("R,m,nu") * PVir("w,e,nu");
+    Z_AO("w,Q,R") = X_AO("w,Q,m,e") * Y_AO("w,R,m,e");
+    E_weight_J("w") = Z_AO("w,Q,R") * Z_AO("w,Q,R");
 
-    AO_Full("m, e, n, f") = DF_AO("Q, m, e") * DF_AO("Q, n, f");
-    AO_Full("m, e, n, f") -= DF_AO("Q, m, f") * DF_AO("Q, n, e");
-    Full_LTAO("w, m, e, n, f") = DF_LTAO("w, Q, m, e") * DF_LTAO("w, Q, n, f");
-    Full_LTAO("w, m, e, n, f") -= DF_LTAO("w, Q, m, f") * DF_LTAO("w, Q, n, e");
-    E_weight_alpha("w") = Full_LTAO("w,m,e,n,f") * AO_Full("m, e, n, f");
+    K_AO("w,Q,R,m,e") = X_AO("w,Q,mu,m") * Y_AO("w,R,mu,e");
+    E_weight_K("w") = K_AO("w,Q,R,m,e") * K_AO("w,Q,R,e,m");
+
     for (size_t w = 0; w < weights; w++) {
-        Ealpha -= E_weight_alpha.data()[w];
-        Ebeta -= E_weight_alpha.data()[w];
-        Emixed -= E_weight_mixed.data()[w];
+        E_J -= E_weight_J.data()[w];
+        E_K -= E_weight_K.data()[w];
     }
 
-    return (0.25 * Ealpha + 0.25 * Ebeta + Emixed);
+    return (2 * E_J - E_K);
 }
 
 double DSRG_MRPT2::E_FT1() {
@@ -1252,10 +1247,10 @@ double DSRG_MRPT2::E_VT2_2() {
     } else {
         E += 0.25 * V_["efmn"] * T2_["mnef"];
         E += 0.25 * V_["EFMN"] * T2_["MNEF"];
-        E += V_["eFmN"] * T2_["mNeF"]; 
+        E += V_["eFmN"] * T2_["mNeF"];
     }
 
-//    Calculates all but ccvv, cCvV, and CCVV energies
+    //    Calculates all but ccvv, cCvV, and CCVV energies
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
     temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
     temp["vu"] += V_["fEuM"] * T2_["vMfE"];
@@ -1532,10 +1527,8 @@ double DSRG_MRPT2::E_VT2_6() {
         std::vector<int> v_symDifference;
         std::vector<int> v_diffvalues;
 
-        std::set_symmetric_difference(
-            v1.begin(), v1.end(),
-            v2.begin(), v2.end(),
-            std::back_inserter(v_symDifference));
+        std::set_symmetric_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
+                                      std::back_inserter(v_symDifference));
 
         for (int n : v_symDifference) {
             v_diffvalues.push_back(n);
@@ -1544,29 +1537,29 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-//               cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //               cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-//                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
-        } else if (foptions_->get_str("CU_APPROX") == "CU"){
+            //            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+        } else if (foptions_->get_str("CU_APPROX") == "CU") {
             value = 0;
-        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD") {
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-//                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-//            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
-    });    
+    });
 
     E += 0.25 * temp.block("aaaaaa")("uvwxyz") * L3aaa_("xyzuvw");
 
@@ -1589,10 +1582,8 @@ double DSRG_MRPT2::E_VT2_6() {
         std::vector<int> v_symDifference;
         std::vector<int> v_diffvalues;
 
-        std::set_symmetric_difference(
-            v1.begin(), v1.end(),
-            v2.begin(), v2.end(),
-            std::back_inserter(v_symDifference));
+        std::set_symmetric_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
+                                      std::back_inserter(v_symDifference));
 
         for (int n : v_symDifference) {
             v_diffvalues.push_back(n);
@@ -1601,29 +1592,29 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-//                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-//               cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //               cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
-        } else if (foptions_->get_str("CU_APPROX") == "CU"){
+            //            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+        } else if (foptions_->get_str("CU_APPROX") == "CU") {
             value = 0;
-        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD") {
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-//                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-//            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
-    }); 
+    });
 
     E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * L3bbb_("XYZUVW");
 
@@ -1648,18 +1639,16 @@ double DSRG_MRPT2::E_VT2_6() {
     }
 
     L3aab_.iterate([&](const std::vector<size_t>& i, double& value) {
-        std::vector<int> v1{(int)i[0], (int)i[1], -((int)i[2])-1};
-        std::vector<int> v2{(int)i[3], (int)i[4], -((int)i[5])-1};
+        std::vector<int> v1{(int)i[0], (int)i[1], -((int)i[2]) - 1};
+        std::vector<int> v2{(int)i[3], (int)i[4], -((int)i[5]) - 1};
         std::sort(v1.begin(), v1.end());
         std::sort(v2.begin(), v2.end());
 
         std::vector<int> v_symDifference;
         std::vector<int> v_diffvalues;
 
-        std::set_symmetric_difference(
-            v1.begin(), v1.end(),
-            v2.begin(), v2.end(),
-            std::back_inserter(v_symDifference));
+        std::set_symmetric_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
+                                      std::back_inserter(v_symDifference));
 
         for (int n : v_symDifference) {
             v_diffvalues.push_back(n);
@@ -1668,29 +1657,29 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-//                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-//                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
-        } else if (foptions_->get_str("CU_APPROX") == "CU"){
+            //            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+        } else if (foptions_->get_str("CU_APPROX") == "CU") {
             value = 0;
-        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD") {
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-//                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-//            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
-    }); 
+    });
 
     E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * L3aab_("xyZuvW");
 
@@ -1715,18 +1704,16 @@ double DSRG_MRPT2::E_VT2_6() {
     }
 
     L3abb_.iterate([&](const std::vector<size_t>& i, double& value) {
-        std::vector<int> v1{(int)i[0], -((int)i[1])-1, -((int)i[2])-1};
-        std::vector<int> v2{(int)i[3], -((int)i[4])-1, -((int)i[5])-1};
+        std::vector<int> v1{(int)i[0], -((int)i[1]) - 1, -((int)i[2]) - 1};
+        std::vector<int> v2{(int)i[3], -((int)i[4]) - 1, -((int)i[5]) - 1};
         std::sort(v1.begin(), v1.end());
         std::sort(v2.begin(), v2.end());
 
         std::vector<int> v_symDifference;
         std::vector<int> v_diffvalues;
 
-        std::set_symmetric_difference(
-            v1.begin(), v1.end(),
-            v2.begin(), v2.end(),
-            std::back_inserter(v_symDifference));
+        std::set_symmetric_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
+                                      std::back_inserter(v_symDifference));
 
         for (int n : v_symDifference) {
             v_diffvalues.push_back(n);
@@ -1735,29 +1722,29 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-//                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-//                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
-        } else if (foptions_->get_str("CU_APPROX") == "CU"){
+            //            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+        } else if (foptions_->get_str("CU_APPROX") == "CU") {
             value = 0;
-        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD") {
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
- //               cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                //               cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
             }
-//            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-//            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            //            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         }
-    }); 
+    });
 
     E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * L3abb_("xYZuVW");
 
