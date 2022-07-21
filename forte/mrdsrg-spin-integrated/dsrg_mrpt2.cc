@@ -1078,11 +1078,10 @@ double DSRG_MRPT2::E_ccvv_laplace() {
 
     ambit::Tensor POcc = ambit::Tensor::build(tensor_type_, "POcc", {weights, nmo, nmo});
     ambit::Tensor PVir = ambit::Tensor::build(tensor_type_, "Pvir", {weights, nmo, nmo});
+    ambit::Tensor AO_Full = ambit::Tensor::build(tensor_type_, "Qso", {nmo, nmo, nmo, nmo});
     ambit::Tensor DF_AO = ambit::Tensor::build(tensor_type_, "Qso", {nthree_, nmo, nmo});
-    ambit::Tensor X_AO = ambit::Tensor::build(tensor_type_, "Qwso", {weights, nthree_, nmo, nmo});
-    ambit::Tensor Y_AO = ambit::Tensor::build(tensor_type_, "Qwso", {weights, nthree_, nmo, nmo});
-    ambit::Tensor Z_AO = ambit::Tensor::build(tensor_type_, "QRw", {weights, nthree_, nthree_});
-    ambit::Tensor K_AO = ambit::Tensor::build(tensor_type_, "QRwso", {weights, nthree_, nthree_, nmo, nmo});
+    ambit::Tensor DF_LTAO = ambit::Tensor::build(tensor_type_, "Qso", {weights, nthree_, nmo, nmo});
+    ambit::Tensor Full_LTAO = ambit::Tensor::build(tensor_type_, "Qso", {weights, nmo, nmo, nmo, nmo});
     ambit::Tensor E_weight_J = ambit::Tensor::build(tensor_type_, "Ew", {weights});
     ambit::Tensor E_weight_K = ambit::Tensor::build(tensor_type_, "Ew", {weights});
 
@@ -1098,13 +1097,12 @@ double DSRG_MRPT2::E_ccvv_laplace() {
         value = Virtual_Density->get(i[0], i[1] * nmo + i[2]);
     });
 
-    X_AO("w,Q,m,e") = DF_AO("Q,mu,e") * POcc("w,mu,m");
-    Y_AO("w,R,m,e") = DF_AO("R,m,nu") * PVir("w,e,nu");
-    Z_AO("w,Q,R") = X_AO("w,Q,m,e") * Y_AO("w,R,m,e");
-    E_weight_J("w") = Z_AO("w,Q,R") * Z_AO("w,Q,R");
+    DF_LTAO("w,Q,m,e") = DF_AO("Q, mu, nu") * POcc("w, mu, m") * PVir("w, nu, e");
+    AO_Full("m, e, n, f") = DF_AO("Q, m, e") * DF_AO("Q, n, f");
+    Full_LTAO("w, m, e, n, f") = DF_LTAO("w, Q, m, e") * DF_LTAO("w, Q, n, f");
 
-    K_AO("w,Q,R,m,e") = X_AO("w,Q,mu,m") * Y_AO("w,R,mu,e");
-    E_weight_K("w") = K_AO("w,Q,R,m,e") * K_AO("w,Q,R,e,m");
+    E_weight_J("w") = Full_LTAO("w, m, e, n, f") * AO_Full("m, e, n, f");
+    E_weight_K("w") = Full_LTAO("w, m, e, n, f") * AO_Full("m, f, n, e");
 
     for (size_t w = 0; w < weights; w++) {
         E_J -= E_weight_J.data()[w];
