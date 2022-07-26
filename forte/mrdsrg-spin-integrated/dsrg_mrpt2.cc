@@ -43,6 +43,7 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libmints/sieve.h"
 
 #include "orbital-helpers/ao_helper.h"
 #include "helpers/blockedtensorfactory.h"
@@ -1032,6 +1033,140 @@ void DSRG_MRPT2::renormalize_F() {
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
 
+double DSRG_MRPT2::E_ccvv_df_ao() {
+    std::string str = "Computing DF-AO-DSRG-MRPT2 CCVV part (Shuhang Li test)";
+    outfile->Printf("\n    %-40s ...", str.c_str());
+    ncore_ = core_mos_.size();
+    nactive_ = actv_mos_.size();
+    nvirtual_ = virt_mos_.size();
+    nthree_ = ints_->nthree();
+    double E_J_loop = 0.0;
+    double E_K_loop = 0.0;
+    double threshold = 1e-6;
+    psi::SharedMatrix Cwfn = ints_->Ca();
+    if (mo_space_info_->nirrep() != 1)
+        throw psi::PSIEXCEPTION("DF-AO-DSRG-MPT2 does not work with symmetry");
+
+    /// Create the AtomicOrbitalHelper Class
+    psi::SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
+    psi::SharedVector epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
+    int core_count = 0;
+    for (auto m : core_mos_) {
+        epsilon_rdocc->set(core_count, Fa_[m]);
+        core_count++;
+    }
+    int virtual_count = 0;
+    for (auto e : virt_mos_) {
+        epsilon_virtual->set(virtual_count, Fa_[e]);
+        virtual_count++;
+    }
+    epsilon_rdocc->print();
+    epsilon_virtual->print();
+
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-10, nactive_);
+    std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
+
+    ao_helper.Compute_AO_Screen(primary);
+    ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
+    size_t weights = ao_helper.Weights();
+    psi::SharedMatrix AO_Screen = ao_helper.AO_Screen();
+    psi::SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
+    psi::SharedMatrix Occupied_Density = ao_helper.POcc();
+    psi::SharedMatrix Virtual_Density = ao_helper.PVir();
+    Occupied_Density->print();
+    Virtual_Density->print();
+    size_t nmo = mo_space_info_->dimension("ALL").sum();
+
+    ERISieve sieve_ao(primary, 1e-10);
+
+    ambit::Tensor DF_AO = ambit::Tensor::build(tensor_type_, "Qso", {nthree_, nmo, nmo});
+    ambit::Tensor nthree_left = ambit::Tensor::build(tensor_type_, "nthree_left", {nthree_});
+    ambit::Tensor nthree_right = ambit::Tensor::build(tensor_type_, "nthree_right", {nthree_});
+    ambit::Tensor POcc_two_m = ambit::Tensor::build(tensor_type_, "POcc_two", {nmo});
+    ambit::Tensor PVir_two_e = ambit::Tensor::build(tensor_type_, "PVir_two", {nmo});
+    ambit::Tensor POcc_two_n = ambit::Tensor::build(tensor_type_, "POcc_two", {nmo});
+    ambit::Tensor PVir_two_f = ambit::Tensor::build(tensor_type_, "PVir_two", {nmo});
+    ambit::Tensor Full_LT_left = ambit::Tensor::build(tensor_type_, "LT", {nthree_});
+    ambit::Tensor Full_LT_right = ambit::Tensor::build(tensor_type_, "LT", {nthree_});
+    ambit::Tensor Full_LT_left_temp = ambit::Tensor::build(tensor_type_, "LT", {nthree_, nmo});
+    ambit::Tensor Full_LT_right_temp = ambit::Tensor::build(tensor_type_, "LT", {nthree_, nmo});
+
+    double trans_value = 0.0;
+    double non_trans_value = 0.0;
+    double ceiling = 0.0;
+    std::vector<double> pair_int_values = sieve_ao.function_pair_values();
+
+    DFTensor df_tensor(primary, auxiliary, Cwfn, ncore_, nvirtual_);
+    psi::SharedMatrix Qso = df_tensor.Qso();
+
+    DF_AO.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = Qso->get(i[0], i[1] * nmo + i[2]);
+    });
+
+    int eff_int = 0;
+    for (size_t m = 0; m < nmo; m++) {
+        for (size_t e = 0; e < nmo; e++) {
+            for (size_t n = 0; n < nmo; n++) {
+                for (size_t f = 0; f < nmo; f++) {
+                    for (size_t n_weight = 0; n_weight < weights; n_weight++) {
+                        ceiling =
+                            std::pow(pair_int_values[m * nmo + e] * pair_int_values[n * nmo + f],
+                                     0.5) *
+                            (2 * std::pow(TransAO_Screen->get(n_weight, m * nmo + e) *
+                                              TransAO_Screen->get(n_weight, n * nmo + f),
+                                          0.5) +
+                             std::pow(TransAO_Screen->get(n_weight, m * nmo + f) *
+                                          TransAO_Screen->get(n_weight, n * nmo + e),
+                                      0.5));
+                        if (ceiling >= threshold) {
+                            eff_int += 1;
+                            nthree_left.iterate([&](const std::vector<size_t>& i, double& value) {
+                                value = Qso->get(i[0], m * nmo + e);
+                            });
+                            nthree_right.iterate([&](const std::vector<size_t>& i, double& value) {
+                                value = Qso->get(i[0], n * nmo + f);
+                            });
+                            POcc_two_m.iterate([&](const std::vector<size_t>& i, double& value) {
+                                value = Occupied_Density->get(n_weight, m * nmo + i[0]);
+                            });
+                            PVir_two_e.iterate([&](const std::vector<size_t>& i, double& value) {
+                                value = Virtual_Density->get(n_weight, e * nmo + i[0]);
+                            });
+                            POcc_two_n.iterate([&](const std::vector<size_t>& i, double& value) {
+                                value = Occupied_Density->get(n_weight, n * nmo + i[0]);
+                            });
+                            PVir_two_f.iterate([&](const std::vector<size_t>& i, double& value) {
+                                value = Virtual_Density->get(n_weight, f * nmo + i[0]);
+                            });
+                            non_trans_value = nthree_left("Q") * nthree_right("Q");
+                            Full_LT_left("Q") =
+                                DF_AO("Q, a, b") * POcc_two_m("a") * PVir_two_e("b");
+                            Full_LT_right("Q") =
+                                DF_AO("Q, a, b") * POcc_two_n("a") * PVir_two_f("b");
+                            trans_value = Full_LT_left("Q") * Full_LT_right("Q");
+                            E_J_loop -= trans_value * non_trans_value;
+                            nthree_left.iterate([&](const std::vector<size_t>& i, double& value) {
+                                value = Qso->get(i[0], m * nmo + f);
+                            });
+                            nthree_right.iterate([&](const std::vector<size_t>& i, double& value) {
+                                value = Qso->get(i[0], n * nmo + e);
+                            });
+                            non_trans_value = nthree_left("Q") * nthree_right("Q");
+                            E_K_loop -= trans_value * non_trans_value;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    outfile->Printf("  Used Integrals %d", eff_int);
+    outfile->Printf("  E_J %15.6f", E_J_loop);
+    outfile->Printf("  E_K %15.6f", E_K_loop);
+    outfile->Printf("Finished");
+    return (2 * E_J_loop - E_K_loop);
+}
+
 double DSRG_MRPT2::E_ccvv_laplace() {
     std::string str = "Computing Laplace CCVV part (Shuhang Li test)";
     outfile->Printf("\n    %-40s ...", str.c_str());
@@ -1239,9 +1374,12 @@ double DSRG_MRPT2::E_VT2_2() {
     outfile->Printf("\n    %-40s ...", str.c_str());
 
     double E = 0.0;
-    if (foptions_->get_bool("LAPLACE")) {
+    if (foptions_->get_bool("LAPLACE") && !foptions_->get_bool("DF_AO")) {
         double E_ccvv_lt = E_ccvv_laplace();
         E += E_ccvv_lt;
+    } else if (foptions_->get_bool("LAPLACE") && foptions_->get_bool("DF_AO")) {
+        double E_ccvv_ao = E_ccvv_df_ao();
+        E += E_ccvv_ao;
     } else {
         E += 0.25 * V_["efmn"] * T2_["mnef"];
         E += 0.25 * V_["EFMN"] * T2_["MNEF"];
@@ -1516,7 +1654,16 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
     }
 
-    L3aaa_.iterate([&](const std::vector<size_t>& i, double& value) {
+    int num_aaa_ori = 0;
+    int num_aaa_ori_4 = 0;
+    int num_aaa_approx = 0;
+    int num_aaa_approx_4 = 0;
+
+    L3bbb_.iterate([&](const std::vector<size_t>& i, double& value) {
+        num_aaa_ori++;
+            if (value > 0.0001) {
+                num_aaa_ori_4++;
+           }
         std::vector<int> v1{(int)i[0], (int)i[1], (int)i[2]};
         std::vector<int> v2{(int)i[3], (int)i[4], (int)i[5]};
         std::sort(v1.begin(), v1.end());
@@ -1525,8 +1672,10 @@ double DSRG_MRPT2::E_VT2_6() {
         std::vector<int> v_symDifference;
         std::vector<int> v_diffvalues;
 
-        std::set_symmetric_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
-                                      std::back_inserter(v_symDifference));
+        std::set_symmetric_difference(
+            v1.begin(), v1.end(),
+            v2.begin(), v2.end(),
+            std::back_inserter(v_symDifference));
 
         for (int n : v_symDifference) {
             v_diffvalues.push_back(n);
@@ -1535,27 +1684,36 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                //               cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_aaa_approx++;
+                    if (value > 0.0001) {
+                        num_aaa_approx_4++;
+                   }
             }
-            //            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_aaa_approx++;
+                    if (value > 0.0001) {
+                        num_aaa_approx_4++;
+                   }
             }
-            //            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
-        } else if (foptions_->get_str("CU_APPROX") == "CU") {
+        } else if (foptions_->get_str("CU_APPROX") == "CU"){
             value = 0;
-        } else if (foptions_->get_str("CU_APPROX") == "CUDSD") {
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_aaa_approx++;
+                    if (value > 0.0001) {
+                        num_aaa_approx_4++;
+                   }
             }
-            //            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-            //            cout<<"aaa"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            num_aaa_approx++;
+                if (value > 0.0001) {
+                    num_aaa_approx_4++;
+               }   
         }
     });
 
@@ -1571,7 +1729,16 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
     }
 
+    int num_bbb_ori{0};
+    int num_bbb_ori_4{0};
+    int num_bbb_approx{0};
+    int num_bbb_approx_4{0};
+
     L3bbb_.iterate([&](const std::vector<size_t>& i, double& value) {
+        num_bbb_ori++;
+            if (value > 0.0001) {
+                num_bbb_ori_4++;
+           }
         std::vector<int> v1{(int)i[0], (int)i[1], (int)i[2]};
         std::vector<int> v2{(int)i[3], (int)i[4], (int)i[5]};
         std::sort(v1.begin(), v1.end());
@@ -1580,8 +1747,10 @@ double DSRG_MRPT2::E_VT2_6() {
         std::vector<int> v_symDifference;
         std::vector<int> v_diffvalues;
 
-        std::set_symmetric_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
-                                      std::back_inserter(v_symDifference));
+        std::set_symmetric_difference(
+            v1.begin(), v1.end(),
+            v2.begin(), v2.end(),
+            std::back_inserter(v_symDifference));
 
         for (int n : v_symDifference) {
             v_diffvalues.push_back(n);
@@ -1590,27 +1759,36 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_bbb_approx++;
+                    if (value > 0.0001) {
+                        num_bbb_approx_4++;
+                   }
             }
-            //            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                //               cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_bbb_approx++;
+                    if (value > 0.0001) {
+                        num_bbb_approx_4++;
+                   }
             }
-            //            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
-        } else if (foptions_->get_str("CU_APPROX") == "CU") {
+        } else if (foptions_->get_str("CU_APPROX") == "CU"){
             value = 0;
-        } else if (foptions_->get_str("CU_APPROX") == "CUDSD") {
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_bbb_approx++;
+                    if (value > 0.0001) {
+                        num_bbb_approx_4++;
+                   }
             }
-            //            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-            //            cout<<"bbb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            num_bbb_approx++;
+                if (value > 0.0001) {
+                    num_bbb_approx_4++;
+               }
         }
     });
 
@@ -1636,17 +1814,28 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uvWxyZ"] -= 2.0 * V_["v!xZ"] * T2_["uWy!"];
     }
 
+    int num_aab_ori{0};
+    int num_aab_ori_4{0};
+    int num_aab_approx{0};
+    int num_aab_approx_4{0};
+
     L3aab_.iterate([&](const std::vector<size_t>& i, double& value) {
-        std::vector<int> v1{(int)i[0], (int)i[1], -((int)i[2]) - 1};
-        std::vector<int> v2{(int)i[3], (int)i[4], -((int)i[5]) - 1};
+        num_aab_ori++;
+            if (value > 0.0001) {
+                num_aab_ori_4++;
+           }
+        std::vector<int> v1{(int)i[0], (int)i[1], -((int)i[2])-1};
+        std::vector<int> v2{(int)i[3], (int)i[4], -((int)i[5])-1};
         std::sort(v1.begin(), v1.end());
         std::sort(v2.begin(), v2.end());
 
         std::vector<int> v_symDifference;
         std::vector<int> v_diffvalues;
 
-        std::set_symmetric_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
-                                      std::back_inserter(v_symDifference));
+        std::set_symmetric_difference(
+            v1.begin(), v1.end(),
+            v2.begin(), v2.end(),
+            std::back_inserter(v_symDifference));
 
         for (int n : v_symDifference) {
             v_diffvalues.push_back(n);
@@ -1655,29 +1844,38 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_aab_approx++;
+                    if (value > 0.0001) {
+                        num_aab_approx_4++;
+                   }
             }
-            //            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_aab_approx++;
+                    if (value > 0.0001) {
+                        num_aab_approx_4++;
+                   }
             }
-            //            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
-        } else if (foptions_->get_str("CU_APPROX") == "CU") {
+        } else if (foptions_->get_str("CU_APPROX") == "CU"){
             value = 0;
-        } else if (foptions_->get_str("CU_APPROX") == "CUDSD") {
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_aab_approx++;
+                    if (value > 0.0001) {
+                        num_aab_approx_4++;
+                   }
             }
-            //            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-            //            cout<<"aab"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            num_aab_approx++;
+                if (value > 0.0001) {
+                    num_aab_approx_4++;
+               }
         }
-    });
+    }); 
 
     E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * L3aab_("xyZuvW");
 
@@ -1701,17 +1899,28 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uVWxYZ"] -= 2.0 * V_["1WxY"] * T2_["uV1Z"];
     }
 
+    int num_abb_ori{0};
+    int num_abb_ori_4{0};
+    int num_abb_approx{0};
+    int num_abb_approx_4{0};
+
     L3abb_.iterate([&](const std::vector<size_t>& i, double& value) {
-        std::vector<int> v1{(int)i[0], -((int)i[1]) - 1, -((int)i[2]) - 1};
-        std::vector<int> v2{(int)i[3], -((int)i[4]) - 1, -((int)i[5]) - 1};
+        num_abb_ori++;
+            if (value > 0.0001) {
+                num_abb_ori_4++;
+           }
+        std::vector<int> v1{(int)i[0], -((int)i[1])-1, -((int)i[2])-1};
+        std::vector<int> v2{(int)i[3], -((int)i[4])-1, -((int)i[5])-1};
         std::sort(v1.begin(), v1.end());
         std::sort(v2.begin(), v2.end());
 
         std::vector<int> v_symDifference;
         std::vector<int> v_diffvalues;
 
-        std::set_symmetric_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
-                                      std::back_inserter(v_symDifference));
+        std::set_symmetric_difference(
+            v1.begin(), v1.end(),
+            v2.begin(), v2.end(),
+            std::back_inserter(v_symDifference));
 
         for (int n : v_symDifference) {
             v_diffvalues.push_back(n);
@@ -1720,32 +1929,57 @@ double DSRG_MRPT2::E_VT2_6() {
             if (v_diffvalues.size() > 2) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_abb_approx++;
+                    if (value > 0.0001) {
+                        num_abb_approx_4++;
+                   }
             }
-            //            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else if (foptions_->get_str("CU_APPROX") == "CUD") {
             if (v_diffvalues.size() != 0) {
                 value = 0;
             } else {
-                //                cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_abb_approx++;
+                    if (value > 0.0001) {
+                        num_abb_approx_4++;
+                   }
             }
-            //            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
-        } else if (foptions_->get_str("CU_APPROX") == "CU") {
+        } else if (foptions_->get_str("CU_APPROX") == "CU"){
             value = 0;
-        } else if (foptions_->get_str("CU_APPROX") == "CUDSD") {
+        } else if (foptions_->get_str("CU_APPROX") == "CUDSD"){
             if (v_diffvalues.size() > 4) {
                 value = 0;
             } else {
-                //               cout<<"unchanged_abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+                num_abb_approx++;
+                    if (value > 0.0001) {
+                        num_abb_approx_4++;
+                   }
             }
-            //            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
         } else {
-            //            cout<<"abb"<<","<<i[0]<<","<<i[1]<<","<<i[2]<<","<<i[3]<<","<<i[4]<<","<<i[5]<<","<<value<<"\n";
+            num_abb_approx++;
+                if (value > 0.0001) {
+                    num_abb_approx_4++;
+               }
         }
-    });
+    }); 
 
     E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * L3abb_("xYZuVW");
 
+    outfile->Printf("\n    Number of original tensor elements in aaa block is %d", num_aaa_ori);
+    outfile->Printf("\n    Number of original tensor elements in bbb block is %d", num_bbb_ori);
+    outfile->Printf("\n    Number of original tensor elements in aab block is %d", num_aab_ori);
+    outfile->Printf("\n    Number of original tensor elements in abb block is %d", num_abb_ori);
+    outfile->Printf("\n    Number of original tensor elements (larger than 0.0001) in aaa block is %d", num_aaa_ori_4);
+    outfile->Printf("\n    Number of original tensor elements (larger than 0.0001) in bbb block is %d", num_bbb_ori_4);
+    outfile->Printf("\n    Number of original tensor elements (larger than 0.0001) in aab block is %d", num_aab_ori_4);
+    outfile->Printf("\n    Number of original tensor elements (larger than 0.0001) in abb block is %d", num_abb_ori_4);
+    outfile->Printf("\n    Number of unchanged tensor elements in aaa block is %d", num_aaa_approx);
+    outfile->Printf("\n    Number of unchanged tensor elements in bbb block is %d", num_bbb_approx);
+    outfile->Printf("\n    Number of unchanged tensor elements in aab block is %d", num_aab_approx);
+    outfile->Printf("\n    Number of unchanged tensor elements in abb block is %d", num_abb_approx);
+    outfile->Printf("\n    Number of unchanged tensor elements (larger than 0.0001) in aaa block is %d", num_aaa_approx_4);
+    outfile->Printf("\n    Number of unchanged tensor elements (larger than 0.0001) in bbb block is %d", num_bbb_approx_4);
+    outfile->Printf("\n    Number of unchanged tensor elements (larger than 0.0001) in aab block is %d", num_aab_approx_4);
+    outfile->Printf("\n    Number of unchanged tensor elements (larger than 0.0001) in abb block is %d", num_abb_approx_4);
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
     return E;

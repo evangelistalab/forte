@@ -37,6 +37,7 @@ set forte{
    correlation_solver dsrg-mrpt2
    print                 0
    laplace               true
+   DF_AO                 true
    active_space_solver              fci
 }
 #

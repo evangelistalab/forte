@@ -645,6 +645,8 @@ def register_dsrg_options(options):
     options.add_str("CU_APPROX", "NONE", ["CUD", "CUDS", "NONE", "CU", "CUDSD"], "Three-body density cumulant approximation methods")
 
     options.add_bool("LAPLACE", False, "Use Laplace transformation for CCVV part? (No regularization)")
+  
+    options.add_bool("DF_AO", False, "Use DF-AO-DSRG-MRPT2 for CCVV part? (Should use 'laplace True')")
 
     options.add_bool("PRINT_TIME_PROFILE", False, "Print detailed timings in dsrg-mrpt3")
 

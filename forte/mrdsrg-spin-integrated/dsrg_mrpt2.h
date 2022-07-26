@@ -233,6 +233,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate
     /// individual pieces of energy
     double E_ccvv_laplace(); // LT-DSRG-MRPT2. Use quadratures for ccvv part in E_VT2_2.
+    double E_ccvv_df_ao(); //DF-AO-DSRG-MRPT2. 
     double E_FT1();
     double E_VT1();
     double E_FT2();
