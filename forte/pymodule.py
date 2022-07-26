@@ -35,6 +35,7 @@ import pathlib
 import numpy as np
 import psi4
 import forte
+from .register_forte_options import *
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
@@ -146,7 +147,10 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
     if ref_wfn is None:
         ref_type = options.get_str('REF_TYPE')
-        p4print('\n  No reference wave function provided for Forte.' f' Computing {ref_type} orbitals using Psi4 ...\n')
+        p4print(
+            '\n  No reference wave function provided for Forte.'
+            f' Computing {ref_type} orbitals using Psi4 ...\n'
+        )
 
         # no warning printing for MCSCF
         job_type = options.get_str('JOB_TYPE')
@@ -196,7 +200,8 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     # set DF and MINAO basis
     if 'DF' in options.get_str('INT_TYPE'):
         aux_basis = psi4.core.BasisSet.build(
-            molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS')
+            molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS'),
+            puream=wfn_new.basisset().has_puream()
         )
         wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
 
@@ -371,17 +376,31 @@ def make_ints_from_fcidump(fcidump, options, mo_space_info):
     )
 
 
-def prepare_forte_options():
+def prepare_forte_options(options_dict=None):
     """
     Return a ForteOptions object.
-    """
-    # Get the option object
-    psi4_options = psi4.core.get_options()
-    psi4_options.set_current_module('FORTE')
 
-    # Get the forte option object
+    Parameters
+    ----------
+    options_dict : dict
+        An optional dictionary used to define the options
+    """
     options = forte.forte_options
-    options.get_options_from_psi4(psi4_options)
+    # if no options_dict is provided then read from psi4
+    if options_dict is None:
+        # Get the option object
+        psi4_options = psi4.core.get_options()
+        psi4_options.set_current_module('FORTE')
+
+        # Get the forte option object
+        options.get_options_from_psi4(psi4_options)
+    else:
+        psi4.core.print_out(
+            f'\n  Forte will use options passed as a dictionary. Option read from psi4 will be ignored\n'
+        )
+        options = forte.ForteOptions()
+        register_forte_options(options)
+        options.set_from_dict(options_dict)
 
     return options
 
@@ -468,7 +487,7 @@ def run_forte(name, **kwargs):
     # my_proc, n_nodes = my_proc_n_nodes
 
     # Build Forte options
-    options = prepare_forte_options()
+    options = prepare_forte_options(kwargs.get('forte_options'))
 
     # Print the banner
     forte.banner()
@@ -514,7 +533,7 @@ def run_forte(name, **kwargs):
 
     if (options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':
-            raise Exception('Forte: the CASSCF code cannot use integrals read' ' from a FCIDUMP file')
+            raise Exception('Forte: the CASSCF code cannot use integrals read from a FCIDUMP file')
 
         casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
@@ -593,7 +612,7 @@ def gradient_forte(name, **kwargs):
     psi4.core.set_global_option('DERTYPE', 'FIRST')
 
     # Build Forte options
-    options = prepare_forte_options()
+    options = prepare_forte_options(kwargs.get('forte_options'))
 
     # Print the banner
     forte.banner()
@@ -655,8 +674,8 @@ def gradient_forte(name, **kwargs):
     ]
     max_key_size = max(len(k) for k, v in times)
     for key, value in times:
-        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} :' f' {value:12.3f} seconds')
-    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} :' f' {end - time_pre_ints:12.3f} seconds\n')
+        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} : {value:12.3f} seconds')
+    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} : {end - time_pre_ints:12.3f} seconds\n')
 
     # Dump orbitals if needed
     if options.get_bool('DUMP_ORBITALS'):

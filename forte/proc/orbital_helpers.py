@@ -84,10 +84,8 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     # Create the fragment(embedding) projector and apply to rotate orbitals
     if options.get_bool("EMBEDDING"):
         forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"])
-        fragment_projector, fragment_nbf = forte.make_fragment_projector(
-            ref_wfn, options)
-        return forte.make_embedding(ref_wfn, options, fragment_projector,
-                                    fragment_nbf, mo_space_info)
+        fragment_projector, fragment_nbf = forte.make_fragment_projector(ref_wfn)
+        return forte.make_embedding(ref_wfn, options, fragment_projector, fragment_nbf, mo_space_info)
     else:
         return mo_space_info
 
@@ -218,9 +216,7 @@ def ortho_orbs_psi4(wfn1, wfn2, semi=True):
 
     nirrep = wfn2.nirrep()
 
-    orbital_spaces = ["FROZEN_DOCC", "RESTRICTED_DOCC",
-                      "ACTIVE",
-                      "RESTRICTED_UOCC", "FROZEN_UOCC"]
+    orbital_spaces = ["FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC", "FROZEN_UOCC"]
     dims = {space: None for space in orbital_spaces}
     dims["RESTRICTED_UOCC"] = wfn2.nmopi()
 
@@ -304,7 +300,7 @@ def canonicalX(S):
     shalf_inv = psi4.core.Matrix("s^(-1/2)", rdim, rdim)
     for h in range(nirrep):
         for i in range(rdim[h]):
-            shalf_inv.set(h, i, i, evals.get(h, i) ** -0.5)
+            shalf_inv.set(h, i, i, evals.get(h, i)**-0.5)
 
     X = psi4.core.doublet(evecs, shalf_inv, False, False)
     return X

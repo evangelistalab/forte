@@ -105,6 +105,8 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Compute the weighted average reference")
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
              "Set the active space integrals manually")
+        .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
+             "Set unitary matrices for changing orbital basis in RDMs when computing dipoles")
         .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs,
              "Compute the oscillator strength assuming using same orbitals")
         .def("state_ci_wfn_map", &ActiveSpaceSolver::state_ci_wfn_map,

@@ -87,6 +87,9 @@ class CASSCF_ORB_GRAD {
     /// Return the generalized Fock matrix
     psi::SharedMatrix fock() { return Fock_; }
 
+    /// Build and return the generalized Fock matrix
+    psi::SharedMatrix fock(std::shared_ptr<RDMs> rdms);
+
     /// Canonicalize the final orbitals
     void canonicalize_final(const psi::SharedMatrix& U);
 
@@ -359,6 +362,9 @@ class CASSCF_ORB_GRAD {
     /// Grab part of the orbital coefficients
     psi::SharedMatrix C_subset(const std::string& name, psi::SharedMatrix C,
                                psi::Dimension dim_start, psi::Dimension dim_end);
+
+    /// Threshold for numerical zero
+    double numerical_zero_ = 1.0e-15;
 };
 } // namespace forte
 

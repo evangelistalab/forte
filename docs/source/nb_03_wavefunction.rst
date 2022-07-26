@@ -125,24 +125,49 @@ arranged according to Cotton’s book (*Chemical Applications of Group
 Theory*). This ordering is reproduced in the following table and is the
 same as used in Psi4:
 
-============== ============= ============== ==============
-============== ============= ============== ==============
-==============
-Point group    Irrep 0       Irrep 1        Irrep 2        Irrep 3        Irrep 4       Irrep 5        Irrep 6        Irrep 7
-============== ============= ============== ==============
-============== ============= ============== ==============
-==============
-:math:`C_1`    :math:`A`                                                                                             
-:math:`C_s`    :math:`A'`    :math:`A''`                                                                             
-:math:`C_i`    :math:`A_{g}` :math:`A_{u}`                                                                           
-:math:`C_2`    :math:`A`     :math:`B`                                                                               
-:math:`C_{2h}` :math:`A_{g}` :math:`B_{g}`  :math:`A_{u}`  :math:`B_{u}`                                             
-:math:`C_{2v}` :math:`A_{1}` :math:`B_{1}`  :math:`A_{2}`  :math:`B_{2}`                                             
-:math:`D_2`    :math:`A`     :math:`B_{1}`  :math:`B_{2}`  :math:`B_{3}`                                             
-:math:`D_{2h}` :math:`A_{g}` :math:`B_{1g}` :math:`B_{2g}` :math:`B_{3g}` :math:`A_{u}` :math:`B_{1u}` :math:`B_{2u}` :math:`B_{3u}`
-============== ============= ============== ==============
-============== ============= ============== ==============
-==============
++------+------+------+------+------+------+------+------+------+
+| P    | I    | I    | I    | I    | I    | I    | I    | I    |
+| oint | rrep | rrep | rrep | rrep | rrep | rrep | rrep | rrep |
+| g    | 0    | 1    | 2    | 3    | 4    | 5    | 6    | 7    |
+| roup |      |      |      |      |      |      |      |      |
++======+======+======+======+======+======+======+======+======+
+| :ma  | :    |      |      |      |      |      |      |      |
+| th:` | math |      |      |      |      |      |      |      |
+| C_1` | :`A` |      |      |      |      |      |      |      |
++------+------+------+------+------+------+------+------+------+
+| :ma  | :m   | :ma  |      |      |      |      |      |      |
+| th:` | ath: | th:` |      |      |      |      |      |      |
+| C_s` | `A'` | A''` |      |      |      |      |      |      |
++------+------+------+------+------+------+------+------+------+
+| :ma  | :    | :    |      |      |      |      |      |      |
+| th:` | math | math |      |      |      |      |      |      |
+| C_i` | :`A_ | :`A_ |      |      |      |      |      |      |
+|      | {g}` | {u}` |      |      |      |      |      |      |
++------+------+------+------+------+------+------+------+------+
+| :ma  | :    | :    |      |      |      |      |      |      |
+| th:` | math | math |      |      |      |      |      |      |
+| C_2` | :`A` | :`B` |      |      |      |      |      |      |
++------+------+------+------+------+------+------+------+------+
+| :m   | :    | :    | :    | :    |      |      |      |      |
+| ath: | math | math | math | math |      |      |      |      |
+| `C_{ | :`A_ | :`B_ | :`A_ | :`B_ |      |      |      |      |
+| 2h}` | {g}` | {g}` | {u}` | {u}` |      |      |      |      |
++------+------+------+------+------+------+------+------+------+
+| :m   | :    | :    | :    | :    |      |      |      |      |
+| ath: | math | math | math | math |      |      |      |      |
+| `C_{ | :`A_ | :`B_ | :`A_ | :`B_ |      |      |      |      |
+| 2v}` | {1}` | {1}` | {2}` | {2}` |      |      |      |      |
++------+------+------+------+------+------+------+------+------+
+| :ma  | :    | :    | :    | :    |      |      |      |      |
+| th:` | math | math | math | math |      |      |      |      |
+| D_2` | :`A` | :`B_ | :`B_ | :`B_ |      |      |      |      |
+|      |      | {1}` | {2}` | {3}` |      |      |      |      |
++------+------+------+------+------+------+------+------+------+
+| :m   | :    | :m   | :m   | :m   | :    | :m   | :m   | :m   |
+| ath: | math | ath: | ath: | ath: | math | ath: | ath: | ath: |
+| `D_{ | :`A_ | `B_{ | `B_{ | `B_{ | :`A_ | `B_{ | `B_{ | `B_{ |
+| 2h}` | {g}` | 1g}` | 2g}` | 3g}` | {u}` | 1u}` | 2u}` | 3u}` |
++------+------+------+------+------+------+------+------+------+
 
 By default, Forte targets a total symmetric state (e.g., :math:`A_1`,
 :math:`A_{g}`, …). To specify a state with a different irreducible
@@ -181,18 +206,30 @@ spaces:
 
 The following table summarizes the properties of these orbital spaces:
 
-===================== =====================
-================================ ===================================
-Space                 Occupation in CAS/GAS Occupation in correlated methods Description
-===================== =====================
-================================ ===================================
-``FROZEN_DOCC``       2                     2                                Frozen doubly occupied orbitals
-``RESTRICTED_DOCC``   2                     0-2                              Restricted doubly occupied orbitals
-``GAS1``, ``GAS2``, … 0-2                   0-2                              Generalized active spaces
-``RESTRICTED_UOCC``   0                     0-2                              Restricted unoccupied orbitals
-``FROZEN_UOCC``       0                     0                                Frozen unoccupied orbitals
-===================== =====================
-================================ ===================================
++-----------------+-----------------+-----------------+-----------------+
+| Space           | Occupation in   | Occupation in   | Description     |
+|                 | CAS/GAS         | correlated      |                 |
+|                 |                 | methods         |                 |
++=================+=================+=================+=================+
+| ``FROZEN_DOCC`` | 2               | 2               | Frozen doubly   |
+|                 |                 |                 | occupied        |
+|                 |                 |                 | orbitals        |
++-----------------+-----------------+-----------------+-----------------+
+| ``RE            | 2               | 0-2             | Restricted      |
+| STRICTED_DOCC`` |                 |                 | doubly occupied |
+|                 |                 |                 | orbitals        |
++-----------------+-----------------+-----------------+-----------------+
+| ``GAS1``,       | 0-2             | 0-2             | Generalized     |
+| ``GAS2``, …     |                 |                 | active spaces   |
++-----------------+-----------------+-----------------+-----------------+
+| ``RE            | 0               | 0-2             | Restricted      |
+| STRICTED_UOCC`` |                 |                 | unoccupied      |
+|                 |                 |                 | orbitals        |
++-----------------+-----------------+-----------------+-----------------+
+| ``FROZEN_UOCC`` | 0               | 0               | Frozen          |
+|                 |                 |                 | unoccupied      |
+|                 |                 |                 | orbitals        |
++-----------------+-----------------+-----------------+-----------------+
 
 **Note**: Forte makes a distinction between elementary and ``composite``
 orbital spaces. The spaces defined above are all elementary, except for
@@ -221,7 +258,7 @@ Theory*).
 The following is an example of a computation on BeH\ :math:`_2`. This
 system has 6 electrons. We freeze the Be 1s-like orbital, which has
 A\ :math:`_1` symmetry. The 2a\ :math:`_1` orbital is restricted doubly
-occupied and the 3a\ :math:`_1`/1b:math:`_2` orbitals belong to the
+occupied and the 3a\ :math:`_1`/1b\ :math:`_2` orbitals belong to the
 active space. The remaining orbitals belong to the ``RESTRICTED_UOCC``
 set and no virtual orbitals are frozen:
 

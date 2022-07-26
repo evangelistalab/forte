@@ -102,7 +102,7 @@ class OrbitalOptimizer {
     /// Solution of g + Hx = 0 (with diagonal H), so x = - g / H
     psi::SharedMatrix approx_solve();
     /// Exponentiate the orbital rotation parameter and use this to update your
-    /// MOCoefficient
+    /// MO coefficients
     psi::SharedMatrix rotate_orbitals(psi::SharedMatrix C, psi::SharedMatrix S);
     /// The norm of the orbital gradient
     double orbital_gradient_norm() { return (g_->rms()); }

@@ -143,6 +143,7 @@ void CubeFile::load(std::string filename) {
         // 6. Data, striped (x, y, z)
         int ndata = num_[0] * num_[1] * num_[2];
         data_.resize(ndata);
+        int nread_tot = 0;
 
         double d[6];
         for (int n = 0; n < ndata; n += 6) {
@@ -150,13 +151,14 @@ void CubeFile::load(std::string filename) {
             sscanf(line.c_str(), "%lE %lE %lE %lE %lE %lE", &d[0], &d[1], &d[2], &d[3], &d[4],
                    &d[5]);
             int nread = std::min(6, ndata - n);
+            nread_tot += nread;
             for (int k = 0; k < nread; ++k)
                 data_[n + k] = d[k];
         }
 
         file.close();
 
-        if (data_.size() != num_[0] * num_[1] * num_[2]) {
+        if (nread_tot != ndata) {
             throw std::runtime_error(
                 "Number of data points is inconsistent with header in Cube file!");
         }

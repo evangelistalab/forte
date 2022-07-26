@@ -84,6 +84,9 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
+    /// Compute permanent dipole moments
+    void compute_dipole_moment();
+
     /// Compute the oscillator strengths assuming same orbitals
     void compute_fosc_same_orbs();
 
@@ -144,6 +147,12 @@ class ActiveSpaceSolver {
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
+    /// Set unitary matrices for changing orbital basis in RDMs when computing dipole moments
+    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
+        Ua_actv_ = Ua;
+        Ub_actv_ = Ub;
+    }
+
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
@@ -198,6 +207,12 @@ class ActiveSpaceSolver {
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
+
+    /// Unitary matrices for orbital rotations used to compute dipole moments
+    /// The issue is dipole integrals are transformed to semi-canonical orbital basis,
+    /// while active-space integrals are in the original orbital basis
+    ambit::Tensor Ua_actv_;
+    ambit::Tensor Ub_actv_;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

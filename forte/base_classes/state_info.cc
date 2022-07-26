@@ -114,11 +114,12 @@ StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
     //    triplet: multiplicity = 3 -> twice_ms = 0 (ms = 0)
     size_t twice_ms = (multiplicity + 1) % 2;
     if (not options->is_none("MS")) {
-        twice_ms = std::round(2.0 * options->get_double("MS"));
+        twice_ms = std::lround(2.0 * options->get_double("MS"));
     }
 
-    if (((nel - twice_ms) % 2) != 0)
-        throw psi::PSIEXCEPTION("\n\n  make_state_info_from_psi: Wrong value of M_s.\n\n");
+    if (((nel - twice_ms) % 2) != 0){
+        throw std::runtime_error("\n\n  make_state_info_from_psi: Wrong value of M_s.\n\n");
+    }
 
     size_t na = (nel + twice_ms) / 2;
     size_t nb = nel - na;
