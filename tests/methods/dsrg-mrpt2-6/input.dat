@@ -49,7 +49,6 @@ set forte {
   dsrg_s              0.5
   ntrial_per_root     56
   relax_ref           once
-  laplace             True
 }
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)

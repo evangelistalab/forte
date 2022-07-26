@@ -1042,7 +1042,7 @@ double DSRG_MRPT2::E_ccvv_df_ao() {
     nthree_ = ints_->nthree();
     double E_J_loop = 0.0;
     double E_K_loop = 0.0;
-    double threshold = 1e-6;
+    double threshold = 1e-20;
     psi::SharedMatrix Cwfn = ints_->Ca();
     if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("DF-AO-DSRG-MPT2 does not work with symmetry");

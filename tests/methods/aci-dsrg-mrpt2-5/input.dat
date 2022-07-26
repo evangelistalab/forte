@@ -47,7 +47,7 @@ set {
 set forte {
   multiplicity 1
   int_type df
-  correlation_solver dsrg-mrpt2
+  correlation_solver three-dsrg-mrpt2
   active_space_solver  aci
   frozen_docc      [8]
   restricted_docc  [17]
@@ -64,7 +64,6 @@ set forte {
   print_no true
   relax_ref once
   e_convergence 13
-  laplace true
 }
 set_num_threads(8)
 
