@@ -77,10 +77,10 @@ std::pair<psi::SharedMatrix, psi::SharedMatrix> SpinCorr::compute_nos() {
         offset += nactpi_[h];
     }
 
-    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, nactpi_, nactpi_));
-    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, nactpi_, nactpi_));
+    auto OCC_A = std::make_shared<Vector>("ALPHA OCCUPATION", nactpi_);
+    auto OCC_B = std::make_shared<Vector>("BETA OCCUPATION", nactpi_);
+    auto NO_A = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_B = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);

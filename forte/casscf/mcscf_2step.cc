@@ -243,7 +243,7 @@ double MCSCF_2STEP::compute_energy() {
             energy_ = e_o;
 
             // info for orbital optimization
-            dG->subtract(lbfgs.g());
+            dG->subtract(*lbfgs.g());
             double g_rms = dG->rms();
             dG->copy(*lbfgs.g());
 

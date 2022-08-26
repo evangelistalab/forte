@@ -139,11 +139,11 @@ double CPSCF::evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g) {
     auto ax = mat_to_vec(AX);
 
     // compute scalar: 0.5 * x^T A x - b^T x
-    double fx = 0.5 * x->vector_dot(ax) - b_->vector_dot(x);
+    double fx = 0.5 * x->vector_dot(*ax) - b_->vector_dot(*x);
 
     if (do_g) {
         g->copy(*ax);
-        g->subtract(b_);
+        g->subtract(*b_);
     }
 
     return fx;
