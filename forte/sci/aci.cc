@@ -227,11 +227,11 @@ void AdaptiveCI::find_q_space() {
 
     if (screen_alg == "AVERAGE") {
         if (gas_iteration_) {
-            get_gas_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+            get_gas_excited_determinants_avg(num_ref_roots_, P_evecs_, P_evals_, P_space_, F_space);
         }
         // multiroot
         else {
-            get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+            get_excited_determinants_avg(num_ref_roots_, P_evecs_, P_evals_, P_space_, F_space);
         }
     } else if (screen_alg == "SR") {
         if (gas_iteration_) {

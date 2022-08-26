@@ -216,8 +216,8 @@ void ASCI::find_q_space() {
     // This will contain all the determinants
     PQ_space_.clear();
     // Add the P-space determinants and zero the hash
-    const det_hashvec& detmap = P_space_.wfn_hash();
-    for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
+    const auto& detmap = P_space_.wfn_hash();
+    for (auto it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
         V_hash.erase(*it);
     }
     //  PQ_space.swap(P_space);
@@ -238,13 +238,13 @@ void ASCI::find_q_space() {
     if (options_->get_str("SCI_EXCITED_ALGORITHM") == "AVERAGE") {
         for (const auto& I : V_hash) {
             double criteria = 0.0;
-            for (size_t n = 0; n < nroot_; ++n) {
+            for (int n = 0; n < num_ref_roots_; ++n) {
                 double delta = as_ints_->energy(I.first) - P_evals_->get(n);
                 double V = I.second;
 
                 criteria += (V / delta);
             }
-            criteria /= nroot_;
+            criteria /= num_ref_roots_;
             F_space[N] = std::make_pair(std::fabs(criteria), I.first);
 
             N++;
