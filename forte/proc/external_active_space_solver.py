@@ -128,27 +128,31 @@ def make_hamiltonian(as_ints, state_map):
         for d in dets:
             print(f'{d.str(4)}')
 
-        import numpy as np
+        scalar_e = as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy() + \
+                   as_ints.frozen_core_energy()
+        print(f'scalar_e = {scalar_e}')
 
+        import numpy as np
         ndets = len(dets)
         H = np.ndarray((ndets, ndets))
         for I, detI in enumerate(dets):
             for J, detJ in enumerate(dets):
-                H[I][J] = as_ints.slater_rules(detI, detJ)
-
+                H[I][J] = as_ints.slater_rules(detI,detJ)
+                # if I == J:
+                #     H[I][J] += scalar_e
+                          
         print(f'\n==> Active Space Hamiltonian <==\n')
         print(f'\n{H}')
-
-        evals, evecs = np.linalg.eigh(H)
-        e_casci = evals[0] + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy() + as_ints.frozen_core_energy()
+        
+        evals, _ = np.linalg.eigh(H)
+        e_casci = evals[0] + scalar_e
         print(f'\nCASCI Energy = {e_casci}')
 
         dets_str = [d.str(4) for d in dets]
-        as_ham = {
-            'dets_list': dets_str,
-            'hamiltonian': H.tolist(),
-            'e_ci': e_casci,
-        }
+        as_ham = {'dets_list': dets_str,
+                  'hamiltonian': H.tolist(),
+                  'scalar_e': scalar_e,
+                  'e_ci': e_casci, }
 
         import json
         with open(f'as_ham.json', 'w') as file:
