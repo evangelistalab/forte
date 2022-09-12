@@ -53,6 +53,9 @@ def test_input_simple():
     efci = psi4.energy('forte')
     assert efci == pytest.approx(ref_efci_3, 1.0e-9)
 
+    # clean psi4
+    psi4.core.clean()
+
 
 if __name__ == "__main__":
     test_input_simple()

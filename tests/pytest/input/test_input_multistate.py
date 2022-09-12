@@ -39,6 +39,9 @@ def test_input_multistate():
         for i in range(3):
             assert psi4.core.variable(f'ENERGY ROOT {i} {k}') == pytest.approx(vals[i], 1.0e-9)
 
+    # clean psi4
+    psi4.core.clean()
+
 
 if __name__ == "__main__":
     test_input_multistate()

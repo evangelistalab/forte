@@ -6,6 +6,7 @@ from forte.solvers.solver import Solver
 from forte import ForteOptions
 from forte import forte_options
 from forte import make_mcscf_two_step, make_mo_space_info_from_map
+from forte.core import clean_options
 
 
 class MCSCF(Solver):
@@ -69,6 +70,7 @@ class MCSCF(Solver):
 
     def _run(self):
         """Run an MCSCF computation"""
+
         # make sure the active space solver executed
         if not self.input_nodes[0].executed:
             flog('info', 'MCSCF: reference not available. Calling run() on input node')
@@ -98,7 +100,6 @@ class MCSCF(Solver):
         )
         flog('info', 'MCSCF: computing the energy')
         energies = mcscf.compute_energy()
-        # flog('info', f'MCSCF: mcscf average energy = {average_energy}')
         flog('info', f'MCSCF: mcscf energy = {energies}')
 
         self._results.add('mcscf energy', energies, 'MCSCF energy', 'Eh')

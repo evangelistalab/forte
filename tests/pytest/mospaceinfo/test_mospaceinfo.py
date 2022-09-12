@@ -12,8 +12,7 @@ def test_mospaceinfo():
 
     geom = "H 0.0 0.0 0.0\nH 0.0 0.0 1.0" ""
 
-    psi4.core.clean()
-    forte.clean_options()
+    forte.core.clean_options()
 
     psi4.geometry(geom)
 
