@@ -35,6 +35,7 @@ import pathlib
 import numpy as np
 import psi4
 import forte
+from .register_forte_options import *
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
@@ -146,7 +147,10 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
     if ref_wfn is None:
         ref_type = options.get_str('REF_TYPE')
-        p4print('\n  No reference wave function provided for Forte.' f' Computing {ref_type} orbitals using Psi4 ...\n')
+        p4print(
+            '\n  No reference wave function provided for Forte.'
+            f' Computing {ref_type} orbitals using Psi4 ...\n'
+        )
 
         # no warning printing for MCSCF
         job_type = options.get_str('JOB_TYPE')
@@ -196,7 +200,8 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     # set DF and MINAO basis
     if 'DF' in options.get_str('INT_TYPE'):
         aux_basis = psi4.core.BasisSet.build(
-            molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS')
+            molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS'),
+            puream=wfn_new.basisset().has_puream()
         )
         wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
 
@@ -298,10 +303,6 @@ def prepare_forte_objects_from_fcidump(options, path='.'):
     # Call methods that project the orbitals (AVAS, embedding)
     # skipped due to lack of functionality
 
-    # Averaging spin multiplets if doing spin-adapted computation
-    if options.get_str('CORRELATION_SOLVER') == 'SA-MRDSRG':
-        options.set_bool('SPIN_AVG_DENSITY', True)
-
     # manufacture a SCFInfo object from the FCIDUMP file (this assumes C1 symmetry)
     nel = fcidump['nelec']
     ms2 = fcidump['ms2']
@@ -375,21 +376,31 @@ def make_ints_from_fcidump(fcidump, options, mo_space_info):
     )
 
 
-def prepare_forte_options():
+def prepare_forte_options(options_dict=None):
     """
     Return a ForteOptions object.
+
+    Parameters
+    ----------
+    options_dict : dict
+        An optional dictionary used to define the options
     """
-    # Get the option object
-    psi4_options = psi4.core.get_options()
-    psi4_options.set_current_module('FORTE')
-
-    # Get the forte option object
     options = forte.forte_options
-    options.get_options_from_psi4(psi4_options)
+    # if no options_dict is provided then read from psi4
+    if options_dict is None:
+        # Get the option object
+        psi4_options = psi4.core.get_options()
+        psi4_options.set_current_module('FORTE')
 
-    # Averaging spin multiplets if doing spin-adapted computation
-    if options.get_str('CORRELATION_SOLVER') in ('SA-MRDSRG', 'SA_MRDSRG'):
-        options.set_bool('SPIN_AVG_DENSITY', True)
+        # Get the forte option object
+        options.get_options_from_psi4(psi4_options)
+    else:
+        psi4.core.print_out(
+            f'\n  Forte will use options passed as a dictionary. Option read from psi4 will be ignored\n'
+        )
+        options = forte.ForteOptions()
+        register_forte_options(options)
+        options.set_from_dict(options_dict)
 
     return options
 
@@ -446,7 +457,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     state_energies_list = active_space_solver.compute_energy()
 
     if options.get_bool('SPIN_ANALYSIS'):
-        rdms = active_space_solver.compute_average_rdms(state_weights_map, 2)
+        rdms = active_space_solver.compute_average_rdms(state_weights_map, 2, forte.RDMsType.spin_dependent)
         forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
@@ -472,7 +483,7 @@ def run_forte(name, **kwargs):
     """
 
     # Build Forte options
-    options = prepare_forte_options()
+    options = prepare_forte_options(kwargs.get('forte_options'))
 
     # Print the banner
     forte.banner()
@@ -481,12 +492,9 @@ def run_forte(name, **kwargs):
     forte_objects = prepare_forte_objects(options, name, **kwargs)
     ref_wfn, state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
 
-    # Run a method
     job_type = options.get_str('JOB_TYPE')
-
-    if job_type == 'NONE':
+    if job_type == 'NONE' and options.get_str("ORBITAL_TYPE") == 'CANONICAL':
         psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
-        # forte.cleanup()
         return ref_wfn
 
     start_pre_ints = time.time()
@@ -509,14 +517,19 @@ def run_forte(name, **kwargs):
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
-        ints.rotate_orbitals(Ua, Ub)
+        ints.rotate_orbitals(Ua, Ub, job_type != 'NONE')
 
     # Run a method
+    if job_type == 'NONE':
+        psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
+        # forte.cleanup()
+        return ref_wfn
+
     energy = 0.0
 
     if (options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':
-            raise Exception('Forte: the CASSCF code cannot use integrals read' ' from a FCIDUMP file')
+            raise Exception('Forte: the CASSCF code cannot use integrals read from a FCIDUMP file')
 
         casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
@@ -575,9 +588,9 @@ def mr_dsrg_pt2(job_type, forte_objects, ints, options):
     ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints, options)
     ci.compute_energy()
 
-    rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level)
+    rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
     semi = forte.SemiCanonical(mo_space_info, ints, options)
-    semi.semicanonicalize(rdms, max_rdm_level)
+    semi.semicanonicalize(rdms)
 
     mcsrgpt2_mo = forte.MCSRGPT2_MO(rdms, options, ints, mo_space_info)
     energy = mcsrgpt2_mo.compute_energy()
@@ -597,7 +610,7 @@ def gradient_forte(name, **kwargs):
     psi4.core.set_global_option('DERTYPE', 'FIRST')
 
     # Build Forte options
-    options = prepare_forte_options()
+    options = prepare_forte_options(kwargs.get('forte_options'))
 
     # Print the banner
     forte.banner()
@@ -663,8 +676,8 @@ def gradient_forte(name, **kwargs):
     ]
     max_key_size = max(len(k) for k, v in times)
     for key, value in times:
-        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} :' f' {value:12.3f} seconds')
-    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} :' f' {end - time_pre_ints:12.3f} seconds\n')
+        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} : {value:12.3f} seconds')
+    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} : {end - time_pre_ints:12.3f} seconds\n')
 
     # Dump orbitals if needed
     if options.get_bool('DUMP_ORBITALS'):

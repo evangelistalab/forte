@@ -3,9 +3,9 @@ from forte.core import flog
 from forte.solvers.feature import Feature
 from forte.solvers.solver import Solver
 
-from forte.forte import ForteOptions
+from forte import ForteOptions
 from forte import forte_options
-from forte.forte import make_mcscf_two_step, make_mo_space_info_from_map
+from forte import make_mcscf_two_step, make_mo_space_info_from_map
 
 
 class MCSCF(Solver):

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -89,7 +89,7 @@ class CASSCF {
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
     /// The reference object generated from Francesco's Full CI
-    RDMs cas_ref_;
+    std::shared_ptr<RDMs> cas_ref_;
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;

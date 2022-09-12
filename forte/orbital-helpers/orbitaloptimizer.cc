@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -358,10 +358,10 @@ void OrbitalOptimizer::orbital_gradient() {
             relative_gas_mo_.push_back(relative_mo);
         }
         auto active_frozen = options_->get_int_list("CASSCF_ACTIVE_FROZEN_ORBITAL");
-        std::vector<int> active;
-        for (int i = 0; i < na_; i++) {
-            active.push_back(i);
-        }
+
+        std::vector<int> active(na_);
+        std::iota(active.begin(), active.end(), 0);
+
         std::vector<int> unfrozen;
         std::set_difference(active.begin(), active.end(), active_frozen.begin(),
                             active_frozen.end(), std::inserter(unfrozen, unfrozen.begin()));
@@ -826,7 +826,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         C_active_ao->print();
     // std::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     // JK_fock->set_memory(psi::Process::environment.get_memory() * 0.8);
-    // JK_fock->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+    // JK_fock->set_cutoff(options_->get_double("INTS_TOLERANCE"));
     // JK_fock->initialize();
     // JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);

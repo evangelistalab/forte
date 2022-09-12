@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -73,9 +73,11 @@ double DSRG_MRPT::compute_energy_pt2() {
     energy.push_back({"<[V, T2]> L2", Ecorr - Etemp});
     Etemp = Ecorr;
 
-    H2_T2_C0_L3(V_, T2_, 1.0, Ecorr);
-    energy.push_back({"<[V, T2]> L3", Ecorr - Etemp});
-    Etemp = Ecorr;
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
+        H2_T2_C0_L3(V_, T2_, 1.0, Ecorr);
+        energy.push_back({"<[V, T2]> L3", Ecorr - Etemp});
+        Etemp = Ecorr;
+    }
 
     Etotal = Ecorr + Eref_;
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
@@ -174,9 +176,8 @@ void DSRG_MRPT::BT_scaled_by_Rplus1(BlockedTensor& BT) {
     if (BT.rank() == 4) {
         BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                value *= 1.0 +
-                         dsrg_source_->compute_renormalized(Fdiag_[i[0]] + Fdiag_[i[1]] -
-                                                            Fdiag_[i[2]] - Fdiag_[i[3]]);
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fdiag_[i[0]] + Fdiag_[i[1]] -
+                                                                  Fdiag_[i[2]] - Fdiag_[i[3]]);
             } else {
                 value = 0.0; // ignore all noise
             }
@@ -224,4 +225,3 @@ void DSRG_MRPT::BT_scaled_by_RD(BlockedTensor& BT) {
     }
 }
 } // namespace forte
-

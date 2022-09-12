@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -69,9 +69,9 @@ class ProjectorCI : public SelectedCIMethod {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info,
-                  std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
+                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
@@ -338,7 +338,8 @@ class ProjectorCI : public SelectedCIMethod {
     double estimate_var_energy_sparse(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                       double max_error = 0.0);
     /// Form the product H c
-    double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I, size_t &thread_num_off_diag_elem);
+    double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                    size_t& thread_num_off_diag_elem);
     /// Form the product H c
     double form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
                       size_t cut_index);

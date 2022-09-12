@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,10 +29,12 @@
 #ifndef _ci_rdms_h_
 #define _ci_rdms_h_
 
+#include <functional>
+
 #include "psi4/libmints/matrix.h"
 
+#include "helpers/helpers.h"
 #include "integrals/active_space_integrals.h"
-
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sorted_string_list.h"
 
@@ -45,7 +47,7 @@ class CI_RDMS {
 
     // Class constructor and destructor
     // I (York) think the following is correct, please check.
-    // e.g., <root1| p^+ q^+ s r | root2> = 2rdm[p*ncmo^(3) + q*ncmo^(2) + r*ncmo + s]
+    // e.g., <root1| p^+ q^+ s r | root2> = 2rdm[p*nmo^(3) + q*nmo^(2) + r*nmo + s]
     CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
             int root2);
@@ -59,7 +61,7 @@ class CI_RDMS {
     // All rdms are stored in spin-labeled vector format.
     // They are accessed in the standard way. E.g., for the alpha/alpha 2-RDM,
     // the element corresponding to p,q,r,s would be accessed with:
-    // tp2rdm_aa[p*ncmo^(3) + q*ncmo^(2) + r*ncmo + s], where ncmo is the number
+    // tp2rdm_aa[p*nmo^(3) + q*nmo^(2) + r*nmo + s], where nmo is the number
     // of active orbitals.
 
     // The most efficient algorithms use coupling lists to fill the
@@ -76,26 +78,34 @@ class CI_RDMS {
 
     // Compute rdms
     void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
+    void compute_1rdm_sf(std::vector<double>& opdm);
 
     void compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
+    void compute_1rdm_sf_op(std::vector<double>& opdm);
 
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
+    void compute_2rdm_sf(std::vector<double>& tpdm);
 
     void compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                          std::vector<double>& tprdm_bb);
+    void compute_2rdm_sf_op(std::vector<double>& tpdm);
 
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+    void compute_3rdm_sf(std::vector<double>& tpdm3);
 
-    void compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
+    void compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& value,
                          std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+    void compute_3rdm_sf_op(std::vector<double>& tpdm3);
 
     void compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                               std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                               std::vector<double>& tprdm_bb, std::vector<double>& tprdm_aaa,
                               std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
                               std::vector<double>& tprdm_bbb);
+    void compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2,
+                                 std::vector<double>& rdm3);
 
     double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                       std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
@@ -141,12 +151,13 @@ class CI_RDMS {
     int root1_;
     int root2_;
 
-    // The number of correlated mos
-    size_t ncmo_;
-    size_t ncmo2_;
-    size_t ncmo3_;
-    size_t ncmo4_;
-    size_t ncmo5_;
+    // The number of orbitals
+    size_t norb_;
+    size_t norb2_;
+    size_t norb3_;
+    size_t norb4_;
+    size_t norb5_;
+    size_t norb6_;
 
     // The correlated mos per irrep
     psi::Dimension active_dim_;

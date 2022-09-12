@@ -43,7 +43,7 @@ set forte{
   r_convergence          8
   casscf_g_convergence   1e-8
   casscf_e_convergence   1e-12
-  spin_avg_density       true
+  ms                     1.0
 }
 Escf, wfn = energy('scf', return_wfn=True)
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
@@ -62,6 +62,7 @@ set forte{
   relax_ref              twice
   e_convergence          12
   r_convergence          8
+  dsrg_3rdm_algorithm    direct
 }
 energy('forte', ref_wfn=wfn)
 names = ["UNRELAXED ENERGY", "PARTIALLY RELAXED ENERGY", "RELAXED ENERGY"]

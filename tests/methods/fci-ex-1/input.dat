@@ -46,11 +46,11 @@ set forte{
 
 energy('scf')
 gs_energy = energy('forte')
-compare_values(refgs, gs_energy, 10, "Ground state FCI energy") #TEST
+compare_values(refgs, gs_energy, 8, "Ground state FCI energy") #TEST
 
 set forte nroot 2
 set forte root  1
 energy('scf')
 ex_energy = energy('forte')
-compare_values(refex, ex_energy, 10, "Singlet Excited State FCI energy") #TEST
+compare_values(refex, ex_energy, 8, "Singlet Excited State FCI energy") #TEST
 

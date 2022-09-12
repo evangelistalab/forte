@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -43,7 +43,7 @@ using namespace psi;
 
 namespace forte {
 
-LBFGS::LBFGS(std::shared_ptr<LBFGS_PARAM> param) : param_(param) { param_->check_param(); }
+LBFGS::LBFGS(std::shared_ptr<LBFGS_PARAM> param) : param_(param), p_(psi::Vector(0)) { param_->check_param(); }
 
 template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
     nirrep_ = x->nirrep();
@@ -73,7 +73,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
 
     // initialize some vectors
     reset();
-    p_ = std::make_shared<psi::Vector>("p", dimpi_);
+    p_ = psi::Vector("p", dimpi_);
     x_last_ = std::make_shared<psi::Vector>(*x);
     g_last_ = std::make_shared<psi::Vector>(*g_);
     if (param_->h0_freq >= 0) {
@@ -101,7 +101,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         // print current iteration
         g_norm = g_->norm();
         if (param_->print > 0)
-            outfile->Printf("\n  L-BFGS Iter:%3d; fx = %20.15f; g_norm = %12.6e; step = %9.3e",
+            outfile->Printf("\n    L-BFGS Iter:%3d; fx = %20.15f; g_norm = %12.6e; step = %9.3e",
                             iter_ + 1, fx, g_norm, step);
 
         // skip the rest if terminate
@@ -115,44 +115,57 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
             break;
         }
 
+        // compute differences
+        psi::Vector s(*x);
+        s.subtract(*x_last_);
+
+        psi::Vector y(*g_);
+        y.subtract(*g_last_);
+
+        double rho = y.vector_dot(s);
+
         // save history
-        int index = (iter_ - 1) % param_->m;
+        if (rho > 0) {
+            int iter = iter_ - iter_shift_;
+            int index = (iter - 1) % param_->m;
 
-        if (iter_ <= param_->m) {
-            s_[index] = std::make_shared<psi::Vector>("s", dimpi_);
-            y_[index] = std::make_shared<psi::Vector>("y", dimpi_);
+            if (iter <= param_->m) {
+                s_[index] = std::make_shared<psi::Vector>("s", dimpi_);
+                y_[index] = std::make_shared<psi::Vector>("y", dimpi_);
+            }
+
+            s_[index]->copy(s);
+            y_[index]->copy(y);
+            rho_[index] = 1.0 / rho;
+
+            x_last_->copy(*x);
+            g_last_->copy(*g_);
+        } else {
+            iter_shift_++;
+            if (param_->print > 1) {
+                outfile->Printf("\n  L-BFGS Warning: Skip this vector due to negative rho");
+            }
         }
-
-        s_[index]->copy(*x);
-        s_[index]->subtract(x_last_);
-
-        y_[index]->copy(*g_);
-        y_[index]->subtract(g_last_);
-
-        rho_[index] = 1.0 / y_[index]->vector_dot(s_[index]);
-
-        x_last_->copy(*x);
-        g_last_->copy(*g_);
     } while (iter_ < param_->maxiter);
 
     if ((not converged_) and param_->print > 1) {
-        outfile->Printf("\n  Warning: L-BFGS did not converge in %d iterations", iter_);
+        outfile->Printf("\n  L-BFGS Warning: No convergence in %d iterations", iter_);
     }
 
     return fx;
 }
 
 void LBFGS::update() {
-    p_->copy(*g_);
+    p_.copy(*g_);
 
-    int m = std::min(iter_, param_->m);
-    int end = m ? (iter_ - 1) % m : 0; // skip for the very first iteration
+    int m = std::min(iter_ - iter_shift_, param_->m);
+    int end = m ? (iter_ - iter_shift_ - 1) % m : 0; // skip for the very first iteration
 
     // first loop
     for (int k = 0; k < m; ++k) {
         int i = (end - k + m) % m;
         alpha_[i] = rho_[i] * s_[i]->vector_dot(p_);
-        p_->axpy(-alpha_[i], y_[i]);
+        p_.axpy(-alpha_[i], *y_[i]);
     }
 
     // apply inverse diagonal Hessian
@@ -162,14 +175,14 @@ void LBFGS::update() {
     for (int k = 0; k < m; ++k) {
         int i = (end + k + 1) % m;
         double beta = rho_[i] * y_[i]->vector_dot(p_);
-        p_->axpy(alpha_[i] - beta, s_[i]);
+        p_.axpy(alpha_[i] - beta, *s_[i]);
     }
 
     // for descent
-    p_->scale(-1.0);
+    p_.scale(-1.0);
 
     if (param_->print > 2)
-        p_->print();
+        p_.print();
 }
 
 template <class Foo>
@@ -194,7 +207,7 @@ void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, d
     double p_max = 0.0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < dimpi_[h]; ++i) {
-            double v = std::fabs(p_->get(h, i));
+            double v = std::fabs(p_.get(h, i));
             if (v > p_max)
                 p_max = v;
         }
@@ -203,7 +216,7 @@ void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, d
 
     x->axpy(step, p_);
 
-    bool do_grad = iter_ + 1 < param_->maxiter;
+    bool do_grad = iter_ - iter_shift_ + 1 < param_->maxiter;
     fx = func.evaluate(x, g_, do_grad);
 }
 
@@ -211,7 +224,7 @@ template <class Foo>
 void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx, double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
-    auto x0 = std::make_shared<psi::Vector>(*x);
+    psi::Vector x0(*x);
 
     // need to restart because this is not a good direction
     if (dg0 >= 0) {
@@ -221,7 +234,7 @@ void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx,
 
     // backtracking for optimal step
     for (int i = 0; i < param_->maxiter_linesearch + 1; ++i) {
-        x->copy(*x0);
+        x->copy(x0);
         x->axpy(step, p_);
         fx = func.evaluate(x, g_);
 
@@ -254,14 +267,14 @@ void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx,
 
         if (step > param_->max_step) {
             if (param_->print > 1)
-                outfile->Printf("\n  Step length > max allowed value. Stopped line search.");
+                outfile->Printf("\n    Step length > max allowed value. Stopped line search.");
             step = param_->max_step;
             break;
         }
 
         if (step < param_->min_step) {
             if (param_->print > 1)
-                outfile->Printf("\n  Step length < min allowed value. Stopped line search.");
+                outfile->Printf("\n    Step length < min allowed value. Stopped line search.");
             step = param_->min_step;
             break;
         }
@@ -272,7 +285,7 @@ template <class Foo>
 void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& fx, double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
-    auto x0 = std::make_shared<psi::Vector>(*x);
+    psi::Vector x0(*x);
 
     // need to restart because this is not a good direction
     if (dg0 >= 0) {
@@ -289,7 +302,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
     // braketing stage
     for (int i = 0; i < param_->maxiter_linesearch; ++i) {
-        x->copy(*x0);
+        x->copy(x0);
         x->axpy(step, p_);
         fx = func.evaluate(x, g_);
 
@@ -303,7 +316,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
         if (std::fabs(dg) <= w2) {
             if (param_->print > 2) {
-                outfile->Printf("\n  Optimal step length from bracketing stage: %.15f", step);
+                outfile->Printf("\n    Optimal step length from bracketing stage: %.15f", step);
             }
             return;
         }
@@ -320,7 +333,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
         step *= 2.0;
     }
     if (param_->print > 2) {
-        outfile->Printf("\n  Step lengths after bracketing stage: low = %.10f, high = %.10f",
+        outfile->Printf("\n    Step lengths after bracketing stage: low = %.10f, high = %.10f",
                         step_low, step_high);
     }
 
@@ -328,7 +341,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
     for (int i = 0; i < param_->maxiter_linesearch + 1; ++i) {
         step = 0.5 * (step_low + step_high);
 
-        x->copy(*x0);
+        x->copy(x0);
         x->axpy(step, p_);
         fx = func.evaluate(x, g_);
 
@@ -343,7 +356,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
             if (std::fabs(dg) <= w2) {
                 if (param_->print > 2) {
-                    outfile->Printf("\n  Optimal step length from zooming stage: %.15f", step);
+                    outfile->Printf("\n    Optimal step length from zooming stage: %.15f", step);
                 }
                 break;
             }
@@ -358,43 +371,39 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
         }
     }
     if (param_->print > 2) {
-        outfile->Printf("\n  Step lengths after zooming stage: low = %.10f, high = %.10f", step_low,
-                        step_high);
+        outfile->Printf("\n    Step lengths after zooming stage: low = %.10f, high = %.10f",
+                        step_low, step_high);
     }
 
     if (step > param_->max_step) {
         if (param_->print > 1)
-            outfile->Printf("\n  Step length > max allowed value. Use max allowed value.");
+            outfile->Printf("\n    Step length > max allowed value. Use max allowed value.");
         step = param_->max_step;
     }
 
     if (step < param_->min_step) {
         if (param_->print > 1)
-            outfile->Printf("\n  Step length < min allowed value. Use min allowed value.");
+            outfile->Printf("\n    Step length < min allowed value. Use min allowed value.");
         step = param_->min_step;
     }
 }
 
-void LBFGS::apply_h0(psi::SharedVector q) {
+void LBFGS::apply_h0(psi::Vector& q) {
     if (param_->h0_freq < 0) {
         double gamma = compute_gamma();
         if (param_->print > 2)
-            outfile->Printf("\n  gamma for H0: %.15f", gamma);
-
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int i = 0; i < dimpi_[h]; ++i) {
-                q->set(h, i, q->get(h, i) * gamma);
-            }
-        }
+            outfile->Printf("\n    gamma for H0: %.15f", gamma);
+        q.scale(gamma);
     } else {
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < dimpi_[h]; ++i) {
                 double vh = h0_->get(h, i);
                 if (std::fabs(vh) > 1.0e-12) {
-                    q->set(h, i, q->get(h, i) / vh);
+                    q.set(h, i, q.get(h, i) / vh);
                 } else {
                     if (param_->print > 1) {
-                        outfile->Printf("\n  Zero diagonal Hessian element (irrep: %d, i: %d)", h, i);
+                        outfile->Printf("\n    Zero diagonal Hessian element (irrep: %d, i: %d)", h,
+                                        i);
                     }
                 }
             }
@@ -404,16 +413,16 @@ void LBFGS::apply_h0(psi::SharedVector q) {
 
 double LBFGS::compute_gamma() {
     double value = 1.0;
-    if (iter_) {
-        int end = (iter_ - 1) % (std::min(iter_, param_->m));
-        value = s_[end]->vector_dot(y_[end]) / y_[end]->vector_dot(y_[end]);
+    if (iter_ - iter_shift_) {
+        int end = (iter_ - iter_shift_ - 1) % (std::min(iter_ - iter_shift_, param_->m));
+        value = s_[end]->vector_dot(*y_[end]) / y_[end]->vector_dot(*y_[end]);
     }
     return value;
 }
 
 void LBFGS::resize(int m) {
-    y_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>());
-    s_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>());
+    y_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>(0));
+    s_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>(0));
     alpha_.resize(m);
     rho_.resize(m);
 }
@@ -421,6 +430,7 @@ void LBFGS::resize(int m) {
 void LBFGS::reset() {
     resize(param_->m);
     iter_ = 0;
+    iter_shift_ = 0;
 }
 
 template double LBFGS::minimize(ROSENBROCK& func, psi::SharedVector x);

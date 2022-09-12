@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -42,15 +42,14 @@ namespace forte {
 /**
  * @brief The SparseFactExp class
  * This class implements an algorithm to apply the exponential of an operator to a state
- * 
+ *
  *    |state> -> exp(op) |state>
- * 
+ *
  */
 class SparseExp {
     enum class Algorithm { Cached, OnTheFlySorted, OnTheFlyStd };
 
   public:
-
     /// @brief Compute the exponential applied to a state via a Taylor expansion
     ///
     ///             exp(op) |state>
@@ -64,14 +63,14 @@ class SparseExp {
     /// @param sop the operator. Each term in this operator is applied in the order provided
     /// @param state the state to which the factorized exponential will be applied
     /// @param algorithm the algorithm used to compute the exponential. If algorithm = "onthefly"
-    /// this function will compute the factorized exponential using an on-the-fly implementation (slow).
-    /// If algorithm = "cached", a cached approach is used.
-    /// @param scaling_factor A scalar factor that multiplies the operator exponentiated. If set to -1.0
-    /// it allows to compute the inverse of the exponential exp(-op)
+    /// this function will compute the factorized exponential using an on-the-fly implementation
+    /// (slow). If algorithm = "cached", a cached approach is used.
+    /// @param scaling_factor A scalar factor that multiplies the operator exponentiated. If set to
+    /// -1.0 it allows to compute the inverse of the exponential exp(-op)
     /// @param maxk the maximum power of op used in the Taylor expansion of exp(op)
-    /// @param screen_thresh a threshold to select which elements of the operator applied to the state.
-    /// An operator in the form exp(t ...), where t is an amplitude, will be applied to a determinant
-    /// Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
+    /// @param screen_thresh a threshold to select which elements of the operator applied to the
+    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
+    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
     StateVector compute(const SparseOperator& sop, const StateVector& state,
                         const std::string& algorithm = "cached", double scaling_factor = 1.0,
                         int maxk = 19, double screen_thresh = 1.0e-12);
@@ -88,7 +87,6 @@ class SparseExp {
                                       double screen_thresh);
     StateVector apply_operator_std(const SparseOperator& sop, const StateVector& state0,
                                    double screen_thresh);
-
 
     std::map<std::string, double> timings_;
     DeterminantHashVec exp_hash_;

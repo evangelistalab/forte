@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -70,9 +70,9 @@ using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
  * This class stores operators in the following canonical form
  *     a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
  *     alpha creation   beta creation    beta annihilation  alpha annihilation
- * 
+ *
  * with indices sorted as
- * 
+ *
  *     (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
  *
  * The creation and annihilation operators are stored separately as bit arrays
@@ -84,21 +84,20 @@ class SQOperator {
 
     /**
      * @brief Create a second quantized operator
-     * 
+     *
      * @param ops a vector of triplets (is_creation, is_alpha, orb) that specify
-     *        the second quantized operators  
+     *        the second quantized operators
      * @param coefficient of the coefficient associated with this operator
-     * @param allow_reordering if true this function will reorder all terms and put them in canonical
-     *        order adjusting the coefficient to account for the number of permutations.
-     *        If set to false, this function will only accept operators that are already in the 
-     *        canonical order
+     * @param allow_reordering if true this function will reorder all terms and put them in
+     * canonical order adjusting the coefficient to account for the number of permutations. If set
+     * to false, this function will only accept operators that are already in the canonical order
      */
     SQOperator(const op_tuple_t& ops, double coefficient = 0.0, bool allow_reordering = false);
     /// @return the numerical coefficient associated with this operator
     double coefficient() const;
     /// @return a Determinant object that represents the creation operators
     const Determinant& cre() const;
-    /// @return a Determinant object that represents the annihilation operators    
+    /// @return a Determinant object that represents the annihilation operators
     const Determinant& ann() const;
     /// @param value set the coefficient associated with this operator
     void set_coefficient(double& value);

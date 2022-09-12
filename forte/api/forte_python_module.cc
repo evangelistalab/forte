@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -48,9 +48,7 @@
 #include "integrals/make_integrals.h"
 
 #include "orbital-helpers/aosubspace.h"
-#include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
-#include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/orbital_embedding.h"
 #include "orbital-helpers/fragment_projector.h"
 
@@ -72,7 +70,6 @@ using namespace pybind11::literals;
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
-void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
@@ -84,6 +81,7 @@ void export_SparseCISolver(py::module& m);
 void export_ForteCubeFile(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
+void export_SemiCanonical(py::module& m);
 
 void set_master_screen_threshold(double value);
 double get_master_screen_threshold();
@@ -107,9 +105,16 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Compute the weighted average reference")
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
              "Set the active space integrals manually")
-        .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs)
-        .def("state_filename_map", &ActiveSpaceSolver::state_filename_map)
-        .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function);
+        .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
+             "Set unitary matrices for changing orbital basis in RDMs when computing dipoles")
+        .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs,
+             "Compute the oscillator strength assuming using same orbitals")
+        .def("state_ci_wfn_map", &ActiveSpaceSolver::state_ci_wfn_map,
+             "Return a map from StateInfo to CI wave functions (DeterminantHashVec, eigenvectors)")
+        .def("state_filename_map", &ActiveSpaceSolver::state_filename_map,
+             "Return a map from StateInfo to wave function file names")
+        .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function,
+             "Dump wave functions to disk");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
@@ -148,7 +153,12 @@ void export_Symmetry(py::module& m) {
 }
 
 // TODO: export more classes using the function above
-PYBIND11_MODULE(forte, m) {
+PYBIND11_MODULE(_forte, m) {
+
+    // This line is how pb11 knows what pieces of ambit have already been exposed,
+    // and can be sent Py-side by Forte.
+    py::module::import("ambit");
+
     m.doc() = "pybind11 Forte module"; // module docstring
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
@@ -220,7 +230,7 @@ PYBIND11_MODULE(forte, m) {
 
     m.def(
         "spinorbital_rdms",
-        [](RDMs& rdms) {
+        [](std::shared_ptr<RDMs> rdms) {
             auto sordms = spinorbital_rdms(rdms);
             std::vector<py::array_t<double>> pysordms;
             for (const auto& sordm : sordms) {
@@ -232,7 +242,7 @@ PYBIND11_MODULE(forte, m) {
 
     m.def(
         "spinorbital_cumulants",
-        [](RDMs& rdms) {
+        [](std::shared_ptr<RDMs> rdms) {
             auto sordms = spinorbital_cumulants(rdms);
             std::vector<py::array_t<double>> pysordms;
             for (const auto& sordm : sordms) {
@@ -242,8 +252,6 @@ PYBIND11_MODULE(forte, m) {
         },
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
-
-    export_ambit(m);
 
     export_ForteOptions(m);
 
@@ -257,6 +265,7 @@ PYBIND11_MODULE(forte, m) {
     export_Symmetry(m);
     export_OrbitalTransform(m);
     export_Localize(m);
+    export_SemiCanonical(m);
 
     export_Determinant(m);
 
@@ -307,19 +316,6 @@ PYBIND11_MODULE(forte, m) {
         .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
         .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
 
-    // export SemiCanonical
-    py::class_<SemiCanonical>(m, "SemiCanonical")
-        .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<ForteOptions>, bool>(),
-             "mo_space_info"_a, "ints"_a, "options"_a, "quiet_banner"_a = false)
-        .def("semicanonicalize", &SemiCanonical::semicanonicalize, "reference"_a,
-             "max_rdm_level"_a = 3, "build_fock"_a = true, "transform"_a = true,
-             "Semicanonicalize the orbitals and transform the integrals and reference")
-        .def("transform_rdms", &SemiCanonical::transform_rdms, "Ua"_a, "Ub"_a, "reference"_a,
-             "max_rdm_level"_a, "Transform the RDMs by input rotation matrices")
-        .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
-        .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
-
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
@@ -331,6 +327,10 @@ PYBIND11_MODULE(forte, m) {
              "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
+             "Set the pointer of ActiveSpaceSolver")
+        .def("set_state_weights_map", &MASTER_DSRG::set_state_weights_map,
+             "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
@@ -343,6 +343,10 @@ PYBIND11_MODULE(forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_active_space_solver", &SADSRG::set_active_space_solver,
+             "Set the pointer of ActiveSpaceSolver")
+        .def("set_state_weights_map", &SADSRG::set_state_weights_map,
+             "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
@@ -366,8 +370,8 @@ PYBIND11_MODULE(forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals");
 
     py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
-        .def(py::init<RDMs, std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<MOSpaceInfo>>())
+        .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>,
+                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
         .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
 
     // export DressedQuantity for dipole moments

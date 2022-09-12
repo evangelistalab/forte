@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -28,11 +28,9 @@
 
 #include <algorithm>
 #include <numeric>
-#include <iomanip>
 #include <tuple>
 
 #include "psi4/psi4-dec.h"
-#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 
@@ -59,11 +57,20 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
       mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
     print_options();
 
-    ms_avg_ = options->get_bool("SPIN_AVG_DENSITY");
     print_ = options->get_int("PRINT");
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
+
+    auto nactv = mo_space_info_->size("ACTIVE");
+    Ua_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nactv, nactv});
+    Ub_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nactv, nactv});
+    auto& Ua_data = Ua_actv_.data();
+    auto& Ub_data = Ub_actv_.data();
+    for (size_t i = 0; i < nactv; ++i) {
+        Ua_data[i * nactv + i] = 1.0;
+        Ub_data[i * nactv + i] = 1.0;
+    }
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -87,15 +94,6 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_r_convergence(r_convergence_);
         state_method_map_[state] = method;
 
-        int twice_ms = state.twice_ms();
-        if (twice_ms < 0 and ms_avg_) {
-            psi::outfile->Printf("\n  Continue to the next symmetry block: No need to find the "
-                                 "solution for ms = %d / 2 < 0.",
-                                 twice_ms);
-            method->set_wfn_filename(""); // empty filename for ms < 0
-            continue;
-        }
-
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();
             method->set_read_wfn_guess(read_initial_guess_);
@@ -109,20 +107,14 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         // check that the effective values of S are within a given tolerance
         validate_spin(spin2, state);
         state_spin2_map_[state] = spin2;
-
-        // save energies for ms < 0 states (same in energy as ms > 0) to ensure correct averaging
-        if (twice_ms > 0 and ms_avg_) {
-            StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
-                                 state.irrep(), state.irrep_label(), state.gas_min(),
-                                 state.gas_max());
-            state_energies_map_[state_spin] = energies;
-            state_spin2_map_[state_spin] = spin2;
-        }
     }
     print_energies();
 
-    if (options_->get_bool("TRANSITION_DIPOLES")) {
-        compute_fosc_same_orbs();
+    if (as_ints_->ints()->integral_type() != Custom) {
+        compute_dipole_moment();
+        if (options_->get_bool("TRANSITION_DIPOLES")) {
+            compute_fosc_same_orbs();
+        }
     }
 
     return state_energies_map_;
@@ -158,9 +150,6 @@ void ActiveSpaceSolver::print_energies() {
         int multi = state.multiplicity();
         int nstates = state_nroot.second;
         int twice_ms = state.twice_ms();
-        if (twice_ms < 0 and ms_avg_) {
-            continue;
-        }
 
         for (int i = 0; i < nstates; ++i) {
             double energy = state_energies_map_[state][i];
@@ -195,6 +184,21 @@ void ActiveSpaceSolver::print_energies() {
     }
 }
 
+void ActiveSpaceSolver::compute_dipole_moment() {
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& [state, nroots] = state_nroots;
+        const auto& method = state_method_map_[state];
+
+        // prepare root list
+        std::vector<std::pair<size_t, size_t>> root_list;
+        for (size_t i = 0; i < nroots; ++i) {
+            root_list.emplace_back(i, i);
+        }
+
+        method->compute_permanent_dipole(root_list, Ua_actv_, Ub_actv_);
+    }
+}
+
 void ActiveSpaceSolver::compute_fosc_same_orbs() {
     // assume SAME set of orbitals!!!
 
@@ -213,56 +217,38 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
             size_t nroot2 = state_nroots_map_[state2];
             const auto& method2 = state_method_map_[state2];
 
-            // skip negative ms if doing ms averaging
-            if (ms_avg_ and (state1.twice_ms() < 0 or state2.twice_ms() < 0))
-                continue;
-
             // skip different multiplicity (no spin-orbit coupling)
-            if (state1.multiplicity() != state2.multiplicity()) {
+            if (state1.multiplicity() != state2.multiplicity())
                 continue;
-            } else {
-                if (M != N and ms_avg_) {
-                    // skip same multiplicity but different Ms (no spin-orbit coupling)
-                    std::tuple<int, int, int, std::vector<size_t>, std::vector<size_t>> set1{
-                        state1.na(), state1.nb(), state1.irrep(), state1.gas_min(),
-                        state1.gas_max()};
-                    std::tuple<int, int, int, std::vector<size_t>, std::vector<size_t>> set2{
-                        state2.na(), state2.nb(), state2.irrep(), state2.gas_min(),
-                        state2.gas_max()};
-                    if (set1 == set2 and state1.twice_ms() != state2.twice_ms()) {
-                        continue;
-                    }
-                }
-            }
 
             // prepare list of root pairs
             std::vector<std::pair<size_t, size_t>> state_ids;
             if (M == N) {
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = i + 1; j < nroot2; ++j) {
-                        state_ids.push_back({i, j});
+                        state_ids.emplace_back(i, j);
                     }
                 }
             } else {
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = 0; j < nroot2; ++j) {
-                        state_ids.push_back({i, j});
+                        state_ids.emplace_back(i, j);
                     }
                 }
             }
-            if (state_ids.size() == 0)
+            if (state_ids.empty())
                 continue;
 
             // compute oscillator strength
-            method1->compute_oscillator_strength_same_orbs(state_ids, method2);
+            method1->compute_oscillator_strength_same_orbs(state_ids, method2, Ua_actv_, Ub_actv_);
         }
     }
 }
 
-std::vector<RDMs> ActiveSpaceSolver::rdms(
+std::vector<std::shared_ptr<RDMs>> ActiveSpaceSolver::rdms(
     std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
-    int max_rdm_level) {
-    std::vector<RDMs> refs;
+    int max_rdm_level, RDMsType rdm_type) {
+    std::vector<std::shared_ptr<RDMs>> refs;
 
     for (const auto& element : elements) {
         const auto& state1 = element.first.first;
@@ -270,11 +256,11 @@ std::vector<RDMs> ActiveSpaceSolver::rdms(
 
         if (state1 != state2) {
             throw std::runtime_error("ActiveSpaceSolver::reference called with states of different "
-                                     "symmetry! This function is not yet suported in Forte.");
+                                     "symmetry! This function is not yet supported in Forte.");
         }
 
-        std::vector<RDMs> state_refs =
-            state_method_map_[state1]->rdms(element.second, max_rdm_level);
+        std::vector<std::shared_ptr<RDMs>> state_refs =
+            state_method_map_[state1]->rdms(element.second, max_rdm_level, rdm_type);
         for (const auto& state_ref : state_refs) {
             refs.push_back(state_ref);
         }
@@ -334,6 +320,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     std::map<StateInfo, std::vector<double>> state_weights_map;
 
     // make a StateInfo object using the information from psi4
+    // TODO: need to optimize for spin-free RDMs
     auto state = make_state_info_from_psi(options); // assumes low-spin
 
     // check if the user provided a AVG_STATE list
@@ -379,7 +366,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         state_weights_map[state_this] = weights;
     } else {
         double sum_of_weights = 0.0;
-        size_t nstates = 0;
         size_t nentry = avg_state.size();
         for (size_t i = 0; i < nentry; ++i) {
             py::list avg_state_list = avg_state[i];
@@ -420,7 +406,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
             std::vector<double> weights;
             py::list avg_weight = options->get_gen_list("AVG_WEIGHT");
-            if (avg_weight.size() == 0) {
+            if (avg_weight.empty()) {
                 // use equal weights
                 weights = std::vector<double>(nstates_this, 1.0);
             } else {
@@ -457,7 +443,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                     options->get_int_list("GAS" + std::to_string(gasn + 1) + "MIN");
                 auto gas_space_max =
                     options->get_int_list("GAS" + std::to_string(gasn + 1) + "MAX");
-                if (gas_space_min.size() > 0) {
+                if (!gas_space_min.empty()) {
                     if (i >= gas_space_min.size()) {
                         std::string msg = "\n  Error: GAS" + std::to_string(gasn + 1) +
                                           "MIN has an incorrect size";
@@ -466,7 +452,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                     }
                     gas_min[gasn] = gas_space_min[i];
                 }
-                if (gas_space_max.size() > 0) {
+                if (!gas_space_max.empty()) {
                     if (i >= gas_space_max.size()) {
                         std::string msg = "\n  Error: GAS" + std::to_string(gasn + 1) +
                                           "MAX has an incorrect size";
@@ -480,7 +466,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
                                  irrep_label, gas_min, gas_max);
             state_weights_map[state_this] = weights;
-            nstates += nstates_this;
         }
 
         // normalize weights
@@ -504,84 +489,16 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
         };
 
-    // If not average over ms, directly return
-    if (not options->get_bool("SPIN_AVG_DENSITY")) {
-        if (options->get_int("PRINT") > 1) {
-            print_state_weights_map(state_weights_map);
-        }
-        return state_weights_map;
-    }
-
-    // If we average over ms, then each multiplet will be considered as a "state".
-    // The weight will be divided by its multiplicity.
-    // For example, a triplet state will be treated as [1, 0, -1] each of weight 1/3.
-
-    std::map<StateInfo, std::vector<double>> state_weights_map_ms_avg;
-
-    for (const auto& state_weights : state_weights_map) {
-        const auto& state = state_weights.first;
-        const auto& weights = state_weights.second;
-
-        auto multiplicity = state.multiplicity();
-        auto irrep = state.irrep();
-        auto irrep_label = state.irrep_label();
-        auto nele = state.na() + state.nb();
-
-        int max_twice_ms = multiplicity - 1;
-        for (int i = max_twice_ms; i >= -max_twice_ms; i -= 2) {
-            int na = (nele + i) / 2;
-            StateInfo state_ms(na, nele - na, multiplicity, i, irrep, irrep_label, state.gas_min(),
-                               state.gas_max());
-            std::vector<double> weights_ms(weights);
-            std::transform(weights_ms.begin(), weights_ms.end(), weights_ms.begin(),
-                           [multiplicity](auto& w) { return w / multiplicity; });
-
-            state_weights_map_ms_avg[state_ms] = weights_ms;
-        }
-    }
-
     if (options->get_int("PRINT") > 1) {
-        print_state_weights_map(state_weights_map_ms_avg);
+        print_state_weights_map(state_weights_map);
     }
-
-    return state_weights_map_ms_avg;
+    return state_weights_map;
 }
 
-RDMs ActiveSpaceSolver::compute_average_rdms(
-    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
-
-    if (ms_avg_) {
-        return compute_avg_rdms_ms_avg(state_weights_map, max_rdm_level);
-    }
-
-    return compute_avg_rdms(state_weights_map, max_rdm_level);
-}
-
-RDMs ActiveSpaceSolver::compute_avg_rdms(
-    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
-    if (max_rdm_level <= 0) {
-        return RDMs();
-    }
-
-    size_t na = mo_space_info_->size("ACTIVE");
-
-    auto g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {na, na});
-    auto g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {na, na});
-
-    ambit::Tensor g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
-
-    if (max_rdm_level >= 2) {
-        g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, na));
-        g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, na));
-        g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, na));
-    }
-
-    if (max_rdm_level >= 3) {
-        g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, na));
-        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, na));
-        g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, na));
-        g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, na));
-    }
+std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
+    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level,
+    RDMsType rdm_type) {
+    auto rdms = RDMs::build(max_rdm_level, mo_space_info_->size("ACTIVE"), rdm_type);
 
     // Loop through references, add to master ref
     for (const auto& state_nroot : state_nroots_map_) {
@@ -594,133 +511,36 @@ RDMs ActiveSpaceSolver::compute_avg_rdms(
 
         // Loop through roots in the method
         for (size_t r = 0; r < nroot; r++) {
-
-            // Get the weight
-            double weight = weights[r];
-
             // Don't bother if the weight is zero
-            if (weight <= 1e-15)
+            if (weights[r] <= 1e-15)
                 continue;
 
             // Get the RDMs
             std::vector<std::pair<size_t, size_t>> state_ids;
-            state_ids.push_back(std::make_pair(r, r));
-            RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
+            state_ids.emplace_back(r, r);
+            auto method_rdms = method->rdms(state_ids, max_rdm_level, rdm_type)[0];
 
-            // Average the RDMs
-            g1a("pq") += weight * method_rdms.g1a()("pq");
-            g1b("pq") += weight * method_rdms.g1b()("pq");
-
-            if (max_rdm_level >= 2) {
-                g2aa("pqrs") += weight * method_rdms.g2aa()("pqrs");
-                g2ab("pqrs") += weight * method_rdms.g2ab()("pqrs");
-                g2bb("pqrs") += weight * method_rdms.g2bb()("pqrs");
-            }
-
-            if (max_rdm_level >= 3) {
-                g3aaa("pqrstu") += weight * method_rdms.g3aaa()("pqrstu");
-                g3aab("pqrstu") += weight * method_rdms.g3aab()("pqrstu");
-                g3abb("pqrstu") += weight * method_rdms.g3abb()("pqrstu");
-                g3bbb("pqrstu") += weight * method_rdms.g3bbb()("pqrstu");
-            }
+            // Add contributions
+            rdms->axpy(method_rdms, weights[r]);
         }
     }
 
-    if (max_rdm_level == 1) {
-        return RDMs(g1a, g1b);
-    }
-
-    if (max_rdm_level == 2) {
-        return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
-    }
-
-    return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+    return rdms;
 }
 
-RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
-    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
-    if (max_rdm_level <= 0) {
-        return RDMs();
+std::map<StateInfo, std::vector<double>>
+ActiveSpaceSolver::compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket) {
+    std::map<StateInfo, std::vector<double>> out;
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& state = state_nroots.first;
+
+        std::vector<size_t> roots(state_nroots.second);
+        std::iota(roots.begin(), roots.end(), 0);
+
+        const auto method = state_method_map_.at(state);
+        out[state] = method->compute_complementary_H2caa_overlap(roots, Tbra, Tket);
     }
-
-    size_t na = mo_space_info_->size("ACTIVE");
-
-    auto g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {na, na});
-
-    ambit::Tensor g2ab, g3aab;
-
-    if (max_rdm_level >= 2) {
-        g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, na));
-    }
-
-    if (max_rdm_level >= 3) {
-        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, na));
-    }
-
-    // Loop through references, add to master ref
-    for (const auto& state_nroot : state_nroots_map_) {
-        const auto& state = state_nroot.first;
-        size_t nroot = state_nroot.second;
-        const auto& weights = state_weights_map.at(state);
-
-        int twice_ms = state.twice_ms();
-        if (twice_ms < 0) {
-            continue;
-        }
-
-        // Get the already-run method
-        const auto& method = state_method_map_.at(state);
-
-        // Loop through roots in the method
-        for (size_t r = 0; r < nroot; r++) {
-
-            // Get the weight
-            double weight = weights[r];
-
-            // Don't bother if the weight is zero
-            if (weight <= 1e-15)
-                continue;
-
-            // Get the RDMs
-            std::vector<std::pair<size_t, size_t>> state_ids;
-            state_ids.push_back(std::make_pair(r, r));
-            RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
-
-            // Average the RDMs
-            g1a("pq") += weight * method_rdms.g1a()("pq");
-
-            if (max_rdm_level >= 2) {
-                g2ab("pqrs") += weight * method_rdms.g2ab()("pqrs");
-            }
-
-            if (max_rdm_level >= 3) {
-                g3aab("pqrstu") += weight * method_rdms.g3aab()("pqrstu");
-            }
-
-            // add ms < 0 components
-            if (twice_ms > 0) {
-                g1a("pq") += weight * method_rdms.g1b()("pq");
-
-                if (max_rdm_level >= 2) {
-                    g2ab("pqrs") += weight * method_rdms.g2ab()("qpsr");
-                }
-
-                if (max_rdm_level >= 3) {
-                    g3aab("pqrstu") += weight * method_rdms.g3abb()("rpqust");
-                }
-            }
-        }
-    }
-
-    if (max_rdm_level == 1) {
-        return RDMs(true, g1a);
-    }
-
-    if (max_rdm_level == 2) {
-        return RDMs(true, g1a, g2ab);
-    }
-
-    return RDMs(true, g1a, g2ab, g3aab);
+    return out;
 }
 
 void ActiveSpaceSolver::dump_wave_function() {
@@ -730,6 +550,14 @@ void ActiveSpaceSolver::dump_wave_function() {
         state_method_map_[state]->set_dump_wfn(true);
         state_method_map_[state]->dump_wave_function(state_filename.second);
     }
+}
+
+std::map<StateInfo, psi::SharedMatrix> ActiveSpaceSolver::state_ci_wfn_map() const {
+    std::map<StateInfo, psi::SharedMatrix> out;
+    for (const auto& pair : state_method_map_) {
+        out[pair.first] = pair.second->ci_wave_functions();
+    }
+    return out;
 }
 
 const std::map<StateInfo, std::vector<double>>&
@@ -759,6 +587,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
     // TODO: check three-body integrals available or not
     //    bool do_three_body = (max_body_ == 3 and max_rdm_level_ == 3) ? true : false;
 
+    // TODO: adapt DressedQuantity for spin-free RDMs
     DressedQuantity ints(0.0, oei_a, oei_b, tei_aa, tei_ab, tei_bb);
 
     for (const auto& state_nroots : state_nroots_map_) {
@@ -766,11 +595,6 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
         size_t nroots = state_nroots.second;
         std::string state_name = state.multiplicity_label() + " " + state.irrep_label();
         auto method = state_method_map_.at(state);
-
-        int twice_ms = state.twice_ms();
-        if (twice_ms < 0 and ms_avg_) {
-            continue;
-        }
 
         // form the Hermitian effective Hamiltonian
         print_h2("Building Effective Hamiltonian for " + state_name);
@@ -780,7 +604,8 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
             for (size_t B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                RDMs rdms = method->rdms(root_list, max_rdm_level)[0];
+                std::shared_ptr<RDMs> rdms =
+                    method->rdms(root_list, max_rdm_level, RDMsType::spin_dependent)[0];
 
                 double H_AB = ints.contract_with_rdms(rdms);
                 if (A == B) {
@@ -808,15 +633,6 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
         }
         state_energies_map_[state] = energies;
         state_contracted_evecs_map_[state] = std::make_shared<psi::Matrix>(U);
-
-        // save energies for ms < 0 states (same in energy as ms > 0) to ensure correct averaging
-        if (twice_ms > 0 and ms_avg_) {
-            StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
-                                 state.irrep(), state.irrep_label(), state.gas_min(),
-                                 state.gas_max());
-            state_energies_map_[state_spin] = energies;
-            state_contracted_evecs_map_[state_spin] = std::make_shared<psi::Matrix>(U);
-        }
     }
 
     print_energies();

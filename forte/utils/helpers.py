@@ -213,7 +213,7 @@ def prepare_forte_objects(
     if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(
             wfn.molecule(), 'DF_BASIS_MP2', psi4.core.get_global_option('DF_BASIS_MP2'), 'RIFIT',
-            psi4.core.get_global_option('BASIS')
+            psi4.core.get_global_option('BASIS'), puream=wfn.basisset().has_puream()
         )
         wfn.set_basisset('DF_BASIS_MP2', aux_basis)
 
@@ -263,12 +263,13 @@ def prepare_forte_objects(
     }
 
 
-def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3):
+def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_dependent):
     """
     Preparation step for DSRG: compute a CAS and its RDMs.
     :param wfn: reference wave function from psi4
     :param mo_spaces: a dictionary {mo_space: occupation}, e.g., {'ACTIVE': [0,0,0,0]}
     :param rdm_level: max RDM to be computed
+    :param rdm_type: RDMs type: spin_dependent or spin_free
     :return: a tuple of (reference energy, MOSpaceInfo, ForteIntegrals, RDMs)
     """
 
@@ -298,7 +299,7 @@ def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3):
     Eref = forte.compute_average_state_energy(state_energies_list, state_weights_map)
 
     # compute RDMs
-    rdms = as_solver.compute_average_rdms(state_weights_map, rdm_level)
+    rdms = as_solver.compute_average_rdms(state_weights_map, rdm_level, rdm_type)
 
     # semicanonicalize orbitals
     semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options)

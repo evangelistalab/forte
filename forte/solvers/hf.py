@@ -4,7 +4,8 @@ from forte.solvers.feature import Feature
 from forte.solvers.solver import Solver
 
 from forte.model import MolecularModel
-from forte.forte import SCFInfo
+from forte import SCFInfo
+from forte.core import clean_options
 
 
 class HF(Solver):
@@ -132,7 +133,7 @@ class HF(Solver):
         import psi4
 
         # reset psi4's options to avoid pollution
-        psi4.core.clean_options()
+        clean_options()
 
         # currently limited to molecules
         if not isinstance(self.data.model, MolecularModel):
@@ -178,7 +179,7 @@ class HF(Solver):
 
         full_options = {**options, **self._options}
 
-        # set the options
+        # send user options to psi4
         psi4.set_options(full_options)
 
         # pipe output to the file self._output_file

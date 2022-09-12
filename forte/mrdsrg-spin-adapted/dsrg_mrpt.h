@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,7 +30,6 @@
 #define _dsrg_mrpt_h_
 
 #include <cmath>
-
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
@@ -59,8 +58,9 @@ class DSRG_MRPT : public DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+              std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~DSRG_MRPT();

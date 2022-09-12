@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -188,6 +188,8 @@ class MOSpaceInfo {
     const std::vector<std::string>& space_names() const;
     /// @return The names of the composite orbital spaces
     std::map<std::string, std::vector<std::string>> composite_space_names() const;
+    /// @return The names of nonempty GAS spaces
+    std::vector<std::string> nonempty_gas_spaces() const;
     /// @return The number of orbitals in a space
     size_t size(const std::string& space) const;
     /// @return The psi::Dimension object for space
@@ -202,6 +204,8 @@ class MOSpaceInfo {
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> relative_mo(const std::string& space) const;
+    /// @return True if the space is contained in a larger composite space
+    bool contained_in_space(const std::string& space, const std::string& composite_space) const;
     /// @return The position of the orbitals in a space in a larger composite space
     std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
     /// @return The psi::Slice for a space counting started at absolute zero

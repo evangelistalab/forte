@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -27,6 +27,7 @@
  */
 
 #include <ctype.h>
+#include <numeric>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
@@ -42,8 +43,9 @@
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libpsio/psio.hpp"
 
-#include "helpers/printing.h"
+#include "helpers/helpers.h"
 #include "helpers/lbfgs/lbfgs.h"
+#include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
@@ -133,7 +135,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
 
     // in Pitzer ordering
     mos_rel_space_.resize(nmo_);
-    for (std::string space : {"f", "c", "a", "v", "u"}) {
+    for (const std::string& space : {"f", "c", "a", "v", "u"}) {
         const auto& mos = label_to_mos_[space];
         for (size_t p = 0, size = mos.size(); p < size; ++p) {
             mos_rel_space_[mos[p]] = std::make_pair(space, p);
@@ -154,32 +156,23 @@ void CASSCF_ORB_GRAD::setup_mos() {
     BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
     BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v", "u"});
 
-    // test if we are doing GAS
-    gas_ref_ = true;
-    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
-    for (const std::string& gas_name : gas_spaces) {
-        if (mo_space_info_->dimension(gas_name) == nactvpi_) {
-            gas_ref_ = false;
-            break;
-        }
-    }
+    // if we are doing GAS
+    gas_ref_ = mo_space_info_->nonempty_gas_spaces().size() > 1;
 }
 
 void CASSCF_ORB_GRAD::read_options() {
     print_ = options_->get_int("PRINT");
     debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
-    g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
-
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
 
-    orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
+    ortho_trans_algo_ = options_->get_str("CASSCF_ORB_ORTHO_TRANS");
 
     // zero rotations
     zero_rots_.resize(nirrep_);
     auto zero_rots = options_->get_gen_list("CASSCF_ZERO_ROT");
 
-    if (zero_rots.size() != 0) {
+    if (not zero_rots.empty()) {
         for (size_t i = 0, npairs = zero_rots.size(); i < npairs; ++i) {
             py::list pair = zero_rots[i];
             if (pair.size() != 3) {
@@ -214,9 +207,8 @@ void CASSCF_ORB_GRAD::read_options() {
 
     auto frza_rot = options_->get_int_list("CASSCF_ACTIVE_FROZEN_ORBITAL");
     auto actv_rel_mos = mo_space_info_->relative_mo("ACTIVE");
-    if (frza_rot.size() != 0) {
-        for (size_t i = 0, size = frza_rot.size(); i < size; ++i) {
-            size_t u = frza_rot[i];
+    if (not frza_rot.empty()) {
+        for (size_t u : frza_rot) {
             if (u >= nactv_) {
                 outfile->Printf("\n  Error: invalid indices in CASSCF_ACTIVE_FROZEN_ORBITAL.");
                 outfile->Printf("\n  Active orbitals include all of those in GAS1-GAS6");
@@ -235,7 +227,7 @@ void CASSCF_ORB_GRAD::read_options() {
         }
     }
 
-    if (debug_print_ and zero_rots_.size()) {
+    if (debug_print_ and !zero_rots_.empty()) {
         print_h2("Orbital Rotations Ignored (User Defined)");
         outfile->Printf("\n    Both irrep and indices are zero-based.\n");
         for (int h = 0; h < nirrep_; ++h) {
@@ -287,51 +279,47 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
                 if (in_zero_rots(hi, ni, nj))
                     continue;
 
-                rot_mos_irrep_.push_back(std::make_tuple(hi, ni, nj));
-                rot_mos_block_.push_back(std::make_tuple(block, i, j));
+                rot_mos_irrep_.emplace_back(hi, ni, nj);
+                rot_mos_block_.emplace_back(block, i, j);
                 nrots[block][hi] += 1;
             }
         }
     }
 
     // GASm-GASn with m != n rotations
-    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+    auto gas_spaces = mo_space_info_->nonempty_gas_spaces();
     if (gas_ref_) {
         const auto& mos = label_to_mos_["a"];
 
         // loop over GASm spaces
         for (int g0 = 0, space_size = gas_spaces.size(); g0 < space_size; ++g0) {
-            if (mo_space_info_->size(gas_spaces[g0]) == 0)
-                continue;
             auto g0_in_actv = mo_space_info_->pos_in_space(gas_spaces[g0], "ACTIVE");
 
             // loop over GASn spaces
             for (int g1 = g0 + 1; g1 < space_size; ++g1) {
-                if (mo_space_info_->size(gas_spaces[g1]) == 0)
-                    continue;
                 auto g1_in_actv = mo_space_info_->pos_in_space(gas_spaces[g1], "ACTIVE");
 
-                // space name for printing, convert to 1-based GAS
-                std::string space_name = std::to_string(g0 + 1) + std::to_string(g1 + 1);
+                // space name for printing
+                std::string space_name = gas_spaces[g0].substr(3) + gas_spaces[g1].substr(3);
                 nrots[space_name] = std::vector<int>(nirrep_, 0);
 
                 // loop over indices in GASm
-                for (int u = 0, u_size = g0_in_actv.size(); u < u_size; ++u) {
-                    int hu = mos_rel_[mos[g0_in_actv[u]]].first;
-                    auto nu = mos_rel_[mos[g0_in_actv[u]]].second;
+                for (size_t u : g0_in_actv) {
+                    int hu = mos_rel_[mos[u]].first;
+                    auto nu = mos_rel_[mos[u]].second;
 
                     // loop over indices in GASn
-                    for (int v = 0, v_size = g1_in_actv.size(); v < v_size; ++v) {
-                        if (hu != mos_rel_[mos[g1_in_actv[v]]].first)
+                    for (size_t v : g1_in_actv) {
+                        if (hu != mos_rel_[mos[v]].first)
                             continue;
 
-                        auto nv = mos_rel_[mos[g1_in_actv[v]]].second;
+                        auto nv = mos_rel_[mos[v]].second;
 
                         if (in_zero_rots(hu, nu, nv))
                             continue;
 
-                        rot_mos_irrep_.push_back({hu, nv, nu});
-                        rot_mos_block_.push_back({"aa", g1_in_actv[v], g0_in_actv[u]});
+                        rot_mos_irrep_.emplace_back(hu, nv, nu);
+                        rot_mos_block_.emplace_back("aa", v, u);
                         nrots[space_name][hu] += 1;
                     }
                 }
@@ -343,16 +331,14 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     if (internal_rot_) {
         const auto& mos = label_to_mos_["a"];
 
-        for (int g = 0, space_size = gas_spaces.size(); g < space_size; ++g) {
-            if (mo_space_info_->size(gas_spaces[g]) == 0)
-                continue;
-            auto g_in_actv = mo_space_info_->pos_in_space(gas_spaces[g], "ACTIVE");
+        for (auto& gas_space : gas_spaces) {
+            auto g_in_actv = mo_space_info_->pos_in_space(gas_space, "ACTIVE");
 
             // space name for printing, convert to 1-based GAS
-            std::string space_name = std::to_string(g + 1) + std::to_string(g + 1);
+            std::string space_name = gas_space.substr(3) + gas_space.substr(3);
             nrots[space_name] = std::vector<int>(nirrep_, 0);
 
-            for (int u = 0, size = g_in_actv.size(); u < size; ++u) {
+            for (int u = 0, size = static_cast<int>(g_in_actv.size()); u < size; ++u) {
                 int hu = mos_rel_[mos[g_in_actv[u]]].first;
                 auto nu = mos_rel_[mos[g_in_actv[u]]].second;
 
@@ -365,8 +351,8 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
                     if (in_zero_rots(hu, nu, nv))
                         continue;
 
-                    rot_mos_irrep_.push_back({hu, nv, nu});
-                    rot_mos_block_.push_back({"aa", g_in_actv[v], g_in_actv[u]});
+                    rot_mos_irrep_.emplace_back(hu, nv, nu);
+                    rot_mos_block_.emplace_back("aa", g_in_actv[v], g_in_actv[u]);
                     nrots[space_name][hu] += 1;
                 }
             }
@@ -427,7 +413,7 @@ void CASSCF_ORB_GRAD::init_tensors() {
 
     std::vector<std::string> g_blocks{"ac", "vc", "va"};
     if (internal_rot_ or gas_ref_) {
-        g_blocks.push_back("aa");
+        g_blocks.emplace_back("aa");
         Guu_ = ambit::BlockedTensor::build(CoreTensor, "Guu", {"aa"});
         Guv_ = ambit::BlockedTensor::build(CoreTensor, "Guv", {"aa"});
         jk_internal_ = ambit::BlockedTensor::build(CoreTensor, "tei_internal", {"aaa"});
@@ -473,6 +459,9 @@ void CASSCF_ORB_GRAD::fill_tei_custom(ambit::BlockedTensor V) {
 }
 
 void CASSCF_ORB_GRAD::build_tei_from_ao() {
+    if (nactv_ == 0)
+        return;
+
     // This function will do an integral transformation using the JK builder,
     // and return the integrals of type <px|uy> = (pu|xy).
     timer_on("Build (pu|xy) integrals");
@@ -523,7 +512,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     Cl.clear();
     Cr.clear();
 
-    // figure out memeory bottleneck
+    // figure out memory bottleneck
     size_t mem_sys = psi::Process::environment.get_memory() * 0.85;
     size_t max_elements = nactv_ * nactv_ * nso_ * nso_ * sizeof(double);
     size_t n_buckets = max_elements / mem_sys + (max_elements % mem_sys ? 1 : 0);
@@ -545,7 +534,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     pairs.reserve(nactv_ * (nactv_ + 1) / 2);
     for (size_t x = 0; x < nactv_; ++x) {
         for (size_t y = x; y < nactv_; ++y) {
-            pairs.push_back(std::make_tuple(x, y));
+            pairs.emplace_back(x, y);
         }
     }
 
@@ -673,6 +662,19 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
     });
 }
 
+psi::SharedMatrix CASSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
+    // put spin-summed 1RDM to psi4 Matrix
+    auto rdm1 = tensor_to_matrix(rdms->SF_G1(), nactvpi_);
+
+    // use ForteIntegrals to build Fock
+    auto Ftuple = ints_->make_fock_inactive(psi::Dimension(nirrep_), ndoccpi_);
+    auto Fock = std::get<0>(Ftuple);
+    Fock->add(ints_->make_fock_active_restricted(rdm1));
+    Fock->set_name("Fock");
+
+    return Fock;
+}
+
 double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g) {
     // if need to update orbitals and integrals
     if (update_orbitals(x)) {
@@ -706,20 +708,33 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     dR->subtract(R_);
 
     // incoming x consistent with R_, no need to update orbitals
-    if (dR->rms() < 1.0e-15)
+    if (dR->absmax() < numerical_zero_)
         return false;
 
     // officially save progress of dR
     R_->add(dR);
 
+    // compute incremental step dU and test against previous step
+    psi::SharedMatrix dU;
+    if (ortho_trans_algo_ == "PADE") {
+        dU = dR->clone();
+        dU->expm(3);
+    } else if (ortho_trans_algo_ == "POWER") {
+        dU = matrix_exponential(dR, 3);
+    } else {
+        dU = cayley_trans(dR);
+    }
+    test_orbital_rotations(dU, "WARNING: Active Orbitals Different from the Previous Step");
+
     // U_new = U_old * exp(dR)
-    U_ = psi::linalg::doublet(U_, matrix_exponential(dR, 3), false, false);
+    U_ = psi::linalg::doublet(U_, dU, false, false);
     U_->set_name("Orthogonal Transformation");
 
     // update orbitals
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
-    if (ints_->integral_type() == Custom)
+    if (ints_->integral_type() == Custom) {
         ints_->update_orbitals(C_, C_);
+    }
 
     // printing
     if (debug_print_) {
@@ -732,7 +747,7 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     return true;
 }
 
-psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(psi::SharedMatrix A, int n) {
+psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(const psi::SharedMatrix& A, int n) {
     auto U = std::make_shared<psi::Matrix>("U = exp(A)", A->rowspi(), A->colspi());
     U->identity();
     U->add(A);
@@ -751,6 +766,85 @@ psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(psi::SharedMatrix A, int n
 
     U->schmidt();
     return U;
+}
+
+psi::SharedMatrix CASSCF_ORB_GRAD::cayley_trans(const psi::SharedMatrix& A) {
+    auto n = std::make_shared<psi::Matrix>("I + A / 2", A->rowspi(), A->colspi());
+    n->identity();
+
+    auto d = n->clone();
+    d->set_name("(I - A / 2)^-1");
+
+    auto a = A->clone();
+    a->scale(0.5);
+
+    n->add(a);
+    d->subtract(a);
+    d->general_invert();
+
+    auto c = psi::linalg::doublet(n, d, false, false);
+    c->set_name("(I + A / 2) (I - A / 2)^-1");
+    return c;
+}
+
+std::vector<std::tuple<int, int, int>>
+CASSCF_ORB_GRAD::test_orbital_rotations(const psi::SharedMatrix& U,
+                                        const std::string& warning_msg) {
+    // the overlap between new and old orbitals is simply U
+    // O = Cold^T S Cnew = Cold^T S Cold U = U
+    // MOM projection index: Pj = sum_{i}^{actv} O_ij
+    std::vector<std::tuple<int, int, int>> out;
+
+    for (int h = 0; h < nirrep_; ++h) {
+        std::vector<std::pair<double, int>> p;
+        for (int j = 0; j < nmopi_[h]; ++j) {
+            double sum = 0.0;
+            for (int i = 0; i < nactvpi_[h]; ++i) {
+                sum += std::fabs(U->get(h, i + ndoccpi_[h], j));
+            }
+            p.emplace_back(sum, j);
+        }
+
+        // sort the Pj in descending order
+        std::sort(p.rbegin(), p.rend());
+
+        // find are there any orbitals rotated outside active
+        std::vector<int> i_old(nactvpi_[h]);
+        std::iota(i_old.begin(), i_old.end(), ndoccpi_[h]);
+        std::vector<int> i_new;
+
+        for (int i = 0; i < nactvpi_[h]; ++i) {
+            auto j = p[i].second;
+            if (j < ndoccpi_[h] or j >= ndoccpi_[h] + nactvpi_[h]) {
+                i_new.push_back(j);
+            } else {
+                auto it = std::find(i_old.begin(), i_old.end(), j);
+                if (it != i_old.end())
+                    i_old.erase(it);
+            }
+        }
+
+        // print warning if orbitals are rotated outside active
+        for (size_t i = 0, ni = i_old.size(); i < ni; ++i) {
+            out.emplace_back(h, i_old[i], i_new[i]);
+        }
+    }
+
+    if (not out.empty()) {
+        print_h2(warning_msg, "!!!", "!!!");
+        outfile->Printf("\n    Based on projections of maximum overlap method:");
+        for (const auto& tup : out) {
+            int h, i_old, i_new;
+            std::tie(h, i_old, i_new) = tup;
+            std::string i_old_str = std::to_string(i_old) + mo_space_info_->irrep_label(h);
+            std::string i_new_str = std::to_string(i_new) + mo_space_info_->irrep_label(h);
+            std::string space = i_new < ndoccpi_[h] ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
+            outfile->Printf("\n    %9s -> %-9s %s", i_old_str.c_str(), i_new_str.c_str(),
+                            space.c_str());
+        }
+    }
+
+    return out;
 }
 
 void CASSCF_ORB_GRAD::compute_reference_energy() {
@@ -782,7 +876,7 @@ void CASSCF_ORB_GRAD::compute_orbital_grad() {
     }
 }
 
-void CASSCF_ORB_GRAD::hess_diag(psi::SharedVector, psi::SharedVector h0) {
+void CASSCF_ORB_GRAD::hess_diag(psi::SharedVector, const psi::SharedVector& h0) {
     compute_orbital_hess_diag();
     h0->copy(*hess_diag_);
 }
@@ -887,10 +981,10 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
     }
 }
 
-void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv) {
+void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, const psi::SharedVector& sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
-        std::runtime_error("Inconsistent size between SharedVector and number of rotaitons");
+        throw std::runtime_error("Inconsistent size between SharedVector and number of rotations");
     }
 
     for (size_t n = 0; n < nrot_; ++n) {
@@ -904,15 +998,14 @@ void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVect
     }
 }
 
-void CASSCF_ORB_GRAD::set_rdms(RDMs& rdms) {
+void CASSCF_ORB_GRAD::set_rdms(std::shared_ptr<RDMs> rdms) {
     // form spin-summed densities
-    D1_.block("aa").copy(rdms.g1a());
-    D1_.block("aa")("pq") += rdms.g1b()("pq");
+    D1_.block("aa").copy(rdms->SF_G1());
     format_1rdm();
 
     // change to chemists' notation
-    D2_.block("aaaa")("pqrs") = rdms.SFg2()("prqs");
-    D2_.block("aaaa")("pqrs") += rdms.SFg2()("qrps");
+    D2_.block("aaaa")("pqrs") = rdms->SF_G2()("prqs");
+    D2_.block("aaaa")("pqrs") += rdms->SF_G2()("qrps");
     D2_.scale(0.5);
 }
 
@@ -956,114 +1049,13 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
     return fci_ints;
 }
 
-void CASSCF_ORB_GRAD::canonicalize_final(psi::SharedMatrix U) {
+void CASSCF_ORB_GRAD::canonicalize_final(const psi::SharedMatrix& U) {
     U_ = psi::linalg::doublet(U_, U, false, false);
     U_->set_name("Orthogonal Transformation");
 
+    test_orbital_rotations(U_, "WARNING: Final Active Orbitals Maybe Different from the Original");
+
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
     build_mo_integrals();
-}
-
-// to be removed once SemiCanonical class has natural orbitals
-std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
-    print_h2("Canonicalize Orbitals (" + orb_type_redundant_ + ")");
-
-    // unitary rotation matrix for output
-    auto U = std::make_shared<psi::Matrix>("U_redundant", nmopi_, nmopi_);
-    U->identity();
-
-    // diagonalize sub-blocks of Fock
-    auto ncorepi = mo_space_info_->dimension("RESTRICTED_DOCC");
-    auto nvirtpi = mo_space_info_->dimension("RESTRICTED_UOCC");
-    std::vector<psi::Dimension> mos_dim{ncorepi, nvirtpi};
-    std::vector<psi::Dimension> mos_offsets{nfrzcpi_, ndoccpi_ + nactvpi_};
-    std::vector<std::string> names{"RESTRICTED_DOCC", "RESTRICTED_UOCC"};
-
-    if (orb_type_redundant_ == "CANONICAL") {
-        mos_dim.push_back(nactvpi_);
-        mos_offsets.push_back(ndoccpi_);
-        names.push_back("ACTIVE");
-    }
-
-    for (int i = 0, size = mos_dim.size(); i < size; ++i) {
-        std::string block_name = "Diagonalizing Fock block " + names[i] + " ...";
-        outfile->Printf("\n    %-44s", block_name.c_str());
-
-        auto dim = mos_dim[i];
-        auto offset_dim = mos_offsets[i];
-
-        auto Fsub = std::make_shared<psi::Matrix>("Fsub_" + names[i], dim, dim);
-
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0; p < dim[h]; ++p) {
-                size_t np = p + offset_dim[h];
-                for (int q = 0; q < dim[h]; ++q) {
-                    size_t nq = q + offset_dim[h];
-                    Fsub->set(h, p, q, Fock_->get(h, np, nq));
-                }
-            }
-        }
-
-        // test off-diagonal elements to decide if need to diagonalize this block
-        auto Fsub_od = Fsub->clone();
-        Fsub_od->zero_diagonal();
-
-        double Fsub_max = Fsub_od->absmax();
-        double Fsub_norm = std::sqrt(Fsub_od->sum_of_squares());
-
-        double threshold_max = 0.1 * g_conv_;
-        if (ints_->integral_type() == Cholesky) {
-            double cd_tlr = options_->get_double("CHOLESKY_TOLERANCE");
-            threshold_max = (threshold_max < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_max;
-        }
-        double threshold_rms = std::sqrt(dim.sum() * (dim.sum() - 1) / 2.0) * threshold_max;
-
-        // diagonalize
-        if (Fsub_max > threshold_max or Fsub_norm > threshold_rms) {
-            auto Usub = std::make_shared<psi::Matrix>("Usub_" + names[i], dim, dim);
-            auto Esub = std::make_shared<psi::Vector>("Esub_" + names[i], dim);
-            Fsub->diagonalize(Usub, Esub);
-
-            // fill in data
-            for (int h = 0; h < nirrep_; ++h) {
-                for (int p = 0; p < dim[h]; ++p) {
-                    size_t np = p + offset_dim[h];
-                    for (int q = 0; q < dim[h]; ++q) {
-                        size_t nq = q + offset_dim[h];
-                        U->set(h, np, nq, Usub->get(h, p, q));
-                    }
-                }
-            }
-        } // end if need to diagonalize
-        outfile->Printf(" Done.");
-    } // end sub block
-
-    // natural orbitals
-    if (orb_type_redundant_ == "NATURAL") {
-        std::string block_name = "Diagonalizing 1-RDM ...";
-        outfile->Printf("\n    %-44s", block_name.c_str());
-
-        auto Usub = std::make_shared<psi::Matrix>("Usub_ACTIVE", nactvpi_, nactvpi_);
-        auto Esub = std::make_shared<psi::Vector>("Esub_ACTIVE", nactvpi_);
-        rdm1_->diagonalize(Usub, Esub, descending);
-
-        // fill in data
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0; p < nactvpi_[h]; ++p) {
-                size_t np = p + ndoccpi_[h];
-                for (int q = 0; q < nactvpi_[h]; ++q) {
-                    size_t nq = q + ndoccpi_[h];
-                    U->set(h, np, nq, Usub->get(h, p, q));
-                }
-            }
-        }
-
-        outfile->Printf(" Done.");
-    }
-
-    if (debug_print_)
-        U->print();
-
-    return U;
 }
 } // namespace forte

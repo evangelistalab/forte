@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -70,10 +70,10 @@ class LBFGS {
     psi::SharedVector g() { return g_; }
 
     /// Return the final number of iterations
-    int iter() { return iter_; }
+    int iter() const { return iter_; }
 
     /// Return true if minimization converged
-    bool converged() { return converged_; }
+    bool converged() const { return converged_; }
 
   private:
     /// The dimension of x
@@ -84,6 +84,8 @@ class LBFGS {
 
     /// The current iteration number
     int iter_;
+    /// The shift to iteration number
+    int iter_shift_;
 
     /// Parameters of L-BFGS
     std::shared_ptr<LBFGS_PARAM> param_;
@@ -107,7 +109,7 @@ class LBFGS {
     std::vector<double> alpha_;
 
     /// The correction (moving direction) vector
-    psi::SharedVector p_;
+    psi::Vector p_;
 
     /// The current gradient vector
     psi::SharedVector g_;
@@ -122,7 +124,7 @@ class LBFGS {
     double compute_gamma();
 
     /// Apply h0_ to some vector
-    void apply_h0(psi::SharedVector q);
+    void apply_h0(psi::Vector& q);
 
     /// Generate correction (direction) vector
     void update();

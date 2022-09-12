@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -384,10 +384,10 @@ std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedM
 CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix> gamma) {
     std::pair<psi::SharedVector, psi::SharedMatrix> no_U;
 
-    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", actvpi_));
-    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", actvpi_));
-    psi::SharedMatrix NO_A(new psi::Matrix(actvpi_, actvpi_));
-    psi::SharedMatrix NO_B(new psi::Matrix(actvpi_, actvpi_));
+    auto NO_A = std::make_shared<psi::Matrix>(actvpi_, actvpi_);
+    auto NO_B = std::make_shared<psi::Matrix>(actvpi_, actvpi_);
+    auto OCC_A = std::make_shared<psi::Vector>("ALPHA OCCUPATION", actvpi_);
+    auto OCC_B = std::make_shared<psi::Vector>("BETA OCCUPATION", actvpi_);
 
     psi::Dimension zero_dim(nirrep_);
     psi::Dimension avirpi = actvpi_ - aoccpi_;
@@ -402,19 +402,19 @@ CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix>
     gamma_a_vir->set_name("Gamma alpha virtual");
 
     // Diagonalize alpha density matrix
-    psi::SharedMatrix NO_A_occ(new psi::Matrix(aoccpi_, aoccpi_));
-    psi::SharedMatrix NO_A_vir(new psi::Matrix(avirpi, avirpi));
-    psi::SharedVector OCC_A_occ(new Vector("Occupied ALPHA OCCUPATION", aoccpi_));
-    psi::SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
+    auto NO_A_occ = std::make_shared<psi::Matrix>(aoccpi_, aoccpi_);
+    auto NO_A_vir = std::make_shared<psi::Matrix>(avirpi, avirpi);
+    auto OCC_A_occ = std::make_shared<psi::Vector>("Occupied ALPHA OCCUPATION", aoccpi_);
+    auto OCC_A_vir = std::make_shared<psi::Vector>("Virtual ALPHA OCCUPATION", avirpi);
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
     gamma_a_vir->diagonalize(NO_A_vir, OCC_A_vir, descending);
     //        OCC_A_occ->print();
     //        OCC_A_vir->print();
 
-    OCC_A->set_block(aocc_slice, OCC_A_occ);
-    NO_A->set_block(aocc_slice, aocc_slice, NO_A_occ);
-    OCC_A->set_block(avir_slice, OCC_A_vir);
-    NO_A->set_block(avir_slice, avir_slice, NO_A_vir);
+    OCC_A->set_block(aocc_slice, *OCC_A_occ);
+    NO_A->set_block(aocc_slice, aocc_slice, *NO_A_occ);
+    OCC_A->set_block(avir_slice, *OCC_A_vir);
+    NO_A->set_block(avir_slice, avir_slice, *NO_A_vir);
 
     /// Diagonalize Beta density matrix
     psi::Dimension bvirpi = actvpi_ - boccpi_;
@@ -444,19 +444,19 @@ CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix>
     //    }
 
     // Diagonalize beta density matrix
-    psi::SharedMatrix NO_B_occ(new psi::Matrix(boccpi_, boccpi_));
-    psi::SharedMatrix NO_B_vir(new psi::Matrix(bvirpi, bvirpi));
-    psi::SharedVector OCC_B_occ(new Vector("Occupied BETA OCCUPATION", boccpi_));
-    psi::SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
+    auto NO_B_occ = std::make_shared<Matrix>(boccpi_, boccpi_);
+    auto NO_B_vir = std::make_shared<Matrix>(bvirpi, bvirpi);
+    auto OCC_B_occ = std::make_shared<Vector>("Occupied BETA OCCUPATION", boccpi_);
+    auto OCC_B_vir = std::make_shared<Vector>("Virtual BETA OCCUPATION", bvirpi);
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
     gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
     //    OCC_B_occ->print();
     //    OCC_B_vir->print();
 
-    OCC_B->set_block(bocc_slice, OCC_B_occ);
-    NO_B->set_block(bocc_slice, bocc_slice, NO_B_occ);
-    OCC_B->set_block(bvir_slice, OCC_B_vir);
-    NO_B->set_block(bvir_slice, bvir_slice, NO_B_vir);
+    OCC_B->set_block(bocc_slice, *OCC_B_occ);
+    NO_B->set_block(bocc_slice, bocc_slice, *NO_B_occ);
+    OCC_B->set_block(bvir_slice, *OCC_B_vir);
+    NO_B->set_block(bvir_slice, bvir_slice, *NO_B_vir);
 
     //    for (int h = 0; h < nirrep_; h++) {
     //        for (int i = 0; i < boccpi[h]; i++) {

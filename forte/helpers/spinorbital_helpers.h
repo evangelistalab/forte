@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -84,14 +84,14 @@ ambit::Tensor spinorbital_fock(const std::shared_ptr<ForteIntegrals> ints,
  * @param rdms the RDMs object
  * @return a vector of RDMs up to the max rank stored in the RDMs object
  */
-std::vector<ambit::Tensor> spinorbital_rdms(RDMs& rdms);
+std::vector<ambit::Tensor> spinorbital_rdms(std::shared_ptr<RDMs> rdms);
 
 /**
  * @brief spinorbital_rdms A helper function to return density cumulants in a spin orbital basis
  * @param rdms the RDMs object
  * @return a vector of cumulants up to the max rank stored in the RDMs object
  */
-std::vector<ambit::Tensor> spinorbital_cumulants(RDMs& rdms);
+std::vector<ambit::Tensor> spinorbital_cumulants(std::shared_ptr<RDMs> rdms);
 
 } // namespace forte
 

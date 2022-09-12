@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -48,13 +48,10 @@
 
 namespace forte {
 
-FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
-                                         std::shared_ptr<MOSpaceInfo> mo_space)
-    : RHF(ref_wfn, std::make_shared<SuperFunctional>(), options, _default_psio_lib_),
-      mo_space_info_(mo_space), options_(options) {
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
-    startup();
+FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn,
+std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space) : RHF(ref_wfn,
+std::make_shared<SuperFunctional>(), options, _default_psio_lib_), mo_space_info_(mo_space),
+options_(options) { shallow_copy(ref_wfn); reference_wavefunction_ = ref_wfn; startup();
 }
 
 void FiniteTemperatureHF::startup() {
@@ -262,7 +259,7 @@ void FiniteTemperatureHF::form_G() {
     form_D();
     std::shared_ptr<JK> JK = JK::build_JK(this->basisset(), get_basisset("DF_BASIS_SCF"), options_);
     JK->set_memory(psi::Process::environment.get_memory() * 0.8);
-    JK->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    JK->set_cutoff(options_.get_double("INTS_TOLERANCE"));
     JK->initialize();
 
     std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK->C_left();
@@ -288,7 +285,8 @@ void FiniteTemperatureHF::form_G() {
     F_core->subtract(K_core);
     G_->copy(F_core);
 }
-void FiniteTemperatureHF::form_D() { D_ = psi::linalg::doublet(C_occ_folded_, C_occ_a_, false, true); }
+void FiniteTemperatureHF::form_D() { D_ = psi::linalg::doublet(C_occ_folded_, C_occ_a_, false,
+true); }
 }
 }
 */

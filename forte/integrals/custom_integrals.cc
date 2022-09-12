@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -328,7 +328,7 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
     }
 
     return {Fock_a, Fock_b, e_closed};
-};
+}
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
@@ -365,7 +365,7 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
     }
 
     return make_fock_active_unrestricted(g1a, g1b);
-};
+}
 
 psi::SharedMatrix CustomIntegrals::make_fock_active_restricted(psi::SharedMatrix D) {
     auto g1a = D->clone();
@@ -529,7 +529,7 @@ void CustomIntegrals::transform_two_electron_integrals() {
 }
 
 void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                      std::shared_ptr<psi::Matrix> Cb) {
+                                      std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
     // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
     Ca_->copy(Ca);
     Cb_->copy(Cb);
@@ -545,14 +545,16 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     }
 
     // 2. Re-transform the integrals
-    aptei_idx_ = nmo_;
-    local_timer int_timer;
-    outfile->Printf("\n  Integrals are about to be updated.");
-    transform_one_electron_integrals();
-    transform_two_electron_integrals();
-    gather_integrals();
-    freeze_core_orbitals();
-    outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
+    if (re_transform) {
+        aptei_idx_ = nmo_;
+        local_timer int_timer;
+        outfile->Printf("\n  Integrals are about to be updated.");
+        transform_one_electron_integrals();
+        transform_two_electron_integrals();
+        gather_integrals();
+        freeze_core_orbitals();
+        outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
+    }
 }
 
 // void CustomIntegrals::resort_integrals_after_freezing() {}

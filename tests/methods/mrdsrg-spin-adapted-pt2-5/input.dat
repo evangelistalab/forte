@@ -1,4 +1,4 @@
-#! Generated using commit GITCOMMIT
+# spin-adapted DSRG-MRPT2 on C2 without 3-cumulant
 
 import forte
 
