@@ -20,7 +20,7 @@ def test_input_simple():
     ref_efci_3 = -7.853436217157
 
     # need to clean the options otherwise this job will interfere
-    forte.clean_options()
+    forte.core.clean_options()
 
     psi4.set_options(
         {

@@ -21,7 +21,7 @@ def test_input_example_1():
     H 1 1.085 2 135.5
     """)
 
-    forte.clean_options()
+    forte.core.clean_options()
 
     psi4.set_options(
         {

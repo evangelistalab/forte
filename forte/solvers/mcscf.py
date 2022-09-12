@@ -97,8 +97,8 @@ class MCSCF(Solver):
             self.input_nodes[0].active_space_solver
         )
         flog('info', 'MCSCF: computing the energy')
-        average_energy, energies = mcscf.compute_energy()
-        flog('info', f'MCSCF: mcscf average energy = {average_energy}')
+        energies = mcscf.compute_energy()
+        # flog('info', f'MCSCF: mcscf average energy = {average_energy}')
         flog('info', f'MCSCF: mcscf energy = {energies}')
 
         self._results.add('mcscf energy', energies, 'MCSCF energy', 'Eh')

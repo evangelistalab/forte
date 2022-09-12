@@ -200,7 +200,11 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     # set DF and MINAO basis
     if 'DF' in options.get_str('INT_TYPE'):
         aux_basis = psi4.core.BasisSet.build(
-            molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS'),
+            molecule,
+            'DF_BASIS_MP2',
+            options.get_str('DF_BASIS_MP2'),
+            'RIFIT',
+            options.get_str('BASIS'),
             puream=wfn_new.basisset().has_puream()
         )
         wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
@@ -545,7 +549,8 @@ def run_forte(name, **kwargs):
             active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
         )
         casscf = forte.make_mcscf_two_step(state_weights_map, mo_space_info, options, ints, active_space_solver)
-        energy, _ = casscf.compute_energy()
+        energies = casscf.compute_energy()
+        energy = average_energy = forte.compute_average_state_energy(energies, state_weights_map)
 
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)
