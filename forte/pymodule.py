@@ -550,7 +550,7 @@ def run_forte(name, **kwargs):
         )
         casscf = forte.make_mcscf_two_step(state_weights_map, mo_space_info, options, ints, active_space_solver)
         energies = casscf.compute_energy()
-        energy = average_energy = forte.compute_average_state_energy(energies, state_weights_map)
+        energy = forte.compute_average_state_energy(energies, state_weights_map)
 
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)
@@ -660,7 +660,8 @@ def gradient_forte(name, **kwargs):
             active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
         )
         casscf = forte.make_mcscf_two_step(state_weights_map, mo_space_info, options, ints, active_space_solver)
-        energy, _ = casscf.compute_energy()
+        energies = casscf.compute_energy()
+        energy = forte.compute_average_state_energy(energies, state_weights_map)
 
     time_pre_deriv = time.time()
 
