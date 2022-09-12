@@ -11,14 +11,13 @@ def test_casscf_1():
     Be        0.000000000000     0.000000000000     0.000000000000
     H         0.000000000000     1.390000000000     2.500000000000
     H         0.000000000000    -1.390000000000     2.500000000000
-    symmetry c1
     units bohr
     no_reorient
     """
 
     input = input_factory(molecule=xyz, basis='3-21g')
-    state = input.state(charge=0, multiplicity=1)
-    mo_spaces = input.mo_spaces(restricted_docc=[2], active=[2])
+    state = input.state(charge=0, multiplicity=1,sym='a1')
+    mo_spaces = input.mo_spaces(restricted_docc=[2,0,0,0], active=[1,0,0,1])
 
     hf = HF(input, state=state)
     fci = ActiveSpaceSolver(hf, type='FCI', states=state, mo_spaces=mo_spaces)
