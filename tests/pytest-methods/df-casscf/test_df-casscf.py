@@ -4,8 +4,8 @@ from forte.solvers import HF, ActiveSpaceSolver, MCSCF, input_factory
 
 def test_df_casscf_1():
 
-    ref_mcscf_energy_1_5 = -99.939309243520498  # @1.5
-    ref_mcscf_energy_1_6 = -99.924064730911269  # @1.6
+    ref_mcscf_energy_1_5 = -99.939310302576473 # @1.5
+    ref_mcscf_energy_1_6 = -99.924066063941879 # @1.6
     xyz = """
     F
     H 1 1.5
