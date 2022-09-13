@@ -100,6 +100,8 @@ class RDMs {
     /// Build a zero-valued RDMs object
     static std::shared_ptr<RDMs> build(size_t max_rdm_level, size_t n_orbs, RDMsType type);
 
+    virtual ~RDMs(){};
+
     /// @return the max RDM level
     size_t max_rdm_level() const { return max_rdm_; }
 

@@ -1303,12 +1303,12 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
         outfile->Printf("\n  Eccvv: %8.10f", Eccvv);
     }
 
-    double all_e = 0.0;
-    if (my_proc == 0)
-        all_e = E + Eccvv;
-#ifdef HAVE_MPI
-    MPI_Bcast(&all_e, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
+    //     double all_e = 0.0;
+    //     if (my_proc == 0)
+    //         all_e = E + Eccvv;
+    // #ifdef HAVE_MPI
+    //     MPI_Bcast(&all_e, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    // #endif
 
     if (internal_amp_ && my_proc == 0) {
         temp.zero();

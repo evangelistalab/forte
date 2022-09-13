@@ -320,7 +320,7 @@ void AdaptiveCI::get_excited_determinants_avg(
                                 }
                                 // thread_ex_dets[i * nobeta + a] =
                                 // std::make_pair(new_det,coupling);
-                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                thread_ex_dets.emplace_back(new_det, coupling);
                             }
                         }
                     }
@@ -354,7 +354,7 @@ void AdaptiveCI::get_excited_determinants_avg(
                                         // noalpha*noalpha*nvalpha +
                                         // j*nvalpha*noalpha +  a*nvalpha + b ]
                                         // = std::make_pair(new_det,coupling);
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.emplace_back(new_det, coupling);
                                     }
                                 }
                             }
@@ -883,7 +883,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     int nruns = static_cast<int>(std::ceil(guess_mem / max_mem));
 
     double total_excluded = 0.0;
-    int nbin = nruns;
+    size_t nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
     if (options_->get_int("ACI_NBATCH") > 0) {
@@ -994,7 +994,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
                                ? thread_id * bin_size
                                : (n_dets % n_threads) * (bin_size + 1) +
                                      (thread_id - (n_dets % n_threads)) * bin_size;
-        int end_idx = start_idx + bin_size;
+        size_t end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
         // size_t guess_a = nalpha_ * (no_ - nalpha_);
@@ -1276,7 +1276,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
                                ? thread_id * bin_size
                                : (n_dets % n_threads) * (bin_size + 1) +
                                      (thread_id - (n_dets % n_threads)) * bin_size;
-        int end_idx = start_idx + bin_size;
+        size_t end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
         // size_t guess_a = nalpha_ * (no_ - nalpha_);

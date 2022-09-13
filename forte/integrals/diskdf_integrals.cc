@@ -509,6 +509,8 @@ void DISKDFIntegrals::gather_integrals() {
             throw psi::PSIEXCEPTION(msg);
         }
     }
+    df_->set_schwarz_cutoff(schwarz_cutoff_);
+    df_->set_fitting_condition(df_fitting_cutoff_);
     df_->set_memory(static_cast<size_t>(mem));
     df_->set_MO_core(false);
     df_->set_nthreads(omp_get_max_threads());

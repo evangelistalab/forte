@@ -69,7 +69,8 @@ class SigmaVector {
     virtual void compute_sigma(std::shared_ptr<psi::Vector> sigma,
                                std::shared_ptr<psi::Vector> b) = 0;
     virtual void get_diagonal(psi::Vector& diag) = 0;
-    virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
+    virtual void
+    add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& /*bad_states*/) {}
     virtual double compute_spin(const std::vector<double>& c) = 0;
 
   protected:

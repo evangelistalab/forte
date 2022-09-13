@@ -99,6 +99,10 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     /// Total memory left
     int64_t mem_total_;
+    /// Enforce batching algorithm
+    bool enforce_batching_;
+    /// Ignore memory warnings and errors
+    bool ignore_memory_errors_;
 
     /// Fill up two-electron integrals
     void build_tei(BlockedTensor& V);

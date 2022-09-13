@@ -57,8 +57,9 @@ class PCISigmaVector : public SigmaVector {
         const std::vector<std::pair<det_hashvec, std::vector<double>>>& bad_roots);
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) override;
     void get_diagonal(psi::Vector& diag) override;
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) override;
-    double compute_spin(const std::vector<double>& c) override { return 0.0; }
+    double compute_spin(const std::vector<double>& /*c*/) override {
+        return 0.0;
+    } // TODO: this should be implemented
 
     void reset(std::vector<double>& ref_C);
     void compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b);
