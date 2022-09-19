@@ -208,6 +208,9 @@ class ActiveSpaceSolver {
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
 
+    /// Only print the transitions between states with different gas
+    bool gas_diff_only_;
+
     /// Unitary matrices for orbital rotations used to compute dipole moments
     /// The issue is dipole integrals are transformed to semi-canonical orbital basis,
     /// while active-space integrals are in the original orbital basis
