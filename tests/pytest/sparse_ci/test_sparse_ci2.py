@@ -15,7 +15,7 @@ def test_sparse_ci2():
 
     psi4.core.clean()
     # need to clean the options otherwise this job will interfere
-    forte.clean_options()
+    forte.core.clean_options()
 
     h2o = psi4.geometry("""
      He

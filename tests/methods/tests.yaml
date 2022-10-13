@@ -78,7 +78,6 @@ casscf:
       - casscf-gradient-3
       - casscf-opt-3
    medium:
-      - casscf-1
       - casscf-2
       - casscf-3
       - casscf-4
@@ -89,6 +88,9 @@ casscf:
       - casscf-opt-1
       # - casscf-opt-2
    long:
+      - casscf-1 # moved to pytest
+      - casscf-7 # moved to pytest
+      - df-casscf-1 # moved to pytest
       - casscf-8
 cd-dsrg-mrpt2:
    short:

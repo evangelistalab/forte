@@ -98,10 +98,9 @@ FCIVector::~FCIVector() { cleanup(); }
 void FCIVector::startup() {
 
     nirrep_ = lists_->nirrep();
-    ncmo_ = lists_->ncmo();
-    cmopi_ = lists_->cmopi();
-    cmopi_offset_ = lists_->cmopi_offset();
-    //    cmo_to_mo_ = lists_->cmo_to_mo();
+    ncmo_ = lists_->nmo();
+    cmopi_ = lists_->mopi();
+    cmopi_offset_ = lists_->mopi_offset();
 
     ndet_ = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {

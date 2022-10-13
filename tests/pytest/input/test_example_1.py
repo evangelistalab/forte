@@ -21,7 +21,7 @@ def test_input_example_1():
     H 1 1.085 2 135.5
     """)
 
-    forte.clean_options()
+    forte.core.clean_options()
 
     psi4.set_options(
         {
@@ -67,6 +67,9 @@ def test_input_example_1():
 
     efci = psi4.energy('forte')
     assert efci == pytest.approx(ref_e_1a1_ex, 1.0e-9)
+
+    # clean psi4
+    psi4.core.clean()
 
 
 if __name__ == "__main__":

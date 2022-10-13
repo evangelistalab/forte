@@ -40,8 +40,8 @@ class MolecularModel(Model):
         molecule: Molecule,
         basis: Basis,
         int_type: str = None,
-        scf_aux_basis: Basis = None,
-        corr_aux_basis: Basis = None
+        jkfit_aux_basis: Basis = None,
+        rifit_aux_basis: Basis = None
     ):
         """
         Initialize a MolecularModel object
@@ -54,16 +54,16 @@ class MolecularModel(Model):
             the type of integrals used
         basis: Basis
             the computational basis
-        scf_aux_basis: Basis
+        jkfit_aux_basis: Basis
             the auxiliary basis set used in density-fitted SCF computations
-        corr_aux_basis: Basis
+        rifit_aux_basis: Basis
             the auxiliary basis set used in density-fitted correlated computations
         """
         self._molecule = molecule
         self._basis = basis
         self._int_type = 'CONVENTIONAL' if int_type is None else int_type.upper()
-        self._scf_aux_basis = scf_aux_basis
-        self._corr_aux_basis = corr_aux_basis
+        self._jkfit_aux_basis = jkfit_aux_basis
+        self._rifit_aux_basis = rifit_aux_basis
         self.symmetry = Symmetry(molecule.molecule.point_group().symbol().capitalize())
 
     def __repr__(self):
@@ -91,16 +91,16 @@ class MolecularModel(Model):
         return self._basis.__str__()
 
     @property
-    def scf_aux_basis(self):
-        if self._scf_aux_basis is None:
+    def jkfit_aux_basis(self):
+        if self._jkfit_aux_basis is None:
             return None
-        return self._scf_aux_basis.__str__()
+        return self._jkfit_aux_basis.__str__()
 
     @property
-    def corr_aux_basis(self):
-        if self._corr_aux_basis is None:
+    def rifit_aux_basis(self):
+        if self._rifit_aux_basis is None:
             return None
-        return self._corr_aux_basis.__str__()
+        return self._rifit_aux_basis.__str__()
 
     @property
     def point_group(self) -> str:
@@ -168,16 +168,65 @@ class MolecularModel(Model):
         gasmax = [] if gasmax is None else gasmax
         return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym, gasmin, gasmax)
 
-    def ints(self, data, options):
+    def ints(self, data, options, df_basis_role: str = None):
+        """
+        This function prepares a ForteIntegral object from the data and options.
+
+        For density-fitted orbitals, we need to know the role of the auxiliary basis.
+        There are two options, SCF, used by codes that optimize MOs,
+        and CORR, used by methods to treat dynamical correlation.
+
+        Parameters
+        ----------
+        data: Data
+            Used to grab a psi Wavefunction object
+        options: ForteOptions
+            User options
+        df_basis_role: {'JKFIT', 'RIFIT'}
+            The role of the auxiliary basis in density fitted computations.
+        """
+
         flog('info', 'MolecularModel: preparing integrals from psi4')
         # if we do DF, we need to make sure that psi4's wavefunction object
         # has a DF_BASIS_MP2 basis registered
         if self.int_type == 'DF':
-            import psi4
-            aux_basis = psi4.core.BasisSet.build(
-                self.molecule, 'DF_BASIS_MP2', self.corr_aux_basis, 'RIFIT', self.basis,
-                puream=data.psi_wfn.basisset().has_puream()
-            )
-            data.psi_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
+            self._prepare_psi4_df_ints(data, df_basis_role)
         # get the appropriate integral object
         return make_ints_from_psi4(data.psi_wfn, options, data.mo_space_info, self._int_type)
+
+    def _prepare_psi4_df_ints(self, data, df_basis_role):
+        """
+        This function builds and adds a new basis set to the psi4 Wavefunction object.
+        It hides some of the sanity checks and issues warnings if a default basis is assumed.
+        This could be problematic if a basis with JKFIT or RIFIT role corresponding to the
+        computational basis is missing from psi4.
+        """
+        import psi4
+        if df_basis_role is None:
+            raise ValueError(
+                '\n  Please specify a value for the variable role when calling the function ints().'
+                'Valid options are JKFIT or RIFIT'
+            )
+        df_basis_role = df_basis_role.upper()
+        if df_basis_role == 'JKFIT':
+            if self.jkfit_aux_basis is None:
+                flog(
+                    'warning',
+                    '\n  MolecularModel.ints(): generating DF integrals with no JKFIT auxiliary basis specified'
+                )
+            psi4_DF_BASIS_MP2 = self.jkfit_aux_basis
+        elif df_basis_role == 'RIFIT':
+            flog(
+                'warning', '\n  MolecularModel.ints(): generating DF integrals with no RIFIT auxiliary basis specified'
+            )
+            psi4_DF_BASIS_MP2 = self.rifit_aux_basis
+        else:
+            raise ValueError(
+                f'\n  MolecularModel.ints() called with a value of the parameter df_basis_role ({df_basis_role}).'
+                '\n  Valid options are SCF or CORR\n'
+            )
+        aux_basis = psi4.core.BasisSet.build(
+            self.molecule, 'DF_BASIS_MP2', psi4_DF_BASIS_MP2, df_basis_role, self.basis
+        )
+        data.psi_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
+        flog('info', f'MolecularModel: added DF_BASIS_MP2 = {psi4_DF_BASIS_MP2} to psi4 with role = {df_basis_role}')

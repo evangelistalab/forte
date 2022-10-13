@@ -20,7 +20,7 @@ def test_input_simple():
     ref_efci_3 = -7.853436217157
 
     # need to clean the options otherwise this job will interfere
-    forte.clean_options()
+    forte.core.clean_options()
 
     psi4.set_options(
         {
@@ -52,6 +52,9 @@ def test_input_simple():
     psi4.set_options({'forte__root_sym': 3})
     efci = psi4.energy('forte')
     assert efci == pytest.approx(ref_efci_3, 1.0e-9)
+
+    # clean psi4
+    psi4.core.clean()
 
 
 if __name__ == "__main__":

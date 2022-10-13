@@ -1,6 +1,6 @@
 import pytest
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_fci_one_electron():
@@ -13,7 +13,7 @@ def test_fci_one_electron():
     H
     H 1 1.0
     """
-    input = solver_factory(molecule=xyz, basis='aug-cc-pVDZ')
+    input = input_factory(molecule=xyz, basis='aug-cc-pVDZ')
     state = input.state(charge=1, multiplicity=2, sym='ag')
     hf = HF(input, state=state, e_convergence=1.0e-12)
     # define an active space

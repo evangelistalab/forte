@@ -203,7 +203,8 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
-    m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
+    m.def("make_mcscf_two_step", &make_mcscf_two_step, "state_weights_map"_a, "mo_space_info"_a,
+          "options"_a, "ints"_a, "active_space_solver"_a, "Make a 2-step MCSCF object");
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
 
     m.def(

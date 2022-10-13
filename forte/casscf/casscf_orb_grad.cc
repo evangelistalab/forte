@@ -157,7 +157,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
     BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v", "u"});
 
     // if we are doing GAS
-    gas_ref_ = mo_space_info_->nonzero_gas_spaces().size() > 1;
+    gas_ref_ = mo_space_info_->nonempty_gas_spaces().size() > 1;
 }
 
 void CASSCF_ORB_GRAD::read_options() {
@@ -287,7 +287,7 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     }
 
     // GASm-GASn with m != n rotations
-    auto gas_spaces = mo_space_info_->nonzero_gas_spaces();
+    auto gas_spaces = mo_space_info_->nonempty_gas_spaces();
     if (gas_ref_) {
         const auto& mos = label_to_mos_["a"];
 

@@ -1,8 +1,11 @@
 from forte.core import flog
 
-from forte.solvers.solver import Feature, Solver
+from forte.solvers.feature import Feature
+from forte.solvers.solver import Solver
+
 from forte.model import MolecularModel
 from forte import SCFInfo
+from forte.core import clean_options
 
 
 class HF(Solver):
@@ -121,7 +124,7 @@ class HF(Solver):
             target = model.symmetry.irrep_label(self.state.irrep())
             actual = model.symmetry.irrep_label(sym)
             raise RuntimeError(
-                f'(HF) The HF equations converged on a state with the wrong symmetry ({actual}).'
+                f'(HF) The HF equations converged on a state with a symmetry ({actual}) different from the one requested ({target}).'
                 '\nPass the docc and socc options to converge to a solution with the correct symmetry.'
             )
 
@@ -130,7 +133,7 @@ class HF(Solver):
         import psi4
 
         # reset psi4's options to avoid pollution
-        psi4.core.clean_options()
+        clean_options()
 
         # currently limited to molecules
         if not isinstance(self.data.model, MolecularModel):
@@ -171,12 +174,12 @@ class HF(Solver):
         if self.socc is not None:
             options['SOCC'] = self.socc
 
-        if self.data.model.scf_aux_basis is not None:
-            options['DF_BASIS_SCF'] = self.data.model.scf_aux_basis
+        if self.data.model.jkfit_aux_basis is not None:
+            options['DF_BASIS_SCF'] = self.data.model.jkfit_aux_basis
 
         full_options = {**options, **self._options}
 
-        # set the options
+        # send user options to psi4
         psi4.set_options(full_options)
 
         # pipe output to the file self._output_file

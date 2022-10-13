@@ -54,10 +54,7 @@ namespace forte {
 ActiveSpaceMethod::ActiveSpaceMethod(StateInfo state, size_t nroot,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints) {
-    active_mo_ = as_ints_->active_mo();
-    core_mo_ = as_ints_->restricted_docc_mo();
-}
+    : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints) {}
 
 void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     as_ints_ = as_ints;

@@ -20,22 +20,27 @@ def test_input_multistate():
     }
 
     # need to clean the options otherwise this job will interfere
-    forte.clean_options()
+    forte.core.clean_options()
 
-    psi4.set_options({'basis': 'DZ', 'scf_type': 'pk', 'e_convergence': 12})
-    psi4.set_module_options(
-        'FORTE', {
-            'active_space_solver': 'fci',
-            'active': [8, 0, 2, 2],
-            'restricted_docc': [0, 0, 0, 0],
-            'avg_state': [[0, 1, 3], [1, 1, 3], [2, 1, 3], [3, 1, 3]],
-            'ms': 0.0
+    psi4.set_options(
+        {
+            'basis': 'DZ',
+            'scf_type': 'pk',
+            'e_convergence': 12,
+            'forte__active_space_solver': 'fci',
+            'forte__active': [8, 0, 2, 2],
+            'forte__restricted_docc': [0, 0, 0, 0],
+            'forte__avg_state': [[0, 1, 3], [1, 1, 3], [2, 1, 3], [3, 1, 3]],
+            'forte__ms': 0.0
         }
     )
     efci = psi4.energy('forte')
     for k, vals in ref_energies.items():
         for i in range(3):
             assert psi4.core.variable(f'ENERGY ROOT {i} {k}') == pytest.approx(vals[i], 1.0e-9)
+
+    # clean psi4
+    psi4.core.clean()
 
 
 if __name__ == "__main__":

@@ -39,7 +39,7 @@ from .model import Model, MolecularModel
 
 from .pymodule import *
 from .register_forte_options import *
-from .core import ForteManager, clean_options
+from .core import ForteManager
 from ._forte import *
 
 __version__ = '0.2.3'

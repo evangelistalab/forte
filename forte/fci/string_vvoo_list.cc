@@ -60,14 +60,14 @@ void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
             int q_sym = pq_sym ^ p_sym;
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;
-                for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                    for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                        for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                            for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
-                                int p_abs = p_rel + cmopi_offset_[p_sym];
-                                int q_abs = q_rel + cmopi_offset_[q_sym];
-                                int r_abs = r_rel + cmopi_offset_[r_sym];
-                                int s_abs = s_rel + cmopi_offset_[s_sym];
+                for (int p_rel = 0; p_rel < mopi_[p_sym]; ++p_rel) {
+                    for (int q_rel = 0; q_rel < mopi_[q_sym]; ++q_rel) {
+                        for (int r_rel = 0; r_rel < mopi_[r_sym]; ++r_rel) {
+                            for (int s_rel = 0; s_rel < mopi_[s_sym]; ++s_rel) {
+                                int p_abs = p_rel + mopi_offset_[p_sym];
+                                int q_abs = q_rel + mopi_offset_[q_sym];
+                                int r_abs = r_rel + mopi_offset_[r_sym];
+                                int s_abs = s_rel + mopi_offset_[s_sym];
                                 if ((p_abs > q_abs) && (r_abs > s_abs)) {
                                     // Avoid
                                     if (not((p_abs == r_abs) and (q_abs == s_abs))) {
@@ -125,8 +125,8 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
 
     if (k >= 0 and n >= 0 and (n >= k)) {
         bool* b = new bool[n];
-        bool* I = new bool[ncmo_];
-        bool* J = new bool[ncmo_];
+        bool* I = new bool[nmo_];
+        bool* J = new bool[nmo_];
 
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
@@ -161,13 +161,13 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                     I[i] = b[k];
                     k++;
                 }
-                for (int i = a[3] + 1; i < static_cast<int>(ncmo_); ++i) {
+                for (int i = a[3] + 1; i < static_cast<int>(nmo_); ++i) {
                     I[i] = b[k];
                     k++;
                 }
                 if (graph->sym(I) == h) {
                     // Copy I to J
-                    for (int i = 0; i < static_cast<int>(ncmo_); ++i)
+                    for (int i = 0; i < static_cast<int>(nmo_); ++i)
                         J[i] = I[i];
                     short sign = 1;
                     // Apply a^{+}_p a^{+}_q a_s a_r to I
@@ -209,14 +209,14 @@ void StringLists::make_vovo_list(GraphPtr graph, VOVOList& list) {
             int q_sym = pq_sym ^ p_sym;
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;
-                for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                    for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                        for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                            for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
-                                int p_abs = p_rel + cmopi_offset_[p_sym];
-                                int q_abs = q_rel + cmopi_offset_[q_sym];
-                                int r_abs = r_rel + cmopi_offset_[r_sym];
-                                int s_abs = s_rel + cmopi_offset_[s_sym];
+                for (int p_rel = 0; p_rel < mopi_[p_sym]; ++p_rel) {
+                    for (int q_rel = 0; q_rel < mopi_[q_sym]; ++q_rel) {
+                        for (int r_rel = 0; r_rel < mopi_[r_sym]; ++r_rel) {
+                            for (int s_rel = 0; s_rel < mopi_[s_sym]; ++s_rel) {
+                                int p_abs = p_rel + mopi_offset_[p_sym];
+                                int q_abs = q_rel + mopi_offset_[q_sym];
+                                int r_abs = r_rel + mopi_offset_[r_sym];
+                                int s_abs = s_rel + mopi_offset_[s_sym];
                                 make_VOVO(graph, list, p_abs, q_abs, r_abs, s_abs);
                             }
                         }
@@ -235,8 +235,8 @@ void StringLists::make_vovo_list(GraphPtr graph, VOVOList& list) {
 void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r, int s) {
     int n = graph->nbits();
     int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
+    bool* I = new bool[nmo_];
+    bool* J = new bool[nmo_];
 
     for (int h = 0; h < nirrep_; ++h) {
         // Create the key to the map
@@ -251,7 +251,7 @@ void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r,
         do {
             if (graph->sym(I) == h) {
                 // Copy I to J
-                for (int i = 0; i < static_cast<int>(ncmo_); ++i)
+                for (int i = 0; i < static_cast<int>(nmo_); ++i)
                     J[i] = I[i];
 
                 short sign = 1;

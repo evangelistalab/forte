@@ -56,8 +56,8 @@ std::vector<H1StringSubstitution>& StringLists::get_beta_1h_list(int h_I, size_t
 void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) {
     int n = graph->nbits();
     int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
+    bool* I = new bool[nmo_];
+    bool* J = new bool[nmo_];
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
@@ -70,7 +70,7 @@ void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) 
             do {
                 if (graph->sym(I) == h_I) {
                     size_t add_I = graph->rel_add(I);
-                    for (size_t p = 0; p < ncmo_; ++p) {
+                    for (size_t p = 0; p < nmo_; ++p) {
                         // copy I to J
                         for (int i = 0; i < n; ++i)
                             J[i] = I[i];
@@ -106,8 +106,8 @@ std::vector<H2StringSubstitution>& StringLists::get_beta_2h_list(int h_I, size_t
 void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) {
     int n = graph->nbits();
     int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
+    bool* I = new bool[nmo_];
+    bool* J = new bool[nmo_];
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
@@ -120,8 +120,8 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) 
             do {
                 if (graph->sym(I) == h_I) {
                     size_t add_I = graph->rel_add(I);
-                    for (size_t q = 0; q < ncmo_; ++q) {
-                        for (size_t p = 0; p < ncmo_; ++p) {
+                    for (size_t q = 0; q < nmo_; ++q) {
+                        for (size_t p = 0; p < nmo_; ++p) {
                             if (p != q) {
                                 // copy I to J
                                 for (int i = 0; i < n; ++i)
@@ -173,8 +173,8 @@ std::vector<H3StringSubstitution>& StringLists::get_beta_3h_list(int h_I, size_t
 void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) {
     int n = graph->nbits();
     int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
+    bool* I = new bool[nmo_];
+    bool* J = new bool[nmo_];
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
@@ -189,9 +189,9 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
                     size_t add_I = graph->rel_add(I);
 
                     // apply a_r I
-                    for (size_t r = 0; r < ncmo_; ++r) {
-                        for (size_t q = 0; q < ncmo_; ++q) {
-                            for (size_t p = 0; p < ncmo_; ++p) {
+                    for (size_t r = 0; r < nmo_; ++r) {
+                        for (size_t q = 0; q < nmo_; ++q) {
+                            for (size_t p = 0; p < nmo_; ++p) {
                                 if ((p != q) and (p != r) and (q != r)) {
                                     // copy I to J
                                     for (int i = 0; i < n; ++i)

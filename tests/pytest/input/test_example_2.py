@@ -34,6 +34,9 @@ def test_input_example_2():
     assert psi4.core.variable('ENERGY ROOT 0 3B1') == pytest.approx(ref_e_3b1, 1.0e-6)
     assert psi4.core.variable('ENERGY ROOT 0 1A1') == pytest.approx(ref_e_1a1, 1.0e-6)
 
+    # clean psi4
+    psi4.core.clean()
+
 
 if __name__ == "__main__":
     test_input_example_2()

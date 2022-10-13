@@ -1,5 +1,5 @@
 import pytest
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_fci_ex_1():
@@ -22,7 +22,7 @@ def test_fci_ex_1():
     O   0.000000   0.000000   1.227600
     units angstrom
     """
-    input = solver_factory(molecule=xyz, basis='3-21g')
+    input = input_factory(molecule=xyz, basis='3-21g')
     state = input.state(charge=0, multiplicity=1, sym='a1')
 
     hf = HF(input, state=state, docc=[8, 1, 2, 5])

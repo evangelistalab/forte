@@ -55,7 +55,6 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
                                      std::shared_ptr<ForteOptions> options)
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
       mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
-
     print_options();
 
     print_ = options->get_int("PRINT");
@@ -76,6 +75,12 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
+
+std::string ActiveSpaceSolver::method() const { return method_; };
+
+std::shared_ptr<MOSpaceInfo> ActiveSpaceSolver::mo_space_info() const { return mo_space_info_; }
+
+std::shared_ptr<SCFInfo> ActiveSpaceSolver::scf_info() const { return scf_info_; }
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
     state_energies_map_.clear();

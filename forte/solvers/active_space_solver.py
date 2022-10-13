@@ -1,6 +1,8 @@
 from forte.core import flog
 
-from forte.solvers.solver import Feature, Solver
+from forte.solvers.solver import Solver
+from forte.solvers.feature import Feature
+
 from forte import ForteOptions
 from forte import to_state_nroots_map
 from forte import forte_options
@@ -81,7 +83,7 @@ class ActiveSpaceSolver(Solver):
         super().__init__(
             input_nodes=input_nodes,
             needs=[Feature.MODEL, Feature.ORBITALS],
-            provides=[Feature.MODEL, Feature.ORBITALS, Feature.RDMS],
+            provides=[Feature.MODEL, Feature.ORBITALS, Feature.ACTIVESPACESOLVER, Feature.RDMS],
             options=options,
             cbh=cbh
         )
@@ -116,6 +118,10 @@ class ActiveSpaceSolver(Solver):
     def r_convergence(self):
         return self._r_convergence
 
+    @property
+    def active_space_solver(self):
+        return self._active_space_solver
+
     def _run(self):
         """Run an active space solver computation"""
 
@@ -142,15 +148,15 @@ class ActiveSpaceSolver(Solver):
         local_options = ForteOptions(forte_options)
         local_options.set_from_dict(full_options)
 
-        flog('info', 'ActiveSpaceSolver: getting integral from the model object')
-        self.ints = self.model.ints(self.data, local_options)
+        flog('info', 'ActiveSpaceSolver: getting integral from the model object (role=JKFIT in DF)')
+        self.ints = self.model.ints(self.data, local_options, 'JKFIT')
 
         # Make an active space integral object
         flog('info', 'ActiveSpaceSolver: making active space integrals')
         self.as_ints = make_active_space_ints(self.mo_space_info, self.ints, "ACTIVE", ["RESTRICTED_DOCC"])
 
         # create an active space solver object and compute the energy
-        flog('info', 'ActiveSpaceSolver: creating active space solver object')
+        flog('info', f'ActiveSpaceSolver: creating active space solver object of type {self._type}')
         self._active_space_solver = make_active_space_solver(
             self._type, state_map, self.scf_info, self.mo_space_info, self.as_ints, local_options
         )

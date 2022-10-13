@@ -37,53 +37,51 @@ using namespace psi;
 
 namespace forte {
 
-StringLists::StringLists(RequiredLists required_lists, psi::Dimension cmopi,
-                         std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo, size_t na,
+StringLists::StringLists(RequiredLists required_lists, const psi::Dimension& mopi, size_t na,
                          size_t nb, int print)
-    : required_lists_(required_lists), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo),
-      na_(na), nb_(nb), print_(print) {
+    : required_lists_(required_lists), mopi_(mopi), na_(na), nb_(nb), print_(print) {
     startup();
 }
 
 void StringLists::startup() {
-    nirrep_ = cmopi_.n();
-    ncmo_ = cmopi_.sum();
+    nirrep_ = mopi_.n();
+    nmo_ = mopi_.sum();
 
-    cmopi_offset_.push_back(0);
+    mopi_offset_.push_back(0);
     for (int h = 1; h < nirrep_; ++h) {
-        cmopi_offset_.push_back(cmopi_offset_[h - 1] + cmopi_[h - 1]);
+        mopi_offset_.push_back(mopi_offset_[h - 1] + mopi_[h - 1]);
     }
 
-    std::vector<int> cmopi_int;
+    std::vector<int> mopi_int;
 
     for (int h = 0; h < nirrep_; ++h) {
-        cmopi_int.push_back(cmopi_[h]);
+        mopi_int.push_back(mopi_[h]);
     }
 
     // Allocate the alfa and beta graphs
-    alfa_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_, cmopi_int));
-    beta_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_, cmopi_int));
-    pair_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, 2, cmopi_int));
+    alfa_graph_ = std::make_shared<BinaryGraph>(nmo_, na_, mopi_int);
+    beta_graph_ = std::make_shared<BinaryGraph>(nmo_, nb_, mopi_int);
+    pair_graph_ = std::make_shared<BinaryGraph>(nmo_, 2, mopi_int);
 
     if (na_ >= 1) {
-        alfa_graph_1h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 1, cmopi_int));
+        alfa_graph_1h_ = std::make_shared<BinaryGraph>(nmo_, na_ - 1, mopi_int);
     }
     if (nb_ >= 1) {
-        beta_graph_1h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 1, cmopi_int));
+        beta_graph_1h_ = std::make_shared<BinaryGraph>(nmo_, nb_ - 1, mopi_int);
     }
 
     if (na_ >= 2) {
-        alfa_graph_2h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 2, cmopi_int));
+        alfa_graph_2h_ = std::make_shared<BinaryGraph>(nmo_, na_ - 2, mopi_int);
     }
     if (nb_ >= 2) {
-        beta_graph_2h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 2, cmopi_int));
+        beta_graph_2h_ = std::make_shared<BinaryGraph>(nmo_, nb_ - 2, mopi_int);
     }
 
     if (na_ >= 3) {
-        alfa_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 3, cmopi_int));
+        alfa_graph_3h_ = std::make_shared<BinaryGraph>(nmo_, na_ - 3, mopi_int);
     }
     if (nb_ >= 3) {
-        beta_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 3, cmopi_int));
+        beta_graph_3h_ = std::make_shared<BinaryGraph>(nmo_, nb_ - 3, mopi_int);
     }
 
     nas_ = 0;
@@ -196,10 +194,10 @@ void StringLists::make_pair_list(NNList& list) {
         // Loop over irreps of p
         for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
             int q_sym = pq_sym ^ p_sym;
-            for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                    int p_abs = p_rel + cmopi_offset_[p_sym];
-                    int q_abs = q_rel + cmopi_offset_[q_sym];
+            for (int p_rel = 0; p_rel < mopi_[p_sym]; ++p_rel) {
+                for (int q_rel = 0; q_rel < mopi_[q_sym]; ++q_rel) {
+                    int p_abs = p_rel + mopi_offset_[p_sym];
+                    int q_abs = q_rel + mopi_offset_[q_sym];
                     if (p_abs > q_abs)
                         list[pq_sym].push_back(std::make_pair(p_abs, q_abs));
                 }

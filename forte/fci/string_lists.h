@@ -119,20 +119,18 @@ class StringLists {
   public:
     // ==> Constructor and Destructor <==
 
-    StringLists(RequiredLists required_lists, psi::Dimension cmopi, std::vector<size_t> core_mo,
-                std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print);
+    StringLists(RequiredLists required_lists, const psi::Dimension& cmopi, size_t na, size_t nb,
+                int print);
     ~StringLists() {}
 
     // ==> Class Public Functions <==
 
     size_t na() const { return na_; }
-    int nirrep() const { return nirrep_; }
-    size_t ncmo() const { return ncmo_; }
-    std::vector<size_t> cmo_to_mo() const { return cmo_to_mo_; }
-    std::vector<size_t> fomo_to_mo() const { return fomo_to_mo_; }
-    psi::Dimension cmopi() const { return cmopi_; }
-    std::vector<size_t> cmopi_offset() const { return cmopi_offset_; }
     size_t nb() const { return nb_; }
+    int nirrep() const { return nirrep_; }
+    size_t nmo() const { return nmo_; }
+    psi::Dimension mopi() const { return mopi_; }
+    std::vector<size_t> mopi_offset() const { return mopi_offset_; }
     size_t pairpi(int h) const { return pairpi_[h]; }
 
     GraphPtr alfa_graph() { return alfa_graph_; }
@@ -178,8 +176,6 @@ class StringLists {
 
     Pair get_nn_list_pair(int h, int n) const { return nn_list[h][n]; }
 
-    //  size_t get_nalfa_strings() const {return nas;}
-    //  size_t get_nbeta_strings() const {return nbs;}
   private:
     // ==> Class Data <==
 
@@ -187,16 +183,12 @@ class StringLists {
     RequiredLists required_lists_;
     /// The number of irreps
     int nirrep_;
-    /// The total number of correlated molecular orbitals
-    size_t ncmo_;
-    /// The number of correlated molecular orbitals per irrep
-    psi::Dimension cmopi_;
-    /// The offset array for cmopi_
-    std::vector<size_t> cmopi_offset_;
-    /// The mapping between correlated molecular orbitals and all orbitals
-    std::vector<size_t> cmo_to_mo_;
-    /// The mapping between frozen occupied molecular orbitals and all orbitals
-    std::vector<size_t> fomo_to_mo_;
+    /// The total number of active molecular orbitals
+    size_t nmo_;
+    /// The number of active molecular orbitals per irrep
+    psi::Dimension mopi_;
+    /// The offset array for mopi_
+    std::vector<size_t> mopi_offset_;
     /// The number of alpha electrons
     size_t na_;
     /// The number of beta electrons

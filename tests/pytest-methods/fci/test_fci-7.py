@@ -1,6 +1,6 @@
 import pytest
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_fci_7():
@@ -18,7 +18,7 @@ def test_fci_7():
     H 1 1.0
     units bohr
     """
-    input = solver_factory(molecule=xyz, basis='6-31G')
+    input = input_factory(molecule=xyz, basis='6-31G')
     state = input.state(charge=0, multiplicity=2, sym='b1')
 
     hf_doublet = HF(input, state=state, docc=[3, 0, 0, 0], socc=[0, 0, 1, 0])

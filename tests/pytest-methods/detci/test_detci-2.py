@@ -1,6 +1,6 @@
 import pytest
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_detci_2():
@@ -16,10 +16,9 @@ def test_detci_2():
     H 1 1.00
     H 1 1.00 2 103.1
     """
-    input = solver_factory(molecule=xyz, basis='6-31g**')
+    input = input_factory(molecule=xyz, basis='6-31g**')
     state = input.state(charge=0, multiplicity=1, sym='a1')
     hf = HF(input, state=state, d_convergence=1.0e-10)
-    hf.run()
 
     # define two states with different number of GAS constraints
     gas_state_1 = input.state(charge=0, multiplicity=1, sym='a1', gasmin=[0], gasmax=[2])

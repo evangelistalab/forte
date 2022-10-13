@@ -250,12 +250,6 @@ class ActiveSpaceMethod {
     void set_quite_mode(bool quiet);
 
   protected:
-    /// The list of active orbitals (absolute ordering)
-    std::vector<size_t> active_mo_;
-
-    /// The list of doubly occupied orbitals (absolute ordering)
-    std::vector<size_t> core_mo_;
-
     /// The state to calculate
     StateInfo state_;
 

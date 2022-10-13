@@ -1,0 +1,75 @@
+import pytest
+from forte.solvers import HF, ActiveSpaceSolver, MCSCF, input_factory
+
+
+def test_casscf_7():
+    """CASSCF on cyclopropene with symmetry and conventional integrals"""
+    ref_mcscf_energy = -115.191969139454
+
+    xyz = """
+    H   0.912650   0.000000   1.457504
+    H  -0.912650   0.000000   1.457504
+    H   0.000000  -1.585659  -1.038624
+    H   0.000000   1.585659  -1.038624
+    C   0.000000   0.000000   0.859492
+    C   0.000000  -0.651229  -0.499559
+    C   0.000000   0.651229  -0.499559
+    """
+
+    input = input_factory(molecule=xyz, basis='3-21g')
+    state = input.state(charge=0, multiplicity=1, sym='a1')
+    mo_spaces = input.mo_spaces(restricted_docc=[6, 0, 1, 2], active=[0, 1, 1, 1])
+
+    hf = HF(input, state=state)
+    fci = ActiveSpaceSolver(hf, type='FCI', states=state, mo_spaces=mo_spaces)
+    mcscf = MCSCF(fci)
+    mcscf.run()
+
+    assert mcscf.value('mcscf energy')[state] == pytest.approx([ref_mcscf_energy], 1.0e-10)
+
+
+if __name__ == "__main__":
+    test_casscf_7()
+
+# import forte
+# memory 1 gb
+
+# e_casscf_psi4 = -115.191969103946292
+
+# molecule cyclopropene {
+# H   0.912650   0.000000   1.457504
+# H  -0.912650   0.000000   1.457504
+# H   0.000000  -1.585659  -1.038624
+# H   0.000000   1.585659  -1.038624
+# C   0.000000   0.000000   0.859492
+# C   0.000000  -0.651229  -0.499559
+# C   0.000000   0.651229  -0.499559
+# units angstrom
+# }
+# set globals{
+#   basis               3-21g
+#   docc                [6,0,2,3]
+#   reference           rhf
+#   restricted_docc     [6,0,1,2]
+#   active              [0,1,1,1]
+#   mcscf_type          conv
+#   reference_sym       0
+#   scf_type            direct
+# }
+# e_casscf = energy('casscf')
+# compare_values(e_casscf_psi4, e_casscf, 6, "CASSCF ENERGY PSI4")
+
+# set forte {
+#   job_type            casscf
+#   int_type            conventional
+#   restricted_docc     [6,0,1,2]
+#   active              [0,1,1,1]
+#   casscf_ci_solver    fci
+#   root_sym            0
+#   nroot               1
+#   root                0
+#   casscf_maxiter      40
+#   print               0
+# }
+# e_casscf_forte = energy('forte')
+# compare_values(e_casscf_psi4, e_casscf_forte, 6, "CASSCF ENERGY FORTE")

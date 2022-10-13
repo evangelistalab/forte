@@ -119,10 +119,6 @@ void ForteIntegrals::read_information() {
     num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
     num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
-
-    // skip integral allocation and transformation if doing CASSCF
-    auto job_type = options_->get_str("JOB_TYPE");
-    skip_build_ = (job_type == "MCSCF_TWO_STEP") and (integral_type_ != Custom);
 }
 
 void ForteIntegrals::allocate() {
@@ -292,15 +288,6 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_dipole_ints() const
     return dipole_ints_ao_;
 }
 
-// void ForteIntegrals::set_oei(double** ints, bool alpha) {
-//    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
-//    for (size_t p = 0; p < aptei_idx_; ++p) {
-//        for (size_t q = 0; q < aptei_idx_; ++q) {
-//            p_oei[p * aptei_idx_ + q] = ints[p][q];
-//        }
-//    }
-//}
-
 void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
     std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
     p_oei[p * aptei_idx_ + q] = value;
@@ -410,8 +397,6 @@ void ForteIntegrals::print_info() {
 }
 
 void ForteIntegrals::print_ints() {
-    //    Ca_->print();
-    //    Cb_->print();
     outfile->Printf("\n  nmo_ = %zu", nmo_);
 
     outfile->Printf("\n  Nuclear repulsion energy: %20.12f", nucrep_);

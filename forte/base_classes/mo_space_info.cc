@@ -51,6 +51,18 @@ MOSpaceInfo::MOSpaceInfo(const psi::Dimension& nmopi, const std::string& point_g
     }
 }
 
+size_t MOSpaceInfo::nirrep() const { return nirrep_; }
+
+const std::string& MOSpaceInfo::irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
+
+std::string MOSpaceInfo::point_group_label() const { return symmetry_.point_group_label(); }
+
+const std::vector<std::string>& MOSpaceInfo::space_names() const { return elementary_spaces_; }
+
+std::map<std::string, std::vector<std::string>> MOSpaceInfo::composite_space_names() const {
+    return composite_spaces_;
+}
+
 std::string MOSpaceInfo::str() const {
     std::string s;
     for (const auto& space : space_names()) {
@@ -281,6 +293,8 @@ psi::Slice MOSpaceInfo::range(const std::string& space) {
     return psi::Slice(dim_start, dim_end);
 }
 
+const std::vector<size_t>& MOSpaceInfo::reorder() const { return reorder_; }
+
 void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
     // Read the elementary spaces
     for (const std::string& space : elementary_spaces_) {
@@ -457,7 +471,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     return std::make_pair(space_info, read);
 }
 
-std::vector<std::string> MOSpaceInfo::nonzero_gas_spaces() const {
+std::vector<std::string> MOSpaceInfo::nonempty_gas_spaces() const {
     std::vector<std::string> nonzero_gas;
 
     auto gas_spaces = composite_space_names()["ACTIVE"];

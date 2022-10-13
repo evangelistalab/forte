@@ -1,92 +1,13 @@
 from abc import abstractmethod
-from enum import Enum, auto
 
 from forte import StateInfo
 from forte.core import flog, increase_log_depth
 from forte.solvers.callback_handler import CallbackHandler
-from forte.data import Data
 from forte.results import Results
 
 import forte
 
-
-class Feature(Enum):
-    """
-    This enum class is used to store all possible Features needed
-    or provided by a node in the computational graph
-    """
-    MODEL = auto()
-    ORBITALS = auto()
-    RDMS = auto()
-
-
-class Node():
-    """
-    Represents a node part of a computational graph.
-
-    A ``Node`` provides only basic functionality and this class
-    is specialized in derived classes (Solver, Input,...).
-    A ``Node`` stores the list of input nodes and a
-    list of features (elements of ``Features``) that are needed and provided.
-    The features that are needed must be part of the input node(s).
-    This information is used to check the validity of a graph.
-    """
-    def __init__(self, needs, provides, input_nodes=None, data=None):
-        """
-        Parameters
-        ----------
-        needs: list(Feature)
-            a list of features required by this solver
-        provides: list(Feature)
-            a list of features provided by this solver
-        input: list(Solver)
-            a list of input nodes to this node
-        """
-        self._needs = needs
-        self._provides = provides
-        # input_nodes can be None, a single element, or a list
-        input_nodes = [] if input_nodes is None else input_nodes
-        self._input_nodes = input_nodes if type(input_nodes) is list else [input_nodes]
-        self._check_input()
-        self._data = Data() if data is None else data
-
-    @property
-    def needs(self):
-        return self._needs
-
-    @property
-    def provides(self):
-        return self._provides
-
-    @property
-    def input_nodes(self):
-        return self._input_nodes
-
-    @property
-    def data(self):
-        return self._data
-
-    def _check_input(self):
-        # verify that this solver can get all that it needs from its inputs
-        for need in self.needs:
-            need_met = False
-            for input in self.input_nodes:
-                if need in input.provides:
-                    need_met = True
-            if not need_met:
-                raise AssertionError(
-                    f'\n\n  ** The computational graph is inconsistent ** \n\n{self.computational_graph()}'
-                    f'\n\n  The solver {self.__class__.__name__} cannot get a feature ({need}) from its input solver: '
-                    + ','.join([input.__class__.__name__ for input in self.input_nodes]) + '\n'
-                )
-
-    def computational_graph(self):
-        graph = f'{self.__class__.__name__}'
-        if len(self.input_nodes) > 0:
-            graph += '\n |\n'
-            for input in self.input_nodes:
-                graph += input.computational_graph()
-        return graph
+from forte.solvers.node import Node
 
 
 class Solver(Node):
@@ -107,7 +28,7 @@ class Solver(Node):
     Solver stores Forte base objects in a data attribute
     and a results object.
     """
-    def __init__(self, needs, provides, input_nodes=None, options=None, cbh=None):
+    def __init__(self, needs, provides, input_nodes=None, data=None, options=None, cbh=None):
         """
         Parameters
         ----------
@@ -122,13 +43,13 @@ class Solver(Node):
         cbh: CallbackHandler
             a callback handler object
         """
-        super().__init__(needs, provides, input_nodes)
+        super().__init__(needs, provides, input_nodes, data)
 
         self._options = {} if options is None else options
         self._cbh = CallbackHandler() if cbh is None else cbh
         self._executed = False
         self._results = Results()
-        # the default psi4 output file
+        # set the default psi4 output file
         self._output_file = 'output.dat'
         # self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
 
@@ -262,7 +183,7 @@ class Solver(Node):
             raise ValueError(f'could not parse stats input {states}')
         return parsed_states
 
-    def make_mo_space_info(self, mo_spaces):
+    def make_mo_space_info(self, mo_spaces, reorder=None):
         """
         Make a MOSpaceInfo object from a dictionary
 
@@ -270,14 +191,16 @@ class Solver(Node):
         ----------
         mo_spaces: dict(str -> list(int))
             A dictionary of orbital space labels to a list of number of orbitals per irrep
-
+        reorder: list(int)
+            A list used to reorder the MOs. If not provided, use Pitzer order as obtained
+            from psi4
         Return
         ------
             A MOSpaceInfo object
         """
         nmopi = self.data.scf_info.nmopi()
         point_group = self.model.point_group
-        reorder = []  # TODO: enable reorder
+        reorder = [] if reorder is None else reorder
         self.data.mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces, reorder)
 
     def prepare_forte_options(self):

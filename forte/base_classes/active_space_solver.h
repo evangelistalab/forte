@@ -147,6 +147,12 @@ class ActiveSpaceSolver {
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
+    /// @return the the label of the ActiveSpaceMethod used by this solver
+    std::string method() const;
+
+    std::shared_ptr<MOSpaceInfo> mo_space_info() const;
+
+    std::shared_ptr<SCFInfo> scf_info() const;
     /// Set unitary matrices for changing orbital basis in RDMs when computing dipole moments
     void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
         Ua_actv_ = Ua;
@@ -223,7 +229,11 @@ class ActiveSpaceSolver {
 };                                   // namespace forte
 
 /**
- * @brief Make an active space solver object.
+ * @brief Make an active space solver object
+ *
+ * Here we make a shared pointer because this object will be passed to other
+ * classes, like MCSCF.
+ *
  * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
  * @param state_nroots_map a map from state symmetry to the number of roots
  * @param scf_info information about a previous SCF computation

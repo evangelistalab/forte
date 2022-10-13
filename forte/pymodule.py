@@ -200,7 +200,11 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     # set DF and MINAO basis
     if 'DF' in options.get_str('INT_TYPE'):
         aux_basis = psi4.core.BasisSet.build(
-            molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS'),
+            molecule,
+            'DF_BASIS_MP2',
+            options.get_str('DF_BASIS_MP2'),
+            'RIFIT',
+            options.get_str('BASIS'),
             puream=wfn_new.basisset().has_puream()
         )
         wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
@@ -482,10 +486,6 @@ def run_forte(name, **kwargs):
 
     """
 
-    # # Start Forte, initialize ambit
-    # my_proc_n_nodes = forte.startup()
-    # my_proc, n_nodes = my_proc_n_nodes
-
     # Build Forte options
     options = prepare_forte_options(kwargs.get('forte_options'))
 
@@ -539,8 +539,18 @@ def run_forte(name, **kwargs):
         energy = casscf.compute_energy()
 
     if (job_type == "MCSCF_TWO_STEP"):
-        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
-        energy = casscf.compute_energy()
+        state_map = forte.to_state_nroots_map(state_weights_map)
+
+        # create an active space solver object and compute the energy
+        as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+
+        active_space_solver_type = options.get_str('CASSCF_CI_SOLVER')
+        active_space_solver = forte.make_active_space_solver(
+            active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
+        )
+        casscf = forte.make_mcscf_two_step(state_weights_map, mo_space_info, options, ints, active_space_solver)
+        energies = casscf.compute_energy()
+        energy = forte.compute_average_state_energy(energies, state_weights_map)
 
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)
@@ -548,9 +558,6 @@ def run_forte(name, **kwargs):
         energy = mr_dsrg_pt2(job_type, forte_objects, ints, options)
 
     end = time.time()
-
-    # Close ambit, etc.
-    # forte.cleanup()
 
     psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
 
@@ -603,10 +610,6 @@ def gradient_forte(name, **kwargs):
         available for : CASSCF
     """
 
-    # # Start Forte, initialize ambit
-    # my_proc_n_nodes = forte.startup()
-    # my_proc, n_nodes = my_proc_n_nodes
-
     # Get the psi4 option object
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
     psi4.core.set_global_option('DERTYPE', 'FIRST')
@@ -649,8 +652,16 @@ def gradient_forte(name, **kwargs):
         casscf.compute_gradient()
 
     if job_type == "MCSCF_TWO_STEP":
-        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
-        energy = casscf.compute_energy()
+        state_map = forte.to_state_nroots_map(state_weights_map)
+        # create an active space solver object and compute the energy
+        as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+        active_space_solver_type = options.get_str('CASSCF_CI_SOLVER')
+        active_space_solver = forte.make_active_space_solver(
+            active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
+        )
+        casscf = forte.make_mcscf_two_step(state_weights_map, mo_space_info, options, ints, active_space_solver)
+        energies = casscf.compute_energy()
+        energy = forte.compute_average_state_energy(energies, state_weights_map)
 
     time_pre_deriv = time.time()
 
@@ -662,9 +673,6 @@ def gradient_forte(name, **kwargs):
     optstash.restore()
 
     end = time.time()
-
-    # Close ambit, etc.
-    # forte.cleanup()
 
     # Print timings
     psi4.core.print_out('\n\n ==> Forte Timings <==\n')

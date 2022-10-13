@@ -64,6 +64,7 @@ void export_MOSpaceInfo(py::module& m) {
              "Read the space info from a map {spacename -> dimension vector}")
         .def("set_reorder", &MOSpaceInfo::set_reorder,
              "Reorder MOs according to the input indexing vector")
+        .def("reorder", &MOSpaceInfo::reorder, "Return the reorder vector")
         .def("compute_space_info", &MOSpaceInfo::compute_space_info,
              "Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals")
         .def("size", &MOSpaceInfo::size, "Return the number of orbitals in a space")

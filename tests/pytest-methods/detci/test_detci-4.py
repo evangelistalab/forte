@@ -1,6 +1,6 @@
 import pytest
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_detci_4():
@@ -13,7 +13,7 @@ def test_detci_4():
     F
     H 1 1.0
     """
-    input = solver_factory(molecule=xyz, basis='6-31g')
+    input = input_factory(molecule=xyz, basis='6-31g')
     state = input.state(charge=0, multiplicity=1, sym='a1')
     hf = HF(input, state=state, e_convergence=1.0e-12, d_convergence=1.0e-8)
     # create a detci solver
