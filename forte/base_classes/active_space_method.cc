@@ -85,6 +85,14 @@ void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
 
+std::vector<std::vector<double>> ActiveSpaceMethod::compute_permanent_quadrupole(
+    const std::vector<std::pair<size_t, size_t>>& root_list, const ambit::Tensor& Ua,
+    const ambit::Tensor& Ub) {
+    std::vector<std::vector<double>> out;
+    
+    return out;
+}
+
 std::vector<std::vector<double>>
 ActiveSpaceMethod::compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
                                             const ambit::Tensor& Ua, const ambit::Tensor& Ub) {

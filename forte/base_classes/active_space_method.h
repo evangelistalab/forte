@@ -154,6 +154,11 @@ class ActiveSpaceMethod {
     compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
                              const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
+    /// Compute permanent quadrupole moments
+    std::vector<std::vector<double>>
+    compute_permanent_quadrupole(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                 const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
     /// Compute transition dipole moments assuming same orbitals
     std::vector<std::vector<double>>
     compute_transition_dipole_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,

@@ -201,21 +201,21 @@ double MCSCF_2STEP::compute_energy() {
 
     bool converged = false;
 
-    if (is_single_reference()) { // Case 2: if there is only 1 determinant
-        lbfgs_param->maxiter = micro_maxiter_ > maxiter_ ? micro_maxiter_ : maxiter_;
-        maxiter_ = lbfgs_param->maxiter;
+//  if (is_single_reference()) { // Case 2: if there is only 1 determinant
+//      lbfgs_param->maxiter = micro_maxiter_ > maxiter_ ? micro_maxiter_ : maxiter_;
+//      maxiter_ = lbfgs_param->maxiter;
 
-        print_h2("Single-Reference Orbital Optimization");
-        cas_grad.set_rdms(rdms);
-        energy_ = lbfgs.minimize(cas_grad, R);
-        converged = lbfgs.converged();
-        pass_energy_to_psi4(converged);
+//      print_h2("Single-Reference Orbital Optimization");
+//      cas_grad.set_rdms(rdms);
+//      energy_ = lbfgs.minimize(cas_grad, R);
+//      converged = lbfgs.converged();
+//      pass_energy_to_psi4(converged);
 
-        if (converged) {
-            psi::outfile->Printf("\n\n  SCF converged in %d iterations!", lbfgs.iter());
-            psi::outfile->Printf("\n  @ Final energy: %.15f", energy_);
-        }
-    } else { // Case 3: multi-determinant SCF
+//      if (converged) {
+//          psi::outfile->Printf("\n\n  SCF converged in %d iterations!", lbfgs.iter());
+//          psi::outfile->Printf("\n  @ Final energy: %.15f", energy_);
+//      }
+//  } else { // Case 3: multi-determinant SCF
         // DIIS extrapolation for macro iteration
         psi::DIISManager diis_manager(do_diis_ ? diis_max_vec_ : 0, "MCSCF DIIS",
                                       psi::DIISManager::RemovalPolicy::OldestAdded,
@@ -354,7 +354,7 @@ double MCSCF_2STEP::compute_energy() {
 
         // print summary
         print_macro_iteration(history);
-    }
+//  }
 
     // perform final CI using converged orbitals
     energy_ = diagonalize_hamiltonian(
