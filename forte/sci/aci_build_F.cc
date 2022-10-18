@@ -320,7 +320,7 @@ void AdaptiveCI::get_excited_determinants_avg(
                                 }
                                 // thread_ex_dets[i * nobeta + a] =
                                 // std::make_pair(new_det,coupling);
-                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                thread_ex_dets.emplace_back(new_det, coupling);
                             }
                         }
                     }
@@ -354,7 +354,7 @@ void AdaptiveCI::get_excited_determinants_avg(
                                         // noalpha*noalpha*nvalpha +
                                         // j*nvalpha*noalpha +  a*nvalpha + b ]
                                         // = std::make_pair(new_det,coupling);
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.emplace_back(new_det, coupling);
                                     }
                                 }
                             }
