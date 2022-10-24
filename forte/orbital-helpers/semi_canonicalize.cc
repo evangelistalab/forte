@@ -265,9 +265,8 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
 
         if (checked_results_[name]) {
             auto M = pair.second;
+            // natural orbital in descending order, canonical orbital in ascending order
             bool ascending = M->name().find("Fock") != std::string::npos;
-            if (not ascending)
-                M->print();
 
             // diagonalize this block
             auto Usub = std::make_shared<psi::Matrix>("U " + name, M->rowspi(), M->colspi());

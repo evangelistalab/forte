@@ -139,8 +139,8 @@ class ActiveSpaceMethod {
     /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
     /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
     virtual std::vector<double>
-    compute_complementary_H2caa_overlap(const std::vector<size_t>& roots, ambit::Tensor Tbra,
-                                        ambit::Tensor Tket) {
+    compute_complementary_H2caa_overlap(const std::vector<size_t>& /*roots*/,
+                                        ambit::Tensor /*Tbra*/, ambit::Tensor /*Tket*/) {
         throw std::runtime_error(
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }
@@ -149,15 +149,22 @@ class ActiveSpaceMethod {
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
+    /// Compute permanent dipole moments
+    std::vector<std::vector<double>>
+    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
     /// Compute transition dipole moments assuming same orbitals
     std::vector<std::vector<double>>
     compute_transition_dipole_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                        std::shared_ptr<ActiveSpaceMethod> method2);
+                                        std::shared_ptr<ActiveSpaceMethod> method2,
+                                        const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Compute oscillator strength assuming same orbitals
     std::vector<double>
     compute_oscillator_strength_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2);
+                                          std::shared_ptr<ActiveSpaceMethod> method2,
+                                          const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Dump the wave function to file
     /// @param file name
@@ -224,6 +231,9 @@ class ActiveSpaceMethod {
     /// Set if we dump the wave function to disk
     void set_dump_wfn(bool dump);
 
+    /// Set if we dump the transition dipole moment to disk
+    void set_dump_trdm(bool dump);
+
     /// Set the file name for storing wave function on disk
     /// @param name the wave function file name
     void set_wfn_filename(const std::string& name);
@@ -289,6 +299,8 @@ class ActiveSpaceMethod {
 
     /// Read wave function from disk as initial guess?
     bool read_wfn_guess_ = false;
+    /// Dump transition density matrix to disk?
+    bool dump_trdm_ = false;
     /// Dump wave function to disk?
     bool dump_wfn_ = false;
     /// The file name for storing wave function (determinants, CI coefficients)

@@ -62,6 +62,17 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
+    gas_diff_only_ = options->get_bool("PRINT_DIFFERENT_GAS_ONLY");
+
+    auto nactv = mo_space_info_->size("ACTIVE");
+    Ua_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nactv, nactv});
+    Ub_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nactv, nactv});
+    auto& Ua_data = Ua_actv_.data();
+    auto& Ub_data = Ub_actv_.data();
+    for (size_t i = 0; i < nactv; ++i) {
+        Ua_data[i * nactv + i] = 1.0;
+        Ub_data[i * nactv + i] = 1.0;
+    }
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -79,8 +90,6 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_r_convergence(r_convergence_);
         state_method_map_[state] = method;
 
-        int twice_ms = state.twice_ms();
-
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();
             method->set_read_wfn_guess(read_initial_guess_);
@@ -97,8 +106,11 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     }
     print_energies();
 
-    if (options_->get_bool("TRANSITION_DIPOLES")) {
-        compute_fosc_same_orbs();
+    if (as_ints_->ints()->integral_type() != Custom) {
+        compute_dipole_moment();
+        if (options_->get_bool("TRANSITION_DIPOLES")) {
+            compute_fosc_same_orbs();
+        }
     }
 
     return state_energies_map_;
@@ -168,6 +180,21 @@ void ActiveSpaceSolver::print_energies() {
     }
 }
 
+void ActiveSpaceSolver::compute_dipole_moment() {
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& [state, nroots] = state_nroots;
+        const auto& method = state_method_map_[state];
+
+        // prepare root list
+        std::vector<std::pair<size_t, size_t>> root_list;
+        for (size_t i = 0; i < nroots; ++i) {
+            root_list.emplace_back(i, i);
+        }
+
+        method->compute_permanent_dipole(root_list, Ua_actv_, Ub_actv_);
+    }
+}
+
 void ActiveSpaceSolver::compute_fosc_same_orbs() {
     // assume SAME set of orbitals!!!
 
@@ -181,6 +208,11 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
         size_t nroot1 = state_nroots_map_[state1];
         const auto& method1 = state_method_map_[state1];
 
+        // Dump transition reduced density matrix if neceessary
+        if (options_->get_bool("DUMP_TRANSITION_RDM")) {
+            method1->set_dump_trdm(true);
+        }
+
         for (size_t N = M; N < n_entries; ++N) {
             const auto& state2 = states[N];
             size_t nroot2 = state_nroots_map_[state2];
@@ -190,26 +222,33 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
             if (state1.multiplicity() != state2.multiplicity())
                 continue;
 
+            // Only calculate the oscillator strengths between states that differ in GAS occupation
+            // Generally used for core-excited state
+            if (gas_diff_only_) {
+                if (state1.gas_max() == state2.gas_max() && state1.gas_min() == state2.gas_min())
+                    continue;
+            }
+
             // prepare list of root pairs
             std::vector<std::pair<size_t, size_t>> state_ids;
             if (M == N) {
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = i + 1; j < nroot2; ++j) {
-                        state_ids.push_back({i, j});
+                        state_ids.emplace_back(i, j);
                     }
                 }
             } else {
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = 0; j < nroot2; ++j) {
-                        state_ids.push_back({i, j});
+                        state_ids.emplace_back(i, j);
                     }
                 }
             }
-            if (state_ids.size() == 0)
+            if (state_ids.empty())
                 continue;
 
             // compute oscillator strength
-            method1->compute_oscillator_strength_same_orbs(state_ids, method2);
+            method1->compute_oscillator_strength_same_orbs(state_ids, method2, Ua_actv_, Ub_actv_);
         }
     }
 }
@@ -335,7 +374,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         state_weights_map[state_this] = weights;
     } else {
         double sum_of_weights = 0.0;
-        size_t nstates = 0;
         size_t nentry = avg_state.size();
         for (size_t i = 0; i < nentry; ++i) {
             py::list avg_state_list = avg_state[i];
@@ -436,7 +474,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
                                  irrep_label, gas_min, gas_max);
             state_weights_map[state_this] = weights;
-            nstates += nstates_this;
         }
 
         // normalize weights

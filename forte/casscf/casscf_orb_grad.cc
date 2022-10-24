@@ -43,8 +43,9 @@
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libpsio/psio.hpp"
 
-#include "helpers/printing.h"
+#include "helpers/helpers.h"
 #include "helpers/lbfgs/lbfgs.h"
+#include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
@@ -661,6 +662,19 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
     });
 }
 
+psi::SharedMatrix CASSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
+    // put spin-summed 1RDM to psi4 Matrix
+    auto rdm1 = tensor_to_matrix(rdms->SF_G1(), nactvpi_);
+
+    // use ForteIntegrals to build Fock
+    auto Ftuple = ints_->make_fock_inactive(psi::Dimension(nirrep_), ndoccpi_);
+    auto Fock = std::get<0>(Ftuple);
+    Fock->add(ints_->make_fock_active_restricted(rdm1));
+    Fock->set_name("Fock");
+
+    return Fock;
+}
+
 double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g) {
     // if need to update orbitals and integrals
     if (update_orbitals(x)) {
@@ -694,7 +708,7 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     dR->subtract(R_);
 
     // incoming x consistent with R_, no need to update orbitals
-    if (dR->absmax() < 1.0e-12)
+    if (dR->absmax() < numerical_zero_)
         return false;
 
     // officially save progress of dR

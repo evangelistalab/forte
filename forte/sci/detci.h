@@ -82,8 +82,10 @@ class DETCI : public ActiveSpaceMethod {
     /// Number of active orbitals per irrep
     psi::Dimension actv_dim_;
 
-    /// Active space type (CAS, GAS, DOCI)
+    /// Active space type (CAS, GAS, DOCI, CIS/CID/CISD)
     std::string actv_space_type_;
+    /// Exclude HF determinant in CID/CISD
+    bool exclude_hf_in_cid_;
 
     /// The determinant space
     DeterminantHashVec p_space_;
@@ -139,8 +141,6 @@ class DETCI : public ActiveSpaceMethod {
     std::vector<psi::SharedMatrix> opdm_a_;
     /// 1RDMs beta spin
     std::vector<psi::SharedMatrix> opdm_b_;
-    /// Print natural occupations for a given root
-    void print_natural_occ(int root);
 
     /// Compute the (transition) 1RDMs, same orbital, same set of determinants
     std::vector<ambit::Tensor> compute_trans_1rdms_sosd(int root1, int root2);
@@ -151,8 +151,6 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Printing for CI_RDMs
     bool print_ci_rdms_ = true;
-    /// Compute permanent dipole moments
-    void compute_permanent_dipole();
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess(const std::string& filename);

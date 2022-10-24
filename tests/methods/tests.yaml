@@ -4,6 +4,9 @@
 # different types of tests (short, long, unused). This is done so that the
 # test script can run certain subsets of all tests.
 #
+api:
+   short:
+      - pass_options
 aci:
    short:
       - aci-2
@@ -84,7 +87,7 @@ casscf:
       - casscf-9
       - casscf-gradient-2
       - casscf-opt-1
-      - casscf-opt-2
+      # - casscf-opt-2
    long:
       - casscf-8
 cd-dsrg-mrpt2:
@@ -233,6 +236,7 @@ gasci:
       - gasci-1
       - gasaci-1
       - gasaci-4
+      - gasci-dsrg-mrpt2-2
    medium:
       - gasci-2
       - gasci-3

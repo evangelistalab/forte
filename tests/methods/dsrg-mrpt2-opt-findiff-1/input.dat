@@ -2,8 +2,8 @@
 
 import forte
 
-refEdsrg = -100.2173774849334
-refRe    =    1.7342309621 # in Bohr
+refEdsrg = -100.224425668263
+refRe    =    1.748792 # bohr
 
 molecule HF{
   0 1
@@ -37,7 +37,6 @@ set forte{
   root_sym                 0
   nroot                    1
   dsrg_s                   0.5
-  active_space_solver      fci
 }
 
 Eopt = optimize('forte',dertype=0)

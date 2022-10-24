@@ -28,6 +28,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/physconst.h"
 
@@ -76,6 +77,8 @@ void ActiveSpaceMethod::set_read_wfn_guess(bool read) { read_wfn_guess_ = read; 
 
 void ActiveSpaceMethod::set_dump_wfn(bool dump) { dump_wfn_ = dump; }
 
+void ActiveSpaceMethod::set_dump_trdm(bool dump) { dump_trdm_ = dump; }
+
 void ActiveSpaceMethod::set_wfn_filename(const std::string& name) { wfn_filename_ = name; }
 
 void ActiveSpaceMethod::set_root(int value) { root_ = value; }
@@ -84,12 +87,125 @@ void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
 
+std::vector<std::vector<double>>
+ActiveSpaceMethod::compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
+    std::vector<std::vector<double>> dipoles_out;
+
+    // nuclear dipole contribution
+    auto ndip = psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+
+    // grab MO dipole moment integrals
+    auto ints = as_ints_->ints();
+    auto mo_dipole_ints = ints->mo_dipole_ints(true, true); // just take alpha spin
+
+    // contributions from doubly occupied orbitals
+    psi::Vector3 edip_docc;
+    auto docc_in_mo = mo_space_info_->pos_in_space("INACTIVE_DOCC", "ALL");
+    for (int z = 0; z < 3; ++z) {
+        auto dm_ints = mo_dipole_ints[z];
+        for (const auto& i : docc_in_mo) {
+            edip_docc[z] += 2.0 * dm_ints->get(i, i);
+        }
+    }
+
+    // contributions from active orbitals
+    auto rdms_vec = rdms(root_list, 1, RDMsType::spin_free);
+    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+        rdms_vec[i]->rotate(Ua, Ub);
+    }
+
+    auto nactv = mo_space_info_->size("ACTIVE");
+    auto actv_in_mo = mo_space_info_->pos_in_space("ACTIVE", "ALL");
+
+    std::vector<ambit::Tensor> dipole_ints(3);
+    std::vector<std::string> dirs{"X", "Y", "Z"};
+    for (int i = 0; i < 3; ++i) {
+        auto dm_ints = mo_dipole_ints[i];
+        auto dm = ambit::Tensor::build(ambit::CoreTensor, "Dipole " + dirs[i], {nactv, nactv});
+        dm.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = dm_ints->get(actv_in_mo[i[0]], actv_in_mo[i[1]]);
+        });
+        dipole_ints[i] = dm;
+    }
+
+    std::string dash(68, '-');
+    std::string state_label = state_.multiplicity_label() +
+                              " (Ms = " + get_ms_string(state_.twice_ms()) + ") " +
+                              state_.irrep_label();
+    print_h2("Permanent Dipole Moments [e a0] for " + state_label);
+    psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
+    psi::outfile->Printf("\n    %s", dash.c_str());
+
+    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+        auto root1 = root_list[i].first;
+        auto root2 = root_list[i].second;
+        if (root1 != root2)
+            continue;
+
+        auto Dt = rdms_vec[i]->SF_G1();
+
+        psi::Vector3 dip;
+        for (int z = 0; z < 3; ++z) {
+            dip[z] = Dt("pq") * dipole_ints[z]("pq");
+            dip[z] += edip_docc[z] + ndip[z];
+        }
+
+        std::vector<double> dipole{dip[0], dip[1], dip[2], dip.norm()};
+        dipoles_out.push_back(dipole);
+
+        // printing
+        std::string name = std::to_string(root1) + upper_string(state_.irrep_label());
+
+        psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dipole[0],
+                             dipole[1], dipole[2], dipole[3]);
+
+        // push to Psi4 global environment
+        auto& globals = psi::Process::environment.globals;
+
+        std::vector<std::string> keys{
+            " <" + name + "|DM_X|" + name + ">", " <" + name + "|DM_Y|" + name + ">",
+            " <" + name + "|DM_Z|" + name + ">", " |<" + name + "|DM|" + name + ">|"};
+
+        std::string multi_label = upper_string(state_.multiplicity_label());
+        std::string label = multi_label + keys[3];
+
+        // try to fix states with different gas_min and gas_max
+        if (globals.find(label) != globals.end()) {
+            if (globals.find(label + " ENTRY 0") == globals.end()) {
+                std::string suffix = " ENTRY 0";
+                for (int i = 0; i < 4; ++i) {
+                    globals[multi_label + keys[i] + suffix] = globals[multi_label + keys[i]];
+                }
+            }
+
+            int n = 1;
+            std::string suffix = " ENTRY 1";
+            while (globals.find(label + suffix) != globals.end()) {
+                suffix = " ENTRY " + std::to_string(++n);
+            }
+
+            for (int i = 0; i < 4; ++i) {
+                globals[multi_label + keys[i] + suffix] = dipole[i];
+            }
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            globals[multi_label + keys[i]] = dipole[i];
+        }
+    }
+
+    psi::outfile->Printf("\n    %s", dash.c_str());
+
+    return dipoles_out;
+}
+
 std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
     const std::vector<std::pair<size_t, size_t>>& root_list,
-    std::shared_ptr<ActiveSpaceMethod> method2) {
+    std::shared_ptr<ActiveSpaceMethod> method2, const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
 
     // compute transition dipole moments
-    auto trans_dipoles = compute_transition_dipole_same_orbs(root_list, method2);
+    auto trans_dipoles = compute_transition_dipole_same_orbs(root_list, method2, Ua, Ub);
 
     const auto& state2 = method2->state();
     std::string title = state_.str_minimum() + " -> " + state2.str_minimum();
@@ -147,12 +263,18 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
 
 std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_same_orbs(
     const std::vector<std::pair<size_t, size_t>>& root_list,
-    std::shared_ptr<ActiveSpaceMethod> method2) {
+    std::shared_ptr<ActiveSpaceMethod> method2, const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
 
     const auto& state2 = method2->state();
+
     std::string title = state_.str_minimum() + " -> " + state2.str_minimum();
     print_h2("Transition Dipole Moments [e a0] for " + title);
 
+    // compute transition 1-RDMs
+    auto rdms = transition_rdms(root_list, method2, 1, RDMsType::spin_free);
+    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+        rdms[i]->rotate(Ua, Ub); // need to make 1-TRDM and dipole in the same orbital basis
+    }
     auto ints = as_ints_->ints();
     auto nactv = mo_space_info_->size("ACTIVE");
     auto actv_in_mo = mo_space_info_->pos_in_space("ACTIVE", "ALL");
@@ -170,9 +292,6 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         });
         dipole_ints[i] = dm;
     }
-
-    // compute transition 1-RDMs
-    auto rdms = transition_rdms(root_list, method2, 1, RDMsType::spin_free);
 
     psi::outfile->Printf("\n    %6s %6s %14s %14s %14s %14s", "Bra", "Ket", "DM_X", "DM_Y", "DM_Z",
                          "|DM|");
@@ -199,7 +318,6 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         // printing
         std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
         std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
-
         psi::outfile->Printf("\n    %6s %6s", name1.c_str(), name2.c_str());
         psi::outfile->Printf("%15.8f%15.8f%15.8f%15.8f", dipole[0], dipole[1], dipole[2],
                              dipole[3]);
@@ -239,6 +357,94 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
 
+    // Doing SVD for transition reduced density matrix
+    std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
+    std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
+    std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
+
+    print_h2("Transition Reduced Density Matrix Analysis for " + title);
+    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+        auto root1 = root_list[i].first;
+        auto root2 = root_list[i].second;
+        std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
+        auto Dt = rdms[i]->SF_G1();
+        auto Dt_matrix = tensor_to_matrix(Dt);
+
+        // Dump transition reduced matrices for each transition
+        if (dump_trdm_) {
+            // Change name that contains GAS info so it does not duplicate
+            std::string gas_name1 = std::to_string(root1) + upper_string(state_.irrep_label()) +
+                                    "_" + std::to_string(state_.gas_max()[0]);
+            std::string gas_name2 = std::to_string(root2) + upper_string(state2.irrep_label()) +
+                                    "_" + std::to_string(state2.gas_max()[0]);
+            std::string dt_filename = "trdm_" + gas_name1 + "_" + gas_name2 + ".txt";
+            Dt_matrix->save(dt_filename, false, false, true);
+        }
+
+        // psi::C_DGESDD('A', nactv, nactv, Dt_matrix->pointer()[0], nactv, &S->pointer()[0],
+        //             U->pointer()[0], nactv, VT->pointer()[0], nactv, &WORK->pointer()[0], lwork,
+        //            &IWORK[0]);
+        Dt_matrix->svd_a(U, S, VT);
+
+        // Printing out the major components of transitions and major components to
+        // the natural transition orbitals in active space
+        std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
+        std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
+        psi::outfile->Printf("\n    Transition from State %4s  to State %4s :", name1.c_str(),
+                             name2.c_str());
+        double maxS = S->get(0);
+
+        // push to Psi4 environment
+        auto& globals = psi::Process::environment.globals;
+        std::string prefix = "TRANS " + upper_string(state_.multiplicity_label());
+        std::string key = " S_MAX " + name1 + " -> " + name2;
+
+        // try to fix states with different gas_min and gas_max
+        std::string label = prefix + key;
+        if (globals.find(label) != globals.end()) {
+            if (globals.find(label + " ENTRY 0") == globals.end()) {
+                std::string suffix = " ENTRY 0";
+                globals[prefix + key + suffix] = globals[prefix + key];
+            }
+            int n = 1;
+            std::string suffix = " ENTRY 1";
+            while (globals.find(label + suffix) != globals.end()) {
+                suffix = " ENTRY " + std::to_string(++n);
+            }
+            globals[prefix + key + suffix] = maxS;
+        }
+        globals[prefix + key] = maxS;
+
+        for (int comp = 0; comp < nactv; comp++) {
+            double Svalue = S->get(comp);
+            if (Svalue / maxS > 0.1) {
+                // Print the components larger than 10 percent of the strongest
+                // occupation
+                psi::outfile->Printf("\n      Component %2d ", comp + 1);
+                psi::outfile->Printf("with value of W = %6.4f", Svalue);
+                psi::outfile->Printf("\n        Init. Orbital:");
+                for (int j = 0; j < nactv; j++) {
+                    double coeff_i = U->get(j, comp);
+                    if (coeff_i * coeff_i > 0.10) {
+                        // Print the compoents with more than 0.1 amplitude form
+                        // original orbitals
+                        psi::outfile->Printf(" %6.4f Orb. %2d", coeff_i * coeff_i, j);
+                    }
+                }
+                psi::outfile->Printf("\n        Final Orbital:");
+                for (int j = 0; j < nactv; j++) {
+                    double coeff_f = VT->get(comp, j);
+                    if (coeff_f * coeff_f > 0.10) {
+                        // Print the compoents with more than 0.1 amplitude form
+                        // original orbitals
+                        psi::outfile->Printf(" %6.4f Orb. %2d", coeff_f * coeff_f, j);
+                    }
+                }
+            }
+        }
+        psi::outfile->Printf("\n        ");
+    }
+
     return dipoles_out;
 }
 
@@ -268,7 +474,8 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else if (type == "DMRG") {
 #ifdef HAVE_CHEMPS2
-        method = std::make_unique<DMRGSolver>(state, nroot, scf_info, options, mo_space_info, as_ints);
+        method =
+            std::make_unique<DMRGSolver>(state, nroot, scf_info, options, mo_space_info, as_ints);
 #else
         throw std::runtime_error("DMRG is not available! Please compile with ENABLE_CHEMPS2=ON.");
 #endif

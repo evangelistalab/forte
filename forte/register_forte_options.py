@@ -253,6 +253,9 @@ def register_active_space_solver_options(options):
 
     options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole moments and oscillator strengths")
 
+    options.add_bool("PRINT_DIFFERENT_GAS_ONLY", False, "Only calculate the transition dipole between states with different GAS occupations?")
+
+    options.add_bool("DUMP_TRANSITION_RDM", False, "Dump transition reduced matrix into disk?")
 
 def register_pt2_options(options):
     options.set_group("PT2")
@@ -533,7 +536,8 @@ def register_fci_mo_options(options):
     options.set_group("FCIMO")
     options.add_str("FCIMO_ACTV_TYPE", "COMPLETE", ["COMPLETE", "CIS", "CISD", "DOCI"], "The active space type")
 
-    options.add_bool("FCIMO_CISD_NOHF", True, "Ground state: HF;" " Excited states: no HF determinant in CISD space")
+    options.add_bool("FCIMO_CISD_NOHF", True, "Ground state: HF;"
+                     " Excited states: no HF determinant in CISD space")
 
     options.add_str("FCIMO_IPEA", "NONE", ["NONE", "IP", "EA"], "Generate IP/EA CIS/CISD space")
 
@@ -546,6 +550,7 @@ def register_detci_options(options):
     options.set_group("DETCI")
 
     options.add_double("DETCI_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors")
+    options.add_bool("DETCI_CISD_NO_HF", False, "Exclude HF determinant in active CID/CISD space")
 
 
 def register_integral_options(options):
@@ -569,8 +574,6 @@ def register_integral_options(options):
         'The number of singly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.'
     )
 
-    options.add_double("CHOLESKY_TOLERANCE", 1.0e-6, "The tolerance for cholesky integrals")
-    options.add_double("INTS_TOLERANCE", 1.0e-12, "The tolerance for cholesky integrals")
     options.add_bool("PRINT_INTS", False, "Print the one- and two-electron integrals?")
 
 
@@ -615,7 +618,8 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_DIPOLE", False, "Compute (if true) DSRG dipole moments")
 
-    options.add_int("DSRG_MAXITER", 50, "Max iterations for nonperturbative" " MR-DSRG amplitudes update")
+    options.add_int("DSRG_MAXITER", 50, "Max iterations for nonperturbative"
+                    " MR-DSRG amplitudes update")
 
     options.add_double("R_CONVERGENCE", 1.0e-6, "Residue convergence criteria for amplitudes")
 
@@ -726,7 +730,7 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_MRPT3_BATCHED", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
-    options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+    options.add_bool("IGNORE_MEMORY_ERRORS", False, "Continue running DSRG-MRPT3 even if memory exceeds")
 
     options.add_int(
         "DSRG_DIIS_START", 2, "Iteration cycle to start adding error vectors for"
@@ -745,11 +749,15 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_DUMP_AMPS", False, "Dump converged amplitudes to the current directory")
 
-    options.add_str("DSRG_T1_AMPS_GUESS", "PT2", ["PT2", "ZERO"],
-                    "The initial guess of T1 amplitudes for nonperturbative DSRG methods")
+    options.add_str(
+        "DSRG_T1_AMPS_GUESS", "PT2", ["PT2", "ZERO"],
+        "The initial guess of T1 amplitudes for nonperturbative DSRG methods"
+    )
 
-    options.add_str("DSRG_3RDM_ALGORITHM", "EXPLICIT", ["EXPLICIT", "DIRECT"],
-                    "Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]")
+    options.add_str(
+        "DSRG_3RDM_ALGORITHM", "EXPLICIT", ["EXPLICIT", "DIRECT"],
+        "Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]"
+    )
 
     options.add_bool("DSRG_RDM_MS_AVG", False, "Form Ms-averaged density if true")
 
@@ -870,8 +878,10 @@ def register_casscf_options(options):
 
     options.add_double("CASSCF_MAX_ROTATION", 0.2, "Max value in orbital update vector")
 
-    options.add_str("CASSCF_ORB_ORTHO_TRANS", "CAYLEY", ["CAYLEY", "POWER", "PADE"],
-                    "Ways to compute the orthogonal transformation U from orbital rotation R")
+    options.add_str(
+        "CASSCF_ORB_ORTHO_TRANS", "CAYLEY", ["CAYLEY", "POWER", "PADE"],
+        "Ways to compute the orthogonal transformation U from orbital rotation R"
+    )
 
     options.add_str(
         "ORB_ROTATION_ALGORITHM", "DIAGONAL", ["DIAGONAL", "AUGMENTED_HESSIAN"], "Orbital rotation algorithm"
@@ -919,12 +929,11 @@ def register_old_options(options):
     options.add_bool("USE_DMRGSCF", False, "Use the older DMRGSCF algorithm?")
 
     #    /*- Semicanonicalize orbitals -*/
-    options.add_bool("SEMI_CANONICAL", True,
-                     "Semicanonicalize orbitals for each elementary orbital space")
-    options.add_bool("SEMI_CANONICAL_MIX_INACTIVE", False,
-                     "Treat frozen and restricted orbitals together for semi-canonicalization")
-    options.add_bool("SEMI_CANONICAL_MIX_ACTIVE", False,
-                     "Treat all GAS orbitals together for semi-canonicalization")
+    options.add_bool("SEMI_CANONICAL", True, "Semicanonicalize orbitals for each elementary orbital space")
+    options.add_bool(
+        "SEMI_CANONICAL_MIX_INACTIVE", False, "Treat frozen and restricted orbitals together for semi-canonicalization"
+    )
+    options.add_bool("SEMI_CANONICAL_MIX_ACTIVE", False, "Treat all GAS orbitals together for semi-canonicalization")
 
     #    /*- Two-particle density cumulant -*/
     options.add_str("TWOPDC", "MK", ["MK", "ZERO"], "The form of the two-particle density cumulant")
@@ -952,9 +961,11 @@ def register_old_options(options):
 def register_psi_options(options):
     options.add_str('BASIS', '', 'The primary basis set')
     options.add_str('BASIS_RELATIVISTIC', '', 'The basis set used to run relativistic computations')
-    options.add_double("INTS_TOLERANCE", 1.0E-12, 'Schwarz screening threshold')
     options.add_str("DF_INTS_IO", "NONE", ['NONE', 'SAVE', 'LOAD'], 'IO caching for CP corrections')
     options.add_str('DF_BASIS_MP2', '', 'Auxiliary basis set for density fitting computations')
+    options.add_double("INTS_TOLERANCE", 1.0e-12, "Schwarz screening threshold")
+    options.add_double("DF_FITTING_CONDITION", 1.0e-10, "Eigenvalue threshold for RI basis")
+    options.add_double("CHOLESKY_TOLERANCE", 1.0e-6, "Tolerance for Cholesky integrals")
 
 
 def register_gas_options(options):
@@ -975,18 +986,22 @@ def register_gas_options(options):
 
 def register_dmrg_options(options):
     options.set_group("DMRG")
-    options.add_int_list("DMRG_SWEEP_STATES",
-                         "Number of reduced renormalized basis states kept during successive DMRG instructions")
-    options.add_int_list("DMRG_SWEEP_MAX_SWEEPS",
-                         "Max number of sweeps to stop an instruction during successive DMRG instructions")
-    options.add_double_list("DMRG_SWEEP_ENERGY_CONV",
-                            "Energy convergence to stop an instruction during successive DMRG instructions")
-    options.add_double_list("DMRG_SWEEP_NOISE_PREFAC",
-                            "The noise prefactors for successive DMRG instructions")
-    options.add_double_list("DMRG_SWEEP_DVDSON_RTOL",
-                            "The residual tolerances for the Davidson diagonalization during DMRG instructions")
-    options.add_bool("DMRG_PRINT_CORR", False,
-                     "Whether or not to print the correlation functions after the DMRG calculation")
+    options.add_int_list(
+        "DMRG_SWEEP_STATES", "Number of reduced renormalized basis states kept during successive DMRG instructions"
+    )
+    options.add_int_list(
+        "DMRG_SWEEP_MAX_SWEEPS", "Max number of sweeps to stop an instruction during successive DMRG instructions"
+    )
+    options.add_double_list(
+        "DMRG_SWEEP_ENERGY_CONV", "Energy convergence to stop an instruction during successive DMRG instructions"
+    )
+    options.add_double_list("DMRG_SWEEP_NOISE_PREFAC", "The noise prefactors for successive DMRG instructions")
+    options.add_double_list(
+        "DMRG_SWEEP_DVDSON_RTOL", "The residual tolerances for the Davidson diagonalization during DMRG instructions"
+    )
+    options.add_bool(
+        "DMRG_PRINT_CORR", False, "Whether or not to print the correlation functions after the DMRG calculation"
+    )
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    options.add_int("MIN_EXC_LEVEL", 0)

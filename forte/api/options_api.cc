@@ -51,12 +51,12 @@ void export_ForteOptions(py::module& m) {
         .def("add_int", &ForteOptions::add_int, "Add an integer option")
         .def("add_double", &ForteOptions::add_double, "Add a double option")
         .def("add_str",
-             (void (ForteOptions::*)(const std::string&, py::object, const std::string&)) &
+             (void(ForteOptions::*)(const std::string&, py::object, const std::string&)) &
                  ForteOptions::add_str,
              "Add a string option")
         .def("add_str",
-             (void (ForteOptions::*)(const std::string&, py::object,
-                                     const std::vector<std::string>&, const std::string&)) &
+             (void(ForteOptions::*)(const std::string&, py::object, const std::vector<std::string>&,
+                                    const std::string&)) &
                  ForteOptions::add_str,
              "Add a string option")
         .def("add_int_list", &ForteOptions::add_int_array, "Add a list of integers option")
@@ -87,8 +87,8 @@ void export_ForteOptions(py::module& m) {
              "Set options from a dictionary `dict` of labels -> values")
         .def("generate_documentation", &ForteOptions::generate_documentation,
              "Generate documentation from the options list")
-        .def("__str__", &ForteOptions::str, "Returns a string represenation of this object")
-        .def("__repr__", &ForteOptions::str, "Returns a string represenation of this object");
+        .def("__str__", &ForteOptions::str, "Returns a string representation of this object")
+        .def("__repr__", &ForteOptions::str, "Returns a string representation of this object");
 }
 
 } // namespace forte
