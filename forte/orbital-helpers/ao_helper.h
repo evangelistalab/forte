@@ -36,16 +36,20 @@ namespace forte {
 
 class AtomicOrbitalHelper {
   protected:
-    psi::SharedMatrix AO_Screen_;
-    psi::SharedMatrix TransAO_Screen_;
-
     psi::SharedMatrix CMO_;
     psi::SharedVector eps_rdocc_;
     psi::SharedVector eps_virtual_;
 
-    psi::SharedMatrix POcc_;
-    psi::SharedMatrix PVir_;
-    void Compute_Psuedo_Density();
+    std::vector<psi::SharedMatrix> LOcc_list_;
+    std::vector<psi::SharedMatrix> LVir_list_;
+    std::vector<psi::SharedMatrix> POcc_list_;
+    std::vector<psi::SharedMatrix> PVir_list_;
+    std::vector<size_t> n_pseudo_occ_list_;
+    std::vector<size_t> n_pseudo_vir_list_;
+
+    psi::SharedMatrix L_Occ_real_;
+    psi::SharedMatrix L_Vir_real_;
+
 
     // LaplaceDenominator Laplace_;
     psi::SharedMatrix Occupied_Laplace_;
@@ -61,22 +65,29 @@ class AtomicOrbitalHelper {
     int shift_;
 
   public:
-    psi::SharedMatrix AO_Screen() { return AO_Screen_; }
-    psi::SharedMatrix TransAO_Screen() { return TransAO_Screen_; }
     psi::SharedMatrix Occupied_Laplace() { return Occupied_Laplace_; }
     psi::SharedMatrix Virtual_Laplace() { return Virtual_Laplace_; }
-    psi::SharedMatrix POcc() { return POcc_; }
-    psi::SharedMatrix PVir() { return PVir_; }
+
+    std::vector<psi::SharedMatrix> POcc_list() { return POcc_list_; }
+    std::vector<psi::SharedMatrix> PVir_list() { return PVir_list_; }
+    std::vector<psi::SharedMatrix> LOcc_list() { return LOcc_list_; }
+    std::vector<psi::SharedMatrix> LVir_list() { return LVir_list_; }
+    std::vector<size_t> n_pseudo_occ_list() { return n_pseudo_occ_list_; }
+    std::vector<size_t> n_pseudo_vir_list() { return n_pseudo_vir_list_; }
+    
+    psi::SharedMatrix L_Occ_real() { return L_Occ_real_; }
+    psi::SharedMatrix L_Vir_real() { return L_Vir_real_; }
+    
     int Weights() { return weights_; }
 
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance);
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance, int shift);
-    /// Compute (mu nu | mu nu)^{(1/2)}
-    void Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary);
-    void Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
-                                 std::shared_ptr<psi::BasisSet>& auxiliary);
+
+    void Compute_Cholesky_Density();
+    void Compute_Cholesky_Pseudo_Density();
+    //void Compute_L_Directly();
 
     ~AtomicOrbitalHelper();
 };

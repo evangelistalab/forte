@@ -181,6 +181,7 @@ orbital-helpers/ci-no/ci-no.cc
 orbital-helpers/ci-no/mrci-no.cc
 orbital-helpers/fragment_projector.cc
 orbital-helpers/iao_builder.cc
+orbital-helpers/Laplace.cc
 orbital-helpers/localize.cc
 orbital-helpers/mp2_nos.cc
 orbital-helpers/orbital_embedding.cc

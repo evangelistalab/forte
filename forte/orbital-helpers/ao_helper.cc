@@ -31,10 +31,14 @@
 #include "psi4/libmints/sieve.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 
 #include "psi4/lib3index/denominator.h"
 #include "psi4/libfock/jk.h"
+#include "Laplace.h"
 #include "ao_helper.h"
+
+#include <numeric> 
 
 using namespace psi;
 
@@ -66,65 +70,78 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
     nbf_ = CMO_->rowspi()[0];
 }
 AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n Done with AO helper class"); }
-void AtomicOrbitalHelper::Compute_Psuedo_Density() {
+/*
+void AtomicOrbitalHelper::Compute_L_Directly() {
     int nmo_ = nbf_;
-    auto Xocc = std::make_shared<psi::Matrix>("DensityOccupied", weights_, nbf_ * nbf_);
-    auto Yvir = std::make_shared<psi::Matrix>("DensityVirtual", weights_, nmo_ * nmo_);
 
+    LOcc_list_.resize(weights_);
+    LVir_list_.resize(weights_);
+    double value_occ, value_vir = 0;
+    for (int w = 0; w < weights_; w++) {
+        LOcc_list_[w] = std::make_shared<Matrix>("LOcc_list", nbf_, nrdocc_);
+        LVir_list_[w] = std::make_shared<Matrix>("LVir_list", nbf_, nvir_);
+        for (int mu = 0; mu < nbf_; mu++) {
+            for (int i = 0; i < nrdocc_; i++) {
+                value_occ = CMO_->get(mu, i) * std::sqrt(Occupied_Laplace_->get(w, i));
+                LOcc_list_[w]->set(mu, i, value_occ);
+                value_occ = 0.0;
+            }
+            for (int a = 0; a < nvir_; a++) {
+                value_vir = CMO_->get(mu, nrdocc_ + shift_ + a) * std::sqrt(Virtual_Laplace_->get(w, a));
+                LVir_list_[w]->set(mu, a, value_vir);
+                value_vir = 0.0;
+            }
+        }
+        n_pseudo_occ_list_.push_back(LOcc_list_[w]->coldim());
+        n_pseudo_vir_list_.push_back(LVir_list_[w]->coldim());
+    }
+}
+*/
+void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
+    psi::SharedMatrix POcc_single(new psi::Matrix("Single_POcc", nbf_, nbf_));
+    psi::SharedMatrix PVir_single(new psi::Matrix("Single_PVir", nbf_, nbf_)); 
+
+    double value_occ, value_vir = 0.0;
     for (int w = 0; w < weights_; w++) {
         for (int mu = 0; mu < nbf_; mu++) {
             for (int nu = 0; nu < nbf_; nu++) {
-                double value_occ = 0.0;
                 for (int i = 0; i < nrdocc_; i++) {
                     value_occ += CMO_->get(mu, i) * CMO_->get(nu, i) * Occupied_Laplace_->get(w, i);
                 }
-                Xocc->set(w, mu * nmo_ + nu, value_occ);
-                double value_vir = 0.0;
+                POcc_single->set(mu, nu, value_occ);
                 for (int a = 0; a < nvir_; a++) {
                     value_vir += CMO_->get(mu, nrdocc_ + shift_ + a) *
                                  CMO_->get(nu, nrdocc_ + shift_ + a) * Virtual_Laplace_->get(w, a);
                 }
-                Yvir->set(w, mu * nmo_ + nu, value_vir);
+                PVir_single->set(mu, nu, value_vir);
+                value_occ = 0.0;
+                value_vir = 0.0;
             }
         }
+        psi::SharedMatrix LOcc = POcc_single->partial_cholesky_factorize(1e-10);
+        psi::SharedMatrix LVir = PVir_single->partial_cholesky_factorize(1e-10);
+        LOcc_list_.push_back(LOcc);
+        LVir_list_.push_back(LVir);
+        POcc_list_.push_back(POcc_single);
+        PVir_list_.push_back(PVir_single);
+        n_pseudo_occ_list_.push_back(LOcc->coldim());
+        n_pseudo_vir_list_.push_back(LVir->coldim());
     }
-    POcc_ = Xocc->clone();
-    PVir_ = Yvir->clone();
 }
-void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary) {
-    ERISieve sieve(primary, 1e-10);
-    auto my_function_pair_values = sieve.function_pair_values();
-    auto AO_Screen = std::make_shared<Matrix>("Z", nbf_, nbf_);
-    for (int mu = 0; mu < nbf_; mu++)
-        for (int nu = 0; nu < nbf_; nu++)
-            AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
+void AtomicOrbitalHelper::Compute_Cholesky_Density() {
+    psi::SharedMatrix POcc_real(new psi::Matrix("Real_POcc", nbf_, nbf_));
+    psi::SharedMatrix PVir_real(new psi::Matrix("Real_PVir", nbf_, nbf_));
+    std::vector<int> Occ_idx(nrdocc_);
+    std::iota(Occ_idx.begin(), Occ_idx.end(), 0);
+    std::vector<int> Vir_idx(nvir_);
+    std::iota(Vir_idx.begin(), Vir_idx.end(), nrdocc_ + shift_);
+    psi::SharedMatrix C_Occ = submatrix_cols(*CMO_, Occ_idx);
+    psi::SharedMatrix C_Vir = submatrix_cols(*CMO_, Vir_idx);
 
-    AO_Screen_ = AO_Screen;
-    AO_Screen_->set_name("ScwartzAOInts");
-}
-void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
-                                                  std::shared_ptr<psi::BasisSet>& auxiliary) {
-    Compute_Psuedo_Density();
-    MemDFJK jk(primary, auxiliary);
-    jk.initialize();
-    jk.compute();
-    auto AO_Trans_Screen = std::make_shared<Matrix>("AOTrans", weights_, nbf_ * nbf_);
+    POcc_real = psi::linalg::doublet(C_Occ, C_Occ, false, true);
+    PVir_real = psi::linalg::doublet(C_Vir, C_Vir, false, true);
 
-    for (int w = 0; w < weights_; w++) {
-        auto COcc = std::make_shared<Matrix>("COcc", nbf_, nbf_);
-        auto CVir = std::make_shared<Matrix>("COcc", nbf_, nbf_);
-        for (int mu = 0; mu < nbf_; mu++)
-            for (int nu = 0; nu < nbf_; nu++) {
-                COcc->set(mu, nu, POcc_->get(w, mu * nbf_ + nu));
-                CVir->set(mu, nu, PVir_->get(w, mu * nbf_ + nu));
-            }
-
-        auto iaia_w = jk.iaia(COcc, CVir);
-        for (int mu = 0; mu < nbf_; mu++)
-            for (int nu = 0; nu < nbf_; nu++)
-                AO_Trans_Screen->set(w, mu * nbf_ + nu, iaia_w->get(mu * nbf_ + nu));
-    }
-    TransAO_Screen_ = AO_Trans_Screen;
-    TransAO_Screen_->set_name("(u_b {b}^v | u_b {b}^v)");
+    L_Occ_real_ = POcc_real->partial_cholesky_factorize(1e-10);
+    L_Vir_real_ = PVir_real->partial_cholesky_factorize(1e-10);
 }
 } // namespace forte
