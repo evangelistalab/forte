@@ -195,6 +195,10 @@ void ActiveSpaceSolver::compute_dipole_moment() {
     }
 }
 
+void ActiveSpaceSolver::compute_mo_extents() {
+
+}
+
 void ActiveSpaceSolver::compute_fosc_same_orbs() {
     // assume SAME set of orbitals!!!
 

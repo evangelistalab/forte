@@ -87,6 +87,9 @@ class ActiveSpaceSolver {
     /// Compute permanent dipole moments
     void compute_dipole_moment();
 
+    /// Compute <r^2>
+    void compute_mo_extents();
+
     /// Compute the oscillator strengths assuming same orbitals
     void compute_fosc_same_orbs();
 

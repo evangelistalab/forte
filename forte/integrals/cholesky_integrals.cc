@@ -256,26 +256,27 @@ void CholeskyIntegrals::transform_integrals() {
     TensorType tensor_type = CoreTensor;
 
     std::shared_ptr<psi::Matrix> L(new psi::Matrix("Lmo", nthree_, (nso_) * (nso_)));
-    std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
-    std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
-    std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
+    auto Ca_ao = Ca_AO();
+    // std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
+    // std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
+    // std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
 
-    // Transform from the SO to the AO basis
-    psi::Dimension nsopi_ = wfn_->nsopi();
-    for (int h = 0, index = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < nmopi_[h]; ++i) {
-            int nao = nso_;
-            int nso = nsopi_[h];
+    // // Transform from the SO to the AO basis
+    // psi::Dimension nsopi_ = wfn_->nsopi();
+    // for (int h = 0, index = 0; h < nirrep_; ++h) {
+    //     for (int i = 0; i < nmopi_[h]; ++i) {
+    //         int nao = nso_;
+    //         int nso = nsopi_[h];
 
-            if (!nso)
-                continue;
+    //         if (!nso)
+    //             continue;
 
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca->pointer(h)[0][i],
-                    nmopi_[h], 0.0, &Ca_ao->pointer()[0][index], nmopi_.sum());
+    //         C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca->pointer(h)[0][i],
+    //                 nmopi_[h], 0.0, &Ca_ao->pointer()[0][index], nmopi_.sum());
 
-            index += 1;
-        }
-    }
+    //         index += 1;
+    //     }
+    // }
     //    Ca_ = Ca_ao;
 
     ambit::Tensor ThreeIntegral_ao =

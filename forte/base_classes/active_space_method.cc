@@ -87,11 +87,13 @@ void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
 
-std::vector<std::vector<double>> ActiveSpaceMethod::compute_permanent_quadrupole(
-    const std::vector<std::pair<size_t, size_t>>& root_list, const ambit::Tensor& Ua,
-    const ambit::Tensor& Ub) {
+std::vector<std::vector<double>>
+ActiveSpaceMethod::compute_mo_extents(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
     std::vector<std::vector<double>> out;
-    
+
+    /// MO quadrupole integrals
+
     return out;
 }
 
@@ -105,7 +107,7 @@ ActiveSpaceMethod::compute_permanent_dipole(const std::vector<std::pair<size_t, 
 
     // grab MO dipole moment integrals
     auto ints = as_ints_->ints();
-    auto mo_dipole_ints = ints->mo_dipole_ints(true, true); // just take alpha spin
+    auto mo_dipole_ints = ints->mo_dipole_ints();
 
     // contributions from doubly occupied orbitals
     psi::Vector3 edip_docc;
@@ -288,7 +290,7 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     auto actv_in_mo = mo_space_info_->pos_in_space("ACTIVE", "ALL");
 
     // grab MO dipole moment integrals
-    auto mo_dipole_ints = ints->mo_dipole_ints(true, true); // just take alpha spin
+    auto mo_dipole_ints = ints->mo_dipole_ints();
 
     std::vector<ambit::Tensor> dipole_ints(3);
     std::vector<std::string> dirs{"X", "Y", "Z"};
