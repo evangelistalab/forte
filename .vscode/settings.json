@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "vector": "cpp",
+        "random": "cpp",
+        "algorithm": "cpp"
+    }
+}

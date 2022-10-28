@@ -1,0 +1,10 @@
+Metadata-Version: 2.1
+Name: forte
+Version: 0.2.3
+Summary: A hybrid Python/C++ quantum chemistry package for strongly correlated electrons.
+Author: Forte developers
+License-File: COPYING
+License-File: COPYING.LESSER
+License-File: AUTHORS
+
+Forte is an open-source plugin to Psi4 that implements a variety of quantum chemistry methods for strongly correlated electrons.
