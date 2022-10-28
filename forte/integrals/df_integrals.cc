@@ -196,30 +196,6 @@ void DFIntegrals::gather_integrals() {
                         mem_info.second.c_str());
     }
 
-    auto Ca_ao = Ca_AO();
-    
-    // psi::Dimension nsopi_ = wfn_->nsopi();
-    // std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
-    // std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
-    // // std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao",nso_,nmopi_.sum()));
-    // std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
-
-    // // Transform from the SO to the AO basis
-    // for (int h = 0, index = 0; h < nirrep_; ++h) {
-    //     for (int i = 0; i < nmopi_[h]; ++i) {
-    //         size_t nao = nso_;
-    //         size_t nso = nsopi_[h];
-
-    //         if (!nso)
-    //             continue;
-
-    //         C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca->pointer(h)[0][i],
-    //                 nmopi_[h], 0.0, &Ca_ao->pointer()[0][index], nmopi_.sum());
-
-    //         index += 1;
-    //     }
-    // }
-
     // B_{pq}^Q -> MO without frozen core
 
     // Constructs the DF function
@@ -246,7 +222,7 @@ void DFIntegrals::gather_integrals() {
     df->print_header();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
-    df->add_space("ALL", Ca_ao);
+    df->add_space("ALL", Ca_AO());
 
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.

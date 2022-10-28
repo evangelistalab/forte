@@ -525,15 +525,13 @@ void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
 void ForteIntegrals::build_multipole_ints_ao() { _undefined_function("build_multipole_ints_ao"); }
 
 std::vector<psi::SharedMatrix> ForteIntegrals::mo_dipole_ints() const {
-    std::vector<psi::SharedMatrix> mo_dipole_ints;
     _undefined_function("mo_dipole_ints");
-    return mo_dipole_ints;
+    return std::vector<psi::SharedMatrix>();
 }
 
 std::vector<psi::SharedMatrix> ForteIntegrals::mo_quadrupole_ints() const {
-    std::vector<psi::SharedMatrix> mo_quadrupole_ints;
     _undefined_function("mo_quadrupole_ints");
-    return mo_quadrupole_ints;
+    return std::vector<psi::SharedMatrix>();
 }
 
 void ForteIntegrals::_undefined_function(const std::string& method) const {
