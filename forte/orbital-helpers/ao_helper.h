@@ -49,6 +49,8 @@ class AtomicOrbitalHelper {
 
     psi::SharedMatrix L_Occ_real_;
     psi::SharedMatrix L_Vir_real_;
+    // psi::SharedMatrix POcc_real_;
+    // psi::SharedMatrix PVir_real_;
 
 
     // LaplaceDenominator Laplace_;
@@ -77,6 +79,9 @@ class AtomicOrbitalHelper {
     
     psi::SharedMatrix L_Occ_real() { return L_Occ_real_; }
     psi::SharedMatrix L_Vir_real() { return L_Vir_real_; }
+
+    // psi::SharedMatrix POcc_real() { return POcc_real_; }
+    // psi::SharedMatrix PVir_real() { return PVir_real_; }
     
     int Weights() { return weights_; }
 

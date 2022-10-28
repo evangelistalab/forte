@@ -128,20 +128,20 @@ void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
         n_pseudo_vir_list_.push_back(LVir->coldim());
     }
 }
-void AtomicOrbitalHelper::Compute_Cholesky_Density() {
-    psi::SharedMatrix POcc_real(new psi::Matrix("Real_POcc", nbf_, nbf_));
-    psi::SharedMatrix PVir_real(new psi::Matrix("Real_PVir", nbf_, nbf_));
-    std::vector<int> Occ_idx(nrdocc_);
-    std::iota(Occ_idx.begin(), Occ_idx.end(), 0);
-    std::vector<int> Vir_idx(nvir_);
-    std::iota(Vir_idx.begin(), Vir_idx.end(), nrdocc_ + shift_);
-    psi::SharedMatrix C_Occ = submatrix_cols(*CMO_, Occ_idx);
-    psi::SharedMatrix C_Vir = submatrix_cols(*CMO_, Vir_idx);
+// void AtomicOrbitalHelper::Compute_Cholesky_Density() {
+//     //psi::SharedMatrix POcc_real(new psi::Matrix("Real_POcc", nbf_, nbf_));
+//     //psi::SharedMatrix PVir_real(new psi::Matrix("Real_PVir", nbf_, nbf_));
+//     std::vector<int> Occ_idx(nrdocc_);
+//     std::iota(Occ_idx.begin(), Occ_idx.end(), 0);
+//     std::vector<int> Vir_idx(nvir_);
+//     std::iota(Vir_idx.begin(), Vir_idx.end(), nrdocc_ + shift_);
+//     psi::SharedMatrix C_Occ = submatrix_cols(*CMO_, Occ_idx);
+//     psi::SharedMatrix C_Vir = submatrix_cols(*CMO_, Vir_idx);
 
-    POcc_real = psi::linalg::doublet(C_Occ, C_Occ, false, true);
-    PVir_real = psi::linalg::doublet(C_Vir, C_Vir, false, true);
+//     POcc_real_ = psi::linalg::doublet(C_Occ, C_Occ, false, true);
+//     PVir_real_ = psi::linalg::doublet(C_Vir, C_Vir, false, true);
 
-    L_Occ_real_ = POcc_real->partial_cholesky_factorize(1e-10);
-    L_Vir_real_ = PVir_real->partial_cholesky_factorize(1e-10);
-}
+//     L_Occ_real_ = POcc_real_->partial_cholesky_factorize(1e-10);
+//     L_Vir_real_ = PVir_real_->partial_cholesky_factorize(1e-10);
+// }
 } // namespace forte
