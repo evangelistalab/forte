@@ -707,6 +707,10 @@ def register_dsrg_options(options):
     )
 
     options.add_bool("AO_DSRG_MRPT2", False, "Do AO-DSRG-MRPT2 if true (not available)")
+    
+    options.add_double("theta_NB", 0, "theta_NB")
+
+    options.add_double("theta_ij", 0, "theta_ij")
 
     options.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM")
 

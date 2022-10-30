@@ -2258,10 +2258,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     double E_J = 0.0;
     double E_K = 0.0;
 
-    double theta_NB = 1e-6;
-    double theta_Schwarz = 1e-9;
-    double theta_ij = 1e-6;
-    double theta_Schwarz_2 = theta_Schwarz * theta_Schwarz;
+    double theta_NB = foptions_->get_double("theta_NB");
+    double theta_ij = foptions_->get_double("theta_ij");
 
     psi::SharedMatrix Cwfn = ints_->Ca();
     if (mo_space_info_->nirrep() != 1)
@@ -2269,6 +2267,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 
     psi::SharedVector epsilon_rdocc(new psi::Vector("EPS_RDOCC", ncore_));
     psi::SharedVector epsilon_virtual(new psi::Vector("EPS_VIRTUAL", nvirtual_));
+
     int core_count = 0;
     for (auto m : core_mos_) {
         epsilon_rdocc->set(core_count, Fa_[m]);
@@ -2285,16 +2284,21 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     /// Construct Cholesky MO coefficients.
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, nactive_);
     size_t weights = ao_helper.Weights();
+
     /// Number of MO.
     size_t nmo = mo_space_info_->dimension("ALL").sum();
     ao_helper.Compute_Cholesky_Pseudo_Density();
-    // ao_helper.Compute_Cholesky_Density();
+    ao_helper.Compute_Cholesky_Density();
     std::vector<psi::SharedMatrix> Occupied_cholesky = ao_helper.LOcc_list();
     std::vector<psi::SharedMatrix> Virtual_cholesky = ao_helper.LVir_list();
+    psi::SharedMatrix Cholesky_Occ = ao_helper.L_Occ_real();
 
     /// |L_Occ| and |L_Vir|
     std::vector<psi::SharedMatrix> Occupied_cholesky_abs;
     std::vector<psi::SharedMatrix> Virtual_cholesky_abs;
+
+    /// |L_ChoMO|
+    psi::SharedMatrix Cholesky_Occ_abs = std::make_shared<psi::Matrix>("LOcc_abs", nmo, Cholesky_Occ->coldim());
 
     Occupied_cholesky_abs.resize(weights);
     Virtual_cholesky_abs.resize(weights);
@@ -2302,10 +2306,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     for (int nweight = 0; nweight < weights; nweight++) {
         Occupied_cholesky_abs[nweight] =
             std::make_shared<psi::Matrix>("LOcc_abs", nmo, Occupied_cholesky[nweight]->coldim());
-        ;
         Virtual_cholesky_abs[nweight] =
             std::make_shared<psi::Matrix>("LVir_abs", nmo, Virtual_cholesky[nweight]->coldim());
-        ;
         for (int u = 0; u < nmo; u++) {
             for (int i = 0; i < Occupied_cholesky[nweight]->coldim(); i++) {
                 Occupied_cholesky_abs[nweight]->set(
@@ -2315,6 +2317,12 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
                 Virtual_cholesky_abs[nweight]->set(u, a,
                                                    std::abs(Virtual_cholesky[nweight]->get(u, a)));
             }
+        }
+    }
+
+    for (int u = 0; u < nmo; u++) {
+        for (int i = 0; i < Cholesky_Occ->coldim(); i++) {
+            Cholesky_Occ_abs->set(u, i, std::abs(Cholesky_Occ->get(u, i)));
         }
     }
 
@@ -2331,6 +2339,16 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 
     /// Construct C_pq
     psi::SharedMatrix C_pq = load_Jinv_full(nthree_, nthree_);
+
+    ///Overlap matrix
+    psi::SharedMatrix S = ints_->wfn()->S();
+
+    ///Construct list for T_ibar_i matrices.
+    std::vector<psi::SharedMatrix> T_ibar_i_list;
+    T_ibar_i_list.resize(weights);
+    for (int i_weight = 0; i_weight < weights; i_weight++) {
+        T_ibar_i_list[i_weight] = psi::linalg::triplet(Occupied_cholesky[i_weight], S, Cholesky_Occ, true, false, false);
+    }
 
     /// Construct M_uv, N_pu, amn, and amn_new
     size_t n_func_pairs = (nmo + 1) * nmo / 2;
@@ -2387,6 +2405,51 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
         amn_new[q] = submatrix_rows_and_cols(*amn[q], ao_list_per_q[q], ao_list_per_q[q]);
     }
 
+    /// Construct N_pi = N_pu * L_ui
+    psi::SharedMatrix N_pi = psi::linalg::doublet(N_pu, Cholesky_Occ_abs, false, false);
+    double* N_pi_p = N_pi->get_pointer();
+
+    /// Construct [i]_p. Use up denotes upper bounds.
+    SparseMap i_p_up;
+    i_p_up.resize(nthree_);
+
+    /// Construct (P|iu)
+    std::vector<psi::SharedMatrix> P_iu; /// [([i]_p * ao_list_per_q), ...]
+    P_iu.resize(nthree_);
+
+    /// Construct {i}_p
+    SparseMap i_p;
+    i_p.resize(nthree_);
+    SparseMap i_p_for_i_up;
+    i_p_for_i_up.resize(nthree_);
+
+    /// (P|vu) -> (P|iu) transformation
+    for  (int q = 0; q < nthree_; q++) {
+        for (int i = 0; i < Cholesky_Occ->coldim(); i++) {
+            if (*N_pi_p > theta_NB) {
+                i_p_up[q].push_back(i);
+            }
+            N_pi_p++;
+        }
+        psi::SharedMatrix Cholesky_Occ_new = submatrix_rows_and_cols(*Cholesky_Occ, ao_list_per_q[q], i_p_up[q]);
+        P_iu[q] = psi::linalg::doublet(Cholesky_Occ_new, amn_new[q], true, false);
+        /// Construct {i}_p
+        for (int inew = 0; inew < i_p_up[q].size(); inew++) {
+            for (int u = 0; u < ao_list_per_q[q].size(); u++) {
+                if (std::abs(P_iu[q]->get(inew, u)) > theta_NB) {
+                    i_p_for_i_up[q].push_back(inew);
+                    i_p[q].push_back(i_p_up[q][inew]);
+                    break;
+                }
+            }
+        }
+        P_iu[q] = submatrix_rows(*P_iu[q], i_p_for_i_up[q]);
+    }
+
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
     /// Construct [ibar]_p and [abar]_p
     SparseMap i_bar_p_up;
     i_bar_p_up.resize(nthree_);
@@ -2394,7 +2457,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     a_bar_p_up.resize(nthree_);
 
     /// Construct (P|ibar u)
-    std::vector<psi::SharedMatrix> P_ibar_u; /// [([ibar]_p * ao_list_per_q), ...]
+    std::vector<psi::SharedMatrix> P_ibar_u;
     P_ibar_u.resize(nthree_);
 
     /// Construct (P|ibar abar)
@@ -2433,22 +2496,9 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     /// Construc Q_ia square;
     psi::SharedMatrix Q_ia_2;
 
-    /// Construct vir_intersection_per_ij <index in abar_ibar[i], index in abar_ibar[j]>
-    /// std::vector<std::pair<int,int>> vir_intersection_per_ij;
-
-    std::vector<int> aux_i_sub;
-
-    std::vector<int> aux_j_sub;
-
-    std::vector<int> abar_ibar_sub;
-
-    std::vector<int> abar_jbar_sub;
-
     std::vector<int> vir_intersection_per_ij;
     std::vector<int> aux_intersection_per_ij;
 
-    /// test
-    std::vector<int> b_sliced_per_a;
 
     for (int nweight = 0; nweight < weights; nweight++) {
         int nocc = Occupied_cholesky[nweight]->coldim();
@@ -2459,6 +2509,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
         double* N_pi_bar_p = N_pi_bar->get_pointer();
         psi::SharedMatrix N_pa_bar =
             psi::linalg::doublet(N_pu, Virtual_cholesky_abs[nweight], false, false);
+        
         double* N_pa_bar_p = N_pa_bar->get_pointer();
         for (int qa = 0; qa < nthree_; qa++) {
             i_bar_p_up[qa].clear();
@@ -2471,22 +2522,22 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
                 }
                 N_pi_bar_p++;
             }
-            psi::SharedMatrix Pseudo_Occ_Mo = submatrix_rows_and_cols(
-                *Occupied_cholesky[nweight], ao_list_per_q[qa], i_bar_p_up[qa]);
-            P_ibar_u[qa] = psi::linalg::doublet(Pseudo_Occ_Mo, amn_new[qa], true, false);
+
+            psi::SharedMatrix T_ibar_i_new = submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p[qa]);
+            P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
 
             for (int abar = 0; abar < nvir; abar++) {
                 if (std::abs(*N_pa_bar_p) > theta_NB) {
                     a_bar_p_up[qa].push_back(abar);
                 }
                 N_pa_bar_p++;
-            }
+            } 
 
             psi::SharedMatrix Pseudo_Vir_Mo = submatrix_rows_and_cols(
                 *Virtual_cholesky[nweight], ao_list_per_q[qa], a_bar_p_up[qa]);
             P_ibar_abar[qa] = psi::linalg::doublet(P_ibar_u[qa], Pseudo_Vir_Mo, false, false);
 
-            /// Construct {ibar}_p. With respect to Occupied_cholesky[nweight]->col
+            /// Construct {ibar}_p.
             for (int i = 0; i < P_ibar_abar[qa]->rowdim(); i++) {
                 for (int a = 0; a < P_ibar_abar[qa]->coldim(); a++) {
                     if (std::abs(P_ibar_abar[qa]->get(i, a)) > theta_NB) {
@@ -2587,69 +2638,6 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 
         psi::SharedMatrix A_ij_2 = psi::linalg::doublet(Q_ia_2, Q_ia_2, false, true);
 
-        /// Below is an naive implementation for figure 4, which is super slow and need to be
-        /// optimized if needed.
-
-        /*
-        for (int i = 0; i < nocc; i++) {
-            for (int j = 0; j < i; j++) {
-                if (A_ij_2->get(i, j) > theta_ij) {
-                    abar_ibar_sub.clear();
-                    abar_jbar_sub.clear();
-                    vir_intersection_per_ij.clear();
-                    for (int abar_check_i = 0; abar_check_i < abar_ibar[i].size(); abar_check_i++) {
-                        int abar_check_j = binary_search_recursive(abar_ibar[j],
-        abar_ibar[i][abar_check_i], 0, abar_ibar[j].size()-1); if (abar_check_j != -1) {
-                            vir_intersection_per_ij.push_back(std::make_pair(abar_check_i,
-        abar_check_j)); /// eg: <0, 0> <1, 2> ...
-                        }
-                    }
-                    /// a_idx and b_idx are indices in vir_intersection_per_ij
-                    /// Use these indices, get the indices in abar_ibar, get abar, bbar
-
-                    aux_i_sub.clear();
-                    aux_j_sub.clear();
-                    for (int aux_check_i = 0; aux_check_i < P_ibar[i].size(); aux_check_i++) {
-                        int aux_check_j = binary_search_recursive(P_ibar[j], P_ibar[i][aux_check_i],
-        0, P_ibar[j].size()-1); if (aux_check_j != -1) { aux_i_sub.push_back(aux_check_i);
-                            aux_j_sub.push_back(aux_check_j);
-                        }
-                    }
-
-                    psi::SharedMatrix i_pair_slice_aux = submatrix_cols(*B_ia_Q[i], aux_i_sub);
-                    psi::SharedMatrix j_pair_slice_aux = submatrix_cols(*i_bar_a_bar_P_sliced[j],
-        aux_j_sub);
-
-                    for (int a_idx = 0; a_idx < vir_intersection_per_ij.size(); a_idx++) {
-                        for (int b_idx = 0; b_idx <= a_idx; b_idx++) {
-                            int a_in_abar_ibar_i = vir_intersection_per_ij[a_idx].first;
-                            int a = abar_ibar[i][a_in_abar_ibar_i];
-                            if (b_idx == a_idx) {
-                                double schwarz = Q_ia_2->get(i, a) * Q_ia_2->get(j, a);
-                                if (schwarz > theta_Schwarz) {
-                                    int a_in_abar_ibar_j_equal =
-        vir_intersection_per_ij[a_idx].second; E_K += 2 * std::pow(i_pair_slice_aux->get_row(0,
-        a_in_abar_ibar_i)->vector_dot(*j_pair_slice_aux->get_row(0, a_in_abar_ibar_j_equal)), 2);
-                                }
-                            } else {
-                                int b_in_abar_ibar_i = vir_intersection_per_ij[b_idx].first;
-                                int b = abar_ibar[i][b_in_abar_ibar_i];
-                                double schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) *
-        Q_ia_2->get(i, b) * Q_ia_2->get(j, a); if (schwarz_2 > theta_Schwarz_2) { int
-        a_in_abar_ibar_j = vir_intersection_per_ij[a_idx].second; int b_in_abar_ibar_j =
-        vir_intersection_per_ij[b_idx].second; E_K += 4 * i_pair_slice_aux->get_row(0,
-        a_in_abar_ibar_i)->vector_dot(*j_pair_slice_aux->get_row(0, b_in_abar_ibar_j)) *
-        i_pair_slice_aux->get_row(0, b_in_abar_ibar_i)->vector_dot(*j_pair_slice_aux->get_row(0,
-        a_in_abar_ibar_j));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        */
-
         /// Below is a better implementation without Schwarz Screening.
         for (int i = 0; i < nocc; i++) {
             for (int j = 0; j < i; j++) {
@@ -2677,64 +2665,6 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
                 }
             }
         }
-
-        /// Below is an improvement with Schwarz screening. Still inefficient. Has a bug. Think
-        /// about the diagonal part.
-        /*
-        for (int i = 0; i < nocc; i++) {
-            for (int j = 0; j < i; j++) {
-                if (A_ij_2->get(i, j) > theta_ij) {
-                    vir_intersection_per_ij.clear();
-                    aux_intersection_per_ij.clear();
-                    std::set_intersection(abar_ibar[i].begin(), abar_ibar[i].end(),
-                                          abar_ibar[j].begin(), abar_ibar[j].end(),
-                                          std::back_inserter(vir_intersection_per_ij));
-                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(),
-                                          P_ibar[j].end(),
-                                          std::back_inserter(aux_intersection_per_ij));
-                    psi::SharedMatrix C_pq_intersection = submatrix_rows_and_cols(
-                        *C_pq, aux_intersection_per_ij, aux_intersection_per_ij);
-
-                    for (int a_int = 0; a_int < vir_intersection_per_ij.size(); a_int++) {
-                        int a_idx = vir_intersection_per_ij[a_int];
-                        for (int b_int = 0; b_int <= a_int; b_int++) {
-                            b_sliced_per_a.clear();
-                            int b_idx = vir_intersection_per_ij[b_int];
-                            if (b_int == a_int) {
-                                double schwarz = Q_ia_2->get(i, a_idx) * Q_ia_2->get(j, a_idx);
-                                if (schwarz > theta_Schwarz) {
-                                    b_sliced_per_a.push_back(a_idx);
-                                }
-                            } else {
-                                double schwarz_2 = Q_ia_2->get(i, a_idx) * Q_ia_2->get(j, b_idx) *
-                                                   Q_ia_2->get(i, b_idx) * Q_ia_2->get(j, a_idx);
-                                if (schwarz_2 > theta_Schwarz_2) {
-                                    b_sliced_per_a.push_back(b_idx);
-                                }
-                            }
-                        }
-                        /// a_int is a single row.
-                        std::vector<int> a_idx_vec = {a_idx};
-                        psi::SharedMatrix i_a_idx = submatrix_rows_and_cols(
-                            *i_bar_a_bar_P[i], a_idx_vec, aux_intersection_per_ij);
-                        psi::SharedMatrix j_b_idx = submatrix_rows_and_cols(
-                            *i_bar_a_bar_P[j], b_sliced_per_a, aux_intersection_per_ij);
-                        psi::SharedMatrix iajb_intersection = psi::linalg::triplet(
-                        i_a_idx, C_pq_intersection, j_b_idx, false, false, true);
-
-                        psi::SharedMatrix j_a_idx = submatrix_rows_and_cols(
-                            *i_bar_a_bar_P[j], a_idx_vec, aux_intersection_per_ij);
-                        psi::SharedMatrix i_b_idx = submatrix_rows_and_cols(
-                            *i_bar_a_bar_P[i], b_sliced_per_a, aux_intersection_per_ij);
-                        psi::SharedMatrix ibja_intersection = psi::linalg::triplet(
-                            i_b_idx, C_pq_intersection, j_a_idx, false, false, true);
-                        E_K += 2 * psi::linalg::doublet(iajb_intersection, ibja_intersection, false,
-        false)->get(0, 0);
-                    }
-                }
-            }
-        }
-        */
     }
 
     std::cout << E_J << "\n";

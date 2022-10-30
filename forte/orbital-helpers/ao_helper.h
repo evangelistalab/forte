@@ -48,8 +48,8 @@ class AtomicOrbitalHelper {
     std::vector<size_t> n_pseudo_vir_list_;
 
     psi::SharedMatrix L_Occ_real_;
-    psi::SharedMatrix L_Vir_real_;
-    // psi::SharedMatrix POcc_real_;
+    //psi::SharedMatrix L_Vir_real_;
+    psi::SharedMatrix POcc_real_;
     // psi::SharedMatrix PVir_real_;
 
 
@@ -78,9 +78,9 @@ class AtomicOrbitalHelper {
     std::vector<size_t> n_pseudo_vir_list() { return n_pseudo_vir_list_; }
     
     psi::SharedMatrix L_Occ_real() { return L_Occ_real_; }
-    psi::SharedMatrix L_Vir_real() { return L_Vir_real_; }
+    //psi::SharedMatrix L_Vir_real() { return L_Vir_real_; }
 
-    // psi::SharedMatrix POcc_real() { return POcc_real_; }
+    psi::SharedMatrix POcc_real() { return POcc_real_; }
     // psi::SharedMatrix PVir_real() { return PVir_real_; }
     
     int Weights() { return weights_; }
