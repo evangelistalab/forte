@@ -762,7 +762,7 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
     if (JK_status_ == JKStatus::finalized) {
         outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
-        jk_initialize(0.7);
+        jk_initialize(0.8);
     }
 
     auto nactvpi = mo_space_info_->dimension("ACTIVE");

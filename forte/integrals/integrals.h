@@ -177,6 +177,9 @@ class ForteIntegrals {
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const;
 
+    /// Return the mapping from correlated MO to full MO (frozen + correlated)
+    std::vector<size_t> cmotomo() const;
+
     /// Set printing level
     void set_print(int print);
 
