@@ -2287,8 +2287,14 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 
     /// Number of MO.
     size_t nmo = mo_space_info_->dimension("ALL").sum();
+    local_timer timer1;
     ao_helper.Compute_Cholesky_Pseudo_Density();
+    outfile->Printf("\n\n  Pseudo Cholesky takes %8.8f", timer1.get());
+
+    local_timer timer2;
     ao_helper.Compute_Cholesky_Density();
+    outfile->Printf("\n\n  Cholesky takes %8.8f", timer2.get());
+    
     std::vector<psi::SharedMatrix> Occupied_cholesky = ao_helper.LOcc_list();
     std::vector<psi::SharedMatrix> Virtual_cholesky = ao_helper.LVir_list();
     psi::SharedMatrix Cholesky_Occ = ao_helper.L_Occ_real();
