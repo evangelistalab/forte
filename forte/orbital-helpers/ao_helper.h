@@ -44,8 +44,8 @@ class AtomicOrbitalHelper {
     std::vector<psi::SharedMatrix> LVir_list_;
     std::vector<psi::SharedMatrix> POcc_list_;
     std::vector<psi::SharedMatrix> PVir_list_;
-    std::vector<size_t> n_pseudo_occ_list_;
-    std::vector<size_t> n_pseudo_vir_list_;
+    std::vector<int> n_pseudo_occ_list_;
+    std::vector<int> n_pseudo_vir_list_;
 
     psi::SharedMatrix L_Occ_real_;
     //psi::SharedMatrix L_Vir_real_;
@@ -74,8 +74,8 @@ class AtomicOrbitalHelper {
     std::vector<psi::SharedMatrix> PVir_list() { return PVir_list_; }
     std::vector<psi::SharedMatrix> LOcc_list() { return LOcc_list_; }
     std::vector<psi::SharedMatrix> LVir_list() { return LVir_list_; }
-    std::vector<size_t> n_pseudo_occ_list() { return n_pseudo_occ_list_; }
-    std::vector<size_t> n_pseudo_vir_list() { return n_pseudo_vir_list_; }
+    std::vector<int> n_pseudo_occ_list() { return n_pseudo_occ_list_; }
+    std::vector<int> n_pseudo_vir_list() { return n_pseudo_vir_list_; }
     
     psi::SharedMatrix L_Occ_real() { return L_Occ_real_; }
     //psi::SharedMatrix L_Vir_real() { return L_Vir_real_; }
@@ -92,6 +92,7 @@ class AtomicOrbitalHelper {
 
     void Compute_Cholesky_Density();
     void Compute_Cholesky_Pseudo_Density();
+    //void Householder_QR();
     //void Compute_L_Directly();
 
     ~AtomicOrbitalHelper();

@@ -217,6 +217,8 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     double E_VT2_6();
 
     double E_ccvv_df_ao();
+    double E_ccvv_lt_ao();
+    double E_ccvv_diskdf_ao();
 
     void de_normal_order();
 

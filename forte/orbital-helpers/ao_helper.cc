@@ -142,6 +142,44 @@ void AtomicOrbitalHelper::Compute_Cholesky_Density() {
     //PVir_real_ = psi::linalg::doublet(C_Vir, C_Vir, false, true);
 
     L_Occ_real_ = POcc_real_->partial_cholesky_factorize(1e-10);
+    //L_Occ_real_->print();
     //L_Vir_real_ = PVir_real_->partial_cholesky_factorize(1e-10);
 }
+/*
+void AtomicOrbitalHelper::Householder_QR() {
+    std::vector<int> Occ_idx(nrdocc_);
+    std::iota(Occ_idx.begin(), Occ_idx.end(), 0);
+    psi::SharedMatrix C_Occ = submatrix_cols(*CMO_, Occ_idx);
+    psi::SharedMatrix C_Occ_transpose = C_Occ->transpose();
+    /// Copy C_Occ matrix to R
+    double** C_T = C_Occ_transpose->pointer();
+    auto R = std::make_shared<psi::Matrix>("R", nrdocc_, C_Occ_transpose->coldim());
+    double** Rp = R->pointer();
+    C_DCOPY(nrdocc_ * C_Occ_transpose->coldim(), C_T[0], 1, Rp[0], 1);
+
+    /// QR decomposition
+    std::vector<double> tau(nrdocc_);
+    //std::vector<int> jpvt(C_Occ_transpose->coldim());
+
+    // First, find out how much workspace to provide
+    // Optimal size of work vector is written to work_size
+    double work_size;
+    //C_DGEQP3(nrdocc_, C_Occ_transpose->coldim(), Rp[0], nrdocc_, jpvt.data(), tau.data(), &work_size, -1);
+    C_DGEQRF(nrdocc_, C_Occ_transpose->coldim(), Rp[0], nrdocc_, tau.data(), &work_size, -1);
+    // Now, do the QR decomposition
+    int lwork = (int)work_size;
+    std::vector<double> work(lwork);
+    //C_DGEQP3(nrdocc_, C_Occ_transpose->coldim(), Rp[0], nrdocc_, jpvt.data(), tau.data(), work.data(), lwork);
+    C_DGEQRF(nrdocc_, C_Occ_transpose->coldim(), Rp[0], nrdocc_, tau.data(), work.data(), lwork);
+
+    // Put R in the upper triangle where it belongs
+    for (int i = 1; i < nrdocc_; i++) {
+        for (int j = 0; j < i; j++) {
+            Rp[j][i] = 0.0;
+        }
+    }
+
+    R->transpose()->print();
+}
+*/
 } // namespace forte
