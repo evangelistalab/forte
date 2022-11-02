@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 
 #include <ambit/tensor.h>
 
@@ -58,10 +59,10 @@ class MultipoleIntegrals {
     double mp_ints(int direction, size_t p, size_t q, bool corr = true) const;
 
     /// Nuclear contributions to dipole moments in X, Y, Z order
-    std::vector<double> nuclear_dipole() const;
+    psi::SharedVector nuclear_contributions() const;
 
     /// Frozen-orbital contributions to dipole moments
-    std::vector<double> mp_frozen_core() const;
+    psi::SharedVector mp_frozen_core() const;
 
     /// Return the MO space info object
     std::shared_ptr<MOSpaceInfo> mo_space_info() const;
@@ -84,9 +85,9 @@ class MultipoleIntegrals {
     std::vector<size_t> cmotomo_;
 
     /// Nuclear dipole moment
-    std::vector<double> nuc_dipole_;
+    psi::SharedVector nuc_;
     /// Frozen-core contributions
-    std::vector<double> mp_frzc_;
+    psi::SharedVector mp_frzc_;
 
     /// MO multipole integrals (frozen orbitals included)
     /// each element is a nmo x nmo psi::SharedMatrix in Pitzer order
@@ -105,20 +106,20 @@ class ActiveMultipoleIntegrals {
 
     // ==> Class Interface <==
 
-    /// Nuclear contributions to dipole moment
-    std::vector<double> nuclear_dipole() const;
+    /// Nuclear contributions
+    psi::SharedVector nuclear_contributions() const;
 
     /// Compute electronic contributions
     /// Dipole in X, Y, Z order
     /// Quadrupole in XX, XY, XZ, YY, YZ, ZZ order
-    std::vector<double> compute_electronic_multipole(std::shared_ptr<RDMs> rdms);
+    psi::SharedVector compute_electronic_multipole(std::shared_ptr<RDMs> rdms);
 
     /// Frozen-core contributions
-    std::vector<double> scalars_fdocc() const;
+    psi::SharedVector scalars_fdocc() const;
     /// Core (restricted docc) contribution
-    std::vector<double> scalars_rdocc() const;
+    psi::SharedVector scalars_rdocc() const;
     /// Inactive (frozen docc + restricted docc) contribution
-    std::vector<double> scalars() const;
+    psi::SharedVector scalars() const;
 
     /// Set scalar term
     void set_scalar_rdocc(int direction, double value);
@@ -129,13 +130,18 @@ class ActiveMultipoleIntegrals {
     /// Set spin-dependent 2-body similarity transformed integrals
     void set_2body(int direction, ambit::Tensor M2aa, ambit::Tensor M2ab, ambit::Tensor M2bb);
 
+    /// Return the order of multipole
+    int order() const;
+    /// Return the multipole many-body level
+    int many_body_level() const;
+
   private:
     // ==> Class Private Data <==
 
     /// The integrals object
     std::shared_ptr<MultipoleIntegrals> mpints_;
-    /// Order of multipole
-    int order_;
+    /// Many-body level of multipole integrals
+    int many_body_level_;
 
     /// The number of MOs
     size_t nmo_;
@@ -147,7 +153,7 @@ class ActiveMultipoleIntegrals {
     size_t nmo4_;
 
     /// Contributions of inactive orbitals
-    std::vector<double> scalars_rdocc_;
+    psi::SharedVector scalars_rdocc_;
     /// One-body integrals
     std::vector<ambit::Tensor> one_body_ints_;
     /// Two-body integrals, spin free
