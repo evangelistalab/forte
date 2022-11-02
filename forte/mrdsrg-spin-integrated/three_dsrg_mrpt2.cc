@@ -2365,29 +2365,30 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
 
     /// Construct C_pq
     psi::SharedMatrix C_pq = load_Jinv_full(nthree_, nthree_);
-
+    outfile->Printf("\n    Done with C_pq");
     ///Overlap matrix
     psi::SharedMatrix S = ints_->wfn()->S();
-
+    outfile->Printf("\n    Done with S");
     ///Construct list for T_ibar_i matrices.
     std::vector<psi::SharedMatrix> T_ibar_i_list;
     T_ibar_i_list.resize(weights);
     for (int i_weight = 0; i_weight < weights; i_weight++) {
         T_ibar_i_list[i_weight] = psi::linalg::triplet(Occupied_cholesky[i_weight], S, Cholesky_Occ, true, false, false);
     }
+    outfile->Printf("\n    Done with T");
 
     S.reset();
 
     /// Construct (P|iu)
     std::vector<psi::SharedMatrix> P_iu; /// [([i]_p * ao_list_per_q), ...]
     P_iu.resize(nthree_);
-
+    outfile->Printf("\n    Intialize P_iu");
     int file_unit = PSIF_DFSCF_BJ;
     //DiskDFJK jk(primary, auxiliary);
     int n_func_pairs = (nmo + 1) * nmo / 2;
     //int max_rows = jk.max_rows();
     //int max_nocc = jk.max_nocc();
-    int max_rows = ncore_;
+    int max_rows = 1;
     std::shared_ptr<PSIO> psio(new PSIO());
     psi::SharedMatrix loadAOtensor = std::make_shared<psi::Matrix>("DiskDF: Load (A|mn) from DF-SCF", max_rows, n_func_pairs);
     psio->open(file_unit, PSIO_OPEN_OLD);
@@ -2404,11 +2405,11 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     i_p_up.resize(nthree_);
     i_p.resize(nthree_);
     i_p_for_i_up.resize(nthree_);
-
+    
     psi::SharedMatrix N_pu = std::make_shared<psi::Matrix>("N_pu", nthree_, nmo);
     N_pu->zero();
     double* N_pu_p = N_pu->get_pointer();
-
+    outfile->Printf("\n    Start loading");
     for (int Q = 0; Q < nthree_; Q += max_rows) {
         int naux = (nthree_ - Q <= max_rows ? nthree_ - Q : max_rows);
         psio_address addr = psio_get_address(PSIO_ZERO, (Q * (int)n_func_pairs) * sizeof(double));
@@ -2481,7 +2482,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     }
     psio->close(file_unit, 1);
     loadAOtensor.reset();
-
+    outfile->Printf("\n    End loading");
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
