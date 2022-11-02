@@ -138,6 +138,26 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     return out;
 }
 
+void push_to_psi4_env_globals(double value, const std::string& label) {
+    auto& globals = psi::Process::environment.globals;
+
+    // rename previous values
+    if (globals.find(label) != globals.end()) {
+        if (globals.find(label + " ENTRY 0") == globals.end()) {
+            std::string suffix = " ENTRY 0";
+            globals[label + suffix] = globals[label];
+        }
+        int n = 1;
+        std::string suffix = " ENTRY 1";
+        while (globals.find(label + suffix) != globals.end()) {
+            suffix = " ENTRY " + std::to_string(++n);
+        }
+        globals[label + suffix] = value;
+    }
+
+    globals[label] = value;
+}
+
 // void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
 //                             const std::shared_ptr<Vector>& diag_F,
 //                             const std::shared_ptr<Vector>& occupation) {

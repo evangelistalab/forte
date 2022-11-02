@@ -182,6 +182,8 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
     }
 }
 
+void push_to_psi4_env_globals(double value, const std::string& label);
+
 namespace math {
 /// Return the number of combinations of n identical objects
 size_t combinations(size_t n, size_t k);

@@ -142,7 +142,7 @@ class RDMs {
     virtual void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) = 0;
 
     /// Save the current RDMs to disk (binary files)
-    virtual void dump_to_disk(const std::string& filename_prefix) const = 0;
+    virtual void dump_to_disk(const std::string& filename_prefix = "") const = 0;
     /// Save the spin-summed 1-RDMs to disk in human readable form
     void save_SF_G1(const std::string& filename);
 
