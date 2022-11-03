@@ -32,14 +32,17 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
+#include "integrals/multipole_integrals.h"
 #include "mrdsrg-helper/dsrg_transformed.h"
 #include "active_space_method.h"
 
@@ -73,6 +76,12 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         Ua_data[i * nactv + i] = 1.0;
         Ub_data[i * nactv + i] = 1.0;
     }
+
+    // initialize multipole integrals
+    auto dp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_, 1);
+    as_dp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(dp_ints);
+    auto qp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_, 2);
+    as_qp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(qp_ints);
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -107,9 +116,10 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     print_energies();
 
     if (as_ints_->ints()->integral_type() != Custom) {
-        compute_dipole_moment();
+        compute_dipole_moment(as_dp_ints_);
+        compute_quadrupole_moment(as_qp_ints_);
         if (options_->get_bool("TRANSITION_DIPOLES")) {
-            compute_fosc_same_orbs();
+            compute_fosc_same_orbs(as_dp_ints_);
         }
     }
 
@@ -138,7 +148,6 @@ void ActiveSpaceSolver::print_energies() {
     std::string dash(56, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
     std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
-    auto& globals = psi::Process::environment.globals;
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -160,27 +169,14 @@ void ActiveSpaceSolver::print_energies() {
 
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
-            label = upper_string(label);
-
-            // try to fix states with different gas_min and gas_max
-            if (globals.find(label) != globals.end()) {
-                if (globals.find(label + " ENTRY 0") == globals.end())
-                    globals[label + " ENTRY 0"] = globals[label];
-
-                int n = 1;
-                while (globals.find(label + " ENTRY " + std::to_string(n)) != globals.end())
-                    n++;
-                globals[label + " ENTRY " + std::to_string(n)] = energy;
-            }
-
-            globals[label] = energy;
+            push_to_psi4_env_globals(energy, upper_string(label));
         }
 
         psi::outfile->Printf("\n    %s", dash.c_str());
     }
 }
 
-void ActiveSpaceSolver::compute_dipole_moment() {
+void ActiveSpaceSolver::compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints) {
     for (const auto& state_nroots : state_nroots_map_) {
         const auto& [state, nroots] = state_nroots;
         const auto& method = state_method_map_[state];
@@ -191,15 +187,27 @@ void ActiveSpaceSolver::compute_dipole_moment() {
             root_list.emplace_back(i, i);
         }
 
-        method->compute_permanent_dipole(root_list, Ua_actv_, Ub_actv_);
+        method->compute_permanent_dipole(ampints, root_list, Ua_actv_, Ub_actv_);
     }
 }
 
-void ActiveSpaceSolver::compute_mo_extents() {
+void ActiveSpaceSolver::compute_quadrupole_moment(
+    std::shared_ptr<ActiveMultipoleIntegrals> ampints) {
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& [state, nroots] = state_nroots;
+        const auto& method = state_method_map_[state];
 
+        // prepare root list
+        std::vector<std::pair<size_t, size_t>> root_list;
+        for (size_t i = 0; i < nroots; ++i) {
+            root_list.emplace_back(i, i);
+        }
+
+        method->compute_permanent_quadrupole(ampints, root_list, Ua_actv_, Ub_actv_);
+    }
 }
 
-void ActiveSpaceSolver::compute_fosc_same_orbs() {
+void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints) {
     // assume SAME set of orbitals!!!
 
     std::vector<StateInfo> states;
@@ -252,7 +260,8 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
                 continue;
 
             // compute oscillator strength
-            method1->compute_oscillator_strength_same_orbs(state_ids, method2, Ua_actv_, Ub_actv_);
+            method1->compute_oscillator_strength_same_orbs(ampints, state_ids, method2, Ua_actv_,
+                                                           Ub_actv_);
         }
     }
 }

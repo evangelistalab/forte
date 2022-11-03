@@ -31,8 +31,11 @@
 
 #include <vector>
 
+#include "psi4/libmints/multipoles.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libmints/vector3.h"
 
 #include <ambit/tensor.h>
 
@@ -52,14 +55,20 @@ class MultipoleIntegrals {
 
     /// @brief Electronic multipole moment matrix element
     /// @param direction The direction of multipole moment
-    /// @param p The bra index
-    /// @param q The ket index
-    /// @param corr Whether indices p, q start counting from correlated orbitals
+    /// @param p The bra index (frozen orbitals included)
+    /// @param q The ket index (frozen orbitals included)
     /// @return electronic multipole matrix element M_{pq}
-    double mp_ints(int direction, size_t p, size_t q, bool corr = true) const;
+    double mp_ints(int direction, size_t p, size_t q) const;
+
+    /// @brief Electronic multipole moment matrix element
+    /// @param direction The direction of multipole moment
+    /// @param p The bra index (frozen orbitals excluded)
+    /// @param q The ket index (frozen orbitals excluded)
+    /// @return electronic multipole matrix element M_{pq}
+    double mp_ints_corr(int direction, size_t p, size_t q) const;
 
     /// Nuclear contributions to dipole moments in X, Y, Z order
-    psi::SharedVector nuclear_contributions() const;
+    psi::SharedVector nuclear_contributions(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
 
     /// Frozen-orbital contributions to dipole moments
     psi::SharedVector mp_frozen_core() const;
@@ -83,11 +92,8 @@ class MultipoleIntegrals {
 
     /// The mapping from correlated MO to full MO (frozen + correlated)
     std::vector<size_t> cmotomo_;
-
-    /// Nuclear dipole moment
-    psi::SharedVector nuc_;
-    /// Frozen-core contributions
-    psi::SharedVector mp_frzc_;
+    /// The molecule object used to compute nuclear contribution
+    std::shared_ptr<psi::Molecule> molecule_;
 
     /// MO multipole integrals (frozen orbitals included)
     /// each element is a nmo x nmo psi::SharedMatrix in Pitzer order
@@ -107,12 +113,12 @@ class ActiveMultipoleIntegrals {
     // ==> Class Interface <==
 
     /// Nuclear contributions
-    psi::SharedVector nuclear_contributions() const;
+    psi::SharedVector nuclear_contributions(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
 
     /// Compute electronic contributions
     /// Dipole in X, Y, Z order
     /// Quadrupole in XX, XY, XZ, YY, YZ, ZZ order
-    psi::SharedVector compute_electronic_multipole(std::shared_ptr<RDMs> rdms);
+    psi::SharedVector compute_electronic_multipole(std::shared_ptr<RDMs> rdms, bool transition = false);
 
     /// Frozen-core contributions
     psi::SharedVector scalars_fdocc() const;

@@ -32,12 +32,14 @@
 #include <vector>
 #include <unordered_set>
 
-#include "base_classes/rdms.h"
-#include "base_classes/state_info.h"
-#include "sparse_ci/determinant.h"
-#include "sparse_ci/determinant_hashvector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+
+#include "base_classes/rdms.h"
+#include "base_classes/state_info.h"
+#include "integrals/multipole_integrals.h"
+#include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
 
@@ -132,6 +134,11 @@ class ActiveSpaceMethod {
                     std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
                     RDMsType type) = 0;
 
+    /// Dump transition RDMs to disk
+    void save_transition_rdms(const std::vector<std::shared_ptr<RDMs>>& rdms,
+                              const std::vector<std::pair<size_t, size_t>>& root_list,
+                              std::shared_ptr<ActiveSpaceMethod> method2);
+
     /// Compute the overlap of two wave functions acted by complementary operators
     /// Return a map from state to roots of values
     /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
@@ -149,25 +156,29 @@ class ActiveSpaceMethod {
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
-    /// Compute permanent dipole moments
-    std::vector<std::vector<double>>
-    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+    /// Compute permanent dipole moments (electronic + nuclear)
+    std::vector<psi::SharedVector>
+    compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                             std::vector<std::pair<size_t, size_t>>& root_list,
                              const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
-    /// Compute MO extents <r^2>
-    std::vector<std::vector<double>>
-    compute_mo_extents(const std::vector<std::pair<size_t, size_t>>& root_list,
-                       const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+    /// Compute permanent quadrupole moments (electronic + nuclear)
+    std::vector<psi::SharedVector>
+    compute_permanent_quadrupole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                                 const std::vector<std::pair<size_t, size_t>>& root_list,
+                                 const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Compute transition dipole moments assuming same orbitals
-    std::vector<std::vector<double>>
-    compute_transition_dipole_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
+    std::vector<psi::SharedVector>
+    compute_transition_dipole_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                                        const std::vector<std::pair<size_t, size_t>>& root_list,
                                         std::shared_ptr<ActiveSpaceMethod> method2,
                                         const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Compute oscillator strength assuming same orbitals
     std::vector<double>
-    compute_oscillator_strength_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
+    compute_oscillator_strength_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                                          const std::vector<std::pair<size_t, size_t>>& root_list,
                                           std::shared_ptr<ActiveSpaceMethod> method2,
                                           const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 

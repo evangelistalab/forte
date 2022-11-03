@@ -35,6 +35,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/multipoles.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libmints/vector3.h"
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/mo_space_info.h"
@@ -44,13 +45,11 @@ namespace forte {
 
 MultipoleIntegrals::MultipoleIntegrals(std::shared_ptr<ForteIntegrals> ints,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info, int order)
-    : mo_space_info_(mo_space_info), order_(order) {
+    : mo_space_info_(mo_space_info), order_(order), cmotomo_(ints->cmotomo()),
+      molecule_(ints->wfn()->molecule()) {
     if (order > 2 or order < 1)
         throw std::runtime_error("Input order: " + std::to_string(order) +
                                  " not available in MultipoleIntegrals");
-    cmotomo_ = ints->cmotomo();
-    const auto& molecule = ints->wfn()->molecule();
-    nuc_ = psi::MultipoleInt::nuclear_contribution(molecule, order, {0.0, 0.0, 0.0});
 
     if (order == 1) {
         ndirs_ = 3;
@@ -59,29 +58,46 @@ MultipoleIntegrals::MultipoleIntegrals(std::shared_ptr<ForteIntegrals> ints,
         ndirs_ = 6;
         mp_ints_ = ints->mo_quadrupole_ints();
     }
+}
 
-    auto frzc_mos = mo_space_info->absolute_mo("FROZEN_DOCC");
-    mp_frzc_ = std::make_shared<psi::Vector>(ndirs_);
+double MultipoleIntegrals::mp_ints_corr(int direction, size_t p, size_t q) const {
+    return mp_ints_[direction]->get(cmotomo_[p], cmotomo_[q]);
+}
+
+double MultipoleIntegrals::mp_ints(int direction, size_t p, size_t q) const {
+    return mp_ints_[direction]->get(p, q);
+}
+
+psi::SharedVector MultipoleIntegrals::nuclear_contributions(const psi::Vector3& origin) const {
+    auto nuc = std::make_shared<psi::Vector>(ndirs_);
+    auto address = 0;
+    for (int ii = 0; ii <= order_; ii++) {
+        int lx = order_ - ii;
+        for (int lz = 0; lz <= ii; lz++) {
+            int ly = ii - lz;
+            for (int atom = 0; atom < molecule_->natom(); ++atom) {
+                auto geom = molecule_->xyz(atom) - origin;
+                nuc->add(address, molecule_->Z(atom) * pow(geom[0], lx) * pow(geom[1], ly) *
+                                      pow(geom[2], lz));
+            }
+            ++address;
+        }
+    }
+    return nuc;
+}
+
+psi::SharedVector MultipoleIntegrals::mp_frozen_core() const {
+    auto frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
+    auto mp_frzc = std::make_shared<psi::Vector>(ndirs_);
     for (int z = 0; z < ndirs_; ++z) {
         double v = 0.0;
         for (const auto& p : frzc_mos) {
-            v += 2 * mp_ints_[z]->get(p, p);
+            v += 2.0 * mp_ints(z, p, p);
         }
-        mp_frzc_->set(z, v);
+        mp_frzc->set(z, v);
     }
+    return mp_frzc;
 }
-
-double MultipoleIntegrals::mp_ints(int direction, size_t p, size_t q, bool corr) const {
-    if (corr) {
-        mp_ints_[direction]->get(cmotomo_[p], cmotomo_[q]);
-    } else {
-        return mp_ints_[direction]->get(p, q);
-    }
-}
-
-psi::SharedVector MultipoleIntegrals::nuclear_contributions() const { return nuc_; }
-
-psi::SharedVector MultipoleIntegrals::mp_frozen_core() const { return mp_frzc_; }
 
 std::shared_ptr<MOSpaceInfo> MultipoleIntegrals::mo_space_info() const { return mo_space_info_; }
 
@@ -105,7 +121,7 @@ ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleInte
     for (int z = 0; z < ndirs; ++z) {
         double value = 0.0;
         for (const auto& i : rdocc_mos) {
-            value += 2.0 * mpints->mp_ints(z, i, i);
+            value += 2.0 * mpints->mp_ints_corr(z, i, i);
         }
         scalars_rdocc_->set(z, value);
     }
@@ -126,7 +142,7 @@ ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleInte
     for (int z = 0; z < ndirs; ++z) {
         auto zints = ambit::Tensor::build(ambit::CoreTensor, prefix + dir_names[z], {nmo_, nmo_});
         zints.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = mpints->mp_ints(z, actv_mos[i[0]], actv_mos[i[1]]);
+            value = mpints->mp_ints_corr(z, actv_mos[i[0]], actv_mos[i[1]]);
         });
         one_body_ints_[z] = zints;
     }
@@ -134,11 +150,14 @@ ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleInte
 
 int ActiveMultipoleIntegrals::order() const { return mpints_->order(); }
 
-psi::SharedVector
-ActiveMultipoleIntegrals::compute_electronic_multipole(std::shared_ptr<RDMs> rdms) {
-    auto out = scalars();
+int ActiveMultipoleIntegrals::many_body_level() const { return many_body_level_; }
 
+psi::SharedVector ActiveMultipoleIntegrals::compute_electronic_multipole(std::shared_ptr<RDMs> rdms,
+                                                                         bool transition) {
     auto ndirs = mpints_->ndirs();
+    auto out = std::make_shared<psi::Vector>(ndirs);
+    if (not transition)
+        out = scalars();
     psi::Vector actv(ndirs);
 
     // 1-body
@@ -173,8 +192,9 @@ ActiveMultipoleIntegrals::compute_electronic_multipole(std::shared_ptr<RDMs> rdm
     return out;
 }
 
-psi::SharedVector ActiveMultipoleIntegrals::nuclear_contributions() const {
-    return mpints_->nuclear_contributions();
+psi::SharedVector
+ActiveMultipoleIntegrals::nuclear_contributions(const psi::Vector3& origin) const {
+    return mpints_->nuclear_contributions(origin);
 }
 
 psi::SharedVector ActiveMultipoleIntegrals::scalars_fdocc() const {
@@ -184,7 +204,7 @@ psi::SharedVector ActiveMultipoleIntegrals::scalars_fdocc() const {
 psi::SharedVector ActiveMultipoleIntegrals::scalars_rdocc() const { return scalars_rdocc_; }
 
 psi::SharedVector ActiveMultipoleIntegrals::scalars() const {
-    auto out = std::make_shared<psi::Vector>(scalars_fdocc());
+    auto out = std::make_shared<psi::Vector>(*scalars_fdocc());
     out->add(*scalars_rdocc_);
     return out;
 }
