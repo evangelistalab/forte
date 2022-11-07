@@ -290,8 +290,8 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
     }
 
     // grab occupied and virtual part of orbital energies
-    auto edocc = epsilon_->get_block(Sdocc);
-    auto euocc = epsilon_->get_block(Suocc);
+    auto edocc = std::make_shared<Vector>(epsilon_->get_block(Sdocc));
+    auto euocc = std::make_shared<Vector>(epsilon_->get_block(Suocc));
 
     // solve CPSCF equation
     CPSCF_SOLVER cpscf_solver(options_, JK_, C0_, b, edocc, euocc);

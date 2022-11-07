@@ -62,6 +62,7 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
+    gas_diff_only_ = options->get_bool("PRINT_DIFFERENT_GAS_ONLY");
 
     auto nactv = mo_space_info_->size("ACTIVE");
     Ua_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nactv, nactv});
@@ -207,6 +208,11 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
         size_t nroot1 = state_nroots_map_[state1];
         const auto& method1 = state_method_map_[state1];
 
+        // Dump transition reduced density matrix if neceessary
+        if (options_->get_bool("DUMP_TRANSITION_RDM")) {
+            method1->set_dump_trdm(true);
+        }
+
         for (size_t N = M; N < n_entries; ++N) {
             const auto& state2 = states[N];
             size_t nroot2 = state_nroots_map_[state2];
@@ -215,6 +221,13 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
             // skip different multiplicity (no spin-orbit coupling)
             if (state1.multiplicity() != state2.multiplicity())
                 continue;
+
+            // Only calculate the oscillator strengths between states that differ in GAS occupation
+            // Generally used for core-excited state
+            if (gas_diff_only_) {
+                if (state1.gas_max() == state2.gas_max() && state1.gas_min() == state2.gas_min())
+                    continue;
+            }
 
             // prepare list of root pairs
             std::vector<std::pair<size_t, size_t>> state_ids;

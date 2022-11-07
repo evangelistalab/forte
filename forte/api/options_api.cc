@@ -87,8 +87,8 @@ void export_ForteOptions(py::module& m) {
              "Set options from a dictionary `dict` of labels -> values")
         .def("generate_documentation", &ForteOptions::generate_documentation,
              "Generate documentation from the options list")
-        .def("__str__", &ForteOptions::str, "Returns a string represenation of this object")
-        .def("__repr__", &ForteOptions::str, "Returns a string represenation of this object");
+        .def("__str__", &ForteOptions::str, "Returns a string representation of this object")
+        .def("__repr__", &ForteOptions::str, "Returns a string representation of this object");
 }
 
 } // namespace forte
