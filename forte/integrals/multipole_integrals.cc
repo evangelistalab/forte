@@ -44,35 +44,41 @@
 namespace forte {
 
 MultipoleIntegrals::MultipoleIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                                       std::shared_ptr<MOSpaceInfo> mo_space_info, int order)
-    : mo_space_info_(mo_space_info), order_(order), cmotomo_(ints->cmotomo()),
-      molecule_(ints->wfn()->molecule()) {
-    if (order > 2 or order < 1)
-        throw std::runtime_error("Input order: " + std::to_string(order) +
-                                 " not available in MultipoleIntegrals");
+                                       std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : mo_space_info_(mo_space_info), cmotomo_(ints->cmotomo()), molecule_(ints->wfn()->molecule()) {
+    dp_ints_ = ints->mo_dipole_ints();
+    qp_ints_ = ints->mo_quadrupole_ints();
+}
 
-    if (order == 1) {
-        ndirs_ = 3;
-        mp_ints_ = ints->mo_dipole_ints();
-    } else {
-        ndirs_ = 6;
-        mp_ints_ = ints->mo_quadrupole_ints();
+double MultipoleIntegrals::dp_ints_corr(int direction, size_t p, size_t q) const {
+    return dp_ints_[direction]->get(cmotomo_[p], cmotomo_[q]);
+}
+
+double MultipoleIntegrals::dp_ints(int direction, size_t p, size_t q) const {
+    return dp_ints_[direction]->get(p, q);
+}
+
+double MultipoleIntegrals::qp_ints_corr(int direction, size_t p, size_t q) const {
+    return qp_ints_[direction]->get(cmotomo_[p], cmotomo_[q]);
+}
+
+double MultipoleIntegrals::qp_ints(int direction, size_t p, size_t q) const {
+    return qp_ints_[direction]->get(p, q);
+}
+
+psi::SharedVector MultipoleIntegrals::nuclear_dipole(const psi::Vector3& origin) const {
+    auto nuc = molecule_->nuclear_dipole(origin);
+    auto out = std::make_shared<psi::Vector>(3);
+    for (int i = 0; i < 3; ++i) {
+        out->set(i, nuc[i]);
     }
+    return out;
 }
 
-double MultipoleIntegrals::mp_ints_corr(int direction, size_t p, size_t q) const {
-    return mp_ints_[direction]->get(cmotomo_[p], cmotomo_[q]);
-}
-
-double MultipoleIntegrals::mp_ints(int direction, size_t p, size_t q) const {
-    return mp_ints_[direction]->get(p, q);
-}
-
-psi::SharedVector MultipoleIntegrals::nuclear_contributions(const psi::Vector3& origin) const {
-    auto nuc = std::make_shared<psi::Vector>(ndirs_);
-    auto address = 0;
-    for (int ii = 0; ii <= order_; ii++) {
-        int lx = order_ - ii;
+psi::SharedVector MultipoleIntegrals::nuclear_quadrupole(const psi::Vector3& origin) const {
+    auto nuc = std::make_shared<psi::Vector>(6);
+    for (int ii = 0, address = 0; ii <= 2; ii++) {
+        int lx = 2 - ii;
         for (int lz = 0; lz <= ii; lz++) {
             int ly = ii - lz;
             for (int atom = 0; atom < molecule_->natom(); ++atom) {
@@ -86,27 +92,32 @@ psi::SharedVector MultipoleIntegrals::nuclear_contributions(const psi::Vector3& 
     return nuc;
 }
 
-psi::SharedVector MultipoleIntegrals::mp_frozen_core() const {
+psi::SharedVector MultipoleIntegrals::dp_frozen_core() const {
     auto frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
-    auto mp_frzc = std::make_shared<psi::Vector>(ndirs_);
-    for (int z = 0; z < ndirs_; ++z) {
-        double v = 0.0;
+    auto dp_frzc = std::make_shared<psi::Vector>(3);
+    for (int z = 0; z < 3; ++z) {
         for (const auto& p : frzc_mos) {
-            v += 2.0 * mp_ints(z, p, p);
+            dp_frzc->add(z, 2.0 * dp_ints(z, p, p));
         }
-        mp_frzc->set(z, v);
     }
-    return mp_frzc;
+    return dp_frzc;
+}
+
+psi::SharedVector MultipoleIntegrals::qp_frozen_core() const {
+    auto frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
+    auto qp_frzc = std::make_shared<psi::Vector>(6);
+    for (int z = 0; z < 6; ++z) {
+        for (const auto& p : frzc_mos) {
+            qp_frzc->add(z, 2.0 * qp_ints(z, p, p));
+        }
+    }
+    return qp_frzc;
 }
 
 std::shared_ptr<MOSpaceInfo> MultipoleIntegrals::mo_space_info() const { return mo_space_info_; }
 
-int MultipoleIntegrals::order() const { return order_; }
-
-int MultipoleIntegrals::ndirs() const { return ndirs_; }
-
 ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleIntegrals> mpints)
-    : mpints_(mpints), many_body_level_(1) {
+    : mpints_(mpints), dp_many_body_level_(1) {
 
     auto mo_space_info = mpints->mo_space_info();
     nmo_ = mo_space_info->size("ACTIVE");
@@ -116,73 +127,79 @@ ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleInte
 
     // determine contributions from restricted_docc orbitals
     auto rdocc_mos = mo_space_info->corr_absolute_mo("CORE");
-    auto ndirs = mpints->ndirs();
-    scalars_rdocc_ = std::make_shared<psi::Vector>(ndirs);
-    for (int z = 0; z < ndirs; ++z) {
-        double value = 0.0;
+    dp0_rdocc_ = std::make_shared<psi::Vector>(3);
+    for (int z = 0; z < 3; ++z) {
         for (const auto& i : rdocc_mos) {
-            value += 2.0 * mpints->mp_ints_corr(z, i, i);
+            dp0_rdocc_->add(z, 2.0 * mpints->dp_ints_corr(z, i, i));
         }
-        scalars_rdocc_->set(z, value);
+    }
+
+    qp0_rdocc_ = std::make_shared<psi::Vector>(6);
+    for (int z = 0; z < 6; ++z) {
+        for (const auto& i : rdocc_mos) {
+            dp0_rdocc_->add(z, 2.0 * mpints->qp_ints_corr(z, i, i));
+        }
     }
 
     // put active part to ambit Tensor form
-    std::vector<std::string> dir_names;
-    std::string prefix;
-    if (mpints->order() == 1) {
-        prefix = "DIPOLE";
-        dir_names = {"X", "Y", "Z"};
-    } else {
-        prefix = "QUADRUPOLE";
-        dir_names = {"XX", "XY", "XZ", "YY", "YZ", "ZZ"};
+    auto actv_mos = mo_space_info->corr_absolute_mo("ACTIVE");
+
+    dp1_ints_.resize(3);
+    std::vector<std::string> dp_names{"X", "Y", "Z"};
+    for (int z = 0; z < 3; ++z) {
+        auto zints = ambit::Tensor::build(ambit::CoreTensor, "DIPOLE" + dp_names[z], {nmo_, nmo_});
+        zints.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = mpints->dp_ints_corr(z, actv_mos[i[0]], actv_mos[i[1]]);
+        });
+        dp1_ints_[z] = zints;
     }
 
-    one_body_ints_.resize(ndirs);
-    auto actv_mos = mo_space_info->corr_absolute_mo("ACTIVE");
-    for (int z = 0; z < ndirs; ++z) {
-        auto zints = ambit::Tensor::build(ambit::CoreTensor, prefix + dir_names[z], {nmo_, nmo_});
+    qp1_ints_.resize(6);
+    std::vector<std::string> qp_names{"XX", "XY", "XZ", "YY", "YZ", "ZZ"};
+    for (int z = 0; z < 6; ++z) {
+        auto zints =
+            ambit::Tensor::build(ambit::CoreTensor, "QUADRUPOLE" + qp_names[z], {nmo_, nmo_});
         zints.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = mpints->mp_ints_corr(z, actv_mos[i[0]], actv_mos[i[1]]);
+            value = mpints->qp_ints_corr(z, actv_mos[i[0]], actv_mos[i[1]]);
         });
-        one_body_ints_[z] = zints;
+        qp1_ints_[z] = zints;
     }
 }
 
-int ActiveMultipoleIntegrals::order() const { return mpints_->order(); }
+int ActiveMultipoleIntegrals::dp_many_body_level() const { return dp_many_body_level_; }
 
-int ActiveMultipoleIntegrals::many_body_level() const { return many_body_level_; }
+int ActiveMultipoleIntegrals::qp_many_body_level() const { return qp_many_body_level_; }
 
-psi::SharedVector ActiveMultipoleIntegrals::compute_electronic_multipole(std::shared_ptr<RDMs> rdms,
-                                                                         bool transition) {
-    auto ndirs = mpints_->ndirs();
+psi::SharedVector ActiveMultipoleIntegrals::compute_electronic_dipole(std::shared_ptr<RDMs> rdms,
+                                                                      bool transition) {
+    auto ndirs = 3;
     auto out = std::make_shared<psi::Vector>(ndirs);
     if (not transition)
-        out = scalars();
+        out = dp_scalars();
     psi::Vector actv(ndirs);
 
     // 1-body
     auto d1 = rdms->SF_G1();
     for (int z = 0; z < ndirs; ++z) {
-        actv.add(z, d1("pq") * one_body_ints_[z]("pq"));
+        actv.add(z, d1("pq") * dp1_ints_[z]("pq"));
     }
 
     // 2-body
-    if (rdms->max_rdm_level() > 1) {
-        if (two_body_ints_.size()) {
+    if (dp_many_body_level_ > 1 and rdms->max_rdm_level() > 1) {
+        if (dp2_ints_.size()) {
             auto d2 = rdms->SF_G2();
             for (int z = 0; z < ndirs; ++z) {
-                actv.add(z, 0.5 * d2("pqrs") * two_body_ints_[z]("pqrs"));
+                actv.add(z, 0.5 * d2("pqrs") * dp2_ints_[z]("pqrs"));
             }
         } else {
-            if (two_body_ints_aa_.size() and two_body_ints_ab_.size() and
-                two_body_ints_bb_.size()) {
+            if (dp2_ints_aa_.size() and dp2_ints_ab_.size() and dp2_ints_bb_.size()) {
                 auto d2aa = rdms->g2aa();
                 auto d2ab = rdms->g2ab();
                 auto d2bb = rdms->g2bb();
                 for (int z = 0; z < ndirs; ++z) {
-                    actv.add(z, 0.25 * two_body_ints_aa_[z]("uvxy") * d2aa("xyuv"));
-                    actv.add(z, 0.25 * two_body_ints_bb_[z]("uvxy") * d2bb("xyuv"));
-                    actv.add(z, two_body_ints_ab_[z]("uvxy") * d2ab("xyuv"));
+                    actv.add(z, 0.25 * dp2_ints_aa_[z]("uvxy") * d2aa("xyuv"));
+                    actv.add(z, 0.25 * dp2_ints_bb_[z]("uvxy") * d2bb("xyuv"));
+                    actv.add(z, dp2_ints_ab_[z]("uvxy") * d2ab("xyuv"));
                 }
             }
         }
@@ -193,46 +210,127 @@ psi::SharedVector ActiveMultipoleIntegrals::compute_electronic_multipole(std::sh
 }
 
 psi::SharedVector
-ActiveMultipoleIntegrals::nuclear_contributions(const psi::Vector3& origin) const {
-    return mpints_->nuclear_contributions(origin);
-}
+ActiveMultipoleIntegrals::compute_electronic_quadrupole(std::shared_ptr<RDMs> rdms,
+                                                        bool transition) {
+    auto ndirs = 6;
+    auto out = std::make_shared<psi::Vector>(ndirs);
+    if (not transition)
+        out = qp_scalars();
+    psi::Vector actv(ndirs);
 
-psi::SharedVector ActiveMultipoleIntegrals::scalars_fdocc() const {
-    return mpints_->mp_frozen_core();
-}
+    // 1-body
+    auto d1 = rdms->SF_G1();
+    for (int z = 0; z < ndirs; ++z) {
+        actv.add(z, d1("pq") * qp1_ints_[z]("pq"));
+    }
 
-psi::SharedVector ActiveMultipoleIntegrals::scalars_rdocc() const { return scalars_rdocc_; }
+    // 2-body
+    if (qp_many_body_level_ > 1 and rdms->max_rdm_level() > 1) {
+        if (qp2_ints_.size()) {
+            auto d2 = rdms->SF_G2();
+            for (int z = 0; z < ndirs; ++z) {
+                actv.add(z, 0.5 * d2("pqrs") * qp2_ints_[z]("pqrs"));
+            }
+        } else {
+            if (qp2_ints_aa_.size() and qp2_ints_ab_.size() and qp2_ints_bb_.size()) {
+                auto d2aa = rdms->g2aa();
+                auto d2ab = rdms->g2ab();
+                auto d2bb = rdms->g2bb();
+                for (int z = 0; z < ndirs; ++z) {
+                    actv.add(z, 0.25 * qp2_ints_aa_[z]("uvxy") * d2aa("xyuv"));
+                    actv.add(z, 0.25 * qp2_ints_bb_[z]("uvxy") * d2bb("xyuv"));
+                    actv.add(z, qp2_ints_ab_[z]("uvxy") * d2ab("xyuv"));
+                }
+            }
+        }
+    }
 
-psi::SharedVector ActiveMultipoleIntegrals::scalars() const {
-    auto out = std::make_shared<psi::Vector>(*scalars_fdocc());
-    out->add(*scalars_rdocc_);
+    out->add(actv);
     return out;
 }
 
-void ActiveMultipoleIntegrals::set_scalar_rdocc(int direction, double value) {
-    scalars_rdocc_->set(direction, value);
+psi::SharedVector ActiveMultipoleIntegrals::nuclear_dipole(const psi::Vector3& origin) const {
+    return mpints_->nuclear_dipole(origin);
 }
 
-void ActiveMultipoleIntegrals::set_1body(int direction, ambit::Tensor M1) {
+psi::SharedVector ActiveMultipoleIntegrals::nuclear_quadrupole(const psi::Vector3& origin) const {
+    return mpints_->nuclear_quadrupole(origin);
+}
+
+psi::SharedVector ActiveMultipoleIntegrals::dp_scalars_fdocc() const {
+    return mpints_->dp_frozen_core();
+}
+
+psi::SharedVector ActiveMultipoleIntegrals::qp_scalars_fdocc() const {
+    return mpints_->qp_frozen_core();
+}
+
+psi::SharedVector ActiveMultipoleIntegrals::dp_scalars_rdocc() const { return dp0_rdocc_; }
+
+psi::SharedVector ActiveMultipoleIntegrals::qp_scalars_rdocc() const { return qp0_rdocc_; }
+
+psi::SharedVector ActiveMultipoleIntegrals::dp_scalars() const {
+    auto out = std::make_shared<psi::Vector>(*dp_scalars_fdocc());
+    out->add(*dp0_rdocc_);
+    return out;
+}
+
+psi::SharedVector ActiveMultipoleIntegrals::qp_scalars() const {
+    auto out = std::make_shared<psi::Vector>(*qp_scalars_fdocc());
+    out->add(*qp0_rdocc_);
+    return out;
+}
+
+void ActiveMultipoleIntegrals::set_dp_scalar_rdocc(int direction, double value) {
+    dp0_rdocc_->set(direction, value);
+}
+
+void ActiveMultipoleIntegrals::set_qp_scalar_rdocc(int direction, double value) {
+    qp0_rdocc_->set(direction, value);
+}
+
+void ActiveMultipoleIntegrals::set_dp1_ints(int direction, ambit::Tensor M1) {
     _test_tensor_dims(M1);
-    one_body_ints_[direction] = M1;
+    dp1_ints_[direction] = M1;
 }
 
-void ActiveMultipoleIntegrals::set_2body(int direction, ambit::Tensor M2) {
+void ActiveMultipoleIntegrals::set_qp1_ints(int direction, ambit::Tensor M1) {
+    _test_tensor_dims(M1);
+    qp1_ints_[direction] = M1;
+}
+
+void ActiveMultipoleIntegrals::set_dp2_ints(int direction, ambit::Tensor M2) {
     _test_tensor_dims(M2);
-    two_body_ints_[direction] = M2;
-    many_body_level_ = 2;
+    dp2_ints_[direction] = M2;
+    dp_many_body_level_ = 2;
 }
 
-void ActiveMultipoleIntegrals::set_2body(int direction, ambit::Tensor M2aa, ambit::Tensor M2ab,
-                                         ambit::Tensor M2bb) {
+void ActiveMultipoleIntegrals::set_qp2_ints(int direction, ambit::Tensor M2) {
+    _test_tensor_dims(M2);
+    qp2_ints_[direction] = M2;
+    qp_many_body_level_ = 2;
+}
+
+void ActiveMultipoleIntegrals::set_dp2_ints(int direction, ambit::Tensor M2aa, ambit::Tensor M2ab,
+                                            ambit::Tensor M2bb) {
     _test_tensor_dims(M2aa);
     _test_tensor_dims(M2ab);
     _test_tensor_dims(M2bb);
-    two_body_ints_aa_[direction] = M2aa;
-    two_body_ints_ab_[direction] = M2ab;
-    two_body_ints_bb_[direction] = M2bb;
-    many_body_level_ = 2;
+    dp2_ints_aa_[direction] = M2aa;
+    dp2_ints_ab_[direction] = M2ab;
+    dp2_ints_bb_[direction] = M2bb;
+    dp_many_body_level_ = 2;
+}
+
+void ActiveMultipoleIntegrals::set_qp2_ints(int direction, ambit::Tensor M2aa, ambit::Tensor M2ab,
+                                            ambit::Tensor M2bb) {
+    _test_tensor_dims(M2aa);
+    _test_tensor_dims(M2ab);
+    _test_tensor_dims(M2bb);
+    qp2_ints_aa_[direction] = M2aa;
+    qp2_ints_ab_[direction] = M2ab;
+    qp2_ints_bb_[direction] = M2bb;
+    qp_many_body_level_ = 2;
 }
 
 void ActiveMultipoleIntegrals::_test_tensor_dims(ambit::Tensor T) {

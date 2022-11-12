@@ -138,16 +138,9 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
-    /// Pass dipole integrals to the solver (e.g. correlation dressed dipole)
-    void set_active_dipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_ints) {
-        if (as_ints->order() == 1)
-            as_dp_ints_ = as_ints;
-    }
-
-    /// Pass quadrupole integrals to the solver (e.g. correlation dressed quadrupole)
-    void set_active_quadrupole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_ints) {
-        if (as_ints->order() == 2)
-            as_qp_ints_ = as_ints;
+    /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
+    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_ints) {
+        as_mp_ints_ = as_ints;
     }
 
     /// Return the map of StateInfo to the wave function file name
@@ -193,11 +186,8 @@ class ActiveSpaceSolver {
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
-    /// The dipole integrals for the active space
-    std::shared_ptr<ActiveMultipoleIntegrals> as_dp_ints_;
-
-    /// The quadrupole integrals for the active space
-    std::shared_ptr<ActiveMultipoleIntegrals> as_qp_ints_;
+    /// The multipole integrals for the active space
+    std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints_;
 
     /// User-provided options
     std::shared_ptr<ForteOptions> options_;

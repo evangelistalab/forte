@@ -46,60 +46,73 @@
 namespace forte {
 class MultipoleIntegrals {
   public:
-    /// @brief Contructor to create integrals for an active space
+    /// @brief Contructor to create dipole and quadrupole integrals
     /// @param ints forte integral object
     /// @param mo_space_info The MOSpaceInfo object
-    /// @param order the order of multipole (1=dipole, 2=quadrupole)
     MultipoleIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info, int order);
+                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    /// @brief Electronic multipole moment matrix element
-    /// @param direction The direction of multipole moment
+    /// @brief Electronic dipole moment integrals matrix element
+    /// @param direction The direction of dipole moment [X, Y, Z]
     /// @param p The bra index (frozen orbitals included)
     /// @param q The ket index (frozen orbitals included)
-    /// @return electronic multipole matrix element M_{pq}
-    double mp_ints(int direction, size_t p, size_t q) const;
+    /// @return electronic dipole matrix element M_{pq}
+    double dp_ints(int direction, size_t p, size_t q) const;
 
-    /// @brief Electronic multipole moment matrix element
-    /// @param direction The direction of multipole moment
+    /// @brief Electronic quadrupole moment integrals matrix element
+    /// @param direction The direction of quadrupole moment [XX, XY, XZ, YY, YZ, ZZ]
+    /// @param p The bra index (frozen orbitals included)
+    /// @param q The ket index (frozen orbitals included)
+    /// @return electronic quadrupole matrix element M_{pq}
+    double qp_ints(int direction, size_t p, size_t q) const;
+
+    /// @brief Electronic dipole moment integrals matrix element
+    /// @param direction The direction of dipole moment [X, Y, Z]
     /// @param p The bra index (frozen orbitals excluded)
     /// @param q The ket index (frozen orbitals excluded)
-    /// @return electronic multipole matrix element M_{pq}
-    double mp_ints_corr(int direction, size_t p, size_t q) const;
+    /// @return electronic dipole matrix element M_{pq}
+    double dp_ints_corr(int direction, size_t p, size_t q) const;
+
+    /// @brief Electronic quadrupole moment integrals matrix element
+    /// @param direction The direction of quadrupole moment [XX, XY, XZ, YY, YZ, ZZ]
+    /// @param p The bra index (frozen orbitals excluded)
+    /// @param q The ket index (frozen orbitals excluded)
+    /// @return electronic quadrupole matrix element M_{pq}
+    double qp_ints_corr(int direction, size_t p, size_t q) const;
 
     /// Nuclear contributions to dipole moments in X, Y, Z order
-    psi::SharedVector nuclear_contributions(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
+    psi::SharedVector nuclear_dipole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
+
+    /// Nuclear contributions to quadrupole moments in XX, XY, XZ, YY, YZ, ZZ order
+    psi::SharedVector nuclear_quadrupole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
 
     /// Frozen-orbital contributions to dipole moments
-    psi::SharedVector mp_frozen_core() const;
+    psi::SharedVector dp_frozen_core() const;
+
+    /// Frozen-orbital contributions to quadrupole moments
+    psi::SharedVector qp_frozen_core() const;
 
     /// Return the MO space info object
     std::shared_ptr<MOSpaceInfo> mo_space_info() const;
 
-    /// Return the order of multipole
-    int order() const;
-    /// Return the number of directions
-    int ndirs() const;
-
   private:
     /// The MO space info object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    /// Mutipole order
-    int order_;
-    /// Number of directions of multipole
-    int ndirs_;
 
     /// The mapping from correlated MO to full MO (frozen + correlated)
     std::vector<size_t> cmotomo_;
     /// The molecule object used to compute nuclear contribution
     std::shared_ptr<psi::Molecule> molecule_;
 
-    /// MO multipole integrals (frozen orbitals included)
+    /// MO dipole integrals (frozen orbitals included)
     /// each element is a nmo x nmo psi::SharedMatrix in Pitzer order
-    /// dipole order: X, Y, Z
-    /// quadrupole order: XX, XY, XZ, YY, YZ, ZZ
-    std::vector<psi::SharedMatrix> mp_ints_;
+    /// X, Y, Z
+    std::vector<psi::SharedMatrix> dp_ints_;
+
+    /// MO quadrupole integrals (frozen orbitals included)
+    /// each element is a nmo x nmo psi::SharedMatrix in Pitzer order
+    /// XX, XY, XZ, YY, YZ, ZZ
+    std::vector<psi::SharedMatrix> qp_ints_;
 };
 
 class ActiveMultipoleIntegrals {
@@ -112,42 +125,64 @@ class ActiveMultipoleIntegrals {
 
     // ==> Class Interface <==
 
-    /// Nuclear contributions
-    psi::SharedVector nuclear_contributions(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
+    /// Nuclear contributions to dipole moment
+    psi::SharedVector nuclear_dipole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
+    /// Nuclear contributions to quadrupole moment
+    psi::SharedVector nuclear_quadrupole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
 
-    /// Compute electronic contributions
-    /// Dipole in X, Y, Z order
-    /// Quadrupole in XX, XY, XZ, YY, YZ, ZZ order
-    psi::SharedVector compute_electronic_multipole(std::shared_ptr<RDMs> rdms, bool transition = false);
+    /// Compute electronic contributions to dipole moment [X, Y, Z]
+    psi::SharedVector compute_electronic_dipole(std::shared_ptr<RDMs> rdms,
+                                                bool transition = false);
+    /// Compute electronic contributions to dipole moment [XX, XY, XZ, YY, YZ, ZZ]
+    psi::SharedVector compute_electronic_quadrupole(std::shared_ptr<RDMs> rdms,
+                                                    bool transition = false);
 
-    /// Frozen-core contributions
-    psi::SharedVector scalars_fdocc() const;
-    /// Core (restricted docc) contribution
-    psi::SharedVector scalars_rdocc() const;
-    /// Inactive (frozen docc + restricted docc) contribution
-    psi::SharedVector scalars() const;
+    /// Dipole from frozen orbitals
+    psi::SharedVector dp_scalars_fdocc() const;
+    /// Dipole from restricted docc orbitals
+    psi::SharedVector dp_scalars_rdocc() const;
+    /// Dipole from doubly occupied orbitals
+    psi::SharedVector dp_scalars() const;
 
-    /// Set scalar term
-    void set_scalar_rdocc(int direction, double value);
-    /// Set 1-body integrals
-    void set_1body(int direction, ambit::Tensor M1);
-    /// Set spin-free 2-body similarity transformed integrals
-    void set_2body(int direction, ambit::Tensor M2);
-    /// Set spin-dependent 2-body similarity transformed integrals
-    void set_2body(int direction, ambit::Tensor M2aa, ambit::Tensor M2ab, ambit::Tensor M2bb);
+    /// Set dipole scalar term from restricted docc orbitals
+    void set_dp_scalar_rdocc(int direction, double value);
+    /// Set 1-body dipole integrals
+    void set_dp1_ints(int direction, ambit::Tensor M1);
+    /// Set spin-free 2-body similarity transformed dipole integrals
+    void set_dp2_ints(int direction, ambit::Tensor M2);
+    /// Set spin-dependent 2-body similarity transformed dipole integrals
+    void set_dp2_ints(int direction, ambit::Tensor M2aa, ambit::Tensor M2ab, ambit::Tensor M2bb);
 
-    /// Return the order of multipole
-    int order() const;
-    /// Return the multipole many-body level
-    int many_body_level() const;
+    /// Quadrupole from frozen orbitals
+    psi::SharedVector qp_scalars_fdocc() const;
+    /// Quadrupole from restricted docc orbitals
+    psi::SharedVector qp_scalars_rdocc() const;
+    /// Quadrupole from doubly occupied orbitals
+    psi::SharedVector qp_scalars() const;
+
+    /// Set quadrupole scalar term from restricted docc orbitals
+    void set_qp_scalar_rdocc(int direction, double value);
+    /// Set 1-body quadrupole integrals
+    void set_qp1_ints(int direction, ambit::Tensor M1);
+    /// Set spin-free 2-body similarity transformed quadrupole integrals
+    void set_qp2_ints(int direction, ambit::Tensor M2);
+    /// Set spin-dependent 2-body similarity transformed quadrupole integrals
+    void set_qp2_ints(int direction, ambit::Tensor M2aa, ambit::Tensor M2ab, ambit::Tensor M2bb);
+
+    /// Return the dipole many-body level
+    int dp_many_body_level() const;
+    /// Return the quadrupole many-body level
+    int qp_many_body_level() const;
 
   private:
     // ==> Class Private Data <==
 
     /// The integrals object
     std::shared_ptr<MultipoleIntegrals> mpints_;
-    /// Many-body level of multipole integrals
-    int many_body_level_;
+    /// Many-body level of dipole integrals
+    int dp_many_body_level_;
+    /// Many-body level of quadrupole integrals
+    int qp_many_body_level_;
 
     /// The number of MOs
     size_t nmo_;
@@ -158,18 +193,31 @@ class ActiveMultipoleIntegrals {
     /// The number of MOs to the fourth power
     size_t nmo4_;
 
-    /// Contributions of inactive orbitals
-    psi::SharedVector scalars_rdocc_;
-    /// One-body integrals
-    std::vector<ambit::Tensor> one_body_ints_;
-    /// Two-body integrals, spin free
-    std::vector<ambit::Tensor> two_body_ints_;
-    /// Two-body integrals, alpha-alpha spin
-    std::vector<ambit::Tensor> two_body_ints_aa_;
-    /// Two-body integrals, alpha-beta spin
-    std::vector<ambit::Tensor> two_body_ints_ab_;
-    /// Two-body integrals, beta-beta spin
-    std::vector<ambit::Tensor> two_body_ints_bb_;
+    /// Dipole from inactive orbitals
+    psi::SharedVector dp0_rdocc_;
+    /// One-body dipole integrals
+    std::vector<ambit::Tensor> dp1_ints_;
+    /// Two-body dipole integrals, spin free
+    std::vector<ambit::Tensor> dp2_ints_;
+    /// Two-body dipole integrals, alpha-alpha spin
+    std::vector<ambit::Tensor> dp2_ints_aa_;
+    /// Two-body dipole integrals, alpha-beta spin
+    std::vector<ambit::Tensor> dp2_ints_ab_;
+    /// Two-body dipole integrals, beta-beta spin
+    std::vector<ambit::Tensor> dp2_ints_bb_;
+
+    /// Quadrupole from inactive orbitals
+    psi::SharedVector qp0_rdocc_;
+    /// One-body quadrupole integrals
+    std::vector<ambit::Tensor> qp1_ints_;
+    /// Two-body quadrupole integrals, spin free
+    std::vector<ambit::Tensor> qp2_ints_;
+    /// Two-body quadrupole integrals, alpha-alpha spin
+    std::vector<ambit::Tensor> qp2_ints_aa_;
+    /// Two-body quadrupole integrals, alpha-beta spin
+    std::vector<ambit::Tensor> qp2_ints_ab_;
+    /// Two-body quadrupole integrals, beta-beta spin
+    std::vector<ambit::Tensor> qp2_ints_bb_;
 
     /// Test the dimension of a given tensor
     void _test_tensor_dims(ambit::Tensor T);

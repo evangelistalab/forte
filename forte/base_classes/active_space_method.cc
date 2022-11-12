@@ -130,10 +130,10 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     print_h2("Quadrupole Moments [e a0^2] (Nuclear + Electronic) for " + state_label);
 
     // nuclear contributions
-    auto nuc = ampints->nuclear_contributions();
+    auto nuc = ampints->nuclear_dipole();
 
     // prepare RDMs
-    auto rdms_vec = rdms(root_list, ampints->many_body_level(), RDMsType::spin_free);
+    auto rdms_vec = rdms(root_list, ampints->dp_many_body_level(), RDMsType::spin_free);
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         rdms_vec[i]->rotate(Ua, Ub);
     }
@@ -200,10 +200,10 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
     print_h2("Dipole Moments [e a0] (Nuclear + Electronic) for " + state_label);
 
     // nuclear contributions
-    auto dipole_nuc = ampints->nuclear_contributions();
+    auto dipole_nuc = ampints->nuclear_dipole();
 
     // prepare RDMs
-    auto rdms_vec = rdms(root_list, ampints->many_body_level(), RDMsType::spin_free);
+    auto rdms_vec = rdms(root_list, ampints->dp_many_body_level(), RDMsType::spin_free);
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         rdms_vec[i]->rotate(Ua, Ub);
     }
@@ -302,7 +302,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     print_h2("Transition Dipole Moments [e a0] for " + title);
 
     // prepare transition RDMs
-    auto rdm_level = ampints->many_body_level();
+    auto rdm_level = ampints->dp_many_body_level();
     auto rdms = transition_rdms(root_list, method2, rdm_level, RDMsType::spin_free);
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         rdms[i]->rotate(Ua, Ub); // need to make 1-TRDM and dipole in the same orbital basis
