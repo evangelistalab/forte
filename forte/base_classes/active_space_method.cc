@@ -117,9 +117,6 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list, const ambit::Tensor& Ua,
     const ambit::Tensor& Ub) {
-    if (ampints->order() != 2)
-        throw std::runtime_error("ActiveMultipoleIntegrals not for quadrupole computations!");
-
     // print title
     auto multi_label = state_.multiplicity_label();
     auto multi_label_upper = upper_string(multi_label);
@@ -130,10 +127,10 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     print_h2("Quadrupole Moments [e a0^2] (Nuclear + Electronic) for " + state_label);
 
     // nuclear contributions
-    auto nuc = ampints->nuclear_dipole();
+    auto quadrupole_nuc = ampints->nuclear_quadrupole();
 
     // prepare RDMs
-    auto rdms_vec = rdms(root_list, ampints->dp_many_body_level(), RDMsType::spin_free);
+    auto rdms_vec = rdms(root_list, ampints->qp_many_body_level(), RDMsType::spin_free);
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         rdms_vec[i]->rotate(Ua, Ub);
     }
@@ -152,8 +149,8 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
             continue;
         std::string name = std::to_string(root1) + upper_string(irrep_label);
 
-        auto quadrupole = ampints->compute_electronic_multipole(rdms_vec[i]);
-        quadrupole->add(*nuc);
+        auto quadrupole = ampints->compute_electronic_quadrupole(rdms_vec[i]);
+        quadrupole->add(*quadrupole_nuc);
         out[i] = quadrupole;
 
         auto xx = quadrupole->get(0);
@@ -176,8 +173,9 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // print nuclear contribution
-    psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f%15.8f%15.8f", "Nuclear", nuc->get(0),
-                         nuc->get(1), nuc->get(2), nuc->get(3), nuc->get(4), nuc->get(5));
+    psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f%15.8f%15.8f", "Nuclear",
+                         quadrupole_nuc->get(0), quadrupole_nuc->get(1), quadrupole_nuc->get(2),
+                         quadrupole_nuc->get(3), quadrupole_nuc->get(4), quadrupole_nuc->get(5));
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     return out;
@@ -187,9 +185,6 @@ std::vector<psi::SharedVector>
 ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                             std::vector<std::pair<size_t, size_t>>& root_list,
                                             const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
-    if (ampints->order() != 1)
-        throw std::runtime_error("ActiveMultipoleIntegrals not for dipole computations!");
-
     // print title
     auto multi_label = state_.multiplicity_label();
     auto multi_label_upper = upper_string(multi_label);
@@ -221,7 +216,7 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
             continue;
         std::string name = std::to_string(root1) + upper_string(irrep_label);
 
-        auto dipole = ampints->compute_electronic_multipole(rdms_vec[i]);
+        auto dipole = ampints->compute_electronic_dipole(rdms_vec[i]);
         dipole->add(*dipole_nuc);
         dipoles_out[i] = dipole;
 
@@ -293,9 +288,6 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list,
     std::shared_ptr<ActiveSpaceMethod> method2, const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
-    if (ampints->order() != 1)
-        throw std::runtime_error("ActiveMultipoleIntegrals not for dipole computations!");
-
     // print title
     const auto& state2 = method2->state();
     std::string title = state_.str_minimum() + " -> " + state2.str_minimum();
@@ -317,7 +309,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     // compute transition dipole
     std::vector<psi::SharedVector> trans_dipoles(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
-        auto td = ampints->compute_electronic_multipole(rdms[i], true);
+        auto td = ampints->compute_electronic_dipole(rdms[i], true);
         trans_dipoles[i] = td;
 
         // print

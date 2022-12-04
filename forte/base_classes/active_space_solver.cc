@@ -78,10 +78,8 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     }
 
     // initialize multipole integrals
-    auto dp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_, 1);
-    as_dp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(dp_ints);
-    auto qp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_, 2);
-    as_qp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(qp_ints);
+    auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
+    as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -116,10 +114,10 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     print_energies();
 
     if (as_ints_->ints()->integral_type() != Custom) {
-        compute_dipole_moment(as_dp_ints_);
-        compute_quadrupole_moment(as_qp_ints_);
+        compute_dipole_moment(as_mp_ints_);
+        compute_quadrupole_moment(as_mp_ints_);
         if (options_->get_bool("TRANSITION_DIPOLES")) {
-            compute_fosc_same_orbs(as_dp_ints_);
+            compute_fosc_same_orbs(as_mp_ints_);
         }
     }
 

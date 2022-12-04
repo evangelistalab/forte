@@ -204,7 +204,6 @@ psi::SharedVector ActiveMultipoleIntegrals::compute_electronic_dipole(std::share
             }
         }
     }
-
     out->add(actv);
     return out;
 }
