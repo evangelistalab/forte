@@ -46,7 +46,7 @@
 namespace forte {
 class MultipoleIntegrals {
   public:
-    /// @brief Contructor to create dipole and quadrupole integrals
+    /// @brief Contructor to create MO dipole and quadrupole integrals
     /// @param ints forte integral object
     /// @param mo_space_info The MOSpaceInfo object
     MultipoleIntegrals(std::shared_ptr<ForteIntegrals> ints,

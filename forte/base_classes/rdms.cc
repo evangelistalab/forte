@@ -102,7 +102,7 @@ std::shared_ptr<RDMs> RDMs::build_from_disk(size_t max_rdm_level, RDMsType type,
                                             const std::string& filename_prefix) {
     std::shared_ptr<RDMs> rdms;
 
-    std::string prefix = filename_prefix + (filename_prefix.empty() ? "" : ".");
+    std::string prefix = (filename_prefix.empty() ? "" : filename_prefix + ".");
 
     if (type == RDMsType::spin_dependent) {
         ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
@@ -973,7 +973,7 @@ void RDMsSpinFree::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
 }
 
 void RDMsSpinFree::dump_to_disk(const std::string& filename_prefix) const {
-    std::string prefix = filename_prefix + (filename_prefix.empty() ? "" : ".");
+    std::string prefix = (filename_prefix.empty() ? "" : filename_prefix + ".");
     
     if (max_rdm_ > 0) {
         ambit::save(SF_G1_, prefix + "g1.bin");

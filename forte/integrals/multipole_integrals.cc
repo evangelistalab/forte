@@ -212,6 +212,9 @@ psi::SharedVector ActiveMultipoleIntegrals::compute_electronic_dipole(std::share
 psi::SharedVector
 ActiveMultipoleIntegrals::compute_electronic_quadrupole(std::shared_ptr<RDMs> rdms,
                                                         bool transition) {
+    if (rdms->dim() != nmo_) {
+        throw std::runtime_error("Dimension mismatch between ActiveMultipoleIntegrals and RDMs!");
+    }
     auto ndirs = 6;
     auto out = std::make_shared<psi::Vector>(ndirs);
     if (not transition)
