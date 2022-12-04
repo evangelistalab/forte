@@ -137,7 +137,7 @@ ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleInte
     qp0_rdocc_ = std::make_shared<psi::Vector>(6);
     for (int z = 0; z < 6; ++z) {
         for (const auto& i : rdocc_mos) {
-            dp0_rdocc_->add(z, 2.0 * mpints->qp_ints_corr(z, i, i));
+            qp0_rdocc_->add(z, 2.0 * mpints->qp_ints_corr(z, i, i));
         }
     }
 
