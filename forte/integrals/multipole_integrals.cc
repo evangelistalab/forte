@@ -117,7 +117,7 @@ psi::SharedVector MultipoleIntegrals::qp_frozen_core() const {
 std::shared_ptr<MOSpaceInfo> MultipoleIntegrals::mo_space_info() const { return mo_space_info_; }
 
 ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleIntegrals> mpints)
-    : mpints_(mpints), dp_many_body_level_(1) {
+    : mpints_(mpints), dp_many_body_level_(1), qp_many_body_level_(1) {
 
     auto mo_space_info = mpints->mo_space_info();
     nmo_ = mo_space_info->size("ACTIVE");
