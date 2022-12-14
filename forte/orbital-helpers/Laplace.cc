@@ -10,6 +10,7 @@
 #include "psi4/lib3index/cholesky.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
+#include "psi4/lib3index/dftensor.h"
 
 #include "helpers/timer.h"
 #include "helpers/printing.h"
@@ -209,6 +210,58 @@ psi::SharedMatrix load_Jinv_full(const size_t P, const size_t Q) {
     psio->read_entry(file_unit, "Jinv_full", (char*)Jinv_fullp[0], sizeof(double) * P * Q);
     psio->close(file_unit, 1);
     return Jinv_full;
+}
+
+psi::SharedMatrix initialize_erfc_integral(double Omega, int n_func_pairs, std::shared_ptr<ForteIntegrals> ints_forte) {
+    std::shared_ptr<psi::BasisSet> zero = psi::BasisSet::zero_ao_basis_set();
+    std::shared_ptr<psi::BasisSet> primary = ints_forte->wfn()->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = ints_forte->wfn()->get_basisset("DF_BASIS_MP2");
+
+    std::shared_ptr<psi::IntegralFactory> integral = std::shared_ptr<IntegralFactory>(new IntegralFactory(auxiliary,zero,primary,primary));
+    ///std::shared_ptr<psi::TwoBodyAOInt> ints(integral->erf_complement_eri(Omega));
+    std::shared_ptr<psi::TwoBodyAOInt> ints(integral->eri());
+
+    int nthree = auxiliary->nbf();
+    int nbf = primary->nbf();
+
+    auto I = std::make_shared<psi::Matrix>("erfc integral", nthree, n_func_pairs);
+    double **Ip = I->pointer();
+
+    int numP, Pshell, MU, NU, P, PHI, mu, nu, nummu, numnu, omu, onu;
+
+    for (MU = 0; MU < primary->nshell(); ++MU) {
+        nummu = primary->shell(MU).nfunction();
+        for (NU = 0; NU <= MU; ++NU) {
+            numnu = primary->shell(NU).nfunction();
+            for (Pshell = 0; Pshell < auxiliary->nshell(); ++Pshell) {
+                numP = auxiliary->shell(Pshell).nfunction();
+                ints->compute_shell(Pshell, 0, MU, NU);
+                const double *buffer = ints->buffer();
+                for (mu = 0; mu < nummu; ++mu) {
+                    omu = primary->shell(MU).function_index() + mu;
+                    for (nu = 0; nu < numnu; ++nu) {
+                        onu = primary->shell(NU).function_index() + nu;
+                        size_t addr = omu > onu ? omu * (omu + 1) / 2 + onu :
+                                                      onu * (onu + 1) / 2 + omu;
+                        for (P = 0; P < numP; ++P) {
+                            PHI = auxiliary->shell(Pshell).function_index() + P;
+                            Ip[PHI][addr] = buffer[P * nummu * numnu + mu * numnu + nu];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return I;
+}
+
+psi::SharedMatrix erfc_metric (std::shared_ptr<ForteIntegrals> ints_forte) {
+    std::shared_ptr<psi::BasisSet> auxiliary = ints_forte->wfn()->get_basisset("DF_BASIS_MP2");
+    auto Jinv = std::make_shared<psi::FittingMetric>(auxiliary, true);
+    ///Jinv->form_full_eig_inverse_erfc(1E-12);
+    Jinv->form_full_eig_inverse(1E-12);
+    psi::SharedMatrix Jinv_metric = Jinv->get_metric();
+    return Jinv_metric;
 }
 
 int binary_search_recursive(std::vector<int> A, int key, int low, int high) {

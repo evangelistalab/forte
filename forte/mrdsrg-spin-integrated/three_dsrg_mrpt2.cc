@@ -2255,7 +2255,7 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
     std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     //DiskDFJK jk(primary, auxiliary);
 
-    bool is_core = 0;
+    bool is_core = 1;
     if (is_core) {
         double result = E_ccvv_df_ao();
         return result;
@@ -2725,6 +2725,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     double theta_ij = foptions_->get_double("theta_ij");
 
     psi::SharedMatrix Cwfn = ints_->Ca();
+    outfile->Printf("\n\n  Ca_ao %d", Cwfn->rowspi()[0]);
+
     if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("LT-DSRG-MRPT2 does not work with symmetry");
 
@@ -2748,8 +2750,9 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, nactive_);
     int weights = ao_helper.Weights();
 
-    /// Number of MO.
+    /// Number of MO. (Core orbitals are included. Probably need to change this afterward.)
     int nmo = mo_space_info_->dimension("ALL").sum();
+    outfile->Printf("\n\n  nmo %d", nmo);
     local_timer timer1;
     ao_helper.Compute_Cholesky_Pseudo_Density();
     outfile->Printf("\n\n  Pseudo Cholesky takes %8.8f", timer1.get());
@@ -2758,9 +2761,6 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     ao_helper.Compute_Cholesky_Density();
     outfile->Printf("\n\n  Cholesky takes %8.8f", timer2.get());
     
-    //local_timer timer3;
-    //ao_helper.Householder_QR();
-    //outfile->Printf("\n\n  Householder QR takes %8.8f", timer3.get());
     
     std::vector<psi::SharedMatrix> Occupied_cholesky = ao_helper.LOcc_list();
     std::vector<psi::SharedMatrix> Virtual_cholesky = ao_helper.LVir_list();
@@ -2811,7 +2811,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     }
 
     /// Construct C_pq
-    psi::SharedMatrix C_pq = load_Jinv_full(nthree_, nthree_);
+    psi::SharedMatrix C_pq = erfc_metric(ints_);
 
     ///Overlap matrix
     psi::SharedMatrix S = ints_->wfn()->S();
@@ -2825,7 +2825,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 
     /// Construct M_uv, N_pu, amn, and amn_new
     int n_func_pairs = (nmo + 1) * nmo / 2;
-    psi::SharedMatrix loadAOtensor = load_Amn(nthree_, n_func_pairs);
+    psi::SharedMatrix loadAOtensor = initialize_erfc_integral(0.1, n_func_pairs, ints_);
     std::vector<psi::SharedMatrix> amn;
     std::vector<psi::SharedMatrix> amn_new;
     amn.resize(nthree_);

@@ -104,6 +104,11 @@ void DSRG_MRPT2::startup() {
         }
     }
 
+    /// Shuhang Li test
+    for (int i = 0; i < Fa_.size(); i++) {
+        outfile->Printf("\n   F alpha diag", Fa_[i]);
+    }
+
     // print levels
     if (print_ > 1) {
         Gamma1_.print(stdout);

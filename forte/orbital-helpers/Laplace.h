@@ -2,6 +2,8 @@
 #define __LAPLACE_H__
 
 #include "psi4/libmints/matrix.h"
+#include "mrdsrg-spin-integrated/master_mrdsrg.h"
+
 
 #include <vector>
 
@@ -55,6 +57,10 @@ psi::SharedMatrix submatrix_rows_and_cols(const psi::Matrix &mat, const std::vec
 psi::SharedMatrix load_Amn(const size_t A, const size_t mn);
 
 psi::SharedMatrix load_Jinv_full(const size_t P, const size_t Q);
+
+psi::SharedMatrix initialize_erfc_integral(double Omega, int n_func_pairs, std::shared_ptr<ForteIntegrals> ints_forte);
+
+psi::SharedMatrix erfc_metric (std::shared_ptr<ForteIntegrals> ints_forte);
 
 int binary_search_recursive(std::vector<int> A, int key, int low, int high);
 } // namespace forte
