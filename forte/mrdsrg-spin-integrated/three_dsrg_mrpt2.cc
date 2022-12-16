@@ -2725,6 +2725,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     double theta_ij = foptions_->get_double("THETA_IJ");
     double Omega = foptions_->get_double("OMEGA");
     double theta_schwarz = foptions_->get_double("THETA_SCHWARZ");
+    double theta_schwarz_2 = theta_schwarz * theta_schwarz;
 
     psi::SharedMatrix Cwfn = ints_->Ca();
     outfile->Printf("\n\n  Ca_ao %d", Cwfn->rowspi()[0]);
@@ -3133,7 +3134,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
                             int a = abar_ibar[j][a_idx];
                             int b = abar_ibar[j][b_idx];
                             double Schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) * Q_ia_2->get(i, b) * Q_ia_2->get(j, a);
-                            if (Schwarz_2 > theta_schwarz) {
+                            if (Schwarz_2 > theta_schwarz_2) {
                                 std::vector<int> vec_a{a};
                                 std::vector<int> vec_b{b};
                                 std::vector<int> vec_a_new{a_idx};
@@ -3142,37 +3143,20 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
                                 psi::SharedMatrix jb = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_b, aux_intersection_per_ij);
                                 psi::SharedMatrix ib = submatrix_rows_and_cols(*B_ia_Q[i], vec_b_new, aux_in_B_i);
                                 psi::SharedMatrix ja = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_a, aux_intersection_per_ij);
-                                double iajb = psi::linalg::doublet(ia, jb, false, true)->get(0, 0);
-                                double ibja = psi::linalg::doublet(ib, ja, false, true)->get(0, 0);
+
+                                psi::SharedMatrix iajb_mat = psi::linalg::doublet(ia, jb, false, true);
+                                double* iajb = iajb_mat->get_pointer();
+                                psi::SharedMatrix ibja_mat = psi::linalg::doublet(ib, ja, false, true);
+                                double* ibja = ibja_mat->get_pointer();
+
                                 if (a == b) {
-                                    E_K += 2 * (iajb) * (ibja);
+                                    E_K += 2 * (*iajb) * (*ibja);
                                 } else {
-                                    E_K += 4 * (iajb) * (ibja);
+                                    E_K += 4 * (*iajb) * (*ibja);
                                 }
                             } 
                         }
                     }
-
-                    // vir_intersection_per_ij.clear();
-                    // aux_intersection_per_ij.clear();
-                    // std::set_intersection(abar_ibar[i].begin(), abar_ibar[i].end(),
-                    //                       abar_ibar[j].begin(), abar_ibar[j].end(),
-                    //                       std::back_inserter(vir_intersection_per_ij));
-                    // std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(),
-                    //                       P_ibar[j].end(),
-                    //                       std::back_inserter(aux_intersection_per_ij));
-                    // psi::SharedMatrix i_intersection = submatrix_rows_and_cols(
-                    //     *i_bar_a_bar_P[i], vir_intersection_per_ij, aux_intersection_per_ij);
-                    // psi::SharedMatrix j_intersection = submatrix_rows_and_cols(
-                    //     *i_bar_a_bar_P[j], vir_intersection_per_ij, aux_intersection_per_ij);
-                    // psi::SharedMatrix C_pq_intersection = submatrix_rows_and_cols(
-                    //     *C_pq, aux_intersection_per_ij, aux_intersection_per_ij);
-                    // psi::SharedMatrix iajb_intersection = psi::linalg::triplet(
-                    //     i_intersection, C_pq_intersection, j_intersection, false, false, true);
-                    // for (int abar = 0; abar < iajb_intersection->rowdim(); abar++) {
-                    //     E_K += 2 * iajb_intersection->get_row(0, abar)->vector_dot(
-                    //                    *iajb_intersection->get_column(0, abar));
-                    // }
                 }
             }
         }
