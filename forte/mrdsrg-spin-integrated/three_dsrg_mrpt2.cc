@@ -2721,8 +2721,10 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     double E_J = 0.0;
     double E_K = 0.0;
 
-    double theta_NB = foptions_->get_double("theta_NB");
-    double theta_ij = foptions_->get_double("theta_ij");
+    double theta_NB = foptions_->get_double("THETA_NB");
+    double theta_ij = foptions_->get_double("THETA_IJ");
+    double Omega = foptions_->get_double("OMEGA");
+    double theta_schwarz = foptions_->get_double("THETA_SCHWARZ");
 
     psi::SharedMatrix Cwfn = ints_->Ca();
     outfile->Printf("\n\n  Ca_ao %d", Cwfn->rowspi()[0]);
@@ -2811,7 +2813,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     }
 
     /// Construct C_pq
-    psi::SharedMatrix C_pq = erfc_metric(ints_);
+    psi::SharedMatrix C_pq = erfc_metric(Omega, ints_);
 
     ///Overlap matrix
     psi::SharedMatrix S = ints_->wfn()->S();
@@ -2825,7 +2827,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 
     /// Construct M_uv, N_pu, amn, and amn_new
     int n_func_pairs = (nmo + 1) * nmo / 2;
-    psi::SharedMatrix loadAOtensor = initialize_erfc_integral(0.1, n_func_pairs, ints_);
+    psi::SharedMatrix loadAOtensor = initialize_erfc_integral(Omega, n_func_pairs, ints_);
     std::vector<psi::SharedMatrix> amn;
     std::vector<psi::SharedMatrix> amn_new;
     amn.resize(nthree_);
@@ -2892,9 +2894,9 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     P_iu.resize(nthree_);
 
     /// Construct {i}_p
-    SparseMap i_p;
+    SparseMap i_p; /// Use original indices.
     i_p.resize(nthree_);
-    SparseMap i_p_for_i_up;
+    SparseMap i_p_for_i_up; /// Use new indices from [i]_p.
     i_p_for_i_up.resize(nthree_);
 
     /// (P|vu) -> (P|iu) transformation
@@ -2919,8 +2921,6 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
         }
         P_iu[q] = submatrix_rows(*P_iu[q], i_p_for_i_up[q]);
     }
-
-    P_iu[0] -> print();
 
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
@@ -2957,7 +2957,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     /// Construct (ibar abar|P)
     std::vector<psi::SharedMatrix> i_bar_a_bar_P;
 
-    /// Constrcut Sliced (ibar abar|P);
+    /// Construct Sliced (ibar abar|P);
     std::vector<psi::SharedMatrix> i_bar_a_bar_P_sliced;
 
     /// Construct {a_bar}_ibar
@@ -2974,6 +2974,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 
     std::vector<int> vir_intersection_per_ij;
     std::vector<int> aux_intersection_per_ij;
+    std::vector<int> aux_in_B_i;
+    std::vector<int> aux_in_B_j;
 
 
     for (int nweight = 0; nweight < weights; nweight++) {
@@ -2985,8 +2987,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
         double* N_pi_bar_p = N_pi_bar->get_pointer();
         psi::SharedMatrix N_pa_bar =
             psi::linalg::doublet(N_pu, Virtual_cholesky_abs[nweight], false, false);
-        
         double* N_pa_bar_p = N_pa_bar->get_pointer();
+
         for (int qa = 0; qa < nthree_; qa++) {
             i_bar_p_up[qa].clear();
             a_bar_p_up[qa].clear();
@@ -3112,32 +3114,65 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
             }
         }
 
+        /// Start ij-prescreening.
         psi::SharedMatrix A_ij_2 = psi::linalg::doublet(Q_ia_2, Q_ia_2, false, true);
-
-        /// Below is a better implementation without Schwarz Screening.
         for (int i = 0; i < nocc; i++) {
             for (int j = 0; j < i; j++) {
                 if (A_ij_2->get(i, j) > theta_ij) {
-                    vir_intersection_per_ij.clear();
                     aux_intersection_per_ij.clear();
-                    std::set_intersection(abar_ibar[i].begin(), abar_ibar[i].end(),
-                                          abar_ibar[j].begin(), abar_ibar[j].end(),
-                                          std::back_inserter(vir_intersection_per_ij));
-                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(),
-                                          P_ibar[j].end(),
-                                          std::back_inserter(aux_intersection_per_ij));
-                    psi::SharedMatrix i_intersection = submatrix_rows_and_cols(
-                        *i_bar_a_bar_P[i], vir_intersection_per_ij, aux_intersection_per_ij);
-                    psi::SharedMatrix j_intersection = submatrix_rows_and_cols(
-                        *i_bar_a_bar_P[j], vir_intersection_per_ij, aux_intersection_per_ij);
-                    psi::SharedMatrix C_pq_intersection = submatrix_rows_and_cols(
-                        *C_pq, aux_intersection_per_ij, aux_intersection_per_ij);
-                    psi::SharedMatrix iajb_intersection = psi::linalg::triplet(
-                        i_intersection, C_pq_intersection, j_intersection, false, false, true);
-                    for (int abar = 0; abar < iajb_intersection->rowdim(); abar++) {
-                        E_K += 2 * iajb_intersection->get_row(0, abar)->vector_dot(
-                                       *iajb_intersection->get_column(0, abar));
+                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(), P_ibar[j].end(), std::back_inserter(aux_intersection_per_ij));
+                    psi::SharedMatrix C_intersection = submatrix_rows_and_cols(*C_pq, aux_intersection_per_ij, aux_intersection_per_ij);
+                    aux_in_B_i.clear();
+                    for (auto aux : aux_intersection_per_ij) {
+                        int idx_aux_i = binary_search_recursive(P_ibar[i], aux, 0, P_ibar[i].size()-1);
+                        aux_in_B_i.push_back(idx_aux_i);
                     }
+
+                    for (int a_idx = 0; a_idx < abar_ibar[j].size(); a_idx++) { // b <= a and j < i
+                        for (int b_idx = 0; b_idx <= a_idx; b_idx++) {
+                            int a = abar_ibar[j][a_idx];
+                            int b = abar_ibar[j][b_idx];
+                            double Schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) * Q_ia_2->get(i, b) * Q_ia_2->get(j, a);
+                            if (Schwarz_2 > theta_schwarz) {
+                                std::vector<int> vec_a{a};
+                                std::vector<int> vec_b{b};
+                                std::vector<int> vec_a_new{a_idx};
+                                std::vector<int> vec_b_new{b_idx};
+                                psi::SharedMatrix ia = submatrix_rows_and_cols(*B_ia_Q[i], vec_a_new, aux_in_B_i);
+                                psi::SharedMatrix jb = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_b, aux_intersection_per_ij);
+                                psi::SharedMatrix ib = submatrix_rows_and_cols(*B_ia_Q[i], vec_b_new, aux_in_B_i);
+                                psi::SharedMatrix ja = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_a, aux_intersection_per_ij);
+                                double iajb = psi::linalg::doublet(ia, jb, false, true)->get(0, 0);
+                                double ibja = psi::linalg::doublet(ib, ja, false, true)->get(0, 0);
+                                if (a == b) {
+                                    E_K += 2 * (iajb) * (ibja);
+                                } else {
+                                    E_K += 4 * (iajb) * (ibja);
+                                }
+                            } 
+                        }
+                    }
+
+                    // vir_intersection_per_ij.clear();
+                    // aux_intersection_per_ij.clear();
+                    // std::set_intersection(abar_ibar[i].begin(), abar_ibar[i].end(),
+                    //                       abar_ibar[j].begin(), abar_ibar[j].end(),
+                    //                       std::back_inserter(vir_intersection_per_ij));
+                    // std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(),
+                    //                       P_ibar[j].end(),
+                    //                       std::back_inserter(aux_intersection_per_ij));
+                    // psi::SharedMatrix i_intersection = submatrix_rows_and_cols(
+                    //     *i_bar_a_bar_P[i], vir_intersection_per_ij, aux_intersection_per_ij);
+                    // psi::SharedMatrix j_intersection = submatrix_rows_and_cols(
+                    //     *i_bar_a_bar_P[j], vir_intersection_per_ij, aux_intersection_per_ij);
+                    // psi::SharedMatrix C_pq_intersection = submatrix_rows_and_cols(
+                    //     *C_pq, aux_intersection_per_ij, aux_intersection_per_ij);
+                    // psi::SharedMatrix iajb_intersection = psi::linalg::triplet(
+                    //     i_intersection, C_pq_intersection, j_intersection, false, false, true);
+                    // for (int abar = 0; abar < iajb_intersection->rowdim(); abar++) {
+                    //     E_K += 2 * iajb_intersection->get_row(0, abar)->vector_dot(
+                    //                    *iajb_intersection->get_column(0, abar));
+                    // }
                 }
             }
         }

@@ -218,8 +218,8 @@ psi::SharedMatrix initialize_erfc_integral(double Omega, int n_func_pairs, std::
     std::shared_ptr<psi::BasisSet> auxiliary = ints_forte->wfn()->get_basisset("DF_BASIS_MP2");
 
     std::shared_ptr<psi::IntegralFactory> integral = std::shared_ptr<IntegralFactory>(new IntegralFactory(auxiliary,zero,primary,primary));
-    ///std::shared_ptr<psi::TwoBodyAOInt> ints(integral->erf_complement_eri(Omega));
-    std::shared_ptr<psi::TwoBodyAOInt> ints(integral->eri());
+    std::shared_ptr<psi::TwoBodyAOInt> ints(integral->erf_complement_eri(Omega));
+    ///std::shared_ptr<psi::TwoBodyAOInt> ints(integral->eri());
 
     int nthree = auxiliary->nbf();
     int nbf = primary->nbf();
@@ -255,11 +255,11 @@ psi::SharedMatrix initialize_erfc_integral(double Omega, int n_func_pairs, std::
     return I;
 }
 
-psi::SharedMatrix erfc_metric (std::shared_ptr<ForteIntegrals> ints_forte) {
+psi::SharedMatrix erfc_metric (double Omega, std::shared_ptr<ForteIntegrals> ints_forte) {
     std::shared_ptr<psi::BasisSet> auxiliary = ints_forte->wfn()->get_basisset("DF_BASIS_MP2");
     auto Jinv = std::make_shared<psi::FittingMetric>(auxiliary, true);
-    ///Jinv->form_full_eig_inverse_erfc(1E-12);
-    Jinv->form_full_eig_inverse(1E-12);
+    Jinv->form_full_eig_inverse_erfc(Omega, 1E-12);
+    ///Jinv->form_full_eig_inverse(1E-12);
     psi::SharedMatrix Jinv_metric = Jinv->get_metric();
     return Jinv_metric;
 }

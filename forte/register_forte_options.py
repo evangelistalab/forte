@@ -708,9 +708,13 @@ def register_dsrg_options(options):
 
     options.add_bool("AO_DSRG_MRPT2", False, "Do AO-DSRG-MRPT2 if true (not available)")
     
-    options.add_double("theta_NB", 0, "theta_NB")
+    options.add_double("THETA_NB", 0, "theta_NB")
 
-    options.add_double("theta_ij", 0, "theta_ij")
+    options.add_double("THETA_IJ", 0, "theta_ij")
+   
+    options.add_double("THETA_SCHWARZ", 0, "theta_schwarz")
+    
+    options.add_double("OMEGA", 0.1, "Omega for erfc attenuated coulomb operator")
 
     options.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM")
 

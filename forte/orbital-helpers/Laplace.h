@@ -60,7 +60,7 @@ psi::SharedMatrix load_Jinv_full(const size_t P, const size_t Q);
 
 psi::SharedMatrix initialize_erfc_integral(double Omega, int n_func_pairs, std::shared_ptr<ForteIntegrals> ints_forte);
 
-psi::SharedMatrix erfc_metric (std::shared_ptr<ForteIntegrals> ints_forte);
+psi::SharedMatrix erfc_metric (double Omega, std::shared_ptr<ForteIntegrals> ints_forte);
 
 int binary_search_recursive(std::vector<int> A, int key, int low, int high);
 } // namespace forte
