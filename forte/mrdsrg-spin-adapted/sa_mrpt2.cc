@@ -1031,7 +1031,7 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
         Bac("gvn") = X("gun") * U_.block("aa")("vu");
     }
 
-#pragma omp parallel for num_threads(n_threads_)
+#pragma omp parallel for num_threads(n_threads)
     for (size_t e = 0; e < nv; ++e) {
         auto ie = virt_mos_[e];
         double Fe = Fdiag_[ie];
@@ -1163,7 +1163,7 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         auto BE = ints_->three_integral_block(aux_mos_, core_mos_, virt_batches[Ebatch]);
         auto& BE_data = BE.data();
 
-#pragma omp parallel for num_threads(n_threads_)
+#pragma omp parallel for num_threads(n_threads)
         for (size_t e = 0; e < Ebatch_size; ++e) {
             auto ie = virt_batches[Ebatch][e];
             double Fe = Fdiag_[ie];
