@@ -104,23 +104,27 @@ class SA_MRPT2 : public SA_DSRGPT {
     ambit::Tensor C1_VT2_CCAV_;
 
     /// Compute DSRG-transformed multipoles
-    void transform_one_body(std::vector<ambit::BlockedTensor>& oetens, int max_body,
+    void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens, int max_body,
                             const std::string& name) override;
-    
+
     /// Compute CCVV contributions to the CC part of 1-RDM
     void compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1);
     /// Compute CCVV contributions to the VV part of 1-RDM
     void compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1);
 
-    /// Compute CCAV contributions to the CC part of 1-RDM
-    void compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1);
-    /// Compute CCAV contributions to the AA part of 1-RDM
-    void compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1);
+    /// Compute CCAV contributions to the CC part of 1-RDM or/and transform multipoles
+    void compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
+                                 const std::vector<ambit::BlockedTensor>& oetens);
+    /// Compute CCAV contributions to the AA and VV parts of 1-RDM or/and transform multipoles
+    void compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
+                                    const std::vector<ambit::BlockedTensor>& oetens);
 
-    /// Compute CAVV contributions to the CC part of 1-RDM
-    void compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1);
-    /// Compute CAVV contributions to the VV part of 1-RDM
-    void compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1);
+    /// Compute CAVV contributions to the CC and AA parts of 1-RDM or/and transform multipoles
+    void compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
+                                    const std::vector<ambit::BlockedTensor>& oetens);
+    /// Compute CAVV contributions to the VV part of 1-RDM or/and transform multipoles
+    void compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
+                                 const std::vector<ambit::BlockedTensor>& oetens);
 
     /// Return a vector of empty ambit Tensor objects
     std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);
