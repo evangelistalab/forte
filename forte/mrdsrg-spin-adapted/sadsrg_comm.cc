@@ -829,12 +829,9 @@ void SADSRG::H_A_Ca_small(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& G
 
     auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "tempHACa", {"aa"});
 
-    temp["uv"] += H1["ev"] * T1["ue"];
-    temp["uv"] -= H1["um"] * T1["mv"];
-
-    H_T_C1a_smallG(G2, T1, T2, temp);
-
-    H_T_C1a_smallS(H1, H2, T2, S2, temp);
+    H1_T_C1a_smallS(H1, T1, S2, temp);
+    H2_T_C1a_smallS(H2, T2, S2, temp);
+    H2_T_C1a_smallG(G2, T1, T2, temp);
 
     C1["uv"] += alpha * temp["uv"];
     C1["vu"] += alpha * temp["uv"];
@@ -847,8 +844,8 @@ void SADSRG::H_A_Ca_small(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& G
     C2["xyuv"] += alpha * temp["uvxy"];
 }
 
-void SADSRG::H_T_C1a_smallG(BlockedTensor& G2, BlockedTensor& T1, BlockedTensor& T2,
-                            BlockedTensor& C1) {
+void SADSRG::H2_T_C1a_smallG(BlockedTensor& G2, BlockedTensor& T1, BlockedTensor& T2,
+                             BlockedTensor& C1) {
     /**
      * The following blocks should be available in memory:
      * G2: avac, aaac, avaa
@@ -863,14 +860,13 @@ void SADSRG::H_T_C1a_smallG(BlockedTensor& G2, BlockedTensor& T1, BlockedTensor&
     C1["wz"] -= 0.5 * G2["wuzm"] * T2["mvxy"] * L2_["xyuv"];
 }
 
-void SADSRG::H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T2,
-                            BlockedTensor& S2, BlockedTensor& C1) {
-    /**
-     * The following blocks should be available in memory:
-     * H2: vvaa, aacc, avca, avac, vaaa, aaca, aaaa
-     * T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
-     * S2: the same as T2
-     */
+void SADSRG::H1_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& T1, BlockedTensor& S2,
+                             BlockedTensor& C1) {
+    // The following blocks should be available in memory:
+    // S2: aavv, ccaa, caav, acav, aava, caaa, aaaa
+
+    C1["uv"] += H1["ev"] * T1["ue"];
+    C1["uv"] -= H1["um"] * T1["mv"];
 
     // C1["uv"] += H1["bm"] * S2["umvb"];
     C1["uv"] += H1["em"] * S2["umve"];
@@ -883,6 +879,16 @@ void SADSRG::H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor&
     // C1["uv"] -= 0.5 * H1["yj"] * S2["ujvx"] * L1_["xy"];
     C1["uv"] -= 0.5 * H1["ym"] * S2["muxv"] * L1_["xy"];
     C1["uv"] -= 0.5 * H1["yw"] * S2["uwvx"] * L1_["xy"];
+}
+
+void SADSRG::H2_T_C1a_smallS(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
+                             BlockedTensor& C1) {
+    /**
+     * The following blocks should be available in memory:
+     * H2: vvaa, aacc, avca, avac, vaaa, aaca, aaaa
+     * T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
+     * S2: the same as T2
+     */
 
     C1["wz"] += H2["uemz"] * S2["mwue"];
     C1["wz"] += H2["uezm"] * S2["wmue"];
@@ -1001,5 +1007,272 @@ void SADSRG::H_T_C2a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor&
 
     C2["uvxy"] += temp["uvxy"];
     C2["vuyx"] += temp["uvxy"];
+}
+
+void SADSRG::H1d_A1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C1) {
+    local_timer timer;
+
+    if (C1.is_block("ac")) {
+        auto C1ac = C1.block("ac");
+        C1ac("um") += alpha * H1.block("aa")("vu") * T1.block("ca")("mv");
+        C1ac("um") -= alpha * H1.block("cc")("mn") * T1.block("ca")("nu");
+    }
+
+    if (C1.is_block("vc")) {
+        auto C1vc = C1.block("vc");
+        C1vc("em") += alpha * H1.block("vv")("fe") * T1.block("cv")("mf");
+        C1vc("em") -= alpha * H1.block("cc")("mn") * T1.block("cv")("ne");
+    }
+
+    if (C1.is_block("va")) {
+        auto C1va = C1.block("va");
+        C1va("eu") += alpha * H1.block("vv")("fe") * T1.block("av")("uf");
+        C1va("eu") -= alpha * H1.block("aa")("uv") * T1.block("av")("ve");
+    }
+
+    if (C1.is_block("aa") and T1.is_block("aa")) {
+        auto C1aa = C1.block("aa");
+        auto H1aa = H1.block("aa");
+        auto T1aa = T1.block("aa");
+        C1aa("uv") += alpha * H1aa("xv") * T1aa("ux");
+        C1aa("uv") += alpha * H1aa("ux") * T1aa("xv");
+        C1aa("vu") += alpha * H1aa("xv") * T1aa("ux");
+        C1aa("vu") += alpha * H1aa("ux") * T1aa("xv");
+    }
+
+    dsrg_time_.add("121", timer.get());
+}
+
+void SADSRG::H1d_A2_C1ph(BlockedTensor& H1, BlockedTensor& S2, const double& alpha,
+                         BlockedTensor& C1) {
+    /**
+     * C1ph = [H1^{d}, A2]^{od}
+     * C1["ia"] += 0.5 * alpha * H1["xu"] * S2["ivax"] * L1_["uv"];
+     * C1["ia"] -= 0.5 * alpha * H1["vy"] * S2["iyau"] * L1_["uv"];
+     *
+     * S2["ijab"] = 2 * T2["ijab"] - T2["jiab"];
+     * S2 blocks are assumed available in memory: aavv, ccaa, caav, acav, aava, caaa, aaaa
+     */
+    local_timer timer;
+    auto H1d = H1.block("aa");
+    auto na = actv_mos_.size();
+    auto temp = ambit::Tensor::build(tensor_type_, "temp_H1d_A2_C1ph", {na, na});
+
+    bool is_ac = C1.is_block("ac");
+    bool is_vc = C1.is_block("vc");
+    bool is_va = C1.is_block("va");
+    bool is_aa = C1.is_block("aa");
+
+    temp("xv") = H1d("xu") * L1_.block("aa")("uv");
+    if (is_ac)
+        C1.block("ac")("ym") += 0.5 * alpha * temp("xv") * S2.block("caaa")("mvyx");
+    if (is_vc)
+        C1.block("vc")("em") += 0.5 * alpha * temp("xv") * S2.block("acav")("vmxe");
+    if (is_va)
+        C1.block("va")("eu") += 0.5 * alpha * temp("xv") * S2.block("aava")("uvex");
+    if (is_aa) {
+        C1.block("aa")("uy") += 0.5 * alpha * temp("xv") * S2.block("aaaa")("uvyx");
+        C1.block("aa")("yu") += 0.5 * alpha * temp("xv") * S2.block("aaaa")("uvyx");
+    }
+
+    temp("uy") = H1d("vy") * L1_.block("aa")("uv");
+    if (is_ac)
+        C1.block("ac")("vm") -= 0.5 * alpha * temp("uy") * S2.block("caaa")("myvu");
+    if (is_va)
+        C1.block("va")("ex") -= 0.5 * alpha * temp("uy") * S2.block("aava")("xyeu");
+    if (is_vc)
+        C1.block("vc")("em") -= 0.5 * alpha * temp("uy") * S2.block("acav")("ymue");
+    if (is_aa) {
+        C1.block("aa")("xv") -= 0.5 * alpha * temp("uy") * S2.block("aaaa")("xyvu");
+        C1.block("aa")("vx") -= 0.5 * alpha * temp("uy") * S2.block("aaaa")("xyvu");
+    }
+
+    dsrg_time_.add("121", timer.get());
+}
+
+void SADSRG::H1d_A2_C2pphh(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                           BlockedTensor& C2) {
+    /**
+     * The following blocks are assumed available in memory:
+     * H1: cc, aa, vv
+     * T2: hhpp including aaaa
+     * C2: pphh including aaaa
+     */
+    auto H1c = H1.block("cc");
+    auto H1a = H1.block("aa");
+    auto H1v = H1.block("vv");
+    auto nc = core_mos_.size();
+    auto na = actv_mos_.size();
+    auto nv = virt_mos_.size();
+
+    // small T2 blocks
+    std::vector<std::string> small_blocks;
+    for (const std::string& block : {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"}) {
+        std::string sblock;
+        for (int i : {1, 0, 3, 2})
+            sblock.push_back(block[i]);
+        if (C2.is_block(block) or C2.is_block(sblock))
+            small_blocks.push_back(block);
+    }
+    auto temp2 = ambit::BlockedTensor::build(tensor_type_, "temp_H1dA2C2pphh", small_blocks);
+    H1d_A2_C2pphh_small(H1, T2, 1.0, temp2);
+    C2["pqrs"] += alpha * temp2["pqrs"];
+    for (const std::string& block : {"avca", "avac", "vaaa", "aaca"}) {
+        std::string sblock;
+        for (int i : {1, 0, 3, 2})
+            sblock.push_back(block[i]);
+        if (C2.is_block(sblock))
+            C2.block(sblock)("qpsr") += alpha * temp2.block(block)("pqrs");
+    }
+
+    local_timer timer;
+
+    // T2 ccvv
+    if (C2.is_block("vvcc") and T2.is_block("ccvv")) {
+        auto T2ccvv = T2.block("ccvv");
+        auto temp2 = ambit::Tensor::build(tensor_type_, "temp_H1dA2C2_ccvv", {nc, nc, nv, nv});
+        temp2("mnef") += H1v("ae") * T2ccvv("mnaf");
+        temp2("mnef") -= H1c("mi") * T2ccvv("inef");
+        C2.block("vvcc")("efmn") += alpha * temp2("mnef");
+        C2.block("vvcc")("fenm") += alpha * temp2("mnef");
+    }
+
+    // T2 ccva or ccav
+    if (C2.is_block("vacc") or C2.is_block("avcc")) {
+        auto temp2 = ambit::Tensor::build(tensor_type_, "temp_H1dA2C2_ccav", {nc, nc, na, nv});
+        if (T2.is_block("ccav")) {
+            auto T2ccav = T2.block("ccav");
+            temp2("mnue") += H1a("au") * T2ccav("mnae");
+            temp2("mnue") += H1v("ae") * T2ccav("mnua");
+            temp2("mnue") -= H1c("mi") * T2ccav("inue");
+            temp2("mnue") -= H1c("ni") * T2ccav("miue");
+        } else if (T2.is_block("ccva")) {
+            auto T2ccva = T2.block("ccva");
+            temp2("mnue") += H1a("au") * T2ccva("nmea");
+            temp2("mnue") += H1v("ae") * T2ccva("nmau");
+            temp2("mnue") -= H1c("mi") * T2ccva("nieu");
+            temp2("mnue") -= H1c("ni") * T2ccva("imeu");
+        }
+        if (C2.is_block("vacc"))
+            C2.block("vacc")("eunm") += alpha * temp2("mnue");
+        if (C2.is_block("avcc"))
+            C2.block("avcc")("uemn") += alpha * temp2("mnue");
+    }
+
+    // T2 acvv or cavv
+    if (C2.is_block("vvca") or C2.is_block("vvac")) {
+        auto temp2 = ambit::Tensor::build(tensor_type_, "temp_H1dA2C2_acvv", {na, nc, nv, nv});
+        if (T2.is_block("acvv")) {
+            auto T2acvv = T2.block("acvv");
+            temp2("umef") -= H1a("ui") * T2acvv("imef");
+            temp2("umef") -= H1c("mi") * T2acvv("uief");
+            temp2("umef") += H1v("ae") * T2acvv("umaf");
+            temp2("umef") += H1v("af") * T2acvv("umea");
+        } else if (T2.is_block("cavv")) {
+            auto T2cavv = T2.block("cavv");
+            temp2("umef") -= H1a("ui") * T2cavv("mife");
+            temp2("umef") -= H1c("mi") * T2cavv("iufe");
+            temp2("umef") += H1v("ae") * T2cavv("mufa");
+            temp2("umef") += H1v("af") * T2cavv("muae");
+        }
+        if (C2.is_block("vvac"))
+            C2.block("vvac")("efum") += alpha * temp2("umef");
+        if (C2.is_block("vvca"))
+            C2.block("vvca")("femu") += alpha * temp2("umef");
+    }
+
+    dsrg_time_.add("122", timer.get());
+}
+
+void SADSRG::H1d_A2_C2pphh_small(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                                 BlockedTensor& C2) {
+    /**
+     * C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
+     * C2["jibp"] += alpha * T2["ijab"] * H1["ap"];
+     * C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
+     * C2["jqba"] -= alpha * T2["ijab"] * H1["qi"];
+     *
+     * The following blocks should be available in memory:
+     * H1: cc, aa, vv
+     * T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
+     * C2: vvaa, aacc, avca, avac, vaaa, aaca, aaaa
+     */
+    local_timer timer;
+
+    auto H1c = H1.block("cc");
+    auto H1a = H1.block("aa");
+    auto H1v = H1.block("vv");
+
+    auto nc = core_mos_.size();
+    auto na = actv_mos_.size();
+    auto nv = virt_mos_.size();
+
+    ambit::Tensor temp;
+    std::string prefix = "temp_H1dA2C2pphh";
+
+    if (C2.is_block("vvaa") and T2.is_block("aavv")) {
+        temp = ambit::Tensor::build(tensor_type_, prefix + "_aavv", {na, na, nv, nv});
+        temp("uvef") += T2.block("aavv")("uvaf") * H1v("ae");
+        temp("uvef") -= T2.block("aavv")("ivef") * H1a("ui");
+        C2.block("vvaa")("efuv") += alpha * temp("uvef");
+        C2.block("vvaa")("fevu") += alpha * temp("uvef");
+    }
+
+    if (C2.is_block("aacc") and T2.is_block("ccaa")) {
+        temp = ambit::Tensor::build(tensor_type_, prefix + "_ccaa", {nc, nc, na, na});
+        temp("mnuv") -= T2.block("ccaa")("inuv") * H1c("mi");
+        temp("mnuv") += T2.block("ccaa")("mnav") * H1a("au");
+        C2.block("aacc")("uvmn") += alpha * temp("mnuv");
+        C2.block("aacc")("vunm") += alpha * temp("mnuv");
+    }
+
+    if (C2.is_block("avca") and T2.is_block("caav")) {
+        auto C2avca = C2.block("avca");
+        auto T2caav = T2.block("caav");
+        C2avca("vemu") += alpha * T2caav("muvf") * H1v("fe");
+        C2avca("vemu") += alpha * T2caav("muye") * H1a("yv");
+        C2avca("vemu") -= alpha * T2caav("nuve") * H1c("mn");
+        C2avca("vemu") -= alpha * T2caav("mxve") * H1a("ux");
+    }
+
+    if (C2.is_block("avac") and T2.is_block("acav")) {
+        auto C2avac = C2.block("avac");
+        auto T2acav = T2.block("acav");
+        C2avac("veum") += alpha * T2acav("umvf") * H1v("fe");
+        C2avac("veum") += alpha * T2acav("umye") * H1a("yv");
+        C2avac("veum") -= alpha * T2acav("unve") * H1c("mn");
+        C2avac("veum") -= alpha * T2acav("xmve") * H1a("ux");
+    }
+
+    if (C2.is_block("vaaa") and T2.is_block("aava")) {
+        auto C2vaaa = C2.block("vaaa");
+        auto T2aava = T2.block("aava");
+        C2vaaa("eyuv") += alpha * T2aava("uvfy") * H1v("fe");
+        C2vaaa("eyuv") += alpha * T2aava("uvex") * H1a("xy");
+        C2vaaa("eyuv") -= alpha * T2aava("xvey") * H1a("ux");
+        C2vaaa("eyuv") -= alpha * T2aava("uxey") * H1a("vx");
+    }
+
+    if (C2.is_block("aaca") and T2.is_block("caaa")) {
+        auto C2aaca = C2.block("aaca");
+        auto T2caaa = T2.block("caaa");
+        C2aaca("xymu") -= alpha * T2caaa("nuxy") * H1c("mn");
+        C2aaca("xymu") -= alpha * T2caaa("mvxy") * H1a("uv");
+        C2aaca("xymu") += alpha * T2caaa("muvy") * H1a("vx");
+        C2aaca("xymu") += alpha * T2caaa("muxv") * H1a("vy");
+    }
+
+    if (C2.is_block("aaaa") and T2.is_block("aaaa")) {
+        temp = ambit::Tensor::build(tensor_type_, prefix + "_aaaa", {na, na, na, na});
+        temp("uvxy") += T2.block("aaaa")("uvay") * H1a("ax");
+        temp("uvxy") -= T2.block("aaaa")("ivxy") * H1a("ui");
+        C2.block("aaaa")("xyuv") += alpha * temp("uvxy");
+        C2.block("aaaa")("yxvu") += alpha * temp("uvxy");
+        C2.block("aaaa")("uvxy") += alpha * temp("uvxy");
+        C2.block("aaaa")("vuyx") += alpha * temp("uvxy");
+    }
+
+    dsrg_time_.add("122", timer.get());
 }
 } // namespace forte

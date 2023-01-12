@@ -187,6 +187,23 @@ void SADSRG::read_options() {
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 
+    max_dipole_level_ = foptions_->get_int("DSRG_MAX_DIPOLE_LEVEL");
+    if (max_dipole_level_ > 2) {
+        outfile->Printf("\n  Warning: DSRG_MAX_DIPOLE_LEVEL option >2 is not implemented.");
+        outfile->Printf("\n  Changed DSRG_MAX_DIPOLE_LEVEL option to 2");
+        max_dipole_level_ = 2;
+        warnings_.push_back(std::make_tuple("Unsupported DSRG_MAX_DIPOLE_LEVEL", "Changed to 2",
+                                            "Change options in input.dat"));
+    }
+    max_quadrupole_level_ = foptions_->get_int("DSRG_MAX_QUADRUPOLE_LEVEL");
+    if (max_quadrupole_level_ > 2) {
+        outfile->Printf("\n  Warning: DSRG_MAX_QUADRUPOLE_LEVEL option >2 is not implemented.");
+        outfile->Printf("\n  Changed DSRG_MAX_QUADRUPOLE_LEVEL option to 2");
+        max_dipole_level_ = 2;
+        warnings_.push_back(std::make_tuple("Unsupported DSRG_MAX_QUADRUPOLE_LEVEL", "Changed to 2",
+                                            "Change options in input.dat"));
+    }
+
     print_done(lt.get());
 }
 
@@ -413,11 +430,12 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     double Edsrg = Eref_ + Hbar0_;
     if (foptions_->get_bool("FORM_HBAR3")) {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);
-        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_, Hbar3_);
+        rotate_three_ints_to_original(Hbar3_);
     } else {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
-        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
     }
+    rotate_one_ints_to_original(Hbar1_);
+    rotate_two_ints_to_original(Hbar2_);
 
     // create FCIIntegral shared_ptr
     auto fci_ints =
@@ -433,8 +451,277 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     return fci_ints;
 }
 
+std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
+    /**
+     * DSRG transform multipole integrals: Mbar = e^{-A} M e^{A}
+     *
+     * Mbar0 is equivalent to computing the M moment using unrelaxed 1-RDM.
+     * The results from Mbar0 are usually considered bad and
+     * response terms must be included to improve the results.
+     *
+     * It might be useful to use Mbar1 and/or Mbar2 for transition M moment.
+     */
+
+    auto mpints = std::make_shared<MultipoleIntegrals>(ints_, mo_space_info_);
+    auto as_mpints = std::make_shared<ActiveMultipoleIntegrals>(mpints);
+
+    if (max_dipole_level_ == 0 and max_quadrupole_level_ == 0)
+        return as_mpints;
+
+    std::vector<std::string> dp_dirs{"X", "Y", "Z"};
+    std::vector<std::string> qp_dirs{"XX", "XY", "XZ", "YY", "YZ", "ZZ"};
+
+    // prepare multipole integrals to be transformed
+    std::vector<ambit::BlockedTensor> M1;
+    std::vector<int> max_levels;
+
+    // bare dipoles
+    if (max_dipole_level_ > 0) {
+        for (int z = 0; z < 3; ++z) {
+            std::string name = "DIPOLE " + dp_dirs[z];
+            ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
+            m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                           double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
+            M1.push_back(m1);
+            max_levels.push_back(max_dipole_level_);
+        }
+    }
+
+    // bare quadrupoles
+    if (max_quadrupole_level_ > 0) {
+        for (int z = 0; z < 6; ++z) {
+            std::string name = "QUADRUPOLE " + qp_dirs[z];
+            ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
+            m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                           double& value) { value = mpints->qp_ints_corr(z, i[0], i[1]); });
+            M1.push_back(m1);
+            max_levels.push_back(max_quadrupole_level_);
+        }
+    }
+
+    // transform one-electron integrals
+    transform_one_body(M1, max_levels);
+
+    // de-normal-order transformed integrals
+    for (int i = 0, size = M1.size(); i < size; ++i) {
+        auto name = M1[i].name();
+        auto max_level = max_levels[i];
+
+        if (max_level == 2) {
+            deGNO_ints(name, Mbar0_[i], Mbar1_[i], Mbar2_[i]);
+            rotate_two_ints_to_original(Mbar2_[i]);
+        } else {
+            deGNO_ints(name, Mbar0_[i], Mbar1_[i]);
+        }
+        rotate_one_ints_to_original(Mbar1_[i]);
+
+        // set active-space multipole integrals
+        if (name.find("DIPOLE") != std::string::npos) {
+            auto dir = name.substr(7, 1); // X, Y, Z
+            size_t z = std::find(dp_dirs.begin(), dp_dirs.end(), dir) - dp_dirs.begin();
+            as_mpints->set_dp_scalar_rdocc(z, Mbar0_[i]);
+            as_mpints->set_dp1_ints(z, Mbar1_[i].block("aa"));
+            if (max_level == 2)
+                as_mpints->set_dp2_ints(z, Mbar2_[i].block("aaaa"));
+        } else {
+            auto dir = name.substr(11, 2); // XX, XY, XZ, YY, YZ, ZZ
+            size_t z = std::find(qp_dirs.begin(), qp_dirs.end(), dir) - qp_dirs.begin();
+            as_mpints->set_qp_scalar_rdocc(z, Mbar0_[i]);
+            as_mpints->set_qp1_ints(z, Mbar1_[i].block("aa"));
+            if (max_level == 2)
+                as_mpints->set_qp2_ints(z, Mbar2_[i].block("aaaa"));
+        }
+    }
+
+    // // transform dipole integrals
+    // if (max_dipole_level_ > 0) {
+    //     // reference dipole and integrals
+    //     std::vector<double> Mref;
+    //     std::vector<ambit::BlockedTensor> M1;
+    //     for (int z = 0; z < 3; ++z) {
+    //         std::string name = "DIPOLE " + dp_dirs[z];
+    //         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
+    //         m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+    //                        double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
+    //         M1.push_back(m1);
+
+    //         auto m0 = 0.0;
+    //         auto& m1_cc = m1.block("cc").data();
+    //         for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+    //             m0 += 2.0 * m1_cc[m * ncore + m];
+    //         }
+    //         m0 += m1["uv"] * L1_["vu"];
+    //         Mref.push_back(m0);
+    //     }
+
+    //     // transform dipole integrals
+    //     transform_one_body(M1, max_dipole_level_, "Dipole");
+
+    //     // de-normal-order transformed dipole integrals
+    //     for (int z = 0; z < 3; ++z) {
+    //         std::string name = "DIPOLE " + dp_dirs[z];
+    //         auto m0 = Mbar0_[z] + Mref[z];
+    //         if (max_dipole_level_ == 2) {
+    //             deGNO_ints(name, m0, Mbar1_[z], Mbar2_[z]);
+    //             rotate_two_ints_to_original(Mbar2_[z]);
+    //         } else {
+    //             deGNO_ints(name, m0, Mbar1_[z]);
+    //         }
+    //         rotate_one_ints_to_original(Mbar1_[z]);
+
+    //         as_mpints->set_dp_scalar_rdocc(z, m0);
+    //         as_mpints->set_dp1_ints(z, Mbar1_[z].block("aa"));
+    //         if (max_dipole_level_ == 2) {
+    //             as_mpints->set_dp2_ints(z, Mbar2_[z].block("aaaa"));
+    //         }
+    //     }
+    // }
+
+    // // transform quadrupole integrals
+    // if (max_quadrupole_level_ > 0) {
+    //     // reference quadrupole and integrals
+    //     std::vector<double> Mref;
+    //     std::vector<ambit::BlockedTensor> M1;
+    //     for (int z = 0; z < 6; ++z) {
+    //         std::string name = "QUADRUPOLE " + qp_dirs[z];
+    //         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
+    //         m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+    //                        double& value) { value = mpints->qp_ints_corr(z, i[0], i[1]); });
+    //         M1.push_back(m1);
+
+    //         auto m0 = 0.0;
+    //         auto& m1_cc = m1.block("cc").data();
+    //         for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+    //             m0 += 2.0 * m1_cc[m * ncore + m];
+    //         }
+    //         m0 += m1["uv"] * L1_["vu"];
+    //         Mref.push_back(m0);
+    //     }
+
+    //     // transform quadrupole integrals
+    //     transform_one_body(M1, max_quadrupole_level_, "Quadrupole");
+
+    //     // de-normal-order transformed quadrupole integrals
+    //     for (int z = 0; z < 6; ++z) {
+    //         std::string name = "QUADRUPOLE " + qp_dirs[z];
+    //         auto m0 = Mbar0_[z] + Mref[z];
+    //         if (max_quadrupole_level_ == 2) {
+    //             deGNO_ints(name, m0, Mbar1_[z], Mbar2_[z]);
+    //             rotate_two_ints_to_original(Mbar2_[z]);
+    //         } else {
+    //             deGNO_ints(name, m0, Mbar1_[z]);
+    //         }
+    //         rotate_one_ints_to_original(Mbar1_[z]);
+
+    //         as_mpints->set_qp_scalar_rdocc(z, m0);
+    //         as_mpints->set_qp1_ints(z, Mbar1_[z].block("aa"));
+    //         if (max_quadrupole_level_ == 2) {
+    //             as_mpints->set_qp2_ints(z, Mbar2_[z].block("aaaa"));
+    //         }
+    //     }
+    // }
+
+    // // compute multipoles of the reference and fill in bare integrals
+    // std::vector<double> Mref;
+    // std::vector<ambit::BlockedTensor> M1;
+
+    // // dipole integrals
+    // if (max_dipole_level_ > 0) {
+    //     for (int z = 0; z < 3; ++z) {
+    //         std::string name = "DIPOLE " + dp_dirs[z];
+    //         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
+    //         m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+    //                        double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
+    //         M1.push_back(m1);
+    //     }
+    // }
+
+    // // quadrupole integrals
+    // if (max_quadrupole_level_ > 0) {
+    //     for (int z = 0; z < 6; ++z) {
+    //         std::string name = "QUADRUPOLE " + qp_dirs[z];
+    //         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
+    //         m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+    //                        double& value) { value = mpints->qp_ints_corr(z, i[0], i[1]); });
+    //         M1.push_back(m1);
+    //     }
+    // }
+
+    // // compute multipoles of the reference
+    // for (auto& m1 : M1) {
+    //     auto m0 = 0.0;
+    //     auto& m1_cc = m1.block("cc").data();
+    //     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+    //         m0 += 2.0 * m1_cc[m * ncore + m];
+    //     }
+    //     m0 += m1["uv"] * L1_["vu"];
+    //     Mref.push_back(m0);
+    // }
+
+    // // transform multipole integrals
+    // transform_one_body(M1);
+
+    // for (auto x : Mbar0_) {
+    //     outfile->Printf("\n %15.8f", x);
+    // }
+
+    // // de-normal order active dipole integrals
+    // if (max_dipole_level_ > 0) {
+    //     for (int z = 0; z < 3; ++z) {
+    //         std::string name = "DIPOLE " + dp_dirs[z];
+    //         auto m0 = Mbar0_[z] + Mref[z];
+    //         if (max_dipole_level_ == 2) {
+    //             deGNO_ints(name, m0, Mbar1_[z], Mbar2_[z]);
+    //             rotate_two_ints_to_original(Mbar2_[z]);
+    //         } else {
+    //             deGNO_ints(name, m0, Mbar1_[z]);
+    //         }
+    //         rotate_one_ints_to_original(Mbar1_[z]);
+
+    //         as_mpints->set_dp_scalar_rdocc(z, m0);
+    //         as_mpints->set_dp1_ints(z, Mbar1_[z].block("aa"));
+    //         if (max_dipole_level_ == 2) {
+    //             as_mpints->set_dp2_ints(z, Mbar2_[z].block("aaaa"));
+    //         }
+    //     }
+    // }
+
+    // // de-normal order active quadrupole integrals
+    // if (max_quadrupole_level_ > 0) {
+    //     auto shift = max_dipole_level_ > 0 ? 3 : 0;
+    //     for (int z = 0; z < 6; ++z) {
+    //         auto zz = z + shift;
+    //         std::string name = "QUADRUPOLE " + qp_dirs[z];
+    //         auto m0 = Mbar0_[zz] + Mref[zz];
+    //         if (max_quadrupole_level_ == 2) {
+    //             deGNO_ints(name, m0, Mbar1_[zz], Mbar2_[zz]);
+    //             rotate_two_ints_to_original(Mbar2_[zz]);
+    //         } else {
+    //             deGNO_ints(name, m0, Mbar1_[zz]);
+    //         }
+    //         rotate_one_ints_to_original(Mbar1_[zz]);
+
+    //         as_mpints->set_qp_scalar_rdocc(z, m0);
+    //         as_mpints->set_qp1_ints(z, Mbar1_[zz].block("aa"));
+    //         if (max_quadrupole_level_ == 2) {
+    //             as_mpints->set_qp2_ints(z, Mbar2_[zz].block("aaaa"));
+    //         }
+    //     }
+    // }
+
+    return as_mpints;
+}
+
+void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1) {
+    print_h2("De-Normal-Order 1-Body DSRG Transformed " + name);
+    local_timer t0;
+    print_contents("Computing the scalar term");
+    H0 -= H1["vu"] * L1_["uv"];
+    print_done(t0.get());
+}
+
 void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2) {
-    print_h2("De-Normal-Order DSRG Transformed " + name);
+    print_h2("De-Normal-Order 2-Body DSRG Transformed " + name);
 
     // compute scalar
     local_timer t0;
@@ -471,7 +758,7 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
                         BlockedTensor& /*H3*/) {
     throw psi::PSIEXCEPTION("Not yet implemented when forming Hbar3.");
 
-    print_h2("De-Normal-Order DSRG Transformed " + name);
+    print_h2("De-Normal-Order 3-Body DSRG Transformed " + name);
 
     // build a temp["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
     auto temp = H2.block("aaaa").clone();
@@ -573,6 +860,25 @@ ambit::BlockedTensor SADSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, Bl
 void SADSRG::set_Uactv(ambit::Tensor& U) {
     Uactv_ = BTF_->build(tensor_type_, "Uactv", {"aa"});
     Uactv_.block("aa")("pq") = U("pq");
+}
+
+void SADSRG::rotate_one_ints_to_original(BlockedTensor& H1) {
+    auto Ua = Uactv_.block("aa");
+    auto temp = H1.block("aa").clone(tensor_type_);
+    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
+}
+
+void SADSRG::rotate_two_ints_to_original(BlockedTensor& H2) {
+    auto Ua = Uactv_.block("aa");
+    auto temp = H2.block("aaaa").clone(tensor_type_);
+    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
+}
+
+void SADSRG::rotate_three_ints_to_original(BlockedTensor& H3) {
+    auto Ua = Uactv_.block("aa");
+    auto temp = H3.block("aaaaaa").clone(tensor_type_);
+    H3.block("aaaaaa")("pqrstu") =
+        Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");
 }
 
 void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,

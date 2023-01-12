@@ -145,6 +145,7 @@ ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleInte
     auto actv_mos = mo_space_info->corr_absolute_mo("ACTIVE");
 
     dp1_ints_.resize(3);
+    dp2_ints_.resize(3);
     std::vector<std::string> dp_names{"X", "Y", "Z"};
     for (int z = 0; z < 3; ++z) {
         auto zints = ambit::Tensor::build(ambit::CoreTensor, "DIPOLE" + dp_names[z], {nmo_, nmo_});
@@ -155,6 +156,7 @@ ActiveMultipoleIntegrals::ActiveMultipoleIntegrals(std::shared_ptr<MultipoleInte
     }
 
     qp1_ints_.resize(6);
+    qp2_ints_.resize(6);
     std::vector<std::string> qp_names{"XX", "XY", "XZ", "YY", "YZ", "ZZ"};
     for (int z = 0; z < 6; ++z) {
         auto zints =

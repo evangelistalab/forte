@@ -59,10 +59,13 @@ class SADSRG : public DynamicCorrelationSolver {
     virtual ~SADSRG();
 
     /// Compute energy
-    virtual double compute_energy() = 0;
+    virtual double compute_energy() override = 0;
 
     /// Compute DSRG transformed Hamiltonian
-    virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
+    std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv() override;
+
+    /// Compute DSRG transformed multipole integrals
+    std::shared_ptr<ActiveMultipoleIntegrals> compute_mp_eff_actv() override;
 
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& U);
@@ -120,11 +123,32 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Active orbital rotation from semicanonicalizor (set from outside)
     ambit::BlockedTensor Uactv_;
+    /// Rotate 1-body DSRG transformed integrals from semicanonical back to original
+    void rotate_one_ints_to_original(BlockedTensor& H1);
     /// Rotate 2-body DSRG transformed integrals from semicanonical back to original
-    void rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1, BlockedTensor& H2);
+    void rotate_two_ints_to_original(BlockedTensor& H2);
     /// Rotate 3-body DSRG transformed integrals from semicanonical back to original
-    void rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1, BlockedTensor& H2,
-                                    BlockedTensor& H3);
+    void rotate_three_ints_to_original(BlockedTensor& H3);
+
+    /// Rotate 2-body DSRG transformed integrals from semicanonical back to original
+    [[deprecated("to be removed")]] void
+    rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1, BlockedTensor& H2);
+    /// Rotate 3-body DSRG transformed integrals from semicanonical back to original
+    [[deprecated("to be removed")]] void rotate_ints_semi_to_origin(const std::string& name,
+                                                                    BlockedTensor& H1,
+                                                                    BlockedTensor& H2,
+                                                                    BlockedTensor& H3);
+
+    /// Max body level of DSRG transformed dipole
+    int max_dipole_level_ = 0;
+    /// Max body level of DSRG transformed quadrupole
+    int max_quadrupole_level_ = 0;
+
+    /// Compute DSRG transformed multipoles
+    virtual void transform_one_body(const std::vector<ambit::BlockedTensor>&,
+                                    const std::vector<int>&) {
+        throw std::runtime_error("Please override!");
+    };
 
     /// Number of threads
     int n_threads_;
@@ -265,14 +289,27 @@ class SADSRG : public DynamicCorrelationSolver {
     /// DSRG transformed 3-body Hamiltonian (active only in DSRG-PT, but full in MRDSRG)
     ambit::BlockedTensor Hbar3_;
 
+    /// Scalar of the DSRG transformed multipoles
+    std::vector<double> Mbar0_;
+    /// DSRG transformed 1-body multipoles
+    std::vector<ambit::BlockedTensor> Mbar1_;
+    /// DSRG transformed 2-body multipoles
+    std::vector<ambit::BlockedTensor> Mbar2_;
+
     /**
-     * De-normal-order a 2-body DSRG transformed integrals
+     * De-normal-order a 1-body DSRG transformed integrals (active only)
+     * This will change H0!!!
+     */
+    void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1);
+
+    /**
+     * De-normal-order a 2-body DSRG transformed integrals (active only)
      * This will change H0 and H1 !!!
      */
     void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2);
 
     /**
-     * De-normal-order a 3-body DSRG transformed integrals
+     * De-normal-order a 3-body DSRG transformed integrals (active only)
      * This will change H0, H1, and H2 !!!
      */
     void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
@@ -358,13 +395,28 @@ class SADSRG : public DynamicCorrelationSolver {
                       BlockedTensor& T2, BlockedTensor& S2, const double& alpha, BlockedTensor& C1,
                       BlockedTensor& C2);
     /// Compute the active part of commutator C1 = [H2, T1 + T2] that uses G2
-    void H_T_C1a_smallG(BlockedTensor& G2, BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& C1);
-    /// Compute the active part of commutator C1 = [H1 + H2, T1 + T2] that uses S2
-    void H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
-                        BlockedTensor& C1);
+    void H2_T_C1a_smallG(BlockedTensor& G2, BlockedTensor& T1, BlockedTensor& T2,
+                         BlockedTensor& C1);
+    /// Compute the active part of commutator C1 = [H1, T1 + T2] that uses S2
+    void H1_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& T1, BlockedTensor& S2,
+                         BlockedTensor& C1);
+    /// Compute the active part of commutator C1 = [H2, T1 + T2] that uses S2
+    void H2_T_C1a_smallS(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
+                         BlockedTensor& C1);
     /// Compute the active part of commutator C2 = [H1 + H2, T1 + T2] that uses S2
     void H_T_C2a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
                         BlockedTensor& S2, BlockedTensor& C2);
+
+    /// Compute the ph part of commutator C1 = [H1d, A1]
+    void H1d_A1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    /// Compute the ph part of commutator C1 = [H1d, A2]
+    void H1d_A2_C1ph(BlockedTensor& H1, BlockedTensor& S2, const double& alpha, BlockedTensor& C1);
+    /// Compute the pphh part of commutator C2 = [H1d, A2]
+    void H1d_A2_C2pphh(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                       BlockedTensor& C2);
+    /// Compute the small pphh part of commutator C2 = [H1d, A2]
+    void H1d_A2_C2pphh_small(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                             BlockedTensor& C2);
 
     // ==> miscellaneous <==
 

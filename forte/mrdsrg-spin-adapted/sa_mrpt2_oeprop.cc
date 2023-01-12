@@ -40,8 +40,8 @@ using namespace psi;
 
 namespace forte {
 
-void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens, int max_body,
-                                  const std::string& name) {
+void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                                  const std::vector<int>& max_levels) {
     /**
      * Define the unrelaxed 1-RDM as the energy derivative w.r.t. Fock matrix.
      * The unrelaxed dipole moment is then given by
@@ -63,20 +63,30 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
      * If max_body = 2,
      *     Mbar_{0,1,2} = Mref + [M^{od}, A]_{0,1,2} + 0.5 * [[M^{d}, A]_{1,2}, A]_{0,1,2}
      */
-    print_h2("Transform " + name + " Integrals");
+    print_h2("Transform One-Electron Operators");
 
     int n_tensors = oetens.size();
     Mbar0_ = std::vector<double>(n_tensors, 0.0);
-    if (max_body < 1)
-        return;
+
+    // compute Mref and add to Mbar0_
+    for (int i = 0; i < n_tensors; ++i) {
+        auto& M1c = oetens[i].block("cc").data();
+        for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+            Mbar0_[i] += 2.0 * M1c[m * ncore + m];
+        }
+        Mbar0_[i] += oetens[i]["uv"] * L1_["vu"];
+    }
 
     Mbar1_.resize(n_tensors);
     Mbar2_.resize(n_tensors);
     for (int i = 0; i < n_tensors; ++i) {
         Mbar1_[i] = BTF_->build(tensor_type_, oetens[i].name() + "1", {"aa"});
-        if (max_body > 1)
+        Mbar1_[i]["uv"] += oetens[i]["uv"]; // add bare one-electron integrals
+        if (max_levels[i] > 1)
             Mbar2_[i] = BTF_->build(tensor_type_, oetens[i].name() + "2", {"aaaa"});
     }
+
+    auto max_body = *std::max_element(max_levels.begin(), max_levels.end());
 
     // temporary tensors
     ambit::BlockedTensor O1, C2, O2, G2, temp1, temp2;
@@ -127,9 +137,6 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
         auto& Mbar1 = Mbar1_[i];
         temp1.zero();
 
-        // add bare one-electron integrals
-        Mbar1["uv"] += M["uv"];
-
         // prepare O1 = M^{od} + 0.5 * [M^{d}, A]^{od}
         O1["pq"] = Mod["pq"];
         H1d_A1_C1ph(Md, T1_, 0.5, O1);
@@ -140,8 +147,8 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
         H1_T2_C0(O1, T2_, 2.0, Mbar0);
         H1_T_C1a_smallS(O1, T1_, S2_, temp1);
 
-        // if max_body > 1:
-        if (max_body > 1) {
+        // if need two-body active integrals
+        if (max_levels[i] > 1) {
             auto& Mbar2 = Mbar2_[i];
             O2.zero();
             temp2.zero();
@@ -182,15 +189,15 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
             Mbar2["uvxy"] += temp2["uvxy"];
             Mbar2["xyuv"] += temp2["uvxy"];
 
-            outfile->Printf(", Mbar2 norm = %20.10f", Mbar2.norm());
+            // outfile->Printf(", Mbar2 norm = %20.10f", Mbar2.norm());
         }
 
         // add 1-body results
         Mbar1["uv"] += temp1["uv"];
         Mbar1["vu"] += temp1["uv"];
 
-        outfile->Printf("\n %-20s: Mbar0 = %20.10f, Mbar1 norm = %20.10f", M.name().c_str(), Mbar0,
-                        Mbar1.norm());
+        // outfile->Printf("\n %-20s: Mbar0 = %20.10f, Mbar1 norm = %20.10f", M.name().c_str(), Mbar0,
+        //                 Mbar1.norm());
 
         print_done(t_local.get());
     }

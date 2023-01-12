@@ -104,8 +104,8 @@ class SA_MRPT2 : public SA_DSRGPT {
     ambit::Tensor C1_VT2_CCAV_;
 
     /// Compute DSRG-transformed multipoles
-    void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens, int max_body,
-                            const std::string& name) override;
+    void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                            const std::vector<int>& max_levels) override;
 
     /// Compute CCVV contributions to the CC part of 1-RDM
     void compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1);
