@@ -56,6 +56,7 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/psifiles.h"
+#include "psi4/libfock/jk.h"
 
 #include "orbital-helpers/ao_helper.h"
 #include "helpers/blockedtensorfactory.h"
@@ -2255,7 +2256,7 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
     std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     //DiskDFJK jk(primary, auxiliary);
 
-    bool is_core = 1;
+    bool is_core = 0;
     if (is_core) {
         double result = E_ccvv_df_ao();
         return result;
@@ -2278,8 +2279,11 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     double E_J = 0.0;
     double E_K = 0.0;
 
-    double theta_NB = foptions_->get_double("theta_NB");
-    double theta_ij = foptions_->get_double("theta_ij");
+    double theta_NB = foptions_->get_double("THETA_NB");
+    double theta_ij = foptions_->get_double("THETA_IJ");
+    double Omega = foptions_->get_double("OMEGA");
+    double theta_schwarz = foptions_->get_double("THETA_SCHWARZ");
+    double theta_schwarz_2 = theta_schwarz * theta_schwarz;
 
     psi::SharedMatrix Cwfn = ints_->Ca();
     if (mo_space_info_->nirrep() != 1)
@@ -2379,15 +2383,16 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
 
     S.reset();
 
+    /// Use DiskDFJK object to initialize erfc three-center integrals.
+    DiskDFJK disk_jk(primary, auxiliary);
+    disk_jk.erfc_three_disk(Omega);
+
     /// Construct (P|iu)
     std::vector<psi::SharedMatrix> P_iu; /// [([i]_p * ao_list_per_q), ...]
     P_iu.resize(nthree_);
     outfile->Printf("\n    Intialize P_iu");
     int file_unit = PSIF_DFSCF_BJ;
-    //DiskDFJK jk(primary, auxiliary);
     int n_func_pairs = (nmo + 1) * nmo / 2;
-    //int max_rows = jk.max_rows();
-    //int max_nocc = jk.max_nocc();
     int max_rows = 1;
     std::shared_ptr<PSIO> psio(new PSIO());
     psi::SharedMatrix loadAOtensor = std::make_shared<psi::Matrix>("DiskDF: Load (A|mn) from DF-SCF", max_rows, n_func_pairs);
@@ -2399,12 +2404,9 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     SparseMap ao_list_per_q; ///{u}_P
     ao_list_per_q.resize(nthree_);
 
-    SparseMap i_p_up;
-    SparseMap i_p;
-    SparseMap i_p_for_i_up;
-    i_p_up.resize(nthree_);
-    i_p.resize(nthree_);
-    i_p_for_i_up.resize(nthree_);
+    SparseMap i_p_up(nthree_);
+    SparseMap i_p(nthree_);
+    SparseMap i_p_for_i_up(nthree_);
     
     psi::SharedMatrix N_pu = std::make_shared<psi::Matrix>("N_pu", nthree_, nmo);
     N_pu->zero();
@@ -2413,7 +2415,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     for (int Q = 0; Q < nthree_; Q += max_rows) {
         int naux = (nthree_ - Q <= max_rows ? nthree_ - Q : max_rows);
         psio_address addr = psio_get_address(PSIO_ZERO, (Q * (int)n_func_pairs) * sizeof(double));
-        psio->read(file_unit, "(A|mn) Integrals", (char*)(loadAOtensor->pointer()[0]), sizeof(double) * naux * n_func_pairs, addr, &addr);
+        psio->read(file_unit, "ERFC Integrals", (char*)(loadAOtensor->pointer()[0]), sizeof(double) * naux * n_func_pairs, addr, &addr);
 
         double* add = loadAOtensor->get_pointer();
 
@@ -2487,29 +2489,23 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
 //////////////////////////////////////////////////////////////////////////////
 
     /// Construct [ibar]_p and [abar]_p
-    SparseMap i_bar_p_up;
-    i_bar_p_up.resize(nthree_);
-    SparseMap a_bar_p_up;
-    a_bar_p_up.resize(nthree_);
+    SparseMap i_bar_p_up(nthree_);
+    SparseMap a_bar_p_up(nthree_);
 
     /// Construct (P|ibar u)
-    std::vector<psi::SharedMatrix> P_ibar_u;
-    P_ibar_u.resize(nthree_);
+    std::vector<psi::SharedMatrix> P_ibar_u(nthree_);
 
     /// Construct (P|ibar abar)
-    std::vector<psi::SharedMatrix> P_ibar_abar;
-    P_ibar_abar.resize(nthree_);
+    std::vector<psi::SharedMatrix> P_ibar_abar(nthree_);
 
     /// Construct {ibar}_p
-    SparseMap ibar_p;
-    ibar_p.resize(nthree_);
+    SparseMap ibar_p(nthree_);
 
     /// Construct {P}_ibar.  Obtain this by "inversion" of {ibar}_p
     SparseMap P_ibar;
 
     /// Construct {abar}_p
-    SparseMap abar_p;
-    abar_p.resize(nthree_);
+    SparseMap abar_p(nthree_);
 
     /// Construct {p}_abar.  Obtain this by "inversion" of {abar}_p
     SparseMap P_abar;
@@ -2517,7 +2513,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     /// Construct (ibar abar|P)
     std::vector<psi::SharedMatrix> i_bar_a_bar_P;
 
-    /// Constrcut Sliced (ibar abar|P);
+    /// Construct Sliced (ibar abar|P);
     std::vector<psi::SharedMatrix> i_bar_a_bar_P_sliced;
 
     /// Construct {a_bar}_ibar
@@ -2534,6 +2530,8 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
 
     std::vector<int> vir_intersection_per_ij;
     std::vector<int> aux_intersection_per_ij;
+    std::vector<int> aux_in_B_i;
+    std::vector<int> aux_in_B_j;
 
 
     for (int nweight = 0; nweight < weights; nweight++) {
@@ -2545,8 +2543,8 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
         double* N_pi_bar_p = N_pi_bar->get_pointer();
         psi::SharedMatrix N_pa_bar =
             psi::linalg::doublet(N_pu, Virtual_cholesky_abs[nweight], false, false);
-        
         double* N_pa_bar_p = N_pa_bar->get_pointer();
+
         for (int qa = 0; qa < nthree_; qa++) {
             i_bar_p_up[qa].clear();
             a_bar_p_up[qa].clear();
@@ -2672,31 +2670,47 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
             }
         }
 
+        /// Start ij-prescreening.
         psi::SharedMatrix A_ij_2 = psi::linalg::doublet(Q_ia_2, Q_ia_2, false, true);
-
-        /// Below is a better implementation without Schwarz Screening.
         for (int i = 0; i < nocc; i++) {
             for (int j = 0; j < i; j++) {
                 if (A_ij_2->get(i, j) > theta_ij) {
-                    vir_intersection_per_ij.clear();
                     aux_intersection_per_ij.clear();
-                    std::set_intersection(abar_ibar[i].begin(), abar_ibar[i].end(),
-                                          abar_ibar[j].begin(), abar_ibar[j].end(),
-                                          std::back_inserter(vir_intersection_per_ij));
-                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(),
-                                          P_ibar[j].end(),
-                                          std::back_inserter(aux_intersection_per_ij));
-                    psi::SharedMatrix i_intersection = submatrix_rows_and_cols(
-                        *i_bar_a_bar_P[i], vir_intersection_per_ij, aux_intersection_per_ij);
-                    psi::SharedMatrix j_intersection = submatrix_rows_and_cols(
-                        *i_bar_a_bar_P[j], vir_intersection_per_ij, aux_intersection_per_ij);
-                    psi::SharedMatrix C_pq_intersection = submatrix_rows_and_cols(
-                        *C_pq, aux_intersection_per_ij, aux_intersection_per_ij);
-                    psi::SharedMatrix iajb_intersection = psi::linalg::triplet(
-                        i_intersection, C_pq_intersection, j_intersection, false, false, true);
-                    for (int abar = 0; abar < iajb_intersection->rowdim(); abar++) {
-                        E_K += 2 * iajb_intersection->get_row(0, abar)->vector_dot(
-                                       *iajb_intersection->get_column(0, abar));
+                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(), P_ibar[j].end(), std::back_inserter(aux_intersection_per_ij));
+                    psi::SharedMatrix C_intersection = submatrix_rows_and_cols(*C_pq, aux_intersection_per_ij, aux_intersection_per_ij);
+                    aux_in_B_i.clear();
+                    for (auto aux : aux_intersection_per_ij) {
+                        int idx_aux_i = binary_search_recursive(P_ibar[i], aux, 0, P_ibar[i].size()-1);
+                        aux_in_B_i.push_back(idx_aux_i);
+                    }
+
+                    for (int a_idx = 0; a_idx < abar_ibar[j].size(); a_idx++) { // b <= a and j < i
+                        for (int b_idx = 0; b_idx <= a_idx; b_idx++) {
+                            int a = abar_ibar[j][a_idx];
+                            int b = abar_ibar[j][b_idx];
+                            double Schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) * Q_ia_2->get(i, b) * Q_ia_2->get(j, a);
+                            if (Schwarz_2 > theta_schwarz_2) {
+                                std::vector<int> vec_a{a};
+                                std::vector<int> vec_b{b};
+                                std::vector<int> vec_a_new{a_idx};
+                                std::vector<int> vec_b_new{b_idx};
+                                psi::SharedMatrix ia = submatrix_rows_and_cols(*B_ia_Q[i], vec_a_new, aux_in_B_i);
+                                psi::SharedMatrix jb = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_b, aux_intersection_per_ij);
+                                psi::SharedMatrix ib = submatrix_rows_and_cols(*B_ia_Q[i], vec_b_new, aux_in_B_i);
+                                psi::SharedMatrix ja = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_a, aux_intersection_per_ij);
+
+                                psi::SharedMatrix iajb_mat = psi::linalg::doublet(ia, jb, false, true);
+                                double* iajb = iajb_mat->get_pointer();
+                                psi::SharedMatrix ibja_mat = psi::linalg::doublet(ib, ja, false, true);
+                                double* ibja = ibja_mat->get_pointer();
+
+                                if (a == b) {
+                                    E_K += 2 * (*iajb) * (*ibja);
+                                } else {
+                                    E_K += 4 * (*iajb) * (*ibja);
+                                }
+                            } 
+                        }
                     }
                 }
             }
@@ -2717,7 +2731,6 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     nactive_ = actv_mos_.size();
     nvirtual_ = virt_mos_.size();
     nthree_ = ints_->nthree();
-    // double threshold = foptions_->get_double("LAPLACE_THRESHOLD");
     double E_J = 0.0;
     double E_K = 0.0;
 
@@ -2770,14 +2783,12 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     psi::SharedMatrix Cholesky_Occ = ao_helper.L_Occ_real();
 
     /// |L_Occ| and |L_Vir|
-    std::vector<psi::SharedMatrix> Occupied_cholesky_abs;
-    std::vector<psi::SharedMatrix> Virtual_cholesky_abs;
+    std::vector<psi::SharedMatrix> Occupied_cholesky_abs(weights);
+    std::vector<psi::SharedMatrix> Virtual_cholesky_abs(weights);
 
     /// |L_ChoMO|
     psi::SharedMatrix Cholesky_Occ_abs = std::make_shared<psi::Matrix>("LOcc_abs", nmo, Cholesky_Occ->coldim());
 
-    Occupied_cholesky_abs.resize(weights);
-    Virtual_cholesky_abs.resize(weights);
 
     for (int nweight = 0; nweight < weights; nweight++) {
         Occupied_cholesky_abs[nweight] =
@@ -2820,8 +2831,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     psi::SharedMatrix S = ints_->wfn()->S();
 
     ///Construct list for T_ibar_i matrices.
-    std::vector<psi::SharedMatrix> T_ibar_i_list;
-    T_ibar_i_list.resize(weights);
+    std::vector<psi::SharedMatrix> T_ibar_i_list(weights);
+
     for (int i_weight = 0; i_weight < weights; i_weight++) {
         T_ibar_i_list[i_weight] = psi::linalg::triplet(Occupied_cholesky[i_weight], S, Cholesky_Occ, true, false, false);
     }
@@ -2829,12 +2840,25 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     /// Construct M_uv, N_pu, amn, and amn_new
     int n_func_pairs = (nmo + 1) * nmo / 2;
     psi::SharedMatrix loadAOtensor = initialize_erfc_integral(Omega, n_func_pairs, ints_);
-    std::vector<psi::SharedMatrix> amn;
-    std::vector<psi::SharedMatrix> amn_new;
-    amn.resize(nthree_);
-    amn_new.resize(nthree_);
-    SparseMap ao_list_per_q; ///{u}_P
-    ao_list_per_q.resize(nthree_);
+
+
+    // Here is a test for diskdf. I am trying to use DiskDFJK object to write erfc three center integrals into disk.
+    // std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
+    // std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
+    // DiskDFJK disk_jk(primary, auxiliary);
+    // outfile->Printf("\n    diskdf success ");
+    // disk_jk.erfc_three_disk(Omega);
+    // outfile->Printf("\n    erfc success ");
+    // psi::SharedMatrix test_loadAOtensor = load_Amn(nthree_, n_func_pairs);
+    // outfile->Printf("\n    load success ");
+    
+    // loadAOtensor->subtract(test_loadAOtensor);
+    // loadAOtensor->print();
+
+    std::vector<psi::SharedMatrix> amn(nthree_);
+    std::vector<psi::SharedMatrix> amn_new(nthree_);
+
+    SparseMap ao_list_per_q(nthree_); ///{u}_P
 
     double* add = loadAOtensor->get_pointer();
 
@@ -2887,18 +2911,14 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     double* N_pi_p = N_pi->get_pointer();
 
     /// Construct [i]_p. Use up denotes upper bounds.
-    SparseMap i_p_up;
-    i_p_up.resize(nthree_);
+    SparseMap i_p_up(nthree_);
 
     /// Construct (P|iu)
-    std::vector<psi::SharedMatrix> P_iu; /// [([i]_p * ao_list_per_q), ...]
-    P_iu.resize(nthree_);
+    std::vector<psi::SharedMatrix> P_iu(nthree_); /// [([i]_p * ao_list_per_q), ...]
 
     /// Construct {i}_p
-    SparseMap i_p; /// Use original indices.
-    i_p.resize(nthree_);
-    SparseMap i_p_for_i_up; /// Use new indices from [i]_p.
-    i_p_for_i_up.resize(nthree_);
+    SparseMap i_p(nthree_); /// Use original indices.
+    SparseMap i_p_for_i_up(nthree_); /// Use new indices from [i]_p.
 
     /// (P|vu) -> (P|iu) transformation
     for  (int q = 0; q < nthree_; q++) {
@@ -2928,29 +2948,23 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 //////////////////////////////////////////////////////////////////////////////////
 
     /// Construct [ibar]_p and [abar]_p
-    SparseMap i_bar_p_up;
-    i_bar_p_up.resize(nthree_);
-    SparseMap a_bar_p_up;
-    a_bar_p_up.resize(nthree_);
+    SparseMap i_bar_p_up(nthree_);
+    SparseMap a_bar_p_up(nthree_);
 
     /// Construct (P|ibar u)
-    std::vector<psi::SharedMatrix> P_ibar_u;
-    P_ibar_u.resize(nthree_);
+    std::vector<psi::SharedMatrix> P_ibar_u(nthree_);
 
     /// Construct (P|ibar abar)
-    std::vector<psi::SharedMatrix> P_ibar_abar;
-    P_ibar_abar.resize(nthree_);
+    std::vector<psi::SharedMatrix> P_ibar_abar(nthree_);
 
     /// Construct {ibar}_p
-    SparseMap ibar_p;
-    ibar_p.resize(nthree_);
+    SparseMap ibar_p(nthree_);
 
     /// Construct {P}_ibar.  Obtain this by "inversion" of {ibar}_p
     SparseMap P_ibar;
 
     /// Construct {abar}_p
-    SparseMap abar_p;
-    abar_p.resize(nthree_);
+    SparseMap abar_p(nthree_);
 
     /// Construct {p}_abar.  Obtain this by "inversion" of {abar}_p
     SparseMap P_abar;

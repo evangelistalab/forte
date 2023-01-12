@@ -195,7 +195,7 @@ psi::SharedMatrix load_Amn(const size_t A, const size_t mn) {
     double** Amnp = Amn->pointer();
     int file_unit = PSIF_DFSCF_BJ;
     psio->open(file_unit, PSIO_OPEN_OLD);
-    psio->read_entry(file_unit, "(A|mn) Integrals", (char*)Amnp[0], sizeof(double) * A * mn);
+    psio->read_entry(file_unit, "ERFC Integrals", (char*)Amnp[0], sizeof(double) * A * mn);
     psio->close(file_unit, 1);
     return Amn;
 }
@@ -217,7 +217,7 @@ psi::SharedMatrix initialize_erfc_integral(double Omega, int n_func_pairs, std::
     std::shared_ptr<psi::BasisSet> primary = ints_forte->wfn()->basisset();
     std::shared_ptr<psi::BasisSet> auxiliary = ints_forte->wfn()->get_basisset("DF_BASIS_MP2");
 
-    std::shared_ptr<psi::IntegralFactory> integral = std::shared_ptr<IntegralFactory>(new IntegralFactory(auxiliary,zero,primary,primary));
+    std::shared_ptr<psi::IntegralFactory> integral = std::make_shared<IntegralFactory>(auxiliary,zero,primary,primary);
     std::shared_ptr<psi::TwoBodyAOInt> ints(integral->erf_complement_eri(Omega));
     ///std::shared_ptr<psi::TwoBodyAOInt> ints(integral->eri());
 
