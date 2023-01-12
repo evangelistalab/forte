@@ -69,12 +69,13 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
     Mbar0_ = std::vector<double>(n_tensors, 0.0);
     if (max_body < 1)
         return;
+
     Mbar1_.resize(n_tensors);
     Mbar2_.resize(n_tensors);
     for (int i = 0; i < n_tensors; ++i) {
-        Mbar1_[i] = BTF_->build(tensor_type_, oetens[i].name(), {"aa"});
+        Mbar1_[i] = BTF_->build(tensor_type_, oetens[i].name() + "1", {"aa"});
         if (max_body > 1)
-            Mbar2_[i] = BTF_->build(tensor_type_, oetens[i].name(), {"aaaa"});
+            Mbar2_[i] = BTF_->build(tensor_type_, oetens[i].name() + "2", {"aaaa"});
     }
 
     // temporary tensors
@@ -84,50 +85,35 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
     if (max_body > 1) {
         temp2 = BTF_->build(tensor_type_, "temp2M", {"aaaa"});
         G2 = BTF_->build(tensor_type_, "C2", {"avac", "aaac", "avaa"}, true);
-        if (eri_df_) {
+        if (!eri_df_) {
+            O2 = BTF_->build(tensor_type_, "O2", {"pphh"}, true);
+        } else {
             O2 = BTF_->build(tensor_type_, "O2",
                              {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"}, true);
-        } else {
-            O2 = BTF_->build(tensor_type_, "O2", {"pphh"}, true);
         }
     }
 
-    // special treatment for large T2 amplitudes
+    // special treatment for large T2 amplitudes when doing DF
     auto D1 = BTF_->build(tensor_type_, "D1", {"gg"});
     if (eri_df_) {
         compute_1rdm_cc_CCVV_DF(D1);
         compute_1rdm_vv_CCVV_DF(D1);
 
-        std::vector<ambit::BlockedTensor> mps;
+        std::vector<ambit::BlockedTensor> mp_ints;
         if (max_body > 1 and eri_df_)
-            mps = oetens;
+            mp_ints = oetens;
 
-        compute_1rdm_cc_CCAV_DF(D1, mps);
-        compute_1rdm_aa_vv_CCAV_DF(D1, mps);
+        compute_1rdm_cc_CCAV_DF(D1, mp_ints);
+        compute_1rdm_aa_vv_CCAV_DF(D1, mp_ints);
 
-        compute_1rdm_cc_aa_CAVV_DF(D1, mps);
-        compute_1rdm_vv_CAVV_DF(D1, mps);
+        compute_1rdm_cc_aa_CAVV_DF(D1, mp_ints);
+        compute_1rdm_vv_CAVV_DF(D1, mp_ints);
     }
-    // D1.print();
-
-    auto T2 = BTF_->build(tensor_type_, "T2", {"hhpp"}, true);
-    // T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
-    T2.block("aavv")("pqrs") = T2_.block("aavv")("pqrs");
-    T2.block("ccaa")("pqrs") = T2_.block("ccaa")("pqrs");
-    T2.block("caav")("pqrs") = T2_.block("caav")("pqrs");
-    T2.block("acva")("qpsr") = T2_.block("caav")("pqrs");
-    T2.block("acav")("pqrs") = T2_.block("acav")("pqrs");
-    T2.block("cava")("qpsr") = T2_.block("acav")("pqrs");
-    T2.block("aava")("pqrs") = T2_.block("aava")("pqrs");
-    T2.block("aaav")("qpsr") = T2_.block("aava")("pqrs");
-    T2.block("caaa")("pqrs") = T2_.block("caaa")("pqrs");
-    T2.block("acaa")("qpsr") = T2_.block("caaa")("pqrs");
-    T2.block("aaaa")("pqrs") = T2_.block("aaaa")("pqrs");
 
     // transform each tensor
     for (int i = 0; i < n_tensors; ++i) {
         local_timer t_local;
-        auto& M = oetens[i];
+        const auto& M = oetens[i];
         print_contents("Transforming " + M.name());
 
         // separate M to diagonal and off-diagonal components
@@ -137,13 +123,12 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
         Mod["pq"] = M["pq"];
 
         // initialize Mbar
-        auto Mbar0 = 0.0;
-        auto Mbar1 = BTF_->build(tensor_type_, M.name(), {"aa"});
-        Mbar1["uv"] = M["uv"];
-        if (eri_df_ and max_body > 1)
-            Mbar1["uv"] += Mbar1_[i]["uv"];
-
+        auto& Mbar0 = Mbar0_[i];
+        auto& Mbar1 = Mbar1_[i];
         temp1.zero();
+
+        // add bare one-electron integrals
+        Mbar1["uv"] += M["uv"];
 
         // prepare O1 = M^{od} + 0.5 * [M^{d}, A]^{od}
         O1["pq"] = Mod["pq"];
@@ -156,25 +141,27 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
         H1_T_C1a_smallS(O1, T1_, S2_, temp1);
 
         // if max_body > 1:
-        ambit::BlockedTensor Mbar2;
         if (max_body > 1) {
-            Mbar2 = BTF_->build(tensor_type_, M.name(), {"aaaa"});
+            auto& Mbar2 = Mbar2_[i];
             O2.zero();
             temp2.zero();
 
-            if (eri_df_) {
-                // O2 = 0.5 * [M^{d}, A]^{od}
-                H1d_A2_C2pphh_small(Md, T2_, 0.5, O2);
-
-                // scalar part of [O2, T2] with large T2
-                Mbar0 += D1["pq"] * Md["pq"];
-            } else {
+            if (!eri_df_) {
                 // O2 = 0.5 * [M^{d}, A]^{od}
                 H1d_A2_C2pphh(Md, T2_, 0.5, O2);
 
                 // active part of [O2, T2]1 with large T2
                 temp1["wz"] += O2["efzm"] * S2_["wmef"];
                 temp1["wz"] -= O2["wemn"] * S2_["mnze"];
+            } else {
+                // O2 = 0.5 * [M^{d}, A]^{od}
+                H1d_A2_C2pphh_small(Md, T2_, 0.5, O2);
+
+                // scalar part of [O2, T2] with large T2
+                Mbar0 += D1["pq"] * Md["pq"];
+
+                // NOTE: active part of [O2, T2]1 with large T2 have considered
+                // when computing unrelaxed 1-RDM previously
             }
 
             // scalar part of [O2, T1 + T2]
@@ -194,26 +181,32 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
             // add 2-body results
             Mbar2["uvxy"] += temp2["uvxy"];
             Mbar2["xyuv"] += temp2["uvxy"];
-            Mbar2_[i] = Mbar2;
+
+            outfile->Printf(", Mbar2 norm = %20.10f", Mbar2.norm());
         }
 
         // add 1-body results
         Mbar1["uv"] += temp1["uv"];
         Mbar1["vu"] += temp1["uv"];
 
-        Mbar0_[i] = Mbar0;
-        Mbar1_[i] = Mbar1;
-
         outfile->Printf("\n %-20s: Mbar0 = %20.10f, Mbar1 norm = %20.10f", M.name().c_str(), Mbar0,
                         Mbar1.norm());
-        if (max_body > 1)
-            outfile->Printf(", Mbar2 norm = %20.10f", Mbar2.norm());
 
         print_done(t_local.get());
     }
 }
 
 void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
+    /**
+     * Compute the core-core part of the MP2-like unrelaxed spin-summed 1-RDM.
+     *
+     * D1["ij"] -= T2["ikab"] * S2["jkab"] + 1.0 * T2["jkab"] * S2["ikab"]
+     *
+     * where S2["jkab"] = 2.0 * T2["jkab"] - T2["jkba"]
+     * for core indices i, j, k and virtual indices a, b.
+     *
+     * Amplitudes are built in batches for every ab pairs.
+     */
     timer t_ccvv("Compute CCVV 1RDM CC term DF");
     print_contents("Computing DF CCVV 1RDM CC part");
 
@@ -335,6 +328,16 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
 }
 
 void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
+    /**
+     * Compute the virtual-virtual part of the MP2-like unrelaxed spin-summed 1-RDM.
+     *
+     * D1["ab"] += T2["ijac"] * S2["ijbc"] + T2["ijbc"] * S2["ijac"]
+     *
+     * where S2["ijbc"] = 2.0 * T2["ijbc"] - T2["jibc"]
+     * for core indices i, j and virtual indices a, b, c.
+     *
+     * Amplitudes are built in batches for every ij pairs.
+     */
     timer t_ccvv("Compute CCVV 1RDM VV term DF");
     print_contents("Computing DF CCVV 1RDM VV part");
 
@@ -457,6 +460,25 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
 
 void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
                                        const std::vector<ambit::BlockedTensor>& oetens) {
+    /**
+     * Compute the core-core part of the unrelaxed spin-summed 1-RDM from T2 ccav block.
+     *
+     * D1["ij"] -= 0.5 * (T2["ikva"] * S2["jkua"] + T2["kiva"] * S2["kjua"]) * Eta1["uv"]
+     *           + 0.5 * (T2["jkva"] * S2["ikua"] + T2["kjva"] * S2["kiua"]) * Eta1["uv"]
+     *
+     * where S2["jkua"] = 2.0 * T2["jkua"] - T2["kjua"]
+     * for core indices i, j, k; active indices u, v; and virtual index a.
+     *
+     * Amplitudes are built in batches for every index a.
+     *
+     * If oetens is not empty, the active part of the transformed one-electron integrals
+     * are also computed inside the batches.
+     *
+     * Mt["vu"] += 0.5 * M["ji"] * (T2["ikva"] * S2["jkua"] + T2["kiva"] * S2["kjua"])
+     *           + 0.5 * M["ji"] * (T2["jkva"] * S2["ikua"] + T2["kjva"] * S2["kiua"])
+     *           + 0.5 * M["ji"] * (T2["ikua"] * S2["jkva"] + T2["kiua"] * S2["kjva"])
+     *           + 0.5 * M["ji"] * (T2["jkua"] * S2["ikva"] + T2["kjua"] * S2["kiva"])
+     */
     timer t_ccav("Compute CCAV 1RDM CC term DF");
     print_contents("Computing DF CCAV 1RDM CC part");
 
@@ -575,6 +597,27 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
 
 void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
                                           const std::vector<ambit::BlockedTensor>& oetens) {
+    /**
+     * Compute the active-active and virtual-virtual parts of
+     * the unrelaxed spin-summed 1-RDM from T2 ccav block.
+     *
+     * D1["vy"] += 0.5 * T2["ijya"] * S2["ijua"] * Eta1["uv"]
+     *           + 0.5 * T2["ijva"] * S2["ijua"] * Eta1["uy"]
+     *
+     * D1["ba"] += 0.5 * (T2["ijva"] * S2["ijub"] + T2["ijvb"] * S2["ijua"]) * Eta1["uv"]
+     *
+     * where S2["ijua"] = 2.0 * T2["ijua"] - T2["jiua"]
+     * for core indices i, j; active indices u, v, y; and virtual indices a, b.
+     *
+     * Amplitudes are built in batches for every ij pairs.
+     *
+     * If oetens is not empty, the active part of the transformed one-electron integrals
+     * are also computed inside the batches.
+     *
+     * Mt["vu"] -= 0.5 * T2["ijya"] * (M["yv"] * S2["ijua"] + M["yu"] * S2["ijva"])
+     *
+     * Mt["vu"] -= 0.5 * M["ab"] * (T2["ijva"] * S2["ijub"] + T2["ijua"] * S2["ijvb"])
+     */
     timer t_ccav("Compute CCAV 1RDM AA/VV term DF");
     print_contents("Computing DF CCAV 1RDM AA/VV part");
 
@@ -763,6 +806,27 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
 
 void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
                                           const std::vector<ambit::BlockedTensor>& oetens) {
+    /**
+     * Compute the core-core and active-active parts of
+     * the unrelaxed spin-summed 1-RDM from T2 cavv block.
+     *
+     * D1["ij"] -= 0.5 * (T2["iuab"] * S2["jvab"] + T2["juab"] * S2["ivab"]) * L1["uv"]
+     *
+     * D1["xu"] -= 0.5 * T2["ixab"] * S2["ivab"] * L1["uv"]
+     *           + 0.5 * T2["iuab"] * S2["ivab"] * L1["xv"]
+     *
+     * where S2["jvab"] = 2.0 * T2["jvab"] - T2["jvba"]
+     * for core indices i, j; active indices u, v, x; and virtual indices a, b.
+     *
+     * Amplitudes are built in batches for every ab pairs.
+     *
+     * If oetens is not empty, the active part of the transformed one-electron integrals
+     * are also computed inside the batches.
+     *
+     * Mt["vu"] -= 0.5 * M["ji"] * (T2["iuab"] * S2["jvab"] + T2["ivab"] * S2["juab"])
+     *
+     * Mt["vu"] -= 0.5 * T2["ixab"] * (M["ux"] * S2["ivab"] + M["vx"] * S2["iuab"])
+     */
     timer t_cavv("Compute CAVV 1RDM CC/AA term DF");
     print_contents("Computing DF CAVV 1RDM CC/AA part");
 
@@ -951,6 +1015,25 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
 
 void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
                                        const std::vector<ambit::BlockedTensor>& oetens) {
+    /**
+     * Compute the virtual-virtual parts of the unrelaxed spin-summed 1-RDM from T2 cavv block.
+     *
+     * D1["ba"] += 0.5 * (T2["iuac"] * S2["ivbc"] + T2["iuca"] * S2["ivcb"]) * L1["uv"]
+     *           + 0.5 * (T2["iubc"] * S2["ivac"] + T2["iucb"] * S2["ivca"]) * L1["uv"]
+     *
+     * where S2["ivbc"] = 2.0 * T2["ivbc"] - T2["ivcb"]
+     * for core index i; active indices u, v; and virtual indices a, b, c.
+     *
+     * Amplitudes are built in batches for every ic pairs.
+     *
+     * If oetens is not empty, the active part of the transformed one-electron integrals
+     * are also computed inside the batches.
+     *
+     * Mt["vu"] += 0.5 * M["ab"] * (T2["iuac"] * S2["ivbc"] + T2["iuca"] * S2["ivcb"])
+     *           + 0.5 * M["ab"] * (T2["iubc"] * S2["ivac"] + T2["iucb"] * S2["ivca"])
+     *           + 0.5 * M["ab"] * (T2["ivac"] * S2["iubc"] + T2["ivca"] * S2["iucb"])
+     *           + 0.5 * M["ab"] * (T2["ivbc"] * S2["iuac"] + T2["ivcb"] * S2["iuca"])
+     */
     timer t_cavv("Compute CAVV 1RDM VV term DF");
     print_contents("Computing DF CAVV 1RDM VV part");
 
