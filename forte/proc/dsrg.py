@@ -210,6 +210,7 @@ class ProcedureDSRG:
             #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
             #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
+            asmpints = self.dsrg_solver.compute_mp_eff_actv()
 
             # Spit out contracted SA-DSRG energy
             if self.do_multi_state and self.multi_state_type == "SA_SUB":
@@ -225,6 +226,9 @@ class ProcedureDSRG:
             # and the current semi-canonical basis
             self.active_space_solver.set_Uactv(self.Ua, self.Ub)
             state_energies_list = self.active_space_solver.compute_energy()
+
+            self.active_space_solver.compute_dipole_moment(asmpints)
+            self.active_space_solver.compute_fosc_same_orbs(asmpints)
 
             # Reorder weights if needed
             if self.state_ci_wfn_map is not None:

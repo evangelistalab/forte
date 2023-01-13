@@ -190,6 +190,12 @@ class SA_MRDSRG : public SADSRG {
 
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
+
+    /// Compute DSRG-transformed multipoles
+    void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                            const std::vector<int>& max_levels) override;
+    /// Compute DSRG-transformed multipoles using LDSRG(1) or LDSRG(2)
+    void compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int max_level, int ind);
 };
 } // namespace forte
 

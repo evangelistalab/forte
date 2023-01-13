@@ -188,16 +188,11 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
             // add 2-body results
             Mbar2["uvxy"] += temp2["uvxy"];
             Mbar2["xyuv"] += temp2["uvxy"];
-
-            // outfile->Printf(", Mbar2 norm = %20.10f", Mbar2.norm());
         }
 
         // add 1-body results
         Mbar1["uv"] += temp1["uv"];
         Mbar1["vu"] += temp1["uv"];
-
-        // outfile->Printf("\n %-20s: Mbar0 = %20.10f, Mbar1 norm = %20.10f", M.name().c_str(), Mbar0,
-        //                 Mbar1.norm());
 
         print_done(t_local.get());
     }

@@ -35,6 +35,7 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "helpers/printing.h"
+#include "helpers/timer.h"
 #include "sa_mrdsrg.h"
 
 using namespace psi;
@@ -253,4 +254,154 @@ double SA_MRDSRG::Hbar_od_norm(const int& n, const std::vector<std::string>& blo
 
     return norm;
 }
+
+void SA_MRDSRG::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                                   const std::vector<int>& max_levels) {
+    print_h2("Transform One-Electron Operators");
+
+    int n_tensors = oetens.size();
+
+    Mbar0_ = std::vector<double>(n_tensors, 0.0);
+
+    Mbar1_.resize(n_tensors);
+    Mbar2_.resize(n_tensors);
+    for (int i = 0; i < n_tensors; ++i) {
+        Mbar1_[i] = BTF_->build(tensor_type_, oetens[i].name() + "1", {"aa"});
+        if (max_levels[i] > 1)
+            Mbar2_[i] = BTF_->build(tensor_type_, oetens[i].name() + "2", {"aaaa"});
+    }
+
+    auto max_body = *std::max_element(max_levels.begin(), max_levels.end());
+    if (max_body > 1) {
+        DT2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
+    }
+
+    for (int i = 0; i < n_tensors; ++i) {
+        local_timer t_local;
+        const auto& M = oetens[i];
+        print_contents("Transforming " + M.name());
+        compute_mbar_ldsrg2(M, max_levels[i], i);
+        print_done(t_local.get());
+    }
+
+    // Mbar0_.clear();
+    // Mbar1_.clear();
+    // Mbar2_.clear();
+
+    // O1_ = BTF_->build(tensor_type_, "O1", {"gg"});
+    // C1_ = BTF_->build(tensor_type_, "C1", {"gg"});
+
+    // for (auto& M : oetens) {
+    //     local_timer t_local;
+    //     print_contents("Transforming " + M.name());
+
+    //     double m0 = 0.0;
+    //     auto m1 = BTF_->build(tensor_type_, M.name(), {"gg"});
+    //     m1["pq"] = M["pq"];
+
+    //     O1_["pq"] = M["pq"];
+
+    //     bool converged = false;
+    //     for (int n = 1, converged = 0; n <= rsc_ncomm_; ++n) {
+    //         // prefactor before n-nested commutator
+    //         double factor = 1.0 / n;
+
+    //         // Compute the commutator C = 1/n [O, T]
+    //         double C0 = 0.0;
+    //         C1_.zero();
+
+    //         // printing level
+    //         if (print_ > 2) {
+    //             std::string dash(38, '-');
+    //             outfile->Printf("\n    %s", dash.c_str());
+    //         }
+
+    //         // zero-body
+    //         H1_T1_C0(O1_, T1_, factor, C0);
+    //         H1_T2_C0(O1_, T2_, factor, C0);
+    //         // if (n == 1 && eri_df_) {
+    //         //     V_T1_C0_DF(B_, T1_, factor, C0);
+    //         //     V_T2_C0_DF(B_, T2_, DT2_, factor, C0);
+    //         // } else {
+    //         //     H2_T1_C0(O2_, T1_, factor, C0);
+    //         //     H2_T2_C0(O2_, T2_, DT2_, factor, C0);
+    //         // }
+
+    //         // one-body
+    //         H1_T1_C1(O1_, T1_, factor, C1_);
+    //         H1_T2_C1(O1_, T2_, factor, C1_);
+    //         // if (n == 1 && eri_df_) {
+    //         //     V_T1_C1_DF(B_, T1_, factor, C1_);
+    //         //     V_T2_C1_DF(B_, T2_, DT2_, factor, C1_);
+    //         // } else {
+    //         //     H2_T1_C1(O2_, T1_, factor, C1_);
+    //         //     H2_T2_C1(O2_, T2_, DT2_, factor, C1_);
+    //         // }
+
+    //         // // two-body
+    //         // H1_T2_C2(O1_, T2_, factor, C2_);
+    //         // if (n == 1 && eri_df_) {
+    //         //     V_T1_C2_DF(B_, T1_, factor, C2_);
+    //         //     V_T2_C2_DF(B_, T2_, DT2_, factor, C2_);
+    //         // } else {
+    //         //     H2_T1_C2(O2_, T1_, factor, C2_);
+    //         //     H2_T2_C2(O2_, T2_, DT2_, factor, C2_);
+    //         // }
+
+    //         // printing level
+    //         if (print_ > 2) {
+    //             std::string dash(38, '-');
+    //             outfile->Printf("\n    %s\n", dash.c_str());
+    //         }
+
+    //         // [H, A] = [H, T] + [H, T]^dagger
+    //         C0 *= 2.0;
+    //         O1_["pq"] = C1_["pq"];
+    //         C1_["pq"] += O1_["qp"];
+    //         // O2_["pqrs"] = C2_["pqrs"];
+    //         // C2_["pqrs"] += O2_["rspq"];
+
+    //         // Hbar += C
+    //         m0 += C0;
+    //         m1["pq"] += C1_["pq"];
+    //         // Hbar2_["pqrs"] += C2_["pqrs"];
+
+    //         // copy C to O for next level commutator
+    //         O1_["pq"] = C1_["pq"];
+    //         // O2_["pqrs"] = C2_["pqrs"];
+
+    //         // test convergence of C
+    //         double norm_C1 = C1_.norm();
+    //         if (print_ > 2) {
+    //             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f", n, C0, C1_.norm(0));
+    //         }
+    //         if (std::sqrt(norm_C1 * norm_C1) < rsc_conv_) {
+    //             converged = true;
+    //             break;
+    //         }
+    //         // double norm_C2 = C2_.norm();
+    //         // if (print_ > 2) {
+    //         //     outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f",
+    //         n,
+    //         //     C0,
+    //         //                     C1_.norm(0), C2_.norm(0));
+    //         // }
+    //         // if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv_) {
+    //         //     converged = true;
+    //         //     break;
+    //         // }
+    //     }
+    //     if (!converged) {
+    //         outfile->Printf("\n    Warning! Mbar is not converged in %3d-nested commutators!",
+    //                         rsc_ncomm_);
+    //         outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
+    //     }
+
+    //     Mbar0_.push_back(m0);
+    //     Mbar1_.push_back(m1);
+
+    //     print_done(t_local.get());
+    // }
+}
+
 } // namespace forte
