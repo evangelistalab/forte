@@ -104,20 +104,17 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
     }
 
     // special treatment for large T2 amplitudes when doing DF
-    auto D1 = BTF_->build(tensor_type_, "D1", {"gg"});
-    if (eri_df_) {
+    ambit::BlockedTensor D1;
+    if (eri_df_ and max_body > 1) {
+        D1 = BTF_->build(tensor_type_, "D1", {"gg"});
         compute_1rdm_cc_CCVV_DF(D1);
         compute_1rdm_vv_CCVV_DF(D1);
 
-        std::vector<ambit::BlockedTensor> mp_ints;
-        if (max_body > 1 and eri_df_)
-            mp_ints = oetens;
+        compute_1rdm_cc_CCAV_DF(D1, oetens);
+        compute_1rdm_aa_vv_CCAV_DF(D1, oetens);
 
-        compute_1rdm_cc_CCAV_DF(D1, mp_ints);
-        compute_1rdm_aa_vv_CCAV_DF(D1, mp_ints);
-
-        compute_1rdm_cc_aa_CAVV_DF(D1, mp_ints);
-        compute_1rdm_vv_CAVV_DF(D1, mp_ints);
+        compute_1rdm_cc_aa_CAVV_DF(D1, oetens);
+        compute_1rdm_vv_CAVV_DF(D1, oetens);
     }
 
     // transform each tensor
@@ -241,6 +238,9 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
     batch_vir = split_vector(virt_mos_, max_vir);
     auto nbatches = batch_vir.size();
 
+    // use MP2 amplitudes instead of DSRG
+    bool complete_ccvv = (ccvv_source_ == "ZERO");
+
     // temp tensors for each thread
     std::vector<ambit::Tensor> Da(nthreads);
     std::vector<ambit::Tensor> Jmn(nthreads), JKmn(nthreads);
@@ -306,11 +306,18 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
                 C_DGEMM('N', 'T', nc, nc, nQ, 1.0, Bci_ptr, nQ, Bdj_ptr, nQ, 0.0,
                         Jmn[thread].data().data(), nc);
 
-                Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                    double denom =
-                        Fdiag_[core_mos_[i[0]]] + Fdiag_[core_mos_[i[1]]] - fock_c - fock_d;
-                    value *= dsrg_source_->compute_renormalized_denominator(denom);
-                });
+                if (complete_ccvv) {
+                    Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                        value /=
+                            Fdiag_[core_mos_[i[0]]] + Fdiag_[core_mos_[i[1]]] - fock_c - fock_d;
+                    });
+                } else {
+                    Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                        double denom =
+                            Fdiag_[core_mos_[i[0]]] + Fdiag_[core_mos_[i[1]]] - fock_c - fock_d;
+                        value *= dsrg_source_->compute_renormalized_denominator(denom);
+                    });
+                }
                 JKmn[thread]("pq") = 2.0 * Jmn[thread]("pq") - Jmn[thread]("qp");
 
                 auto factor = (c_batch_vir_mos[c] == d_batch_vir_mos[d]) ? 0.5 : 1.0;
@@ -371,6 +378,9 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
     std::vector<std::vector<size_t>> batch_occ;
     batch_occ = split_vector(core_mos_, max_occ);
     auto nbatches = batch_occ.size();
+
+    // use MP2 amplitudes instead of DSRG
+    bool complete_ccvv = (ccvv_source_ == "ZERO");
 
     // temp tensors for each thread
     std::vector<ambit::Tensor> Da(nthreads);
@@ -437,11 +447,18 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
                 C_DGEMM('N', 'T', nv, nv, nQ, 1.0, Bia_ptr, nQ, Bjb_ptr, nQ, 0.0,
                         Jab[thread].data().data(), nv);
 
-                Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                    double denom =
-                        fock_i + fock_j - Fdiag_[virt_mos_[i[0]]] - Fdiag_[virt_mos_[i[1]]];
-                    value *= dsrg_source_->compute_renormalized_denominator(denom);
-                });
+                if (complete_ccvv) {
+                    Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                        value /=
+                            fock_i + fock_j - Fdiag_[virt_mos_[i[0]]] - Fdiag_[virt_mos_[i[1]]];
+                    });
+                } else {
+                    Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                        double denom =
+                            fock_i + fock_j - Fdiag_[virt_mos_[i[0]]] - Fdiag_[virt_mos_[i[1]]];
+                        value *= dsrg_source_->compute_renormalized_denominator(denom);
+                    });
+                }
                 JKab[thread]("pq") = 2.0 * Jab[thread]("pq") - Jab[thread]("qp");
 
                 auto factor = (i_batch_occ_mos[i] == j_batch_occ_mos[j]) ? 0.5 : 1.0;
