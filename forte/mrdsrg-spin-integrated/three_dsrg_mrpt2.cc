@@ -2368,7 +2368,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     }
 
     /// Construct C_pq
-    psi::SharedMatrix C_pq = load_Jinv_full(nthree_, nthree_);
+    psi::SharedMatrix C_pq = erfc_metric(Omega, ints_);
     outfile->Printf("\n    Done with C_pq");
     ///Overlap matrix
     psi::SharedMatrix S = ints_->wfn()->S();
