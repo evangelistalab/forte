@@ -535,7 +535,6 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
 py::object process_psi4_array_data(psi::Data& data) {
     auto list = py::list();
     if (data.is_array()) {
-        outfile->Printf("\n Data is an array -> call again");
         // process each element of the array
         size_t n = data.size();
         for (size_t i = 0; i < n; i++) {
