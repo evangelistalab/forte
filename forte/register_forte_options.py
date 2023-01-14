@@ -714,7 +714,9 @@ def register_dsrg_options(options):
    
     options.add_double("THETA_SCHWARZ", 0, "theta_schwarz")
     
-    options.add_double("OMEGA", 0.1, "Omega for erfc attenuated coulomb operator")
+    options.add_double("OMEGA", 0, "Omega for erfc attenuated coulomb operator")
+    
+    options.add_double("LAPLACE_THRESHOLD", 1e-10, "laplace threshold")
 
     options.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM")
 

@@ -2283,6 +2283,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     double theta_ij = foptions_->get_double("THETA_IJ");
     double Omega = foptions_->get_double("OMEGA");
     double theta_schwarz = foptions_->get_double("THETA_SCHWARZ");
+    double laplace_threshold = foptions_->get_double("LAPLACE_THRESHOLD");
     double theta_schwarz_2 = theta_schwarz * theta_schwarz;
 
     psi::SharedMatrix Cwfn = ints_->Ca();
@@ -2306,7 +2307,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
-    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, nactive_);
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_);
     int weights = ao_helper.Weights();
 
     /// Number of MO.
@@ -2738,6 +2739,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     double theta_ij = foptions_->get_double("THETA_IJ");
     double Omega = foptions_->get_double("OMEGA");
     double theta_schwarz = foptions_->get_double("THETA_SCHWARZ");
+    double laplace_threshold = foptions_->get_double("LAPLACE_THRESHOLD");
     double theta_schwarz_2 = theta_schwarz * theta_schwarz;
 
     psi::SharedMatrix Cwfn = ints_->Ca();
@@ -2763,7 +2765,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
-    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, nactive_);
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_);
     int weights = ao_helper.Weights();
 
     /// Number of MO. (Core orbitals are included. Probably need to change this afterward.)
