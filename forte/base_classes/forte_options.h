@@ -348,6 +348,11 @@ class ForteOptions {
      */
     std::string str() const;
 
+    /**
+     * @brief Reset this object (there will be no options defined)
+     */
+    void clear();
+
   private:
     /// a python dictionary object
     pybind11::dict dict_;

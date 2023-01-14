@@ -593,6 +593,11 @@ std::string ForteOptions::str() const {
     return s;
 }
 
+void ForteOptions::clear() {
+    dict_.clear();
+    group_ = "";
+}
+
 std::string ForteOptions::generate_documentation() const {
     std::vector<std::pair<std::string, std::string>> option_docs_list;
 
