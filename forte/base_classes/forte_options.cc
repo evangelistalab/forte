@@ -511,7 +511,9 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
                     }
                     if (std::find(allowed_values.begin(), allowed_values.end(), value) ==
                         allowed_values.end()) {
-                        std::string msg = "The option value " + value + " must be one of [" +
+                        std::string msg = "The option " + label + " was set to " + value +
+                                          ", a value that is not allowed.\n Please select one of "
+                                          "the following values [" +
                                           join(allowed_values, ",") + "]";
                         throw std::runtime_error(msg);
                     }
