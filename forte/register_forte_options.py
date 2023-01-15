@@ -718,6 +718,8 @@ def register_dsrg_options(options):
     
     options.add_double("LAPLACE_THRESHOLD", 1e-10, "laplace threshold")
 
+    options.add_bool("LAPLACE_CORE", True, "Use core or disk algorithm")
+
     options.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM")
 
     options.add_bool("DSRG_MRPT2_DEBUG", False, "Excssive printing for three-dsrg-mrpt2")

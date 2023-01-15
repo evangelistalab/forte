@@ -65,6 +65,7 @@ class AtomicOrbitalHelper {
     /// How many orbitals does it take to go from occupied to virtual (ie should
     /// be active)
     int shift_;
+    int nfrozen_;
 
   public:
     psi::SharedMatrix Occupied_Laplace() { return Occupied_Laplace_; }
@@ -88,7 +89,7 @@ class AtomicOrbitalHelper {
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance);
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
-                        double laplace_tolerance, int shift);
+                        double laplace_tolerance, int shift, int nfrozen);
 
     void Compute_Cholesky_Density();
     void Compute_Cholesky_Pseudo_Density();

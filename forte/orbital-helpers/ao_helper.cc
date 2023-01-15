@@ -58,9 +58,9 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
 }
 AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
                                          psi::SharedVector eps_vir, double laplace_tolerance,
-                                         int shift)
+                                         int shift, int nfrozen)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
-      shift_(shift) {
+      shift_(shift), nfrozen_(nfrozen) {
     psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
@@ -106,12 +106,12 @@ void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
         for (int mu = 0; mu < nbf_; mu++) {
             for (int nu = 0; nu < nbf_; nu++) {
                 for (int i = 0; i < nrdocc_; i++) {
-                    value_occ += CMO_->get(mu, i) * CMO_->get(nu, i) * Occupied_Laplace_->get(w, i);
+                    value_occ += CMO_->get(mu, i + nfrozen_) * CMO_->get(nu, i + nfrozen_) * Occupied_Laplace_->get(w, i);
                 }
                 POcc_single->set(mu, nu, value_occ);
                 for (int a = 0; a < nvir_; a++) {
-                    value_vir += CMO_->get(mu, nrdocc_ + shift_ + a) *
-                                 CMO_->get(nu, nrdocc_ + shift_ + a) * Virtual_Laplace_->get(w, a);
+                    value_vir += CMO_->get(mu, nfrozen_ + nrdocc_ + shift_ + a) *
+                                 CMO_->get(nu, nfrozen_ + nrdocc_ + shift_ + a) * Virtual_Laplace_->get(w, a);
                 }
                 PVir_single->set(mu, nu, value_vir);
                 value_occ = 0.0;
@@ -132,9 +132,9 @@ void AtomicOrbitalHelper::Compute_Cholesky_Density() {
     //psi::SharedMatrix POcc_real(new psi::Matrix("Real_POcc", nbf_, nbf_));
     //psi::SharedMatrix PVir_real(new psi::Matrix("Real_PVir", nbf_, nbf_));
     std::vector<int> Occ_idx(nrdocc_);
-    std::iota(Occ_idx.begin(), Occ_idx.end(), 0);
+    std::iota(Occ_idx.begin(), Occ_idx.end(), nfrozen_);
     std::vector<int> Vir_idx(nvir_);
-    std::iota(Vir_idx.begin(), Vir_idx.end(), nrdocc_ + shift_);
+    std::iota(Vir_idx.begin(), Vir_idx.end(), nfrozen_ + nrdocc_ + shift_);
     psi::SharedMatrix C_Occ = submatrix_cols(*CMO_, Occ_idx);
     //psi::SharedMatrix C_Vir = submatrix_cols(*CMO_, Vir_idx);
 

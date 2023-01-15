@@ -35,6 +35,8 @@ set forte{
    correlation_solver    three-dsrg-mrpt2
    print                 0
    AO_DSRG_MRPT2         true
+   laplace_threshold     1e-10
+   laplace_core          false
    active_space_solver              fci
 }
 

@@ -2256,7 +2256,7 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
     std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     //DiskDFJK jk(primary, auxiliary);
 
-    bool is_core = 0;
+    bool is_core = foptions_->get_bool("LAPLACE_CORE");
     if (is_core) {
         double result = E_ccvv_df_ao();
         return result;
@@ -2275,6 +2275,8 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     nactive_ = actv_mos_.size();
     nvirtual_ = virt_mos_.size();
     nthree_ = ints_->nthree();
+    
+    int nfrozen = mo_space_info_->dimension("FROZEN").sum();
 
     double E_J = 0.0;
     double E_K = 0.0;
@@ -2307,11 +2309,12 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
-    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_);
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_, nfrozen);
     int weights = ao_helper.Weights();
 
     /// Number of MO.
     int nmo = mo_space_info_->dimension("ALL").sum();
+    outfile->Printf("\n\n  NMOOOOO %d", nmo);
     local_timer timer1;
     ao_helper.Compute_Cholesky_Pseudo_Density();
     outfile->Printf("\n\n  Pseudo Cholesky takes %8.8f", timer1.get());
@@ -2735,6 +2738,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     double E_J = 0.0;
     double E_K = 0.0;
 
+    int nfrozen = mo_space_info_->dimension("FROZEN").sum();
+
     double theta_NB = foptions_->get_double("THETA_NB");
     double theta_ij = foptions_->get_double("THETA_IJ");
     double Omega = foptions_->get_double("OMEGA");
@@ -2765,7 +2770,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
-    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_);
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_, nfrozen);
     int weights = ao_helper.Weights();
 
     /// Number of MO. (Core orbitals are included. Probably need to change this afterward.)
