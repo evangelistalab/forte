@@ -49,7 +49,8 @@ def register_driver_options(options):
         'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
-        'CORRELATION_SOLVER', 'NONE', ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG'],
+        'CORRELATION_SOLVER', 'NONE',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG', 'DSRG_MRPT'],
         'Dynamical correlation solver type'
     )
     options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'], 'The type of computation')
