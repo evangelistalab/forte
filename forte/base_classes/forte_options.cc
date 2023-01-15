@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <algorithm>
+
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/liboptions/liboptions.h"
@@ -500,6 +502,20 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
                 std::string value = options.get_str(label);
                 // capitalize the string
                 to_upper_string(value);
+                if (item.second.contains("allowed_values")) {
+                    // check that value is allowed
+                    auto py_allowed_values = item.second["allowed_values"];
+                    std::vector<std::string> allowed_values;
+                    for (auto av : py_allowed_values) {
+                        allowed_values.push_back(py::cast<std::string>(av));
+                    }
+                    if (std::find(allowed_values.begin(), allowed_values.end(), value) ==
+                        allowed_values.end()) {
+                        std::string msg = "The option value " + value + " must be one of [" +
+                                          join(allowed_values, ",") + "]";
+                        throw std::runtime_error(msg);
+                    }
+                }
                 item.second["value"] = py::cast(value);
             }
             if (type == "int_list") {
