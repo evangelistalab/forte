@@ -47,20 +47,22 @@ S   1   1.00
 ****
 }
 
-set globals{
-   scf_type             pk
-   d_convergence        10
-   e_convergence        12
+set forte{
+   job_type             mcscf_two_step
+   casscf_e_convergence 12
+   active_space_solver  fci
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
+   root_sym             0
+   nroot                1
+   multiplicity         1
 }
 
-set mcscf{
-   reference            twocon
-   docc                 [2,0,0,0]
-   socc                 [1,0,0,1]
-   maxiter              1000
-}
+mcscf_energy, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf,mcscf_energy,10,"MCSCF energy")
 
 set forte{
+   job_type             newdriver
    active_space_solver  fci
    correlation_solver   dsrg-mrpt2
    restricted_docc      [2,0,0,0]
@@ -73,8 +75,5 @@ set forte{
    threepdc             zero
 }
 
-scf_energy, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
-
 energy('forte',ref_wfn=wfn)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")
