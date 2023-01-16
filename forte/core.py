@@ -43,9 +43,9 @@ def clean_options():
     2. re-registers all of Forte options (in their default values)
     3. pushes the value of Forte options to the psi4 options object
     """
-    # clear options and allocate a fresh forte.forte_options object
+    # clear options
     psi4.core.clean_options()
-    forte.forte_options = forte.ForteOptions()
+    forte.forte_options.clear()
 
     # register options defined in Forte in the forte_options object
     forte.register_forte_options(forte.forte_options)

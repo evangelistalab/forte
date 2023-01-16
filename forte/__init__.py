@@ -45,7 +45,7 @@ from ._forte import *
 __version__ = '0.2.3'
 __author__ = 'Forte Developers'
 
-# Create a ForteOptions object (stores all options)
+# Create a global ForteOptions object (stores all options)
 forte_options = forte.ForteOptions()
 
 # Register options defined in Forte in the forte_options object

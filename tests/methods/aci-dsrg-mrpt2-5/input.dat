@@ -4,7 +4,7 @@ memory 2 gb
 
 escf = -304.905779549494
 efix = -305.390029652734
-eaci = -305.3981015635
+eaci = -305.3965679747
 
 molecule ene2{
 0 1
@@ -39,8 +39,8 @@ set {
   scf_type df
   guess sad
   maxiter 500
-  e_convergence 11
-  d_convergence 11
+  e_convergence 12
+  d_convergence 7
   reference rhf
 }
 

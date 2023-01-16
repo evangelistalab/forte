@@ -44,6 +44,7 @@ void export_ForteOptions(py::module& m) {
         .def(py::init<const ForteOptions&>())
         .def("set_dict", &ForteOptions::set_dict, "Set the options dictionary")
         .def("dict", &ForteOptions::dict, "Returns the options dictionary")
+        .def("clear", &ForteOptions::clear, "Clear the options dictionary")
         .def("set_group", &ForteOptions::set_group, "Set the options group")
         .def("is_none", &ForteOptions::is_none, "Is this variable defined?")
         .def("exists", &ForteOptions::exists, "Does this option exist?")

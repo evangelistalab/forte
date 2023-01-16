@@ -1,33 +1,41 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.4a2.dev543 
+                               Psi4 1.8a1.dev5 
 
-                         Git: Rev {bcc_frozen_virtual} bf127d9 dirty
-
-
-    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
-    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
-    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
-    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
-    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
-    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
-    (doi: 10.1021/acs.jctc.7b00174)
+                         Git: Rev {master} 4d94910 
 
 
-                         Additional Contributions by
-    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
-    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 19 May 2020 10:52AM
+    Psi4 started on: Monday, 16 January 2023 08:13AM
 
-    Process ID: 20177
-    Host:       Yorks-Mac.local
-    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Process ID: 1363
+    Host:       CHE-FEVANGE-01i
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -38,8 +46,8 @@
 
 import forte
 
-refmcscf   = -15.569761360883527
-refdsrgpt2 = -15.629041567739097
+refmcscf   = -15.56976136088
+refdsrgpt2 = -15.62904156665
 
 molecule {
   0 1
@@ -83,20 +91,23 @@ S   1   1.00
 ****
 }
 
-set globals{
-   scf_type             pk
-   d_convergence        12
-   e_convergence        15
+set forte{
+   job_type             mcscf_two_step
+   casscf_e_convergence 12
+   casscf_g_convergence 8
+   active_space_solver  fci
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
+   root_sym             0
+   nroot                1
+   multiplicity         1
 }
 
-set mcscf{
-   reference            twocon
-   docc                 [2,0,0,0]
-   socc                 [1,0,0,1]
-   maxiter              1000
-}
+mcscf_energy, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf,mcscf_energy,10,"MCSCF energy")
 
 set forte{
+   job_type             newdriver
    active_space_solver  fci
    correlation_solver   dsrg-mrpt2
    restricted_docc      [2,0,0,0]
@@ -109,544 +120,17 @@ set forte{
    threepdc             zero
 }
 
-scf_energy, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
-
 energy('forte',ref_wfn=wfn)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")
 --------------------------------------------------------------------------
 
-Scratch directory: /Users/york/scratch/psi4/
-   => Loading Basis Set <=
-
-    Name: ANONYMOUSE5AD70F6
-    Role: ORBITAL
-    Keyword: BASIS
-    atoms 1   entry BE         line     5 inputblock anonymouse5ad70f6 
-    atoms 2-3 entry H          line    25 inputblock anonymouse5ad70f6 
-
-
-*** tstart() called on Yorks-Mac.local
-*** at Tue May 19 10:52:55 2020
-
-
-         ------------------------------------------
-           MCSCF: a self-consistent field program
-            written by Francesco A. Evangelista
-         ------------------------------------------
-
-  MOs per irrep:                                      A1  A2  B1  B2 Total
-  ----------------------------------------------------------------------------
-  Total                                                7    0    2    4    13
-  Doubly Occupied                                      2    0    0    0     2
-  Active/Singly Occupied                               1    0    0    1     2
-  ----------------------------------------------------------------------------
-
-  Running an SCF calculation
-  TWOCON MOs = [2 (A1),9 (B2)]
-
-  Generated 91 pairs
-  Distributed as [41 A1][8 A2][14 B1][28 B2]
-  batch   0 pq = [       0,      41] index = [               0,             861]
-
-  Allocated the PK matrix (861 elements) 
-  Allocated the  K matrix (861 elements) 
-  Reading the two-electron integrals to form PK and K ... 
-  batch   0 ... done.
-
-
-  =========================================================================================
-         Cycle          Energy               D(Energy)            D(Density)            DIIS
-  ===========================================================================================
-  Setting level shift to 0.000 S
-  @SCF    0      -15.095964782460     -15.095964782460       0.124371451250
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    1      -15.480358046822      -0.384393264362       0.111190852968
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    2      -15.477580816090       0.002777230732       0.009809199882
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    3      -15.486632816077      -0.009051999987       0.002695266879
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    4      -15.484559645649       0.002073170428       0.001179184163
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    5      -15.485650291580      -0.001090645932       0.000460182618
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    6      -15.485321117370       0.000329174210       0.000242730310
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF    7      -15.485449121809      -0.000128004439       0.000152659311
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF    8      -15.485425950509       0.000023171300       0.000064713898
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF    9      -15.485425888149       0.000000062360       0.000000035875
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   10      -15.485425886222       0.000000001927       0.000000001209
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   11      -15.485425888496      -0.000000002274       0.000000000376
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   12      -15.485425888455       0.000000000041       0.000000000109
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   13      -15.485425888324       0.000000000131       0.000000000034
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   14      -15.485425888981      -0.000000000657       0.000000000136
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   15      -15.485425890036      -0.000000001054       0.000000000258
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   16      -15.485425890200      -0.000000000164       0.000000000248
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   17      -15.554026483471      -0.068600593271       0.029927779993
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.01343362,-0.06727889]
-  Setting level shift to 0.000 S/E
-  @SCF   18      -15.566887346434      -0.012860862962       0.013938934680
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00508031,-0.01403555]
-  Setting level shift to 0.000 S/E
-  @SCF   19      -15.568810500982      -0.001923154549       0.005142754425
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00606823,-0.00317891]
-  Setting level shift to 0.000 S/E
-  @SCF   20      -15.569084439354      -0.000273938372       0.003000640707
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00606832,-0.00151291]
-  Setting level shift to 0.000 S/E
-  @SCF   21      -15.569248539720      -0.000164100366       0.003220528848
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00557924,-0.00132093]
-  Setting level shift to 0.000 S/E
-  @SCF   22      -15.569439415498      -0.000190875777       0.004636467813
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00522832,-0.00128974]
-  Setting level shift to 0.000 S/E
-  @SCF   23      -15.569559082027      -0.000119666530       0.004370923600
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00533301,-0.00123981]
-  Setting level shift to 0.000 S/E
-  @SCF   24      -15.569634768085      -0.000075686058       0.002837792328
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00577449,-0.00127752]
-  Setting level shift to 0.000 S/E
-  @SCF   25      -15.569666138858      -0.000031370773       0.000945136349
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00602644,-0.00127855]
-  Setting level shift to 0.000 S/E
-  @SCF   26      -15.569690384174      -0.000024245316       0.001882624506
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00615488,-0.00129491]
-  Setting level shift to 0.000 S/E
-  @SCF   27      -15.569708709449      -0.000018325275       0.001835358106
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [-0.00632212,-0.00131913]
-  Setting level shift to 0.000 S/E
-  @SCF   28      -15.569710226289      -0.000001516840       0.000728312834
-    ci      = [-0.20145758, 0.97949724]
-    ci_grad = [-0.00633530,-0.00130456]
-  Setting level shift to 0.000 S/E
-  @SCF   29      -15.569709992386       0.000000233903       0.000123905901
-    ci      = [-0.20148450, 0.97949170]
-    ci_grad = [ 0.00000462, 0.00000119]
-  Setting level shift to 0.000 S/E
-  @SCF   30      -15.569710213784      -0.000000221398       0.000030449623
-    ci      = [-0.20146939, 0.97949481]
-    ci_grad = [-0.00000257,-0.00000076]
-  Setting level shift to 0.000 S/E
-  @SCF   31      -15.569710738577      -0.000000524793       0.000118963874
-    ci      = [-0.20142956, 0.97950300]
-    ci_grad = [-0.00000679,-0.00000193]
-  Setting level shift to 0.000 S/E
-  @SCF   32      -15.569712768138      -0.000002029561       0.000081070232
-    ci      = [-0.20129579, 0.97953050]
-    ci_grad = [-0.00002280,-0.00000676]
-  Setting level shift to 0.000 S/E
-  @SCF   33      -15.569711748252       0.000001019886       0.000175835861
-    ci      = [-0.20136199, 0.97951690]
-    ci_grad = [ 0.00001127, 0.00000336]
-  Setting level shift to 0.000 S/E
-  @SCF   34      -15.569709831157       0.000001917096       0.000174581374
-    ci      = [-0.20148048, 0.97949253]
-    ci_grad = [ 0.00002013, 0.00000610]
-  Setting level shift to 0.000 S/E
-  @SCF   35      -15.569715954788      -0.000006123632       0.000396510409
-    ci      = [-0.20107587, 0.97957567]
-    ci_grad = [-0.00006914,-0.00002044]
-  Setting level shift to 0.000 S/E
-  @SCF   36      -15.569751904060      -0.000035949271       0.003844977373
-    ci      = [-0.20107587, 0.97957567]
-    ci_grad = [-0.00092924,-0.00022235]
-  Setting level shift to 0.000 S/E
-  @SCF   37      -15.569753183150      -0.000001279090       0.000356670307
-    ci      = [-0.19596979, 0.98060993]
-    ci_grad = [-0.00093417,-0.00018799]
-  Setting level shift to 0.000 S/E
-  @SCF   38      -15.569755599223      -0.000002416074       0.001506987804
-    ci      = [-0.19615831, 0.98057224]
-    ci_grad = [ 0.00003489, 0.00000452]
-  Setting level shift to 0.000 S/E
-  @SCF   39      -15.569757756457      -0.000002157234       0.000414405295
-    ci      = [-0.19549970, 0.98070376]
-    ci_grad = [-0.00012058,-0.00002624]
-  Setting level shift to 0.000 S/E
-  @SCF   40      -15.569759033930      -0.000001277473       0.000401493654
-    ci      = [-0.19515001, 0.98077341]
-    ci_grad = [-0.00006423,-0.00001408]
-  Setting level shift to 0.000 S/E
-  @SCF   41      -15.569759402601      -0.000000368671       0.000250313278
-    ci      = [-0.19510724, 0.98078191]
-    ci_grad = [-0.00000782,-0.00000193]
-  Setting level shift to 0.000 S/E
-  @SCF   42      -15.569760782085      -0.000001379484       0.000737715127
-    ci      = [-0.19434802, 0.98093264]
-    ci_grad = [-0.00014090,-0.00002932]
-  Setting level shift to 0.000 S/E
-  @SCF   43      -15.569761211220      -0.000000429135       0.000501458834
-    ci      = [-0.19387540, 0.98102616]
-    ci_grad = [-0.00008821,-0.00001787]
-  Setting level shift to 0.000 S/E
-  @SCF   44      -15.569761271435      -0.000000060215       0.000166527887
-    ci      = [-0.19369391, 0.98106201]
-    ci_grad = [-0.00003395,-0.00000677]
-  Setting level shift to 0.000 S/E
-  @SCF   45      -15.569761310297      -0.000000038861       0.000088448313
-    ci      = [-0.19359629, 0.98108128]
-    ci_grad = [-0.00001828,-0.00000365]
-  Setting level shift to 0.000 S/E
-  @SCF   46      -15.569761329753      -0.000000019456       0.000136553915
-    ci      = [-0.19366567, 0.98106759]
-    ci_grad = [ 0.00001299, 0.00000254]
-  Setting level shift to 0.000 S/E
-  @SCF   47      -15.569761357311      -0.000000027558       0.000071501581
-    ci      = [-0.19355361, 0.98108970]
-    ci_grad = [-0.00002100,-0.00000417]
-  Setting level shift to 0.000 S/E
-  @SCF   48      -15.569761358617      -0.000000001306       0.000074118111
-    ci      = [-0.19345775, 0.98110861]
-    ci_grad = [-0.00001798,-0.00000355]
-  Setting level shift to 0.000 S/E
-  @SCF   49      -15.569761359941      -0.000000001324       0.000024473357
-    ci      = [-0.19348485, 0.98110326]
-    ci_grad = [ 0.00000508, 0.00000100]
-  Setting level shift to 0.000 S/E
-  @SCF   50      -15.569761360353      -0.000000000412       0.000010689689
-    ci      = [-0.19347865, 0.98110449]
-    ci_grad = [-0.00000116,-0.00000023]
-  Setting level shift to 0.000 S/E
-  @SCF   51      -15.569761360626      -0.000000000274       0.000011420733
-    ci      = [-0.19348420, 0.98110339]
-    ci_grad = [ 0.00000104, 0.00000021]
-  Setting level shift to 0.000 S/E
-  @SCF   52      -15.569761360678      -0.000000000052       0.000014536422
-    ci      = [-0.19348824, 0.98110259]
-    ci_grad = [ 0.00000076, 0.00000015]
-  Setting level shift to 0.000 S/E
-  @SCF   53      -15.569761360556       0.000000000123       0.000012964867
-    ci      = [-0.19346662, 0.98110686]
-    ci_grad = [-0.00000406,-0.00000080]
-  Setting level shift to 0.000 S/E
-  @SCF   54      -15.569761360641      -0.000000000085       0.000004334090
-    ci      = [-0.19346975, 0.98110624]
-    ci_grad = [ 0.00000059, 0.00000012]
-  Setting level shift to 0.000 S/E
-  @SCF   55      -15.569761360725      -0.000000000084       0.000005097869
-    ci      = [-0.19347122, 0.98110595]
-    ci_grad = [ 0.00000028, 0.00000005]
-  Setting level shift to 0.000 S/E
-  @SCF   56      -15.569761360864      -0.000000000139       0.000007585704
-    ci      = [-0.19348083, 0.98110406]
-    ci_grad = [ 0.00000180, 0.00000036]
-  Setting level shift to 0.000 S/E
-  @SCF   57      -15.569761360878      -0.000000000014       0.000001934057
-    ci      = [-0.19348344, 0.98110354]
-    ci_grad = [ 0.00000049, 0.00000010]
-  Setting level shift to 0.000 S/E
-  @SCF   58      -15.569761360882      -0.000000000004       0.000001171824
-    ci      = [-0.19348505, 0.98110322]
-    ci_grad = [ 0.00000030, 0.00000006]
-  Setting level shift to 0.000 S/E
-  @SCF   59      -15.569761360883      -0.000000000001       0.000000362444
-    ci      = [-0.19348549, 0.98110314]
-    ci_grad = [ 0.00000008, 0.00000002]
-  Setting level shift to 0.000 S/E
-  @SCF   60      -15.569761360884      -0.000000000000       0.000000527444
-    ci      = [-0.19348617, 0.98110300]
-    ci_grad = [ 0.00000013, 0.00000003]
-  Setting level shift to 0.000 S/E
-  @SCF   61      -15.569761360883       0.000000000000       0.000000058171
-    ci      = [-0.19348610, 0.98110302]
-    ci_grad = [-0.00000001,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   62      -15.569761360884      -0.000000000000       0.000000075748
-    ci      = [-0.19348621, 0.98110299]
-    ci_grad = [ 0.00000002, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   63      -15.569761360883       0.000000000000       0.000000023375
-    ci      = [-0.19348618, 0.98110300]
-    ci_grad = [-0.00000001,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   64      -15.569761360884      -0.000000000000       0.000000047033
-    ci      = [-0.19348626, 0.98110299]
-    ci_grad = [ 0.00000001, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   65      -15.569761360884       0.000000000000       0.000000019936
-    ci      = [-0.19348629, 0.98110298]
-    ci_grad = [ 0.00000001, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   66      -15.569761360883       0.000000000000       0.000000053861
-    ci      = [-0.19348620, 0.98110300]
-    ci_grad = [-0.00000002,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   67      -15.569761360884      -0.000000000000       0.000000015359
-    ci      = [-0.19348623, 0.98110299]
-    ci_grad = [ 0.00000001, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   68      -15.569761360884      -0.000000000000       0.000000026628
-    ci      = [-0.19348628, 0.98110298]
-    ci_grad = [ 0.00000001, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   69      -15.569761360884      -0.000000000000       0.000000008435
-    ci      = [-0.19348629, 0.98110298]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   70      -15.569761360884      -0.000000000000       0.000000000575
-    ci      = [-0.19348629, 0.98110298]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   71      -15.569761360884      -0.000000000000       0.000000003809
-    ci      = [-0.19348630, 0.98110298]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   72      -15.569761360884       0.000000000000       0.000000019115
-    ci      = [-0.19348633, 0.98110297]
-    ci_grad = [ 0.00000001, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   73      -15.569761360884       0.000000000000       0.000000015442
-    ci      = [-0.19348636, 0.98110297]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   74      -15.569761360884      -0.000000000000       0.000000002383
-    ci      = [-0.19348636, 0.98110297]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   75      -15.569761360884       0.000000000000       0.000000011503
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   76      -15.569761360884      -0.000000000000       0.000000001841
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   77      -15.569761360884       0.000000000000       0.000000005441
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   78      -15.569761360884       0.000000000000       0.000000001081
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   79      -15.569761360884      -0.000000000000       0.000000000244
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   80      -15.569761360884      -0.000000000000       0.000000000552
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   81      -15.569761360884      -0.000000000000       0.000000000289
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   82      -15.569761360884      -0.000000000000       0.000000000430
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   83      -15.569761360884      -0.000000000000       0.000000003215
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   84      -15.569761360884       0.000000000000       0.000000001461
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   85      -15.569761360884      -0.000000000000       0.000000000082
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   86      -15.569761360884       0.000000000000       0.000000000005
-    ci      = [-0.19348638, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   87      -15.569761360884       0.000000000000       0.000000000153
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   88      -15.569761360884       0.000000000000       0.000000000149
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   89      -15.569761360884      -0.000000000000       0.000000000037
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   90      -15.569761360884       0.000000000000       0.000000000101
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   91      -15.569761360884      -0.000000000000       0.000000000108
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   92      -15.569761360884       0.000000000000       0.000000000264
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   93      -15.569761360884       0.000000000000       0.000000000025
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   94      -15.569761360883       0.000000000000       0.000000000085
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   95      -15.569761360884      -0.000000000000       0.000000000065
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   96      -15.569761360884      -0.000000000000       0.000000000049
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   97      -15.569761360884       0.000000000000       0.000000000001
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   98      -15.569761360884       0.000000000000       0.000000000064
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   99      -15.569761360884      -0.000000000000       0.000000000019
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  100      -15.569761360884       0.000000000000       0.000000000028
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  101      -15.569761360884      -0.000000000000       0.000000000003
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  102      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  103      -15.569761360884      -0.000000000000       0.000000000005
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  104      -15.569761360884       0.000000000000       0.000000000005
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  105      -15.569761360884      -0.000000000000       0.000000000001
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  106      -15.569761360884      -0.000000000000       0.000000000001
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  107      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  =========================================================================================
-
-      * SCF total energy   =     -15.569761360884
-
-
-      CI coefficients  = [-0.193486374, 0.981102963]
-
-  End of SCF
-  MOs orthonormality check passed.
-
-  Orbitals are canonicalized as:
-  inactive (docc + uocc) : Fock(core)
-  active   (actv)        : Fock(core)
-
-  =========================================================================
-  Eigenvalues (Eh)
-  -------------------------------------------------------------------------
-  Doubly occupied orbitals
-      1     -4.739924  A1      2     -0.500747  A1
-  Active orbitals
-      3     -0.244890  B2      4      0.064261  A1
-  Unoccupied orbitals
-      5      0.148361  B1      6      0.264471  A1      7      0.280038  B2
-      8      0.353880  A1      9      1.182543  B2     10      1.266276  A1
-     11      8.962250  B1     12      9.012677  B2     13      9.103846  A1
-  =========================================================================
-
-
-  MCSCF Execution Completed.
-
-
-*** tstop() called on Yorks-Mac.local at Tue May 19 10:52:55 2020
-Module time:
-	user time   =       0.16 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
-Total time:
-	user time   =       0.16 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
-    MCSCF energy......................................................PASSED
-
-Scratch directory: /Users/york/scratch/psi4/
-   => Loading Basis Set <=
-
-    Name: STO-3G
-    Role: ORBITAL
-    Keyword: MINAO_BASIS
-    atoms 1   entry BE         line    41 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 2-3 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-
+Scratch directory: /tmp/
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: dsrg_file_io - git commit: 50bc8a14
+    git branch: master - git commit: 4225e1f0
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -655,8 +139,206 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
 
   Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+
+*** tstart() called on CHE-FEVANGE-01i
+*** at Mon Jan 16 08:13:25 2023
+
+   => Loading Basis Set <=
+
+    Name: ANONYMOUS436F4548
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry BE         line     5 inputblock anonymous436f4548 
+    atoms 2-3 entry H          line    25 inputblock anonymous436f4548 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C2v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         BE           0.000000000000     0.000000000000    -0.456946083786     9.012183065000
+         H           -0.000000000000     1.390000000000     2.043053916214     1.007825032230
+         H            0.000000000000    -1.390000000000     2.043053916214     1.007825032230
+
+  Running in c2v symmetry.
+
+  Rotational constants: A =     15.45786  B =      5.84735  C =      4.24251 [cm^-1]
+  Rotational constants: A = 463415.11676  B = 175299.21065  C = 127187.22704 [MHz]
+  Nuclear repulsion =    3.156487659063052
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 6
+  Nalpha       = 3
+  Nbeta        = 3
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-08
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: ANONYMOUS436F4548
+    Blend: ANONYMOUS436F4548
+    Number of shells: 9
+    Number of basis functions: 13
+    Number of Cartesian functions: 13
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:               9
+      Number of primitives:             21
+      Number of atomic orbitals:        13
+      Number of basis functions:        13
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 8372 doubles for integral storage.
+  We computed 1035 shell quartets total.
+  Whereas there are 1035 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 9.9525368827E-02.
+  Reciprocal condition number of the overlap matrix is 3.4316955989E-02.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1         7       7 
+     A2         0       0 
+     B1         2       2 
+     B2         4       4 
+   -------------------------
+    Total      13      13
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:   -15.07250505830336   -1.50725e+01   0.00000e+00 
+   @RHF iter   1:   -15.51862674309169   -4.46122e-01   2.04143e-02 ADIIS/DIIS
+   @RHF iter   2:   -15.56221406111648   -4.35873e-02   2.74378e-03 ADIIS/DIIS
+   @RHF iter   3:   -15.56276088785826   -5.46827e-04   8.24450e-04 ADIIS/DIIS
+   @RHF iter   4:   -15.56286420062847   -1.03313e-04   1.85093e-04 ADIIS/DIIS
+   @RHF iter   5:   -15.56287198391566   -7.78329e-06   4.20179e-05 DIIS
+   @RHF iter   6:   -15.56287237352119   -3.89606e-07   4.63720e-06 DIIS
+   @RHF iter   7:   -15.56287237681271   -3.29152e-09   3.45157e-07 DIIS
+   @RHF iter   8:   -15.56287237683222   -1.95151e-11   2.92751e-08 DIIS
+   @RHF iter   9:   -15.56287237683231   -8.70415e-14   2.48330e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1    -4.745154     2A1    -0.496862     1B2    -0.252144  
+
+    Virtual:                                                              
+
+       3A1    -0.004524     1B1     0.147520     4A1     0.268817  
+       2B2     0.280798     5A1     0.399681     3B2     1.190648  
+       6A1     1.301378     2B1     8.956704     4B2     9.007371  
+       7A1     9.098579  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     2,    0,    0,    1 ]
+    NA   [     2,    0,    0,    1 ]
+    NB   [     2,    0,    0,    1 ]
+
+  @RHF Final Energy:   -15.56287237683231
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              3.1564876590630520
+    One-Electron Energy =                 -26.4504019992847859
+    Two-Electron Energy =                   7.7310419633894218
+    Total Energy =                        -15.5628723768323098
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -3.9654409            2.2583235           -1.7071175
+ Magnitude           :                                                    1.7071175
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on CHE-FEVANGE-01i at Mon Jan 16 08:13:25 2023
+Module time:
+	user time   =       0.13 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.13 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
 
   ==> MO Space Information <==
 
@@ -665,37 +347,1279 @@ Scratch directory: /Users/york/scratch/psi4/
   -------------------------------------------------
     FROZEN_DOCC         0     0     0     0     0
     RESTRICTED_DOCC     2     0     0     0     2
-    ACTIVE              1     0     0     1     2
+    GAS1                1     0     0     1     2
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
     RESTRICTED_UOCC     4     0     2     3     9
     FROZEN_UOCC         0     0     0     0     0
     Total               7     0     2     4    13
-  -------------------------------------------------
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1   entry BE         line    41 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: ANONYMOUS436F4548
+    Blend: ANONYMOUS436F4548
+    Number of shells: 9
+    Number of basis functions: 13
+    Number of Cartesian functions: 13
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:               9
+      Number of primitives:             21
+      Number of atomic orbitals:        13
+      Number of basis functions:        13
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 8372 doubles for integral storage.
+  We computed 1035 shell quartets total.
+  Whereas there are 1035 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
 
   ==> Integral Transformation <==
 
-  Number of molecular orbitals:                    13
-  Number of correlated molecular orbitals:         13
-  Number of frozen occupied orbitals:               0
-  Number of frozen unoccupied orbitals:             0
-  Two-electron integral type:              Conventional
+  Number of molecular orbitals:                         13
+  Number of correlated molecular orbitals:              13
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
 
 
-  Overall Conventional Integrals timings
+  Skip integral allocation and transformation for AO-driven CASSCF.
 
-	Presorting SO-basis two-electron integrals.
-	Sorting File: SO Ints (nn|nn) nbuckets = 1
-	Transforming the one-electron integrals and constructing Fock matrices
-	Starting first half-transformation.
-	Sorting half-transformed integrals.
-	First half integral transformation complete.
-	Starting second half-transformation.
-	Two-electron integral transformation complete.
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
 
-  Integral transformation done. 0.00745882 s
-  Reading the two-electron integrals from disk
-  Size of two-electron integrals:   0.000638 GB
-  Timing for freezing core and virtual orbitals:              0.000 s.
-  Conventional integrals take 0.03666602 s
+
+  ==> Calculation Information <==
+
+    Integral type                               CONVENTIONAL
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-12
+    Gradient convergence                           1.000e-08
+    Max value for rotation                         2.000e-01
+    Printing level                                         1
+    Max number of macro iterations                       100
+    Max number of micro iterations                        40
+    Min number of micro iterations                         6
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      2      0      0      0
+    RESTRICTED_UOCC /          ACTIVE      4      0      0      3
+    RESTRICTED_UOCC / RESTRICTED_DOCC      8      0      0      0
+    -------------------------------------------------------------
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.565395299383  0.000  singlet
+      1      -15.401487332583  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.565395299383  -1.557e+01  +1.557e+01
+      2      -15.565395299383  +0.000e+00  +3.615e-15
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.99227400
+    2 0      0.12406576
+
+    Total Energy:     -15.565395299383, <S^2>: -0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.565395299383  -0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.969215      1A1     0.030785  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.63108431     1.63108431
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.969215      1A1     0.030785  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.567939329700007; g_norm = 1.105617e-02; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569016722217746; g_norm = 6.799508e-03; step = 5.918e-01
+    L-BFGS Iter:  3; fx =  -15.569045980274636; g_norm = 3.296018e-03; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569049859137934; g_norm = 1.606860e-03; step = 1.000e+00
+    L-BFGS Iter:  5; fx =  -15.569050881124646; g_norm = 6.757486e-04; step = 1.000e+00
+    L-BFGS Iter:  6; fx =  -15.569050976449123; g_norm = 6.757486e-04; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 1 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.565395299383 (-1.5565e+01)    -15.569050976449 (-1.5569e+01)   -3.6557e-03    4.4030e-03    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569477099459  0.000  singlet
+      1      -15.325776749646  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 7.31e-05
+  Residual convergence: 2.20e-05
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569477099459  -1.557e+01  +1.557e+01
+      2      -15.569477099459  +0.000e+00  +1.831e-15
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98621820
+    2 0      0.16544988
+
+    Total Energy:     -15.569477099459, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569477099459   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.945253      1A1     0.054747  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.57190024     1.57190024
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.945253      1A1     0.054747  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569620988768037; g_norm = 3.632023e-03; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569645126877488; g_norm = 1.008266e-03; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569645483959073; g_norm = 3.021047e-04; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569645535033089; g_norm = 6.878893e-05; step = 1.000e+00
+    L-BFGS Iter:  5; fx =  -15.569645536031084; g_norm = 2.290667e-05; step = 1.000e+00
+    L-BFGS Iter:  6; fx =  -15.569645536164632; g_norm = 2.290667e-05; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 2 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569477099459 (-4.0818e-03)    -15.569645536165 (-5.9456e-04)   -1.6844e-04    1.6434e-04    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569727342768  0.000  singlet
+      1      -15.366962360358  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 3.37e-06
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569727342768  -1.557e+01  +1.557e+01
+      2      -15.569727342768  +0.000e+00  +1.986e-15
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98269597
+    2 0      0.18522587
+
+    Total Energy:     -15.569727342768, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569727342768   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.931383      1A1     0.068617  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.53764372     1.53764372
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.931383      1A1     0.068617  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569747595996029; g_norm = 1.556160e-03; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569751225345966; g_norm = 3.897655e-04; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569751286019230; g_norm = 1.207416e-04; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569751295407832; g_norm = 3.197117e-05; step = 1.000e+00
+    L-BFGS Iter:  5; fx =  -15.569751295642687; g_norm = 1.249973e-05; step = 1.000e+00
+    L-BFGS Iter:  6; fx =  -15.569751295691814; g_norm = 1.249973e-05; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 3 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569727342768 (-2.5024e-04)    -15.569751295692 (-1.0576e-04)   -2.3953e-05    2.6637e-06    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569758782148  0.000  singlet
+      1      -15.378372239211  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 4.79e-07
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569758782148  -1.557e+01  +1.557e+01
+      2      -15.569758782148  +0.000e+00  +1.986e-15
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98151829
+    2 0      0.19136838
+
+    Total Energy:     -15.569758782148, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569758782148   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.926756      1A1     0.073244  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52621709     1.52621709
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.926756      1A1     0.073244  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569760395351892; g_norm = 4.702786e-04; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569760692839258; g_norm = 1.123119e-04; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569760698032612; g_norm = 3.540493e-05; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569760698868878; g_norm = 1.019663e-05; step = 1.000e+00
+    L-BFGS Iter:  5; fx =  -15.569760698894299; g_norm = 4.384622e-06; step = 1.000e+00
+    L-BFGS Iter:  6; fx =  -15.569760698901078; g_norm = 4.384622e-06; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 4 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569758782148 (-3.1439e-05)    -15.569760698901 (-9.4032e-06)   -1.9168e-06    1.9759e-06    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569761198023  0.000  singlet
+      1      -15.381272213611  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 3.83e-08
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569761198023  -1.557e+01  +1.557e+01
+      2      -15.569761198023  +0.000e+00  +0.000e+00
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98120558
+    2 0      0.19296532
+
+    Total Energy:     -15.569761198023, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761198023   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925529      1A1     0.074471  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52318531     1.52318531
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925529      1A1     0.074471  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569761301231388; g_norm = 1.214747e-04; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569761320417490; g_norm = 2.860767e-05; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569761320756694; g_norm = 9.078911e-06; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569761320812082; g_norm = 2.684738e-06; step = 1.000e+00
+    L-BFGS Iter:  5; fx =  -15.569761320813887; g_norm = 1.183173e-06; step = 1.000e+00
+    L-BFGS Iter:  6; fx =  -15.569761320814392; g_norm = 1.183173e-06; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 5 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569761198023 (-2.4159e-06)    -15.569761320814 (-6.2191e-07)   -1.2279e-07    7.7658e-07    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569761351128  0.000  singlet
+      1      -15.381984825587  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 2.46e-09
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569761351128  -1.557e+01  +1.557e+01
+      2      -15.569761351128  +0.000e+00  +1.831e-15
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98112797
+    2 0      0.19335954
+
+    Total Energy:     -15.569761351128, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761351128   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925224      1A1     0.074776  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52243301     1.52243301
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925224      1A1     0.074776  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569761357330057; g_norm = 2.994048e-05; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569761358485371; g_norm = 7.025747e-06; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569761358505863; g_norm = 2.233755e-06; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569761358509215; g_norm = 6.650370e-07; step = 1.000e+00
+    L-BFGS Iter:  5; fx =  -15.569761358509329; g_norm = 2.947854e-07; step = 1.000e+00
+    L-BFGS Iter:  6; fx =  -15.569761358509362; g_norm = 2.947854e-07; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 6 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569761351128 (-1.5310e-07)    -15.569761358509 (-3.7695e-08)   -7.3816e-09    2.1547e-07    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569761360307  0.000  singlet
+      1      -15.382158252020  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.48e-10
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569761360307  -1.557e+01  +1.557e+01
+      2      -15.569761360307  +0.000e+00  +3.553e-15
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98110903
+    2 0      0.19345558
+
+    Total Energy:     -15.569761360307, <S^2>: -0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761360307  -0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925150      1A1     0.074850  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52224950     1.52224950
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925150      1A1     0.074850  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569761360673837; g_norm = 7.291309e-06; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569761360742200; g_norm = 1.709445e-06; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569761360743417; g_norm = 5.437432e-07; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569761360743623; g_norm = 1.621533e-07; step = 1.000e+00
+    L-BFGS Iter:  5; fx =  -15.569761360743623; g_norm = 7.197584e-08; step = 1.000e+00
+    L-BFGS Iter:  6; fx =  -15.569761360743627; g_norm = 7.197584e-08; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 7 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569761360307 (-9.1792e-09)    -15.569761360744 (-2.2343e-09)   -4.3664e-10    5.4039e-08    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569761360850  0.000  singlet
+      1      -15.382200354731  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 8.73e-12
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569761360850  -1.557e+01  +1.557e+01
+      2      -15.569761360850  +0.000e+00  +4.441e-16
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98110444
+    2 0      0.19347890
+
+    Total Energy:     -15.569761360850, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761360850   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925132      1A1     0.074868  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52220493     1.52220493
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925132      1A1     0.074868  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569761360871215; g_norm = 1.770382e-06; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569761360875244; g_norm = 4.149761e-07; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569761360875319; g_norm = 1.320108e-07; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569761360875329; g_norm = 3.938374e-08; step = 1.000e+00
+    L-BFGS Iter:  5; fx =  -15.569761360875326; g_norm = 1.748731e-08; step = 1.000e+00
+    L-BFGS Iter:  6; fx =  -15.569761360875328; g_norm = 1.748731e-08; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 8 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569761360850 (-5.4262e-10)    -15.569761360875 (-1.3170e-10)   -2.5723e-11    1.3215e-08    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569761360882  0.000  singlet
+      1      -15.382210569833  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569761360882  -1.557e+01  +1.557e+01
+      2      -15.569761360882  +0.000e+00  +0.000e+00
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98110332
+    2 0      0.19348456
+
+    Total Energy:     -15.569761360882, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761360882   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925127      1A1     0.074873  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52219411     1.52219411
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925127      1A1     0.074873  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569761360882829; g_norm = 4.295519e-07; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569761360883069; g_norm = 1.006814e-07; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569761360883078; g_norm = 3.202928e-08; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -15.569761360883081; g_norm = 9.556461e-09; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 9 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569761360882 (-3.1960e-11)    -15.569761360883 (-7.7538e-12)   -1.5170e-12    2.6403e-09    4/Y
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569761360883  0.000  singlet
+      1      -15.382213052323  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569761360883  -1.557e+01  +1.557e+01
+      2      -15.569761360883  -3.553e-15  +1.831e-15
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98110305
+    2 0      0.19348594
+
+    Total Energy:     -15.569761360883, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761360883   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925126      1A1     0.074874  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52219149     1.52219149
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925126      1A1     0.074874  
+
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -15.569761360883520; g_norm = 1.050736e-07; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569761360883534; g_norm = 2.536214e-08; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -15.569761360883540; g_norm = 8.250230e-09; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 10 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569761360883 (-1.8865e-12)    -15.569761360884 (-4.5830e-13)   -8.8818e-14    3.1827e-09    3/Y
 
   ==> Summary of Active Space Solver Input <==
 
@@ -743,34 +1667,52 @@ Scratch directory: /Users/york/scratch/psi4/
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
       0      -15.569761360884  0.000  singlet
-      1      -15.382213841536  0.000  singlet
+      1      -15.382213652255  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
 
   ==> Diagonalizing Hamiltonian <==
 
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-06
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -15.569761360884  -1.557e+01  +0.000e+00
-      2      -15.569761360884  +0.000e+00  +0.000e+00
+      1      -15.569761360884  -1.557e+01  +1.557e+01
+      2      -15.569761360884  +0.000e+00  +3.662e-15
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    0 2     -0.98110296
-    2 0      0.19348637
+    0 2     -0.98110298
+    2 0      0.19348627
 
-    Total Energy:       -15.569761360883527
+    Total Energy:     -15.569761360884, <S^2>: -0.000000
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -15.569761360884
-    ---------------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761360884  -0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925126      1A1     0.074874  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52219085     1.52219085
+    --------------------------------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -782,34 +1724,415 @@ Scratch directory: /Users/york/scratch/psi4/
         1B2     1.925126      1A1     0.074874  
 
 
-       -----------------------------------------------------------------
-                            Semi-Canonical Orbitals
-         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
-       -----------------------------------------------------------------
+  ==> Optimizing Orbitals for Current RDMs <==
 
-  Took 0.000048 s to build Fock matrix
+    L-BFGS Iter:  1; fx =  -15.569761360883566; g_norm = 2.739459e-08; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -15.569761360883563; g_norm = 5.747181e-09; step = 1.000e+00
 
-  ==> Checking Fock Matrix Diagonal Blocks <==
+  ==> MCSCF Macro Iter. 11 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -15.569761360884 (-1.1369e-13)    -15.569761360884 (-2.3093e-14)    1.7764e-15    1.3520e-09    2/Y
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  ==> MCSCF Iteration Summary <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1     -15.565395299383  0.0000e+00    -15.569050976449  0.0000e+00  4.4030e-03     6
+       2     -15.569477099459 -4.0818e-03    -15.569645536165 -5.9456e-04  1.6434e-04     6
+       3     -15.569727342768 -2.5024e-04    -15.569751295692 -1.0576e-04  2.6637e-06     6
+       4     -15.569758782148 -3.1439e-05    -15.569760698901 -9.4032e-06  1.9759e-06     6
+       5     -15.569761198023 -2.4159e-06    -15.569761320814 -6.2191e-07  7.7658e-07     6
+       6     -15.569761351128 -1.5310e-07    -15.569761358509 -3.7695e-08  2.1547e-07     6
+       7     -15.569761360307 -9.1792e-09    -15.569761360744 -2.2343e-09  5.4039e-08     6
+       8     -15.569761360850 -5.4262e-10    -15.569761360875 -1.3170e-10  1.3215e-08     6
+       9     -15.569761360882 -3.1960e-11    -15.569761360883 -7.7538e-12  2.6403e-09     4
+      10     -15.569761360883 -1.8865e-12    -15.569761360884 -4.5830e-13  3.1827e-09     3
+      11     -15.569761360884 -1.1369e-13    -15.569761360884 -2.3093e-14  1.3520e-09     2
+    ----------------------------------------------------------------------------------------
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569761360884  0.000  singlet
+      1      -15.382213795623  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569761360884  -1.557e+01  +1.557e+01
+      2      -15.569761360884  -3.553e-15  +0.000e+00
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98110297
+    2 0      0.19348635
+
+    Total Energy:     -15.569761360884, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761360884   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925126      1A1     0.074874  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1    -0.00000000     0.00000000    -1.52219070     1.52219070
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925126      1A1     0.074874  
+
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    GAS1            ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa actv              0.0000000000   0.0000000000
-    Fb actv              0.0000000000   0.0000000000
+    GAS1                 0.0000000000   0.0000000000
+    RESTRICTED_DOCC      0.0000659918   0.0000933265
+    RESTRICTED_UOCC      0.0514397155   0.0790720837
     ------------------------------------------------
-    Fa core              0.0000000000   0.0000000000
-    Fb core              0.0000000000   0.0000000000
+  Timing for orbital canonicalization:                        0.000 s.
+
+  Time to prepare integrals:        0.005 seconds
+  Time to run job          :        0.026 seconds
+  Total                    :        0.031 seconds
+    MCSCF energy..........................................................................PASSED
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 4225e1f0
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     2     0     0     0     2
+    GAS1                1     0     0     1     2
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     4     0     2     3     9
+    FROZEN_UOCC         0     0     0     0     0
+    Total               7     0     2     4    13
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: ANONYMOUS436F4548
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry BE         line     5 inputblock anonymous436f4548 
+    atoms 2-3 entry H          line    25 inputblock anonymous436f4548 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1   entry BE         line    41 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: ANONYMOUS436F4548
+    Blend: ANONYMOUS436F4548
+    Number of shells: 9
+    Number of basis functions: 13
+    Number of Cartesian functions: 13
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:               9
+      Number of primitives:             21
+      Number of atomic orbitals:        13
+      Number of basis functions:        13
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 8372 doubles for integral storage.
+  We computed 1035 shell quartets total.
+  Whereas there are 1035 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         13
+  Number of correlated molecular orbitals:              13
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00534108 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000638 GB
+  Timing for conventional integral transformation:            0.010 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.010 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           2
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -15.569761360884  0.000  singlet
+      1      -15.382213795623  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-06
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -15.569761360884  -1.557e+01  +1.557e+01
+      2      -15.569761360884  +0.000e+00  +3.794e-15
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    0 2     -0.98110297
+    2 0      0.19348635
+
+    Total Energy:     -15.569761360884, <S^2>: -0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -15.569761360884  -0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925126      1A1     0.074874  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -1.55403722     1.55403722
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2     1.925126      1A1     0.074874  
+
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    GAS1            ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa virt              0.0000000000   0.0000000000
-    Fb virt              0.0000000000   0.0000000000
+    GAS1                 0.0000000000   0.0000000000
+    RESTRICTED_DOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0000000000   0.0000000000
     ------------------------------------------------
   Orbitals are already semicanonicalized.
+  Timing for orbital canonicalization:                        0.000 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
+    Computing Fock matrix and cleaning JK ........... Done
     Reading DSRG options ............................ Done
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
-    Building Fock matrix ............................ Done
+    Filling Fock matrix from ForteIntegrals ......... Done
 
               ----------------------------------------------------
                     MR-DSRG Second-Order Perturbation Theory
@@ -822,47 +2145,40 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Calculation Information <==
 
-    ntamp                                                 15
-    flow parameter                                 1.000e+10
-    taylor expansion threshold                     1.000e-03
-    intruder_tamp                                  1.000e-01
     int_type                                    CONVENTIONAL
     source operator                                 STANDARD
     reference relaxation                                NONE
     state_type                                STATE-SPECIFIC
     form Hbar3                                         FALSE
+    flow parameter                                 1.000e+10
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    ntamp                                                 15
+
 
   ==> Checking Semicanonical Orbitals <==
 
-    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
-                  core          active         virtual
-    --------------------------------------------------
-    Fα    0.0000000000    0.0000000000    0.0000000000
-    Fβ    0.0000000000    0.0000000000    0.0000000000
-    --------------------------------------------------
-
-    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
-                  core          active         virtual
-    --------------------------------------------------
-    Fα    0.0000000000    0.0000000000    0.0000000000
-    Fβ    0.0000000000    0.0000000000    0.0000000000
-    --------------------------------------------------
-
+    Block             Fa Max         Fa Mean           Fb Max         Fb Mean
+    -------------------------------------------------------------------------
+    CORE        0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    VIRTUAL     0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    GAS1        0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    -------------------------------------------------------------------------
     Orbitals are semi-canonicalized.
 
   ==> Computing DSRG-MRPT2 ... <==
 
-    Computing T2 amplitudes                  ...  Done. Timing        0.001021 s
-    Computing T1 amplitudes                  ...  Done. Timing        0.001005 s
-    Renormalizing two-electron integrals     ...  Done. Timing        0.000523 s
-    Renormalizing Fock matrix elements       ...  Done. Timing        0.001065 s
-    Computing <[F, T1]>                      ...  Done. Timing        0.000557 s
-    Computing <[F, T2]>                      ...  Done. Timing        0.001600 s
-    Computing <[V, T1]>                      ...  Done. Timing        0.001770 s
-    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.010872 s
-    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.002793 s
-    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.003163 s
-    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.012491 s
+    Computing T2 amplitudes                  ...  Done. Timing        0.000289 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.000293 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.000096 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.000298 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.000130 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.000362 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.000432 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.002495 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.000634 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.000632 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.002733 s
 
   ==> Excitation Amplitudes Summary <==
 
@@ -870,60 +2186,60 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.419524 [  2       3    ] 0.240357 [  2       5    ]-0.149095 
-    [  1       2    ]-0.010361 [  9      10    ] 0.006691 [  9      11    ]-0.002598 
-    [  2       6    ] 0.001953 [  0       2    ] 0.000087 [  9      12    ]-0.000037 
-    [  1       4    ] 0.000000 [  1       5    ]-0.000000 [  1       3    ]-0.000000 
+    [  2       4    ]-0.419524 [  2       3    ]-0.240357 [  2       5    ]-0.149095 
+    [  1       2    ]-0.010361 [  9      10    ]-0.006691 [  9      11    ]-0.002598 
+    [  2       6    ]-0.001953 [  0       2    ]-0.000087 [  9      12    ]-0.000037 
+    [  1       4    ]-0.000000 [  1       5    ]-0.000000 [  1       3    ]-0.000000 
     [  0       4    ]-0.000000 [  0       6    ] 0.000000 [  0       3    ] 0.000000 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 17)                    0.506126013838089.
+    Norm of T1A vector: (nonzero elements: 17)                    0.506126266871589.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.419524 [  2       3    ] 0.240357 [  2       5    ]-0.149095 
-    [  1       2    ]-0.010361 [  9      10    ] 0.006691 [  9      11    ]-0.002598 
-    [  2       6    ] 0.001953 [  0       2    ] 0.000087 [  9      12    ]-0.000037 
-    [  1       4    ] 0.000000 [  1       5    ]-0.000000 [  1       3    ]-0.000000 
+    [  2       4    ]-0.419524 [  2       3    ]-0.240357 [  2       5    ]-0.149095 
+    [  1       2    ]-0.010361 [  9      10    ]-0.006691 [  9      11    ]-0.002598 
+    [  2       6    ]-0.001953 [  0       2    ]-0.000087 [  9      12    ]-0.000037 
+    [  1       4    ]-0.000000 [  1       5    ]-0.000000 [  1       3    ]-0.000000 
     [  0       4    ]-0.000000 [  0       6    ] 0.000000 [  0       3    ] 0.000000 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 17)                    0.506126013838089.
+    Norm of T1B vector: (nonzero elements: 17)                    0.506126266871589.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  2   9   3   9] 0.175142 [  1   2   9  10] 0.069541 [  2   9   4   9] 0.065079 
-    [  1   2   2   4]-0.059606 [  2   9   2  10] 0.040610 [  1   9   3   9] 0.039139 
-    [  2   9   4  10] 0.036818 [  1   9   4   9] 0.034582 [  1   2   2   3]-0.029577 
-    [  2   9   5   9]-0.028780 [  1   9   2   9] 0.024460 [  1   9   2  10] 0.024323 
+    [  2   9   3   9]-0.175142 [  1   2   9  10]-0.069541 [  2   9   4   9]-0.065079 
+    [  1   2   2   4] 0.059606 [  2   9   2  10]-0.040610 [  1   9   3   9]-0.039139 
+    [  2   9   4  10] 0.036818 [  1   9   4   9]-0.034582 [  1   2   2   3] 0.029577 
+    [  2   9   5   9]-0.028780 [  1   9   2   9] 0.024460 [  1   9   2  10]-0.024323 
     [  2   9   3  10]-0.017722 [  1   2   9  11] 0.012375 [  2   9   2  11]-0.012181 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 440)                  0.460056672607608.
+    Norm of T2AA vector: (nonzero elements: 440)                  0.460056757143161.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   9   9]-0.359350 [  2   2   7   7]-0.344787 [  2   2   2   3] 0.266810 
-    [  1   1   9   9]-0.207460 [  2   9   3   9] 0.201663 [  2   2  10  10]-0.146511 
-    [  1   2   9  10] 0.141350 [  2   9   4   9] 0.100855 [  2   2   4   4]-0.100842 
-    [  2   2   2   4]-0.081446 [  2   2   3   3]-0.074732 [  9   9  10  10]-0.074235 
-    [  1   9   2   9] 0.058356 [  1   9   2  10] 0.055396 [  2   9   4  10] 0.052945 
+    [  1   2   9   9]-0.359349 [  2   2   7   7]-0.344787 [  2   2   2   3]-0.266810 
+    [  1   1   9   9]-0.207460 [  2   9   3   9]-0.201663 [  2   2  10  10]-0.146511 
+    [  1   2   9  10]-0.141350 [  2   9   4   9]-0.100855 [  2   2   4   4]-0.100842 
+    [  2   2   2   4] 0.081446 [  2   2   3   3]-0.074732 [  9   9  10  10]-0.074235 
+    [  1   9   2   9] 0.058356 [  1   9   2  10]-0.055396 [  2   9   4  10] 0.052945 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 682)                  0.934888075747714.
+    Norm of T2AB vector: (nonzero elements: 682)                  0.934887987435819.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  2   9   3   9] 0.175142 [  1   2   9  10] 0.069541 [  2   9   4   9] 0.065079 
-    [  1   2   2   4]-0.059606 [  2   9   2  10] 0.040610 [  1   9   3   9] 0.039139 
-    [  2   9   4  10] 0.036818 [  1   9   4   9] 0.034582 [  1   2   2   3]-0.029577 
-    [  2   9   5   9]-0.028780 [  1   9   2   9] 0.024460 [  1   9   2  10] 0.024323 
+    [  2   9   3   9]-0.175142 [  1   2   9  10]-0.069541 [  2   9   4   9]-0.065079 
+    [  1   2   2   4] 0.059606 [  2   9   2  10]-0.040610 [  1   9   3   9]-0.039139 
+    [  2   9   4  10] 0.036818 [  1   9   4   9]-0.034582 [  1   2   2   3] 0.029577 
+    [  2   9   5   9]-0.028780 [  1   9   2   9] 0.024460 [  1   9   2  10]-0.024323 
     [  2   9   3  10]-0.017722 [  1   2   9  11] 0.012375 [  2   9   2  11]-0.012181 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 440)                  0.460056672607608.
+    Norm of T2BB vector: (nonzero elements: 440)                  0.460056757143161.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -931,78 +2247,79 @@ Scratch directory: /Users/york/scratch/psi4/
     T1 amplitudes larger than 0.1000 for spin case A:
         Amplitude         Value                  Denominator              
     ----------------------------------------------------------------------
-    [  2       4    ]    0.41952382 (  0.064261 -   0.353880 =  -0.289618)
-    [  2       3    ]    0.24035689 (  0.064261 -   0.264471 =  -0.200210)
-    [  2       5    ]   -0.14909457 (  0.064261 -   1.266276 =  -1.202015)
+    [  2       4    ]   -0.41952400 (  0.064261 -   0.353880 =  -0.289618)
+    [  2       3    ]   -0.24035708 (  0.064261 -   0.264471 =  -0.200210)
+    [  2       5    ]   -0.14909462 (  0.064261 -   1.266276 =  -1.202015)
     ----------------------------------------------------------------------
     T1 amplitudes larger than 0.1000 for spin case B:
         Amplitude         Value                  Denominator              
     ----------------------------------------------------------------------
-    [  2       4    ]    0.41952382 (  0.064261 -   0.353880 =  -0.289618)
-    [  2       3    ]    0.24035689 (  0.064261 -   0.264471 =  -0.200210)
-    [  2       5    ]   -0.14909457 (  0.064261 -   1.266276 =  -1.202015)
+    [  2       4    ]   -0.41952400 (  0.064261 -   0.353880 =  -0.289618)
+    [  2       3    ]   -0.24035708 (  0.064261 -   0.264471 =  -0.200210)
+    [  2       5    ]   -0.14909462 (  0.064261 -   1.266276 =  -1.202015)
     ----------------------------------------------------------------------
     T2 amplitudes larger than 0.1000 for spin case AA:
         Amplitude         Value                               Denominator                           
     ------------------------------------------------------------------------------------------------
-    [  2   9   3   9]    0.17514200 (  0.064261 +  -0.244890 -   0.264471 -  -0.244890 =  -0.200210)
+    [  2   9   3   9]   -0.17514204 (  0.064261 +  -0.244890 -   0.264471 -  -0.244890 =  -0.200210)
     ------------------------------------------------------------------------------------------------
     T2 amplitudes larger than 0.1000 for spin case AB:
         Amplitude         Value                               Denominator                           
     ------------------------------------------------------------------------------------------------
-    [  1   2   9   9]   -0.35934976 ( -0.500747 +   0.064261 -  -0.244890 -  -0.244890 =   0.053295)
-    [  2   2   7   7]   -0.34478691 (  0.064261 +   0.064261 -   0.148361 -   0.148361 =  -0.168200)
-    [  2   2   2   3]    0.26681010 (  0.064261 +   0.064261 -   0.064261 -   0.264471 =  -0.200210)
+    [  1   2   9   9]   -0.35934947 ( -0.500747 +   0.064261 -  -0.244890 -  -0.244890 =   0.053295)
+    [  2   2   7   7]   -0.34478711 (  0.064261 +   0.064261 -   0.148361 -   0.148361 =  -0.168200)
+    [  2   2   2   3]   -0.26681014 (  0.064261 +   0.064261 -   0.064261 -   0.264471 =  -0.200210)
     [  1   1   9   9]   -0.20745991 ( -0.500747 +  -0.500747 -  -0.244890 -  -0.244890 =  -0.511713)
-    [  2   9   3   9]    0.20166316 (  0.064261 +  -0.244890 -   0.264471 -  -0.244890 =  -0.200210)
-    [  2   2  10  10]   -0.14651144 (  0.064261 +   0.064261 -   0.280038 -   0.280038 =  -0.431553)
-    [  1   2   9  10]    0.14135023 ( -0.500747 +   0.064261 -  -0.244890 -   0.280038 =  -0.471633)
-    [  2   9   4   9]    0.10085485 (  0.064261 +  -0.244890 -   0.353880 -  -0.244890 =  -0.289618)
-    [  2   2   4   4]   -0.10084184 (  0.064261 +   0.064261 -   0.353880 -   0.353880 =  -0.579237)
+    [  2   9   3   9]   -0.20166321 (  0.064261 +  -0.244890 -   0.264471 -  -0.244890 =  -0.200210)
+    [  2   2  10  10]   -0.14651148 (  0.064261 +   0.064261 -   0.280038 -   0.280038 =  -0.431553)
+    [  1   2   9  10]   -0.14135025 ( -0.500747 +   0.064261 -  -0.244890 -   0.280038 =  -0.471633)
+    [  2   9   4   9]   -0.10085487 (  0.064261 +  -0.244890 -   0.353880 -  -0.244890 =  -0.289618)
+    [  2   2   4   4]   -0.10084188 (  0.064261 +   0.064261 -   0.353880 -   0.353880 =  -0.579237)
     ------------------------------------------------------------------------------------------------
     T2 amplitudes larger than 0.1000 for spin case BB:
         Amplitude         Value                               Denominator                           
     ------------------------------------------------------------------------------------------------
-    [  2   9   3   9]    0.17514200 (  0.064261 +  -0.244890 -   0.264471 -  -0.244890 =  -0.200210)
+    [  2   9   3   9]   -0.17514204 (  0.064261 +  -0.244890 -   0.264471 -  -0.244890 =  -0.200210)
     ------------------------------------------------------------------------------------------------
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -15.569761360883529
-    <[F, T1]>                      =     -0.006866409451580
-    <[F, T2]>                      =      0.003999655607589
-    <[V, T1]>                      =      0.006866409451540
-    <[V, T2]> (C_2)^4              =     -0.056789258635422
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.002566546986885
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.003883716695554
-    <[V, T2]> C_4 (C_2)^2 PH       =     -0.012940867510135
+    E0 (reference)                 =    -15.569761360883566
+    <[F, T1]>                      =     -0.006866412328682
+    <[F, T2]>                      =      0.003999657612963
+    <[V, T1]>                      =      0.006866410831958
+    <[V, T2]> (C_2)^4              =     -0.056789258176922
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.002566546870333
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.003883717416722
+    <[V, T2]> C_4 (C_2)^2 PH       =     -0.012940867997391
     <[V, T2]> C_6 C_2              =      0.000000000000000
-    <[V, T2]>                      =     -0.063279862463118
-    DSRG-MRPT2 correlation energy  =     -0.059280206855569
-    DSRG-MRPT2 total energy        =    -15.629041567739097
-    max(T1)                        =      0.419523822235186
-    max(T2)                        =      0.359349761666866
-    ||T1||                         =      0.715770273039658
-    ||T2||                         =      1.979739159768937
+    <[V, T2]>                      =     -0.063279861887259
+    DSRG-MRPT2 correlation energy  =     -0.059280205771020
+    DSRG-MRPT2 total energy        =    -15.629041566654587
+    max(T1)                        =      0.419524000689332
+    max(T2)                        =      0.359349467234258
+    ||T1||                         =      0.715770630883065
+    ||T2||                         =      1.979739032244742
 
-  Energy took      0.041 s
+  Energy took      0.009 s
 
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.002       0.002       0.029
+    -> C0       0.000       0.000       0.000       0.007
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.043 seconds
-  Time to run job          :        0.048 seconds
-  Total                    :        0.048 seconds    DSRG-MRPT2 energy.................................................PASSED
+  Time to prepare integrals:        0.015 seconds
+  Time to run job          :        0.011 seconds
+  Total                    :        0.026 seconds
+    DSRG-MRPT2 energy.....................................................................PASSED
 
-    Psi4 stopped on: Tuesday, 19 May 2020 10:52AM
-    Psi4 wall time for execution: 0:00:00.38
+    Psi4 stopped on: Monday, 16 January 2023 08:13AM
+    Psi4 wall time for execution: 0:00:00.30
 
 *** Psi4 exiting successfully. Buy a developer a beer!
