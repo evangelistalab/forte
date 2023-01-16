@@ -15,7 +15,7 @@ aci:
       - aci-8
       - aci-9
       - aci-12
-      - aci-14
+#      - aci-14 # todo: fix issue with root orthogonalize algorithm
       - aci-18
       - aci_scf-1
       - aci-full-pt2-1

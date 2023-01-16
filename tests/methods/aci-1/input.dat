@@ -1,4 +1,3 @@
-#! Generated using commit GITCOMMIT 
 # Basic ACI calculation with energy threshold selection
 
 import forte
@@ -22,8 +21,7 @@ set {
 
 set scf {
   scf_type pk
-  reference rohf
-#  docc = [2,0,0,0,0,1,0,0]
+  reference rhf
 }
 
 set forte {
@@ -36,11 +34,9 @@ set forte {
   charge 0
   sci_enforce_spin_complete false
   sci_project_out_spin_contaminants false
-  active_ref_type hf 
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
-
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)

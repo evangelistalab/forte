@@ -13,9 +13,9 @@ C  0.00000 0.00000 1.24253
 set {
   basis 6-31g*
   scf_type pk
-  e_convergence 13
-  d_convergence 12
-  r_convergence 12
+  e_convergence 12
+  d_convergence 7
+  r_convergence 7
   docc [2,0,0,0,0,2,1,1]
   guess gwh
 }

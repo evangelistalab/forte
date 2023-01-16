@@ -53,7 +53,7 @@ set forte {
   restricted_docc  [17]
   active           [8]
   sigma 0.001
-  diag_algorithm dynamic
+  diag_algorithm sparse #dynamic
   sci_direct_rdms true
   aci_screen_alg batch_vec
   dsrg_s 1.0e10
