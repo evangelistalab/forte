@@ -1,4 +1,3 @@
-
 import forte
 
 refscf = -75.3790205732175735
@@ -21,16 +20,14 @@ set {
 }
 
 set forte {
-  active_space_solver aci
-  frozen_docc [2,0,0,0,0,0,0,0]
-  restricted_docc [0,0,0,0,0,0,0,0]
-  active [1,0,1,1,0,3,2,2]
+  active_space_solver   aci
+  frozen_docc           [2,0,0,0,0,0,0,0]
+  restricted_docc       [0,0,0,0,0,0,0,0]
+  active                [1,0,1,1,0,3,2,2]
   sci_excited_algorithm root_orthogonalize
   sigma 0.001
   nroot 2
   aci_n_average 2
-  charge 0
-  root_sym 0
   sci_preiterations 2
   dl_maxiter 100
 }

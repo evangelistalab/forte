@@ -1,6 +1,7 @@
 # Test DOCI of Forte DETCI
 # We first perform a CASSCF(2,2) computation and obtain natural orbitals.
 # Then subsequent DOCI should be equivalent to CAS(2,2)
+
 import forte
 
 refmcscf     =  -99.939316382624

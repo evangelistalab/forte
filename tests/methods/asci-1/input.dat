@@ -42,5 +42,6 @@ set forte {
                                          
 Escf, scf_wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy")
+
 energy('forte', ref_wfn = scf_wfn) 
 compare_values(refasci,variable("CURRENT ENERGY"),5,"ASCI ENERGY")

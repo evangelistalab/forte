@@ -1,8 +1,8 @@
-#! Perform a computation of HF without storing DISKDF
+# Perform a computation of HF without storing DISKDF
 
 import forte
 
-refmcscf         =  -99.939316382624 #cc-pvdz
+refmcscf         =  -99.939316382624
 refdsrgpt2_jk_rd = -100.105012605848
 
 memory 500 mb
@@ -25,7 +25,7 @@ set globals{
 
 set forte{
   job_type                mcscf_two_step
-  active_space_solver     fci
+  active_space_solver     cas
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
   casscf_e_convergence    12

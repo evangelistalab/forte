@@ -1,9 +1,7 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
-refmcscf     = -15.569761360883527 #TEST
-refdsrgpt2   = -15.627184888920119 #TEST
+refmcscf     = -15.569761360884 #TEST
+refdsrgpt2   = -15.627184888271 #TEST
 
 molecule {
   0 1
@@ -16,7 +14,7 @@ molecule {
 
 set globals{
    scf_type             pk
-   d_convergence        10
+   d_convergence        6 
    e_convergence        12
 }
 
@@ -61,7 +59,6 @@ set forte{
    casscf_e_convergence 12
    root_sym             0
    nroot                1
-   int_type             conventional
 }
 
 scf_energy,scf_wfn = energy('forte', return_wfn = True)
@@ -82,4 +79,4 @@ set forte{
 }
 
 energy('forte', ref_wfn = scf_wfn)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy") #TEST
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy") #TEST
