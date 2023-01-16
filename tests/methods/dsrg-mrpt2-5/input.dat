@@ -1,10 +1,7 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
-memory 500 mb
 refmcscf =   -226.575081996603
-refdsrgpt2 = -226.883026732817
+refdsrgpt2 = -226.883026729816
 
 molecule mbenzyne{
   0 1
@@ -33,7 +30,7 @@ set forte{
   restricted_docc         [5, 3, 1, 1, 0, 1, 4, 4]
   active                  [1, 0, 0, 0, 0, 0, 1, 0]
   casscf_e_convergence    12
-  casscf_final_orbital    natural
+  casscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)

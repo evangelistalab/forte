@@ -4,13 +4,10 @@ refmcscf   =  -99.939316382624
 Eldsrg2_u  = -100.112784378794
 Eldsrg2_pr = -100.115962352711
 
-memory 500 mb
-
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.5
 }
 
 set globals{
@@ -24,6 +21,7 @@ set forte{
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
   casscf_e_convergence    12
+  casscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)

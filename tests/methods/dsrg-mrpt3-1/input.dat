@@ -9,13 +9,12 @@ refdsrgpt3   = -99.498903267935276
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.5
 }
 
 set globals{
-   basis                   3-21g
-   scf_type                pk
+   basis                  3-21g
+   scf_type               pk
    docc                   [3,0,1,1]
 }
 
@@ -27,6 +26,7 @@ set forte{
    root_sym               0
    nroot                  1
    casscf_e_convergence   12
+   casscf_g_convergence   8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
@@ -44,7 +44,6 @@ set forte{
    dsrg_s                  1.0
    relax_ref               once
    maxiter                 100
-   e_convergence           8
    semi_canonical          false
 }
 

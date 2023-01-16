@@ -1,5 +1,3 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refmcscf     = -99.406065223639
@@ -9,8 +7,7 @@ memory 1 gb
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.5
 }
 
 set globals{

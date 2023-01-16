@@ -1,9 +1,7 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
-refmcscf     = -15.569761360883527 #TEST
-refdsrgpt2   = -15.608881063967 #TEST
+refmcscf     = -15.569761360884
+refdsrgpt2   = -15.608881064389
 
 molecule {
   0 1
@@ -16,11 +14,6 @@ molecule {
 
 set globals{
    scf_type             pk
-}
-
-set mcscf{
-   docc                 [2,0,0,0]
-   socc                 [1,0,0,1]
 }
 
 basis {
@@ -59,11 +52,12 @@ S   1   1.00
 set forte{
    job_type                mcscf_two_step
    active_space_solver     fci
-   restricted_docc        [2,0,0,0]
-   active                 [1,0,0,1]
+   restricted_docc         [2,0,0,0]
+   active                  [1,0,0,1]
    root_sym                0
    nroot                   1
    casscf_e_convergence    12
+   casscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)

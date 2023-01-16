@@ -1,5 +1,3 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refmcscf    =  -99.939316382624
@@ -10,8 +8,7 @@ memory 500 mb
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.5
 }
 
 set globals{
@@ -25,6 +22,7 @@ set forte{
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
   casscf_e_convergence    12
+  casscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)

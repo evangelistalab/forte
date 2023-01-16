@@ -1,7 +1,4 @@
-#! Generated using commit GITCOMMIT
-
 import forte
-memory 500 mb
 
 refmcscf     = -99.406065223639
 refdsrgpt3   = -99.497571402141162 # no relaxation
@@ -10,24 +7,24 @@ refdsrgpt3   = -99.498903267726078 # relaxed once
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.5
 }
 
 set globals{
    basis                   3-21g
    scf_type                pk
-   docc                   [3,0,1,1]
+   docc                    [3,0,1,1]
 }
 
 set forte{
    job_type                mcscf_two_step
    active_space_solver     fci
-   restricted_docc        [2,0,1,1]
-   active                 [2,0,0,0]
+   restricted_docc         [2,0,1,1]
+   active                  [2,0,0,0]
    root_sym                0
    nroot                   1
    casscf_e_convergence    12
+   casscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
@@ -37,19 +34,17 @@ set forte{
    job_type                newdriver
    active_space_solver     fci
    correlation_solver      dsrg-mrpt3
-   frozen_docc            [1,0,0,0]
-   restricted_docc        [1,0,1,1]
-   active                 [2,0,0,0]
+   frozen_docc             [1,0,0,0]
+   restricted_docc         [1,0,1,1]
+   active                  [2,0,0,0]
    root_sym                0
    nroot                   1
    dsrg_s                  1.0
    maxiter                 100
-   e_convergence           8
    relax_ref               once
    int_type                cholesky
    cholesky_tolerance      1e-8
 }
-
 
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt3,variable("CURRENT ENERGY"),7,"DSRG-MRPT3 relaxed energy") #TEST

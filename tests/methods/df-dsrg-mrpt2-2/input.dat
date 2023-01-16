@@ -1,11 +1,9 @@
-#! Perform a computation of HF without storing DISKDF
+# Perform a computation of HF without storing DISKDF
 
 import forte
 
-refmcscf         = -99.939316382624 #cc-pvdz
+refmcscf         =  -99.939316382624
 refdsrgpt2_jk_rd = -100.102359679329
-
-memory 500 mb
 
 molecule HF{
   0 1
@@ -35,16 +33,16 @@ Emcscf, wfn = energy('forte', return_wfn=True)
 compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "MCSCF energy")
 
 set forte{
-   job_type                newdriver
+   job_type               newdriver
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]
    active                 [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   int_type                df
-   active_space_solver     fci
-   correlation_solver      three-dsrg-mrpt2
+   root_sym               0
+   nroot                  1
+   dsrg_s                 1.0
+   int_type               df
+   active_space_solver    fci
+   correlation_solver     three-dsrg-mrpt2
 }
 
 energy('forte', ref_wfn=wfn)

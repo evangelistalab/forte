@@ -1,5 +1,4 @@
-#! Generated using commit GITCOMMIT
-
+# This currently fails because ACTIVE_DSRG is disabled
 import forte
 
 refmcscf     = -15.569761360883527 # MCSCF
@@ -20,7 +19,6 @@ set globals{
    basis                   cc-pvdz
    scf_type                pk
 }
-
 
 basis {
 spherical
@@ -61,6 +59,7 @@ set forte{
   restricted_docc         [2,0,0,0]
   active                  [1,0,0,1]
   casscf_e_convergence    12
+  casscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
