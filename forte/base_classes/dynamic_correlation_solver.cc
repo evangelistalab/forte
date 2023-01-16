@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -85,7 +85,7 @@ double DynamicCorrelationSolver::compute_reference_energy() {
     auto nactv = mo_space_info_->size("ACTIVE");
     auto Fc = ambit::Tensor::build(ambit::CoreTensor, "F closed", {nactv, nactv});
     auto actv_relative_mos = mo_space_info_->relative_mo("ACTIVE");
-    Fc.iterate([&](const std::vector<size_t>& i, double& value){
+    Fc.iterate([&](const std::vector<size_t>& i, double& value) {
         size_t h1, h2, p, q;
         std::tie(h1, p) = actv_relative_mos[i[0]];
         std::tie(h2, q) = actv_relative_mos[i[1]];
