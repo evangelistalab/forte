@@ -8,11 +8,10 @@ refRe    =    1.748792 # bohr
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 0.918
+  H  1 0.918
 }
 
-set globals{
+set {
   basis                    cc-pvdz
   reference                rhf
   restricted_docc          [2,0,1,1]

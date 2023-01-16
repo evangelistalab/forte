@@ -128,9 +128,9 @@ class DavidsonLiuSolver {
   private:
     // ==> Class Private Functions <==
 
-    /// Check that the eigenvectors are orthogonal
+    /// Check that the eigenvectors are orthogonal. Throws if fails
     void check_orthogonality();
-    /// Check that the mini-Hamiltonian is Hermitian
+    /// Check that the mini-Hamiltonian is Hermitian. Throws if fails
     void check_G_hermiticity();
     /// Check if the the iterative procedure has converged
     /// @return a pair of boolean (is_energy_converged,is_residual_converged)

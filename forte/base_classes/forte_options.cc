@@ -504,9 +504,8 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
                 to_upper_string(value);
                 if (item.second.contains("allowed_values")) {
                     // check that value is allowed
-                    auto py_allowed_values = item.second["allowed_values"];
                     std::vector<std::string> allowed_values;
-                    for (auto av : py_allowed_values) {
+                    for (const auto& av : item.second["allowed_values"]) {
                         allowed_values.push_back(py::cast<std::string>(av));
                     }
                     if (std::find(allowed_values.begin(), allowed_values.end(), value) ==

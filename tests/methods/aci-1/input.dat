@@ -16,24 +16,18 @@ set {
   basis DZ
   e_convergence 10
   d_convergence  8
-  guess gwh
 }
 
 set scf {
   scf_type pk
-  reference rhf
 }
 
 set forte {
   active_space_solver aci
-  multiplicity 1
-  ms 0.0
   sigma 0.001
-  nroot 1
-  root_sym 0
-  charge 0
   sci_enforce_spin_complete false
   sci_project_out_spin_contaminants false
+  active_ref_type hf
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
