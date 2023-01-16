@@ -19,7 +19,6 @@ C 1 1.27273
 set {                                    
   scf_type pk                            
   basis cc-pvdz                      
-  reference rohf
   e_convergence 10
 }                                        
                                          

@@ -50,7 +50,7 @@ def register_driver_options(options):
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
         'CORRELATION_SOLVER', 'NONE',
-        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG', 'DSRG_MRPT'],
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG', 'DSRG_MRPT', 'MRDSRG_SO', 'SOMRDSRG'],
         'Dynamical correlation solver type'
     )
     options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'], 'The type of computation')
@@ -401,7 +401,7 @@ def register_aci_options(options):
     options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
 
     options.add_str(
-        "ACI_SCREEN_ALG", "AVERAGE", ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC'],
+        "ACI_SCREEN_ALG", "AVERAGE", ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC', 'MULTI_GAS'],
         "The screening algorithm to use"
     )
 
