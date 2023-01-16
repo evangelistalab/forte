@@ -24,7 +24,6 @@ set {
   d_convergence 10
   r_convergence 5
   docc [2,0,0,0,0,2,1,1]
-  guess gwh
 }
 
 set forte {
@@ -37,7 +36,6 @@ set forte {
   nroot 1
   charge 0
   sci_enforce_spin_complete true
-  active_ref_type hf
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

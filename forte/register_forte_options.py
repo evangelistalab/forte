@@ -46,7 +46,7 @@ def register_driver_options(options):
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
         'CORRELATION_SOLVER', 'NONE',
@@ -77,7 +77,7 @@ def register_driver_options(options):
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
     options.add_str(
-        "ACTIVE_REF_TYPE", "CAS", ["CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD", "DOCI"],
+        "ACTIVE_REF_TYPE", "CAS", ["HF", "CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD", "DOCI"],
         "Initial guess for active space wave functions"
     )
 

@@ -28,14 +28,8 @@ set globals{
    MCSCF_R_CONVERGENCE  6
 }
 
-energy('casscf')
-scf = energy('scf')
-
-set scf_type direct
 set forte{
-   job_type             casscf
-   CASSCF_REFERENCE    true
-   CASSCF_MAXITER   25
+   job_type             mcscf_two_step
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
    int_type             conventional
@@ -50,5 +44,4 @@ set forte{
 }
 casscf = energy('forte')
 
-compare_values(refscf, scf, 8, "SCF ENERGY")
 compare_values(refcasscf, casscf, 6, "CASSCF ENERGY")
