@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,7 +31,7 @@
 
 #include "ambit/blocked_tensor.h"
 #include "base_classes/rdms.h"
-//#include "base_classes/mo_space_info.h"
+// #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libfock/jk.h"

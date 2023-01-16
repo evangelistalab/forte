@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -125,7 +125,7 @@ StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
         twice_ms = std::lround(2.0 * options->get_double("MS"));
     }
 
-    if (((nel - twice_ms) % 2) != 0){
+    if (((nel - twice_ms) % 2) != 0) {
         throw std::runtime_error("\n\n  make_state_info_from_psi: Wrong value of M_s.\n\n");
     }
 
