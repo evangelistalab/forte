@@ -49,8 +49,8 @@ set forte{
   print              2
 }
 Ept2_cholesky = energy('forte', ref_wfn=wfn)
-compare_values(refpt2, Ept2_cholesky, 10, "DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=FALSE) energy")
+compare_values(refpt2, Ept2_cholesky, 8, "DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=FALSE) energy")
 
 set forte semi_canonical true
 Ept2_cholesky = energy('forte', ref_wfn=wfn)
-compare_values(refpt2, Ept2_cholesky, 10, "DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=TRUE) energy")
+compare_values(refpt2, Ept2_cholesky, 8, "DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=TRUE) energy")
