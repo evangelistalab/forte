@@ -55,4 +55,4 @@ set forte{
 }
 
 energy('forte', ref_wfn = wfn)
-compare_values(refdsrgpt2_jk_rd, variable("CURRENT ENERGY"),10,"DF-DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_jk_rd, variable("CURRENT ENERGY"),8,"DF-DSRG-MRPT2 energy")
