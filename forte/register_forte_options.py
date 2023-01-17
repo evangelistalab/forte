@@ -47,7 +47,7 @@ def register_driver_options(options):
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG', 'BLOCK2'], 'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
         'CORRELATION_SOLVER', 'NONE',
@@ -990,7 +990,7 @@ def register_gas_options(options):
 
 def register_block2_options(options):
     options.set_group("BLOCK2")
-    options.add_double("BLOCK2_STACK_MEM", 1.0, "DMRG stack memory (in GB)")
+    options.add_double("BLOCK2_STACK_MEM", 1.5, "DMRG stack memory (in GB)")
     options.add_double("BLOCK2_SWEEP_ENERGY_CONV", 1E-8,
                        "DMRG energy convergence threshold")
     options.add_double("BLOCK2_INITIAL_GUESS", -1,

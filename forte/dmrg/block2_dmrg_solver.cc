@@ -232,6 +232,7 @@ Block2DMRGSolver::Block2DMRGSolver(StateInfo state, size_t nroot, std::shared_pt
     print_method_banner(
         {is_spin_adapted ? "block2 DMRG (spin-adapted)" : "block2 DMRG (non-spin-adapted)",
          "by Huanchen Zhai", "Jan 14-16, 2023"});
+    psi::outfile->Printf("\n    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.");
     std::string scratch = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                           std::to_string(getpid()) + ".block2." +
                           psi::Process::environment.molecule()->name();
@@ -293,9 +294,9 @@ double Block2DMRGSolver::compute_energy() {
         r->exprs.push_back("((C+(C+D)0)1+D)0");
         r->exprs.push_back("(C+D)0");
         r->add_sum_term(as_ints_->tei_ab_vector().data(), as_ints_->tei_ab_vector().size(),
-                        tei_shape, tei_strides, integral_cutoff, 1.0);
+                        tei_shape, tei_strides, integral_cutoff, 1.0, actv_irreps);
         r->add_sum_term(as_ints_->oei_a_vector().data(), as_ints_->oei_a_vector().size(), oei_shape,
-                        oei_strides, integral_cutoff, sqrt(2.0));
+                        oei_strides, integral_cutoff, sqrt(2.0), actv_irreps);
     } else {
         // cd = create/destroy alpha
         // CD = create/destroy beta
@@ -303,17 +304,17 @@ double Block2DMRGSolver::compute_energy() {
         r->exprs.push_back("CcdD"), r->exprs.push_back("CCDD");
         r->exprs.push_back("cd"), r->exprs.push_back("CD");
         r->add_sum_term(as_ints_->tei_aa_vector().data(), as_ints_->tei_aa_vector().size(),
-                        tei_shape, tei_strides, integral_cutoff, 0.25);
+                        tei_shape, tei_strides, integral_cutoff, 0.25, actv_irreps);
         r->add_sum_term(as_ints_->tei_ab_vector().data(), as_ints_->tei_ab_vector().size(),
-                        tei_shape, tei_strides, integral_cutoff, 0.5);
+                        tei_shape, tei_strides, integral_cutoff, 0.5, actv_irreps);
         r->add_sum_term(as_ints_->tei_ab_vector().data(), as_ints_->tei_ab_vector().size(),
-                        tei_shape, tei_ba_strides, integral_cutoff, 0.5);
+                        tei_shape, tei_ba_strides, integral_cutoff, 0.5, actv_irreps);
         r->add_sum_term(as_ints_->tei_bb_vector().data(), as_ints_->tei_bb_vector().size(),
-                        tei_shape, tei_strides, integral_cutoff, 0.25);
+                        tei_shape, tei_strides, integral_cutoff, 0.25, actv_irreps);
         r->add_sum_term(as_ints_->oei_a_vector().data(), as_ints_->oei_a_vector().size(), oei_shape,
-                        oei_strides, integral_cutoff, 1.0);
+                        oei_strides, integral_cutoff, 1.0, actv_irreps);
         r->add_sum_term(as_ints_->oei_b_vector().data(), as_ints_->oei_b_vector().size(), oei_shape,
-                        oei_strides, integral_cutoff, 1.0);
+                        oei_strides, integral_cutoff, 1.0, actv_irreps);
     }
 
     r = r->adjust_order();
