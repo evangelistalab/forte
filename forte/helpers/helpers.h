@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -54,9 +54,9 @@ class Options;
 namespace forte {
 
 /// Spin cases for 1-, 2-, and 3-body tensors
-enum class Spin1 {a, b};
-enum class Spin2 {aa, ab, bb};
-enum class Spin3 {aaa, aab, abb, bbb};
+enum class Spin1 { a, b };
+enum class Spin2 { aa, ab, bb };
+enum class Spin3 { aaa, aab, abb, bbb };
 
 /**
  * @brief Convert an ambit tensor to a numpy ndarray.

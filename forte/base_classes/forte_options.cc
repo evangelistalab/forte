@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -25,6 +25,8 @@
  *
  * @END LICENSE
  */
+
+#include <algorithm>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
@@ -500,6 +502,21 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
                 std::string value = options.get_str(label);
                 // capitalize the string
                 to_upper_string(value);
+                if (item.second.contains("allowed_values")) {
+                    // check that value is allowed
+                    std::vector<std::string> allowed_values;
+                    for (const auto& av : item.second["allowed_values"]) {
+                        allowed_values.push_back(py::cast<std::string>(av));
+                    }
+                    if (std::find(allowed_values.begin(), allowed_values.end(), value) ==
+                        allowed_values.end()) {
+                        std::string msg = "The option " + label + " was set to " + value +
+                                          ", a value that is not allowed.\n Please select one of "
+                                          "the following values [" +
+                                          join(allowed_values, ",") + "]";
+                        throw std::runtime_error(msg);
+                    }
+                }
                 item.second["value"] = py::cast(value);
             }
             if (type == "int_list") {
@@ -535,7 +552,6 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
 py::object process_psi4_array_data(psi::Data& data) {
     auto list = py::list();
     if (data.is_array()) {
-        outfile->Printf("\n Data is an array -> call again");
         // process each element of the array
         size_t n = data.size();
         for (size_t i = 0; i < n; i++) {
@@ -592,6 +608,11 @@ std::string ForteOptions::str() const {
         s += "\n";
     }
     return s;
+}
+
+void ForteOptions::clear() {
+    dict_.clear();
+    group_ = "";
 }
 
 std::string ForteOptions::generate_documentation() const {

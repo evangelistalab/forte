@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -1295,7 +1295,7 @@ double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& de
         b->set(i, C[i]);
     }
     sigma_vector->compute_sigma(sigma, b);
-    variational_energy_estimator = sigma->dot(b.get());
+    variational_energy_estimator = sigma->vector_dot(*b);
 
     variational_energy_estimator /= 1.0 - cume_ignore;
     return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -231,6 +231,9 @@ class ActiveSpaceMethod {
     /// Set if we dump the wave function to disk
     void set_dump_wfn(bool dump);
 
+    /// Set if we dump the transition dipole moment to disk
+    void set_dump_trdm(bool dump);
+
     /// Set the file name for storing wave function on disk
     /// @param name the wave function file name
     void set_wfn_filename(const std::string& name);
@@ -296,6 +299,8 @@ class ActiveSpaceMethod {
 
     /// Read wave function from disk as initial guess?
     bool read_wfn_guess_ = false;
+    /// Dump transition density matrix to disk?
+    bool dump_trdm_ = false;
     /// Dump wave function to disk?
     bool dump_wfn_ = false;
     /// The file name for storing wave function (determinants, CI coefficients)

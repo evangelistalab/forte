@@ -60,3 +60,8 @@ compare_values(tdip_a1_b2, variable("TRANS SINGLET |<0A1|DM|0B2>| ENTRY 1"), 8,
                "Transition dipole singlet 0A1-0B2 before/after orbital change")
 compare_values(0.03991558, tdip_a1_b1, 6, "Transition dipole singlet 0A1-0B1")
 compare_values(0.03991558, tdip_a1_b2, 6, "Transition dipole singlet 0A1-0B2")
+
+smax_a1 = variable("TRANS SINGLET S_MAX 0A1 -> 0B1 ENTRY 1")
+smax_a2 = variable("TRANS SINGLET S_MAX 0A1 -> 0B2 ENTRY 0")
+compare_values(1.037550, smax_a1, 6, "S_MAX singlet 0A1 -> 0B1")
+compare_values(1.037550, smax_a2, 6, "S_MAX singlet 0A1 -> 0B2")

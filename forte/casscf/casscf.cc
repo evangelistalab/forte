@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -351,7 +351,8 @@ void CASSCF::diagonalize_hamiltonian() {
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print_);
     const auto state_energies_map = active_space_solver->compute_energy();
-    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
+    cas_ref_ =
+        active_space_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     E_casscf_ = compute_average_state_energy(state_energies_map, state_weights_map_);
 
     // Compute 1-RDM

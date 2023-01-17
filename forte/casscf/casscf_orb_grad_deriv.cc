@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -290,8 +290,8 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
     }
 
     // grab occupied and virtual part of orbital energies
-    auto edocc = epsilon_->get_block(Sdocc);
-    auto euocc = epsilon_->get_block(Suocc);
+    auto edocc = std::make_shared<Vector>(epsilon_->get_block(Sdocc));
+    auto euocc = std::make_shared<Vector>(epsilon_->get_block(Suocc));
 
     // solve CPSCF equation
     CPSCF_SOLVER cpscf_solver(options_, JK_, C0_, b, edocc, euocc);

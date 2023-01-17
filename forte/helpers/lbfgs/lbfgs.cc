@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -43,7 +43,9 @@ using namespace psi;
 
 namespace forte {
 
-LBFGS::LBFGS(std::shared_ptr<LBFGS_PARAM> param) : param_(param) { param_->check_param(); }
+LBFGS::LBFGS(std::shared_ptr<LBFGS_PARAM> param) : param_(param), p_(psi::Vector(0)) {
+    param_->check_param();
+}
 
 template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
     nirrep_ = x->nirrep();
@@ -73,7 +75,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
 
     // initialize some vectors
     reset();
-    p_ = std::make_shared<psi::Vector>("p", dimpi_);
+    p_ = psi::Vector("p", dimpi_);
     x_last_ = std::make_shared<psi::Vector>(*x);
     g_last_ = std::make_shared<psi::Vector>(*g_);
     if (param_->h0_freq >= 0) {
@@ -116,13 +118,13 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         }
 
         // compute differences
-        auto s = std::make_shared<psi::Vector>(*x);
-        s->subtract(x_last_);
+        psi::Vector s(*x);
+        s.subtract(*x_last_);
 
-        auto y = std::make_shared<psi::Vector>(*g_);
-        y->subtract(g_last_);
+        psi::Vector y(*g_);
+        y.subtract(*g_last_);
 
-        double rho = y->vector_dot(s);
+        double rho = y.vector_dot(s);
 
         // save history
         if (rho > 0) {
@@ -134,8 +136,8 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
                 y_[index] = std::make_shared<psi::Vector>("y", dimpi_);
             }
 
-            s_[index]->copy(*s);
-            y_[index]->copy(*y);
+            s_[index]->copy(s);
+            y_[index]->copy(y);
             rho_[index] = 1.0 / rho;
 
             x_last_->copy(*x);
@@ -156,7 +158,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
 }
 
 void LBFGS::update() {
-    p_->copy(*g_);
+    p_.copy(*g_);
 
     int m = std::min(iter_ - iter_shift_, param_->m);
     int end = m ? (iter_ - iter_shift_ - 1) % m : 0; // skip for the very first iteration
@@ -165,7 +167,7 @@ void LBFGS::update() {
     for (int k = 0; k < m; ++k) {
         int i = (end - k + m) % m;
         alpha_[i] = rho_[i] * s_[i]->vector_dot(p_);
-        p_->axpy(-alpha_[i], y_[i]);
+        p_.axpy(-alpha_[i], *y_[i]);
     }
 
     // apply inverse diagonal Hessian
@@ -175,14 +177,14 @@ void LBFGS::update() {
     for (int k = 0; k < m; ++k) {
         int i = (end + k + 1) % m;
         double beta = rho_[i] * y_[i]->vector_dot(p_);
-        p_->axpy(alpha_[i] - beta, s_[i]);
+        p_.axpy(alpha_[i] - beta, *s_[i]);
     }
 
     // for descent
-    p_->scale(-1.0);
+    p_.scale(-1.0);
 
     if (param_->print > 2)
-        p_->print();
+        p_.print();
 }
 
 template <class Foo>
@@ -207,7 +209,7 @@ void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, d
     double p_max = 0.0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < dimpi_[h]; ++i) {
-            double v = std::fabs(p_->get(h, i));
+            double v = std::fabs(p_.get(h, i));
             if (v > p_max)
                 p_max = v;
         }
@@ -224,7 +226,7 @@ template <class Foo>
 void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx, double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
-    auto x0 = std::make_shared<psi::Vector>(*x);
+    psi::Vector x0(*x);
 
     // need to restart because this is not a good direction
     if (dg0 >= 0) {
@@ -234,7 +236,7 @@ void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx,
 
     // backtracking for optimal step
     for (int i = 0; i < param_->maxiter_linesearch + 1; ++i) {
-        x->copy(*x0);
+        x->copy(x0);
         x->axpy(step, p_);
         fx = func.evaluate(x, g_);
 
@@ -285,7 +287,7 @@ template <class Foo>
 void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& fx, double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
-    auto x0 = std::make_shared<psi::Vector>(*x);
+    psi::Vector x0(*x);
 
     // need to restart because this is not a good direction
     if (dg0 >= 0) {
@@ -302,7 +304,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
     // braketing stage
     for (int i = 0; i < param_->maxiter_linesearch; ++i) {
-        x->copy(*x0);
+        x->copy(x0);
         x->axpy(step, p_);
         fx = func.evaluate(x, g_);
 
@@ -341,7 +343,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
     for (int i = 0; i < param_->maxiter_linesearch + 1; ++i) {
         step = 0.5 * (step_low + step_high);
 
-        x->copy(*x0);
+        x->copy(x0);
         x->axpy(step, p_);
         fx = func.evaluate(x, g_);
 
@@ -388,23 +390,18 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
     }
 }
 
-void LBFGS::apply_h0(psi::SharedVector q) {
+void LBFGS::apply_h0(psi::Vector& q) {
     if (param_->h0_freq < 0) {
         double gamma = compute_gamma();
         if (param_->print > 2)
             outfile->Printf("\n    gamma for H0: %.15f", gamma);
-
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int i = 0; i < dimpi_[h]; ++i) {
-                q->set(h, i, q->get(h, i) * gamma);
-            }
-        }
+        q.scale(gamma);
     } else {
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < dimpi_[h]; ++i) {
                 double vh = h0_->get(h, i);
                 if (std::fabs(vh) > 1.0e-12) {
-                    q->set(h, i, q->get(h, i) / vh);
+                    q.set(h, i, q.get(h, i) / vh);
                 } else {
                     if (param_->print > 1) {
                         outfile->Printf("\n    Zero diagonal Hessian element (irrep: %d, i: %d)", h,
@@ -420,14 +417,14 @@ double LBFGS::compute_gamma() {
     double value = 1.0;
     if (iter_ - iter_shift_) {
         int end = (iter_ - iter_shift_ - 1) % (std::min(iter_ - iter_shift_, param_->m));
-        value = s_[end]->vector_dot(y_[end]) / y_[end]->vector_dot(y_[end]);
+        value = s_[end]->vector_dot(*y_[end]) / y_[end]->vector_dot(*y_[end]);
     }
     return value;
 }
 
 void LBFGS::resize(int m) {
-    y_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>());
-    s_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>());
+    y_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>(0));
+    s_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>(0));
     alpha_.resize(m);
     rho_.resize(m);
 }
