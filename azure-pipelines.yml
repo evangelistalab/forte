@@ -99,6 +99,7 @@ jobs:
         eigen \
         pytest \
         pytest-xdist \
+        libgcc=5.2.0 \
         conda-forge::qcelemental \
         conda-forge::qcengine
       source activate p4env
@@ -114,8 +115,7 @@ jobs:
         py-cpuinfo \
         scipy \
         codecov \
-        lcov \
-        gcc
+        lcov
       which python
       conda list
     displayName: 'Configure Environment'
