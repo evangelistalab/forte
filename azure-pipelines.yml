@@ -114,7 +114,8 @@ jobs:
         py-cpuinfo \
         scipy \
         codecov \
-        lcov
+        lcov \
+        gcc
       which python
       conda list
     displayName: 'Configure Environment'
