@@ -47,6 +47,10 @@
 #include "dmrg/dmrgsolver.h"
 #endif
 
+#ifdef HAVE_BLOCK2
+#include "dmrg/block2_dmrg_solver.h"
+#endif
+
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>

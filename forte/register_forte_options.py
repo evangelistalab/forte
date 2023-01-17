@@ -27,6 +27,7 @@ def register_forte_options(options):
     register_psi_options(options)
     register_gas_options(options)
     register_dmrg_options(options)
+    register_block2_options(options)
 
 
 def register_driver_options(options):
@@ -977,6 +978,28 @@ def register_gas_options(options):
     options.add_int_list("GAS5MIN", "The minimum number of electrons in GAS5 for different states")
     options.add_int_list("GAS6MAX", "The maximum number of electrons in GAS6 for different states")
     options.add_int_list("GAS6MIN", "The minimum number of electrons in GAS6 for different states")
+
+
+def register_block2_options(options):
+    options.set_group("BLOCK2")
+    options.add_double("BLOCK2_STACK_MEM", 1.0, "DMRG stack memory (in GB)")
+    options.add_double("BLOCK2_SWEEP_ENERGY_CONV", 1E-8,
+                       "DMRG energy convergence threshold")
+    options.add_double("BLOCK2_INITIAL_GUESS", -1,
+                       "Shift (0 ~ 1) of occupation number for DMRG initial guess. -1 = random initial guess.")
+    options.add_double("BLOCK2_CUTOFF", 1E-20, "Cutoff for MPS bond dimension.")
+    options.add_bool("BLOCK2_SPIN_ADAPTED", True, "Whether to use spin-adapted DMRG when it is restricted integrals.")
+    options.add_bool("BLOCK2_SINGLET_EMBEDDING", True, "Whether to use singlet embedding for non-singlet states.")
+    options.add_int("BLOCK2_N_TOTAL_SWEEPS", 10, "Max number of DMRG sweeps")
+    options.add_int_list("BLOCK2_SWEEP_N_SWEEPS",
+                         "Number of sweeps used for one instruction during DMRG sweeps")
+    options.add_int_list("BLOCK2_SWEEP_BOND_DIMS",
+                         "MPS bond dimension used for one instruction during DMRG sweeps")
+    options.add_double_list(
+        "BLOCK2_SWEEP_NOISES", "The noise used for one instruction during DMRG sweeps")
+    options.add_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS", "The residual tolerances for the Davidson diagonalization"
+                            " used for one instruction during DMRG sweeps")
+    options.add_int("BLOCK2_VERBOSE", 1, "Level of verbosity for DMRG calculations")
 
 
 def register_dmrg_options(options):

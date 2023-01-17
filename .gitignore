@@ -18,6 +18,9 @@ forte/version.h
 forte_tests
 forte_benchmarks
 
+my_test/
+.vscode/
+
 # All outputs and clean files in test cases
 /tests/*/output.dat
 /tests/methods/*/output.dat
