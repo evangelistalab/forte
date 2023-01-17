@@ -143,6 +143,7 @@ jobs:
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_BUILD_TYPE=${PSI_BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_STANDARD=17 \
@@ -188,6 +189,7 @@ jobs:
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_CXX_STANDARD=17
     displayName: 'Configure Ambit Build'
 
@@ -218,6 +220,7 @@ jobs:
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
         -DENABLE_CODECOV=ON \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DEIGEN3_INCLUDE_DIR=$CONDA_PREFIX/include/eigen3 \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
