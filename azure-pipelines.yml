@@ -12,7 +12,7 @@ jobs:
   strategy:
     maxParallel: 4
     matrix:
-      gcc_py39_orb64_dmrg:
+      gcc_py310_orb64_dmrg:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
@@ -23,11 +23,11 @@ jobs:
         APT_INSTALL: 'gfortran'
         ENABLE_CHEMPS2: 'ON'
 
-      gcc_py38_orb128:
+      gcc_py39_orb128:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.10'
+        PYTHON_VER: '3.9'
         BUILD_TYPE: 'RelWithDebInfo'
         PSI_BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 128
@@ -143,7 +143,6 @@ jobs:
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
-        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_BUILD_TYPE=${PSI_BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_STANDARD=17 \
@@ -189,7 +188,6 @@ jobs:
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_CXX_STANDARD=17
     displayName: 'Configure Ambit Build'
 
