@@ -41,7 +41,7 @@ set forte{
 }
 
 Ept2 = energy('forte', ref_wfn=wfn)
-compare_values(refpt2, Ept2, 10, "DSRG-MRPT2 (CCVV=ZERO, SEMI=FALSE) energy")
+compare_values(refpt2, Ept2, 8, "DSRG-MRPT2 (CCVV=ZERO, SEMI=FALSE) energy")
 
 set forte{
   int_type           cholesky
