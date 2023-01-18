@@ -2517,7 +2517,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     /// Construct (ibar abar|P)
     std::vector<psi::SharedMatrix> i_bar_a_bar_P;
 
-    /// Construct Sliced (ibar abar|P);
+    /// Constrcut Sliced (ibar abar|P);
     std::vector<psi::SharedMatrix> i_bar_a_bar_P_sliced;
 
     /// Construct {a_bar}_ibar
@@ -2674,34 +2674,42 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
             }
         }
 
-        /// Start ij-prescreening.
+         /// Start ij-prescreening.
         psi::SharedMatrix A_ij_2 = psi::linalg::doublet(Q_ia_2, Q_ia_2, false, true);
         for (int i = 0; i < nocc; i++) {
             for (int j = 0; j < i; j++) {
                 if (A_ij_2->get(i, j) > theta_ij) {
+                    vir_intersection_per_ij.clear();
                     aux_intersection_per_ij.clear();
                     std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(), P_ibar[j].end(), std::back_inserter(aux_intersection_per_ij));
-                    psi::SharedMatrix C_intersection = submatrix_rows_and_cols(*C_pq, aux_intersection_per_ij, aux_intersection_per_ij);
                     aux_in_B_i.clear();
+                    std::set_intersection(abar_ibar[i].begin(), abar_ibar[i].end(),
+                                          abar_ibar[j].begin(), abar_ibar[j].end(),
+                                          std::back_inserter(vir_intersection_per_ij));
                     for (auto aux : aux_intersection_per_ij) {
                         int idx_aux_i = binary_search_recursive(P_ibar[i], aux, 0, P_ibar[i].size()-1);
                         aux_in_B_i.push_back(idx_aux_i);
                     }
-
-                    for (int a_idx = 0; a_idx < abar_ibar[j].size(); a_idx++) { // b <= a and j < i
+                    for (int a_idx = 0; a_idx < vir_intersection_per_ij.size(); a_idx++) { // b <= a and j < i
                         for (int b_idx = 0; b_idx <= a_idx; b_idx++) {
-                            int a = abar_ibar[j][a_idx];
-                            int b = abar_ibar[j][b_idx];
+                            int a = vir_intersection_per_ij[a_idx];
+                            int b = vir_intersection_per_ij[b_idx];
                             double Schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) * Q_ia_2->get(i, b) * Q_ia_2->get(j, a);
                             if (Schwarz_2 > theta_schwarz_2) {
-                                std::vector<int> vec_a{a};
-                                std::vector<int> vec_b{b};
-                                std::vector<int> vec_a_new{a_idx};
-                                std::vector<int> vec_b_new{b_idx};
-                                psi::SharedMatrix ia = submatrix_rows_and_cols(*B_ia_Q[i], vec_a_new, aux_in_B_i);
-                                psi::SharedMatrix jb = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_b, aux_intersection_per_ij);
-                                psi::SharedMatrix ib = submatrix_rows_and_cols(*B_ia_Q[i], vec_b_new, aux_in_B_i);
-                                psi::SharedMatrix ja = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_a, aux_intersection_per_ij);
+                                int a_idx_i = binary_search_recursive(abar_ibar[i], a, 0, abar_ibar[i].size()-1);
+                                int b_idx_i = binary_search_recursive(abar_ibar[i], b, 0, abar_ibar[i].size()-1);
+                                int a_idx_j = binary_search_recursive(abar_ibar[j], a, 0, abar_ibar[j].size()-1);
+                                int b_idx_j = binary_search_recursive(abar_ibar[j], b, 0, abar_ibar[j].size()-1);
+
+                                std::vector<int> vec_a_i{a_idx_i};
+                                std::vector<int> vec_b_i{b_idx_i};
+                                std::vector<int> vec_a_j{a_idx_j};
+                                std::vector<int> vec_b_j{b_idx_j};
+                                
+                                psi::SharedMatrix ia = submatrix_rows_and_cols(*B_ia_Q[i], vec_a_i, aux_in_B_i);
+                                psi::SharedMatrix jb = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_b_j, aux_intersection_per_ij);
+                                psi::SharedMatrix ib = submatrix_rows_and_cols(*B_ia_Q[i], vec_b_i, aux_in_B_i);
+                                psi::SharedMatrix ja = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_a_j, aux_intersection_per_ij);
 
                                 psi::SharedMatrix iajb_mat = psi::linalg::doublet(ia, jb, false, true);
                                 double* iajb = iajb_mat->get_pointer();
