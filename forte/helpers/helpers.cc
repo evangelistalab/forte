@@ -41,6 +41,7 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"
 
+#include "forte-def.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 
@@ -136,6 +137,64 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
         }
     }
     return out;
+}
+
+void matrix_transpose_in_place(double* data, const size_t m, const size_t n) {
+    int nthreads = omp_get_max_threads();
+    std::vector<double> tmp(nthreads * (m > n ? m : n));
+    double* tmp_ptr = tmp.data();
+
+    int c = math::gcd(m, n);
+    int a = m / c;
+    int b = n / c;
+
+    if (c > 1) {
+#pragma omp parallel
+        {
+            int tid = omp_get_thread_num();
+            double* tmp_tid = tmp_ptr + m * tid;
+#pragma omp for
+            for (int j = 0; j < n; ++j) {
+                int j_b = j / b;
+                for (int i = 0; i < m; ++i) {
+                    tmp_tid[i] = data[((i + j_b) % m) * n + j];
+                }
+                for (int i = 0; i < m; ++i) {
+                    data[i * n + j] = tmp_tid[i];
+                }
+            }
+        }
+    }
+
+#pragma omp parallel
+    {
+        int tid = omp_get_thread_num();
+        double* tmp_tid = tmp_ptr + n * tid;
+#pragma omp for
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j) {
+                tmp_tid[((i + int(j / b)) % m + j * m) % n] = data[i * n + j];
+            }
+            for (int j = 0; j < n; ++j) {
+                data[i * n + j] = tmp_tid[j];
+            }
+        }
+    }
+
+#pragma omp parallel
+    {
+        int tid = omp_get_thread_num();
+        double* tmp_tid = tmp_ptr + m * tid;
+#pragma omp for
+        for (int j = 0; j < n; ++j) {
+            for (int i = 0; i < m; ++i) {
+                tmp_tid[i] = data[((i * n + j - int(i / a)) % m) * n + j];
+            }
+            for (int i = 0; i < m; ++i) {
+                data[i * n + j] = tmp_tid[i];
+            }
+        }
+    }
 }
 
 void push_to_psi4_env_globals(double value, const std::string& label) {

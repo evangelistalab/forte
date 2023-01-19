@@ -54,9 +54,9 @@ class Options;
 namespace forte {
 
 /// Spin cases for 1-, 2-, and 3-body tensors
-enum class Spin1 {a, b};
-enum class Spin2 {aa, ab, bb};
-enum class Spin3 {aaa, aab, abb, bbb};
+enum class Spin1 { a, b };
+enum class Spin2 { aa, ab, bb };
+enum class Spin3 { aaa, aab, abb, bbb };
 
 /**
  * @brief Convert an ambit tensor to a numpy ndarray.
@@ -182,11 +182,37 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
     }
 }
 
+/**
+ * @brief Apply in-place matrix transposition based on the algorithm of Catanzaro, Keller, Garland.
+ *
+ * See Algorithm 1 of DOI: 10.1145/2555243.2555253.
+ * Also see https://github.com/bryancatanzaro/inplace
+ *
+ * @param data the matrix stored in row-major format
+ * @param m the number of rows of the matrix
+ * @param n the number of columns of the matrix
+ */
+void matrix_transpose_in_place(double* data, const size_t m, const size_t n);
+
 void push_to_psi4_env_globals(double value, const std::string& label);
 
 namespace math {
 /// Return the number of combinations of n identical objects
 size_t combinations(size_t n, size_t k);
+
+/// Compute the greatest common divisor
+inline int gcd(int a, int b) {
+    int b_tmp;
+    while (b) {
+        b_tmp = a % b;
+        a = b;
+        b = b_tmp;
+    }
+    return a;
+    // if (b == 0)
+    //     return a;
+    // return gcd(b, a % b);
+}
 
 /// Return the Cartesian product of the input vector<vector<T>>
 /// https://stackoverflow.com/a/17050528/4101036
