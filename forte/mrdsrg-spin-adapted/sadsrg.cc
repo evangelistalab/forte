@@ -78,6 +78,15 @@ SADSRG::~SADSRG() {
         outfile->Printf("\n  %s", std::string(100, '-').c_str());
         outfile->Printf("\n\n");
     }
+
+    // delete canonicalized B(Q|pq) files
+    for (const auto& pair : Bcan_files_) {
+        const auto& [block, filename] = pair;
+        if (remove(filename.c_str()) != 0) {
+            std::string msg = "Error when deleting Bcan." + block + ".bin";
+            perror(msg.c_str());
+        }
+    }
 }
 
 void SADSRG::startup() {
@@ -123,6 +132,12 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
+
+    // setup checkpoint filename prefix
+    chk_filename_prefix_ = PSIOManager::shared_object()->get_default_path();
+    chk_filename_prefix_ += "forte." + std::to_string(getpid());
+    chk_filename_prefix_ += "." + psi::Process::environment.molecule()->name();
+    Bcan_files_.clear();
 }
 
 void SADSRG::build_fock_from_ints() {
@@ -1105,6 +1120,368 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     }
 
     return Fdiag;
+}
+
+void SADSRG::canonicalize_B(const std::vector<std::string>& blocks) {
+    /**
+     * Transform 3-index integrals to semicanonical basis and dump to disk.
+     *
+     * The order of B is Qpq and each block will be stored separately.
+     *
+     * For each index Q and block cv with block indices m and e:
+     * B["me"] = B["nf"] * U["mn"] * U["ef"]
+     */
+    if (!eri_df_)
+        throw std::runtime_error("For DF/CD integrals ONLY!");
+
+    for (const std::string& block : blocks) {
+        if (block.size() != 2)
+            throw std::runtime_error("Incorrect block labels: " + block);
+        std::string U1_block(2, block[0]);
+        std::string U2_block(2, block[1]);
+        if (!U_.is_block(U1_block))
+            throw std::runtime_error("U_ block(" + U1_block + ") not available!");
+        if (!U_.is_block(U2_block))
+            throw std::runtime_error("U_ block(" + U2_block + ") not available!");
+        const auto& U1 = U_.block(U1_block);
+        const auto& U2 = U_.block(U2_block);
+
+        // create file
+        std::string filename = chk_filename_prefix_ + ".Bcan." + block + ".bin";
+        FILE* fp = fopen(filename.c_str(), "wb");
+
+        // determine largest chunk of B to be transformed
+        const auto& mos1 = label_to_spacemo_[block[0]];
+        const auto& mos2 = label_to_spacemo_[block[1]];
+        auto n1 = mos1.size();
+        auto n2 = mos2.size();
+        auto N = n1 * n2;
+        auto nQ = aux_mos_.size();
+
+        size_t memory_avai = dsrg_mem_.available();
+        if (2 * N * sizeof(double) > memory_avai) {
+            outfile->Printf(
+                "\n  Error: Not enough memory to transform B(P|pq) to canonical basis.");
+            outfile->Printf(" Need at least %zu Bytes more!", 2 * N * sizeof(double) - memory_avai);
+            throw std::runtime_error("Not enough memory to transform B(P|pq) to canonical basis!");
+        }
+
+        size_t max_nQ = memory_avai / sizeof(double) / (2 * N);
+        max_nQ = 3;
+        if (max_nQ < nQ) {
+            outfile->Printf("\n -> B(P|pq) to Bcan(P|pq) to be run in batches: max Q size = %zu",
+                            max_nQ);
+        } else {
+            max_nQ = nQ;
+        }
+
+        // batches of virtual indices
+        auto batch_Q = split_vector(aux_mos_, max_nQ);
+        auto nbatches = batch_Q.size();
+
+        // loop over auxiliary index
+        for (size_t n = 0; n < nbatches; ++n) {
+            auto B = ints_->three_integral_block(batch_Q[n], mos1, mos2);
+            auto C = ambit::Tensor::build(tensor_type_, "Btemp", {batch_Q[n].size(), n1, n2});
+            C("Qps") = B("Qrs") * U1("pr");
+            B("Qpq") = C("Qps") * U2("qs");
+
+            // write to disk
+            fwrite(B.data().data(), sizeof(double), batch_Q[n].size() * n1 * n2, fp);
+        }
+
+        // close file
+        fflush(fp);
+        fclose(fp);
+
+        Bcan_files_[block] = filename;
+
+        // // test
+        // FILE* fpr = fopen(filename.c_str(), "rb");
+        // auto B = ints_->three_integral_block(aux_mos_, mos1, mos2);
+        // auto Br = ambit::Tensor::build(tensor_type_, "Br", {nQ, n1, n2});
+        // auto C = ambit::Tensor::build(tensor_type_, "C", {nQ, n1, n2});
+        // fread(C.data().data(), sizeof(double), nQ * n1 * n2, fpr);
+        // fclose(fpr);
+        // C("Qpq") -= B("Qrs") * U1("pr") * U2("qs");
+        // outfile->Printf("\n write error: %20.15f", C.norm());
+
+        // test read
+        auto B = ints_->three_integral_block(aux_mos_, mos1, mos2);
+        auto Br = ints_->three_integral_block(aux_mos_, mos1, mos2);
+        Br("Qpq") = B("Qrs") * U1("pr") * U2("qs");
+
+        auto C = read_Bcanonical(block, {0, n1 - 1}, {0, n2 - 1});
+        C("Qpq") -= Br("Qpq");
+        outfile->Printf("\n write error: %20.15f", C.norm());
+
+        C = read_Bcanonical(block, {1, 1}, {0, n2 - 1});
+        C.iterate([&](const std::vector<size_t>& i, double& value) {
+            auto i1 = i[1] + 1;
+            value -= Br.data()[i[0] * N + i1 * n2 + i[2]];
+        });
+        outfile->Printf("\n write error: %20.15f", C.norm());
+
+        C = read_Bcanonical(block, {1, 2}, {5, n2 - 1});
+        C.iterate([&](const std::vector<size_t>& i, double& value) {
+            auto i1 = i[1] + 1;
+            auto i2 = i[2] + 5;
+            value -= Br.data()[i[0] * N + i1 * n2 + i2];
+        });
+        outfile->Printf("\n write error: %20.15f", C.norm());
+
+        std::string rblock{block[1], block[0]};
+        C = read_Bcanonical(rblock, {0, n2 - 1}, {0, n1 - 1});
+        C("Qpq") -= Br("Qqp");
+        outfile->Printf("\n rblock write error: %20.15f", C.norm());
+
+        C = read_Bcanonical(rblock, {0, n2 - 1}, {1, 2});
+        C.iterate([&](const std::vector<size_t>& i, double& value) {
+            auto i1 = i[2] + 1;
+            value -= Br.data()[i[0] * N + i1 * n2 + i[1]];
+        });
+        outfile->Printf("\n rblock write error: %20.15f", C.norm());
+
+        C = read_Bcanonical(rblock, {5, n2 - 1}, {1, 1});
+        C.iterate([&](const std::vector<size_t>& i, double& value) {
+            auto i1 = i[2] + 1;
+            auto i2 = i[1] + 5;
+            value -= Br.data()[i[0] * N + i1 * n2 + i2];
+        });
+        outfile->Printf("\n rblock write error: %20.15f", C.norm());
+
+        C = read_Bcanonical(block, {1, 1}, {5, n2 - 1}, "pqQ");
+        C.iterate([&](const std::vector<size_t>& i, double& value) {
+            auto i1 = i[0] + 1;
+            auto i2 = i[1] + 5;
+            value -= Br.data()[i[2] * N + i1 * n2 + i2];
+        });
+        outfile->Printf("\n block write error (in-place transpose): %20.15f", C.norm());
+
+        C = read_Bcanonical(rblock, {5, n2 - 1}, {1, 1}, "pqQ");
+        C.iterate([&](const std::vector<size_t>& i, double& value) {
+            auto i1 = i[1] + 1;
+            auto i2 = i[0] + 5;
+            value -= Br.data()[i[2] * N + i1 * n2 + i2];
+        });
+        outfile->Printf("\n rblock write error (in-place transpose): %20.15f", C.norm());
+
+        C = read_Bcanonical(rblock, {0, n2 - 1}, {0, n1 - 1}, "pqQ");
+        C("pqQ") -= Br("Qqp");
+        outfile->Printf("\n rblock write error (in-place transpose): %20.15f", C.norm());
+    }
+}
+
+ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
+                                      const std::pair<size_t, size_t>& mos1_range,
+                                      const std::pair<size_t, size_t>& mos2_range,
+                                      const std::string& order) {
+    /**
+     * Read canonicalized 3-index integrals from disk.
+     *
+     * On disk, the order of B is Qpq, i.e., the first index is auxiliary index.
+     *
+     * If block is available (i.e., created by canonicalize_B), we just load a chunk of data
+     * depending on the contiguity of the fastest indices. Otherwise, this function tries to
+     * load the transpose block {block[1], block[0]} before it throws an error.
+     *
+     * If the auxiliary index is desired to be the last (i.e., pqQ), we will still load data
+     * in the order of Qpq. Then, an in-place matrix transpose is performed to give the correct
+     * ordering of data storage in memory.
+     */
+    if (!eri_df_)
+        throw std::runtime_error("For DF/CD integrals ONLY!");
+
+    auto n1 = label_to_spacemo_[block[0]].size();
+    auto n2 = label_to_spacemo_[block[1]].size();
+    auto nQ = aux_mos_.size();
+
+    auto [mos1_start, mos1_end] = mos1_range;
+    auto [mos2_start, mos2_end] = mos2_range;
+    auto s1 = mos1_end - mos1_start + 1;
+    auto s2 = mos2_end - mos2_start + 1;
+    auto S = s1 * s2;
+
+    auto d1 = n1 - s1;
+    auto d2 = n2 - s2;
+
+    ambit::Tensor T;
+    if (order == "Qpq")
+        T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {nQ, s1, s2});
+    else if (order == "pqQ")
+        T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {s1, s2, nQ});
+    else
+        throw std::runtime_error(order + " order not available!");
+    if (s1 == 0 or s2 == 0)
+        return T;
+
+    auto& Tdata = T.data();
+
+    if (Bcan_files_.find(block) != Bcan_files_.end()) {
+        FILE* fp = fopen(Bcan_files_.at(block).c_str(), "rb");
+
+        // everything contiguous: read the entire file
+        if (d1 == 0 and d2 == 0) {
+            fread(Tdata.data(), sizeof(double), nQ * n1 * n2, fp);
+        } else if (d2 == 0) { // fastest index is contiguous
+            auto error_msg = [&](const size_t Q) {
+                std::stringstream ss;
+                ss << "Read error of Bcan." << block << ".bin on Q = " << Q;
+                throw std::runtime_error(ss.str());
+            };
+
+            // locate first element to be read
+            fseek(fp, (mos1_start * n2) * sizeof(double), SEEK_SET);
+
+            for (size_t Q = 0; Q < nQ - 1; ++Q) {
+                auto nele = fread(&Tdata[Q * S], sizeof(double), S, fp);
+                if (!nele) {
+                    error_msg(Q);
+                }
+                fseek(fp, d1 * n2 * sizeof(double), SEEK_CUR);
+            }
+            auto nele = fread(&Tdata[(nQ - 1) * S], sizeof(double), S, fp);
+            if (!nele) {
+                error_msg(nQ - 1);
+            }
+        } else {
+            auto error_msg = [&](const size_t Q, const size_t p) {
+                std::stringstream ss;
+                ss << "Read error of Bcan." << block << ".bin on Q = " << Q << " p = " << p;
+                throw std::runtime_error(ss.str());
+            };
+
+            // locate first element to be read
+            fseek(fp, (mos1_start * n2 + mos2_start) * sizeof(double), SEEK_CUR);
+
+            for (size_t Q = 0; Q < nQ - 1; ++Q) {
+                // read data on this page
+                for (size_t p = 0, QS = Q * S; p < s1; ++p) {
+                    auto nele = fread(&Tdata[QS + p * s2], sizeof(double), s2, fp);
+                    if (!nele) {
+                        error_msg(Q, p);
+                    }
+                    fseek(fp, d2 * sizeof(double), SEEK_CUR);
+                }
+
+                // advance to next page
+                fseek(fp, d1 * n2 * sizeof(double), SEEK_CUR);
+            }
+
+            // read data on the last page
+            for (size_t p = 0; p < s1 - 1; ++p) {
+                auto nele = fread(&Tdata[(nQ - 1) * S + p * s2], sizeof(double), s2, fp);
+                if (!nele) {
+                    error_msg(nQ - 1, p);
+                }
+                fseek(fp, d2 * sizeof(double), SEEK_CUR);
+            }
+
+            // read data of the last row
+            auto nele = fread(&Tdata[(nQ - 1) * S + (s1 - 1) * s2], sizeof(double), s2, fp);
+            if (!nele) {
+                error_msg(nQ - 1, s1 - 1);
+            }
+        }
+
+        fclose(fp);
+    } else if (Bcan_files_.find({block[1], block[0]}) != Bcan_files_.end()) {
+        std::string rblock{block[1], block[0]};
+        FILE* fp = fopen(Bcan_files_.at(rblock).c_str(), "rb");
+
+        auto tmp = ambit::Tensor::build(tensor_type_, "Bcan_tmp", {s2, s1});
+        double* tmp_ptr = tmp.data().data();
+
+        auto P = ambit::Tensor::build(tensor_type_, "Bcan_P", {s1, s2});
+        double* P_ptr = P.data().data();
+
+        if (d1 == 0) { // fastest index is contiguous
+            auto error_msg = [&](const size_t Q) {
+                std::stringstream ss;
+                ss << "Read error of Bcan." << block << ".bin (transpose) on Q = " << Q;
+                throw std::runtime_error(ss.str());
+            };
+
+            // locate first element to be read
+            fseek(fp, (mos2_start * n1) * sizeof(double), SEEK_SET);
+
+            for (size_t Q = 0; Q < nQ - 1; ++Q) {
+                auto nele = fread(tmp_ptr, sizeof(double), S, fp);
+                if (!nele) {
+                    error_msg(Q);
+                }
+                P("pq") = tmp("qp");
+                C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
+                fseek(fp, d2 * n1 * sizeof(double), SEEK_CUR);
+            }
+            auto nele = fread(tmp_ptr, sizeof(double), S, fp);
+            if (!nele) {
+                error_msg(nQ - 1);
+            }
+            P("pq") = tmp("qp");
+            C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
+        } else {
+            auto error_msg = [&](const size_t Q, const size_t p) {
+                std::stringstream ss;
+                ss << "Read error of Bcan." << block << ".bin (transpose) on Q = " << Q
+                   << " p = " << p;
+                throw std::runtime_error(ss.str());
+            };
+
+            // locate first element to be read
+            fseek(fp, (mos2_start * n1 + mos1_start) * sizeof(double), SEEK_CUR);
+
+            for (size_t Q = 0; Q < nQ - 1; ++Q) {
+                // read data on this page
+                for (size_t p = 0; p < s2; ++p) {
+                    // auto nele = fread(&Tdata[QS + p * s1], sizeof(double), s1, fp);
+                    auto nele = fread(&tmp_ptr[p * s1], sizeof(double), s1, fp);
+                    if (!nele) {
+                        error_msg(Q, p);
+                    }
+                    fseek(fp, d1 * sizeof(double), SEEK_CUR);
+                }
+
+                // transpose and copy to T
+                P("pq") = tmp("qp");
+                C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
+
+                // advance to next page
+                fseek(fp, d2 * n1 * sizeof(double), SEEK_CUR);
+            }
+
+            // read data on the last page
+            for (size_t p = 0; p < s2 - 1; ++p) {
+                // auto nele = fread(&Tdata[(nQ - 1) * S + p * s1], sizeof(double), s1, fp);
+                auto nele = fread(&tmp_ptr[p * s1], sizeof(double), s1, fp);
+                if (!nele) {
+                    error_msg(nQ - 1, p);
+                }
+                fseek(fp, d1 * sizeof(double), SEEK_CUR);
+            }
+
+            // read data of the last row
+            // auto nele = fread(&Tdata[(nQ - 1) * S + (s2 - 1) * s1], sizeof(double), s1, fp);
+            auto nele = fread(&tmp_ptr[(s2 - 1) * s1], sizeof(double), s1, fp);
+            if (!nele) {
+                error_msg(nQ - 1, s2 - 1);
+            }
+
+            // transpose and copy to T
+            P("pq") = tmp("qp");
+            C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
+        }
+
+        fclose(fp);
+    } else {
+        throw std::runtime_error("Bcan." + block + ".bin not available on disk!");
+    }
+
+    if (order == "pqQ") {
+        matrix_transpose_in_place(Tdata.data(), nQ, S);
+    }
+
+    return T;
 }
 
 void SADSRG::print_contents(const std::string& str, size_t size) {

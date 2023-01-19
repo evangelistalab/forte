@@ -184,13 +184,12 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
 
 /**
  * @brief Apply in-place matrix transposition based on the algorithm of Catanzaro, Keller, Garland.
- *
- * See Algorithm 1 of DOI: 10.1145/2555243.2555253.
- * Also see https://github.com/bryancatanzaro/inplace
- *
  * @param data the matrix stored in row-major format
  * @param m the number of rows of the matrix
  * @param n the number of columns of the matrix
+ * 
+ * See Algorithm 1 of DOI: 10.1145/2555243.2555253.
+ * Also see https://github.com/bryancatanzaro/inplace
  */
 void matrix_transpose_in_place(double* data, const size_t m, const size_t n);
 
