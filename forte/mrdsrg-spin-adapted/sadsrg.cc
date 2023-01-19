@@ -1167,7 +1167,6 @@ void SADSRG::canonicalize_B(const std::vector<std::string>& blocks) {
         }
 
         size_t max_nQ = memory_avai / sizeof(double) / (2 * N);
-        max_nQ = 3;
         if (max_nQ < nQ) {
             outfile->Printf("\n -> B(P|pq) to Bcan(P|pq) to be run in batches: max Q size = %zu",
                             max_nQ);
@@ -1334,17 +1333,15 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
             fseek(fp, (mos1_start * n2) * sizeof(double), SEEK_SET);
 
             for (size_t Q = 0; Q < nQ - 1; ++Q) {
-                auto nele = fread(&Tdata[Q * S], sizeof(double), S, fp);
-                if (!nele) {
+                if (!fread(&Tdata[Q * S], sizeof(double), S, fp)) {
                     error_msg(Q);
                 }
                 fseek(fp, d1 * n2 * sizeof(double), SEEK_CUR);
             }
-            auto nele = fread(&Tdata[(nQ - 1) * S], sizeof(double), S, fp);
-            if (!nele) {
+            if (!fread(&Tdata[(nQ - 1) * S], sizeof(double), S, fp)) {
                 error_msg(nQ - 1);
             }
-        } else {
+        } else { // fastest index is not contiguous
             auto error_msg = [&](const size_t Q, const size_t p) {
                 std::stringstream ss;
                 ss << "Read error of Bcan." << block << ".bin on Q = " << Q << " p = " << p;
@@ -1357,29 +1354,26 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
             for (size_t Q = 0; Q < nQ - 1; ++Q) {
                 // read data on this page
                 for (size_t p = 0, QS = Q * S; p < s1; ++p) {
-                    auto nele = fread(&Tdata[QS + p * s2], sizeof(double), s2, fp);
-                    if (!nele) {
+                    if (!fread(&Tdata[QS + p * s2], sizeof(double), s2, fp)) {
                         error_msg(Q, p);
                     }
                     fseek(fp, d2 * sizeof(double), SEEK_CUR);
                 }
 
-                // advance to next page
+                // advance to the first element to be read on the next page
                 fseek(fp, d1 * n2 * sizeof(double), SEEK_CUR);
             }
 
             // read data on the last page
             for (size_t p = 0; p < s1 - 1; ++p) {
-                auto nele = fread(&Tdata[(nQ - 1) * S + p * s2], sizeof(double), s2, fp);
-                if (!nele) {
+                if (!fread(&Tdata[(nQ - 1) * S + p * s2], sizeof(double), s2, fp)) {
                     error_msg(nQ - 1, p);
                 }
                 fseek(fp, d2 * sizeof(double), SEEK_CUR);
             }
 
             // read data of the last row
-            auto nele = fread(&Tdata[(nQ - 1) * S + (s1 - 1) * s2], sizeof(double), s2, fp);
-            if (!nele) {
+            if (!fread(&Tdata[(nQ - 1) * S + (s1 - 1) * s2], sizeof(double), s2, fp)) {
                 error_msg(nQ - 1, s1 - 1);
             }
         }
@@ -1406,21 +1400,19 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
             fseek(fp, (mos2_start * n1) * sizeof(double), SEEK_SET);
 
             for (size_t Q = 0; Q < nQ - 1; ++Q) {
-                auto nele = fread(tmp_ptr, sizeof(double), S, fp);
-                if (!nele) {
+                if (!fread(tmp_ptr, sizeof(double), S, fp)) {
                     error_msg(Q);
                 }
                 P("pq") = tmp("qp");
                 C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
                 fseek(fp, d2 * n1 * sizeof(double), SEEK_CUR);
             }
-            auto nele = fread(tmp_ptr, sizeof(double), S, fp);
-            if (!nele) {
+            if (!fread(tmp_ptr, sizeof(double), S, fp)) {
                 error_msg(nQ - 1);
             }
             P("pq") = tmp("qp");
             C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
-        } else {
+        } else { // fastest index is not contiguous
             auto error_msg = [&](const size_t Q, const size_t p) {
                 std::stringstream ss;
                 ss << "Read error of Bcan." << block << ".bin (transpose) on Q = " << Q
@@ -1434,9 +1426,7 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
             for (size_t Q = 0; Q < nQ - 1; ++Q) {
                 // read data on this page
                 for (size_t p = 0; p < s2; ++p) {
-                    // auto nele = fread(&Tdata[QS + p * s1], sizeof(double), s1, fp);
-                    auto nele = fread(&tmp_ptr[p * s1], sizeof(double), s1, fp);
-                    if (!nele) {
+                    if (!fread(&tmp_ptr[p * s1], sizeof(double), s1, fp)) {
                         error_msg(Q, p);
                     }
                     fseek(fp, d1 * sizeof(double), SEEK_CUR);
@@ -1446,24 +1436,18 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
                 P("pq") = tmp("qp");
                 C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
 
-                // advance to next page
+                // advance to the first element to be read on the next page
                 fseek(fp, d2 * n1 * sizeof(double), SEEK_CUR);
             }
 
             // read data on the last page
             for (size_t p = 0; p < s2 - 1; ++p) {
-                // auto nele = fread(&Tdata[(nQ - 1) * S + p * s1], sizeof(double), s1, fp);
-                auto nele = fread(&tmp_ptr[p * s1], sizeof(double), s1, fp);
-                if (!nele) {
+                if (!fread(&tmp_ptr[p * s1], sizeof(double), s1, fp)) {
                     error_msg(nQ - 1, p);
                 }
                 fseek(fp, d1 * sizeof(double), SEEK_CUR);
             }
-
-            // read data of the last row
-            // auto nele = fread(&Tdata[(nQ - 1) * S + (s2 - 1) * s1], sizeof(double), s1, fp);
-            auto nele = fread(&tmp_ptr[(s2 - 1) * s1], sizeof(double), s1, fp);
-            if (!nele) {
+            if (!fread(&tmp_ptr[(s2 - 1) * s1], sizeof(double), s1, fp)) {
                 error_msg(nQ - 1, s2 - 1);
             }
 
@@ -1477,6 +1461,7 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
         throw std::runtime_error("Bcan." + block + ".bin not available on disk!");
     }
 
+    // in-place matrix transpose
     if (order == "pqQ") {
         matrix_transpose_in_place(Tdata.data(), nQ, S);
     }
