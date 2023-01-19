@@ -251,7 +251,8 @@ class ForteIntegrals {
     // Three-index integral functions (DF, Cholesky)
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>&,
                                                const std::vector<size_t>&,
-                                               const std::vector<size_t>&);
+                                               const std::vector<size_t>&,
+                                               const std::string& order = "Qpq");
 
     /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,

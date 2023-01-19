@@ -1223,12 +1223,14 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
 
     auto [mos1_start, mos1_end] = mos1_range;
     auto [mos2_start, mos2_end] = mos2_range;
-    auto s1 = mos1_end - mos1_start + 1;
-    auto s2 = mos2_end - mos2_start + 1;
+    auto s1 = mos1_end - mos1_start;
+    auto s2 = mos2_end - mos2_start;
     auto S = s1 * s2;
 
-    auto d1 = n1 - s1;
-    auto d2 = n2 - s2;
+    auto d1 = std::make_signed_t<std::size_t>(n1 - s1);
+    auto d2 = std::make_signed_t<std::size_t>(n2 - s2);
+    if (d1 < 0 or d2 < 0)
+        throw std::runtime_error("Incorrect MO indices! Check mos1_range and mos2_range!");
 
     ambit::Tensor T;
     if (order == "Qpq")

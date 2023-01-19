@@ -290,15 +290,24 @@ double** DISKDFIntegrals::three_integral_pointer() { return (ThreeIntegral_->poi
 
 ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q_vec,
                                                     const std::vector<size_t>& p_vec,
-                                                    const std::vector<size_t>& q_vec) {
+                                                    const std::vector<size_t>& q_vec,
+                                                    const std::string& order) {
     std::string func_name = "DISKDFIntegrals::three_integral_block: ";
 
     auto Qsize = Q_vec.size();
     auto psize = p_vec.size();
     auto qsize = q_vec.size();
     auto pqsize = psize * qsize;
+    auto Qqsize = Qsize * qsize;
 
-    auto out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
+    ambit::Tensor out;
+    if (order == "Qpq") {
+        out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
+    } else if (order == "pqQ") {
+        out = ambit::Tensor::build(tensor_type_, "Return", {psize, qsize, Qsize});
+    } else {
+        throw std::runtime_error(order + " order is not supported!");
+    }
 
     // directly return if any of the dimension is zero
     if (Qsize == 0 or psize == 0 or qsize == 0) {
@@ -325,10 +334,10 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
         std::iota(cmotomo.begin(), cmotomo.end(), 0);
     }
 
-    // make sure indices are contiguous
+    // test if indices are contiguous
     for (size_t a = 1; a < Qsize; ++a) {
         if (Q_vec[a] != Q_vec[0] + a) {
-            throw std::runtime_error(func_name + "auxiliary indices not contiguous");
+            throw std::runtime_error(func_name + "auxiliary indices not contiguous!");
         }
     }
     std::vector<size_t> Q_range{Q_vec[0], Q_vec[0] + Qsize};
@@ -356,31 +365,61 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
         df_->fill_tensor("B", out_data.data(), Q_range, p_range, q_range);
+        if (order == "pqQ")
+            matrix_transpose_in_place(out_data.data(), Qsize, pqsize);
     } else if ((not p_contiguous) and q_contiguous) {
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
-        for (size_t p = 0; p < psize; ++p) {
-            auto np = cmotomo[p_vec[p]];
-            auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
-            df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
+        if (order == "Qpq") {
+            for (size_t p = 0; p < psize; ++p) {
+                auto np = cmotomo[p_vec[p]];
+                auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
+                df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
 
-            for (size_t a = 0; a < Qsize; ++a) {
-                for (size_t q = 0; q < qsize; ++q) {
-                    out_data[a * pqsize + p * qsize + q] = Aq->get(a, q);
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t q = 0; q < qsize; ++q) {
+                        out_data[a * pqsize + p * qsize + q] = Aq->get(a, q);
+                    }
+                }
+            }
+        } else {
+            for (size_t p = 0; p < psize; ++p) {
+                auto np = cmotomo[p_vec[p]];
+                auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
+                df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
+
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t q = 0; q < qsize; ++q) {
+                        out_data[p * Qqsize + q * Qsize + a] = Aq->get(a, q);
+                    }
                 }
             }
         }
     } else if (p_contiguous and (not q_contiguous)) {
         std::vector<size_t> p_range{cmotomo[p_vec[0]], cmotomo[p_vec[0]] + psize};
 
-        for (size_t q = 0; q < qsize; ++q) {
-            auto nq = cmotomo[q_vec[q]];
-            auto Ap = std::make_shared<psi::Matrix>("Aq", Qsize, psize);
-            df_->fill_tensor("B", Ap, Q_range, {nq, nq + 1}, p_range);
+        if (order == "Qpq") {
+            for (size_t q = 0; q < qsize; ++q) {
+                auto nq = cmotomo[q_vec[q]];
+                auto Ap = std::make_shared<psi::Matrix>("Ap", Qsize, psize);
+                df_->fill_tensor("B", Ap, Q_range, {nq, nq + 1}, p_range);
 
-            for (size_t a = 0; a < Qsize; ++a) {
-                for (size_t p = 0; p < psize; ++p) {
-                    out_data[a * pqsize + p * qsize + q] = Ap->get(a, p);
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t p = 0; p < psize; ++p) {
+                        out_data[a * pqsize + p * qsize + q] = Ap->get(a, p);
+                    }
+                }
+            }
+        } else {
+            for (size_t q = 0; q < qsize; ++q) {
+                auto nq = cmotomo[q_vec[q]];
+                auto Ap = std::make_shared<psi::Matrix>("Ap", Qsize, psize);
+                df_->fill_tensor("B", Ap, Q_range, {nq, nq + 1}, p_range);
+
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t p = 0; p < psize; ++p) {
+                        out_data[p * Qqsize + q * Qsize + a] = Ap->get(a, p);
+                    }
                 }
             }
         }
@@ -404,20 +443,42 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
             }
 
             if (psize < qsize) {
-                for (size_t i = 0; i < batches[n]; ++i) {
-                    for (size_t a = 0; a < Qsize; ++a) {
-                        for (size_t q = 0; q < qsize; ++q) {
-                            auto idx = a * pqsize + (i + offset) * qsize + q;
-                            out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
+                if (order == "Qpq") {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t q = 0; q < qsize; ++q) {
+                                auto idx = a * pqsize + (i + offset) * qsize + q;
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
+                            }
+                        }
+                    }
+                } else {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t q = 0; q < qsize; ++q) {
+                                auto idx = (i + offset) * Qqsize + q * Qsize + a;
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
+                            }
                         }
                     }
                 }
             } else {
-                for (size_t i = 0; i < batches[n]; ++i) {
-                    for (size_t a = 0; a < Qsize; ++a) {
-                        for (size_t p = 0; p < psize; ++p) {
-                            auto idx = a * pqsize + p * qsize + (i + offset);
-                            out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
+                if (order == "Qpq") {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t p = 0; p < psize; ++p) {
+                                auto idx = a * pqsize + p * qsize + (i + offset);
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
+                            }
+                        }
+                    }
+                } else {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t p = 0; p < psize; ++p) {
+                                auto idx = p * Qqsize + (i + offset) * Qsize + a;
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
+                            }
                         }
                     }
                 }
