@@ -81,11 +81,6 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Energy contribution from CCAV block
     double E_V_T2_CCAV();
 
-    // /// Energy contribution from CCVV block using DF integrals
-    // double compute_Hbar0_CCVV_DF();
-    // /// Energy contribution from CCVV block using DiskDF integrals
-    // double compute_Hbar0_CCVV_diskDF();
-
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
 
@@ -93,10 +88,6 @@ class SA_MRPT2 : public SA_DSRGPT {
     void compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr = true);
     /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
     void compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr = true);
-    // /// Compute Hbar1 from core contraction, renormalize V if Vr is true
-    // void compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
-    // /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
-    // void compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
 
     /// C1 = [Vr, T2] CAVV from compute_Hbar1V_diskDF
     ambit::Tensor C1_VT2_CAVV_;

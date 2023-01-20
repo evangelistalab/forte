@@ -1139,7 +1139,12 @@ void SADSRG::canonicalize_B(const std::unordered_set<std::string>& blocks) {
     if (!eri_df_)
         throw std::runtime_error("For DF/CD integrals ONLY!");
 
+    print_h2("Canonicalize 3-Index B Integrals & Dump to Disk");
+
     for (const std::string& block : blocks) {
+        local_timer LT;
+        print_contents("Canonicalizing block " + block);
+
         if (block.size() != 2)
             throw std::runtime_error("Incorrect block labels: " + block);
         std::string U1_block(2, block[0]);
@@ -1199,6 +1204,7 @@ void SADSRG::canonicalize_B(const std::unordered_set<std::string>& blocks) {
         fclose(fp);
 
         Bcan_files_[block] = filename;
+        print_done(LT.get());
     }
 }
 
