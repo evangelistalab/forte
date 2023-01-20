@@ -974,9 +974,12 @@ bool SADSRG::check_semi_orbs() {
         Fcheck.emplace_back(space, fmax, fmean);
     }
 
+    bool semi_actv = true;
     auto nactv = actv_mos_.size();
-    for (const std::string& space : mo_space_info_->space_names()) {
-        if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
+    auto& Faa_data = Fd.block("aa").data();
+    auto actv_subspace = mo_space_info_->composite_space_names().at("ACTIVE");
+    for (const auto& space : actv_subspace) {
+        if (mo_space_info_->size(space) == 0)
             continue;
 
         auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");
@@ -986,8 +989,7 @@ bool SADSRG::check_semi_orbs() {
         for (size_t p = 0; p < size; ++p) {
             auto np = rel_indices[p];
             for (size_t q = p + 1; q < size; ++q) {
-                auto nq = rel_indices[q];
-                double v = std::fabs(Fd.block("aa").data()[np * nactv + nq]);
+                double v = std::fabs(Faa_data[np * nactv + rel_indices[q]]);
                 if (v > fmax)
                     fmax = v;
                 fmean += v;
@@ -996,9 +998,12 @@ bool SADSRG::check_semi_orbs() {
         fmean /= size * size * 0.5; // roughly correct
 
         semi_checked_results_[space] = fmax <= threshold_max and fmean <= e_conv;
+        if (not semi_checked_results_[space])
+            semi_actv = false;
 
         Fcheck.emplace_back(space, fmax, fmean);
     }
+    semi_checked_results_["ACTIVE"] = semi_actv; // manually add key "ACTIVE"
 
     std::string dash(8 + 32, '-');
     outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "Mean");
@@ -1122,7 +1127,7 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     return Fdiag;
 }
 
-void SADSRG::canonicalize_B(const std::vector<std::string>& blocks) {
+void SADSRG::canonicalize_B(const std::unordered_set<std::string>& blocks) {
     /**
      * Transform 3-index integrals to semicanonical basis and dump to disk.
      *
