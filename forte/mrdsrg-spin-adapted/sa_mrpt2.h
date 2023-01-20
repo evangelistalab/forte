@@ -93,8 +93,8 @@ class SA_MRPT2 : public SA_DSRGPT {
     void compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr = true);
     /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
     void compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr = true);
-    /// Compute Hbar1 from core contraction, renormalize V if Vr is true
-    void compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
+    // /// Compute Hbar1 from core contraction, renormalize V if Vr is true
+    // void compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
     // /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
     // void compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
 

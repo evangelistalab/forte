@@ -1257,13 +1257,15 @@ double SA_MRPT2::E_V_T2_CCAV() {
 
     double Eout = C1("vu") * Eta1_.block("aa")("uv");
 
-    auto D1 = ambit::Tensor::build(tensor_type_, "C1 VT2 CCAV", {na, na});
-    compute_Hbar1C_diskDF(D1, true);
-    double Eold = D1("vu") * Eta1_.block("aa")("uv");
+    // auto D1 = ambit::Tensor::build(tensor_type_, "C1 VT2 CCAV", {na, na});
+    // compute_Hbar1C_diskDF(D1, true);
+    // double Eold = D1("vu") * Eta1_.block("aa")("uv");
 
-    outfile->Printf("\n  Enew = %20.15f", Eout);
-    outfile->Printf("\n  Eold = %20.15f", Eold);
-    outfile->Printf("\n  Edel = %20.15f", Eout - Eold);
+    // outfile->Printf("\n  Enew = %20.15f", Eout);
+    // outfile->Printf("\n  Eold = %20.15f", Eold);
+    // outfile->Printf("\n  Edel = %20.15f", Eout - Eold);
+
+    outfile->Printf("\n  Eccav = %20.15f", Eout);
 
     t.stop();
     return Eout;
@@ -1308,7 +1310,6 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
     }
 
     size_t max_vir = (memory_avai / sizeof(double) - memory_min) / nQc;
-    max_vir = 3;
     if (max_vir < nv) {
         outfile->Printf("\n -> DF-DSRG-PT2(CCAV) Hbar1C to be run in batches: max virt size = %zu",
                         max_vir);
@@ -1468,7 +1469,7 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
     for (int thread = 0; thread < nthreads; ++thread) {
         C("vu") += C_vec[thread]("vu");
     }
-    C.print();
+    // C.print();
 
     // rotate back to original orbital basis
     if (!semi_canonical_) {
@@ -1482,140 +1483,140 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
     print_done(t.stop());
 }
 
-void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
-    /**
-     * Compute Hbar1["vu"] += V["vemn"] * S["mnue"]
-     *
-     * - if Vr is false: V["vemn"] = B(L|vm) * B(L|en)
-     * - if Vr is true: V["vemn"] = B(L|vm) * B(L|en) * [1 + exp(-s * D1^2)]
-     * - S["mnue"] = [2 * (mu|ne) - (mu|en)] * [1 - exp(-s * D2^2)] / D2
-     *
-     * where the two denominators are:
-     *   D1 = F_m + F_n - F_e - F_v
-     *   D2 = F_m + F_n - F_e - F_v
-     *
-     * Batching: for a given e, form V(vmn) and S(umn)
-     *
-     * To minimize the number of calls of ints_->three_integral_block,
-     * we store as many B(L|en) as possible in memory.
-     * Modified from function compute_Hbar1C_DF.
-     */
-    auto nQ = aux_mos_.size();
-    auto nc = core_mos_.size();
-    auto na = actv_mos_.size();
+// void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
+//     /**
+//      * Compute Hbar1["vu"] += V["vemn"] * S["mnue"]
+//      *
+//      * - if Vr is false: V["vemn"] = B(L|vm) * B(L|en)
+//      * - if Vr is true: V["vemn"] = B(L|vm) * B(L|en) * [1 + exp(-s * D1^2)]
+//      * - S["mnue"] = [2 * (mu|ne) - (mu|en)] * [1 - exp(-s * D2^2)] / D2
+//      *
+//      * where the two denominators are:
+//      *   D1 = F_m + F_n - F_e - F_v
+//      *   D2 = F_m + F_n - F_e - F_v
+//      *
+//      * Batching: for a given e, form V(vmn) and S(umn)
+//      *
+//      * To minimize the number of calls of ints_->three_integral_block,
+//      * we store as many B(L|en) as possible in memory.
+//      * Modified from function compute_Hbar1C_DF.
+//      */
+//     auto nQ = aux_mos_.size();
+//     auto nc = core_mos_.size();
+//     auto na = actv_mos_.size();
 
-    // check memory
-    size_t max_n_threads = dsrg_mem_.available() / mem_batched_["ccav"];
-    int n_threads = static_cast<size_t>(n_threads_) < max_n_threads ? n_threads_ : max_n_threads;
-    if (n_threads != n_threads_) {
-        outfile->Printf("\n  Use %d threads to compute CCAV energy due to memory shortage.",
-                        n_threads);
-    }
+//     // check memory
+//     size_t max_n_threads = dsrg_mem_.available() / mem_batched_["ccav"];
+//     int n_threads = static_cast<size_t>(n_threads_) < max_n_threads ? n_threads_ : max_n_threads;
+//     if (n_threads != n_threads_) {
+//         outfile->Printf("\n  Use %d threads to compute CCAV energy due to memory shortage.",
+//                         n_threads);
+//     }
 
-    size_t max_num_Qc = (dsrg_mem_.available() - n_threads * mem_batched_["ccav"]) * 0.8 /
-                        (sizeof(double) * nQ * nc);
-    if (max_num_Qc < 2) { // no point to do this batching anymore
-        compute_Hbar1C_DF(Hbar1, Vr);
-        return;
-    }
+//     size_t max_num_Qc = (dsrg_mem_.available() - n_threads * mem_batched_["ccav"]) * 0.8 /
+//                         (sizeof(double) * nQ * nc);
+//     if (max_num_Qc < 2) { // no point to do this batching anymore
+//         compute_Hbar1C_DF(Hbar1, Vr);
+//         return;
+//     }
 
-    timer t("Compute C1 core contraction DiskDF");
-    print_contents("Computing DiskDF Hbar1 CCAV");
+//     timer t("Compute C1 core contraction DiskDF");
+//     print_contents("Computing DiskDF Hbar1 CCAV");
 
-    // separate virtual indices into batches
-    auto virt_batches = split_indices_to_batches(virt_mos_, max_num_Qc);
-    size_t nbatch = virt_batches.size();
+//     // separate virtual indices into batches
+//     auto virt_batches = split_indices_to_batches(virt_mos_, max_num_Qc);
+//     size_t nbatch = virt_batches.size();
 
-    // some tensors used for threading
-    std::vector<ambit::Tensor> Be_vec = init_tensor_vecs(n_threads);
-    std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads);
-    std::vector<ambit::Tensor> S_vec = init_tensor_vecs(n_threads);
-    std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
-    std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads);
+//     // some tensors used for threading
+//     std::vector<ambit::Tensor> Be_vec = init_tensor_vecs(n_threads);
+//     std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads);
+//     std::vector<ambit::Tensor> S_vec = init_tensor_vecs(n_threads);
+//     std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
+//     std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads);
 
-    for (int i = 0; i < n_threads; i++) {
-        std::string t = std::to_string(i);
-        Be_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nc}));
-        V_vec.push_back(ambit::Tensor::build(tensor_type_, "V_thread" + t, {na, nc, nc}));
-        S_vec.push_back(ambit::Tensor::build(tensor_type_, "S_thread" + t, {na, nc, nc}));
-        C_vec.push_back(ambit::Tensor::build(tensor_type_, "C_thread" + t, {na, na}));
-    }
-    if (!semi_canonical_) {
-        for (int i = 0; i < n_threads; i++) {
-            std::string t = std::to_string(i);
-            X_vec.push_back(ambit::Tensor::build(tensor_type_, "X_thread" + t, {nQ, nc}));
-        }
-    }
+//     for (int i = 0; i < n_threads; i++) {
+//         std::string t = std::to_string(i);
+//         Be_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nc}));
+//         V_vec.push_back(ambit::Tensor::build(tensor_type_, "V_thread" + t, {na, nc, nc}));
+//         S_vec.push_back(ambit::Tensor::build(tensor_type_, "S_thread" + t, {na, nc, nc}));
+//         C_vec.push_back(ambit::Tensor::build(tensor_type_, "C_thread" + t, {na, na}));
+//     }
+//     if (!semi_canonical_) {
+//         for (int i = 0; i < n_threads; i++) {
+//             std::string t = std::to_string(i);
+//             X_vec.push_back(ambit::Tensor::build(tensor_type_, "X_thread" + t, {nQ, nc}));
+//         }
+//     }
 
-    auto Bac = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_);
-    if (!semi_canonical_) {
-        auto X = ambit::Tensor::build(tensor_type_, "tempCCAV", {nQ, na, nc});
-        X("gun") = Bac("gum") * U_.block("cc")("nm");
-        Bac("gvn") = X("gun") * U_.block("aa")("vu");
-    }
+//     auto Bac = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_);
+//     if (!semi_canonical_) {
+//         auto X = ambit::Tensor::build(tensor_type_, "tempCCAV", {nQ, na, nc});
+//         X("gun") = Bac("gum") * U_.block("cc")("nm");
+//         Bac("gvn") = X("gun") * U_.block("aa")("vu");
+//     }
 
-    for (size_t Ebatch = 0; Ebatch < nbatch; ++Ebatch) {
-        auto Ebatch_size = virt_batches[Ebatch].size();
-        auto BE = ints_->three_integral_block(aux_mos_, core_mos_, virt_batches[Ebatch]);
-        auto& BE_data = BE.data();
+//     for (size_t Ebatch = 0; Ebatch < nbatch; ++Ebatch) {
+//         auto Ebatch_size = virt_batches[Ebatch].size();
+//         auto BE = ints_->three_integral_block(aux_mos_, core_mos_, virt_batches[Ebatch]);
+//         auto& BE_data = BE.data();
 
-#pragma omp parallel for num_threads(n_threads)
-        for (size_t e = 0; e < Ebatch_size; ++e) {
-            auto ie = virt_batches[Ebatch][e];
-            double Fe = Fdiag_[ie];
+// #pragma omp parallel for num_threads(n_threads)
+//         for (size_t e = 0; e < Ebatch_size; ++e) {
+//             auto ie = virt_batches[Ebatch][e];
+//             double Fe = Fdiag_[ie];
 
-            int thread = omp_get_thread_num();
-#pragma omp critical
-            {
-                Be_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = BE_data[i[0] * Ebatch_size * nc + i[1] * Ebatch_size + e];
-                });
-                if (!semi_canonical_) {
-                    X_vec[thread]("gn") = Be_vec[thread]("gm") * U_.block("cc")("nm");
-                    Be_vec[thread]("gn") = X_vec[thread]("gn");
-                }
-            }
+//             int thread = omp_get_thread_num();
+// #pragma omp critical
+//             {
+//                 Be_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//                     value = BE_data[i[0] * Ebatch_size * nc + i[1] * Ebatch_size + e];
+//                 });
+//                 if (!semi_canonical_) {
+//                     X_vec[thread]("gn") = Be_vec[thread]("gm") * U_.block("cc")("nm");
+//                     Be_vec[thread]("gn") = X_vec[thread]("gn");
+//                 }
+//             }
 
-            V_vec[thread]("vmn") = Bac("gvm") * Be_vec[thread]("gn");
-            S_vec[thread]("vmn") = 2.0 * V_vec[thread]("vmn") - V_vec[thread]("vnm");
+//             V_vec[thread]("vmn") = Bac("gvm") * Be_vec[thread]("gn");
+//             S_vec[thread]("vmn") = 2.0 * V_vec[thread]("vmn") - V_vec[thread]("vnm");
 
-            // scale V by 1 + exp(-s * D^2)
-            if (Vr) {
-                V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                    double denom = Fdiag_[core_mos_[i[1]]] + Fdiag_[core_mos_[i[2]]] - Fe -
-                                   Fdiag_[actv_mos_[i[0]]];
-                    value *= 1.0 + dsrg_source_->compute_renormalized(denom);
-                });
-            }
+//             // scale V by 1 + exp(-s * D^2)
+//             if (Vr) {
+//                 V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//                     double denom = Fdiag_[core_mos_[i[1]]] + Fdiag_[core_mos_[i[2]]] - Fe -
+//                                    Fdiag_[actv_mos_[i[0]]];
+//                     value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+//                 });
+//             }
 
-            // scale T by [1 - exp(-s * D^2)] / D
-            S_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                double denom = Fdiag_[core_mos_[i[1]]] + Fdiag_[core_mos_[i[2]]] - Fe -
-                               Fdiag_[actv_mos_[i[0]]];
-                value *= dsrg_source_->compute_renormalized_denominator(denom);
-            });
+//             // scale T by [1 - exp(-s * D^2)] / D
+//             S_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//                 double denom = Fdiag_[core_mos_[i[1]]] + Fdiag_[core_mos_[i[2]]] - Fe -
+//                                Fdiag_[actv_mos_[i[0]]];
+//                 value *= dsrg_source_->compute_renormalized_denominator(denom);
+//             });
 
-            C_vec[thread]("vu") += V_vec[thread]("vmn") * S_vec[thread]("umn");
-        }
-    }
+//             C_vec[thread]("vu") += V_vec[thread]("vmn") * S_vec[thread]("umn");
+//         }
+//     }
 
-    // finalize results
-    auto C = ambit::Tensor::build(tensor_type_, "C1total_CCAV", {na, na});
-    for (int thread = 0; thread < n_threads; thread++) {
-        C("vu") += C_vec[thread]("vu");
-    }
+//     // finalize results
+//     auto C = ambit::Tensor::build(tensor_type_, "C1total_CCAV", {na, na});
+//     for (int thread = 0; thread < n_threads; thread++) {
+//         C("vu") += C_vec[thread]("vu");
+//     }
 
-    // rotate back to original orbital basis
-    if (!semi_canonical_) {
-        auto X = ambit::Tensor::build(tensor_type_, "tempCCAV", {na, na});
-        X("xv") = C("uv") * U_.block("aa")("ux");
-        C("xy") = X("xv") * U_.block("aa")("vy");
-    }
+//     // rotate back to original orbital basis
+//     if (!semi_canonical_) {
+//         auto X = ambit::Tensor::build(tensor_type_, "tempCCAV", {na, na});
+//         X("xv") = C("uv") * U_.block("aa")("ux");
+//         C("xy") = X("xv") * U_.block("aa")("vy");
+//     }
 
-    Hbar1("uv") += C("uv");
+//     Hbar1("uv") += C("uv");
 
-    print_done(t.stop());
-}
+//     print_done(t.stop());
+// }
 
 void SA_MRPT2::compute_hbar() {
     // Note F_ and V_ are renormalized integrals
