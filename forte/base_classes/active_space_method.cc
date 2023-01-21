@@ -131,9 +131,9 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
 
     // prepare RDMs
     auto rdms_vec = rdms(root_list, ampints->qp_many_body_level(), RDMsType::spin_free);
-    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
-        rdms_vec[i]->rotate(Ua, Ub);
-    }
+    // for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+    //     rdms_vec[i]->rotate(Ua, Ub);
+    // }
 
     // print table header
     psi::outfile->Printf("\n    %8s %14s %14s %14s %14s %14s %14s", "State", "QM_XX", "QM_XY",
@@ -199,9 +199,9 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
 
     // prepare RDMs
     auto rdms_vec = rdms(root_list, ampints->dp_many_body_level(), RDMsType::spin_free);
-    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
-        rdms_vec[i]->rotate(Ua, Ub);
-    }
+    // for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+    //     rdms_vec[i]->rotate(Ua, Ub);
+    // }
 
     // print table header
     psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
@@ -296,9 +296,9 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     // prepare transition RDMs
     auto rdm_level = ampints->dp_many_body_level();
     auto rdms = transition_rdms(root_list, method2, rdm_level, RDMsType::spin_free);
-    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
-        rdms[i]->rotate(Ua, Ub); // need to make 1-TRDM and dipole in the same orbital basis
-    }
+    // for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+    //     rdms[i]->rotate(Ua, Ub); // need to make 1-TRDM and dipole in the same orbital basis
+    // }
 
     // print table header
     psi::outfile->Printf("\n    %6s %6s %14s %14s %14s %14s", "Bra", "Ket", "DM_X", "DM_Y", "DM_Z",

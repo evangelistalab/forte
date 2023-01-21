@@ -75,6 +75,7 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
             Mbar0_[i] += 2.0 * M1c[m * ncore + m];
         }
         Mbar0_[i] += oetens[i]["uv"] * L1_["vu"];
+        outfile->Printf("\n  tensor %d: Mref = %20.15f", i, Mbar0_[i]);
     }
 
     Mbar1_.resize(n_tensors);
@@ -192,6 +193,10 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
         Mbar1["vu"] += temp1["uv"];
 
         print_done(t_local.get());
+
+        outfile->Printf("\n  tensor %d: Mbar0_ = %20.15f", i, Mbar0_[i]);
+        outfile->Printf(" Mbar1 norm = %20.15f", Mbar1.norm());
+        outfile->Printf(" Mbar2 norm = %20.15f", max_levels[i] > 1 ? Mbar2_[i].norm() : 0.0);
     }
 }
 
@@ -225,6 +230,7 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
         throw std::runtime_error("Not enough memory to run DF-DSRG-PT2(CCVV) 1RDM CC!");
     }
 
+    // batches of virtual indices
     size_t max_vir = (memory_avai / sizeof(double) - memory_min) / (2 * nQc);
     if (max_vir < nv) {
         outfile->Printf("\n -> DF-DSRG-PT2(CCVV) 1RDM CC to be run in batches: max virt size = %zu",
@@ -232,45 +238,50 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
     } else {
         max_vir = nv;
     }
-
-    // batches of virtual indices
-    std::vector<std::vector<size_t>> batch_vir;
-    batch_vir = split_vector(virt_mos_, max_vir);
+    auto batch_vir = split_vector(virt_mos_, max_vir);
     auto nbatches = batch_vir.size();
 
     // use MP2 amplitudes instead of DSRG
     bool complete_ccvv = (ccvv_source_ == "ZERO");
 
     // temp tensors for each thread
-    std::vector<ambit::Tensor> Da(nthreads);
+    std::vector<ambit::Tensor> Dc(nthreads);
     std::vector<ambit::Tensor> Jmn(nthreads), JKmn(nthreads);
 
     for (int i = 0; i < nthreads; ++i) {
         std::string t = std::to_string(i);
-        Da[i] = ambit::Tensor::build(CoreTensor, "Dcc_thread" + t, {nc, nc});
+        Dc[i] = ambit::Tensor::build(CoreTensor, "Dcc_thread" + t, {nc, nc});
         Jmn[i] = ambit::Tensor::build(CoreTensor, "Jcc_thread" + t, {nc, nc});
         JKmn[i] = ambit::Tensor::build(CoreTensor, "JKcc_thread" + t, {nc, nc});
     }
 
-    for (size_t c_batch = 0; c_batch < nbatches; ++c_batch) {
+    bool Bcv_file_exist =
+        !semi_checked_results_["RESTRICTED_DOCC"] or !semi_checked_results_["RESTRICTED_UOCC"];
+
+    for (size_t c_batch = 0, c_shift = 0; c_batch < nbatches; ++c_batch) {
         const auto& c_batch_vir_mos = batch_vir[c_batch];
         auto c_nvir = c_batch_vir_mos.size();
-        auto Bc = ambit::Tensor::build(ambit::CoreTensor, "Bc", {c_nvir, nc, nQ});
-        Bc("aig") = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_)("gai");
-        auto& Bc_vec = Bc.data();
+        ambit::Tensor Bc; // ckQ
+        if (Bcv_file_exist)
+            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc}, "pqQ");
+        else
+            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_, "pqQ");
+        auto& Bc_data = Bc.data();
 
-        for (size_t d_batch = c_batch; d_batch < nbatches; ++d_batch) {
+        for (size_t d_batch = c_batch, d_shift = c_shift; d_batch < nbatches; ++d_batch) {
             const auto& d_batch_vir_mos = batch_vir[d_batch];
             auto d_nvir = d_batch_vir_mos.size();
             ambit::Tensor Bd;
             if (d_batch == c_batch) {
                 Bd = Bc;
             } else {
-                Bd = ambit::Tensor::build(ambit::CoreTensor, "Bd", {d_nvir, nc, nQ});
-                Bd("aig") =
-                    ints_->three_integral_block(aux_mos_, d_batch_vir_mos, core_mos_)("gai");
+                ambit::Tensor Bd; // dlQ
+                if (Bcv_file_exist)
+                    Bd = read_Bcanonical("vc", {d_shift, d_shift + d_nvir}, {0, nc}, "pqQ");
+                else
+                    Bd = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, core_mos_, "pqQ");
             }
-            auto& Bd_vec = Bd.data();
+            auto& Bd_data = Bd.data();
 
             // index pairs for c and d
             std::vector<std::pair<size_t, size_t>> cd_pairs;
@@ -299,12 +310,12 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
                 auto fock_c = Fdiag_[c_batch_vir_mos[c]];
                 auto fock_d = Fdiag_[d_batch_vir_mos[d]];
 
-                double* Bci_ptr = &Bc_vec[c * nQc];
-                double* Bdj_ptr = &Bd_vec[d * nQc];
+                double* Bci_ptr = &Bc_data[c * nQc];
+                double* Bdj_ptr = &Bd_data[d * nQc];
 
                 // compute (ci|dj) for given indices c and d
-                C_DGEMM('N', 'T', nc, nc, nQ, 1.0, Bci_ptr, nQ, Bdj_ptr, nQ, 0.0,
-                        Jmn[thread].data().data(), nc);
+                psi::C_DGEMM('N', 'T', nc, nc, nQ, 1.0, Bci_ptr, nQ, Bdj_ptr, nQ, 0.0,
+                             Jmn[thread].data().data(), nc);
 
                 if (complete_ccvv) {
                     Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
@@ -321,17 +332,30 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
                 JKmn[thread]("pq") = 2.0 * Jmn[thread]("pq") - Jmn[thread]("qp");
 
                 auto factor = (c_batch_vir_mos[c] == d_batch_vir_mos[d]) ? 0.5 : 1.0;
-                Da[thread]("ij") -= factor * Jmn[thread]("ik") * JKmn[thread]("jk");
-                Da[thread]("ij") -= factor * Jmn[thread]("ki") * JKmn[thread]("kj");
+                Dc[thread]("ij") -= factor * Jmn[thread]("ik") * JKmn[thread]("jk");
+                Dc[thread]("ij") -= factor * Jmn[thread]("ki") * JKmn[thread]("kj");
             }
+            d_shift += d_nvir;
         }
+        c_shift += c_nvir;
+    }
+
+    // collect all results to the first thread
+    for (int i = 1; i < nthreads; ++i) {
+        Dc[0]("pq") += Dc[i]("pq");
+    }
+
+    // rotate back to original basis
+    if (!semi_checked_results_["RESTRICTED_DOCC"]) {
+        auto X = ambit::Tensor::build(CoreTensor, "Dcc_U", {nc, nc});
+        const auto& Ucc = U_.block("cc");
+        X("kj") = Dc[0]("kl") * Ucc("lj");
+        Dc[0]("ij") = Ucc("ki") * X("kj");
     }
 
     // add Dcc contributions to D1
-    for (int i = 0; i < nthreads; ++i) {
-        D1.block("cc")("pq") += Da[i]("pq");
-        D1.block("cc")("pq") += Da[i]("qp");
-    }
+    D1.block("cc")("pq") += Dc[0]("pq");
+    D1.block("cc")("pq") += Dc[0]("qp");
 
     print_done(t_ccvv.stop());
 }
@@ -366,6 +390,7 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
         throw std::runtime_error("Not enough memory to run DF-DSRG-PT2(CCVV) 1RDM VV!");
     }
 
+    // batches of occupied indices
     size_t max_occ = (memory_avai / sizeof(double) - memory_min) / (2 * nQv);
     if (max_occ < nc) {
         outfile->Printf("\n -> DF-DSRG-PT2(CCVV) 1RDM VV to be run in batches: max core size = %zu",
@@ -373,45 +398,49 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
     } else {
         max_occ = nc;
     }
-
-    // batches of occupied indices
-    std::vector<std::vector<size_t>> batch_occ;
-    batch_occ = split_vector(core_mos_, max_occ);
+    auto batch_occ = split_vector(core_mos_, max_occ);
     auto nbatches = batch_occ.size();
 
     // use MP2 amplitudes instead of DSRG
     bool complete_ccvv = (ccvv_source_ == "ZERO");
 
     // temp tensors for each thread
-    std::vector<ambit::Tensor> Da(nthreads);
+    std::vector<ambit::Tensor> Dv(nthreads);
     std::vector<ambit::Tensor> Jab(nthreads), JKab(nthreads);
 
     for (int i = 0; i < nthreads; ++i) {
         std::string t = std::to_string(i);
-        Da[i] = ambit::Tensor::build(CoreTensor, "Dvv_thread" + t, {nv, nv});
+        Dv[i] = ambit::Tensor::build(CoreTensor, "Dvv_thread" + t, {nv, nv});
         Jab[i] = ambit::Tensor::build(CoreTensor, "Jvv_thread" + t, {nv, nv});
         JKab[i] = ambit::Tensor::build(CoreTensor, "JKvv_thread" + t, {nv, nv});
     }
 
-    for (size_t i_batch = 0; i_batch < nbatches; ++i_batch) {
+    bool Bcv_file_exist =
+        !semi_checked_results_["RESTRICTED_DOCC"] or !semi_checked_results_["RESTRICTED_UOCC"];
+
+    for (size_t i_batch = 0, i_shift = 0; i_batch < nbatches; ++i_batch) {
         const auto& i_batch_occ_mos = batch_occ[i_batch];
         auto i_nocc = i_batch_occ_mos.size();
-        auto Bi = ambit::Tensor::build(ambit::CoreTensor, "Bi", {i_nocc, nv, nQ});
-        Bi("iag") = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_)("gia");
-        auto& Bi_vec = Bi.data();
+        ambit::Tensor Bi; // iaQ
+        if (Bcv_file_exist)
+            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv}, "pqQ");
+        else
+            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_, "pqQ");
+        auto& Bi_data = Bi.data();
 
-        for (size_t j_batch = i_batch; j_batch < nbatches; ++j_batch) {
+        for (size_t j_batch = i_batch, j_shift = i_shift; j_batch < nbatches; ++j_batch) {
             const auto& j_batch_occ_mos = batch_occ[j_batch];
             auto j_nocc = j_batch_occ_mos.size();
-            ambit::Tensor Bj;
+            ambit::Tensor Bj; // jbQ
             if (j_batch == i_batch) {
                 Bj = Bi;
             } else {
-                Bj = ambit::Tensor::build(ambit::CoreTensor, "Bj", {j_nocc, nv, nQ});
-                Bj("iag") =
-                    ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_)("gia");
+                if (Bcv_file_exist)
+                    Bj = read_Bcanonical("cv", {j_shift, j_shift + j_nocc}, {0, nv}, "pqQ");
+                else
+                    Bj = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_, "pqQ");
             }
-            auto& Bj_vec = Bj.data();
+            auto& Bj_data = Bj.data();
 
             // index pairs of i and j
             std::vector<std::pair<size_t, size_t>> ij_pairs;
@@ -440,12 +469,12 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
                 auto fock_i = Fdiag_[i_batch_occ_mos[i]];
                 auto fock_j = Fdiag_[j_batch_occ_mos[j]];
 
-                double* Bia_ptr = &Bi_vec[i * nQv];
-                double* Bjb_ptr = &Bj_vec[j * nQv];
+                double* Bia_ptr = &Bi_data[i * nQv];
+                double* Bjb_ptr = &Bj_data[j * nQv];
 
                 // compute (ia|jb) for given indices i and j
-                C_DGEMM('N', 'T', nv, nv, nQ, 1.0, Bia_ptr, nQ, Bjb_ptr, nQ, 0.0,
-                        Jab[thread].data().data(), nv);
+                psi::C_DGEMM('N', 'T', nv, nv, nQ, 1.0, Bia_ptr, nQ, Bjb_ptr, nQ, 0.0,
+                             Jab[thread].data().data(), nv);
 
                 if (complete_ccvv) {
                     Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
@@ -462,17 +491,30 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
                 JKab[thread]("pq") = 2.0 * Jab[thread]("pq") - Jab[thread]("qp");
 
                 auto factor = (i_batch_occ_mos[i] == j_batch_occ_mos[j]) ? 0.5 : 1.0;
-                Da[thread]("ab") += factor * Jab[thread]("ac") * JKab[thread]("bc");
-                Da[thread]("ab") += factor * Jab[thread]("ca") * JKab[thread]("cb");
+                Dv[thread]("ab") += factor * Jab[thread]("ac") * JKab[thread]("bc");
+                Dv[thread]("ab") += factor * Jab[thread]("ca") * JKab[thread]("cb");
             }
+            j_shift += j_nocc;
         }
+        i_shift += i_nocc;
+    }
+
+    // collect all results to the first thread
+    for (int i = 1; i < nthreads; ++i) {
+        Dv[0]("pq") += Dv[i]("pq");
+    }
+
+    // rotate back to original basis
+    if (!semi_checked_results_["RESTRICTED_UOCC"]) {
+        auto X = ambit::Tensor::build(CoreTensor, "Dvv_U", {nv, nv});
+        const auto& Uvv = U_.block("vv");
+        X("cb") = Dv[0]("cd") * Uvv("db");
+        Dv[0]("ab") = Uvv("ca") * X("cb");
     }
 
     // add Dvv contributions to D1
-    for (int i = 0; i < nthreads; ++i) {
-        D1.block("vv")("pq") += Da[i]("pq");
-        D1.block("vv")("pq") += Da[i]("qp");
-    }
+    D1.block("vv")("pq") += Dv[0]("pq");
+    D1.block("vv")("pq") += Dv[0]("qp");
 
     print_done(t_ccvv.stop());
 }
@@ -510,10 +552,16 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
     auto nQc = nQ * nc;
     auto nac = na * nc;
 
+    // check semi-canonical orbitals
+    bool semi_c = semi_checked_results_.at("RESTRICTED_DOCC");
+    bool semi_v = semi_checked_results_.at("RESTRICTED_UOCC");
+    bool semi_a = semi_checked_results_.at("ACTIVE");
+
     // test memory
     int nthreads = std::min(n_threads_, int(nv));
     size_t memory_avai = dsrg_mem_.available();
-    size_t memory_min = nthreads * nc * nc * (3 * na + 1) + nQ * nc * na + nthreads * na * na * N;
+    size_t memory_min = nthreads * (nc * (3 * nac + nc) + N * na * na) + nQc * na;
+    memory_min += (semi_c ? 0 : N * nc * nc);
     if ((memory_min + nQc) * sizeof(double) > memory_avai) {
         outfile->Printf("\n  Error: Not enough memory for DF-DSRG-PT2(CCAV) 1RDM CC.");
         outfile->Printf(" Need at least %zu Bytes more!",
@@ -521,6 +569,7 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
         throw std::runtime_error("Not enough memory to run DF-DSRG-PT2(CCAV) 1RDM CC!");
     }
 
+    // batches of virtual indices
     size_t max_vir = (memory_avai / sizeof(double) - memory_min) / nQc;
     if (max_vir < nv) {
         outfile->Printf("\n -> DF-DSRG-PT2(CCAV) 1RDM CC to be run in batches: max virt size = %zu",
@@ -528,22 +577,36 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
     } else {
         max_vir = nv;
     }
-
-    // batches of virtual indices
     auto batch_vir = split_vector(virt_mos_, max_vir);
     auto nbatches = batch_vir.size();
 
+    // rotate one-electron integrals to semi-canonical basis
+    std::vector<ambit::Tensor> oei_cc(N);
+    if (semi_c) {
+        for (int n = 0; n < N; ++n) {
+            oei_cc[n] = oetens[n].block("cc");
+        }
+    } else {
+        const auto& Ucc = U_.block("cc");
+        auto X = ambit::Tensor::build(CoreTensor, "oei_temp", {nc, nc});
+        for (int n = 0; n < N; ++n) {
+            oei_cc[n] = ambit::Tensor::build(CoreTensor, oetens[n].block("cc").name(), {nc, nc});
+            X("kj") = Ucc("ki") * oetens[n].block("cc")("ij");
+            oei_cc[n]("kl") = X("kj") * Ucc("lj");
+        }
+    }
+
     // temp tensors for each thread
     std::vector<ambit::Tensor> Dc(nthreads);
-    std::vector<ambit::Tensor> T2umn(nthreads), S2umn(nthreads), X2umn(nthreads);
+    std::vector<ambit::Tensor> T2(nthreads), S2(nthreads), X2(nthreads);
     std::vector<std::vector<ambit::Tensor>> Ma(nthreads);
 
     for (int i = 0; i < nthreads; ++i) {
         std::string t = std::to_string(i);
         Dc[i] = ambit::Tensor::build(CoreTensor, "Dcc_thread" + t, {nc, nc});
-        T2umn[i] = ambit::Tensor::build(CoreTensor, "T2acc_thread" + t, {na, nc, nc});
-        S2umn[i] = ambit::Tensor::build(CoreTensor, "S2acc_thread" + t, {na, nc, nc});
-        X2umn[i] = ambit::Tensor::build(CoreTensor, "X2acc_thread" + t, {na, nc, nc});
+        T2[i] = ambit::Tensor::build(CoreTensor, "T2acc_thread" + t, {na, nc, nc});
+        S2[i] = ambit::Tensor::build(CoreTensor, "S2acc_thread" + t, {na, nc, nc});
+        X2[i] = ambit::Tensor::build(CoreTensor, "X2acc_thread" + t, {na, nc, nc});
 
         for (int n = 0; n < N; ++n) {
             std::string name = "Ma" + std::to_string(n) + "_thread" + t;
@@ -552,63 +615,91 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
     }
 
     // 3-index integrals (P|mv)
-    auto Bmv = ambit::Tensor::build(CoreTensor, "Bmv", {na, nc, nQ});
-    Bmv("vmg") = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_)("gvm");
-    auto& Bu_vec = Bmv.data();
+    ambit::Tensor Bmv; // vmQ
+    if (!semi_c or !semi_a)
+        Bmv = read_Bcanonical("ac", {0, na}, {0, nc}, "pqQ");
+    else
+        Bmv = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_, "pqQ");
+    auto& Bu_data = Bmv.data();
 
     // pointer to 1-hole density
     const auto& E1 = Eta1_.block("aa");
 
-    for (size_t c_batch = 0; c_batch < nbatches; ++c_batch) {
+    for (size_t c_batch = 0, c_shift = 0; c_batch < nbatches; ++c_batch) {
         const auto& c_batch_vir_mos = batch_vir[c_batch];
         auto c_nvir = c_batch_vir_mos.size();
-        auto Bc = ambit::Tensor::build(ambit::CoreTensor, "Bi", {c_nvir, nc, nQ});
-        Bc("aig") = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_)("gai");
-        auto& Bc_vec = Bc.data();
+        ambit::Tensor Bc; // aiQ
+        if (!semi_c or !semi_v)
+            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc}, "pqQ");
+        else
+            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_, "pqQ");
+        auto& Bc_data = Bc.data();
 
 #pragma omp parallel for num_threads(nthreads)
-        for (size_t c = 0; c < nv; ++c) {
+        for (size_t c = 0; c < c_nvir; ++c) {
             int thread = omp_get_thread_num();
 
             auto fock_c = Fdiag_[c_batch_vir_mos[c]];
-            double* Bci_ptr = &Bc_vec[c * nQc];
+            double* Bci_ptr = &Bc_data[c * nQc];
 
             // form T2["ikvc"] for given c
-            C_DGEMM('N', 'T', nac, nc, nQ, 1.0, Bu_vec.data(), nQ, Bci_ptr, nQ, 0.0,
-                    T2umn[thread].data().data(), nc);
-            T2umn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+            psi::C_DGEMM('N', 'T', nac, nc, nQ, 1.0, Bu_data.data(), nQ, Bci_ptr, nQ, 0.0,
+                         T2[thread].data().data(), nc);
+            T2[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                 double denom = Fdiag_[core_mos_[i[1]]] + Fdiag_[core_mos_[i[2]]] - fock_c -
                                Fdiag_[actv_mos_[i[0]]];
                 value *= dsrg_source_->compute_renormalized_denominator(denom);
             });
-            S2umn[thread]("umn") = 2.0 * T2umn[thread]("umn") - T2umn[thread]("unm");
+            S2[thread]("umn") = 2.0 * T2[thread]("umn") - T2[thread]("unm");
 
-            X2umn[thread]("umn") = T2umn[thread]("vmn") * E1("uv");
+            X2[thread]("umn") = T2[thread]("vmn") * E1("uv");
 
-            Dc[thread]("ij") -= 0.5 * X2umn[thread]("uik") * S2umn[thread]("ujk");
-            Dc[thread]("ij") -= 0.5 * X2umn[thread]("uki") * S2umn[thread]("ukj");
+            Dc[thread]("ij") -= 0.5 * X2[thread]("uik") * S2[thread]("ujk");
+            Dc[thread]("ij") -= 0.5 * X2[thread]("uki") * S2[thread]("ukj");
 
             for (int n = 0; n < N; ++n) {
-                const auto& M1 = oetens[n].block("cc");
-                Ma[thread][n]("vu") -= 0.5 * M1("ji") * T2umn[thread]("vik") * S2umn[thread]("ujk");
-                Ma[thread][n]("vu") -= 0.5 * M1("ji") * T2umn[thread]("vki") * S2umn[thread]("ukj");
+                Ma[thread][n]("vu") -=
+                    0.5 * oei_cc[n]("ji") * T2[thread]("vik") * S2[thread]("ujk");
+                Ma[thread][n]("vu") -=
+                    0.5 * oei_cc[n]("ji") * T2[thread]("vki") * S2[thread]("ukj");
             }
+        }
+        c_shift += c_nvir;
+    }
+
+    // collect results to the first thread
+    for (int i = 1; i < nthreads; ++i) {
+        Dc[0]("pq") += Dc[i]("pq");
+        for (int n = 0; n < N; ++n) {
+            Ma[0][n]("pq") += Ma[i][n]("pq");
+        }
+    }
+
+    // rotate back to original basis
+    if (!semi_c) {
+        auto X = ambit::Tensor::build(CoreTensor, "Xcc_U", {nc, nc});
+        const auto& Ucc = U_.block("cc");
+        X("kj") = Dc[0]("kl") * Ucc("lj");
+        Dc[0]("ij") = Ucc("ki") * X("kj");
+    }
+    if (!semi_a) {
+        const auto& Uaa = U_.block("aa");
+        auto X = ambit::Tensor::build(CoreTensor, "Xaa_U", {na, na});
+        for (int n = 0; n < N; ++n) {
+            X("xv") = Ma[0][n]("xy") * Uaa("yv");
+            Ma[0][n]("uv") = Uaa("xu") * X("xv");
         }
     }
 
     // add Dcc contributions to D1
-    for (int i = 0; i < nthreads; ++i) {
-        D1.block("cc")("pq") += Dc[i]("pq");
-        D1.block("cc")("pq") += Dc[i]("qp");
-    }
+    D1.block("cc")("pq") += Dc[0]("pq");
+    D1.block("cc")("pq") += Dc[0]("qp");
 
     // add Maa contributions to Mbar1_
     for (int n = 0; n < N; ++n) {
         const auto& M1 = Mbar1_.at(n).block("aa");
-        for (int i = 0; i < nthreads; ++i) {
-            M1("pq") -= Ma[i][n]("pq");
-            M1("qp") -= Ma[i][n]("pq");
-        }
+        M1("pq") -= Ma[0][n]("pq");
+        M1("qp") -= Ma[0][n]("pq");
     }
 
     print_done(t_ccav.stop());
@@ -649,10 +740,16 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
     auto nQv = nQ * nv;
     auto nQa = nQ * na;
 
+    // check semi-canonical orbitals
+    bool semi_c = semi_checked_results_.at("RESTRICTED_DOCC");
+    bool semi_v = semi_checked_results_.at("RESTRICTED_UOCC");
+    bool semi_a = semi_checked_results_.at("ACTIVE");
+
     // test memory
     int nthreads = std::min(n_threads_, int(nc * (nc + 1) / 2));
     size_t memory_avai = dsrg_mem_.available();
-    size_t memory_min = nthreads * (3 * na * nv + na * na + nv * nv + na * na * N) + nQ * nc * na;
+    size_t memory_min = nthreads * (3 * na * nv + na * na + nv * nv + na * na * N) + nQa * nc;
+    memory_min += (semi_v ? 0 : N * nv * nv) + (semi_a ? 0 : N * na * na);
     if ((memory_min + nQv * 2) * sizeof(double) > memory_avai) {
         outfile->Printf("\n  Error: Not enough memory for DF-DSRG-PT2(CCAV) 1RDM AA/VV.");
         outfile->Printf(" Need at least %zu Bytes more!",
@@ -660,6 +757,7 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
         throw std::runtime_error("Not enough memory to run DF-DSRG-PT2(CCAV) 1RDM AA/VV!");
     }
 
+    // batches of occupied indices
     size_t max_occ = (memory_avai / sizeof(double) - memory_min) / (2 * nQv);
     if (max_occ < nc) {
         outfile->Printf(
@@ -668,11 +766,37 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
     } else {
         max_occ = nc;
     }
-
-    // batches of occupied indices
-    std::vector<std::vector<size_t>> batch_occ;
-    batch_occ = split_vector(core_mos_, max_occ);
+    auto batch_occ = split_vector(core_mos_, max_occ);
     auto nbatches = batch_occ.size();
+
+    // rotate one-electron integrals to semi-canonical basis
+    std::vector<ambit::Tensor> oei_vv(N), oei_aa(N);
+    if (semi_v) {
+        for (int n = 0; n < N; ++n) {
+            oei_vv[n] = oetens[n].block("vv");
+        }
+    } else {
+        const auto& Uvv = U_.block("vv");
+        auto X = ambit::Tensor::build(CoreTensor, "oei_temp", {nv, nv});
+        for (int n = 0; n < N; ++n) {
+            oei_vv[n] = ambit::Tensor::build(CoreTensor, oetens[n].block("vv").name(), {nv, nv});
+            X("cb") = Uvv("ca") * oetens[n].block("vv")("ab");
+            oei_vv[n]("cd") = X("cb") * Uvv("db");
+        }
+    }
+    if (semi_a) {
+        for (int n = 0; n < N; ++n) {
+            oei_aa[n] = oetens[n].block("aa");
+        }
+    } else {
+        const auto& Uaa = U_.block("aa");
+        auto X = ambit::Tensor::build(CoreTensor, "oei_temp", {na, na});
+        for (int n = 0; n < N; ++n) {
+            oei_aa[n] = ambit::Tensor::build(CoreTensor, oetens[n].block("aa").name(), {na, na});
+            X("xv") = Uaa("xu") * oetens[n].block("aa")("uv");
+            oei_aa[n]("xy") = X("xv") * Uaa("yv");
+        }
+    }
 
     // temp tensors for each thread
     std::vector<ambit::Tensor> Da(nthreads), Dv(nthreads);
@@ -694,9 +818,12 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
     }
 
     // 3-index integrals (P|mv)
-    auto Bmv = ambit::Tensor::build(CoreTensor, "Bmv", {nc, na, nQ});
-    Bmv("mvg") = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_)("gmv");
-    auto& Bu_vec = Bmv.data();
+    ambit::Tensor Bmv; // mvQ
+    if (!semi_c or !semi_a)
+        Bmv = read_Bcanonical("ca", {0, nc}, {0, na}, "pqQ");
+    else
+        Bmv = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_, "pqQ");
+    auto& Bu_data = Bmv.data();
 
     // 1-hole density pointer
     auto E1 = Eta1_.block("aa");
@@ -704,22 +831,26 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
     for (size_t i_batch = 0, i_shift = 0; i_batch < nbatches; ++i_batch) {
         const auto& i_batch_occ_mos = batch_occ[i_batch];
         auto i_nocc = i_batch_occ_mos.size();
-        auto Bi = ambit::Tensor::build(ambit::CoreTensor, "Ba", {i_nocc, nv, nQ});
-        Bi("iag") = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_)("gia");
-        auto& Bi_vec = Bi.data();
+        ambit::Tensor Bi; // iaQ
+        if (!semi_c or !semi_v)
+            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv}, "pqQ");
+        else
+            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_, "pqQ");
+        auto& Bi_data = Bi.data();
 
         for (size_t j_batch = i_batch, j_shift = i_shift; j_batch < nbatches; ++j_batch) {
             const auto& j_batch_occ_mos = batch_occ[j_batch];
             auto j_nocc = j_batch_occ_mos.size();
-            ambit::Tensor Bj;
+            ambit::Tensor Bj; // jbQ
             if (j_batch == i_batch) {
                 Bj = Bi;
             } else {
-                Bj = ambit::Tensor::build(ambit::CoreTensor, "Bb", {j_nocc, nv, nQ});
-                Bj("iag") =
-                    ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_)("gia");
+                if (!semi_c or !semi_v)
+                    Bj = read_Bcanonical("cv", {j_shift, j_shift + j_nocc}, {0, nv}, "pqQ");
+                else
+                    Bj = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_, "pqQ");
             }
-            auto& Bj_vec = Bj.data();
+            auto& Bj_data = Bj.data();
 
             // index pairs of i and j
             std::vector<std::pair<size_t, size_t>> ij_pairs;
@@ -749,11 +880,11 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
                 auto fock_j = Fdiag_[j_batch_occ_mos[j]];
 
                 // compute (ia|jv) for given indices i and j
-                double* Bia_ptr = &Bi_vec[i * nQv];
-                double* Bjv_ptr = &Bu_vec[(j + j_shift) * nQa];
+                double* Bia_ptr = &Bi_data[i * nQv];
+                double* Bjv_ptr = &Bu_data[(j + j_shift) * nQa];
 
-                C_DGEMM('N', 'T', nv, na, nQ, 1.0, Bia_ptr, nQ, Bjv_ptr, nQ, 0.0,
-                        J1[thread].data().data(), na);
+                psi::C_DGEMM('N', 'T', nv, na, nQ, 1.0, Bia_ptr, nQ, Bjv_ptr, nQ, 0.0,
+                             J1[thread].data().data(), na);
 
                 J1[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                     double denom =
@@ -762,11 +893,11 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
                 });
 
                 // compute (ja|iv) for given indices i and j
-                double* Bja_ptr = &Bj_vec[j * nQv];
-                double* Biv_ptr = &Bu_vec[(i + i_shift) * nQa];
+                double* Bja_ptr = &Bj_data[j * nQv];
+                double* Biv_ptr = &Bu_data[(i + i_shift) * nQa];
 
-                C_DGEMM('N', 'T', nv, na, nQ, 1.0, Bja_ptr, nQ, Biv_ptr, nQ, 0.0,
-                        J2[thread].data().data(), na);
+                psi::C_DGEMM('N', 'T', nv, na, nQ, 1.0, Bja_ptr, nQ, Biv_ptr, nQ, 0.0,
+                             J2[thread].data().data(), na);
 
                 J2[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                     double denom =
@@ -781,10 +912,10 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
                 Dv[thread]("ea") += factor * J1[thread]("av") * JK[thread]("eu") * E1("uv");
 
                 for (int n = 0; n < N; ++n) {
-                    const auto& M1a = oetens[n].block("aa");
-                    const auto& M1v = oetens[n].block("vv");
-                    Ma[thread][n]("vu") += factor * M1a("yv") * J1[thread]("ey") * JK[thread]("eu");
-                    Ma[thread][n]("vu") += factor * M1v("ae") * J1[thread]("av") * JK[thread]("eu");
+                    Ma[thread][n]("vu") +=
+                        factor * oei_aa[n]("yv") * J1[thread]("ey") * JK[thread]("eu");
+                    Ma[thread][n]("vu") +=
+                        factor * oei_vv[n]("ae") * J1[thread]("av") * JK[thread]("eu");
                 }
 
                 JK[thread]("pq") = 2.0 * J2[thread]("pq") - J1[thread]("pq");
@@ -792,10 +923,10 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
                 Dv[thread]("ea") += factor * J2[thread]("av") * JK[thread]("eu") * E1("uv");
 
                 for (int n = 0; n < N; ++n) {
-                    const auto& M1a = oetens[n].block("aa");
-                    const auto& M1v = oetens[n].block("vv");
-                    Ma[thread][n]("vu") += factor * M1a("yv") * J2[thread]("ey") * JK[thread]("eu");
-                    Ma[thread][n]("vu") += factor * M1v("ae") * J2[thread]("av") * JK[thread]("eu");
+                    Ma[thread][n]("vu") +=
+                        factor * oei_aa[n]("yv") * J2[thread]("ey") * JK[thread]("eu");
+                    Ma[thread][n]("vu") +=
+                        factor * oei_vv[n]("ae") * J2[thread]("av") * JK[thread]("eu");
                 }
             }
             j_shift += j_nocc;
@@ -803,21 +934,44 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
         i_shift += i_nocc;
     }
 
-    // add Daa and Dvv contributions to D1
-    for (int i = 0; i < nthreads; ++i) {
-        D1.block("aa")("pq") += Da[i]("pq");
-        D1.block("aa")("pq") += Da[i]("qp");
-        D1.block("vv")("pq") += Dv[i]("pq");
-        D1.block("vv")("pq") += Dv[i]("qp");
+    // collect results to the first thread
+    for (int i = 1; i < nthreads; ++i) {
+        Da[0]("pq") += Da[i]("pq");
+        Dv[0]("pq") += Dv[i]("pq");
+        for (int n = 0; n < N; ++n) {
+            Ma[0][n]("pq") += Ma[i][n]("pq");
+        }
     }
+
+    // rotate back to original basis
+    if (!semi_v) {
+        auto X = ambit::Tensor::build(CoreTensor, "Xvv_U", {nv, nv});
+        const auto& Uvv = U_.block("vv");
+        X("cb") = Dv[0]("cd") * Uvv("db");
+        Dv[0]("ab") = Uvv("ca") * X("cb");
+    }
+    if (!semi_a) {
+        auto X = ambit::Tensor::build(CoreTensor, "Xaa_U", {na, na});
+        const auto& Uaa = U_.block("aa");
+        X("xv") = Da[0]("xy") * Uaa("yv");
+        Da[0]("uv") = Uaa("xu") * X("xv");
+        for (int n = 0; n < N; ++n) {
+            X("xv") = Ma[0][n]("xy") * Uaa("yv");
+            Ma[0][n]("uv") = Uaa("xu") * X("xv");
+        }
+    }
+
+    // add Daa and Dvv contributions to D1
+    D1.block("aa")("pq") += Da[0]("pq");
+    D1.block("aa")("pq") += Da[0]("qp");
+    D1.block("vv")("pq") += Dv[0]("pq");
+    D1.block("vv")("pq") += Dv[0]("qp");
 
     // add Maa contributions to Mbar1_
     for (int n = 0; n < N; ++n) {
         const auto& M1 = Mbar1_.at(n).block("aa");
-        for (int i = 0; i < nthreads; ++i) {
-            M1("pq") -= Ma[i][n]("pq");
-            M1("qp") -= Ma[i][n]("pq");
-        }
+        M1("pq") -= Ma[0][n]("pq");
+        M1("qp") -= Ma[0][n]("pq");
     }
 
     print_done(t_ccav.stop());
@@ -858,10 +1012,16 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
     auto nQc = nQ * nc;
     auto nQa = nQ * na;
 
+    // check semi-canonical orbitals
+    bool semi_c = semi_checked_results_.at("RESTRICTED_DOCC");
+    bool semi_v = semi_checked_results_.at("RESTRICTED_UOCC");
+    bool semi_a = semi_checked_results_.at("ACTIVE");
+
     // test memory
     int nthreads = std::min(n_threads_, int(nv * (nv + 1) / 2));
     size_t memory_avai = dsrg_mem_.available();
     size_t memory_min = nthreads * (nc * nc + na * na + 3 * na * nc + na * na * N) + nQa * nv;
+    memory_min += (semi_c ? 0 : N * nc * nc) + (semi_a ? 0 : N * na * na);
     if ((memory_min + nQc * 2) * sizeof(double) > memory_avai) {
         outfile->Printf("\n  Error: Not enough memory for DF-DSRG-PT2(CAVV) 1RDM CC/AA.");
         outfile->Printf(" Need at least %zu Bytes more!",
@@ -869,6 +1029,7 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
         throw std::runtime_error("Not enough memory to run DF-DSRG-PT2(CAVV) 1RDM CC/AA!");
     }
 
+    // batches of virtual indices
     size_t max_vir = (memory_avai / sizeof(double) - memory_min) / (2 * nQc);
     if (max_vir < nv) {
         outfile->Printf(
@@ -877,11 +1038,37 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
     } else {
         max_vir = nv;
     }
-
-    // batches of virtual indices
-    std::vector<std::vector<size_t>> batch_vir;
-    batch_vir = split_vector(virt_mos_, max_vir);
+    auto batch_vir = split_vector(virt_mos_, max_vir);
     auto nbatches = batch_vir.size();
+
+    // rotate one-electron integrals to semi-canonical basis
+    std::vector<ambit::Tensor> oei_cc(N), oei_aa(N);
+    if (semi_c) {
+        for (int n = 0; n < N; ++n) {
+            oei_cc[n] = oetens[n].block("cc");
+        }
+    } else {
+        const auto& Ucc = U_.block("cc");
+        auto X = ambit::Tensor::build(CoreTensor, "oei_temp", {nc, nc});
+        for (int n = 0; n < N; ++n) {
+            oei_cc[n] = ambit::Tensor::build(CoreTensor, oetens[n].block("cc").name(), {nc, nc});
+            X("kj") = Ucc("ki") * oetens[n].block("cc")("ij");
+            oei_cc[n]("kl") = X("kj") * Ucc("lj");
+        }
+    }
+    if (semi_a) {
+        for (int n = 0; n < N; ++n) {
+            oei_aa[n] = oetens[n].block("aa");
+        }
+    } else {
+        const auto& Uaa = U_.block("aa");
+        auto X = ambit::Tensor::build(CoreTensor, "oei_temp", {na, na});
+        for (int n = 0; n < N; ++n) {
+            oei_aa[n] = ambit::Tensor::build(CoreTensor, oetens[n].block("aa").name(), {na, na});
+            X("xv") = Uaa("xu") * oetens[n].block("aa")("uv");
+            oei_aa[n]("xy") = X("xv") * Uaa("yv");
+        }
+    }
 
     // temp tensors for each thread
     std::vector<ambit::Tensor> Dc(nthreads), Da(nthreads);
@@ -903,9 +1090,12 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
     }
 
     // 3-index integrals (P|mv)
-    auto Beu = ambit::Tensor::build(CoreTensor, "Beu", {nv, na, nQ});
-    Beu("eug") = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_)("geu");
-    auto& Bu_vec = Beu.data();
+    ambit::Tensor Beu; // euQ
+    if (!semi_a or !semi_v)
+        Beu = read_Bcanonical("va", {0, nv}, {0, na}, "pqQ");
+    else
+        Beu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, "pqQ");
+    auto& Bu_data = Beu.data();
 
     // pointer to 1-particle density
     auto L1 = L1_.block("aa");
@@ -913,22 +1103,26 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
     for (size_t c_batch = 0, c_shift = 0; c_batch < nbatches; ++c_batch) {
         const auto& c_batch_vir_mos = batch_vir[c_batch];
         auto c_nvir = c_batch_vir_mos.size();
-        auto Bc = ambit::Tensor::build(ambit::CoreTensor, "Bc", {c_nvir, nc, nQ});
-        Bc("aig") = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_)("gai");
-        auto& Bc_vec = Bc.data();
+        ambit::Tensor Bc; // ckQ
+        if (!semi_c or !semi_v)
+            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc}, "pqQ");
+        else
+            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_, "pqQ");
+        auto& Bc_data = Bc.data();
 
         for (size_t d_batch = c_batch, d_shift = c_shift; d_batch < nbatches; ++d_batch) {
             const auto& d_batch_vir_mos = batch_vir[d_batch];
             auto d_nvir = d_batch_vir_mos.size();
-            ambit::Tensor Bd;
+            ambit::Tensor Bd; // dlQ
             if (d_batch == c_batch) {
                 Bd = Bc;
             } else {
-                Bd = ambit::Tensor::build(ambit::CoreTensor, "Bd", {d_nvir, nc, nQ});
-                Bd("aig") =
-                    ints_->three_integral_block(aux_mos_, d_batch_vir_mos, core_mos_)("gai");
+                if (!semi_c or !semi_v)
+                    Bd = read_Bcanonical("vc", {d_shift, d_shift + d_nvir}, {0, nc}, "pqQ");
+                else
+                    Bd = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, core_mos_, "pqQ");
             }
-            auto& Bd_vec = Bd.data();
+            auto& Bd_data = Bd.data();
 
             // index pairs for c and d
             std::vector<std::pair<size_t, size_t>> cd_pairs;
@@ -958,11 +1152,11 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
                 auto fock_d = Fdiag_[d_batch_vir_mos[d]];
 
                 // compute (ic|vd) for given indices c and d
-                double* Bci_ptr = &Bc_vec[c * nQc];
-                double* Bdv_ptr = &Bu_vec[(d + d_shift) * nQa];
+                double* Bci_ptr = &Bc_data[c * nQc];
+                double* Bdv_ptr = &Bu_data[(d + d_shift) * nQa];
 
-                C_DGEMM('N', 'T', nc, na, nQ, 1.0, Bci_ptr, nQ, Bdv_ptr, nQ, 0.0,
-                        J1[thread].data().data(), na);
+                psi::C_DGEMM('N', 'T', nc, na, nQ, 1.0, Bci_ptr, nQ, Bdv_ptr, nQ, 0.0,
+                             J1[thread].data().data(), na);
 
                 J1[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                     double denom =
@@ -971,11 +1165,11 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
                 });
 
                 // compute (id|vc) for given indices c and d
-                double* Bdi_ptr = &Bd_vec[d * nQc];
-                double* Bcv_ptr = &Bu_vec[(c + c_shift) * nQa];
+                double* Bdi_ptr = &Bd_data[d * nQc];
+                double* Bcv_ptr = &Bu_data[(c + c_shift) * nQa];
 
-                C_DGEMM('N', 'T', nc, na, nQ, 1.0, Bdi_ptr, nQ, Bcv_ptr, nQ, 0.0,
-                        J2[thread].data().data(), na);
+                psi::C_DGEMM('N', 'T', nc, na, nQ, 1.0, Bdi_ptr, nQ, Bcv_ptr, nQ, 0.0,
+                             J2[thread].data().data(), na);
 
                 J2[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                     double denom =
@@ -990,10 +1184,10 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
                 Da[thread]("xu") -= factor * J1[thread]("mx") * JK[thread]("mv") * L1("uv");
 
                 for (int n = 0; n < N; ++n) {
-                    const auto& M1c = oetens[n].block("cc");
-                    const auto& M1a = oetens[n].block("aa");
-                    Ma[thread][n]("vu") -= factor * M1c("mi") * J1[thread]("iu") * JK[thread]("mv");
-                    Ma[thread][n]("vu") -= factor * M1a("ux") * J1[thread]("mx") * JK[thread]("mv");
+                    Ma[thread][n]("vu") -=
+                        factor * oei_cc[n]("mi") * J1[thread]("iu") * JK[thread]("mv");
+                    Ma[thread][n]("vu") -=
+                        factor * oei_aa[n]("ux") * J1[thread]("mx") * JK[thread]("mv");
                 }
 
                 JK[thread]("pq") = 2.0 * J2[thread]("pq") - J1[thread]("pq");
@@ -1001,10 +1195,10 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
                 Da[thread]("xu") -= factor * J2[thread]("mx") * JK[thread]("mv") * L1("uv");
 
                 for (int n = 0; n < N; ++n) {
-                    const auto& M1c = oetens[n].block("cc");
-                    const auto& M1a = oetens[n].block("aa");
-                    Ma[thread][n]("vu") -= factor * M1c("mi") * J2[thread]("iu") * JK[thread]("mv");
-                    Ma[thread][n]("vu") -= factor * M1a("ux") * J2[thread]("mx") * JK[thread]("mv");
+                    Ma[thread][n]("vu") -=
+                        factor * oei_cc[n]("mi") * J2[thread]("iu") * JK[thread]("mv");
+                    Ma[thread][n]("vu") -=
+                        factor * oei_aa[n]("ux") * J2[thread]("mx") * JK[thread]("mv");
                 }
             }
             d_shift += d_nvir;
@@ -1012,21 +1206,44 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
         c_shift += c_nvir;
     }
 
-    // add Daa and Dcc contributions to D1
-    for (int i = 0; i < nthreads; ++i) {
-        D1.block("aa")("pq") += Da[i]("pq");
-        D1.block("aa")("pq") += Da[i]("qp");
-        D1.block("cc")("pq") += Dc[i]("pq");
-        D1.block("cc")("pq") += Dc[i]("qp");
+    // collect results to the first thread
+    for (int i = 1; i < nthreads; ++i) {
+        Dc[0]("pq") += Dc[i]("pq");
+        Da[0]("pq") += Da[i]("pq");
+        for (int n = 0; n < N; ++n) {
+            Ma[0][n]("pq") += Ma[i][n]("pq");
+        }
     }
+
+    // rotate back to original basis
+    if (!semi_c) {
+        auto X = ambit::Tensor::build(CoreTensor, "Xcc_U", {nc, nc});
+        const auto& Ucc = U_.block("cc");
+        X("kj") = Dc[0]("kl") * Ucc("lj");
+        Dc[0]("ij") = Ucc("ki") * X("kj");
+    }
+    if (!semi_a) {
+        const auto& Uaa = U_.block("aa");
+        auto X = ambit::Tensor::build(CoreTensor, "Xaa_U", {na, na});
+        X("xv") = Da[0]("xy") * Uaa("yv");
+        Da[0]("uv") = Uaa("xu") * X("xv");
+        for (int n = 0; n < N; ++n) {
+            X("xv") = Ma[0][n]("xy") * Uaa("yv");
+            Ma[0][n]("uv") = Uaa("xu") * X("xv");
+        }
+    }
+
+    // add Daa and Dcc contributions to D1
+    D1.block("aa")("pq") += Da[0]("pq");
+    D1.block("aa")("pq") += Da[0]("qp");
+    D1.block("cc")("pq") += Dc[0]("pq");
+    D1.block("cc")("pq") += Dc[0]("qp");
 
     // add Maa contributions to Mbar1_
     for (int n = 0; n < N; ++n) {
         const auto& M1 = Mbar1_.at(n).block("aa");
-        for (int i = 0; i < nthreads; ++i) {
-            M1("pq") += Ma[i][n]("pq");
-            M1("qp") += Ma[i][n]("pq");
-        }
+        M1("pq") += Ma[0][n]("pq");
+        M1("qp") += Ma[0][n]("pq");
     }
 
     print_done(t_cavv.stop());
@@ -1065,6 +1282,11 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
     auto nQv = nQ * nv;
     auto nQa = nQ * na;
 
+    // check semi-canonical orbitals
+    bool semi_c = semi_checked_results_.at("RESTRICTED_DOCC");
+    bool semi_v = semi_checked_results_.at("RESTRICTED_UOCC");
+    bool semi_a = semi_checked_results_.at("ACTIVE");
+
     // test memory
     int nthreads = std::min(n_threads_, int(nv * nc));
     size_t memory_avai = dsrg_mem_.available();
@@ -1076,6 +1298,7 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
         throw std::runtime_error("Not enough memory to run DF-DSRG-PT2(CAVV) 1RDM VV!");
     }
 
+    // batches of occupied indices
     size_t max_occ = (memory_avai / sizeof(double) - memory_min) / nQv;
     if (max_occ < nc) {
         outfile->Printf("\n -> DF-DSRG-PT2(CAVV) 1RDM VV to be run in batches: max core size = %zu",
@@ -1083,11 +1306,24 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
     } else {
         max_occ = nc;
     }
-
-    // batches of occupied indices
-    std::vector<std::vector<size_t>> batch_occ;
-    batch_occ = split_vector(core_mos_, max_occ);
+    auto batch_occ = split_vector(core_mos_, max_occ);
     auto nbatches = batch_occ.size();
+
+    // rotate one-electron integrals to semi-canonical basis
+    std::vector<ambit::Tensor> oei_vv(N);
+    if (semi_v) {
+        for (int n = 0; n < N; ++n) {
+            oei_vv[n] = oetens[n].block("vv");
+        }
+    } else {
+        const auto& Uvv = U_.block("vv");
+        auto X = ambit::Tensor::build(CoreTensor, "oei_temp", {nv, nv});
+        for (int n = 0; n < N; ++n) {
+            oei_vv[n] = ambit::Tensor::build(CoreTensor, oetens[n].block("vv").name(), {nv, nv});
+            X("cb") = Uvv("ca") * oetens[n].block("vv")("ab");
+            oei_vv[n]("cd") = X("cb") * Uvv("db");
+        }
+    }
 
     // temp tensors for each thread
     std::vector<ambit::Tensor> Dv(nthreads);
@@ -1108,19 +1344,25 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
     }
 
     // 3-index integrals (P|eu)
-    auto Beu = ambit::Tensor::build(CoreTensor, "Beu", {nv, na, nQ});
-    Beu("evg") = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_)("gev");
-    auto& Bu_vec = Beu.data();
+    ambit::Tensor Beu; // euQ
+    if (!semi_a or !semi_v)
+        Beu = read_Bcanonical("va", {0, nv}, {0, na}, "pqQ");
+    else
+        Beu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, "pqQ");
+    auto& Bu_data = Beu.data();
 
     // 1-particle density pointer
     auto L1 = L1_.block("aa");
 
-    for (size_t i_batch = 0; i_batch < nbatches; ++i_batch) {
+    for (size_t i_batch = 0, i_shift = 0; i_batch < nbatches; ++i_batch) {
         const auto& i_batch_occ_mos = batch_occ[i_batch];
         auto i_nocc = i_batch_occ_mos.size();
-        auto Bi = ambit::Tensor::build(ambit::CoreTensor, "Ba", {i_nocc, nv, nQ});
-        Bi("iag") = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_)("gia");
-        auto& Bi_vec = Bi.data();
+        ambit::Tensor Bi; // iaQ
+        if (!semi_c or !semi_v)
+            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv}, "pqQ");
+        else
+            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_, "pqQ");
+        auto& Bi_data = Bi.data();
 
         // index pairs of i and c
         std::vector<std::pair<size_t, size_t>> ic_pairs;
@@ -1142,11 +1384,11 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
             auto fock_c = Fdiag_[virt_mos_[c]];
 
             // compute (ia|uc) for given indices i and c
-            double* Bia_ptr = &Bi_vec[i * nQv];
-            double* Bcu_ptr = &Bu_vec[c * nQa];
+            double* Bia_ptr = &Bi_data[i * nQv];
+            double* Bcu_ptr = &Bu_data[c * nQa];
 
-            C_DGEMM('N', 'T', nv, na, nQ, 1.0, Bia_ptr, nQ, Bcu_ptr, nQ, 0.0,
-                    J1[thread].data().data(), na);
+            psi::C_DGEMM('N', 'T', nv, na, nQ, 1.0, Bia_ptr, nQ, Bcu_ptr, nQ, 0.0,
+                         J1[thread].data().data(), na);
 
             J1[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                 double denom = fock_i + Fdiag_[actv_mos_[i[1]]] - fock_c - Fdiag_[virt_mos_[i[0]]];
@@ -1154,10 +1396,10 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
             });
 
             // compute (ic|ua) for given indices i and c
-            double* Bic_ptr = &Bi_vec[i * nQv + c * nQ];
+            double* Bic_ptr = &Bi_data[i * nQv + c * nQ];
 
-            C_DGEMV('N', nv * na, nQ, 1.0, Bu_vec.data(), nQ, Bic_ptr, 1, 0.0,
-                    J2[thread].data().data(), 1);
+            psi::C_DGEMV('N', nv * na, nQ, 1.0, Bu_data.data(), nQ, Bic_ptr, 1, 0.0,
+                         J2[thread].data().data(), 1);
 
             J2[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                 double denom = fock_i + Fdiag_[actv_mos_[i[1]]] - fock_c - Fdiag_[virt_mos_[i[0]]];
@@ -1168,33 +1410,52 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
             Dv[thread]("ba") += 0.5 * J1[thread]("au") * JK[thread]("bv") * L1("uv");
 
             for (int n = 0; n < N; ++n) {
-                Ma[thread][n]("vu") +=
-                    0.5 * oetens[n].block("vv")("ab") * J1[thread]("au") * JK[thread]("bv");
+                Ma[thread][n]("vu") += 0.5 * oei_vv[n]("ab") * J1[thread]("au") * JK[thread]("bv");
             }
 
             JK[thread]("pq") = 2.0 * J2[thread]("pq") - J1[thread]("pq");
             Dv[thread]("ba") += 0.5 * J2[thread]("au") * JK[thread]("bv") * L1("uv");
 
             for (int n = 0; n < N; ++n) {
-                Ma[thread][n]("vu") +=
-                    0.5 * oetens[n].block("vv")("ab") * J2[thread]("au") * JK[thread]("bv");
+                Ma[thread][n]("vu") += 0.5 * oei_vv[n]("ab") * J2[thread]("au") * JK[thread]("bv");
             }
+        }
+        i_shift += i_nocc;
+    }
+
+    // collect results to the first thread
+    for (int i = 1; i < nthreads; ++i) {
+        Dv[0]("pq") += Dv[i]("pq");
+        for (int n = 0; n < N; ++n) {
+            Ma[0][n]("pq") += Ma[i][n]("pq");
+        }
+    }
+
+    // rotate back to original basis
+    if (!semi_v) {
+        const auto& Uvv = U_.block("vv");
+        auto X = ambit::Tensor::build(CoreTensor, "Xvv_U", {nv, nv});
+        X("cb") = Dv[0]("cd") * Uvv("db");
+        Dv[0]("ab") = Uvv("ca") * X("cb");
+    }
+    if (!semi_a) {
+        const auto& Uaa = U_.block("aa");
+        auto X = ambit::Tensor::build(CoreTensor, "Xaa_U", {na, na});
+        for (int n = 0; n < N; ++n) {
+            X("xv") = Ma[0][n]("xy") * Uaa("yv");
+            Ma[0][n]("uv") = Uaa("xu") * X("xv");
         }
     }
 
     // add Dvv contributions to D1
-    for (int i = 0; i < nthreads; ++i) {
-        D1.block("vv")("pq") += Dv[i]("pq");
-        D1.block("vv")("pq") += Dv[i]("qp");
-    }
+    D1.block("vv")("pq") += Dv[0]("pq");
+    D1.block("vv")("pq") += Dv[0]("qp");
 
     // add Maa contributions to Mbar1_
     for (int n = 0; n < N; ++n) {
         const auto& M1 = Mbar1_.at(n).block("aa");
-        for (int i = 0; i < nthreads; ++i) {
-            M1("pq") += Ma[i][n]("pq");
-            M1("qp") += Ma[i][n]("pq");
-        }
+        M1("pq") += Ma[0][n]("pq");
+        M1("qp") += Ma[0][n]("pq");
     }
 
     print_done(t_cavv.stop());

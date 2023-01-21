@@ -244,17 +244,13 @@ void SA_MRPT2::check_memory() {
     // compute energy
     if (eri_df_) {
         auto size_Lv = dsrg_mem_.compute_memory({"Lv"});
+        auto size_av = dsrg_mem_.compute_memory({"av"});
+        auto size_aa = dsrg_mem_.compute_memory({"aa"});
         auto size_acc = dsrg_mem_.compute_memory({"acc"});
 
-        auto mem_ccvv = 2 * (size_Lv + dsrg_mem_.compute_memory({"vv"}));
-        auto mem_cavv = size_Lv + dsrg_mem_.compute_memory({"vva", "vva", "aa", "Lva"});
-        auto mem_ccav = 2 * size_acc + dsrg_mem_.compute_memory({"Lc", "aa", "Lac"});
-
-        if (!semi_canonical_) {
-            mem_ccvv += 2 * size_Lv;
-            mem_cavv += size_Lv + dsrg_mem_.compute_memory({"Lva"});
-            mem_ccav += dsrg_mem_.compute_memory({"Lc", "Lac"});
-        }
+        auto mem_ccvv = 2 * (size_Lv + n_threads_ * dsrg_mem_.compute_memory({"vv"}));
+        auto mem_cavv = size_Lv + n_threads_ * (3 * size_av + size_aa) + dsrg_mem_.compute_memory({"Lva"});
+        auto mem_ccav = n_threads_ * (2 * size_acc + size_aa) + dsrg_mem_.compute_memory({"Lc", "Lac"});
 
         mem_batched_["ccvv"] = mem_ccvv;
         dsrg_mem_.add_entry("Local integrals for CCVV energy", mem_ccvv, false);
@@ -534,8 +530,8 @@ double SA_MRPT2::E_V_T2_CCVV() {
                 double* Bjb_ptr = &Bj_data[j * nQv];
 
                 // compute (ia|jb) for given indices i and j
-                C_DGEMM('N', 'T', nv, nv, nQ, 1.0, Bia_ptr, nQ, Bjb_ptr, nQ, 0.0,
-                        Jab[thread].data().data(), nv);
+                psi::C_DGEMM('N', 'T', nv, nv, nQ, 1.0, Bia_ptr, nQ, Bjb_ptr, nQ, 0.0,
+                             Jab[thread].data().data(), nv);
 
                 JKab[thread]("pq") = 2.0 * Jab[thread]("pq") - Jab[thread]("qp");
 
@@ -690,16 +686,16 @@ void SA_MRPT2::compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr) {
             double* Bia_ptr = &Bi_data[i * nQv];
             double* Bcu_ptr = &Bu_data[c * nQa];
 
-            C_DGEMM('N', 'T', nv, na, nQ, 1.0, Bia_ptr, nQ, Bcu_ptr, nQ, 0.0,
-                    J1[thread].data().data(), na);
+            psi::C_DGEMM('N', 'T', nv, na, nQ, 1.0, Bia_ptr, nQ, Bcu_ptr, nQ, 0.0,
+                         J1[thread].data().data(), na);
 
             JK[thread]("pq") = 2.0 * J1[thread]("pq");
 
             // compute (ic|ua) for given indices i and c
             double* Bic_ptr = &Bi_data[i * nQv + c * nQ];
 
-            C_DGEMV('N', nv * na, nQ, 1.0, Bu_data.data(), nQ, Bic_ptr, 1, 0.0,
-                    J2[thread].data().data(), 1);
+            psi::C_DGEMV('N', nv * na, nQ, 1.0, Bu_data.data(), nQ, Bic_ptr, 1, 0.0,
+                         J2[thread].data().data(), 1);
 
             JK[thread]("pq") -= J2[thread]("pq");
 
@@ -784,7 +780,7 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
     // test memory
     int nthreads = std::min(n_threads_, int(nv));
     size_t memory_avai = dsrg_mem_.available();
-    size_t memory_min = nthreads * na * (3 * nc * nc + na) + nQc * na;
+    size_t memory_min = nthreads * na * (2 * nc * nc + na) + nQc * na;
     if ((memory_min + nQc) * sizeof(double) > memory_avai) {
         outfile->Printf("\n  Error: Not enough memory for DF-DSRG-PT2(CCAV) Hbar1C.");
         outfile->Printf(" Need at least %zu Bytes more!",
@@ -846,8 +842,8 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
             double* Bci_ptr = &Bc_vec[c * nQc];
 
             // form (iv|kc) for given c
-            C_DGEMM('N', 'T', nac, nc, nQ, 1.0, Bu_vec.data(), nQ, Bci_ptr, nQ, 0.0,
-                    J[thread].data().data(), nc);
+            psi::C_DGEMM('N', 'T', nac, nc, nQ, 1.0, Bu_vec.data(), nQ, Bci_ptr, nQ, 0.0,
+                         J[thread].data().data(), nc);
 
             JK[thread]("umn") = 2.0 * J[thread]("umn") - J[thread]("unm");
 

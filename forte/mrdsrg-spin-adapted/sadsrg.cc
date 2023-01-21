@@ -1343,14 +1343,14 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
                     error_msg(Q);
                 }
                 P("pq") = tmp("qp");
-                C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
+                psi::C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
                 fseek(fp, d2 * n1 * sizeof(double), SEEK_CUR);
             }
             if (!fread(tmp_ptr, sizeof(double), S, fp)) {
                 error_msg(nQ - 1);
             }
             P("pq") = tmp("qp");
-            C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
+            psi::C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
         } else { // fastest index is not contiguous
             auto error_msg = [&](const size_t Q, const size_t p) {
                 std::stringstream ss;
@@ -1373,7 +1373,7 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
 
                 // transpose and copy to T
                 P("pq") = tmp("qp");
-                C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
+                psi::C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
 
                 // advance to the first element to be read on the next page
                 fseek(fp, d2 * n1 * sizeof(double), SEEK_CUR);
@@ -1392,7 +1392,7 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
 
             // transpose and copy to T
             P("pq") = tmp("qp");
-            C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
+            psi::C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
         }
 
         fclose(fp);
