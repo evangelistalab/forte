@@ -488,7 +488,7 @@ void DavidsonLiuSolver::check_orthogonality() {
     }
     if (maxoffdiag > orthogonality_threshold_) {
         S->print();
-        outfile->Printf("\n  Maximum absolute off-diagonal element of the overlap: %e", maxdiag);
+        outfile->Printf("\n  Maximum absolute off-diagonal element of the overlap: %e", maxoffdiag);
         std::string msg =
             "DavidsonLiuSolver::check_orthogonality(): eigenvectors are not orthogonal!";
         throw std::runtime_error(msg);
