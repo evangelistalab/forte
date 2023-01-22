@@ -648,13 +648,12 @@ void SA_MRDSRG::add_hermitian_conjugate(BlockedTensor& H2) {
 void SA_MRDSRG::compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int max_level, int ind) {
     // compute reference multipole
     {
+        Mbar0_[ind] = M["uv"] * L1_["vu"];
         auto& M1c = M.block("cc").data();
         for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
             Mbar0_[ind] += 2.0 * M1c[m * ncore + m];
         }
-        Mbar0_[ind] += M["uv"] * L1_["vu"];
-
-        Mbar1_[ind]["uv"] += M["uv"];
+        Mbar1_[ind]["uv"] = M["uv"];
     }
 
     O1_["pq"] = M["pq"];

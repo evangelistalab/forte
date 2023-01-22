@@ -87,7 +87,7 @@ class SA_MRDSRG : public SADSRG {
     bool restart_amps_;
 
     /// Prefix for file name for restart
-    std::string restart_file_prefix_;
+    std::string chk_filename_prefix_;
 
     /// Dump the converged amplitudes to disk
     void dump_amps_to_disk() override;
