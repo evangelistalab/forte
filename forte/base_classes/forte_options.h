@@ -308,12 +308,6 @@ class ForteOptions {
     void get_options_from_psi4(psi::Options& options);
 
     /**
-     * @brief Generate documentation for the options registered with this object
-     * @return A string with a list of options
-     */
-    std::string generate_documentation() const;
-
-    /**
      * @brief Return a python dictionary with all the options registered
      */
     pybind11::dict dict();
