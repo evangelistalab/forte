@@ -1,3 +1,7 @@
+# This script updates the file /docs/source/options.rst
+#
+# It should be run after any changes to the file /forte/register_forte_options.py
+
 from collections import defaultdict
 
 header  = """.. _`sec:options`:
