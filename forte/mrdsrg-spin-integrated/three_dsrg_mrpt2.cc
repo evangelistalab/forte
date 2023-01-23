@@ -1254,6 +1254,9 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     if (ccvv_algorithm == "CORE") {
         if (my_proc == 0)
             Eccvv = E_VT2_2_core();
+    } else if (ccvv_algorithm == "LT-DSRG") {
+        if (my_proc == 0)
+            Eccvv = E_ccvv_lt_ao();
     } else if (ccvv_algorithm == "FLY_LOOP") {
         if (my_proc == 0)
             Eccvv = E_VT2_2_fly_openmp();
@@ -1297,11 +1300,11 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
                                 "other algorihm");
     }
 
-    if (foptions_->get_bool("AO_DSRG_MRPT2")) {
-        double Eccvv_ao = E_ccvv_lt_ao();
-        Eccvv = Eccvv_ao;
-        outfile->Printf("\n  Eccvv_ao: %8.10f", Eccvv_ao);
-    }
+    // if (foptions_->get_bool("AO_DSRG_MRPT2")) {
+    //     double Eccvv_ao = E_ccvv_lt_ao();
+    //     Eccvv = Eccvv_ao;
+    //     outfile->Printf("\n  Eccvv_ao: %8.10f", Eccvv_ao);
+    // }
 
     if (my_proc == 0) {
         outfile->Printf("... Done. Timing %15.6f s", ccvv_timer.get());
@@ -2252,9 +2255,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
 double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
     std::string str = "Computing LT-DSRG-MRPT2 CCVV part (Shuhang Li test)";
     outfile->Printf("\n    %-40s ...", str.c_str());
-    std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
-    std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
-    //DiskDFJK jk(primary, auxiliary);
 
     bool is_core = foptions_->get_bool("LAPLACE_CORE");
     if (is_core) {
@@ -2305,8 +2305,8 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
         epsilon_virtual->set(virtual_count, Fa_[e]);
         virtual_count++;
     }
-    epsilon_rdocc->print();
-    epsilon_virtual->print();
+    // epsilon_rdocc->print();
+    // epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_, nfrozen);
@@ -2314,7 +2314,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
 
     /// Number of MO.
     int nmo = mo_space_info_->dimension("ALL").sum();
-    outfile->Printf("\n\n  NMOOOOO %d", nmo);
+
     local_timer timer1;
     ao_helper.Compute_Cholesky_Pseudo_Density();
     outfile->Printf("\n\n  Pseudo Cholesky takes %8.8f", timer1.get());
@@ -2363,13 +2363,13 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     std::vector<int> number_pseudo_occ_list = ao_helper.n_pseudo_occ_list();
     std::vector<int> number_pseudo_vir_list = ao_helper.n_pseudo_vir_list();
 
-    for (int i = 0; i < number_pseudo_occ_list.size(); i++) {
-        outfile->Printf("\n    pseudo_occ per point %d ", number_pseudo_occ_list[i]);
-    }
+    // for (int i = 0; i < number_pseudo_occ_list.size(); i++) {
+    //     outfile->Printf("\n    pseudo_occ per point %d ", number_pseudo_occ_list[i]);
+    // }
 
-    for (int i = 0; i < number_pseudo_vir_list.size(); i++) {
-        outfile->Printf("\n    pseudo_vir per point %d ", number_pseudo_vir_list[i]);
-    }
+    // for (int i = 0; i < number_pseudo_vir_list.size(); i++) {
+    //     outfile->Printf("\n    pseudo_vir per point %d ", number_pseudo_vir_list[i]);
+    // }
 
     /// Construct C_pq
     psi::SharedMatrix C_pq = erfc_metric(Omega, ints_);
@@ -2386,6 +2386,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     outfile->Printf("\n    Done with T");
 
     S.reset();
+    ints_.reset();
 
     /// Use DiskDFJK object to initialize erfc three-center integrals.
     DiskDFJK disk_jk(primary, auxiliary);
@@ -2774,8 +2775,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
         epsilon_virtual->set(virtual_count, Fa_[e]);
         virtual_count++;
     }
-    epsilon_rdocc->print();
-    epsilon_virtual->print();
+    // epsilon_rdocc->print();
+    // epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_, nfrozen);
@@ -2831,13 +2832,13 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     std::vector<int> number_pseudo_occ_list = ao_helper.n_pseudo_occ_list();
     std::vector<int> number_pseudo_vir_list = ao_helper.n_pseudo_vir_list();
 
-    for (int i = 0; i < number_pseudo_occ_list.size(); i++) {
-        outfile->Printf("\n    pseudo_occ per point %d ", number_pseudo_occ_list[i]);
-    }
+    // for (int i = 0; i < number_pseudo_occ_list.size(); i++) {
+    //     outfile->Printf("\n    pseudo_occ per point %d ", number_pseudo_occ_list[i]);
+    // }
 
-    for (int i = 0; i < number_pseudo_vir_list.size(); i++) {
-        outfile->Printf("\n    pseudo_vir per point %d ", number_pseudo_vir_list[i]);
-    }
+    // for (int i = 0; i < number_pseudo_vir_list.size(); i++) {
+    //     outfile->Printf("\n    pseudo_vir per point %d ", number_pseudo_vir_list[i]);
+    // }
 
     /// Construct C_pq
     psi::SharedMatrix C_pq = erfc_metric(Omega, ints_);

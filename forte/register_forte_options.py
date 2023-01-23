@@ -702,7 +702,7 @@ def register_dsrg_options(options):
     options.add_str(
         "CCVV_ALGORITHM", "FLY_AMBIT", [
             "CORE", "FLY_AMBIT", "FLY_LOOP", "BATCH_CORE", "BATCH_VIRTUAL", "BATCH_CORE_GA", "BATCH_VIRTUAL_GA",
-            "BATCH_VIRTUAL_MPI", "BATCH_CORE_MPI", "BATCH_CORE_REP", "BATCH_VIRTUAL_REP"
+            "BATCH_VIRTUAL_MPI", "BATCH_CORE_MPI", "BATCH_CORE_REP", "BATCH_VIRTUAL_REP", "LT-DSRG"
         ], "Algorithm to compute the CCVV term in DSRG-MRPT2 (only in three-dsrg-mrpt2 code)"
     )
 
