@@ -86,8 +86,6 @@ void export_ForteOptions(py::module& m) {
              "Read the value of options from Psi4")
         .def("set_from_dict", &ForteOptions::set_from_dict,
              "Set options from a dictionary `dict` of labels -> values")
-        .def("generate_documentation", &ForteOptions::generate_documentation,
-             "Generate documentation from the options list")
         .def("__str__", &ForteOptions::str, "Returns a string representation of this object")
         .def("__repr__", &ForteOptions::str, "Returns a string representation of this object");
 }
