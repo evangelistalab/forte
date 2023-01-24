@@ -896,51 +896,6 @@ void SADSRG::rotate_three_ints_to_original(BlockedTensor& H3) {
         Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");
 }
 
-void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
-                                        BlockedTensor& H2) {
-    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
-    ambit::Tensor temp;
-    ambit::Tensor Ua = Uactv_.block("aa");
-
-    local_timer timer;
-    print_contents("Rotating 1-body term to original basis");
-    temp = H1.block("aa").clone(tensor_type_);
-    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
-    print_done(timer.get());
-
-    timer.reset();
-    print_contents("Rotating 2-body term to original basis");
-    temp = H2.block("aaaa").clone(tensor_type_);
-    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
-    print_done(timer.get());
-}
-
-void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
-                                        BlockedTensor& H2, BlockedTensor& H3) {
-    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
-    ambit::Tensor temp;
-    ambit::Tensor Ua = Uactv_.block("aa");
-
-    local_timer timer;
-    print_contents("Rotating 1-body term to original basis");
-    temp = H1.block("aa").clone(tensor_type_);
-    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
-    print_done(timer.get());
-
-    timer.reset();
-    print_contents("Rotating 2-body term to original basis");
-    temp = H2.block("aaaa").clone(tensor_type_);
-    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
-    print_done(timer.get());
-
-    timer.reset();
-    print_contents("Rotating 3-body term to original basis");
-    temp = H3.block("aaaaaa").clone(tensor_type_);
-    H3.block("aaaaaa")("pqrstu") =
-        Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");
-    print_done(timer.get());
-}
-
 bool SADSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
     semi_checked_results_.clear();

@@ -438,58 +438,6 @@ std::vector<psi::SharedMatrix> Psi4Integrals::mo_quadrupole_ints() const {
     return quadrupole_ints;
 }
 
-// std::vector<std::shared_ptr<psi::Matrix>>
-// Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon,
-//                                      const bool& resort) {
-//     std::vector<std::shared_ptr<psi::Matrix>> MOdipole_ints;
-//     std::vector<std::string> names{"X", "Y", "Z"};
-//     for (int i = 0; i < 3; ++i) {
-//         std::shared_ptr<psi::Matrix> modipole(dipole_ints_ao_[i]->clone());
-//         modipole->set_name("MO Dipole " + names[i]);
-//         modipole->transform(Cao);
-//         MOdipole_ints.push_back(modipole);
-//     }
-
-//     if (resort) {
-//         // figure out the correspondence between C1 and Pitzer
-//         std::vector<std::tuple<double, int, int>> order;
-//         for (int h = 0; h < nirrep_; ++h) {
-//             for (int i = 0; i < nmopi_[h]; ++i) {
-//                 order.emplace_back(epsilon->get(h, i), i, h);
-//             }
-//         }
-//         std::sort(order.begin(), order.end());
-
-//         std::vector<int> irrep_offset(nirrep_, 0);
-//         for (int h = 1, sum = 0; h < nirrep_; ++h) {
-//             sum += nmopi_[h - 1];
-//             irrep_offset[h] = sum;
-//         }
-
-//         std::vector<int> indices;
-//         for (int iC1 = 0; iC1 < (int)nmo_; ++iC1) {
-//             int i = std::get<1>(order[iC1]);
-//             int h = std::get<2>(order[iC1]);
-//             indices.push_back(irrep_offset[h] + i);
-//         }
-
-//         for (int i = 0; i < 3; ++i) {
-//             std::shared_ptr<psi::Matrix> modipole(
-//                 new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
-//             for (int p = 0; p < (int)nmo_; ++p) {
-//                 int np = indices[p];
-//                 for (int q = 0; q < (int)nmo_; ++q) {
-//                     int nq = indices[q];
-//                     modipole->set(np, nq, MOdipole_ints[i]->get(p, q));
-//                 }
-//             }
-//             MOdipole_ints[i] = modipole;
-//         }
-//     }
-
-//     return MOdipole_ints;
-// }
-
 void Psi4Integrals::make_fock_matrix(ambit::Tensor gamma_a, ambit::Tensor gamma_b) {
     // build inactive Fock
     auto rdoccpi = mo_space_info_->dimension("INACTIVE_DOCC");

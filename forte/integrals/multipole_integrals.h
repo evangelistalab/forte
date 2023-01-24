@@ -46,38 +46,53 @@
 namespace forte {
 class MultipoleIntegrals {
   public:
-    /// @brief Contructor to create MO dipole and quadrupole integrals
-    /// @param ints forte integral object
-    /// @param mo_space_info The MOSpaceInfo object
+    /**
+     * @brief Construct a new Multipole Integrals object
+     *
+     * @param ints forte integral object
+     * @param mo_space_info The MOSpaceInfo object
+     */
     MultipoleIntegrals(std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    /// @brief Electronic dipole moment integrals matrix element
-    /// @param direction The direction of dipole moment [X, Y, Z]
-    /// @param p The bra index (frozen orbitals included)
-    /// @param q The ket index (frozen orbitals included)
-    /// @return electronic dipole matrix element M_{pq}
+    /**
+     * @brief Electronic dipole moment integrals matrix element
+     *
+     * @param direction The direction of dipole moment [X, Y, Z]
+     * @param p The bra index (frozen orbitals included)
+     * @param q The ket index (frozen orbitals included)
+     * @return electronic dipole matrix element M_{pq}
+     */
     double dp_ints(int direction, size_t p, size_t q) const;
 
-    /// @brief Electronic quadrupole moment integrals matrix element
-    /// @param direction The direction of quadrupole moment [XX, XY, XZ, YY, YZ, ZZ]
-    /// @param p The bra index (frozen orbitals included)
-    /// @param q The ket index (frozen orbitals included)
-    /// @return electronic quadrupole matrix element M_{pq}
+    /**
+     * @brief Electronic quadrupole moment integrals matrix element
+     *
+     * @param direction The direction of quadrupole moment [XX, XY, XZ, YY, YZ, ZZ]
+     * @param p The bra index (frozen orbitals included)
+     * @param q The ket index (frozen orbitals included)
+     * @return electronic quadrupole matrix element M_{pq}
+     */
     double qp_ints(int direction, size_t p, size_t q) const;
 
-    /// @brief Electronic dipole moment integrals matrix element
-    /// @param direction The direction of dipole moment [X, Y, Z]
-    /// @param p The bra index (frozen orbitals excluded)
-    /// @param q The ket index (frozen orbitals excluded)
-    /// @return electronic dipole matrix element M_{pq}
+    /**
+     * @brief Electronic dipole moment integrals matrix element
+     *
+     * @param direction The direction of dipole moment [X, Y, Z]
+     * @param p The bra index (frozen orbitals excluded)
+     * @param q The ket index (frozen orbitals excluded)
+     * @return electronic dipole matrix element M_{pq}
+     */
     double dp_ints_corr(int direction, size_t p, size_t q) const;
 
-    /// @brief Electronic quadrupole moment integrals matrix element
-    /// @param direction The direction of quadrupole moment [XX, XY, XZ, YY, YZ, ZZ]
-    /// @param p The bra index (frozen orbitals excluded)
-    /// @param q The ket index (frozen orbitals excluded)
-    /// @return electronic quadrupole matrix element M_{pq}
+    /**
+     * @brief Electronic quadrupole moment integrals matrix element
+     *
+     * @param direction The direction of quadrupole moment [XX, XY, XZ, YY, YZ, ZZ]
+     * @param p The bra index (frozen orbitals excluded)
+     * @param q The ket index (frozen orbitals excluded)
+     * @return electronic quadrupole matrix element M_{pq}
+     */
     double qp_ints_corr(int direction, size_t p, size_t q) const;
 
     /// Nuclear contributions to dipole moments in X, Y, Z order
@@ -119,8 +134,11 @@ class ActiveMultipoleIntegrals {
   public:
     // ==> Class Constructors <==
 
-    /// @brief Contructor to create integrals for an active space
-    /// @param mpints MultipoleIntegrals object
+    /**
+     * @brief Construct a new Active Multipole Integrals object
+     *
+     * @param mpints MultipoleIntegrals object
+     */
     ActiveMultipoleIntegrals(std::shared_ptr<MultipoleIntegrals> mpints);
 
     // ==> Class Interface <==

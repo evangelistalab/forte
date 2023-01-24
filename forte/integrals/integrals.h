@@ -594,20 +594,12 @@ class Psi4Integrals : public ForteIntegrals {
     void setup_psi4_ints();
     void transform_one_electron_integrals();
     void compute_frozen_one_body_operator() override;
-    //    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub)
-    //    override;
     void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
                          bool re_transform = true) override;
     void rotate_mos() override;
 
     /// Build AO dipole and quadrupole integrals
     void build_multipole_ints_ao() override;
-
-    // std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha,
-    //                                                          const bool& resort) override;
-    // std::vector<std::shared_ptr<psi::Matrix>>
-    // dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
-    //                       const bool& resort) override;
 
     /// Make a shared pointer to a Psi4 JK object
     void make_psi4_JK();

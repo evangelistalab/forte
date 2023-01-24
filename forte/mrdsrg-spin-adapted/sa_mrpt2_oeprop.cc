@@ -580,7 +580,8 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
     auto batch_vir = split_vector(virt_mos_, max_vir);
     auto nbatches = batch_vir.size();
 
-    // rotate one-electron integrals to semi-canonical basis
+    // rotate one-electron integrals and 1-hole density to semicanonical basis
+    ambit::Tensor E1;
     std::vector<ambit::Tensor> oei_cc(N);
     if (semi_c) {
         for (int n = 0; n < N; ++n) {
@@ -594,6 +595,13 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
             X("kj") = Ucc("ki") * oetens[n].block("cc")("ij");
             oei_cc[n]("kl") = X("kj") * Ucc("lj");
         }
+    }
+    if (semi_a) {
+        E1 = Eta1_.block("aa");
+    } else {
+        const auto& Uaa = U_.block("aa");
+        E1 = ambit::Tensor::build(CoreTensor, "E1can", {na, na});
+        E1("xy") = Uaa("xu") * Eta1_.block("aa")("uv") * Uaa("yv");
     }
 
     // temp tensors for each thread
@@ -621,9 +629,6 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
     else
         Bmv = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_, "pqQ");
     auto& Bu_data = Bmv.data();
-
-    // pointer to 1-hole density
-    const auto& E1 = Eta1_.block("aa");
 
     for (size_t c_batch = 0, c_shift = 0; c_batch < nbatches; ++c_batch) {
         const auto& c_batch_vir_mos = batch_vir[c_batch];
@@ -769,7 +774,8 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
     auto batch_occ = split_vector(core_mos_, max_occ);
     auto nbatches = batch_occ.size();
 
-    // rotate one-electron integrals to semi-canonical basis
+    // rotate one-electron integrals and 1-hole density to semi-canonical basis
+    ambit::Tensor E1;
     std::vector<ambit::Tensor> oei_vv(N), oei_aa(N);
     if (semi_v) {
         for (int n = 0; n < N; ++n) {
@@ -785,6 +791,7 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
         }
     }
     if (semi_a) {
+        auto E1 = Eta1_.block("aa");
         for (int n = 0; n < N; ++n) {
             oei_aa[n] = oetens[n].block("aa");
         }
@@ -796,6 +803,10 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
             X("xv") = Uaa("xu") * oetens[n].block("aa")("uv");
             oei_aa[n]("xy") = X("xv") * Uaa("yv");
         }
+
+        E1 = ambit::Tensor::build(CoreTensor, "E1can", {na, na});
+        X("xv") = Uaa("xu") * Eta1_.block("aa")("uv");
+        E1("xy") = X("xv") * Uaa("yv");
     }
 
     // temp tensors for each thread
@@ -824,9 +835,6 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
     else
         Bmv = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_, "pqQ");
     auto& Bu_data = Bmv.data();
-
-    // 1-hole density pointer
-    auto E1 = Eta1_.block("aa");
 
     for (size_t i_batch = 0, i_shift = 0; i_batch < nbatches; ++i_batch) {
         const auto& i_batch_occ_mos = batch_occ[i_batch];
@@ -1041,7 +1049,8 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
     auto batch_vir = split_vector(virt_mos_, max_vir);
     auto nbatches = batch_vir.size();
 
-    // rotate one-electron integrals to semi-canonical basis
+    // rotate one-electron integrals and 1-RDM to semi-canonical basis
+    ambit::Tensor L1;
     std::vector<ambit::Tensor> oei_cc(N), oei_aa(N);
     if (semi_c) {
         for (int n = 0; n < N; ++n) {
@@ -1057,6 +1066,7 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
         }
     }
     if (semi_a) {
+        auto L1 = L1_.block("aa");
         for (int n = 0; n < N; ++n) {
             oei_aa[n] = oetens[n].block("aa");
         }
@@ -1068,6 +1078,9 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
             X("xv") = Uaa("xu") * oetens[n].block("aa")("uv");
             oei_aa[n]("xy") = X("xv") * Uaa("yv");
         }
+        L1 = ambit::Tensor::build(CoreTensor, "L1can", {na, na});
+        X("xv") = Uaa("xu") * L1_.block("aa")("uv");
+        L1("xy") = X("xv") * Uaa("yv");
     }
 
     // temp tensors for each thread
@@ -1096,9 +1109,6 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
     else
         Beu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, "pqQ");
     auto& Bu_data = Beu.data();
-
-    // pointer to 1-particle density
-    auto L1 = L1_.block("aa");
 
     for (size_t c_batch = 0, c_shift = 0; c_batch < nbatches; ++c_batch) {
         const auto& c_batch_vir_mos = batch_vir[c_batch];
@@ -1309,7 +1319,8 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
     auto batch_occ = split_vector(core_mos_, max_occ);
     auto nbatches = batch_occ.size();
 
-    // rotate one-electron integrals to semi-canonical basis
+    // rotate one-electron integrals and 1-RDM to semi-canonical basis
+    ambit::Tensor L1;
     std::vector<ambit::Tensor> oei_vv(N);
     if (semi_v) {
         for (int n = 0; n < N; ++n) {
@@ -1323,6 +1334,13 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
             X("cb") = Uvv("ca") * oetens[n].block("vv")("ab");
             oei_vv[n]("cd") = X("cb") * Uvv("db");
         }
+    }
+    if (semi_a) {
+        auto L1 = L1_.block("aa");
+    } else {
+        const auto& Uaa = U_.block("aa");
+        L1 = ambit::Tensor::build(CoreTensor, "L1can", {na, na});
+        L1("xy") = Uaa("xu") * L1_.block("aa")("uv") * Uaa("yv");
     }
 
     // temp tensors for each thread
@@ -1350,9 +1368,6 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
     else
         Beu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, "pqQ");
     auto& Bu_data = Beu.data();
-
-    // 1-particle density pointer
-    auto L1 = L1_.block("aa");
 
     for (size_t i_batch = 0, i_shift = 0; i_batch < nbatches; ++i_batch) {
         const auto& i_batch_occ_mos = batch_occ[i_batch];

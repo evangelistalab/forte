@@ -130,15 +130,6 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Rotate 3-body DSRG transformed integrals from semicanonical back to original
     void rotate_three_ints_to_original(BlockedTensor& H3);
 
-    /// Rotate 2-body DSRG transformed integrals from semicanonical back to original
-    [[deprecated("to be removed")]] void
-    rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1, BlockedTensor& H2);
-    /// Rotate 3-body DSRG transformed integrals from semicanonical back to original
-    [[deprecated("to be removed")]] void rotate_ints_semi_to_origin(const std::string& name,
-                                                                    BlockedTensor& H1,
-                                                                    BlockedTensor& H2,
-                                                                    BlockedTensor& H3);
-
     /// Max body level of DSRG transformed dipole
     int max_dipole_level_ = 0;
     /// Max body level of DSRG transformed quadrupole
@@ -292,7 +283,7 @@ class SADSRG : public DynamicCorrelationSolver {
      *
      * For example, assume "cv" block of B is available on disk and
      * there are nQ auxiliary basis functions.
-     * 
+     *
      * The mos1_range and mos2_range are for MO spaces block[0] and block[1], respectively.
      *
      * auto B = read_Bcanonical("cv", {1,2}, {0,10});
