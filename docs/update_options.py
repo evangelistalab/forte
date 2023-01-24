@@ -24,7 +24,7 @@ groups = sorted(grouped_options.keys())
 
 lines = []
 for g in groups:
-    label = 'General' if len(g) == 0 else g
+    label = 'General' if not g else g
     head = f'{label} options'
     lines.append(f"\n{head}\n{'=' * len(head)}")
     opts = sorted(grouped_options[g])
