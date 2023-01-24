@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -44,6 +44,7 @@ void export_ForteOptions(py::module& m) {
         .def(py::init<const ForteOptions&>())
         .def("set_dict", &ForteOptions::set_dict, "Set the options dictionary")
         .def("dict", &ForteOptions::dict, "Returns the options dictionary")
+        .def("clear", &ForteOptions::clear, "Clear the options dictionary")
         .def("set_group", &ForteOptions::set_group, "Set the options group")
         .def("is_none", &ForteOptions::is_none, "Is this variable defined?")
         .def("exists", &ForteOptions::exists, "Does this option exist?")
@@ -85,8 +86,6 @@ void export_ForteOptions(py::module& m) {
              "Read the value of options from Psi4")
         .def("set_from_dict", &ForteOptions::set_from_dict,
              "Set options from a dictionary `dict` of labels -> values")
-        .def("generate_documentation", &ForteOptions::generate_documentation,
-             "Generate documentation from the options list")
         .def("__str__", &ForteOptions::str, "Returns a string representation of this object")
         .def("__repr__", &ForteOptions::str, "Returns a string representation of this object");
 }

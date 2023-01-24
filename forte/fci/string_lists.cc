@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -269,25 +269,25 @@ void StringLists::print_string(bool* I, size_t n) {
 }
 
 ///*
-//#ifdef PRINT_COMBINATIONS
-//    cout << "\n p = " << p << " q = " << q;
-//    cout << "\n b = ";
-//    for ( int i = 0 ; i < n ; ++i){
-//      cout << b[i] ? 1 : 0;
-//    }
-//    cout << "\n I = ";
-//    for ( int i = 0 ; i < ncmos; ++i){
-//      cout << I[i] ? 1 : 0;
-//    }
-//    cout << "  Add(I) = " << graph->address(I);
-//    cout << "\n J = ";
-//    for ( int i = 0 ; i < ncmos; ++i){
-//      cout << J[i] ? 1 : 0;
-//    }
-//    cout << "  Add(J) = " <<  graph->address(J);
-//    cout << "\n sign = " << sign << endl
-//#endif
-//#include "Memory/Memory.h"
+// #ifdef PRINT_COMBINATIONS
+//     cout << "\n p = " << p << " q = " << q;
+//     cout << "\n b = ";
+//     for ( int i = 0 ; i < n ; ++i){
+//       cout << b[i] ? 1 : 0;
+//     }
+//     cout << "\n I = ";
+//     for ( int i = 0 ; i < ncmos; ++i){
+//       cout << I[i] ? 1 : 0;
+//     }
+//     cout << "  Add(I) = " << graph->address(I);
+//     cout << "\n J = ";
+//     for ( int i = 0 ; i < ncmos; ++i){
+//       cout << J[i] ? 1 : 0;
+//     }
+//     cout << "  Add(J) = " <<  graph->address(J);
+//     cout << "\n sign = " << sign << endl
+// #endif
+// #include "Memory/Memory.h"
 
 //  int n = graph->nbits() - 2 - (p==q ? 0 : 1);
 //  int k = graph->nones() - 2;

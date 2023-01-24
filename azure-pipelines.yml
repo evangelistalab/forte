@@ -12,22 +12,22 @@ jobs:
   strategy:
     maxParallel: 4
     matrix:
-      gcc_py39_orb64_dmrg:
+      gcc_py310_orb64_dmrg:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.9'
+        PYTHON_VER: '3.10'
         BUILD_TYPE: 'RelWithDebInfo'
         PSI_BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
         APT_INSTALL: 'gfortran'
         ENABLE_CHEMPS2: 'ON'
 
-      gcc_py38_orb128:
+      gcc_py39_orb128:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.8'
+        PYTHON_VER: '3.9'
         BUILD_TYPE: 'RelWithDebInfo'
         PSI_BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 128
@@ -99,6 +99,7 @@ jobs:
         eigen \
         pytest \
         pytest-xdist \
+        libgcc=5.2.0 \
         conda-forge::qcelemental \
         conda-forge::qcengine
       source activate p4env
@@ -114,7 +115,8 @@ jobs:
         py-cpuinfo \
         scipy \
         codecov \
-        lcov
+        lcov \
+        libstdcxx-ng
       which python
       conda list
     displayName: 'Configure Environment'
@@ -220,6 +222,7 @@ jobs:
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
         -DENABLE_CODECOV=ON \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DEIGEN3_INCLUDE_DIR=$CONDA_PREFIX/include/eigen3 \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
