@@ -791,7 +791,7 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
         }
     }
     if (semi_a) {
-        auto E1 = Eta1_.block("aa");
+        E1 = Eta1_.block("aa");
         for (int n = 0; n < N; ++n) {
             oei_aa[n] = oetens[n].block("aa");
         }
@@ -1066,7 +1066,7 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
         }
     }
     if (semi_a) {
-        auto L1 = L1_.block("aa");
+        L1 = L1_.block("aa");
         for (int n = 0; n < N; ++n) {
             oei_aa[n] = oetens[n].block("aa");
         }
@@ -1336,7 +1336,7 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
         }
     }
     if (semi_a) {
-        auto L1 = L1_.block("aa");
+        L1 = L1_.block("aa");
     } else {
         const auto& Uaa = U_.block("aa");
         L1 = ambit::Tensor::build(CoreTensor, "L1can", {na, na});
