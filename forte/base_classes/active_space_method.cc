@@ -25,6 +25,7 @@
  *
  * @END LICENSE
  */
+#include <memory>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
@@ -325,94 +326,72 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
 
-    // // Doing SVD for transition reduced density matrix
-    // std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nactv, nactv));
-    // std::shared_ptr<psi::Matrix> VT(new psi::Matrix("VT", nactv, nactv));
-    // std::shared_ptr<psi::Vector> S(new psi::Vector("S", nactv));
+    // Doing SVD for transition reduced density matrix
+    auto nactv = mo_space_info_->size("ACTIVE");
+    auto U = std::make_shared<psi::Matrix>("U", nactv, nactv);
+    auto VT = std::make_shared<psi::Matrix>("VT", nactv, nactv);
+    auto S = std::make_shared<psi::Vector>("S", nactv);
 
-    // print_h2("Transition Reduced Density Matrix Analysis for " + title);
-    // for (size_t i = 0, size = root_list.size(); i < size; ++i) {
-    //     auto root1 = root_list[i].first;
-    //     auto root2 = root_list[i].second;
-    //     std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
-    //     auto Dt = rdms[i]->SF_G1();
-    //     auto Dt_matrix = tensor_to_matrix(Dt);
+    print_h2("Transition Reduced Density Matrix Analysis for " + title);
+    for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+        auto root1 = root_list[i].first;
+        auto root2 = root_list[i].second;
+        std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
+        auto Dt_matrix = rdms[i]->SF_G1mat();
 
-    //     // Dump transition reduced matrices for each transition
-    //     if (dump_trdm_) {
-    //         // Change name that contains GAS info so it does not duplicate
-    //         std::string gas_name1 = std::to_string(root1) + upper_string(state_.irrep_label()) +
-    //                                 "_" + std::to_string(state_.gas_max()[0]);
-    //         std::string gas_name2 = std::to_string(root2) + upper_string(state2.irrep_label()) +
-    //                                 "_" + std::to_string(state2.gas_max()[0]);
-    //         std::string dt_filename = "trdm_" + gas_name1 + "_" + gas_name2 + ".txt";
-    //         Dt_matrix->save(dt_filename, false, false, true);
-    //     }
+        // Dump transition reduced matrices for each transition
+        if (dump_trdm_) {
+            // Change name that contains GAS info so it does not duplicate
+            std::string gas_name1 = std::to_string(root1) + upper_string(state_.irrep_label()) +
+                                    "_" + std::to_string(state_.gas_max()[0]);
+            std::string gas_name2 = std::to_string(root2) + upper_string(state2.irrep_label()) +
+                                    "_" + std::to_string(state2.gas_max()[0]);
+            std::string dt_filename = "trdm_" + gas_name1 + "_" + gas_name2 + ".txt";
+            Dt_matrix->save(dt_filename, false, false, true);
+        }
 
-    //     // psi::C_DGESDD('A', nactv, nactv, Dt_matrix->pointer()[0], nactv, &S->pointer()[0],
-    //     //             U->pointer()[0], nactv, VT->pointer()[0], nactv, &WORK->pointer()[0],
-    //     lwork,
-    //     //            &IWORK[0]);
-    //     Dt_matrix->svd_a(U, S, VT);
+        Dt_matrix->svd_a(U, S, VT);
 
-    //     // Printing out the major components of transitions and major components to
-    //     // the natural transition orbitals in active space
-    //     std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
-    //     std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
-    //     psi::outfile->Printf("\n    Transition from State %4s  to State %4s :", name1.c_str(),
-    //                          name2.c_str());
-    //     double maxS = S->get(0);
+        // Print the major components of transitions and major components to
+        // the natural transition orbitals in active space
+        std::string name1 = std::to_string(root1) + upper_string(state_.irrep_label());
+        std::string name2 = std::to_string(root2) + upper_string(state2.irrep_label());
+        psi::outfile->Printf("\n    Transition from State %4s  to State %4s :", name1.c_str(),
+                             name2.c_str());
+        double maxS = S->get(0);
 
-    //     // push to Psi4 environment
-    //     auto& globals = psi::Process::environment.globals;
-    //     std::string prefix = "TRANS " + upper_string(state_.multiplicity_label());
-    //     std::string key = " S_MAX " + name1 + " -> " + name2;
+        // push to Psi4 environment
+        auto& globals = psi::Process::environment.globals;
+        std::string prefix = "TRANS " + upper_string(state_.multiplicity_label());
+        std::string key = " S_MAX " + name1 + " -> " + name2;
+        push_to_psi4_env_globals(maxS, prefix + key);
 
-    //     // try to fix states with different gas_min and gas_max
-    //     std::string label = prefix + key;
-    //     if (globals.find(label) != globals.end()) {
-    //         if (globals.find(label + " ENTRY 0") == globals.end()) {
-    //             std::string suffix = " ENTRY 0";
-    //             globals[prefix + key + suffix] = globals[prefix + key];
-    //         }
-    //         int n = 1;
-    //         std::string suffix = " ENTRY 1";
-    //         while (globals.find(label + suffix) != globals.end()) {
-    //             suffix = " ENTRY " + std::to_string(++n);
-    //         }
-    //         globals[prefix + key + suffix] = maxS;
-    //     }
-    //     globals[prefix + key] = maxS;
-
-    //     for (int comp = 0; comp < nactv; comp++) {
-    //         double Svalue = S->get(comp);
-    //         if (Svalue / maxS > 0.1) {
-    //             // Print the components larger than 10 percent of the strongest
-    //             // occupation
-    //             psi::outfile->Printf("\n      Component %2d ", comp + 1);
-    //             psi::outfile->Printf("with value of W = %6.4f", Svalue);
-    //             psi::outfile->Printf("\n        Init. Orbital:");
-    //             for (int j = 0; j < nactv; j++) {
-    //                 double coeff_i = U->get(j, comp);
-    //                 if (coeff_i * coeff_i > 0.10) {
-    //                     // Print the compoents with more than 0.1 amplitude form
-    //                     // original orbitals
-    //                     psi::outfile->Printf(" %6.4f Orb. %2d", coeff_i * coeff_i, j);
-    //                 }
-    //             }
-    //             psi::outfile->Printf("\n        Final Orbital:");
-    //             for (int j = 0; j < nactv; j++) {
-    //                 double coeff_f = VT->get(comp, j);
-    //                 if (coeff_f * coeff_f > 0.10) {
-    //                     // Print the compoents with more than 0.1 amplitude form
-    //                     // original orbitals
-    //                     psi::outfile->Printf(" %6.4f Orb. %2d", coeff_f * coeff_f, j);
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     psi::outfile->Printf("\n        ");
-    // }
+        for (size_t comp = 0; comp < nactv; comp++) {
+            double Svalue = S->get(comp);
+            if (Svalue / maxS > 0.1) {
+                // Print the components larger than 10% of the strongest occupation
+                psi::outfile->Printf("\n      Component %2zu with value of W = %6.4f", comp + 1,
+                                     Svalue);
+                psi::outfile->Printf("\n        Init. Orbital:");
+                for (size_t j = 0; j < nactv; j++) {
+                    double coeff_i = U->get(j, comp);
+                    if (coeff_i * coeff_i > 0.10) {
+                        // Print the components with more than 0.1 amplitude from original orbitals
+                        psi::outfile->Printf(" %6.4f Orb. %2zu", coeff_i * coeff_i, j);
+                    }
+                }
+                psi::outfile->Printf("\n        Final Orbital:");
+                for (size_t j = 0; j < nactv; j++) {
+                    double coeff_f = VT->get(comp, j);
+                    if (coeff_f * coeff_f > 0.10) {
+                        // Print the components with more than 0.1 amplitude from final orbitals
+                        psi::outfile->Printf(" %6.4f Orb. %2zu", coeff_f * coeff_f, j);
+                    }
+                }
+            }
+        }
+        psi::outfile->Printf("\n        ");
+    }
 
     return trans_dipoles;
 }

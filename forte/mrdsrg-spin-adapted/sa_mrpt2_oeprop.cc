@@ -75,7 +75,7 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
             Mbar0_[i] += 2.0 * M1c[m * ncore + m];
         }
         Mbar0_[i] += oetens[i]["uv"] * L1_["vu"];
-        outfile->Printf("\n  tensor %d: Mref = %20.15f", i, Mbar0_[i]);
+        // outfile->Printf("\n  tensor %d: Mref = %20.15f", i, Mbar0_[i]);
     }
 
     Mbar1_.resize(n_tensors);
@@ -194,9 +194,9 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
 
         print_done(t_local.get());
 
-        outfile->Printf("\n  tensor %d: Mbar0_ = %20.15f", i, Mbar0_[i]);
-        outfile->Printf(" Mbar1 norm = %20.15f", Mbar1.norm());
-        outfile->Printf(" Mbar2 norm = %20.15f", max_levels[i] > 1 ? Mbar2_[i].norm() : 0.0);
+        // outfile->Printf("\n  tensor %d: Mbar0_ = %20.15f", i, Mbar0_[i]);
+        // outfile->Printf(" Mbar1 norm = %20.15f", Mbar1.norm());
+        // outfile->Printf(" Mbar2 norm = %20.15f", max_levels[i] > 1 ? Mbar2_[i].norm() : 0.0);
     }
 }
 
