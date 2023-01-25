@@ -37,7 +37,7 @@
 #include "base_classes/rdms.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
-#include "integrals/multipole_integrals.h"
+#include "integrals/one_body_integrals.h"
 
 namespace forte {
 

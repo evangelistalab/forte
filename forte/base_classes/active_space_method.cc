@@ -37,7 +37,7 @@
 #include "base_classes/forte_options.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
-#include "integrals/multipole_integrals.h"
+#include "integrals/one_body_integrals.h"
 #include "fci/fci_solver.h"
 #include "casscf/casscf.h"
 #include "sci/aci.h"
@@ -115,8 +115,7 @@ void ActiveSpaceMethod::save_transition_rdms(
 
 std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-    const std::vector<std::pair<size_t, size_t>>& root_list, const ambit::Tensor& Ua,
-    const ambit::Tensor& Ub) {
+    const std::vector<std::pair<size_t, size_t>>& root_list) {
     // print title
     auto multi_label = state_.multiplicity_label();
     auto multi_label_upper = upper_string(multi_label);
@@ -124,16 +123,14 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     auto irrep_label = state_.irrep_label();
 
     std::string state_label = multi_label + " (Ms = " + ms_label + ") " + irrep_label;
-    print_h2("Quadrupole Moments [e a0^2] (Nuclear + Electronic) for " + state_label);
+    std::string prefix = ampints->qp_name().empty() ? "" : ampints->qp_name() + " ";
+    print_h2(prefix + "Quadrupole Moments [e a0^2] (Nuclear + Electronic) for " + state_label);
 
     // nuclear contributions
     auto quadrupole_nuc = ampints->nuclear_quadrupole();
 
     // prepare RDMs
     auto rdms_vec = rdms(root_list, ampints->qp_many_body_level(), RDMsType::spin_free);
-    // for (size_t i = 0, size = root_list.size(); i < size; ++i) {
-    //     rdms_vec[i]->rotate(Ua, Ub);
-    // }
 
     // print table header
     psi::outfile->Printf("\n    %8s %14s %14s %14s %14s %14s %14s", "State", "QM_XX", "QM_XY",
@@ -183,8 +180,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
 
 std::vector<psi::SharedVector>
 ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                                            std::vector<std::pair<size_t, size_t>>& root_list,
-                                            const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
+                                            std::vector<std::pair<size_t, size_t>>& root_list) {
     // print title
     auto multi_label = state_.multiplicity_label();
     auto multi_label_upper = upper_string(multi_label);
@@ -192,16 +188,14 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
     auto irrep_label = state_.irrep_label();
 
     std::string state_label = multi_label + " (Ms = " + ms_label + ") " + irrep_label;
-    print_h2("Dipole Moments [e a0] (Nuclear + Electronic) for " + state_label);
+    std::string prefix = ampints->dp_name().empty() ? "" : ampints->dp_name() + " ";
+    print_h2(prefix + "Dipole Moments [e a0] (Nuclear + Electronic) for " + state_label);
 
     // nuclear contributions
     auto dipole_nuc = ampints->nuclear_dipole();
 
     // prepare RDMs
     auto rdms_vec = rdms(root_list, ampints->dp_many_body_level(), RDMsType::spin_free);
-    // for (size_t i = 0, size = root_list.size(); i < size; ++i) {
-    //     rdms_vec[i]->rotate(Ua, Ub);
-    // }
 
     // print table header
     psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
@@ -245,10 +239,10 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
 std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list,
-    std::shared_ptr<ActiveSpaceMethod> method2, const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
+    std::shared_ptr<ActiveSpaceMethod> method2) {
 
     // compute transition dipole moments
-    auto trans_dipoles = compute_transition_dipole_same_orbs(ampints, root_list, method2, Ua, Ub);
+    auto trans_dipoles = compute_transition_dipole_same_orbs(ampints, root_list, method2);
 
     // print title
     std::string multi_label = upper_string(state_.multiplicity_label());
@@ -287,18 +281,16 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
 std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same_orbs(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list,
-    std::shared_ptr<ActiveSpaceMethod> method2, const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
+    std::shared_ptr<ActiveSpaceMethod> method2) {
     // print title
     const auto& state2 = method2->state();
     std::string title = state_.str_minimum() + " -> " + state2.str_minimum();
-    print_h2("Transition Dipole Moments [e a0] for " + title);
+    std::string prefix = ampints->dp_name().empty() ? "" : ampints->dp_name() + " ";
+    print_h2(prefix + "Transition Dipole Moments [e a0] for " + title);
 
     // prepare transition RDMs
     auto rdm_level = ampints->dp_many_body_level();
     auto rdms = transition_rdms(root_list, method2, rdm_level, RDMsType::spin_free);
-    // for (size_t i = 0, size = root_list.size(); i < size; ++i) {
-    //     rdms[i]->rotate(Ua, Ub); // need to make 1-TRDM and dipole in the same orbital basis
-    // }
 
     // print table header
     psi::outfile->Printf("\n    %6s %6s %14s %14s %14s %14s", "Bra", "Ket", "DM_X", "DM_Y", "DM_Z",

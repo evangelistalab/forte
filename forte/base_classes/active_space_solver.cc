@@ -42,7 +42,7 @@
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
-#include "integrals/multipole_integrals.h"
+#include "integrals/one_body_integrals.h"
 #include "mrdsrg-helper/dsrg_transformed.h"
 #include "active_space_method.h"
 
@@ -185,7 +185,7 @@ void ActiveSpaceSolver::compute_dipole_moment(std::shared_ptr<ActiveMultipoleInt
             root_list.emplace_back(i, i);
         }
 
-        method->compute_permanent_dipole(ampints, root_list, Ua_actv_, Ub_actv_);
+        method->compute_permanent_dipole(ampints, root_list);
     }
 }
 
@@ -201,7 +201,7 @@ void ActiveSpaceSolver::compute_quadrupole_moment(
             root_list.emplace_back(i, i);
         }
 
-        method->compute_permanent_quadrupole(ampints, root_list, Ua_actv_, Ub_actv_);
+        method->compute_permanent_quadrupole(ampints, root_list);
     }
 }
 
@@ -258,8 +258,7 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
                 continue;
 
             // compute oscillator strength
-            method1->compute_oscillator_strength_same_orbs(ampints, state_ids, method2, Ua_actv_,
-                                                           Ub_actv_);
+            method1->compute_oscillator_strength_same_orbs(ampints, state_ids, method2);
         }
     }
 }

@@ -53,7 +53,7 @@ void SA_MRPT3::startup() {
     // test semi-canonical
     if (!semi_canonical_) {
         outfile->Printf("\n  Orbital invariant formalism will be employed for DSRG-MRPT3.");
-        U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
+        U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"cc", "aa", "vv"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
 
@@ -418,4 +418,7 @@ double SA_MRPT3::compute_energy_pt3_3() {
 
     return Ereturn;
 }
+
+void SA_MRPT3::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                                  const std::vector<int>& max_levels) {}
 } // namespace forte

@@ -136,7 +136,7 @@ integrals/distribute_df_integrals.cc
 integrals/integrals.cc
 integrals/integrals_psi4_interface.cc
 integrals/make_integrals.cc
-integrals/multipole_integrals.cc
+integrals/one_body_integrals.cc
 integrals/parallel_ccvv_algorithms.cc
 integrals/paralleldfmo.cc
 mrdsrg-helper/dsrg_mem.cc

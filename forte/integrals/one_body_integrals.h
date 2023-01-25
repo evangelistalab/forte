@@ -26,12 +26,11 @@
  * @END LICENSE
  */
 
-#ifndef _multipole_integrals_
-#define _multipole_integrals_
+#ifndef _one_body_integrals_
+#define _one_body_integrals_
 
 #include <vector>
 
-#include "psi4/libmints/multipoles.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
@@ -192,6 +191,15 @@ class ActiveMultipoleIntegrals {
     /// Return the quadrupole many-body level
     int qp_many_body_level() const;
 
+    /// Set dipole integrals name
+    void set_dp_name(const std::string& name) { dp_name_ = name; }
+    /// Set quadrupole integrals name
+    void set_qp_name(const std::string& name) { qp_name_ = name; }
+    /// Return dipole integrals name
+    std::string dp_name() const { return dp_name_; }
+    /// Return quadrupole integrals name
+    std::string qp_name() const { return qp_name_; }
+
   private:
     // ==> Class Private Data <==
 
@@ -201,6 +209,11 @@ class ActiveMultipoleIntegrals {
     int dp_many_body_level_;
     /// Many-body level of quadrupole integrals
     int qp_many_body_level_;
+
+    /// Dipole integrals name
+    std::string dp_name_ = "";
+    /// Quadrupole integrals name
+    std::string qp_name_ = "";
 
     /// The number of MOs
     size_t nmo_;
@@ -242,4 +255,4 @@ class ActiveMultipoleIntegrals {
 };
 } // namespace forte
 
-#endif // _multipole_integrals_
+#endif // _one_body_integrals_

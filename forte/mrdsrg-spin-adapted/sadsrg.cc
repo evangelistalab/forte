@@ -500,6 +500,7 @@ std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
             M1.push_back(m1);
             max_levels.push_back(max_dipole_level_);
         }
+        as_mpints->set_dp_name("DSRG Dressed");
     }
 
     // bare quadrupoles
@@ -512,6 +513,7 @@ std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
             M1.push_back(m1);
             max_levels.push_back(max_quadrupole_level_);
         }
+        as_mpints->set_qp_name("DSRG Dressed");
     }
 
     // transform one-electron integrals
@@ -547,182 +549,6 @@ std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
                 as_mpints->set_qp2_ints(z, Mbar2_[i].block("aaaa"));
         }
     }
-
-    // // transform dipole integrals
-    // if (max_dipole_level_ > 0) {
-    //     // reference dipole and integrals
-    //     std::vector<double> Mref;
-    //     std::vector<ambit::BlockedTensor> M1;
-    //     for (int z = 0; z < 3; ++z) {
-    //         std::string name = "DIPOLE " + dp_dirs[z];
-    //         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
-    //         m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-    //                        double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
-    //         M1.push_back(m1);
-
-    //         auto m0 = 0.0;
-    //         auto& m1_cc = m1.block("cc").data();
-    //         for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
-    //             m0 += 2.0 * m1_cc[m * ncore + m];
-    //         }
-    //         m0 += m1["uv"] * L1_["vu"];
-    //         Mref.push_back(m0);
-    //     }
-
-    //     // transform dipole integrals
-    //     transform_one_body(M1, max_dipole_level_, "Dipole");
-
-    //     // de-normal-order transformed dipole integrals
-    //     for (int z = 0; z < 3; ++z) {
-    //         std::string name = "DIPOLE " + dp_dirs[z];
-    //         auto m0 = Mbar0_[z] + Mref[z];
-    //         if (max_dipole_level_ == 2) {
-    //             deGNO_ints(name, m0, Mbar1_[z], Mbar2_[z]);
-    //             rotate_two_ints_to_original(Mbar2_[z]);
-    //         } else {
-    //             deGNO_ints(name, m0, Mbar1_[z]);
-    //         }
-    //         rotate_one_ints_to_original(Mbar1_[z]);
-
-    //         as_mpints->set_dp_scalar_rdocc(z, m0);
-    //         as_mpints->set_dp1_ints(z, Mbar1_[z].block("aa"));
-    //         if (max_dipole_level_ == 2) {
-    //             as_mpints->set_dp2_ints(z, Mbar2_[z].block("aaaa"));
-    //         }
-    //     }
-    // }
-
-    // // transform quadrupole integrals
-    // if (max_quadrupole_level_ > 0) {
-    //     // reference quadrupole and integrals
-    //     std::vector<double> Mref;
-    //     std::vector<ambit::BlockedTensor> M1;
-    //     for (int z = 0; z < 6; ++z) {
-    //         std::string name = "QUADRUPOLE " + qp_dirs[z];
-    //         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
-    //         m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-    //                        double& value) { value = mpints->qp_ints_corr(z, i[0], i[1]); });
-    //         M1.push_back(m1);
-
-    //         auto m0 = 0.0;
-    //         auto& m1_cc = m1.block("cc").data();
-    //         for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
-    //             m0 += 2.0 * m1_cc[m * ncore + m];
-    //         }
-    //         m0 += m1["uv"] * L1_["vu"];
-    //         Mref.push_back(m0);
-    //     }
-
-    //     // transform quadrupole integrals
-    //     transform_one_body(M1, max_quadrupole_level_, "Quadrupole");
-
-    //     // de-normal-order transformed quadrupole integrals
-    //     for (int z = 0; z < 6; ++z) {
-    //         std::string name = "QUADRUPOLE " + qp_dirs[z];
-    //         auto m0 = Mbar0_[z] + Mref[z];
-    //         if (max_quadrupole_level_ == 2) {
-    //             deGNO_ints(name, m0, Mbar1_[z], Mbar2_[z]);
-    //             rotate_two_ints_to_original(Mbar2_[z]);
-    //         } else {
-    //             deGNO_ints(name, m0, Mbar1_[z]);
-    //         }
-    //         rotate_one_ints_to_original(Mbar1_[z]);
-
-    //         as_mpints->set_qp_scalar_rdocc(z, m0);
-    //         as_mpints->set_qp1_ints(z, Mbar1_[z].block("aa"));
-    //         if (max_quadrupole_level_ == 2) {
-    //             as_mpints->set_qp2_ints(z, Mbar2_[z].block("aaaa"));
-    //         }
-    //     }
-    // }
-
-    // // compute multipoles of the reference and fill in bare integrals
-    // std::vector<double> Mref;
-    // std::vector<ambit::BlockedTensor> M1;
-
-    // // dipole integrals
-    // if (max_dipole_level_ > 0) {
-    //     for (int z = 0; z < 3; ++z) {
-    //         std::string name = "DIPOLE " + dp_dirs[z];
-    //         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
-    //         m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-    //                        double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
-    //         M1.push_back(m1);
-    //     }
-    // }
-
-    // // quadrupole integrals
-    // if (max_quadrupole_level_ > 0) {
-    //     for (int z = 0; z < 6; ++z) {
-    //         std::string name = "QUADRUPOLE " + qp_dirs[z];
-    //         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
-    //         m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-    //                        double& value) { value = mpints->qp_ints_corr(z, i[0], i[1]); });
-    //         M1.push_back(m1);
-    //     }
-    // }
-
-    // // compute multipoles of the reference
-    // for (auto& m1 : M1) {
-    //     auto m0 = 0.0;
-    //     auto& m1_cc = m1.block("cc").data();
-    //     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
-    //         m0 += 2.0 * m1_cc[m * ncore + m];
-    //     }
-    //     m0 += m1["uv"] * L1_["vu"];
-    //     Mref.push_back(m0);
-    // }
-
-    // // transform multipole integrals
-    // transform_one_body(M1);
-
-    // for (auto x : Mbar0_) {
-    //     outfile->Printf("\n %15.8f", x);
-    // }
-
-    // // de-normal order active dipole integrals
-    // if (max_dipole_level_ > 0) {
-    //     for (int z = 0; z < 3; ++z) {
-    //         std::string name = "DIPOLE " + dp_dirs[z];
-    //         auto m0 = Mbar0_[z] + Mref[z];
-    //         if (max_dipole_level_ == 2) {
-    //             deGNO_ints(name, m0, Mbar1_[z], Mbar2_[z]);
-    //             rotate_two_ints_to_original(Mbar2_[z]);
-    //         } else {
-    //             deGNO_ints(name, m0, Mbar1_[z]);
-    //         }
-    //         rotate_one_ints_to_original(Mbar1_[z]);
-
-    //         as_mpints->set_dp_scalar_rdocc(z, m0);
-    //         as_mpints->set_dp1_ints(z, Mbar1_[z].block("aa"));
-    //         if (max_dipole_level_ == 2) {
-    //             as_mpints->set_dp2_ints(z, Mbar2_[z].block("aaaa"));
-    //         }
-    //     }
-    // }
-
-    // // de-normal order active quadrupole integrals
-    // if (max_quadrupole_level_ > 0) {
-    //     auto shift = max_dipole_level_ > 0 ? 3 : 0;
-    //     for (int z = 0; z < 6; ++z) {
-    //         auto zz = z + shift;
-    //         std::string name = "QUADRUPOLE " + qp_dirs[z];
-    //         auto m0 = Mbar0_[zz] + Mref[zz];
-    //         if (max_quadrupole_level_ == 2) {
-    //             deGNO_ints(name, m0, Mbar1_[zz], Mbar2_[zz]);
-    //             rotate_two_ints_to_original(Mbar2_[zz]);
-    //         } else {
-    //             deGNO_ints(name, m0, Mbar1_[zz]);
-    //         }
-    //         rotate_one_ints_to_original(Mbar1_[zz]);
-
-    //         as_mpints->set_qp_scalar_rdocc(z, m0);
-    //         as_mpints->set_qp1_ints(z, Mbar1_[zz].block("aa"));
-    //         if (max_quadrupole_level_ == 2) {
-    //             as_mpints->set_qp2_ints(z, Mbar2_[zz].block("aaaa"));
-    //         }
-    //     }
-    // }
 
     return as_mpints;
 }

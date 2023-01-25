@@ -37,7 +37,7 @@
 
 #include "base_classes/state_info.h"
 #include "base_classes/rdms.h"
-#include "integrals/multipole_integrals.h"
+#include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 namespace forte {
 

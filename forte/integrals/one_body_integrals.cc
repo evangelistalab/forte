@@ -33,13 +33,12 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/multipoles.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/vector3.h"
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/mo_space_info.h"
-#include "integrals/multipole_integrals.h"
+#include "integrals/one_body_integrals.h"
 
 namespace forte {
 

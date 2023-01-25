@@ -61,7 +61,7 @@
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-adapted/sadsrg.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
-#include "integrals/multipole_integrals.h"
+#include "integrals/one_body_integrals.h"
 
 #include "post_process/spin_corr.h"
 
@@ -327,7 +327,9 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_electronic_quadrupole",
              &ActiveMultipoleIntegrals::compute_electronic_quadrupole)
         .def("nuclear_dipole", &ActiveMultipoleIntegrals::nuclear_dipole)
-        .def("nuclear_quadrupole", &ActiveMultipoleIntegrals::nuclear_quadrupole);
+        .def("nuclear_quadrupole", &ActiveMultipoleIntegrals::nuclear_quadrupole)
+        .def("set_dipole_name", &ActiveMultipoleIntegrals::set_dp_name)
+        .def("set_quadrupole_name", &ActiveMultipoleIntegrals::set_qp_name);
 
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")

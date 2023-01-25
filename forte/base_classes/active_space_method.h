@@ -37,7 +37,7 @@
 
 #include "base_classes/rdms.h"
 #include "base_classes/state_info.h"
-#include "integrals/multipole_integrals.h"
+#include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
 
@@ -159,28 +159,24 @@ class ActiveSpaceMethod {
     /// Compute permanent dipole moments (electronic + nuclear)
     std::vector<psi::SharedVector>
     compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                             std::vector<std::pair<size_t, size_t>>& root_list,
-                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+                             std::vector<std::pair<size_t, size_t>>& root_list);
 
     /// Compute permanent quadrupole moments (electronic + nuclear)
     std::vector<psi::SharedVector>
     compute_permanent_quadrupole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                                 const std::vector<std::pair<size_t, size_t>>& root_list,
-                                 const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+                                 const std::vector<std::pair<size_t, size_t>>& root_list);
 
     /// Compute transition dipole moments assuming same orbitals
     std::vector<psi::SharedVector>
     compute_transition_dipole_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                         const std::vector<std::pair<size_t, size_t>>& root_list,
-                                        std::shared_ptr<ActiveSpaceMethod> method2,
-                                        const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+                                        std::shared_ptr<ActiveSpaceMethod> method2);
 
     /// Compute oscillator strength assuming same orbitals
     std::vector<double>
     compute_oscillator_strength_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                           const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2,
-                                          const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+                                          std::shared_ptr<ActiveSpaceMethod> method2);
 
     /// Dump the wave function to file
     /// @param file name
