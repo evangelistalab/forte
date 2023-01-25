@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -128,8 +128,8 @@ void SemiCanonical::set_U_to_identity() {
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 }
 
-void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock, const bool& nat_orb,
-                                     const bool& transform) {
+void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock,
+                                     const bool& nat_orb, const bool& transform) {
     timer t_semi("semicanonicalize orbitals");
 
     print_h2("Semicanonicalize Orbitals");

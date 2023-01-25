@@ -1,38 +1,36 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refmcscf   = -99.406065222746975
-refdsrg    = -99.497343303065037 # no relaxation semi-canonical orbitals
-
-memory 500 mb
+refdsrg    = -99.4973433134 # no relaxation semi-canonical orbitals
 
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.5
 }
 
 set globals{
   basis                  3-21g
-  reference              twocon
   scf_type               cd
-  e_convergence          8
-  maxiter                100
   docc                   [3,0,1,1]
 }
 
-set mcscf{
-  docc                   [2,0,1,1]
-  socc                   [2,0,0,0]
-  maxiter                1000
-  level_shift            0.5
-  d_convergence          10
-  e_convergence          12
+set forte{
+   job_type               mcscf_two_step
+   active_space_solver    fci
+   restricted_docc        [2,0,1,1]
+   active                 [2,0,0,0]
+   root_sym               0
+   nroot                  1
+   casscf_e_convergence   12
+   casscf_g_convergence   8
 }
 
+Emcscf, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy") #TEST
+
 set forte{
+  job_type               newdriver
   active_space_solver    fci
   correlation_solver     mrdsrg
   int_type               cholesky
@@ -51,9 +49,6 @@ set forte{
   dsrg_read_amps         true
   dsrg_diis_start        1
 }
-
-Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrg,variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy") #TEST

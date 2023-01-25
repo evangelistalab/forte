@@ -46,10 +46,11 @@ def register_driver_options(options):
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
-        'CORRELATION_SOLVER', 'NONE', ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG'],
+        'CORRELATION_SOLVER', 'NONE',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG', 'DSRG_MRPT', 'MRDSRG_SO', 'SOMRDSRG'],
         'Dynamical correlation solver type'
     )
     options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'], 'The type of computation')
@@ -76,7 +77,7 @@ def register_driver_options(options):
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
     options.add_str(
-        "ACTIVE_REF_TYPE", "CAS", ["CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD"],
+        "ACTIVE_REF_TYPE", "CAS", ["HF", "CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD", "DOCI"],
         "Initial guess for active space wave functions"
     )
 
@@ -253,9 +254,13 @@ def register_active_space_solver_options(options):
 
     options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole moments and oscillator strengths")
 
-    options.add_bool("PRINT_DIFFERENT_GAS_ONLY", False, "Only calculate the transition dipole between states with different GAS occupations?")
+    options.add_bool(
+        "PRINT_DIFFERENT_GAS_ONLY", False,
+        "Only calculate the transition dipole between states with different GAS occupations?"
+    )
 
     options.add_bool("DUMP_TRANSITION_RDM", False, "Dump transition reduced matrix into disk?")
+
 
 def register_pt2_options(options):
     options.set_group("PT2")
@@ -396,7 +401,7 @@ def register_aci_options(options):
     options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
 
     options.add_str(
-        "ACI_SCREEN_ALG", "AVERAGE", ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC'],
+        "ACI_SCREEN_ALG", "AVERAGE", ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC', 'MULTI_GAS'],
         "The screening algorithm to use"
     )
 
