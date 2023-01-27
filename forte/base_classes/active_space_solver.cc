@@ -78,8 +78,10 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     }
 
     // initialize multipole integrals
-    auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
-    as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+    if (as_ints_->ints()->integral_type() != Custom) {
+        auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
+        as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+    }
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }

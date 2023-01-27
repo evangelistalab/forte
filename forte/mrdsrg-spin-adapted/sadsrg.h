@@ -450,6 +450,11 @@ class SADSRG : public DynamicCorrelationSolver {
     void H1d_A2_C2pphh_small(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                              BlockedTensor& C2);
 
+    /// Compute the ph part of commutator C1 = [H1, A1]
+    void H1_A1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    /// Compute the ph part of commutator C1 = [H1, A2]
+    void H1_A2_C1ph(BlockedTensor& H1, BlockedTensor& S2, const double& alpha, BlockedTensor& C1);
+
     // ==> miscellaneous <==
 
     /// File name prefix for checkpoint files

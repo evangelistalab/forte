@@ -420,5 +420,224 @@ double SA_MRPT3::compute_energy_pt3_3() {
 }
 
 void SA_MRPT3::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
-                                  const std::vector<int>& max_levels) {}
+                                  const std::vector<int>& max_levels) {
+    /**
+     * Transform one-body integrals based on DSRG-PT3.
+     * The diagonal blocks of the one-body integrals are considered 0th order.
+     *
+     * @param oetens: a vector of bare multipole integrals
+     * @param max_body: the max body kept in recursive linear commutator approximation
+     *
+     * This function should be called after compute_energy(),
+     * as 1st- and 2nd-order amps. are stored in O1_/O2_ and T1_/T2_, respectively.
+     */
+    print_h2("Transform One-Electron Operators");
+
+    int n_tensors = oetens.size();
+    Mbar0_ = std::vector<double>(n_tensors, 0.0);
+
+    // compute Mref and add to Mbar0_
+    // for (int i = 0; i < n_tensors; ++i) {
+    //     auto& M1c = oetens[i].block("cc").data();
+    //     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+    //         Mbar0_[i] += 2.0 * M1c[m * ncore + m];
+    //     }
+    //     Mbar0_[i] += oetens[i]["uv"] * L1_["vu"];
+    // }
+
+    Mbar1_.resize(n_tensors);
+    Mbar2_.resize(n_tensors);
+    for (int i = 0; i < n_tensors; ++i) {
+        Mbar1_[i] = BTF_->build(tensor_type_, oetens[i].name() + "1", {"aa"});
+        // Mbar1_[i]["uv"] += oetens[i]["uv"]; // add bare one-electron integrals
+        if (max_levels[i] > 1)
+            Mbar2_[i] = BTF_->build(tensor_type_, oetens[i].name() + "2", {"aaaa"});
+    }
+
+    auto max_body = *std::max_element(max_levels.begin(), max_levels.end());
+
+    auto Md = BTF_->build(tensor_type_, "M_D", {"cc", "aa", "vv"});
+    auto Mod = BTF_->build(tensor_type_, "M_OD", od_one_labels());
+
+    ambit::BlockedTensor O1, O2, G2, temp1, temp2;
+    O1 = BTF_->build(tensor_type_, "O1", od_one_labels_ph());
+    temp1 = BTF_->build(tensor_type_, "temp1M", {"aa"});
+    if (max_body > 1) {
+        temp2 = BTF_->build(tensor_type_, "temp2M", {"aaaa"});
+        G2 = BTF_->build(tensor_type_, "C2", {"avac", "aaac", "avaa"}, true);
+        if (!eri_df_) {
+            O2 = BTF_->build(tensor_type_, "O2", {"pphh"}, true);
+        } else {
+            O2 = BTF_->build(tensor_type_, "O2",
+                             {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"}, true);
+        }
+    }
+
+    double C0;
+    ambit::BlockedTensor C1, F1, J1, H1, K1;
+    C1 = BTF_->build(tensor_type_, "C1", {"aa"});
+    F1 = BTF_->build(tensor_type_, "F1", {"gg"});
+    J1 = BTF_->build(tensor_type_, "J1", {"gg"});
+    H1 = BTF_->build(tensor_type_, "H1", {"gg"});
+    K1 = BTF_->build(tensor_type_, "K1", {"gg"});
+
+    // transform each tensor
+    for (int i = 0; i < n_tensors; ++i) {
+        local_timer t_local;
+        auto M = oetens[i];
+        print_contents("Transforming " + M.name());
+
+        // separate M to diagonal and off-diagonal components
+        Md["pq"] = M["pq"];
+        Mod["pq"] = M["pq"];
+
+        // initialize Mbar
+        auto& Mbar0 = Mbar0_[i];
+        auto& Mbar1 = Mbar1_[i];
+        temp1.zero();
+
+        // [M, A2nd] + 0.5 * [[M^{d}, A1st], A2nd]
+        // - prepare O1 = M^{od} + 0.5 * [M^{d}, A1st]^{od}
+        O1["pq"] = Mod["pq"];
+        S2_["ijab"] = 2.0 * O2_["ijab"] - O2_["jiab"];
+        H1d_A1_C1ph(Md, O1_, 0.5, O1);
+        H1d_A2_C1ph(Md, S2_, 0.5, O1);
+
+        // - compute Mbar_{0,1}
+        S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["jiab"];
+        H1_T1_C0(O1, T1_, 2.0, Mbar0);
+        H1_T2_C0(O1, T2_, 2.0, Mbar0);
+        H1_T_C1a_smallS(O1, T1_, S2_, temp1);
+
+        // [M, A1st] + 0.5 * [[M^{d}, A2nd], A1st] + 0.5 * [[M, A1st], A1st]
+        // - prepare O1 = M^{od} + 0.5 * [M^{d}, A2nd]^{od}
+        O1["pq"] = Mod["pq"];
+        H1d_A1_C1ph(Md, T1_, 0.5, O1);
+        H1d_A2_C1ph(Md, S2_, 0.5, O1);
+
+        S2_["ijab"] = 2.0 * O2_["ijab"] - O2_["jiab"];
+        H1_A1_C1ph(M, O1_, 0.5, O1);
+        H1_A2_C1ph(M, S2_, 0.5, O1);
+
+        // - compute Mbar_{0,1}
+        H1_T1_C0(O1, O1_, 2.0, Mbar0);
+        H1_T2_C0(O1, O2_, 2.0, Mbar0);
+        H1_T_C1a_smallS(O1, O1_, S2_, temp1);
+
+        // 1/6 * [[[M^{d}, A1st], A1st], A1st]
+        F1.zero();
+        H1.zero();
+        H1_T1_C1(Md, O1_, 1.0, F1);
+        H1_T2_C1(Md, O2_, 1.0, F1);
+        H1["pq"] += F1["pq"];
+        H1["pq"] += F1["qp"];
+
+        O1.zero();
+        H1_A1_C1ph(H1, O1_, 1.0 / 6.0, O1);
+        H1_A2_C1ph(H1, S2_, 1.0 / 6.0, O1);
+
+        H1_T1_C0(O1, O1_, 2.0, Mbar0);
+        H1_T2_C0(O1, O2_, 2.0, Mbar0);
+        H1_T_C1a_smallS(O1, O1_, S2_, temp1);
+
+        // add 1-body results
+        Mbar1["uv"] += temp1["uv"];
+        Mbar1["vu"] += temp1["uv"];
+
+        // check results
+        C0 = 0.0;
+        C1.zero();
+        F1.zero();
+        H1.zero();
+        J1.zero();
+        K1.zero();
+        auto N = oetens[i];
+
+        Md["pq"] = M["pq"];
+        Mod["pq"] = M["pq"];
+
+        // single commutator
+        H1_T1_C0(N, T1_, 2.0, C0);
+        H1_T2_C0(N, T2_, 2.0, C0);
+        H1_T1_C0(N, O1_, 2.0, C0);
+        H1_T2_C0(N, O2_, 2.0, C0);
+
+        H1_T1_C1(N, O1_, 1.0, J1);
+        H1_T2_C1(N, O2_, 1.0, J1);
+        F1["pq"] += J1["pq"];
+        F1["pq"] += J1["qp"];
+        C1["pq"] += F1["pq"];
+
+        H1_T1_C1(N, T1_, 1.0, K1);
+        H1_T2_C1(N, T2_, 1.0, K1);
+        C1["pq"] += K1["pq"];
+        C1["pq"] += K1["qp"];
+
+        // double commutator
+        H1_T1_C0(F1, O1_, 1.0, C0);
+        H1_T2_C0(F1, O2_, 1.0, C0);
+
+        J1.zero();
+        H1_T1_C1(F1, O1_, 0.5, J1);
+        H1_T2_C1(F1, O2_, 0.5, J1);
+        C1["pq"] += J1["pq"];
+        C1["pq"] += J1["qp"];
+
+        J1.zero();
+        F1.zero();
+        H1_T1_C1(Md, O1_, 1.0, J1);
+        H1_T2_C1(Md, O2_, 1.0, J1);
+        F1["pq"] += J1["pq"];
+        F1["pq"] += J1["qp"];
+
+        H1_T1_C0(F1, T1_, 1.0, C0);
+        H1_T2_C0(F1, T2_, 1.0, C0);
+
+        J1.zero();
+        H1_T1_C1(F1, T1_, 0.5, J1);
+        H1_T2_C1(F1, T2_, 0.5, J1);
+        C1["pq"] += J1["pq"];
+        C1["pq"] += J1["qp"];
+
+        J1.zero();
+        K1.zero();
+        H1_T1_C1(Md, T1_, 1.0, K1);
+        H1_T2_C1(Md, T2_, 1.0, K1);
+        J1["pq"] += K1["pq"];
+        J1["pq"] += K1["qp"];
+
+        H1_T1_C0(J1, O1_, 1.0, C0);
+        H1_T2_C0(J1, O2_, 1.0, C0);
+
+        K1.zero();
+        H1_T1_C1(J1, O1_, 0.5, K1);
+        H1_T2_C1(J1, O2_, 0.5, K1);
+        C1["pq"] += K1["pq"];
+        C1["pq"] += K1["qp"];
+
+        // triple commutator
+        J1.zero();
+        K1.zero();
+        H1_T1_C1(F1, O1_, 0.5, J1);
+        H1_T2_C1(F1, O2_, 0.5, J1);
+        K1["pq"] += J1["pq"];
+        K1["pq"] += J1["qp"];
+
+        H1_T1_C0(K1, O1_, 2.0 / 3.0, C0);
+        H1_T2_C0(K1, O2_, 2.0 / 3.0, C0);
+
+        J1.zero();
+        H1_T1_C1(K1, O1_, 1.0 / 3.0, J1);
+        H1_T2_C1(K1, O2_, 1.0 / 3.0, J1);
+        C1["pq"] += J1["pq"];
+        C1["pq"] += J1["qp"];
+
+        outfile->Printf("\n  Mbar0 = %20.15f, C0 = %20.15f, Diff = %20.15f", Mbar0, C0, Mbar0 - C0);
+
+        C1["pq"] -= Mbar1["pq"];
+        outfile->Printf("\n  C1 diff norm = %20.15f", C1.norm());
+
+        print_done(t_local.get());
+    }
+}
 } // namespace forte

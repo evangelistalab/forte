@@ -90,7 +90,7 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
     auto max_body = *std::max_element(max_levels.begin(), max_levels.end());
 
     // temporary tensors
-    ambit::BlockedTensor O1, C2, O2, G2, temp1, temp2;
+    ambit::BlockedTensor O1, O2, G2, temp1, temp2;
     O1 = BTF_->build(tensor_type_, "O1", od_one_labels_ph());
     temp1 = BTF_->build(tensor_type_, "temp1M", {"aa"});
     if (max_body > 1) {

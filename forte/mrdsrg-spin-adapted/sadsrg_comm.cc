@@ -1275,4 +1275,34 @@ void SADSRG::H1d_A2_C2pphh_small(BlockedTensor& H1, BlockedTensor& T2, const dou
 
     dsrg_time_.add("122", timer.get());
 }
+
+void SADSRG::H1_A1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                        BlockedTensor& C1) {
+    local_timer timer;
+
+    C1["ai"] += alpha * H1["ca"] * T1["ic"];
+    C1["ai"] -= alpha * H1["ik"] * T1["ka"];
+
+    C1["ui"] += alpha * H1["ai"] * T1["ua"];
+    C1["au"] -= alpha * H1["ai"] * T1["iu"];
+
+    dsrg_time_.add("111", timer.get());
+}
+
+void SADSRG::H1_A2_C1ph(BlockedTensor& H1, BlockedTensor& S2, const double& alpha,
+                        BlockedTensor& C1) {
+    local_timer timer;
+
+    C1["ai"] += alpha * H1["bm"] * S2["imab"];
+    C1["ai"] += 0.5 * alpha * H1["bu"] * S2["ivab"] * L1_["uv"];
+    C1["ai"] -= 0.5 * alpha * H1["vj"] * S2["ijau"] * L1_["uv"];
+
+    if (C1.is_block("aa")) {
+        C1["xy"] += alpha * H1["bm"] * S2["xmyb"];
+        C1["xy"] += 0.5 * alpha * H1["bu"] * S2["xvyb"] * L1_["uv"];
+        C1["xy"] -= 0.5 * alpha * H1["vj"] * S2["xjyu"] * L1_["uv"];
+    }
+
+    dsrg_time_.add("121", timer.get());
+}
 } // namespace forte
