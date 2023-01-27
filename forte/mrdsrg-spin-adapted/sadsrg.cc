@@ -489,9 +489,12 @@ std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
     // prepare multipole integrals to be transformed
     std::vector<ambit::BlockedTensor> M1;
     std::vector<int> max_levels;
+    std::vector<double> scalars;
 
     // bare dipoles
     if (max_dipole_level_ > 0) {
+        auto fdocc = as_mpints->dp_scalars_fdocc();
+        auto nuc = as_mpints->nuclear_dipole();
         for (int z = 0; z < 3; ++z) {
             std::string name = "DIPOLE " + dp_dirs[z];
             ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
@@ -499,12 +502,15 @@ std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
                            double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
             M1.push_back(m1);
             max_levels.push_back(max_dipole_level_);
+            scalars.push_back(fdocc->get(z) + nuc->get(z));
         }
         as_mpints->set_dp_name("DSRG Dressed");
     }
 
     // bare quadrupoles
     if (max_quadrupole_level_ > 0) {
+        auto fdocc = as_mpints->qp_scalars_fdocc();
+        auto nuc = as_mpints->nuclear_quadrupole();
         for (int z = 0; z < 6; ++z) {
             std::string name = "QUADRUPOLE " + qp_dirs[z];
             ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
@@ -512,12 +518,20 @@ std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
                            double& value) { value = mpints->qp_ints_corr(z, i[0], i[1]); });
             M1.push_back(m1);
             max_levels.push_back(max_quadrupole_level_);
+            scalars.push_back(fdocc->get(z) + nuc->get(z));
         }
         as_mpints->set_qp_name("DSRG Dressed");
     }
 
     // transform one-electron integrals
     transform_one_body(M1, max_levels);
+
+    // print scalar part of the multipoles
+    print_h2("Expectation Values of the DSRG Transformed One-Body Operators [a.u.]");
+    for (int i = 0, size = M1.size(); i < size; ++i) {
+        auto name = M1[i].name();
+        outfile->Printf("\n    %s: %12.8f", name.c_str(), Mbar0_[i] + scalars[i]);
+    }
 
     // de-normal-order transformed integrals
     for (int i = 0, size = M1.size(); i < size; ++i) {

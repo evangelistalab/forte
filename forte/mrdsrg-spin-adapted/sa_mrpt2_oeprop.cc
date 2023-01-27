@@ -119,14 +119,14 @@ void SA_MRPT2::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
     }
 
     // transform each tensor
+    auto Md = BTF_->build(tensor_type_, "M_D", {"cc", "aa", "vv"});
+    auto Mod = BTF_->build(tensor_type_, "M_OD", od_one_labels_ph());
     for (int i = 0; i < n_tensors; ++i) {
         local_timer t_local;
         const auto& M = oetens[i];
         print_contents("Transforming " + M.name());
 
         // separate M to diagonal and off-diagonal components
-        auto Md = BTF_->build(tensor_type_, M.name() + " D", {"cc", "aa", "vv"});
-        auto Mod = BTF_->build(tensor_type_, M.name() + " OD", od_one_labels_ph());
         Md["pq"] = M["pq"];
         Mod["pq"] = M["pq"];
 

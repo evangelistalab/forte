@@ -390,7 +390,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
                 }
             }
         }
-        psi::outfile->Printf("\n        ");
+        psi::outfile->Printf("\n");
     }
 
     return trans_dipoles;

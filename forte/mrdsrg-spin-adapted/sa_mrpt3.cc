@@ -435,7 +435,7 @@ void SA_MRPT3::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
 
     auto max_body = *std::max_element(max_levels.begin(), max_levels.end());
     if (max_body > 1)
-        throw std::runtime_error("Multipole level >1 currently not available for MRPT3!");
+        throw std::runtime_error("Multipole level > 1 currently not available for MRPT3!");
 
     int n_tensors = oetens.size();
     Mbar0_ = std::vector<double>(n_tensors, 0.0);
@@ -496,8 +496,11 @@ void SA_MRPT3::transform_one_body(const std::vector<ambit::BlockedTensor>& oeten
 
         // [M, A1st] + 0.5 * [[M^{d}, A2nd], A1st] + 0.5 * [[M, A1st], A1st]
         // + 1/6 * [[[M^{d}, A1st], A1st], A1st]
-        // - prepare O1 <- M^{od} + 0.5 * [M^{d}, A2nd]^{od}
+
+        // - O1 <- M^{od}
         O1["pq"] = Mod["pq"];
+
+        // - O1 <- 0.5 * [M^{d}, A2nd]^{od}
         H1d_A1_C1ph(Md, T1_, 0.5, O1);
         H1d_A2_C1ph(Md, S2_, 0.5, O1);
 
