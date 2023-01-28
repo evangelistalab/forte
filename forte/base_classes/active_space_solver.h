@@ -139,8 +139,8 @@ class ActiveSpaceSolver {
     }
 
     /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
-    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_ints) {
-        as_mp_ints_ = as_ints;
+    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
+        as_mp_ints_ = as_mp_ints;
     }
 
     /// Return the map of StateInfo to the wave function file name
