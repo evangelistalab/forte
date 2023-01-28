@@ -194,7 +194,7 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
  * See Algorithm 1 of DOI: 10.1145/2555243.2555253.
  * Also see https://github.com/bryancatanzaro/inplace
  */
-void matrix_transpose_in_place(double* data, const size_t m, const size_t n);
+void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const size_t n);
 
 void push_to_psi4_env_globals(double value, const std::string& label);
 

@@ -366,7 +366,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
 
         df_->fill_tensor("B", out_data.data(), Q_range, p_range, q_range);
         if (order == "pqQ")
-            matrix_transpose_in_place(out_data.data(), Qsize, pqsize);
+            matrix_transpose_in_place(out_data, Qsize, pqsize);
     } else if ((not p_contiguous) and q_contiguous) {
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 

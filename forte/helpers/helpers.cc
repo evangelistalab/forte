@@ -139,7 +139,7 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     return out;
 }
 
-void matrix_transpose_in_place(double* data, const size_t m, const size_t n) {
+void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const size_t n) {
     int nthreads = std::min(omp_get_max_threads(), int(m > n ? n : m));
     std::vector<double> tmp(nthreads * (m > n ? m : n));
     double* tmp_ptr = tmp.data();

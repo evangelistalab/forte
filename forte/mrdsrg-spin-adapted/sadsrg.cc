@@ -1197,7 +1197,7 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
 
     // in-place matrix transpose
     if (order == "pqQ") {
-        matrix_transpose_in_place(Tdata.data(), nQ, S);
+        matrix_transpose_in_place(Tdata, nQ, S);
     }
 
     return T;
