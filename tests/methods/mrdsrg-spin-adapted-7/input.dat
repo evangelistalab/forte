@@ -90,7 +90,6 @@ set forte {
   dsrg_max_quadrupole_level 1
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-psi4.core.print_variables()
 
 # compare SA-CASSCF results
 compare_results("cas")
@@ -104,7 +103,6 @@ set forte {
   dsrg_s      2.0
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-psi4.core.print_variables()
 
 # compare SA-DSRG-PT3 results
 compare_results("pt3")

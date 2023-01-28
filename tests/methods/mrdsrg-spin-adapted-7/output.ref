@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sunday, 29 January 2023 03:06AM
+    Psi4 started on: Sunday, 29 January 2023 03:16AM
 
-    Process ID: 92788
+    Process ID: 99467
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -134,7 +134,6 @@ set forte {
   dsrg_max_quadrupole_level 1
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-psi4.core.print_variables()
 
 # compare SA-CASSCF results
 compare_results("cas")
@@ -148,7 +147,6 @@ set forte {
   dsrg_s      2.0
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-psi4.core.print_variables()
 
 # compare SA-DSRG-PT3 results
 compare_results("pt3")
@@ -172,7 +170,7 @@ compare_results("ldsrg2_casci")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Sun Jan 29 03:06:11 2023
+*** at Sun Jan 29 03:16:13 2023
 
    => Loading Basis Set <=
 
@@ -302,12 +300,12 @@ Scratch directory: /Users/york/scratch/psi4/
                            Total Energy        Delta E     RMS |[F,P]|
 
    @DF-RHF iter SAD:   -77.24229140694897   -7.72423e+01   0.00000e+00 
-   @DF-RHF iter   1:   -77.96701480686215   -7.24723e-01   1.05730e-02 DIIS/ADIIS
-   @DF-RHF iter   2:   -78.03223502320554   -6.52202e-02   4.19828e-03 DIIS/ADIIS
-   @DF-RHF iter   3:   -78.04273229499951   -1.04973e-02   6.84138e-04 DIIS/ADIIS
-   @DF-RHF iter   4:   -78.04326487002319   -5.32575e-04   6.32341e-05 DIIS
-   @DF-RHF iter   5:   -78.04327012301876   -5.25300e-06   6.87028e-06 DIIS
-   @DF-RHF iter   6:   -78.04327019247263   -6.94539e-08   8.45597e-07 DIIS
+   @DF-RHF iter   1:   -77.96701480686212   -7.24723e-01   1.05730e-02 ADIIS/DIIS
+   @DF-RHF iter   2:   -78.03223502320557   -6.52202e-02   4.19828e-03 ADIIS/DIIS
+   @DF-RHF iter   3:   -78.04273229499955   -1.04973e-02   6.84138e-04 ADIIS/DIIS
+   @DF-RHF iter   4:   -78.04326487002314   -5.32575e-04   6.32341e-05 DIIS
+   @DF-RHF iter   5:   -78.04327012301866   -5.25300e-06   6.87028e-06 DIIS
+   @DF-RHF iter   6:   -78.04327019247262   -6.94540e-08   8.45597e-07 DIIS
   Energy and wave function converged.
 
 
@@ -356,13 +354,13 @@ Scratch directory: /Users/york/scratch/psi4/
     NA   [     3,    0,    0,    1,    0,    2,    1,    1 ]
     NB   [     3,    0,    0,    1,    0,    2,    1,    1 ]
 
-  @DF-RHF Final Energy:   -78.04327019247263
+  @DF-RHF Final Energy:   -78.04327019247262
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             33.2649999611281402
-    One-Electron Energy =                -169.7784184629058188
-    Two-Electron Energy =                  58.4701483093050385
+    One-Electron Energy =                -169.7784184629053073
+    Two-Electron Energy =                  58.4701483093045340
     Total Energy =                        -78.0432701924726189
 
 Computation Completed
@@ -387,14 +385,14 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on Yorks-Mac.local at Sun Jan 29 03:06:12 2023
+*** tstop() called on Yorks-Mac.local at Sun Jan 29 03:16:14 2023
 Module time:
-	user time   =       7.47 seconds =       0.12 minutes
-	system time =       0.25 seconds =       0.00 minutes
+	user time   =       7.89 seconds =       0.13 minutes
+	system time =       0.30 seconds =       0.01 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       7.47 seconds =       0.12 minutes
-	system time =       0.25 seconds =       0.00 minutes
+	user time   =       7.89 seconds =       0.13 minutes
+	system time =       0.30 seconds =       0.01 minutes
 	total time  =          1 seconds =       0.02 minutes
 
 Scratch directory: /Users/york/scratch/psi4/
@@ -540,14 +538,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.129 s.
+  Timing for density-fitting transformation:                  0.125 s.
 
   Frozen-core energy         -78.519766265366485 a.u.
-  Timing for frozen one-body operator:                        0.003 s.
+  Timing for frozen one-body operator:                        0.004 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.062 s.
-  Timing for freezing core and virtual orbitals:              0.065 s.
-  Timing for computing density-fitted integrals:              0.485 s.
+  Timing for resorting DF integrals:                          0.067 s.
+  Timing for freezing core and virtual orbitals:              0.070 s.
+  Timing for computing density-fitted integrals:              0.490 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -584,8 +582,8 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000038 s
-  Forming determinants                ...  Done. Timing        0.000010 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000044 s
+  Forming determinants                ...  Done. Timing        0.000012 s
 
   ==> Determinants Summary <==
 
@@ -598,20 +596,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          2.603e-05 seconds
-        β          1.232e-05 seconds
+        α          3.011e-05 seconds
+        β          1.507e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         1.064e-05 seconds
-        ββ         5.224e-06 seconds
-        αβ         2.197e-05 seconds
+        αα         1.192e-05 seconds
+        ββ         6.204e-06 seconds
+        αβ         2.562e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000465 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000536 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -652,7 +650,7 @@ Scratch directory: /Users/york/scratch/psi4/
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
   Forming alpha and beta strings      ...  Done. Timing        0.000025 s
-  Forming determinants                ...  Done. Timing        0.000006 s
+  Forming determinants                ...  Done. Timing        0.000007 s
 
   ==> Determinants Summary <==
 
@@ -665,20 +663,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.183e-05 seconds
-        β          1.052e-05 seconds
+        α          1.220e-05 seconds
+        β          1.039e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         5.936e-06 seconds
-        ββ         4.636e-06 seconds
-        αβ         9.607e-06 seconds
+        αα         6.218e-06 seconds
+        ββ         4.689e-06 seconds
+        αβ         9.500e-06 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000262 s
+  Found 2 roots with 2S+1 = 3  Done. Timing        0.000267 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -717,7 +715,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000057 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -749,8 +747,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000060 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000049 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -21.88290076     0.00000000     0.00000000   -11.85325349     0.00000000   -19.67456801
@@ -761,8 +759,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000062 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000054 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000076 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000065 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000    -0.00000000     1.25329859     1.25329859
@@ -798,7 +796,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000056 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000066 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
@@ -818,15 +816,15 @@ Scratch directory: /Users/york/scratch/psi4/
     ----------------------------------------------------------
       0B1U   1B1U     0.11362270     3.09183113     0.00000000
     ----------------------------------------------------------
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000053 s
- Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000053 s
- Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000054 s
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000046 s
- Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000038 s
- Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000038 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  2RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000038 s
- Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000035 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000062 s
+ Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000064 s
+ Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000063 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
+ Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000047 s
+ Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000053 s
+ Computing  2RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000049 s
+ Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
 
   ==> Semicanonicalize Orbitals <==
 
@@ -846,7 +844,7 @@ Scratch directory: /Users/york/scratch/psi4/
     RESTRICTED_UOCC      0.0000000000   0.0000000000
     ------------------------------------------------
   Orbitals are already semicanonicalized.
-  Timing for orbital canonicalization:                        0.007 s.
+  Timing for orbital canonicalization:                        0.010 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -860,7 +858,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
-    Computing Fock matrix and cleaning JK ....... Done. Timing      0.006 s
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.010 s
     Reading DSRG options ........................ Done. Timing      0.000 s
     Setting ambit MO space ...................... Done. Timing      0.000 s
     Initializing density cumulants .............. Done. Timing      0.001 s
@@ -926,9 +924,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Prepare Integrals & Amplitudes <==
 
-    Initializing integrals ...................... Done. Timing      0.014 s
+    Initializing integrals ...................... Done. Timing      0.017 s
     Allocating amplitudes ....................... Done. Timing      0.000 s
-    Computing T2 amplitudes minimal ............. Done. Timing      0.006 s
+    Computing T2 amplitudes minimal ............. Done. Timing      0.007 s
     Computing T1 amplitudes ..................... Done. Timing      0.001 s
 
   ==> First-Order Excitation Amplitudes Summary <==
@@ -955,7 +953,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  22   73   25   73] 0.0128221 [  73   44   73   51] 0.0126854 [   0   73   73   12] 0.0124500
     [  73   61   73   68] 0.0123788 [   0   44   73   21] 0.0123308 [  21   73   25   77] 0.0119484
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.163417820557288
+    2-Norm of T2 vector:                                                          0.163417820557287
     Number of nonzero elements:                                                               14188
     -----------------------------------------------------------------------------------------------
 
@@ -963,15 +961,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
     T1 amplitudes larger than 0.1000: NULL
     T2 amplitudes larger than 0.1000: NULL
-    Renormalizing 2-body integrals .............. Done. Timing      0.031 s
+    Renormalizing 2-body integrals .............. Done. Timing      0.030 s
     Renormalizing 1-body integrals .............. Done. Timing      0.001 s
     Computing <0|[Fr, T1]|0> .................... Done. Timing      0.000 s
     Computing <0|[Fr, T2]|0> .................... Done. Timing      0.000 s
     Computing <0|[Vr, T1]|0> .................... Done. Timing      0.000 s
     Computing <0|[Vr, T2]|0> minimal ............ Done. Timing      0.004 s
     Computing DF <0|[Vr, T2]|0> CCVV ............ Done. Timing      0.007 s
-    Computing DF Hbar1 CAVV ..................... Done. Timing      0.014 s
-    Computing DF Hbar1 CCAV ..................... Done. Timing      0.007 s
+    Computing DF Hbar1 CAVV ..................... Done. Timing      0.013 s
+    Computing DF Hbar1 CCAV ..................... Done. Timing      0.006 s
   DF-PT2 CCVV energy:     -0.159761440639193
   DF-PT2 CAVV energy:     -0.052385924839114
   DF-PT2 CCAV energy:     -0.011017636522910
@@ -986,7 +984,7 @@ Scratch directory: /Users/york/scratch/psi4/
       - [Vr, T2] L1 contribution   =     -0.274187909606937
       - [Vr, T2] L2 contribution   =      0.002293183498345
       - [Vr, T2] L3 contribution   =      0.000209196209105
-    DSRG-MRPT2 correlation energy  =     -0.271018282672939
+    DSRG-MRPT2 correlation energy  =     -0.271018282672938
     DSRG-MRPT2 total energy        =    -78.086310139203889
     Computing MRPT2 Hbar AAAA minimal ........... Done. Timing      0.013 s
 
@@ -998,11 +996,11 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Transform One-Electron Operators <==
 
     Transforming DIPOLE X ....................... Done. Timing      0.001 s
-    Transforming DIPOLE Y ....................... Done. Timing      0.001 s
-    Transforming DIPOLE Z ....................... Done. Timing      0.001 s
+    Transforming DIPOLE Y ....................... Done. Timing      0.002 s
+    Transforming DIPOLE Z ....................... Done. Timing      0.002 s
     Transforming QUADRUPOLE XX .................. Done. Timing      0.002 s
-    Transforming QUADRUPOLE XY .................. Done. Timing      0.002 s
-    Transforming QUADRUPOLE XZ .................. Done. Timing      0.002 s
+    Transforming QUADRUPOLE XY .................. Done. Timing      0.001 s
+    Transforming QUADRUPOLE XZ .................. Done. Timing      0.001 s
     Transforming QUADRUPOLE YY .................. Done. Timing      0.002 s
     Transforming QUADRUPOLE YZ .................. Done. Timing      0.002 s
     Transforming QUADRUPOLE ZZ .................. Done. Timing      0.002 s
@@ -1077,7 +1075,7 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000034 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000038 s
   Forming determinants                ...  Done. Timing        0.000008 s
 
   ==> Determinants Summary <==
@@ -1091,20 +1089,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.615e-05 seconds
-        β          1.209e-05 seconds
+        α          1.563e-05 seconds
+        β          1.220e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         6.596e-06 seconds
-        ββ         5.173e-06 seconds
-        αβ         1.215e-05 seconds
+        αα         6.852e-06 seconds
+        ββ         4.972e-06 seconds
+        αβ         1.148e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000324 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000340 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1117,7 +1115,7 @@ Scratch directory: /Users/york/scratch/psi4/
     ba 0         -0.0641462491
     ab 0         -0.0641462491
 
-    Total Energy:   -78.322910420240461
+    Total Energy:   -78.322910420240447
 
 
 
@@ -1144,7 +1142,7 @@ Scratch directory: /Users/york/scratch/psi4/
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
   Forming alpha and beta strings      ...  Done. Timing        0.000026 s
-  Forming determinants                ...  Done. Timing        0.000006 s
+  Forming determinants                ...  Done. Timing        0.000007 s
 
   ==> Determinants Summary <==
 
@@ -1157,20 +1155,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.180e-05 seconds
-        β          1.040e-05 seconds
+        α          1.224e-05 seconds
+        β          1.043e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         5.872e-06 seconds
-        ββ         4.630e-06 seconds
-        αβ         9.303e-06 seconds
+        αα         5.968e-06 seconds
+        ββ         4.571e-06 seconds
+        αβ         1.016e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000257 s
+  Found 2 roots with 2S+1 = 3  Done. Timing        0.000334 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1205,7 +1203,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000050 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000060 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -1215,8 +1213,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000053 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000048 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
@@ -1227,7 +1225,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000047 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.67531764     0.00000000     0.00000000    -8.47402702     0.00000000    -7.75468726
@@ -1237,8 +1235,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000040 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000057 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000049 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.51957819     0.00000000     0.00000000   -10.28839551     0.00000000   -14.79281562
@@ -1249,8 +1247,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000058 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000054 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000069 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000064 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000     0.00000000     1.53221223     1.53221223
@@ -1283,7 +1281,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000056 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000066 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
@@ -1306,7 +1304,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000056 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000    -0.00000000    -0.00000000     0.00000000
@@ -1316,8 +1314,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000051 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000047 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
@@ -1328,7 +1326,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000047 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.78113010    -0.00000000     0.00000000    -8.72309233    -0.00000000    -8.22888228
@@ -1338,8 +1336,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000040 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000052 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000048 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.49446567     0.00000000     0.00000000   -10.23398953    -0.00000000   -14.61966901
@@ -1350,8 +1348,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000058 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000054 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000068 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000063 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000     0.00000000     1.44585584     1.44585584
@@ -1384,7 +1382,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000081 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000065 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
@@ -1415,221 +1413,9 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.741 seconds
-  Time to run job          :        0.171 seconds
-  Total                    :        0.912 seconds
-
-
-  Variable Map:
-  ----------------------------------------------------------------------------
-  "CURRENT ENERGY"                           =>     -78.086546921014
-  "DSRG REFERENCE ENERGY"                    =>     -77.815291856531
-  "ENERGY ROOT 0 1AG"                        =>     -78.322910420240
-  "ENERGY ROOT 0 1AG ENTRY 0"                =>     -78.050972650022
-  "ENERGY ROOT 0 1AG ENTRY 1"                =>     -78.322910420240
-  "ENERGY ROOT 0 1B1U"                       =>     -78.024073016710
-  "ENERGY ROOT 0 1B1U ENTRY 0"               =>     -77.754262809385
-  "ENERGY ROOT 0 1B1U ENTRY 1"               =>     -78.024073016710
-  "ENERGY ROOT 1 1B1U"                       =>     -77.912657326092
-  "ENERGY ROOT 1 1B1U ENTRY 0"               =>     -77.640640110185
-  "ENERGY ROOT 1 1B1U ENTRY 1"               =>     -77.912657326092
-  "FCI_MO ENERGY"                            =>     -78.024073016710
-  "OSC. SINGLET 0AG -> 0B1U"                 =>       0.416479551582
-  "OSC. SINGLET 0AG -> 0B1U ENTRY 0"         =>       0.310706108193
-  "OSC. SINGLET 0AG -> 0B1U ENTRY 1"         =>       0.467715263324
-  "OSC. SINGLET 0AG -> 0B1U ENTRY 2"         =>       0.416479551582
-  "OSC. SINGLET 0AG -> 1B1U"                 =>       0.071542891028
-  "OSC. SINGLET 0AG -> 1B1U ENTRY 0"         =>       0.233911712991
-  "OSC. SINGLET 0AG -> 1B1U ENTRY 1"         =>       0.087820418627
-  "OSC. SINGLET 0AG -> 1B1U ENTRY 2"         =>       0.071542891028
-  "OSC. SINGLET 0B1U -> 1B1U"                =>       0.000000000000
-  "OSC. SINGLET 0B1U -> 1B1U ENTRY 0"        =>       0.000000000000
-  "OSC. SINGLET 0B1U -> 1B1U ENTRY 1"        =>       0.000000000000
-  "OSC. SINGLET 0B1U -> 1B1U ENTRY 2"        =>       0.000000000000
-  "PARTIALLY RELAXED ENERGY"                 =>     -78.086546921014
-  "SINGLET <0AG|DM_X|0AG>"                   =>       0.000000000000
-  "SINGLET <0AG|DM_X|0AG> ENTRY 0"           =>       0.000000000000
-  "SINGLET <0AG|DM_X|0AG> ENTRY 1"           =>       0.000000000000
-  "SINGLET <0AG|DM_X|0AG> ENTRY 2"           =>       0.000000000000
-  "SINGLET <0AG|DM_Y|0AG>"                   =>      -0.000000000000
-  "SINGLET <0AG|DM_Y|0AG> ENTRY 0"           =>       0.000000000000
-  "SINGLET <0AG|DM_Y|0AG> ENTRY 1"           =>       0.000000000000
-  "SINGLET <0AG|DM_Y|0AG> ENTRY 2"           =>      -0.000000000000
-  "SINGLET <0AG|DM_Z|0AG>"                   =>      -0.000000000000
-  "SINGLET <0AG|DM_Z|0AG> ENTRY 0"           =>       0.000000000000
-  "SINGLET <0AG|DM_Z|0AG> ENTRY 1"           =>       0.000000000000
-  "SINGLET <0AG|DM_Z|0AG> ENTRY 2"           =>      -0.000000000000
-  "SINGLET <0AG|QM_XX|0AG>"                  =>     -11.781130095753
-  "SINGLET <0AG|QM_XX|0AG> ENTRY 0"          =>     -11.684553148724
-  "SINGLET <0AG|QM_XX|0AG> ENTRY 1"          =>     -11.675317636441
-  "SINGLET <0AG|QM_XX|0AG> ENTRY 2"          =>     -11.781130095753
-  "SINGLET <0AG|QM_XY|0AG>"                  =>      -0.000000000000
-  "SINGLET <0AG|QM_XY|0AG> ENTRY 0"          =>       0.000000000000
-  "SINGLET <0AG|QM_XY|0AG> ENTRY 1"          =>       0.000000000000
-  "SINGLET <0AG|QM_XY|0AG> ENTRY 2"          =>      -0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG>"                  =>       0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG> ENTRY 0"          =>       0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG> ENTRY 1"          =>       0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG> ENTRY 2"          =>       0.000000000000
-  "SINGLET <0AG|QM_YY|0AG>"                  =>      -8.723092328757
-  "SINGLET <0AG|QM_YY|0AG> ENTRY 0"          =>      -8.482733980497
-  "SINGLET <0AG|QM_YY|0AG> ENTRY 1"          =>      -8.474027021493
-  "SINGLET <0AG|QM_YY|0AG> ENTRY 2"          =>      -8.723092328757
-  "SINGLET <0AG|QM_YZ|0AG>"                  =>      -0.000000000000
-  "SINGLET <0AG|QM_YZ|0AG> ENTRY 0"          =>       0.000000000000
-  "SINGLET <0AG|QM_YZ|0AG> ENTRY 1"          =>       0.000000000000
-  "SINGLET <0AG|QM_YZ|0AG> ENTRY 2"          =>      -0.000000000000
-  "SINGLET <0AG|QM_ZZ|0AG>"                  =>      -8.228882275242
-  "SINGLET <0AG|QM_ZZ|0AG> ENTRY 0"          =>      -7.817286329029
-  "SINGLET <0AG|QM_ZZ|0AG> ENTRY 1"          =>      -7.754687262226
-  "SINGLET <0AG|QM_ZZ|0AG> ENTRY 2"          =>      -8.228882275242
-  "SINGLET <0B1U|DM_X|0B1U>"                 =>      -0.000000000000
-  "SINGLET <0B1U|DM_X|0B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <0B1U|DM_X|0B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <0B1U|DM_X|0B1U> ENTRY 2"         =>      -0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U>"                 =>      -0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U> ENTRY 2"         =>      -0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U>"                 =>      -0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U> ENTRY 2"         =>      -0.000000000000
-  "SINGLET <0B1U|QM_XX|0B1U>"                =>     -16.494465668042
-  "SINGLET <0B1U|QM_XX|0B1U> ENTRY 0"        =>     -21.882900761865
-  "SINGLET <0B1U|QM_XX|0B1U> ENTRY 1"        =>     -16.519578192300
-  "SINGLET <0B1U|QM_XX|0B1U> ENTRY 2"        =>     -16.494465668042
-  "SINGLET <0B1U|QM_XY|0B1U>"                =>       0.000000000000
-  "SINGLET <0B1U|QM_XY|0B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XY|0B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XY|0B1U> ENTRY 2"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U>"                =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U> ENTRY 2"        =>       0.000000000000
-  "SINGLET <0B1U|QM_YY|0B1U>"                =>     -10.233989531391
-  "SINGLET <0B1U|QM_YY|0B1U> ENTRY 0"        =>     -11.853253488786
-  "SINGLET <0B1U|QM_YY|0B1U> ENTRY 1"        =>     -10.288395512636
-  "SINGLET <0B1U|QM_YY|0B1U> ENTRY 2"        =>     -10.233989531391
-  "SINGLET <0B1U|QM_YZ|0B1U>"                =>      -0.000000000000
-  "SINGLET <0B1U|QM_YZ|0B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <0B1U|QM_YZ|0B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <0B1U|QM_YZ|0B1U> ENTRY 2"        =>      -0.000000000000
-  "SINGLET <0B1U|QM_ZZ|0B1U>"                =>     -14.619669012052
-  "SINGLET <0B1U|QM_ZZ|0B1U> ENTRY 0"        =>     -19.674568009057
-  "SINGLET <0B1U|QM_ZZ|0B1U> ENTRY 1"        =>     -14.792815617761
-  "SINGLET <0B1U|QM_ZZ|0B1U> ENTRY 2"        =>     -14.619669012052
-  "SINGLET <1B1U|DM_X|1B1U>"                 =>      -0.000000000000
-  "SINGLET <1B1U|DM_X|1B1U> ENTRY 0"         =>      -0.000000000000
-  "SINGLET <1B1U|DM_X|1B1U> ENTRY 1"         =>      -0.000000000000
-  "SINGLET <1B1U|DM_X|1B1U> ENTRY 2"         =>      -0.000000000000
-  "SINGLET <1B1U|DM_Y|1B1U>"                 =>       0.000000000000
-  "SINGLET <1B1U|DM_Y|1B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Y|1B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Y|1B1U> ENTRY 2"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Z|1B1U>"                 =>       0.000000000000
-  "SINGLET <1B1U|DM_Z|1B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Z|1B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Z|1B1U> ENTRY 2"         =>       0.000000000000
-  "SINGLET <1B1U|QM_XX|1B1U>"                =>     -26.883130105872
-  "SINGLET <1B1U|QM_XX|1B1U> ENTRY 0"        =>     -21.603817284171
-  "SINGLET <1B1U|QM_XX|1B1U> ENTRY 1"        =>     -26.967139853736
-  "SINGLET <1B1U|QM_XX|1B1U> ENTRY 2"        =>     -26.883130105872
-  "SINGLET <1B1U|QM_XY|1B1U>"                =>       0.000000000000
-  "SINGLET <1B1U|QM_XY|1B1U> ENTRY 0"        =>      -0.000000000000
-  "SINGLET <1B1U|QM_XY|1B1U> ENTRY 1"        =>      -0.000000000000
-  "SINGLET <1B1U|QM_XY|1B1U> ENTRY 2"        =>       0.000000000000
-  "SINGLET <1B1U|QM_XZ|1B1U>"                =>       0.000000000000
-  "SINGLET <1B1U|QM_XZ|1B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <1B1U|QM_XZ|1B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <1B1U|QM_XZ|1B1U> ENTRY 2"        =>       0.000000000000
-  "SINGLET <1B1U|QM_YY|1B1U>"                =>     -12.803238971794
-  "SINGLET <1B1U|QM_YY|1B1U> ENTRY 0"        =>     -11.434100625201
-  "SINGLET <1B1U|QM_YY|1B1U> ENTRY 1"        =>     -12.998958601351
-  "SINGLET <1B1U|QM_YY|1B1U> ENTRY 2"        =>     -12.803238971794
-  "SINGLET <1B1U|QM_YZ|1B1U>"                =>      -0.000000000000
-  "SINGLET <1B1U|QM_YZ|1B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <1B1U|QM_YZ|1B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <1B1U|QM_YZ|1B1U> ENTRY 2"        =>      -0.000000000000
-  "SINGLET <1B1U|QM_ZZ|1B1U>"                =>     -23.299342175609
-  "SINGLET <1B1U|QM_ZZ|1B1U> ENTRY 0"        =>     -18.747586608151
-  "SINGLET <1B1U|QM_ZZ|1B1U> ENTRY 1"        =>     -23.629338999447
-  "SINGLET <1B1U|QM_ZZ|1B1U> ENTRY 2"        =>     -23.299342175609
-  "SINGLET |<0AG|DM|0AG>|"                   =>       0.000000000000
-  "SINGLET |<0AG|DM|0AG>| ENTRY 0"           =>       0.000000000000
-  "SINGLET |<0AG|DM|0AG>| ENTRY 1"           =>       0.000000000000
-  "SINGLET |<0AG|DM|0AG>| ENTRY 2"           =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>|"                 =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>| ENTRY 0"         =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>| ENTRY 1"         =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>| ENTRY 2"         =>       0.000000000000
-  "SINGLET |<1B1U|DM|1B1U>|"                 =>       0.000000000000
-  "SINGLET |<1B1U|DM|1B1U>| ENTRY 0"         =>       0.000000000000
-  "SINGLET |<1B1U|DM|1B1U>| ENTRY 1"         =>       0.000000000000
-  "SINGLET |<1B1U|DM|1B1U>| ENTRY 2"         =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U>"            =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U> ENTRY 0"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U> ENTRY 1"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U> ENTRY 2"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|1B1U>"            =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_X|1B1U> ENTRY 0"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|1B1U> ENTRY 1"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|1B1U> ENTRY 2"    =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U>"            =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U> ENTRY 0"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U> ENTRY 1"    =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U> ENTRY 2"    =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|1B1U>"            =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|1B1U> ENTRY 0"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|1B1U> ENTRY 1"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|1B1U> ENTRY 2"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Z|0B1U>"            =>       1.445855841434
-  "TRANS SINGLET <0AG|DM_Z|0B1U> ENTRY 0"    =>       1.253298586775
-  "TRANS SINGLET <0AG|DM_Z|0B1U> ENTRY 1"    =>       1.532212227304
-  "TRANS SINGLET <0AG|DM_Z|0B1U> ENTRY 2"    =>       1.445855841434
-  "TRANS SINGLET <0AG|DM_Z|1B1U>"            =>      -0.511449713736
-  "TRANS SINGLET <0AG|DM_Z|1B1U> ENTRY 0"    =>      -0.924705913673
-  "TRANS SINGLET <0AG|DM_Z|1B1U> ENTRY 1"    =>      -0.566653334084
-  "TRANS SINGLET <0AG|DM_Z|1B1U> ENTRY 2"    =>      -0.511449713736
-  "TRANS SINGLET <0B1U|DM_X|1B1U>"           =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_X|1B1U> ENTRY 0"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_X|1B1U> ENTRY 1"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_X|1B1U> ENTRY 2"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_Y|1B1U>"           =>       0.000000000000
-  "TRANS SINGLET <0B1U|DM_Y|1B1U> ENTRY 0"   =>       0.000000000000
-  "TRANS SINGLET <0B1U|DM_Y|1B1U> ENTRY 1"   =>       0.000000000000
-  "TRANS SINGLET <0B1U|DM_Y|1B1U> ENTRY 2"   =>       0.000000000000
-  "TRANS SINGLET <0B1U|DM_Z|1B1U>"           =>       0.000000000000
-  "TRANS SINGLET <0B1U|DM_Z|1B1U> ENTRY 0"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_Z|1B1U> ENTRY 1"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_Z|1B1U> ENTRY 2"   =>       0.000000000000
-  "TRANS SINGLET S_MAX 0AG -> 0B1U"          =>       1.400781996229
-  "TRANS SINGLET S_MAX 0AG -> 0B1U ENTRY 0"  =>       1.392836632446
-  "TRANS SINGLET S_MAX 0AG -> 0B1U ENTRY 1"  =>       1.400781996229
-  "TRANS SINGLET S_MAX 0AG -> 0B1U ENTRY 2"  =>       1.400781996229
-  "TRANS SINGLET S_MAX 0AG -> 1B1U"          =>       1.400781996229
-  "TRANS SINGLET S_MAX 0AG -> 1B1U ENTRY 0"  =>       1.392836632446
-  "TRANS SINGLET S_MAX 0AG -> 1B1U ENTRY 1"  =>       1.400781996229
-  "TRANS SINGLET S_MAX 0AG -> 1B1U ENTRY 2"  =>       1.400781996229
-  "TRANS SINGLET S_MAX 0B1U -> 1B1U"         =>       1.000000000000
-  "TRANS SINGLET S_MAX 0B1U -> 1B1U ENTRY 0" =>       1.000000000000
-  "TRANS SINGLET S_MAX 0B1U -> 1B1U ENTRY 1" =>       1.000000000000
-  "TRANS SINGLET S_MAX 0B1U -> 1B1U ENTRY 2" =>       1.000000000000
-  "TRANS SINGLET |<0AG|DM|0B1U>|"            =>       1.445855841434
-  "TRANS SINGLET |<0AG|DM|0B1U>| ENTRY 0"    =>       1.253298586775
-  "TRANS SINGLET |<0AG|DM|0B1U>| ENTRY 1"    =>       1.532212227304
-  "TRANS SINGLET |<0AG|DM|0B1U>| ENTRY 2"    =>       1.445855841434
-  "TRANS SINGLET |<0AG|DM|1B1U>|"            =>       0.511449713736
-  "TRANS SINGLET |<0AG|DM|1B1U>| ENTRY 0"    =>       0.924705913673
-  "TRANS SINGLET |<0AG|DM|1B1U>| ENTRY 1"    =>       0.566653334084
-  "TRANS SINGLET |<0AG|DM|1B1U>| ENTRY 2"    =>       0.511449713736
-  "TRANS SINGLET |<0B1U|DM|1B1U>|"           =>       0.000000000000
-  "TRANS SINGLET |<0B1U|DM|1B1U>| ENTRY 0"   =>       0.000000000000
-  "TRANS SINGLET |<0B1U|DM|1B1U>| ENTRY 1"   =>       0.000000000000
-  "TRANS SINGLET |<0B1U|DM|1B1U>| ENTRY 2"   =>       0.000000000000
-  "UNRELAXED ENERGY"                         =>     -78.086310139204
-
-
+  Time to prepare integrals:        0.753 seconds
+  Time to run job          :        0.187 seconds
+  Total                    :        0.940 seconds
     CASSCF ENERGY.........................................................................PASSED
     CASSCF ENERGY.........................................................................PASSED
     CASSCF ENERGY.........................................................................PASSED
@@ -1798,11 +1584,11 @@ Scratch directory: /Users/york/scratch/psi4/
   Timing for density-fitting transformation:                  0.119 s.
 
   Frozen-core energy         -78.519766265366485 a.u.
-  Timing for frozen one-body operator:                        0.002 s.
+  Timing for frozen one-body operator:                        0.003 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.066 s.
-  Timing for freezing core and virtual orbitals:              0.069 s.
-  Timing for computing density-fitted integrals:              0.465 s.
+  Timing for resorting DF integrals:                          0.056 s.
+  Timing for freezing core and virtual orbitals:              0.059 s.
+  Timing for computing density-fitted integrals:              0.474 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1839,7 +1625,7 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000035 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000050 s
   Forming determinants                ...  Done. Timing        0.000010 s
 
   ==> Determinants Summary <==
@@ -1853,20 +1639,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.891e-05 seconds
-        β          1.450e-05 seconds
+        α          1.862e-05 seconds
+        β          1.465e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         8.104e-06 seconds
-        ββ         6.061e-06 seconds
-        αβ         1.443e-05 seconds
+        αα         8.198e-06 seconds
+        ββ         6.161e-06 seconds
+        αβ         1.471e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000385 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000388 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1906,8 +1692,8 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000029 s
-  Forming determinants                ...  Done. Timing        0.000008 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000025 s
+  Forming determinants                ...  Done. Timing        0.000007 s
 
   ==> Determinants Summary <==
 
@@ -1920,20 +1706,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.394e-05 seconds
-        β          1.200e-05 seconds
+        α          1.181e-05 seconds
+        β          1.054e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         7.185e-06 seconds
-        ββ         5.534e-06 seconds
-        αβ         1.128e-05 seconds
+        αα         6.130e-06 seconds
+        ββ         4.665e-06 seconds
+        αβ         9.454e-06 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000301 s
+  Found 2 roots with 2S+1 = 3  Done. Timing        0.000270 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1972,7 +1758,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000058 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -1982,8 +1768,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000052 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000047 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
@@ -1994,7 +1780,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000047 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.68455315     0.00000000     0.00000000    -8.48273398     0.00000000    -7.81728633
@@ -2004,8 +1790,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000069 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000051 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000043 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000040 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -21.88290076     0.00000000     0.00000000   -11.85325349     0.00000000   -19.67456801
@@ -2016,8 +1802,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000071 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000064 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000058 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000054 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000    -0.00000000     1.25329859     1.25329859
@@ -2053,7 +1839,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000067 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000055 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
@@ -2073,15 +1859,15 @@ Scratch directory: /Users/york/scratch/psi4/
     ----------------------------------------------------------
       0B1U   1B1U     0.11362270     3.09183113     0.00000000
     ----------------------------------------------------------
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000062 s
- Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000050 s
- Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000046 s
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000053 s
- Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000041 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000052 s
- Computing  2RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000052 s
+ Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000043 s
+ Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000038 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
+ Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000039 s
+ Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000035 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000044 s
+ Computing  2RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000038 s
+ Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000035 s
 
   ==> Semicanonicalize Orbitals <==
 
@@ -2101,7 +1887,7 @@ Scratch directory: /Users/york/scratch/psi4/
     RESTRICTED_UOCC      0.0000000000   0.0000000000
     ------------------------------------------------
   Orbitals are already semicanonicalized.
-  Timing for orbital canonicalization:                        0.007 s.
+  Timing for orbital canonicalization:                        0.008 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -2115,7 +1901,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
-    Computing Fock matrix and cleaning JK ....... Done. Timing      0.007 s
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.008 s
     Reading DSRG options ........................ Done. Timing      0.000 s
     Setting ambit MO space ...................... Done. Timing      0.000 s
     Initializing density cumulants .............. Done. Timing      0.001 s
@@ -2177,9 +1963,9 @@ Scratch directory: /Users/york/scratch/psi4/
     Max memory for local intermediates               8.65 MB
     Memory currently available                       7.14 GB
 
-    Initializing integrals ...................... Done. Timing      0.126 s
+    Initializing integrals ...................... Done. Timing      0.151 s
     Allocating amplitudes ....................... Done. Timing      0.001 s
-    Computing T2 amplitudes ..................... Done. Timing      0.192 s
+    Computing T2 amplitudes ..................... Done. Timing      0.197 s
     Computing T1 amplitudes ..................... Done. Timing      0.001 s
 
   ==> First-Order Excitation Amplitudes Summary <==
@@ -2194,7 +1980,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   77] 0.0043544 [  21   26] 0.0027663 [  73   79] 0.0025061
     [  22   27] 0.0010349 [  22   23] 0.0006556 [  22   24] 0.0003397
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.032464509812079
+    2-Norm of T1 vector:                            0.032464509812081
     Number of nonzero elements:                                    84
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
@@ -2206,7 +1992,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   73   73   74] 0.0362875 [  73   61   73   63] 0.0311937 [  73   28   73   34] 0.0300546
     [  73   22   73   24] 0.0300011 [  73   28   73   30] 0.0292374 [  73    1   73   10] 0.0291759
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.522564775245926
+    2-Norm of T2 vector:                                                          0.522564775245924
     Number of nonzero elements:                                                              106531
     -----------------------------------------------------------------------------------------------
 
@@ -2217,20 +2003,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3) ............ Done. Timing      0.153 s
+    Computing 3rd-order energy (1/3) ............ Done. Timing      0.156 s
     Computing integrals for ref. relaxation ..... Done. Timing      0.016 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing 2-body integrals .............. Done. Timing      0.198 s
+    Renormalizing 2-body integrals .............. Done. Timing      0.183 s
     Renormalizing 1-body integrals .............. Done. Timing      0.001 s
-    Computing 2nd-order energy .................. Done. Timing      0.007 s
-    Computing integrals for ref. relaxation ..... Done. Timing      0.016 s
+    Computing 2nd-order energy .................. Done. Timing      0.006 s
+    Computing integrals for ref. relaxation ..... Done. Timing      0.014 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes .............. Done. Timing      0.741 s
-    Computing T2 amplitudes ..................... Done. Timing      0.186 s
+    Preparing 2nd-order amplitudes .............. Done. Timing      0.720 s
+    Computing T2 amplitudes ..................... Done. Timing      0.191 s
     Computing T1 amplitudes ..................... Done. Timing      0.001 s
     Computing 3rd-order energy (2/3) ............ Done. Timing      0.007 s
     Computing integrals for ref. relaxation ..... Done. Timing      0.015 s
@@ -2247,7 +2033,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  21   24] 0.0047189 [   1   13] 0.0040985 [   1    6] 0.0037502
     [   1   15] 0.0036264 [  44   51] 0.0034779 [  73   79] 0.0034078
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.039062529873586
+    2-Norm of T1 vector:                            0.039062529873585
     Number of nonzero elements:                                   305
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
@@ -2259,8 +2045,8 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   22   73   24] 0.0106611 [  22   73   73   25] 0.0097508 [  21   22   21   25] 0.0097392
     [  73   21   73   24] 0.0097285 [  22   22   21   25] 0.0096410 [  73    1   73    6] 0.0094662
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.123005038171169
-    Number of nonzero elements:                                                              125331
+    2-Norm of T2 vector:                                                          0.123005038171167
+    Number of nonzero elements:                                                              125333
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2270,20 +2056,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Renormalizing 2-body integrals .............. Done. Timing      0.172 s
+    Renormalizing 2-body integrals .............. Done. Timing      0.178 s
     Renormalizing 1-body integrals .............. Done. Timing      0.001 s
-    Computing 3rd-order energy (3/3) ............ Done. Timing      0.008 s
-    Computing integrals for ref. relaxation ..... Done. Timing      0.016 s
+    Computing 3rd-order energy (3/3) ............ Done. Timing      0.006 s
+    Computing integrals for ref. relaxation ..... Done. Timing      0.018 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
     Reference energy                         =    -77.815291856530948
     2nd-order correlation energy             =     -0.292762925387540
     3rd-order correlation energy part 1      =      0.002413079512237
-    3rd-order correlation energy part 2      =     -0.017832110710215
+    3rd-order correlation energy part 2      =     -0.017832110710214
     3rd-order correlation energy part 3      =      0.000715778987805
-    3rd-order correlation energy             =     -0.014703252210173
-    DSRG-MRPT3 correlation energy            =     -0.307466177597713
+    3rd-order correlation energy             =     -0.014703252210171
+    DSRG-MRPT3 correlation energy            =     -0.307466177597711
     DSRG-MRPT3 total energy                  =    -78.122758034128665
 
     Notes:
@@ -2300,15 +2086,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transform One-Electron Operators <==
 
-    Transforming DIPOLE X ....................... Done. Timing      0.012 s
-    Transforming DIPOLE Y ....................... Done. Timing      0.013 s
-    Transforming DIPOLE Z ....................... Done. Timing      0.015 s
-    Transforming QUADRUPOLE XX .................. Done. Timing      0.013 s
-    Transforming QUADRUPOLE XY .................. Done. Timing      0.011 s
-    Transforming QUADRUPOLE XZ .................. Done. Timing      0.013 s
-    Transforming QUADRUPOLE YY .................. Done. Timing      0.014 s
-    Transforming QUADRUPOLE YZ .................. Done. Timing      0.017 s
-    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.017 s
+    Transforming DIPOLE X ....................... Done. Timing      0.013 s
+    Transforming DIPOLE Y ....................... Done. Timing      0.014 s
+    Transforming DIPOLE Z ....................... Done. Timing      0.016 s
+    Transforming QUADRUPOLE XX .................. Done. Timing      0.016 s
+    Transforming QUADRUPOLE XY .................. Done. Timing      0.016 s
+    Transforming QUADRUPOLE XZ .................. Done. Timing      0.014 s
+    Transforming QUADRUPOLE YY .................. Done. Timing      0.015 s
+    Transforming QUADRUPOLE YZ .................. Done. Timing      0.014 s
+    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.015 s
 
   ==> Expectation Values of the DSRG Transformed One-Body Operators [a.u.] <==
 
@@ -2380,7 +2166,7 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000041 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000039 s
   Forming determinants                ...  Done. Timing        0.000010 s
 
   ==> Determinants Summary <==
@@ -2394,20 +2180,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.883e-05 seconds
-        β          1.457e-05 seconds
+        α          1.639e-05 seconds
+        β          1.252e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         7.938e-06 seconds
-        ββ         6.150e-06 seconds
-        αβ         1.422e-05 seconds
+        αα         6.890e-06 seconds
+        ββ         5.167e-06 seconds
+        αβ         1.211e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000385 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000367 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -2421,7 +2207,7 @@ Scratch directory: /Users/york/scratch/psi4/
     ab 0         -0.0688124976
     02 0         -0.0506062850
 
-    Total Energy:   -78.355123774026481
+    Total Energy:   -78.355123774026509
 
 
 
@@ -2447,8 +2233,8 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000027 s
-  Forming determinants                ...  Done. Timing        0.000007 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000034 s
+  Forming determinants                ...  Done. Timing        0.000011 s
 
   ==> Determinants Summary <==
 
@@ -2461,20 +2247,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.192e-05 seconds
-        β          1.059e-05 seconds
+        α          1.437e-05 seconds
+        β          1.244e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         6.057e-06 seconds
-        ββ         4.733e-06 seconds
-        αβ         9.504e-06 seconds
+        αα         7.315e-06 seconds
+        ββ         5.751e-06 seconds
+        αβ         1.169e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000266 s
+  Found 2 roots with 2S+1 = 3  Done. Timing        0.000357 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -2487,7 +2273,7 @@ Scratch directory: /Users/york/scratch/psi4/
     0a b         -0.0566026929
     0b a         -0.0566026929
 
-    Total Energy:   -78.063699729828301
+    Total Energy:   -78.063699729828315
 
 
   ==> Root No. 1 <==
@@ -2497,7 +2283,7 @@ Scratch directory: /Users/york/scratch/psi4/
     a0 b         -0.0566026929
     b0 a         -0.0566026929
 
-    Total Energy:   -77.949828270257740
+    Total Energy:   -77.949828270257768
 
 
 
@@ -2505,7 +2291,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0      -78.355123774026   0.000000
+       1  (  0)    Ag     0      -78.355123774027   0.000000
     --------------------------------------------------------
        1  (  0)   B1u     0      -78.063699729828   0.000000
        1  (  0)   B1u     1      -77.949828270258   0.000000
@@ -2513,7 +2299,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000051 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000064 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -2523,8 +2309,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000052 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
@@ -2535,7 +2321,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000048 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000058 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.67820964     0.00000000     0.00000000    -8.47613499     0.00000000    -7.76957211
@@ -2545,8 +2331,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000051 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.19479253     0.00000000     0.00000000   -10.19147402     0.00000000   -14.49289084
@@ -2557,8 +2343,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000059 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000054 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000071 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000067 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000     0.00000000     1.52799621     1.52799621
@@ -2591,7 +2377,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000056 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000069 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
@@ -2614,7 +2400,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000060 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000    -0.00000000    -0.00000000     0.00000000
@@ -2624,8 +2410,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000056 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000052 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
@@ -2636,7 +2422,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000048 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000059 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.75769641     0.00000000     0.00000000    -8.95243988    -0.00000000    -8.71870992
@@ -2646,8 +2432,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000051 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.19286291     0.00000000     0.00000000   -10.20796758    -0.00000000   -14.31931066
@@ -2658,8 +2444,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000075 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000110 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000078 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000068 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U     0.00000000     0.00000000     1.35506186     1.35506186
@@ -2692,7 +2478,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000065 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000069 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000    -0.00000000     0.00000000     0.00000000
@@ -2717,227 +2503,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.004       0.005       0.001       0.026
-    -> C1       0.012       0.084       0.029       0.128
-    -> C2                   0.026       0.062       0.615
+    -> C0       0.004       0.005       0.001       0.023
+    -> C1       0.013       0.089       0.030       0.133
+    -> C2                   0.025       0.056       0.603
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.730 seconds
-  Time to run job          :        2.237 seconds
-  Total                    :        2.967 seconds
-
-
-  Variable Map:
-  ----------------------------------------------------------------------------
-  "CURRENT ENERGY"                           =>     -78.122883924704
-  "DSRG REFERENCE ENERGY"                    =>     -77.815291856531
-  "ENERGY ROOT 0 1AG"                        =>     -78.355123774026
-  "ENERGY ROOT 0 1AG ENTRY 0"                =>     -78.050972650022
-  "ENERGY ROOT 0 1AG ENTRY 1"                =>     -78.355123774026
-  "ENERGY ROOT 0 1B1U"                       =>     -78.063699729828
-  "ENERGY ROOT 0 1B1U ENTRY 0"               =>     -77.754262809385
-  "ENERGY ROOT 0 1B1U ENTRY 1"               =>     -78.063699729828
-  "ENERGY ROOT 1 1B1U"                       =>     -77.949828270258
-  "ENERGY ROOT 1 1B1U ENTRY 0"               =>     -77.640640110185
-  "ENERGY ROOT 1 1B1U ENTRY 1"               =>     -77.949828270258
-  "FCI_MO ENERGY"                            =>     -78.063699729828
-  "OSC. SINGLET 0AG -> 0B1U"                 =>       0.356740458265
-  "OSC. SINGLET 0AG -> 0B1U ENTRY 0"         =>       0.310706108193
-  "OSC. SINGLET 0AG -> 0B1U ENTRY 1"         =>       0.453605882499
-  "OSC. SINGLET 0AG -> 0B1U ENTRY 2"         =>       0.356740458265
-  "OSC. SINGLET 0AG -> 1B1U"                 =>       0.044040508954
-  "OSC. SINGLET 0AG -> 1B1U ENTRY 0"         =>       0.233911712991
-  "OSC. SINGLET 0AG -> 1B1U ENTRY 1"         =>       0.074334293374
-  "OSC. SINGLET 0AG -> 1B1U ENTRY 2"         =>       0.044040508954
-  "OSC. SINGLET 0B1U -> 1B1U"                =>       0.000000000000
-  "OSC. SINGLET 0B1U -> 1B1U ENTRY 0"        =>       0.000000000000
-  "OSC. SINGLET 0B1U -> 1B1U ENTRY 1"        =>       0.000000000000
-  "OSC. SINGLET 0B1U -> 1B1U ENTRY 2"        =>       0.000000000000
-  "PARTIALLY RELAXED ENERGY"                 =>     -78.122883924704
-  "SINGLET <0AG|DM_X|0AG>"                   =>       0.000000000000
-  "SINGLET <0AG|DM_X|0AG> ENTRY 0"           =>       0.000000000000
-  "SINGLET <0AG|DM_X|0AG> ENTRY 1"           =>       0.000000000000
-  "SINGLET <0AG|DM_X|0AG> ENTRY 2"           =>       0.000000000000
-  "SINGLET <0AG|DM_Y|0AG>"                   =>      -0.000000000000
-  "SINGLET <0AG|DM_Y|0AG> ENTRY 0"           =>       0.000000000000
-  "SINGLET <0AG|DM_Y|0AG> ENTRY 1"           =>       0.000000000000
-  "SINGLET <0AG|DM_Y|0AG> ENTRY 2"           =>      -0.000000000000
-  "SINGLET <0AG|DM_Z|0AG>"                   =>      -0.000000000000
-  "SINGLET <0AG|DM_Z|0AG> ENTRY 0"           =>       0.000000000000
-  "SINGLET <0AG|DM_Z|0AG> ENTRY 1"           =>       0.000000000000
-  "SINGLET <0AG|DM_Z|0AG> ENTRY 2"           =>      -0.000000000000
-  "SINGLET <0AG|QM_XX|0AG>"                  =>     -11.757696414354
-  "SINGLET <0AG|QM_XX|0AG> ENTRY 0"          =>     -11.684553148724
-  "SINGLET <0AG|QM_XX|0AG> ENTRY 1"          =>     -11.678209637748
-  "SINGLET <0AG|QM_XX|0AG> ENTRY 2"          =>     -11.757696414354
-  "SINGLET <0AG|QM_XY|0AG>"                  =>       0.000000000000
-  "SINGLET <0AG|QM_XY|0AG> ENTRY 0"          =>       0.000000000000
-  "SINGLET <0AG|QM_XY|0AG> ENTRY 1"          =>       0.000000000000
-  "SINGLET <0AG|QM_XY|0AG> ENTRY 2"          =>       0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG>"                  =>       0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG> ENTRY 0"          =>       0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG> ENTRY 1"          =>       0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG> ENTRY 2"          =>       0.000000000000
-  "SINGLET <0AG|QM_YY|0AG>"                  =>      -8.952439876035
-  "SINGLET <0AG|QM_YY|0AG> ENTRY 0"          =>      -8.482733980497
-  "SINGLET <0AG|QM_YY|0AG> ENTRY 1"          =>      -8.476134994399
-  "SINGLET <0AG|QM_YY|0AG> ENTRY 2"          =>      -8.952439876035
-  "SINGLET <0AG|QM_YZ|0AG>"                  =>      -0.000000000000
-  "SINGLET <0AG|QM_YZ|0AG> ENTRY 0"          =>       0.000000000000
-  "SINGLET <0AG|QM_YZ|0AG> ENTRY 1"          =>       0.000000000000
-  "SINGLET <0AG|QM_YZ|0AG> ENTRY 2"          =>      -0.000000000000
-  "SINGLET <0AG|QM_ZZ|0AG>"                  =>      -8.718709921093
-  "SINGLET <0AG|QM_ZZ|0AG> ENTRY 0"          =>      -7.817286329029
-  "SINGLET <0AG|QM_ZZ|0AG> ENTRY 1"          =>      -7.769572105843
-  "SINGLET <0AG|QM_ZZ|0AG> ENTRY 2"          =>      -8.718709921093
-  "SINGLET <0B1U|DM_X|0B1U>"                 =>      -0.000000000000
-  "SINGLET <0B1U|DM_X|0B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <0B1U|DM_X|0B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <0B1U|DM_X|0B1U> ENTRY 2"         =>      -0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U>"                 =>      -0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U> ENTRY 2"         =>      -0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U>"                 =>      -0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U> ENTRY 2"         =>      -0.000000000000
-  "SINGLET <0B1U|QM_XX|0B1U>"                =>     -16.192862906222
-  "SINGLET <0B1U|QM_XX|0B1U> ENTRY 0"        =>     -21.882900761865
-  "SINGLET <0B1U|QM_XX|0B1U> ENTRY 1"        =>     -16.194792526608
-  "SINGLET <0B1U|QM_XX|0B1U> ENTRY 2"        =>     -16.192862906222
-  "SINGLET <0B1U|QM_XY|0B1U>"                =>       0.000000000000
-  "SINGLET <0B1U|QM_XY|0B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XY|0B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XY|0B1U> ENTRY 2"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U>"                =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U> ENTRY 2"        =>       0.000000000000
-  "SINGLET <0B1U|QM_YY|0B1U>"                =>     -10.207967583608
-  "SINGLET <0B1U|QM_YY|0B1U> ENTRY 0"        =>     -11.853253488786
-  "SINGLET <0B1U|QM_YY|0B1U> ENTRY 1"        =>     -10.191474021277
-  "SINGLET <0B1U|QM_YY|0B1U> ENTRY 2"        =>     -10.207967583608
-  "SINGLET <0B1U|QM_YZ|0B1U>"                =>      -0.000000000000
-  "SINGLET <0B1U|QM_YZ|0B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <0B1U|QM_YZ|0B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <0B1U|QM_YZ|0B1U> ENTRY 2"        =>      -0.000000000000
-  "SINGLET <0B1U|QM_ZZ|0B1U>"                =>     -14.319310658039
-  "SINGLET <0B1U|QM_ZZ|0B1U> ENTRY 0"        =>     -19.674568009057
-  "SINGLET <0B1U|QM_ZZ|0B1U> ENTRY 1"        =>     -14.492890842285
-  "SINGLET <0B1U|QM_ZZ|0B1U> ENTRY 2"        =>     -14.319310658039
-  "SINGLET <1B1U|DM_X|1B1U>"                 =>       0.000000000000
-  "SINGLET <1B1U|DM_X|1B1U> ENTRY 0"         =>      -0.000000000000
-  "SINGLET <1B1U|DM_X|1B1U> ENTRY 1"         =>      -0.000000000000
-  "SINGLET <1B1U|DM_X|1B1U> ENTRY 2"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Y|1B1U>"                 =>      -0.000000000000
-  "SINGLET <1B1U|DM_Y|1B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Y|1B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Y|1B1U> ENTRY 2"         =>      -0.000000000000
-  "SINGLET <1B1U|DM_Z|1B1U>"                 =>       0.000000000000
-  "SINGLET <1B1U|DM_Z|1B1U> ENTRY 0"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Z|1B1U> ENTRY 1"         =>       0.000000000000
-  "SINGLET <1B1U|DM_Z|1B1U> ENTRY 2"         =>       0.000000000000
-  "SINGLET <1B1U|QM_XX|1B1U>"                =>     -26.873505484459
-  "SINGLET <1B1U|QM_XX|1B1U> ENTRY 0"        =>     -21.603817284171
-  "SINGLET <1B1U|QM_XX|1B1U> ENTRY 1"        =>     -27.291925519428
-  "SINGLET <1B1U|QM_XX|1B1U> ENTRY 2"        =>     -26.873505484459
-  "SINGLET <1B1U|QM_XY|1B1U>"                =>      -0.000000000000
-  "SINGLET <1B1U|QM_XY|1B1U> ENTRY 0"        =>      -0.000000000000
-  "SINGLET <1B1U|QM_XY|1B1U> ENTRY 1"        =>      -0.000000000000
-  "SINGLET <1B1U|QM_XY|1B1U> ENTRY 2"        =>      -0.000000000000
-  "SINGLET <1B1U|QM_XZ|1B1U>"                =>       0.000000000000
-  "SINGLET <1B1U|QM_XZ|1B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <1B1U|QM_XZ|1B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <1B1U|QM_XZ|1B1U> ENTRY 2"        =>       0.000000000000
-  "SINGLET <1B1U|QM_YY|1B1U>"                =>     -12.625855946664
-  "SINGLET <1B1U|QM_YY|1B1U> ENTRY 0"        =>     -11.434100625201
-  "SINGLET <1B1U|QM_YY|1B1U> ENTRY 1"        =>     -13.095880092710
-  "SINGLET <1B1U|QM_YY|1B1U> ENTRY 2"        =>     -12.625855946664
-  "SINGLET <1B1U|QM_YZ|1B1U>"                =>      -0.000000000000
-  "SINGLET <1B1U|QM_YZ|1B1U> ENTRY 0"        =>       0.000000000000
-  "SINGLET <1B1U|QM_YZ|1B1U> ENTRY 1"        =>       0.000000000000
-  "SINGLET <1B1U|QM_YZ|1B1U> ENTRY 2"        =>      -0.000000000000
-  "SINGLET <1B1U|QM_ZZ|1B1U>"                =>     -23.037594625019
-  "SINGLET <1B1U|QM_ZZ|1B1U> ENTRY 0"        =>     -18.747586608151
-  "SINGLET <1B1U|QM_ZZ|1B1U> ENTRY 1"        =>     -23.929263774922
-  "SINGLET <1B1U|QM_ZZ|1B1U> ENTRY 2"        =>     -23.037594625019
-  "SINGLET |<0AG|DM|0AG>|"                   =>       0.000000000000
-  "SINGLET |<0AG|DM|0AG>| ENTRY 0"           =>       0.000000000000
-  "SINGLET |<0AG|DM|0AG>| ENTRY 1"           =>       0.000000000000
-  "SINGLET |<0AG|DM|0AG>| ENTRY 2"           =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>|"                 =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>| ENTRY 0"         =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>| ENTRY 1"         =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>| ENTRY 2"         =>       0.000000000000
-  "SINGLET |<1B1U|DM|1B1U>|"                 =>       0.000000000000
-  "SINGLET |<1B1U|DM|1B1U>| ENTRY 0"         =>       0.000000000000
-  "SINGLET |<1B1U|DM|1B1U>| ENTRY 1"         =>       0.000000000000
-  "SINGLET |<1B1U|DM|1B1U>| ENTRY 2"         =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U>"            =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U> ENTRY 0"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U> ENTRY 1"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U> ENTRY 2"    =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_X|1B1U>"            =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|1B1U> ENTRY 0"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|1B1U> ENTRY 1"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_X|1B1U> ENTRY 2"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U>"            =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U> ENTRY 0"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U> ENTRY 1"    =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U> ENTRY 2"    =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|1B1U>"            =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|1B1U> ENTRY 0"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|1B1U> ENTRY 1"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|1B1U> ENTRY 2"    =>      -0.000000000000
-  "TRANS SINGLET <0AG|DM_Z|0B1U>"            =>       1.355061861305
-  "TRANS SINGLET <0AG|DM_Z|0B1U> ENTRY 0"    =>       1.253298586775
-  "TRANS SINGLET <0AG|DM_Z|0B1U> ENTRY 1"    =>       1.527996213906
-  "TRANS SINGLET <0AG|DM_Z|0B1U> ENTRY 2"    =>       1.355061861305
-  "TRANS SINGLET <0AG|DM_Z|1B1U>"            =>      -0.403725239867
-  "TRANS SINGLET <0AG|DM_Z|1B1U> ENTRY 0"    =>      -0.924705913673
-  "TRANS SINGLET <0AG|DM_Z|1B1U> ENTRY 1"    =>      -0.524510691641
-  "TRANS SINGLET <0AG|DM_Z|1B1U> ENTRY 2"    =>      -0.403725239867
-  "TRANS SINGLET <0B1U|DM_X|1B1U>"           =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_X|1B1U> ENTRY 0"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_X|1B1U> ENTRY 1"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_X|1B1U> ENTRY 2"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_Y|1B1U>"           =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_Y|1B1U> ENTRY 0"   =>       0.000000000000
-  "TRANS SINGLET <0B1U|DM_Y|1B1U> ENTRY 1"   =>       0.000000000000
-  "TRANS SINGLET <0B1U|DM_Y|1B1U> ENTRY 2"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_Z|1B1U>"           =>       0.000000000000
-  "TRANS SINGLET <0B1U|DM_Z|1B1U> ENTRY 0"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_Z|1B1U> ENTRY 1"   =>      -0.000000000000
-  "TRANS SINGLET <0B1U|DM_Z|1B1U> ENTRY 2"   =>       0.000000000000
-  "TRANS SINGLET S_MAX 0AG -> 0B1U"          =>       1.398953933437
-  "TRANS SINGLET S_MAX 0AG -> 0B1U ENTRY 0"  =>       1.392836632446
-  "TRANS SINGLET S_MAX 0AG -> 0B1U ENTRY 1"  =>       1.398953933437
-  "TRANS SINGLET S_MAX 0AG -> 0B1U ENTRY 2"  =>       1.398953933437
-  "TRANS SINGLET S_MAX 0AG -> 1B1U"          =>       1.398953933437
-  "TRANS SINGLET S_MAX 0AG -> 1B1U ENTRY 0"  =>       1.392836632446
-  "TRANS SINGLET S_MAX 0AG -> 1B1U ENTRY 1"  =>       1.398953933437
-  "TRANS SINGLET S_MAX 0AG -> 1B1U ENTRY 2"  =>       1.398953933437
-  "TRANS SINGLET S_MAX 0B1U -> 1B1U"         =>       1.000000000000
-  "TRANS SINGLET S_MAX 0B1U -> 1B1U ENTRY 0" =>       1.000000000000
-  "TRANS SINGLET S_MAX 0B1U -> 1B1U ENTRY 1" =>       1.000000000000
-  "TRANS SINGLET S_MAX 0B1U -> 1B1U ENTRY 2" =>       1.000000000000
-  "TRANS SINGLET |<0AG|DM|0B1U>|"            =>       1.355061861305
-  "TRANS SINGLET |<0AG|DM|0B1U>| ENTRY 0"    =>       1.253298586775
-  "TRANS SINGLET |<0AG|DM|0B1U>| ENTRY 1"    =>       1.527996213906
-  "TRANS SINGLET |<0AG|DM|0B1U>| ENTRY 2"    =>       1.355061861305
-  "TRANS SINGLET |<0AG|DM|1B1U>|"            =>       0.403725239867
-  "TRANS SINGLET |<0AG|DM|1B1U>| ENTRY 0"    =>       0.924705913673
-  "TRANS SINGLET |<0AG|DM|1B1U>| ENTRY 1"    =>       0.524510691641
-  "TRANS SINGLET |<0AG|DM|1B1U>| ENTRY 2"    =>       0.403725239867
-  "TRANS SINGLET |<0B1U|DM|1B1U>|"           =>       0.000000000000
-  "TRANS SINGLET |<0B1U|DM|1B1U>| ENTRY 0"   =>       0.000000000000
-  "TRANS SINGLET |<0B1U|DM|1B1U>| ENTRY 1"   =>       0.000000000000
-  "TRANS SINGLET |<0B1U|DM|1B1U>| ENTRY 2"   =>       0.000000000000
-  "UNRELAXED ENERGY"                         =>     -78.122758034129
-
-
+  Time to prepare integrals:        0.759 seconds
+  Time to run job          :        2.265 seconds
+  Total                    :        3.024 seconds
     SA-DSRG-PT3 ENERGY....................................................................PASSED
     SA-DSRG-PT3 ENERGY....................................................................PASSED
     SA-DSRG-PT3 ENERGY....................................................................PASSED
@@ -3095,14 +2669,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.118 s.
+  Timing for density-fitting transformation:                  0.122 s.
 
   Frozen-core energy         -78.519766265366485 a.u.
   Timing for frozen one-body operator:                        0.003 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.066 s.
-  Timing for freezing core and virtual orbitals:              0.069 s.
-  Timing for computing density-fitted integrals:              0.477 s.
+  Timing for resorting DF integrals:                          0.063 s.
+  Timing for freezing core and virtual orbitals:              0.066 s.
+  Timing for computing density-fitted integrals:              0.484 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -3139,8 +2713,8 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000034 s
-  Forming determinants                ...  Done. Timing        0.000010 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000041 s
+  Forming determinants                ...  Done. Timing        0.000013 s
 
   ==> Determinants Summary <==
 
@@ -3153,20 +2727,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.659e-05 seconds
-        β          1.286e-05 seconds
+        α          1.885e-05 seconds
+        β          1.655e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         7.031e-06 seconds
-        ββ         5.251e-06 seconds
-        αβ         1.204e-05 seconds
+        αα         8.122e-06 seconds
+        ββ         6.259e-06 seconds
+        αβ         1.561e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000358 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000431 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -3206,8 +2780,8 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000045 s
-  Forming determinants                ...  Done. Timing        0.000009 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000033 s
+  Forming determinants                ...  Done. Timing        0.000011 s
 
   ==> Determinants Summary <==
 
@@ -3220,20 +2794,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.263e-05 seconds
-        β          1.085e-05 seconds
+        α          1.426e-05 seconds
+        β          1.292e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         6.357e-06 seconds
-        ββ         4.735e-06 seconds
-        αβ         9.918e-06 seconds
+        αα         7.574e-06 seconds
+        ββ         5.624e-06 seconds
+        αβ         1.216e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000321 s
+  Found 2 roots with 2S+1 = 3  Done. Timing        0.000354 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -3272,7 +2846,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000054 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000062 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -3282,8 +2856,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000048 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000044 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000052 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
@@ -3294,7 +2868,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000053 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000058 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.68455315     0.00000000     0.00000000    -8.48273398     0.00000000    -7.81728633
@@ -3304,8 +2878,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000048 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000044 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000051 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -21.88290076     0.00000000     0.00000000   -11.85325349     0.00000000   -19.67456801
@@ -3316,8 +2890,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000061 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000057 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000072 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000067 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000    -0.00000000     1.25329859     1.25329859
@@ -3353,7 +2927,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000070 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000068 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
@@ -3374,14 +2948,14 @@ Scratch directory: /Users/york/scratch/psi4/
       0B1U   1B1U     0.11362270     3.09183113     0.00000000
     ----------------------------------------------------------
  Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000065 s
- Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000053 s
+ Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000054 s
  Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000071 s
- Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000052 s
- Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000047 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000056 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
+ Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000048 s
+ Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000055 s
  Computing  2RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000048 s
- Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000045 s
+ Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000044 s
 
   ==> Semicanonicalize Orbitals <==
 
@@ -3401,7 +2975,7 @@ Scratch directory: /Users/york/scratch/psi4/
     RESTRICTED_UOCC      0.0000000000   0.0000000000
     ------------------------------------------------
   Orbitals are already semicanonicalized.
-  Timing for orbital canonicalization:                        0.008 s.
+  Timing for orbital canonicalization:                        0.007 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -3415,7 +2989,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
-    Computing Fock matrix and cleaning JK ....... Done. Timing      0.006 s
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.007 s
     Reading DSRG options ........................ Done. Timing      0.000 s
     Setting ambit MO space ...................... Done. Timing      0.000 s
     Initializing density cumulants .............. Done. Timing      0.001 s
@@ -3531,15 +3105,15 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.316886920128 -3.169e-01   4.091e-02  2.500e-01   4.575e-08  2.855e-07     4.613    0.357
-       2    -0.316886920961 -8.331e-10   4.091e-02  2.500e-01   2.053e-08  1.220e-07     4.544    0.366  S
+       1    -0.316886920128 -3.169e-01   4.091e-02  2.500e-01   4.575e-08  2.855e-07     4.870    0.366
+       2    -0.316886920961 -8.331e-10   4.091e-02  2.500e-01   2.053e-08  1.220e-07     4.808    0.378  S
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =     -77.815291856530934
+    E0 (reference)                 =     -77.815291856530948
     MR-LDSRG(2) correlation energy =      -0.316886920961327
-    MR-LDSRG(2) total energy       =     -78.132178777492257
+    MR-LDSRG(2) total energy       =     -78.132178777492271
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -3553,7 +3127,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   77] 0.0074332 [  73   79] 0.0061687 [  61   67] 0.0059035
     [  22   24] 0.0058432 [   1   13] 0.0052178 [  21   26] 0.0050467
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.049755662141037
+    2-Norm of T1 vector:                            0.049755662141036
     Number of nonzero elements:                                   304
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
@@ -3565,7 +3139,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   61   73   63] 0.0244996 [  73   22   73   25] 0.0238530 [  73   44   73   48] 0.0234518
     [   0   44   73   21] 0.0233338 [  73   28   73   30] 0.0224688 [  73    1   73   10] 0.0220296
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.491772493384936
+    2-Norm of T2 vector:                                                          0.491772493384925
     Number of nonzero elements:                                                              140793
     -----------------------------------------------------------------------------------------------
 
@@ -3581,15 +3155,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transform One-Electron Operators <==
 
-    Transforming DIPOLE X ....................... Done. Timing      0.050 s
-    Transforming DIPOLE Y ....................... Done. Timing      0.050 s
-    Transforming DIPOLE Z ....................... Done. Timing      0.049 s
-    Transforming QUADRUPOLE XX .................. Done. Timing      0.052 s
-    Transforming QUADRUPOLE XY .................. Done. Timing      0.041 s
-    Transforming QUADRUPOLE XZ .................. Done. Timing      0.053 s
-    Transforming QUADRUPOLE YY .................. Done. Timing      0.078 s
-    Transforming QUADRUPOLE YZ .................. Done. Timing      0.060 s
-    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.067 s
+    Transforming DIPOLE X ....................... Done. Timing      0.060 s
+    Transforming DIPOLE Y ....................... Done. Timing      0.056 s
+    Transforming DIPOLE Z ....................... Done. Timing      0.056 s
+    Transforming QUADRUPOLE XX .................. Done. Timing      0.064 s
+    Transforming QUADRUPOLE XY .................. Done. Timing      0.048 s
+    Transforming QUADRUPOLE XZ .................. Done. Timing      0.068 s
+    Transforming QUADRUPOLE YY .................. Done. Timing      0.084 s
+    Transforming QUADRUPOLE YZ .................. Done. Timing      0.063 s
+    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.063 s
 
   ==> Expectation Values of the DSRG Transformed One-Body Operators [a.u.] <==
 
@@ -3661,8 +3235,8 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000044 s
-  Forming determinants                ...  Done. Timing        0.000013 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000035 s
+  Forming determinants                ...  Done. Timing        0.000008 s
 
   ==> Determinants Summary <==
 
@@ -3675,20 +3249,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.883e-05 seconds
-        β          1.478e-05 seconds
+        α          1.613e-05 seconds
+        β          1.202e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         7.949e-06 seconds
-        ββ         6.409e-06 seconds
-        αβ         1.422e-05 seconds
+        αα         6.797e-06 seconds
+        ββ         5.079e-06 seconds
+        αβ         1.203e-05 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000420 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000327 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -3701,7 +3275,7 @@ Scratch directory: /Users/york/scratch/psi4/
     ba 0         -0.0675012893
     ab 0         -0.0675012893
 
-    Total Energy:   -78.365075562325899
+    Total Energy:   -78.365075562325941
 
 
 
@@ -3727,8 +3301,8 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    2     0     0     1     0     1     1     0 ]
     ACTIVE                        [    0     0     2     0     0     0     0     1 ]
     VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000034 s
-  Forming determinants                ...  Done. Timing        0.000011 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000026 s
+  Forming determinants                ...  Done. Timing        0.000007 s
 
   ==> Determinants Summary <==
 
@@ -3741,20 +3315,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.394e-05 seconds
-        β          1.270e-05 seconds
+        α          1.191e-05 seconds
+        β          1.068e-05 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         7.236e-06 seconds
-        ββ         5.879e-06 seconds
-        αβ         1.144e-05 seconds
+        αα         6.115e-06 seconds
+        ββ         4.582e-06 seconds
+        αβ         9.465e-06 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000342 s
+  Found 2 roots with 2S+1 = 3  Done. Timing        0.000260 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -3767,7 +3341,7 @@ Scratch directory: /Users/york/scratch/psi4/
     0a b         -0.0546578399
     0b a         -0.0546578399
 
-    Total Energy:   -78.072476887734098
+    Total Energy:   -78.072476887734112
 
 
   ==> Root No. 1 <==
@@ -3777,7 +3351,7 @@ Scratch directory: /Users/york/scratch/psi4/
     a0 b         -0.0546578399
     b0 a         -0.0546578399
 
-    Total Energy:   -77.959441188992102
+    Total Energy:   -77.959441188992116
 
 
 
@@ -3793,7 +3367,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000061 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -3803,8 +3377,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000057 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000052 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
@@ -3815,7 +3389,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000059 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000048 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.67741522     0.00000000     0.00000000    -8.47552699     0.00000000    -7.76526842
@@ -3825,8 +3399,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000056 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000051 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.23898589     0.00000000     0.00000000   -10.20468148     0.00000000   -14.53374010
@@ -3837,8 +3411,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000072 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000066 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000058 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000054 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000     0.00000000     1.53099838     1.53099838
@@ -3871,7 +3445,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000059 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000056 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
@@ -3894,7 +3468,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000052 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000    -0.00000000    -0.00000000     0.00000000
@@ -3904,8 +3478,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000047 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000044 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000    -0.00000000    -0.00000000     0.00000000
@@ -3916,7 +3490,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000050 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.76918733    -0.00000000     0.00000000    -8.97388062    -0.00000000    -8.68867981
@@ -3926,8 +3500,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000047 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000043 s
+ Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000051 s
+ Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000048 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.20586280     0.00000000     0.00000000   -10.22322690    -0.00000000   -14.35924308
@@ -3938,8 +3512,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000061 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000057 s
+ Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000069 s
+ Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000063 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U     0.00000000     0.00000000     1.36837819     1.36837819
@@ -3972,7 +3546,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000058 s
+ Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000065 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
       0B1U   1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
@@ -3997,15 +3571,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.027       0.028       0.013       0.306
-    -> C1       0.058       0.517       0.221       1.263
-    -> C2                   0.413       0.994       5.406
+    -> C0       0.028       0.028       0.012       0.309
+    -> C1       0.060       0.578       0.234       1.308
+    -> C2                   0.428       1.039       5.791
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.744 seconds
-  Time to run job          :       10.816 seconds
-  Total                    :       11.559 seconds
+  Time to prepare integrals:        0.746 seconds
+  Time to run job          :       11.444 seconds
+  Total                    :       12.190 seconds
     SA-LDSRG(2) ENERGY....................................................................PASSED
     SA-LDSRG(2) ENERGY....................................................................PASSED
     SA-LDSRG(2) ENERGY....................................................................PASSED
@@ -4020,7 +3594,7 @@ Scratch directory: /Users/york/scratch/psi4/
     SA-LDSRG(2)/BARE MULTIPOLE OSCILLATOR STRENGTH OF 0B1U................................PASSED
     SA-LDSRG(2)/BARE MULTIPOLE OSCILLATOR STRENGTH OF 1B1U................................PASSED
 
-    Psi4 stopped on: Sunday, 29 January 2023 03:06AM
-    Psi4 wall time for execution: 0:00:18.39
+    Psi4 stopped on: Sunday, 29 January 2023 03:16AM
+    Psi4 wall time for execution: 0:00:19.17
 
 *** Psi4 exiting successfully. Buy a developer a beer!
