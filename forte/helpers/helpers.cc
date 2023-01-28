@@ -144,7 +144,7 @@ void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const 
     std::vector<double> tmp(nthreads * (m > n ? m : n));
     double* tmp_ptr = tmp.data();
 
-    int c = math::gcd(m, n);
+    int c = std::gcd(m, n);
     int a = m / c;
     int b = n / c;
 

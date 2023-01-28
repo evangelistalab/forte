@@ -202,17 +202,6 @@ namespace math {
 /// Return the number of combinations of n identical objects
 size_t combinations(size_t n, size_t k);
 
-/// Compute the greatest common divisor
-inline int gcd(int a, int b) {
-    int b_tmp;
-    while (b) {
-        b_tmp = a % b;
-        a = b;
-        b = b_tmp;
-    }
-    return a;
-}
-
 /// Return the Cartesian product of the input vector<vector<T>>
 /// https://stackoverflow.com/a/17050528/4101036
 template <typename T>
