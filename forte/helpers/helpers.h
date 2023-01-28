@@ -137,8 +137,11 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
 
 template <typename T>
 std::vector<std::vector<T>> split_vector(const std::vector<T>& vec, size_t max_length) {
-    std::vector<std::vector<T>> out_vec;
     size_t vec_size = vec.size();
+    if (max_length == 0 or vec_size == 0)
+        throw std::runtime_error("Cannot split vector of size 0!");
+
+    std::vector<std::vector<T>> out_vec;
 
     size_t n_even = vec_size / max_length;
     for (size_t i = 0, begin = 0, end = max_length; i < n_even; ++i) {
@@ -187,7 +190,7 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
  * @param data the matrix stored in row-major format
  * @param m the number of rows of the matrix
  * @param n the number of columns of the matrix
- * 
+ *
  * See Algorithm 1 of DOI: 10.1145/2555243.2555253.
  * Also see https://github.com/bryancatanzaro/inplace
  */

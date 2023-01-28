@@ -204,7 +204,7 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
     /**
      * Compute the core-core part of the MP2-like unrelaxed spin-summed 1-RDM.
      *
-     * D1["ij"] -= T2["ikab"] * S2["jkab"] + 1.0 * T2["jkab"] * S2["ikab"]
+     * D1["ij"] -= T2["ikab"] * S2["jkab"] + T2["jkab"] * S2["ikab"]
      *
      * where S2["jkab"] = 2.0 * T2["jkab"] - T2["jkba"]
      * for core indices i, j, k and virtual indices a, b.
@@ -218,6 +218,11 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
     auto nQc = nQ * nc;
+
+    if (nc == 0 or nv == 0) {
+        print_done(t_ccvv.stop(), "Skipped");
+        return;
+    }
 
     // test memory
     int nthreads = std::min(n_threads_, int(nv * (nv + 1) / 2));
@@ -378,6 +383,11 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
     auto nQv = nQ * nv;
+
+    if (nc == 0 or nv == 0) {
+        print_done(t_ccvv.stop(), "Skipped");
+        return;
+    }
 
     // test memory
     int nthreads = std::min(n_threads_, int(nc * (nc + 1) / 2));
@@ -551,6 +561,11 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
     auto nv = virt_mos_.size();
     auto nQc = nQ * nc;
     auto nac = na * nc;
+
+    if (nc == 0 or nv == 0 or na == 0) {
+        print_done(t_ccav.stop(), "Skipped");
+        return;
+    }
 
     // check semi-canonical orbitals
     bool semi_c = semi_checked_results_.at("RESTRICTED_DOCC");
@@ -744,6 +759,11 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
     auto nv = virt_mos_.size();
     auto nQv = nQ * nv;
     auto nQa = nQ * na;
+
+    if (nc == 0 or nv == 0 or na == 0) {
+        print_done(t_ccav.stop(), "Skipped");
+        return;
+    }
 
     // check semi-canonical orbitals
     bool semi_c = semi_checked_results_.at("RESTRICTED_DOCC");
@@ -1020,6 +1040,11 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
     auto nQc = nQ * nc;
     auto nQa = nQ * na;
 
+    if (nc == 0 or nv == 0 or na == 0) {
+        print_done(t_cavv.stop(), "Skipped");
+        return;
+    }
+
     // check semi-canonical orbitals
     bool semi_c = semi_checked_results_.at("RESTRICTED_DOCC");
     bool semi_v = semi_checked_results_.at("RESTRICTED_UOCC");
@@ -1291,6 +1316,11 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
     auto nc = core_mos_.size();
     auto nQv = nQ * nv;
     auto nQa = nQ * na;
+
+    if (nc == 0 or nv == 0 or na == 0) {
+        print_done(t_cavv.stop(), "Skipped");
+        return;
+    }
 
     // check semi-canonical orbitals
     bool semi_c = semi_checked_results_.at("RESTRICTED_DOCC");

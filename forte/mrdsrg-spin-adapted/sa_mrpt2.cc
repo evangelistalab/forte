@@ -249,8 +249,10 @@ void SA_MRPT2::check_memory() {
         auto size_acc = dsrg_mem_.compute_memory({"acc"});
 
         auto mem_ccvv = 2 * (size_Lv + n_threads_ * dsrg_mem_.compute_memory({"vv"}));
-        auto mem_cavv = size_Lv + n_threads_ * (3 * size_av + size_aa) + dsrg_mem_.compute_memory({"Lva"});
-        auto mem_ccav = n_threads_ * (2 * size_acc + size_aa) + dsrg_mem_.compute_memory({"Lc", "Lac"});
+        auto mem_cavv =
+            size_Lv + n_threads_ * (3 * size_av + size_aa) + dsrg_mem_.compute_memory({"Lva"});
+        auto mem_ccav =
+            n_threads_ * (2 * size_acc + size_aa) + dsrg_mem_.compute_memory({"Lc", "Lac"});
 
         mem_batched_["ccvv"] = mem_ccvv;
         dsrg_mem_.add_entry("Local integrals for CCVV energy", mem_ccvv, false);
@@ -435,6 +437,11 @@ double SA_MRPT2::E_V_T2_CCVV() {
     auto nc = core_mos_.size();
     auto nQv = nQ * nv;
 
+    if (nc == 0 or nv == 0) {
+        print_done(t_ccvv.stop(), "Skipped");
+        return Eout;
+    }
+
     // test memory
     int nthreads = std::min(n_threads_, int(nc * (nc + 1) / 2));
     size_t memory_avai = dsrg_mem_.available();
@@ -603,6 +610,11 @@ void SA_MRPT2::compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr) {
     auto na = actv_mos_.size();
     auto nQv = nQ * nv;
     auto nQa = nQ * na;
+
+    if (nc == 0 or nv == 0 or na == 0) {
+        print_done(t.stop(), "Skipped");
+        return;
+    }
 
     // test memory
     int nthreads = std::min(n_threads_, int(nv * nc));
@@ -776,6 +788,11 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
     auto na = actv_mos_.size();
     auto nQc = nQ * nc;
     auto nac = na * nc;
+
+    if (nc == 0 or nv == 0 or na == 0) {
+        print_done(t.stop(), "Skipped");
+        return;
+    }
 
     // test memory
     int nthreads = std::min(n_threads_, int(nv));

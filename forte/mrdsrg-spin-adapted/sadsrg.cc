@@ -1210,5 +1210,7 @@ void SADSRG::print_contents(const std::string& str, size_t size) {
     outfile->Printf("\n    %s %s", str.c_str(), padding.c_str());
 }
 
-void SADSRG::print_done(double t) { outfile->Printf(" Done. Timing %10.3f s", t); }
+void SADSRG::print_done(double t, const std::string& done) {
+    outfile->Printf(" %s. Timing %10.3f s", done.c_str(), t);
+}
 } // namespace forte
