@@ -86,7 +86,11 @@ compare_values(oref_0b1u_dp1, variable("OSC. SINGLET 0AG -> 0B1U"),
 compare_values(oref_1b1u_dp1, variable("OSC. SINGLET 0AG -> 1B1U"),
                6, "0AG -> 1B1U OSCILLATOR STRENGTH DIPOLE LEVEL 1")
 
-set forte dsrg_max_dipole_level 2
+set forte {
+  int_type              diskdf
+  dsrg_max_dipole_level 2
+}
+
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(oref_0b1u_dp2, variable("OSC. SINGLET 0AG -> 0B1U"),
                6, "0AG -> 0B1U OSCILLATOR STRENGTH DIPOLE LEVEL 2")

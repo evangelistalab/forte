@@ -291,7 +291,7 @@ double** DISKDFIntegrals::three_integral_pointer() { return (ThreeIntegral_->poi
 ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q_vec,
                                                     const std::vector<size_t>& p_vec,
                                                     const std::vector<size_t>& q_vec,
-                                                    const std::string& order) {
+                                                    ThreeIntsBlockOrder order) {
     std::string func_name = "DISKDFIntegrals::three_integral_block: ";
 
     auto Qsize = Q_vec.size();
@@ -301,12 +301,10 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
     auto Qqsize = Qsize * qsize;
 
     ambit::Tensor out;
-    if (order == "Qpq") {
-        out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
-    } else if (order == "pqQ") {
+    if (order == pqQ) {
         out = ambit::Tensor::build(tensor_type_, "Return", {psize, qsize, Qsize});
     } else {
-        throw std::runtime_error(order + " order is not supported!");
+        out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
     }
 
     // directly return if any of the dimension is zero
@@ -365,24 +363,12 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
         df_->fill_tensor("B", out_data.data(), Q_range, p_range, q_range);
-        if (order == "pqQ")
+        if (order == pqQ)
             matrix_transpose_in_place(out_data, Qsize, pqsize);
     } else if ((not p_contiguous) and q_contiguous) {
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
-        if (order == "Qpq") {
-            for (size_t p = 0; p < psize; ++p) {
-                auto np = cmotomo[p_vec[p]];
-                auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
-                df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
-
-                for (size_t a = 0; a < Qsize; ++a) {
-                    for (size_t q = 0; q < qsize; ++q) {
-                        out_data[a * pqsize + p * qsize + q] = Aq->get(a, q);
-                    }
-                }
-            }
-        } else {
+        if (order == pqQ) {
             for (size_t p = 0; p < psize; ++p) {
                 auto np = cmotomo[p_vec[p]];
                 auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
@@ -394,11 +380,23 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
                     }
                 }
             }
+        } else {
+            for (size_t p = 0; p < psize; ++p) {
+                auto np = cmotomo[p_vec[p]];
+                auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
+                df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
+
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t q = 0; q < qsize; ++q) {
+                        out_data[a * pqsize + p * qsize + q] = Aq->get(a, q);
+                    }
+                }
+            }
         }
     } else if (p_contiguous and (not q_contiguous)) {
         std::vector<size_t> p_range{cmotomo[p_vec[0]], cmotomo[p_vec[0]] + psize};
 
-        if (order == "Qpq") {
+        if (order == pqQ) {
             for (size_t q = 0; q < qsize; ++q) {
                 auto nq = cmotomo[q_vec[q]];
                 auto Ap = std::make_shared<psi::Matrix>("Ap", Qsize, psize);
@@ -406,7 +404,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
 
                 for (size_t a = 0; a < Qsize; ++a) {
                     for (size_t p = 0; p < psize; ++p) {
-                        out_data[a * pqsize + p * qsize + q] = Ap->get(a, p);
+                        out_data[p * Qqsize + q * Qsize + a] = Ap->get(a, p);
                     }
                 }
             }
@@ -418,7 +416,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
 
                 for (size_t a = 0; a < Qsize; ++a) {
                     for (size_t p = 0; p < psize; ++p) {
-                        out_data[p * Qqsize + q * Qsize + a] = Ap->get(a, p);
+                        out_data[a * pqsize + p * qsize + q] = Ap->get(a, p);
                     }
                 }
             }
@@ -443,16 +441,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
             }
 
             if (psize < qsize) {
-                if (order == "Qpq") {
-                    for (size_t i = 0; i < batches[n]; ++i) {
-                        for (size_t a = 0; a < Qsize; ++a) {
-                            for (size_t q = 0; q < qsize; ++q) {
-                                auto idx = a * pqsize + (i + offset) * qsize + q;
-                                out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
-                            }
-                        }
-                    }
-                } else {
+                if (order == pqQ) {
                     for (size_t i = 0; i < batches[n]; ++i) {
                         for (size_t a = 0; a < Qsize; ++a) {
                             for (size_t q = 0; q < qsize; ++q) {
@@ -461,13 +450,22 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
                             }
                         }
                     }
+                } else {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t q = 0; q < qsize; ++q) {
+                                auto idx = a * pqsize + (i + offset) * qsize + q;
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
+                            }
+                        }
+                    }
                 }
             } else {
-                if (order == "Qpq") {
+                if (order == pqQ) {
                     for (size_t i = 0; i < batches[n]; ++i) {
                         for (size_t a = 0; a < Qsize; ++a) {
                             for (size_t p = 0; p < psize; ++p) {
-                                auto idx = a * pqsize + p * qsize + (i + offset);
+                                auto idx = p * Qqsize + (i + offset) * Qsize + a;
                                 out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
                             }
                         }
@@ -476,7 +474,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
                     for (size_t i = 0; i < batches[n]; ++i) {
                         for (size_t a = 0; a < Qsize; ++a) {
                             for (size_t p = 0; p < psize; ++p) {
-                                auto idx = p * Qqsize + (i + offset) * Qsize + a;
+                                auto idx = a * pqsize + p * qsize + (i + offset);
                                 out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
                             }
                         }

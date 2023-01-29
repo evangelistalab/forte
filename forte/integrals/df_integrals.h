@@ -68,7 +68,7 @@ class DFIntegrals : public Psi4Integrals {
 
     ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
                                        const std::vector<size_t>& q,
-                                       const std::string& order = "Qpq") override;
+                                       ThreeIntsBlockOrder order = Qpq) override;
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                  const std::vector<size_t>&) override;
     double** three_integral_pointer() override;

@@ -158,20 +158,18 @@ double** DFIntegrals::three_integral_pointer() { return ThreeIntegral_->pointer(
 ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                 const std::vector<size_t>& p,
                                                 const std::vector<size_t>& q,
-                                                const std::string& order) {
+                                                ThreeIntsBlockOrder order) {
     ambit::Tensor ReturnTensor;
-    if (order == "Qpq") {
-        ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
-        ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = three_integral(A[i[0]], p[i[1]], q[i[2]]);
-        });
-    } else if (order == "pqQ") {
+    if (order == pqQ) {
         ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), A.size()});
         ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
             value = three_integral(A[i[2]], p[i[0]], q[i[1]]);
         });
     } else {
-        throw std::runtime_error(order + " order is not supported!");
+        ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
+        ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = three_integral(A[i[0]], p[i[1]], q[i[2]]);
+        });
     }
     return ReturnTensor;
 }

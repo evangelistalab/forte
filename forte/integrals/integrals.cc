@@ -506,7 +506,8 @@ size_t ForteIntegrals::nthree() const {
 
 ambit::Tensor ForteIntegrals::three_integral_block(const std::vector<size_t>&,
                                                    const std::vector<size_t>&,
-                                                   const std::vector<size_t>&, const std::string&) {
+                                                   const std::vector<size_t>&,
+                                                   ThreeIntsBlockOrder) {
     _undefined_function("three_integral_block");
     return ambit::Tensor();
 }

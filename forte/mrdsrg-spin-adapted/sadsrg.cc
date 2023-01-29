@@ -1006,7 +1006,7 @@ void SADSRG::canonicalize_B(const std::unordered_set<std::string>& blocks) {
 ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
                                       const std::pair<size_t, size_t>& mos1_range,
                                       const std::pair<size_t, size_t>& mos2_range,
-                                      const std::string& order) {
+                                      ThreeIntsBlockOrder order) {
     /**
      * Read canonicalized 3-index integrals from disk.
      *
@@ -1039,12 +1039,11 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
         throw std::runtime_error("Incorrect MO indices! Check mos1_range and mos2_range!");
 
     ambit::Tensor T;
-    if (order == "Qpq")
-        T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {nQ, s1, s2});
-    else if (order == "pqQ")
+    if (order == pqQ)
         T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {s1, s2, nQ});
     else
-        throw std::runtime_error(order + " order not available!");
+        T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {nQ, s1, s2});
+
     if (s1 == 0 or s2 == 0)
         return T;
 
@@ -1196,7 +1195,7 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
     }
 
     // in-place matrix transpose
-    if (order == "pqQ") {
+    if (order == pqQ) {
         matrix_transpose_in_place(Tdata, nQ, S);
     }
 

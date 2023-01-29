@@ -67,6 +67,14 @@ enum class IntegralSpinRestriction { Restricted, Unrestricted };
 enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Custom };
 
 /**
+ * @brief The order of three-index integrals when calling
+ *
+ * In Forte, the auxiliary index is the first index (i.e., Qpq). However,
+ * pqQ order is more convenient for implementing DF-MRPT2.
+ */
+enum ThreeIntsBlockOrder { Qpq, pqQ };
+
+/**
  * @brief The ForteIntegrals class is a base class for transforming and storing MO integrals
  *
  * ForteIntegrals provides a common interface for using one- and two-electron integrals
@@ -252,7 +260,7 @@ class ForteIntegrals {
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>&,
                                                const std::vector<size_t>&,
                                                const std::vector<size_t>&,
-                                               const std::string& order = "Qpq");
+                                               ThreeIntsBlockOrder order = Qpq);
 
     /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,

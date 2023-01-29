@@ -73,7 +73,7 @@ class DISKDFIntegrals : public Psi4Integrals {
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
     ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
                                        const std::vector<size_t>& q,
-                                       const std::string& order = "Qpq") override;
+                                       ThreeIntsBlockOrder order = Qpq) override;
     /// return ambit tensor of size A by q
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
                                                  const std::vector<size_t>& q) override;

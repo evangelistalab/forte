@@ -296,14 +296,14 @@ class SADSRG : public DynamicCorrelationSolver {
      * The output tensor is identical to B with the last two indices permuted:
      * C("Qpq") = B("Qqp");
      *
-     * auto D = read_Bcanonical("cv", {1,2}, {0,10});
+     * auto D = read_Bcanonical("cv", {1,2}, {0,10}, pqQ);
      * outputs a Tensor of dimension 1 x 10 x nQ and it is equivalent to
-     * D("pqQ") = B("pqQ");
+     * D("pqQ") = B("Qpq");
      */
     ambit::Tensor read_Bcanonical(const std::string& block,
                                   const std::pair<size_t, size_t>& mos1_range,
                                   const std::pair<size_t, size_t>& mos2_range,
-                                  const std::string& order = "Qpq");
+                                  ThreeIntsBlockOrder order = Qpq);
     /// File names for canonicalized 3-index integrals
     std::unordered_map<std::string, std::string> Bcan_files_;
 
