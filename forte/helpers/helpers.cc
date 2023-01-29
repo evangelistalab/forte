@@ -142,7 +142,7 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
 void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const size_t n) {
     int nthreads = std::min(omp_get_max_threads(), int(m > n ? n : m));
     std::vector<double> tmp(nthreads * (m > n ? m : n));
-    double* tmp_ptr = tmp.data();
+    auto tmp_begin = tmp.begin();
 
     int c = std::gcd(m, n);
     int a = m / c;
@@ -152,15 +152,15 @@ void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const 
 #pragma omp parallel num_threads(nthreads)
         {
             int tid = omp_get_thread_num();
-            double* tmp_tid = tmp_ptr + m * tid;
+            auto tmp_it = tmp_begin + m * tid;
 #pragma omp for
             for (size_t j = 0; j < n; ++j) {
                 size_t j_b = j / b;
                 for (size_t i = 0; i < m; ++i) {
-                    tmp_tid[i] = data[((i + j_b) % m) * n + j];
+                    *(tmp_it + i) = data[((i + j_b) % m) * n + j];
                 }
                 for (size_t i = 0; i < m; ++i) {
-                    data[i * n + j] = tmp_tid[i];
+                    data[i * n + j] = *(tmp_it + i);
                 }
             }
         }
@@ -169,14 +169,14 @@ void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const 
 #pragma omp parallel num_threads(nthreads)
     {
         int tid = omp_get_thread_num();
-        double* tmp_tid = tmp_ptr + n * tid;
+        auto tmp_it = tmp_begin + n * tid;
 #pragma omp for
         for (size_t i = 0; i < m; ++i) {
             for (size_t j = 0; j < n; ++j) {
-                tmp_tid[((i + size_t(j / b)) % m + j * m) % n] = data[i * n + j];
+                *(tmp_it + ((i + size_t(j / b)) % m + j * m) % n) = data[i * n + j];
             }
             for (size_t j = 0; j < n; ++j) {
-                data[i * n + j] = tmp_tid[j];
+                data[i * n + j] = *(tmp_it + j);
             }
         }
     }
@@ -184,14 +184,14 @@ void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const 
 #pragma omp parallel num_threads(nthreads)
     {
         int tid = omp_get_thread_num();
-        double* tmp_tid = tmp_ptr + m * tid;
+        auto tmp_it = tmp_begin + m * tid;
 #pragma omp for
         for (size_t j = 0; j < n; ++j) {
             for (size_t i = 0; i < m; ++i) {
-                tmp_tid[i] = data[((i * n + j - size_t(i / a)) % m) * n + j];
+                *(tmp_it + i) = data[((i * n + j - size_t(i / a)) % m) * n + j];
             }
             for (size_t i = 0; i < m; ++i) {
-                data[i * n + j] = tmp_tid[i];
+                data[i * n + j] = *(tmp_it + i);
             }
         }
     }
