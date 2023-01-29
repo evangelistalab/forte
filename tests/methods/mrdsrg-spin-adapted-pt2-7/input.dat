@@ -7,28 +7,6 @@ oref_1b1u_dp1 = 0.071544002468
 oref_0b1u_dp2 = 0.423521418134
 oref_1b1u_dp2 = 0.075960724331
 
-def compare_results(level):
-    name = names[level]
-
-    # compare energies
-    entry = 0 if level == "cas" else 1
-    if "_casci" not in level:
-        for state, eref in ref_energies[level].items():
-            ecompt = variable(f"ENERGY ROOT {state} ENTRY {entry}")
-            compare_values(eref, ecompt, 8, f"{name} ENERGY")
-
-    # compare quadrupole moments
-    if level != "cas":
-        entry = 1 if "_casci" in level else 2
-    for state, qref in ref_qp_xx[level].items():
-         qcompt = variable(f"SINGLET <{state}|QM_XX|{state}> ENTRY {entry}")
-         compare_values(qref, qcompt, 6, f"{name} QM_XX OF {state}")
-
-    # compare oscillator strengths
-    for state, oref in ref_osc[level].items():
-         ocompt = variable(f"OSC. SINGLET 0AG -> {state} ENTRY {entry}")
-         compare_values(oref, ocompt, 6, f"{name} OSCILLATOR STRENGTH OF {state}")
-
 memory 8 gb
 import forte
 
