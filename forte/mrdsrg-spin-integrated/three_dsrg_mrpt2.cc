@@ -1167,28 +1167,6 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 (no ccvv)");
         // TODO: Implement these without storing V and/or T2 by using blocking
-        if (integral_type_ != DiskDF) {
-            temp.zero();
-            temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
-            temp["vu"] += V_["fEuM"] * T2_["vMfE"];
-            temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
-            temp["VU"] += V_["eFmU"] * T2_["mVeF"];
-            E += temp["vu"] * Gamma1_["uv"];
-            E += temp["VU"] * Gamma1_["UV"];
-            // outfile->Printf("\n E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
-
-            temp.zero();
-            temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
-            temp["vu"] += V_["vEmN"] * T2_["mNuE"];
-            temp["VU"] += 0.5 * V_["VEMN"] * T2_["MNUE"];
-            temp["VU"] += V_["eVnM"] * T2_["nMeU"];
-            E += temp["vu"] * Eta1_["uv"];
-            E += temp["VU"] * Eta1_["UV"];
-            // outfile->Printf("\n E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
-        } else {
-            E += E_VT2_2_one_active();
-        }
-
         /// These terms all have at least two active indices (assume can be store in core).
         temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
         temp["yvxu"] += V_["efxu"] * T2_["yvef"];
@@ -1236,6 +1214,36 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
         E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
         // outfile->Printf("\n V_{VE}^{XW} * T2_{UE}^{YZ} * G1 * E1: %8.6f", E);
 
+        bool laplace_one_active = foptions_->get_bool("LAPLACE_ONE_ACTIVE");
+
+        if (integral_type_ != DiskDF && !laplace_one_active) {
+            outfile->Printf("\n  Using core algorithm for one active section");
+            temp.zero();
+            temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
+            temp["vu"] += V_["fEuM"] * T2_["vMfE"];
+            temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
+            temp["VU"] += V_["eFmU"] * T2_["mVeF"];
+            E += temp["vu"] * Gamma1_["uv"];
+            E += temp["VU"] * Gamma1_["UV"];
+            // outfile->Printf("\n E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
+
+            temp.zero();
+            temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
+            temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+            temp["VU"] += 0.5 * V_["VEMN"] * T2_["MNUE"];
+            temp["VU"] += V_["eVnM"] * T2_["nMeU"];
+            E += temp["vu"] * Eta1_["uv"];
+            E += temp["VU"] * Eta1_["UV"];
+            // outfile->Printf("\n E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
+        } else if (integral_type_ == DiskDF && !laplace_one_active) {
+            outfile->Printf("\n  Using DiskDF algorithm for one active section");
+            E += E_VT2_2_one_active();
+        } else if (integral_type_ == DiskDF && laplace_one_active) {
+            outfile->Printf("\n  Using LAPLACE algorithm (ONLY DISK VERSION) for one active section. This time is not included.");
+            // Don't do anything. The one active section is in the CCVV function.
+        } else {
+            throw psi::PSIEXCEPTION("Only DISK version LAPLACE algorithm is implemented!");
+        }
         // Calculates all but ccvv, cCvV, and CCVV energies
         outfile->Printf("... Done. Timing %15.6f s", timer.get());
     }
@@ -2269,6 +2277,15 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
 double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     std::string str = "Using DiskDF (Shuhang Li test)";
     outfile->Printf("\n    %-40s ...", str.c_str());
+
+    bool laplace_one_active = foptions_->get_bool("LAPLACE_ONE_ACTIVE");
+
+    if (laplace_one_active) {
+        outfile->Printf("\n CAVV and CCAV will also use Laplace algorithm. ");
+    } else {
+        outfile->Printf("\n ONLY for CCVV!! ");
+    }
+
     std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
     std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     ncore_ = core_mos_.size();
@@ -2294,6 +2311,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
 
     psi::SharedVector epsilon_rdocc(new psi::Vector("EPS_RDOCC", ncore_));
     psi::SharedVector epsilon_virtual(new psi::Vector("EPS_VIRTUAL", nvirtual_));
+    psi::SharedVector epsilon_active(new psi::Vector("EPS_ACTIVE", nactive_));
 
     int core_count = 0;
     for (auto m : core_mos_) {
@@ -2305,12 +2323,28 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
         epsilon_virtual->set(virtual_count, Fa_[e]);
         virtual_count++;
     }
+
+    if (laplace_one_active) {
+        psi::SharedVector epsilon_active(new psi::Vector("EPS_ACTIVE", nactive_));
+        int actv_count = 0;
+        for (auto u : actv_mos_) {
+            epsilon_active->set(actv_count, Fa_[u]);
+            actv_count++;
+        }
+    }
+
     // epsilon_rdocc->print();
     // epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_, nfrozen);
     int weights = ao_helper.Weights();
+
+    if (laplace_one_active) {
+        AtomicOrbitalHelper ao_helper_cavv(Cwfn, epsilon_rdocc, epsilon_active, epsilon_virtual, laplace_threshold, nactive_, nfrozen, true);
+        AtomicOrbitalHelper ao_helper_ccav(Cwfn, epsilon_rdocc, epsilon_active, epsilon_virtual, laplace_threshold, nactive_, nfrozen, false);
+    }
+
 
     /// Number of MO.
     int nmo = mo_space_info_->dimension("ALL").sum();

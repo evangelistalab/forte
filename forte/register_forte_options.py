@@ -719,6 +719,8 @@ def register_dsrg_options(options):
     options.add_double("LAPLACE_THRESHOLD", 1e-10, "laplace threshold")
 
     options.add_bool("LAPLACE_CORE", True, "Use core or disk algorithm")
+    
+    options.add_bool("LAPLACE_ONE_ACTIVE", False, "Use Laplace for one active section")
 
     options.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM")
 

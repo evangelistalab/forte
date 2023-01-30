@@ -39,13 +39,18 @@ class AtomicOrbitalHelper {
     psi::SharedMatrix CMO_;
     psi::SharedVector eps_rdocc_;
     psi::SharedVector eps_virtual_;
+    psi::SharedVector eps_active_;
 
     std::vector<psi::SharedMatrix> LOcc_list_;
     std::vector<psi::SharedMatrix> LVir_list_;
+    std::vector<psi::SharedMatrix> LAct_list_;
+    
     std::vector<psi::SharedMatrix> POcc_list_;
     std::vector<psi::SharedMatrix> PVir_list_;
+
     std::vector<int> n_pseudo_occ_list_;
     std::vector<int> n_pseudo_vir_list_;
+    std::vector<int> n_pseudo_act_list_;
 
     psi::SharedMatrix L_Occ_real_;
     //psi::SharedMatrix L_Vir_real_;
@@ -56,12 +61,14 @@ class AtomicOrbitalHelper {
     // LaplaceDenominator Laplace_;
     psi::SharedMatrix Occupied_Laplace_;
     psi::SharedMatrix Virtual_Laplace_;
+    psi::SharedMatrix Active_Laplace_;
     double laplace_tolerance_ = 1e-10;
 
     int weights_;
     int nbf_;
     int nrdocc_;
     int nvir_;
+    int nact_;
     /// How many orbitals does it take to go from occupied to virtual (ie should
     /// be active)
     int shift_;
@@ -73,26 +80,34 @@ class AtomicOrbitalHelper {
 
     std::vector<psi::SharedMatrix> POcc_list() { return POcc_list_; }
     std::vector<psi::SharedMatrix> PVir_list() { return PVir_list_; }
+
     std::vector<psi::SharedMatrix> LOcc_list() { return LOcc_list_; }
     std::vector<psi::SharedMatrix> LVir_list() { return LVir_list_; }
+    std::vector<psi::SharedMatrix> LAct_list() { return LAct_list_; }
+
     std::vector<int> n_pseudo_occ_list() { return n_pseudo_occ_list_; }
     std::vector<int> n_pseudo_vir_list() { return n_pseudo_vir_list_; }
+    std::vector<int> n_pseudo_act_list() { return n_pseudo_act_list_; }
     
     psi::SharedMatrix L_Occ_real() { return L_Occ_real_; }
-    //psi::SharedMatrix L_Vir_real() { return L_Vir_real_; }
 
     psi::SharedMatrix POcc_real() { return POcc_real_; }
-    // psi::SharedMatrix PVir_real() { return PVir_real_; }
     
     int Weights() { return weights_; }
 
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance);
+    
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance, int shift, int nfrozen);
 
+    AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_act,
+                                         psi::SharedVector eps_vir, double laplace_tolerance,
+                                         int shift, int nfrozen, bool cavv);
+
     void Compute_Cholesky_Density();
     void Compute_Cholesky_Pseudo_Density();
+    void Compute_Cholesky_Pseudo_Density(psi::SharedMatrix RDM);
     //void Householder_QR();
     //void Compute_L_Directly();
 

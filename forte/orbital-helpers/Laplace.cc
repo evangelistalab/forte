@@ -269,7 +269,7 @@ int binary_search_recursive(std::vector<int> A, int key, int low, int high) {
         return -1;
     }
 
-    size_t mid = low + ((high - low) / 2);
+    int mid = low + ((high - low) / 2);
     if (A[mid] == key) {
         return mid;
     } else if (key < A[mid]) {

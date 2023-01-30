@@ -33,7 +33,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 
-#include "psi4/lib3index/denominator.h"
+#include "LaplaceDenominator.h"
 #include "psi4/libfock/jk.h"
 #include "Laplace.h"
 #include "ao_helper.h"
@@ -47,7 +47,7 @@ namespace forte {
 AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
                                          psi::SharedVector eps_vir, double laplace_tolerance)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
-    psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
+    LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
     weights_ = Occupied_Laplace_->rowspi()[0];
@@ -61,7 +61,7 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
                                          int shift, int nfrozen)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
       shift_(shift), nfrozen_(nfrozen) {
-    psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
+    LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
     weights_ = Occupied_Laplace_->rowspi()[0];
@@ -69,34 +69,25 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
     nvir_ = eps_virtual_->dim();
     nbf_ = CMO_->rowspi()[0];
 }
-AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n Done with AO helper class"); }
-/*
-void AtomicOrbitalHelper::Compute_L_Directly() {
-    int nmo_ = nbf_;
 
-    LOcc_list_.resize(weights_);
-    LVir_list_.resize(weights_);
-    double value_occ, value_vir = 0;
-    for (int w = 0; w < weights_; w++) {
-        LOcc_list_[w] = std::make_shared<Matrix>("LOcc_list", nbf_, nrdocc_);
-        LVir_list_[w] = std::make_shared<Matrix>("LVir_list", nbf_, nvir_);
-        for (int mu = 0; mu < nbf_; mu++) {
-            for (int i = 0; i < nrdocc_; i++) {
-                value_occ = CMO_->get(mu, i) * std::sqrt(Occupied_Laplace_->get(w, i));
-                LOcc_list_[w]->set(mu, i, value_occ);
-                value_occ = 0.0;
-            }
-            for (int a = 0; a < nvir_; a++) {
-                value_vir = CMO_->get(mu, nrdocc_ + shift_ + a) * std::sqrt(Virtual_Laplace_->get(w, a));
-                LVir_list_[w]->set(mu, a, value_vir);
-                value_vir = 0.0;
-            }
-        }
-        n_pseudo_occ_list_.push_back(LOcc_list_[w]->coldim());
-        n_pseudo_vir_list_.push_back(LVir_list_[w]->coldim());
-    }
+AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_act,
+                                         psi::SharedVector eps_vir, double laplace_tolerance,
+                                         int shift, int nfrozen, bool cavv)
+    : CMO_(CMO), eps_rdocc_(eps_occ), eps_active_(eps_act), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
+      shift_(shift), nfrozen_(nfrozen) {
+    LaplaceDenominator laplace(eps_rdocc_, eps_active_, eps_virtual_, laplace_tolerance_, cavv);
+    Occupied_Laplace_ = laplace.denominator_occ();
+    Virtual_Laplace_ = laplace.denominator_vir();
+    Active_Laplace_ = laplace.denominator_act();
+    weights_ = Occupied_Laplace_->rowspi()[0];
+    nrdocc_ = eps_rdocc_->dim();
+    nact_ = eps_active_->dim();
+    nvir_ = eps_virtual_->dim();
+    nbf_ = CMO_->rowspi()[0];
 }
-*/
+
+AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n Done with AO helper class"); }
+
 void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
     psi::SharedMatrix POcc_single(new psi::Matrix("Single_POcc", nbf_, nbf_));
     psi::SharedMatrix PVir_single(new psi::Matrix("Single_PVir", nbf_, nbf_)); 
@@ -128,6 +119,31 @@ void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
         n_pseudo_vir_list_.push_back(LVir->coldim());
     }
 }
+
+void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density(psi::SharedMatrix RDM) {
+    psi::SharedMatrix PAct_single(new psi::Matrix("Single_PAct", nbf_, nbf_));
+    std::vector<int> Act_idx(shift_);
+    std::iota(Act_idx.begin(), Act_idx.end(), nfrozen_+nrdocc_);
+    psi::SharedMatrix C_Act = submatrix_cols(*CMO_, Act_idx);
+    psi::SharedMatrix D_Act = psi::linalg::doublet(C_Act, RDM, false, false);
+
+    double value_act = 0.0;
+    for (int w = 0; w < weights_; w++) {
+        for (int mu = 0; mu < nbf_; mu++) {
+            for (int nu = 0; nu < nbf_; nu++) {
+                for (int u = 0; u < shift_; u++) {
+                    value_act += D_Act->get(mu, u) * C_Act->get(nu, u) * Active_Laplace_->get(w, u);
+                }
+                PAct_single->set(mu, nu, value_act);
+                value_act = 0.0;
+            }
+        }
+        psi::SharedMatrix LAct = PAct_single->partial_cholesky_factorize(1e-10);
+        LAct_list_.push_back(LAct);
+        n_pseudo_vir_list_.push_back(LAct->coldim());
+    }
+}
+
 void AtomicOrbitalHelper::Compute_Cholesky_Density() {
     //psi::SharedMatrix POcc_real(new psi::Matrix("Real_POcc", nbf_, nbf_));
     //psi::SharedMatrix PVir_real(new psi::Matrix("Real_PVir", nbf_, nbf_));
