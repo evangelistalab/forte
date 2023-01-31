@@ -281,7 +281,7 @@ void SA_MRPT2::check_memory() {
 }
 
 double SA_MRPT2::compute_energy() {
-    build_1rdm_cc();
+    build_1rdm_vv();
 
     // scale the integrals
     renormalize_integrals(true);
