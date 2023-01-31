@@ -1579,50 +1579,10 @@ psi::SharedMatrix SA_MRPT2::build_1rdm_cc() {
 
     print_done(t.get());
 
-    // // test
-    // double e = D1_["mn"] * F_["mn"];
-
-    // auto H0 = ambit::BlockedTensor::build(tensor_type_, "H0", {"cc"});
-    // H0["mn"] = F_["mn"];
-
-    // auto C1 = ambit::BlockedTensor::build(tensor_type_, "HT1", {"gg"});
-    // auto C2 = ambit::BlockedTensor::build(tensor_type_, "HT1", {"gggg"});
-    // auto O1 = ambit::BlockedTensor::build(tensor_type_, "HA1", {"gg"});
-    // auto O2 = ambit::BlockedTensor::build(tensor_type_, "HA1", {"gggg"});
-
-    // double eref = 0.0;
-
-    // H1_T1_C1(H0, T1_, 1.0, C1);
-    // O1["pq"] = C1["pq"];
-    // O1["pq"] += C1["qp"];
-    // H1_T1_C0(O1, T1_, 1.0, eref);
-    // H1_T2_C0(O1, T2_, 1.0, eref);
-
-    // C1.zero();
-    // H1_T2_C1(H0, T2_, 1.0, C1);
-    // H1_T2_C2(H0, T2_, 1.0, C2);
-
-    // O1["pq"] = C1["pq"];
-    // O1["pq"] += C1["qp"];
-    // O2["pqrs"] = C2["pqrs"];
-    // O2["pqrs"] += C2["rspq"];
-
-    // H1_T1_C0(O1, T1_, 1.0, eref);
-    // H2_T1_C0(O2, T1_, 1.0, eref);
-
-    // H1_T2_C0(O1, T2_, 1.0, eref);
-    // H2_T2_C0(O2, T2_, S2_, 1.0, eref);
-
-    // outfile->Printf("\n  e_ref   = %20.15f", eref);
-    // outfile->Printf("\n  e_compt = %20.15f", e);
-    // outfile->Printf("\n  e_diff  = %20.15f", e - eref);
-
     return tensor_to_matrix(D1_.block("cc"), mo_space_info_->dimension("RESTRICTED_DOCC"));
 }
 
 psi::SharedMatrix SA_MRPT2::build_1rdm_vv() {
-    D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"}); // TODO: remove
-
     timer tvv("1RDM-VV");
 
     auto D1v = D1_.block("vv");
@@ -1694,55 +1654,14 @@ psi::SharedMatrix SA_MRPT2::build_1rdm_vv() {
 
     print_done(t.get());
 
-    D1v.print();
-
-    // test
-    double e = D1_["ef"] * F_["ef"];
-
-    auto H0 = ambit::BlockedTensor::build(tensor_type_, "H0", {"vv"});
-    H0["ef"] = F_["ef"];
-
-    auto C1 = ambit::BlockedTensor::build(tensor_type_, "HT1", {"gg"});
-    auto C2 = ambit::BlockedTensor::build(tensor_type_, "HT1", {"gggg"});
-    auto O1 = ambit::BlockedTensor::build(tensor_type_, "HA1", {"gg"});
-    auto O2 = ambit::BlockedTensor::build(tensor_type_, "HA1", {"gggg"});
-
-    double eref = 0.0;
-
-    H1_T1_C1(H0, T1_, 1.0, C1);
-    O1["pq"] = C1["pq"];
-    O1["pq"] += C1["qp"];
-    H1_T1_C0(O1, T1_, 1.0, eref);
-    H1_T2_C0(O1, T2_, 1.0, eref);
-
-    C1.zero();
-    H1_T2_C1(H0, T2_, 1.0, C1);
-    H1_T2_C2(H0, T2_, 1.0, C2);
-
-    O1["pq"] = C1["pq"];
-    O1["pq"] += C1["qp"];
-    O2["pqrs"] = C2["pqrs"];
-    O2["pqrs"] += C2["rspq"];
-
-    H1_T1_C0(O1, T1_, 1.0, eref);
-    H2_T1_C0(O2, T1_, 1.0, eref);
-
-    H1_T2_C0(O1, T2_, 1.0, eref);
-    H2_T2_C0(O2, T2_, S2_, 1.0, eref);
-
-    outfile->Printf("\n  e_ref   = %20.15f", eref);
-    outfile->Printf("\n  e_compt = %20.15f", e);
-    outfile->Printf("\n  e_diff  = %20.15f", e - eref);
-
-    exit(1);
     return tensor_to_matrix(D1_.block("vv"), mo_space_info_->dimension("RESTRICTED_UOCC"));
 }
 
-void SA_MRPT2::build_1rdm_unrelaxed(psi::SharedMatrix D1c, psi::SharedMatrix D1v) {
+void SA_MRPT2::build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D1v) {
     print_h2("Build Spin-Summed Unrelaxed 1-RDM (CC and VV)");
 
     D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"});
-    D1_.block("vv").iterate([&](const std::vector<size_t> i, double& value) {
+    D1_.block("cc").iterate([&](const std::vector<size_t> i, double& value) {
         if (i[0] == i[1])
             value = 2.0;
     });
