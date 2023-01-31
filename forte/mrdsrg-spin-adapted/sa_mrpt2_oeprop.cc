@@ -1505,4 +1505,162 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
 
     print_done(t_cavv.stop());
 }
+
+psi::SharedMatrix SA_MRPT2::build_1rdm_cc() {
+    D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"}); // TODO: remove
+
+    timer tcc("1RDM-CC");
+
+    auto D1c = D1_.block("cc");
+
+    if (eri_df_) {
+        compute_1rdm_cc_CCVV_DF(D1_);
+        compute_1rdm_cc_CCAV_DF(D1_, {});
+        compute_1rdm_cc_aa_CAVV_DF(D1_, {});
+    } else {
+        local_timer t;
+        print_contents("Computing CCVV 1RDM CC part");
+        D1c("ij") -= 2.0 * T2_.block("ccvv")("ikab") * S2_.block("ccvv")("jkab");
+        print_done(t.get());
+
+        t.reset();
+        print_contents("Computing CCAV 1RDM CC part");
+        D1c("ij") -=
+            T2_.block("ccav")("ikva") * S2_.block("ccav")("jkua") * Eta1_.block("aa")("uv");
+        D1c("ij") -=
+            T2_.block("ccav")("kiva") * S2_.block("ccav")("kjua") * Eta1_.block("aa")("uv");
+        print_done(t.get());
+
+        t.reset();
+        print_contents("Computing CAVV 1RDM CC part");
+        D1c("ij") -= T2_.block("cavv")("iuab") * S2_.block("cavv")("jvab") * L1_.block("aa")("uv");
+        print_done(t.get());
+    }
+
+    local_timer t;
+    print_contents("Computing T1 contr. to 1RDM CC part");
+
+    D1_["mn"] -= 2.0 * T1_["ne"] * T1_["me"];
+    D1_["mn"] -= T1_["nv"] * T1_["mu"] * Eta1_["uv"];
+
+    D1_["mn"] += T1_["nx"] * T2_["myuv"] * L2_["uvxy"];
+    D1_["mn"] += T1_["mu"] * T2_["nvxy"] * L2_["uvxy"];
+    print_done(t.get());
+
+    t.reset();
+    print_contents("Computing T2 contr. to 1RDM CC part");
+
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_D1cc", {"aaaa"});
+    temp["uvxy"] = L2_["uvxy"];
+    temp["uvxy"] += Eta1_["ux"] * Eta1_["vy"];
+    temp["uvxy"] -= 0.5 * Eta1_["vx"] * Eta1_["uy"];
+    D1c("ij") -= T2_.block("ccaa")("ikuv") * T2_.block("ccaa")("jkxy") * temp.block("aaaa")("uvxy");
+
+    D1_["mn"] -= 0.5 * T2_["ynve"] * S2_["xmue"] * L1_["yx"] * Eta1_["uv"];
+    D1_["mn"] -= 0.5 * T2_["nyve"] * S2_["mxue"] * L1_["yx"] * Eta1_["uv"];
+
+    D1_["mn"] -= T2_["vnye"] * S2_["xmue"] * L2_["uvxy"];
+    D1_["mn"] += T2_["nvye"] * T2_["xmue"] * L2_["uvxy"];
+    D1_["mn"] += T2_["nvye"] * T2_["mxue"] * L2_["uvyx"];
+
+    D1_["mn"] -= 0.25 * T2_["nuyz"] * S2_["mvxw"] * L1_["uv"] * Eta1_["xy"] * Eta1_["wz"];
+
+    D1_["mn"] -= 0.5 * T2_["mzuv"] * T2_["nwxy"] * L1_["wz"] * L2_["uvxy"];
+
+    D1_["mn"] -= 0.5 * T2_["nvzy"] * S2_["mxwu"] * Eta1_["wz"] * L2_["uvxy"];
+    D1_["mn"] += 0.5 * T2_["nvyz"] * T2_["mxwu"] * Eta1_["wz"] * L2_["uvxy"];
+    D1_["mn"] += 0.5 * T2_["nvyz"] * T2_["mxuw"] * Eta1_["wz"] * L2_["uvyx"];
+
+    D1c("mn") += T2_.block("caaa")("nwxy") * T2_.block("caaa")("mzuv") * L3_("xyzuwv");
+
+    D1c.print();
+
+    print_done(t.get());
+
+    // test
+    double e = D1_["mn"] * F_["mn"];
+
+    auto H0 = ambit::BlockedTensor::build(tensor_type_, "H0", {"cc"});
+    H0["mn"] = F_["mn"];
+
+    auto C1 = ambit::BlockedTensor::build(tensor_type_, "HT1", {"gg"});
+    auto C2 = ambit::BlockedTensor::build(tensor_type_, "HT1", {"gggg"});
+    auto O1 = ambit::BlockedTensor::build(tensor_type_, "HA1", {"gg"});
+    auto O2 = ambit::BlockedTensor::build(tensor_type_, "HA1", {"gggg"});
+
+    double eref = 0.0;
+
+    H1_T1_C1(H0, T1_, 1.0, C1);
+    O1["pq"] = C1["pq"];
+    O1["pq"] += C1["qp"];
+    H1_T1_C0(O1, T1_, 1.0, eref);
+    H1_T2_C0(O1, T2_, 1.0, eref);
+
+    C1.zero();
+    H1_T2_C1(H0, T2_, 1.0, C1);
+    H1_T2_C2(H0, T2_, 1.0, C2);
+
+    O1["pq"] = C1["pq"];
+    O1["pq"] += C1["qp"];
+    O2["pqrs"] = C2["pqrs"];
+    O2["pqrs"] += C2["rspq"];
+
+    H1_T1_C0(O1, T1_, 1.0, eref);
+    H2_T1_C0(O2, T1_, 1.0, eref);
+
+    H1_T2_C0(O1, T2_, 1.0, eref);
+    H2_T2_C0(O2, T2_, S2_, 1.0, eref);
+
+    outfile->Printf("\n  e_ref   = %20.15f", eref);
+    outfile->Printf("\n  e_compt = %20.15f", e);
+    outfile->Printf("\n  e_diff  = %20.15f", e - eref);
+
+    exit(1);
+    return tensor_to_matrix(D1_.block("cc"), mo_space_info_->dimension("RESTRICTED_DOCC"));
+}
+
+psi::SharedMatrix SA_MRPT2::build_1rdm_vv() {
+    D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"}); // TODO: remove
+
+    timer tvv("1RDM-VV");
+    if (eri_df_) {
+        compute_1rdm_vv_CCVV_DF(D1_);
+        compute_1rdm_vv_CAVV_DF(D1_, {});
+        compute_1rdm_aa_vv_CCAV_DF(D1_, {});
+    } else {
+        auto D1v = D1_.block("vv");
+
+        local_timer t;
+        print_contents("Computing CCVV 1RDM VV part");
+        D1v("ab") += 2.0 * T2_.block("ccvv")("ijac") * S2_.block("ccvv")("ijbc");
+        print_done(t.get());
+
+        t.reset();
+        print_contents("Computing CAVV 1RDM VV part");
+        D1v("ab") += T2_.block("cavv")("iuac") * S2_.block("cavv")("ivbc") * L1_.block("aa")("uv");
+        D1v("ab") += T2_.block("cavv")("iuca") * S2_.block("cavv")("ivcb") * L1_.block("aa")("uv");
+        print_done(t.get());
+
+        t.reset();
+        print_contents("Computing CCAV 1RDM VV part");
+        D1v("ab") +=
+            T2_.block("ccav")("ijva") * S2_.block("ccav")("ijub") * Eta1_.block("aa")("uv");
+        print_done(t.get());
+    }
+}
+
+void SA_MRPT2::build_1rdm_unrelaxed(psi::SharedMatrix D1c, psi::SharedMatrix D1v) {
+    print_h2("Build Spin-Summed Unrelaxed 1-RDM (CC and VV)");
+
+    D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"});
+    D1_.block("vv").iterate([&](const std::vector<size_t> i, double& value) {
+        if (i[0] == i[1])
+            value = 2.0;
+    });
+    D1_["uv"] = L1_["uv"];
+
+    D1c = build_1rdm_cc();
+    D1v = build_1rdm_vv();
+}
+
 } // namespace forte
