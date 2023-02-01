@@ -189,8 +189,8 @@ void MP2_NOS::compute_transformation() {
     if (options_->get_bool("NAT_ACT")) {
         std::vector<size_t> restricted_docc(nirrep);
         std::vector<size_t> active(nirrep);
-        double occupied = options_->get_double("MP2NO_OCC_THRESHOLD");
-        double virtual_orb = options_->get_double("MP2NO_VIR_THRESHOLD");
+        double occupied = options_->get_double("PT2NO_OCC_THRESHOLD");
+        double virtual_orb = options_->get_double("PT2NO_VIR_THRESHOLD");
         outfile->Printf("\n Suggested Active Space \n");
         outfile->Printf("\n Occupied orbitals with an occupation less than %6.4f are active",
                         occupied);

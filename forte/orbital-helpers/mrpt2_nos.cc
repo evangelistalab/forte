@@ -32,6 +32,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/dimension.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -82,7 +83,7 @@ void MRPT2_NOS::compute_transformation() {
 
     // suggest active space
     if (options_->get_bool("NAT_ACT")) {
-        suggest_active_space();
+        suggest_active_space(D1c_evals, D1v_evals);
     }
 
     // build transformation matrix
@@ -102,10 +103,125 @@ void MRPT2_NOS::compute_transformation() {
     Ub_ = Ua_->clone();
 }
 
-void MRPT2_NOS::suggest_active_space() {
+void MRPT2_NOS::suggest_active_space(const psi::Vector& D1c_evals, const psi::Vector& D1v_evals) {
     // print original active space
+    print_h2("Original Occupation Information (User Input)");
+
+    auto nirrep = mo_space_info_->nirrep();
+    std::string dash(15 + 6 * nirrep + 7, '-');
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    %15c", ' ');
+    for (size_t h = 0; h < nirrep; ++h) {
+        outfile->Printf(" %5s", mo_space_info_->irrep_label(h).c_str());
+    }
+    outfile->Printf("    Sum");
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (const std::string& space_name : mo_space_info_->space_names()) {
+        auto dim = mo_space_info_->dimension(space_name);
+        if (dim.sum() == 0)
+            continue;
+        outfile->Printf("\n    %15s", space_name.c_str());
+        for (size_t h = 0; h < nirrep; ++h) {
+            outfile->Printf(" %5d", dim[h]);
+        }
+        outfile->Printf(" %6d", dim.sum());
+    }
+    outfile->Printf("\n    %s", dash.c_str());
 
     // suggest new active space
+    print_h2("Active Space Suggested by MRPT2 Natural Orbitals");
+
+    auto core_cutoff = 2.0 * options_->get_double("PT2NO_OCC_THRESHOLD");
+    auto virt_cutoff = 2.0 * options_->get_double("PT2NO_VIR_THRESHOLD");
+    outfile->Printf("\n    RESTRICTED_DOCC Threshold (Spin-Summed): %10.4e", core_cutoff);
+    outfile->Printf("\n    RESTRICTED_UOCC Threshold (Spin-Summed): %10.4e\n", virt_cutoff);
+
+    auto dim_frzc = mo_space_info_->dimension("FROZEN_DOCC");
+    auto dim_hole = mo_space_info_->dimension("GENERALIZED HOLE");
+
+    auto dim_core = mo_space_info_->dimension("RESTRICTED_DOCC");
+    auto dim_virt = mo_space_info_->dimension("RESTRICTED_UOCC");
+    std::vector<int> newdim_rdocc(nirrep), newdim_actv(nirrep), newdim_ruocc(nirrep);
+
+    for (size_t h = 0; h < nirrep; ++h) {
+        auto ndocc = 0, nactv = 0, nuocc = 0;
+        for (int i = 0; i < dim_core[h]; ++i) {
+            if (D1c_evals.get(h, i) < core_cutoff)
+                nactv++;
+            else
+                ndocc++;
+        }
+        for (int a = 0; a < dim_virt[h]; ++a) {
+            if (D1v_evals.get(h, a) > virt_cutoff)
+                nactv++;
+            else
+                nuocc++;
+        }
+        newdim_actv[h] = nactv;
+        newdim_rdocc[h] = ndocc;
+        newdim_ruocc[h] = nuocc;
+    }
+
+    if (psi::Dimension(newdim_actv).sum() == 0) {
+        outfile->Printf("\n    MRPT2 natural orbitals finds no additional active orbitals.");
+        return;
+    }
+
+    dash = std::string(5 + 9 + 14, '-');
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    Irrep  Orbital   Occ. Number");
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (size_t h = 0; h < nirrep; ++h) {
+        if (newdim_actv[h] == 0)
+            continue;
+
+        auto irrep_label = mo_space_info_->irrep_label(h);
+        auto core_shift = dim_frzc[h];
+        auto virt_shift = dim_frzc[h] + dim_hole[h];
+
+        for (int i = newdim_rdocc[h]; i < dim_core[h]; ++i) {
+            outfile->Printf("\n    %5s  %7zu  %12.6e", irrep_label.c_str(), i + core_shift,
+                            D1c_evals.get(h, i));
+        }
+
+        for (int a = 0; a < dim_virt[h] - newdim_ruocc[h]; ++a) {
+            outfile->Printf("\n    %5s  %7zu  %12.6e", irrep_label.c_str(), a + virt_shift,
+                            D1v_evals.get(h, a));
+        }
+
+        outfile->Printf("\n    %s", dash.c_str());
+    }
+
+    std::map<std::string, psi::Dimension> newdims;
+    newdims["ACTIVE"] = psi::Dimension(newdim_actv) + mo_space_info_->dimension("ACTIVE");
+    newdims["RESTRICTED_DOCC"] = psi::Dimension(newdim_rdocc);
+    newdims["RESTRICTED_UOCC"] = psi::Dimension(newdim_ruocc);
+    newdims["FROZEN_DOCC"] = mo_space_info_->dimension("FROZEN_DOCC");
+    newdims["FROZEN_UOCC"] = mo_space_info_->dimension("FROZEN_DOCC");
+
+    print_h2("Occupation Information Suggested by MRPT2 Natural Orbitals");
+
+    dash = std::string(15 + 6 * nirrep + 7, '-');
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    %15c", ' ');
+    for (size_t h = 0; h < nirrep; ++h) {
+        outfile->Printf(" %5s", mo_space_info_->irrep_label(h).c_str());
+    }
+    outfile->Printf("    Sum");
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (const auto& space_name :
+         {"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC", "FROZEN_UOCC"}) {
+        const auto& dim = newdims[space_name];
+        outfile->Printf("\n    %15s", space_name);
+        for (size_t h = 0; h < nirrep; ++h) {
+            outfile->Printf(" %5d", dim[h]);
+        }
+        outfile->Printf(" %6d", dim.sum());
+    }
+    outfile->Printf("\n    %s", dash.c_str());
 }
 
 } // namespace forte

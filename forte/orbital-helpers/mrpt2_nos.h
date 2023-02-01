@@ -60,7 +60,7 @@ class MRPT2_NOS : public OrbitalTransform {
     psi::SharedMatrix D1v_;
 
     /// Suggest active space
-    void suggest_active_space();
+    void suggest_active_space(const psi::Vector& D1c_evals, const psi::Vector& D1v_evals);
 };
 } // namespace forte
 
