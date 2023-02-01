@@ -74,6 +74,7 @@ void MRPT2_NOS::compute_transformation() {
 
     // print natural orbitals
     if (options_->get_bool("NAT_ORBS_PRINT")) {
+        outfile->Printf("\n");
         D1c_evals.print();
         D1v_evals.print();
     }
@@ -196,7 +197,7 @@ void MRPT2_NOS::suggest_active_space(const psi::Vector& D1c_evals, const psi::Ve
     newdims["RESTRICTED_DOCC"] = psi::Dimension(newdim_rdocc);
     newdims["RESTRICTED_UOCC"] = psi::Dimension(newdim_ruocc);
     newdims["FROZEN_DOCC"] = mo_space_info_->dimension("FROZEN_DOCC");
-    newdims["FROZEN_UOCC"] = mo_space_info_->dimension("FROZEN_DOCC");
+    newdims["FROZEN_UOCC"] = mo_space_info_->dimension("FROZEN_UOCC");
 
     print_h2("Occupation Information Suggested by MRPT2 Natural Orbitals");
 

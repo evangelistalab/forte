@@ -1,0 +1,73 @@
+import forte
+
+refcas = -100.042959961917
+refocc = {"FROZEN_DOCC": [1,0,0,0],
+          "RESTRICTED_DOCC": [1,0,0,0],
+          "ACTIVE": [2,0,1,1],
+          "RESTRICTED_UOCC": [6,1,3,3],
+          "FROZEN_UOCC": [0,0,0,0]}
+
+molecule HF{
+  0 1
+  F
+  H 1 0.918
+}
+
+set globals{
+  basis                  cc-pvdz
+  scf_type               pk
+}
+
+set forte{
+  job_type               mcscf_two_step
+  casscf_ci_solver       fci
+  restricted_docc        [2,0,1,1]
+  active                 [2,0,0,0]
+  casscf_g_convergence   8
+  casscf_e_convergence   12
+}
+
+Emcscf, wfn = energy('forte', return_wfn=True)
+compare_values(refcas, Emcscf, 10, "CASSCF(2,2) (FORTE) energy")
+
+set forte{
+  job_type                none
+  orbital_type            mrpt2no
+  nat_act                 true
+  nat_orbs_print          true
+  active_space_solver     cas
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  dsrg_s                  1.0
+  e_convergence           10
+  pt2no_occ_threshold     0.99
+  pt2no_vir_threshold     0.01
+}
+
+Ept2 = energy('forte', ref_wfn=wfn)
+
+# test DSRG-MRPT2 unrelaxed 1RDM core and virtual blocks
+D1c = variable("MRPT2 1RDM CC")
+D1v = variable("MRPT2 1RDM VV")
+
+files = {'D1c': D1c, 'D1v': D1v}
+
+## dump files
+#for name, data in files.items():
+#    with open(name + '.npz', 'wb') as f:
+#        np.savez_compressed(f, *(data.to_array()))
+
+# read files
+for name in files:
+    M_loaded = np.load(name + '.npz')
+    nirrep = len(M_loaded.files)
+    M_list = [M_loaded[f'arr_{i}'] for i in range(nirrep)]
+    M = psi4.core.Matrix.from_array(M_list)
+    compare_matrices(M, files[name], 6, 'DSRG-MRPT2 unrelaxed 1RDM: ' + name.upper())
+
+# compare mrpt2 suggested active space
+import json
+compt_occ = json.load(open('mrpt2_nos_occ.json'))
+for name, occ in refocc.items():
+    compare_integers(occ, compt_occ[name], f"{name}")
