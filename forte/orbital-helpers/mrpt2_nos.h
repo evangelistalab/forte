@@ -26,45 +26,42 @@
  * @END LICENSE
  */
 
-#ifndef _localize_h_
-#define _localize_h_
+#ifndef _mrpt2_nos_h_
+#define _mrpt2_nos_h_
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/local.h"
+#include "psi4/libmints/matrix.h"
 
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "integrals/integrals.h"
-#include "base_classes/forte_options.h"
-#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
-#include "base_classes/scf_info.h"
-
+#include "integrals/integrals.h"
+#include "base_classes/rdms.h"
 #include "base_classes/orbital_transform.h"
+#include "mrdsrg-spin-adapted/sa_mrpt2.h"
 
 namespace forte {
 
-class Localize : public OrbitalTransform {
+class MRPT2_NOS : public OrbitalTransform {
   public:
-    Localize(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-             std::shared_ptr<MOSpaceInfo> mo_space_info);
+    // => Constructor <= //
+    MRPT2_NOS(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+              std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    // Compute the rotation matrices
-    void compute_transformation() override;
-
-    // Sets the orbitals to localize by first/last indices
-    void set_orbital_space(std::vector<int>& orbital_spaces);
-
-    // Sets the orbitals to localize by space label from MOSpaceInfo
-    void set_orbital_space(std::vector<std::string>& labels);
-
+    void compute_transformation();
   private:
-    // orbitals to localize
-    std::vector<int> orbital_spaces_;
+    /// Pointer to ForteOptions
+    std::shared_ptr<ForteOptions> options_;
 
-    // Pipek-Mezey or Boys
-    std::string local_method_;
+    /// DSRG-MRPT2 method
+    std::shared_ptr<SA_MRPT2> mrpt2_;
+
+    /// DSRG-MRPT2 1-RDM CC part
+    psi::SharedMatrix D1c_;
+    /// DSRG-MRPT2 1-RDM VV part
+    psi::SharedMatrix D1v_;
+
+    /// Suggest active space
+    void suggest_active_space();
 };
 } // namespace forte
 
-#endif
+#endif // _mrpt2_nos_h_

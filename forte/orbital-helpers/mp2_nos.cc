@@ -60,9 +60,6 @@ MP2_NOS::MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions
                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options) {}
 
-psi::SharedMatrix MP2_NOS::get_Ua() { return Ua_; }
-psi::SharedMatrix MP2_NOS::get_Ub() { return Ub_; }
-
 void MP2_NOS::compute_transformation() {
     print_method_banner(
         {"Second-Order Moller-Plesset Natural Orbitals", "written by Francesco A. Evangelista"});

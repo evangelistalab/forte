@@ -82,9 +82,6 @@ CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> opti
 
 CINO::~CINO() {}
 
-psi::SharedMatrix CINO::get_Ua() { return Ua_; }
-psi::SharedMatrix CINO::get_Ub() { return Ub_; }
-
 void CINO::compute_transformation() {
     outfile->Printf("\n\n  Computing CIS natural orbitals\n");
 

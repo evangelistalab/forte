@@ -93,9 +93,6 @@ MRCINO::MRCINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
 
 MRCINO::~MRCINO() {}
 
-psi::SharedMatrix MRCINO::get_Ua() { return Ua_; }
-psi::SharedMatrix MRCINO::get_Ub() { return Ub_; }
-
 void MRCINO::compute_transformation() {
     outfile->Printf("\n\n  Computing CIS natural orbitals\n");
 
