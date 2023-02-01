@@ -27,8 +27,6 @@
  */
 #include <memory>
 
-#include "ambit/blocked_tensor.h"
-
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
@@ -37,11 +35,10 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers/helpers.h"
-#include "helpers/blockedtensorfactory.h"
-#include "helpers/printing.h"
-#include "helpers/timer.h"
 #include "mrdsrg-spin-adapted/sa_mrpt2.h"
+#include "helpers/disk_io.h"
+#include "helpers/printing.h"
+
 #include "mrpt2_nos.h"
 
 using namespace ambit;
@@ -194,7 +191,7 @@ void MRPT2_NOS::suggest_active_space(const psi::Vector& D1c_evals, const psi::Ve
         outfile->Printf("\n    %s", dash.c_str());
     }
 
-    std::map<std::string, psi::Dimension> newdims;
+    std::unordered_map<std::string, psi::Dimension> newdims;
     newdims["ACTIVE"] = psi::Dimension(newdim_actv) + mo_space_info_->dimension("ACTIVE");
     newdims["RESTRICTED_DOCC"] = psi::Dimension(newdim_rdocc);
     newdims["RESTRICTED_UOCC"] = psi::Dimension(newdim_ruocc);
@@ -222,6 +219,9 @@ void MRPT2_NOS::suggest_active_space(const psi::Vector& D1c_evals, const psi::Ve
         outfile->Printf(" %6d", dim.sum());
     }
     outfile->Printf("\n    %s", dash.c_str());
+
+    // save occupation numbers to disk
+    dump_occupations("mrpt2_nos_occ", newdims);
 }
 
 } // namespace forte

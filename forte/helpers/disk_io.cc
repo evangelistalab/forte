@@ -40,8 +40,10 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"
 
+#include "helpers/json.hpp"
 #include "helpers/disk_io.h"
 
+using json = nlohmann::json;
 using namespace psi;
 
 namespace forte {
@@ -90,6 +92,21 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
     in.read(reinterpret_cast<char*>(&data[0]), data_size * sizeof(double));
 
     in.close();
+}
+
+void dump_occupations(const std::string& filename,
+                      std::unordered_map<std::string, psi::Dimension> occ_map) {
+    json occ_json;
+    for (const auto& [space_name, dim] : occ_map) {
+        occ_json[space_name] = dim.blocks();
+    }
+    std::ofstream wfile(filename + ".json");
+    if (wfile.is_open()) {
+        wfile << occ_json.dump(4);
+        wfile.close();
+    } else {
+        throw std::runtime_error("Unable to open file for dump occupation numbers!");
+    }
 }
 
 // std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,

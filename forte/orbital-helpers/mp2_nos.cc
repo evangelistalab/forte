@@ -32,12 +32,14 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/dimension.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers/helpers.h"
+#include "helpers/disk_io.h"
 #include "helpers/blockedtensorfactory.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "mp2_nos.h"
@@ -187,8 +189,8 @@ void MP2_NOS::compute_transformation() {
     // This will suggest a restricted_docc and an active
     // Does not take in account frozen_docc
     if (options_->get_bool("NAT_ACT")) {
-        std::vector<size_t> restricted_docc(nirrep);
-        std::vector<size_t> active(nirrep);
+        std::vector<int> restricted_docc(nirrep);
+        std::vector<int> active(nirrep);
         double occupied = options_->get_double("PT2NO_OCC_THRESHOLD");
         double virtual_orb = options_->get_double("PT2NO_VIR_THRESHOLD");
         outfile->Printf("\n Suggested Active Space \n");
@@ -198,8 +200,8 @@ void MP2_NOS::compute_transformation() {
                         virtual_orb);
         outfile->Printf("\n Remember, these are suggestions  :-)!\n");
         for (int h = 0; h < nirrep; ++h) {
-            size_t restricted_docc_number = 0;
-            size_t active_number = 0;
+            int restricted_docc_number = 0;
+            int active_number = 0;
             for (int i = 0; i < aoccpi[h]; ++i) {
                 if (D1oo_evals.get(h, i) < occupied) {
                     active_number++;
@@ -231,6 +233,10 @@ void MP2_NOS::compute_transformation() {
             outfile->Printf("%zu ", ract);
         }
         outfile->Printf("]\n");
+
+        dump_occupations("mp2_nos_occ", {{"FROZEN_DOCC", mo_space_info_->dimension("FROZEN_DOCC")},
+                                         {"RESTRICTED_DOCC", psi::Dimension(restricted_docc)},
+                                         {"ACTIVE", psi::Dimension(active)}});
     }
 
     auto Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);

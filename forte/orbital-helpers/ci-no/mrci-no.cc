@@ -33,6 +33,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "psi4/libmints/vector.h"
+#include "helpers/disk_io.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "base_classes/mo_space_info.h"
@@ -687,6 +688,10 @@ void MRCINO::find_active_space_and_transform(
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
     outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
     // outfile->Printf("\n  RESTRICTED_UOCC = %s", dimension_to_string(noci_rducc).c_str());
+
+    dump_occupations(
+        "mrci_nos_occ",
+        {{"FROZEN_DOCC", noci_fdocc}, {"RESTRICTED_DOCC", noci_rdocc}, {"ACTIVE", noci_actv}});
 
     // Pass the MOSpaceInfo
     //   if (mrcino_auto) {

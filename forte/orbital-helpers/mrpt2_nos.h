@@ -30,6 +30,7 @@
 #define _mrpt2_nos_h_
 
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
