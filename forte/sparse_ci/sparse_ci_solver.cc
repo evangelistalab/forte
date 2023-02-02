@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -100,7 +100,7 @@ SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
 
     if ((!force_diag_ and (space.size() <= 200)) or
         sigma_vector->sigma_vector_type() == SigmaVectorType::Full) {
-        outfile->Printf("\n\n  Performing diagonalization of the H matrix");
+        outfile->Printf("\n\n  Performing full diagonalization of the H matrix");
         const std::vector<Determinant> dets = space.determinants();
         return diagonalize_hamiltonian_full(dets, sigma_vector->as_ints(), nroot, multiplicity);
     }
@@ -145,7 +145,6 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
     }
 
     const double target_S = 0.5 * (static_cast<double>(multiplicity) - 1.0);
-    const double target_multiplicity = static_cast<double>(multiplicity);
 
     // First, we check if this space is spin complete by looking at how much the
     // eigenvalue of S^2 deviate from their exact values
@@ -252,12 +251,11 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
             double avg_S2 = CtSC->get(I, I);
             double energy = full_evals->get(I);
             double S = 0.5 * (std::sqrt(1.0 + 4.0 * avg_S2) - 1.0);
-            double error = std::fabs(S - target_S);
             double S_rounded = 0.5 * std::lround(2.0 * S);
             double twoSp1_rounded = std::lround(2.0 * S + 1.0);
             sorted_evals[I] = std::make_tuple(std::fabs(S_rounded - target_S), energy, I, S);
             S_vals_sorted[twoSp1_rounded].emplace_back(S - S_rounded, I);
-            if (I < std::max(2 * nroot, 10)) {
+            if (I < static_cast<size_t>(std::max(2 * nroot, 10))) {
                 outfile->Printf("\n     %3d   %20.12f %9.6f", I,
                                 energy + as_ints->nuclear_repulsion_energy(), avg_S2);
             }
@@ -273,7 +271,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         outfile->Printf("\n    --------------");
 
         const auto& target_S_vals = S_vals_sorted[std::llround(2 * target_S + 1)];
-        if (target_S_vals.size() < nroot) {
+        if (target_S_vals.size() < static_cast<size_t>(nroot)) {
             outfile->Printf("\n  Error: requested for %d roots with 2S+1 = %d but only "
                             "%zu were found!",
                             nroot, multiplicity, target_S_vals.size());
@@ -433,7 +431,7 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
     H.transform(S2evecs);
 
     // Find groups of solutions with same spin
-    double Stollerance = 1.0e-6;
+    double Stollerance = 1.0e-9;
     std::map<int, std::vector<int>> mult_list;
     for (size_t i = 0; i < nguess; ++i) {
         double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
@@ -582,7 +580,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         // Prepare a list of bad roots to project out and pass them to the solver
         bad_roots.clear();
         size_t rejected = 0;
-        size_t count = 0;
         for (auto& g : guess) {
             int guess_multiplicity = std::get<0>(g);
             double guess_energy = std::get<1>(g);
@@ -595,7 +592,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
                 bad_roots.push_back(std::get<2>(g));
                 rejected += 1;
             }
-            count += 1;
         }
         outfile->Printf("\n\n  Projecting out %zu solutions", rejected);
         dls.set_project_out(bad_roots);

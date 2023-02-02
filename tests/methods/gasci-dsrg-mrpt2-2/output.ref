@@ -3,7 +3,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                                Psi4 undefined 
 
-                         Git: Rev {master} 7636787 
+                         Git: Rev {HEAD} 9240cbe 
 
 
     D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
@@ -30,21 +30,23 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Friday, 22 April 2022 08:43PM
+    Psi4 started on: Wednesday, 01 June 2022 06:56AM
 
-    Process ID: 57117
-    Host:       Yorks-Mac.local
-    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Process ID: 6400
+    Host:       DESKTOP-SQPD2D3
+    PSIDATADIR: /home/mhuang/psi4_install/share/psi4
     Memory:     500.0 MiB
-    Threads:    8
+    Threads:    1
     
   ==> Input File <==
 
 --------------------------------------------------------------------------
+# test if dipole is consistent before and after orbital rotations
+
 import forte
 memory 2gb
 
-molecule co{
+molecule CO{
 C     0.000000     0.000000     0.70
 O     0.000000     0.000000    -0.70
 }
@@ -80,8 +82,6 @@ set forte {
 }
 edsrg = energy('forte', ref_wfn = wfn)
 
-#psi4.core.print_variables()
-
 dip_a1 = variable("SINGLET <0A1|DM_Z|0A1> ENTRY 0")
 dip_b1 = variable("SINGLET <0B1|DM_Z|0B1> ENTRY 0")
 dip_b2 = variable("SINGLET <0B2|DM_Z|0B2> ENTRY 0")
@@ -103,22 +103,27 @@ compare_values(tdip_a1_b2, variable("TRANS SINGLET |<0A1|DM|0B2>| ENTRY 1"), 8,
                "Transition dipole singlet 0A1-0B2 before/after orbital change")
 compare_values(0.03991558, tdip_a1_b1, 6, "Transition dipole singlet 0A1-0B1")
 compare_values(0.03991558, tdip_a1_b2, 6, "Transition dipole singlet 0A1-0B2")
+
+smax_a1 = variable("TRANS SINGLET S_MAX 0A1 -> 0B1 ENTRY 1")
+smax_a2 = variable("TRANS SINGLET S_MAX 0A1 -> 0B2 ENTRY 0")
+compare_values(1.037550, smax_a1, 6, "S_MAX singlet 0A1 -> 0B1")
+compare_values(1.037550, smax_a2, 6, "S_MAX singlet 0A1 -> 0B2")
 --------------------------------------------------------------------------
 
   Memory set to   1.863 GiB by Python driver.
 
-Scratch directory: /Users/york/scratch/psi4/
+Scratch directory: /tmp/
 
-*** tstart() called on Yorks-Mac.local
-*** at Fri Apr 22 20:43:51 2022
+*** tstart() called on DESKTOP-SQPD2D3
+*** at Wed Jun  1 06:56:58 2022
 
    => Loading Basis Set <=
 
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1 entry C          line   138 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2 entry O          line   198 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+    atoms 1 entry C          line   138 file /home/mhuang/psi4_install/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry O          line   198 file /home/mhuang/psi4_install/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -126,7 +131,7 @@ Scratch directory: /Users/york/scratch/psi4/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                              ROHF Reference
-                        8 Threads,   1907 MiB Core
+                        1 Threads,   1907 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -179,8 +184,8 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: (CC-PVDZ AUX)
     Role: JKFIT
     Keyword: DF_BASIS_SCF
-    atoms 1 entry C          line   121 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
-    atoms 2 entry O          line   221 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 1 entry C          line   121 file /home/mhuang/psi4_install/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2 entry O          line   221 file /home/mhuang/psi4_install/share/psi4/basis/cc-pvdz-jkfit.gbs 
 
   ==> Integral Setup <==
 
@@ -191,7 +196,7 @@ Scratch directory: /Users/york/scratch/psi4/
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               8
+    OpenMP threads:               1
     Memory [MiB]:              1430
     Algorithm:                 Core
     Schwarz Cutoff:           0E+00
@@ -231,17 +236,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-ROHF iter SAD:  -111.35860098900403   -1.11359e+02   0.00000e+00 
-   @DF-ROHF iter   1:  -112.53680970492360   -1.17821e+00   1.86077e-02 DIIS
-   @DF-ROHF iter   2:  -112.47159929562918    6.52104e-02   2.61533e-02 DIIS
-   @DF-ROHF iter   3:  -112.62226084345420   -1.50662e-01   8.69888e-04 DIIS
-   @DF-ROHF iter   4:  -112.62256016503804   -2.99322e-04   2.82054e-04 DIIS
-   @DF-ROHF iter   5:  -112.62261606518049   -5.59001e-05   1.44470e-04 DIIS
-   @DF-ROHF iter   6:  -112.62263188075491   -1.58156e-05   6.00252e-05 DIIS
-   @DF-ROHF iter   7:  -112.62263464300520   -2.76225e-06   6.07135e-06 DIIS
-   @DF-ROHF iter   8:  -112.62263466928087   -2.62757e-08   7.66410e-07 DIIS
-   @DF-ROHF iter   9:  -112.62263466954002   -2.59149e-10   8.56892e-08 DIIS
-   @DF-ROHF iter  10:  -112.62263466954340   -3.38218e-12   9.02765e-09 DIIS
+   @DF-ROHF iter SAD:  -111.35860098900625   -1.11359e+02   0.00000e+00 
+   @DF-ROHF iter   1:  -112.53680970492564   -1.17821e+00   1.86077e-02 DIIS
+   @DF-ROHF iter   2:  -112.47159929563148    6.52104e-02   2.61533e-02 DIIS
+   @DF-ROHF iter   3:  -112.62226084345639   -1.50662e-01   8.69888e-04 DIIS
+   @DF-ROHF iter   4:  -112.62256016504011   -2.99322e-04   2.82054e-04 DIIS
+   @DF-ROHF iter   5:  -112.62261606518271   -5.59001e-05   1.44470e-04 DIIS
+   @DF-ROHF iter   6:  -112.62263188075698   -1.58156e-05   6.00252e-05 DIIS
+   @DF-ROHF iter   7:  -112.62263464300725   -2.76225e-06   6.07135e-06 DIIS
+   @DF-ROHF iter   8:  -112.62263466928295   -2.62757e-08   7.66410e-07 DIIS
+   @DF-ROHF iter   9:  -112.62263466954226   -2.59320e-10   8.56892e-08 DIIS
+   @DF-ROHF iter  10:  -112.62263466954570   -3.43903e-12   9.02765e-09 DIIS
   Energy and wave function converged.
 
 
@@ -253,8 +258,8 @@ Scratch directory: /Users/york/scratch/psi4/
     Doubly Occupied:                                                      
 
        1A1   -20.662729     2A1   -11.465893     3A1    -1.358813  
-       4A1    -0.788404     5A1    -0.554301     1B1    -0.536972  
-       1B2    -0.536972  
+       4A1    -0.788404     5A1    -0.554301     1B2    -0.536972  
+       1B1    -0.536972  
 
     Singly Occupied:                                                      
 
@@ -263,26 +268,26 @@ Scratch directory: /Users/york/scratch/psi4/
     Virtual:                                                              
 
        2B1     0.058405     2B2     0.058405     6A1     0.330130  
-       3B2     0.660490     3B1     0.660490     7A1     0.675762  
+       3B1     0.660490     3B2     0.660490     7A1     0.675762  
        8A1     0.704674     9A1     1.143311     4B1     1.237754  
-       4B2     1.237754     1A2     1.331122    10A1     1.331122  
-       5B2     1.427069     5B1     1.427069    11A1     1.917822  
+       4B2     1.237754    10A1     1.331122     1A2     1.331122  
+       5B1     1.427069     5B2     1.427069    11A1     1.917822  
       12A1     1.966738     2A2     2.935611    13A1     2.935611  
-       6B2     3.196368     6B1     3.196368    14A1     3.526588  
+       6B1     3.196368     6B2     3.196368    14A1     3.526588  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
     DOCC [     5,    0,    1,    1 ]
     SOCC [     0,    0,    0,    0 ]
 
-  @DF-ROHF Final Energy:  -112.62263466954340
+  @DF-ROHF Final Energy:  -112.62263466954570
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             18.1432186515428597
-    One-Electron Energy =                -189.7235381955379410
-    Two-Electron Energy =                  58.9576848744516724
-    Total Energy =                       -112.6226346695434017
+    One-Electron Energy =                -189.7235381955383957
+    Two-Electron Energy =                  58.9576848744498392
+    Total Energy =                       -112.6226346695456897
 
 Computation Completed
 
@@ -306,17 +311,17 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on Yorks-Mac.local at Fri Apr 22 20:43:51 2022
+*** tstop() called on DESKTOP-SQPD2D3 at Wed Jun  1 06:56:58 2022
 Module time:
-	user time   =       4.38 seconds =       0.07 minutes
-	system time =       0.18 seconds =       0.00 minutes
+	user time   =       1.28 seconds =       0.02 minutes
+	system time =       0.98 seconds =       0.02 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       4.38 seconds =       0.07 minutes
-	system time =       0.18 seconds =       0.00 minutes
+	user time   =       1.28 seconds =       0.02 minutes
+	system time =       0.98 seconds =       0.02 minutes
 	total time  =          0 seconds =       0.00 minutes
 
-Scratch directory: /Users/york/scratch/psi4/
+Scratch directory: /tmp/
 
  Data is an array -> call again
  Data is an array -> call again
@@ -328,7 +333,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: orb_opt_implicit - git commit: cd62c688
+    git branch: HEAD - git commit: b3baf982
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -365,8 +370,8 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1 entry C          line   138 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2 entry O          line   198 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+    atoms 1 entry C          line   138 file /home/mhuang/psi4_install/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry O          line   198 file /home/mhuang/psi4_install/share/psi4/basis/cc-pvdz.gbs 
 
 
   Checking orbital orthonormality against current geometry ... Done (OK)
@@ -376,16 +381,16 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: CC-PVDZ-JKFIT
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1 entry C          line   121 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
-    atoms 2 entry O          line   221 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 1 entry C          line   121 file /home/mhuang/psi4_install/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2 entry O          line   221 file /home/mhuang/psi4_install/share/psi4/basis/cc-pvdz-jkfit.gbs 
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1 entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 2 entry O          line    81 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 1 entry C          line    61 file /home/mhuang/psi4_install/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry O          line    81 file /home/mhuang/psi4_install/share/psi4/basis/sto-3g.gbs 
 
 
   Forte will use psi4 integrals
@@ -409,7 +414,7 @@ Scratch directory: /Users/york/scratch/psi4/
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               8
+    OpenMP threads:               1
     Memory [MiB]:              1525
     Algorithm:                 Core
     Schwarz Cutoff:           0E+00
@@ -449,7 +454,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                 0
     DFH Avail. Memory [GiB]:       1.675
-    OpenMP threads:                    8
+    OpenMP threads:                    1
     Algorithm:                     STORE
     AO Core:                        True
     MO Core:                       False
@@ -461,10 +466,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.044 s.
+  Timing for density-fitting transformation:                  0.017 s.
 
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing density-fitted integrals:              0.176 s.
+  Timing for computing density-fitted integrals:              0.108 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -522,9 +527,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Config.  #Determinants     Time/s
     ---------------------------------
-         1            1768  5.560e-03
+         1            1768  5.149e-04
     ---------------------------------
-    Total:            1768  5.696e-03
+    Total:            1768  7.087e-04
     ---------------------------------
   Number of determinants (GAS): 1768
 
@@ -533,14 +538,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          2.008e-02 seconds
-        β          1.970e-02 seconds
+        α          3.895e-03 seconds
+        β          3.636e-03 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         5.949e-02 seconds
-        ββ         7.967e-02 seconds
-        αβ         3.910e-01 seconds
+        αα         1.064e-02 seconds
+        ββ         9.902e-03 seconds
+        αβ         3.049e-02 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Initial guess determinants:         50
@@ -574,40 +579,40 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1     -130.841638434167  -1.308e+02  +2.188e-01
-      2     -130.861954490305  -2.032e-02  +1.036e-01
-      3     -130.865354605509  -3.400e-03  +4.318e-02
-      4     -130.866111055044  -7.564e-04  +1.685e-02
-      5     -130.866201742836  -9.069e-05  +7.527e-03
-      6     -130.866225372760  -2.363e-05  +3.678e-03
-      7     -130.866230310008  -4.937e-06  +1.895e-03
-      8     -130.866231286026  -9.760e-07  +9.545e-04
-      9     -130.866231691425  -4.054e-07  +4.901e-04
-     10     -130.866231802649  -1.112e-07  +2.920e-04
-     11     -130.866231827005  -2.436e-08  +1.266e-04
-     12     -130.866231833731  -6.727e-09  +6.084e-05
-     13     -130.866231835263  -1.532e-09  +4.308e-05
-     14     -130.866231835763  -4.994e-10  +2.097e-05
-     15     -130.866231835975  -2.121e-10  +1.109e-05
-     16     -130.866231836029  -5.406e-11  +6.951e-06
-     17     -130.866231836043  -1.376e-11  +3.047e-06
-     18     -130.866231836046  -3.922e-12  +1.409e-06
-     19     -130.866231836047  -7.390e-13  +1.048e-06
-     20     -130.866231836047  -2.558e-13  +5.066e-07
-     21     -130.866231836048  -1.705e-13  +2.709e-07
-     22     -130.866231836048  +2.842e-14  +1.713e-07
-     23     -130.866231836048  -2.842e-14  +7.526e-08
+      1     -130.841638434168  -1.308e+02  +2.188e-01
+      2     -130.861954490306  -2.032e-02  +1.036e-01
+      3     -130.865354605511  -3.400e-03  +4.318e-02
+      4     -130.866111055046  -7.564e-04  +1.685e-02
+      5     -130.866201742838  -9.069e-05  +7.527e-03
+      6     -130.866225372762  -2.363e-05  +3.678e-03
+      7     -130.866230310011  -4.937e-06  +1.895e-03
+      8     -130.866231286028  -9.760e-07  +9.545e-04
+      9     -130.866231691427  -4.054e-07  +4.901e-04
+     10     -130.866231802652  -1.112e-07  +2.920e-04
+     11     -130.866231827007  -2.436e-08  +1.266e-04
+     12     -130.866231833734  -6.727e-09  +6.084e-05
+     13     -130.866231835265  -1.532e-09  +4.308e-05
+     14     -130.866231835765  -4.994e-10  +2.097e-05
+     15     -130.866231835977  -2.121e-10  +1.109e-05
+     16     -130.866231836031  -5.403e-11  +6.951e-06
+     17     -130.866231836045  -1.373e-11  +3.047e-06
+     18     -130.866231836048  -3.894e-12  +1.409e-06
+     19     -130.866231836049  -7.958e-13  +1.048e-06
+     20     -130.866231836050  -2.842e-13  +5.066e-07
+     21     -130.866231836050  -1.705e-13  +2.709e-07
+     22     -130.866231836050  +5.684e-14  +1.713e-07
+     23     -130.866231836050  +0.000e+00  +7.526e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 24 iterations.
-  Davidson-Liu procedure took  1.339695 s
+  Davidson-Liu procedure took  0.333160 s
 
-  Done diagonalizing Hamiltonian, 1.929e+00 seconds.
+  Done diagonalizing Hamiltonian, 3.948e-01 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          2.476e-02 seconds
-        β          2.342e-02 seconds
-  Time spent building 1-rdm: 1.029e-02 seconds
+        α          3.335e-03 seconds
+        β          2.923e-03 seconds
+  Time spent building 1-rdm: 5.007e-04 seconds
 
   ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
 
@@ -620,14 +625,14 @@ Scratch directory: /Users/york/scratch/psi4/
      222220 20 20   -0.9463001266
      222220 20 02    0.1177853075
      222220 02 20    0.1177853074
-     222220 ba ab    0.0909848290
      222220 ab ba    0.0909848290
-     222220 ab ab    0.0713051200
+     222220 ba ab    0.0909848290
      222220 ba ba    0.0713051200
-     222220 ba 20   -0.0534191914
+     222220 ab ab    0.0713051200
      222220 ab 20   -0.0534191914
-     222220 20 ba   -0.0534191912
+     222220 ba 20   -0.0534191914
      222220 20 ab   -0.0534191912
+     222220 20 ba   -0.0534191912
     -----------------------------
 
     Occupation Numbers:
@@ -635,7 +640,7 @@ Scratch directory: /Users/york/scratch/psi4/
         5A1   1.96891042    1B1   1.92410866    1B2   1.92410866    2B2   0.09259155
         2B1   0.09259155    6A1   0.02026415
 
-    Total Energy:  -112.723013184504765
+    Total Energy:  -112.723013184506812
 
   ==> General Determinant-Based CI Solver <==
 
@@ -680,10 +685,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Config.  #Determinants     Time/s
     ---------------------------------
-         1             752  3.333e-03
-         2             752  3.410e-03
+         1             752  2.073e-04
+         2             752  1.443e-04
     ---------------------------------
-    Total:            1504  6.905e-03
+    Total:            1504  4.296e-04
     ---------------------------------
   Number of determinants (GAS): 1504
 
@@ -692,14 +697,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          2.132e-02 seconds
-        β          2.315e-02 seconds
+        α          1.764e-03 seconds
+        β          2.207e-03 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         5.055e-02 seconds
-        ββ         5.106e-02 seconds
-        αβ         1.176e-01 seconds
+        αα         5.598e-03 seconds
+        ββ         4.753e-03 seconds
+        αβ         1.411e-02 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Initial guess determinants:         50
@@ -735,44 +740,44 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1     -110.819665207387  -1.108e+02  +3.928e-01
-      2     -110.875869428139  -5.620e-02  +2.213e-01
-      3     -110.893177512298  -1.731e-02  +1.205e-01
-      4     -110.898950067933  -5.773e-03  +6.565e-02
-      5     -110.900054232083  -1.104e-03  +3.428e-02
-      6     -110.900532795267  -4.786e-04  +2.145e-02
-      7     -110.900668897369  -1.361e-04  +1.093e-02
-      8     -110.900694549961  -2.565e-05  +4.597e-03
-      9     -110.900703130595  -8.581e-06  +2.401e-03
-     10     -110.900705371348  -2.241e-06  +1.613e-03
-     11     -110.900706025589  -6.542e-07  +8.011e-04
-     12     -110.900706294350  -2.688e-07  +4.852e-04
-     13     -110.900706370855  -7.651e-08  +3.126e-04
-     14     -110.900706391247  -2.039e-08  +1.301e-04
-     15     -110.900706398075  -6.828e-09  +6.881e-05
-     16     -110.900706399764  -1.689e-09  +4.613e-05
-     17     -110.900706400299  -5.357e-10  +2.356e-05
-     18     -110.900706400524  -2.249e-10  +1.338e-05
-     19     -110.900706400579  -5.504e-11  +8.689e-06
-     20     -110.900706400595  -1.556e-11  +3.788e-06
-     21     -110.900706400601  -5.670e-12  +2.056e-06
-     22     -110.900706400602  -1.378e-12  +1.386e-06
-     23     -110.900706400602  -4.547e-13  +6.658e-07
-     24     -110.900706400603  -1.705e-13  +3.716e-07
-     25     -110.900706400603  -9.948e-14  +2.613e-07
-     26     -110.900706400603  +0.000e+00  +1.163e-07
-     27     -110.900706400603  -2.842e-14  +6.493e-08
+      1     -110.819665207389  -1.108e+02  +3.928e-01
+      2     -110.875869428142  -5.620e-02  +2.213e-01
+      3     -110.893177512300  -1.731e-02  +1.205e-01
+      4     -110.898950067935  -5.773e-03  +6.565e-02
+      5     -110.900054232086  -1.104e-03  +3.428e-02
+      6     -110.900532795270  -4.786e-04  +2.145e-02
+      7     -110.900668897371  -1.361e-04  +1.093e-02
+      8     -110.900694549963  -2.565e-05  +4.597e-03
+      9     -110.900703130598  -8.581e-06  +2.401e-03
+     10     -110.900705371351  -2.241e-06  +1.613e-03
+     11     -110.900706025591  -6.542e-07  +8.011e-04
+     12     -110.900706294352  -2.688e-07  +4.852e-04
+     13     -110.900706370857  -7.651e-08  +3.126e-04
+     14     -110.900706391249  -2.039e-08  +1.301e-04
+     15     -110.900706398078  -6.828e-09  +6.881e-05
+     16     -110.900706399766  -1.689e-09  +4.613e-05
+     17     -110.900706400302  -5.357e-10  +2.356e-05
+     18     -110.900706400527  -2.249e-10  +1.338e-05
+     19     -110.900706400582  -5.502e-11  +8.689e-06
+     20     -110.900706400597  -1.556e-11  +3.788e-06
+     21     -110.900706400603  -5.684e-12  +2.056e-06
+     22     -110.900706400604  -1.407e-12  +1.386e-06
+     23     -110.900706400605  -4.690e-13  +6.658e-07
+     24     -110.900706400605  -1.563e-13  +3.716e-07
+     25     -110.900706400605  -9.948e-14  +2.613e-07
+     26     -110.900706400605  +0.000e+00  +1.163e-07
+     27     -110.900706400605  -2.842e-14  +6.493e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 28 iterations.
-  Davidson-Liu procedure took  1.189907 s
+  Davidson-Liu procedure took  0.368331 s
 
-  Done diagonalizing Hamiltonian, 1.470e+00 seconds.
+  Done diagonalizing Hamiltonian, 3.984e-01 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.902e-02 seconds
-        β          1.974e-02 seconds
-  Time spent building 1-rdm: 7.134e-03 seconds
+        α          1.892e-03 seconds
+        β          2.253e-03 seconds
+  Time spent building 1-rdm: 4.624e-04 seconds
 
   ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B1 <==
 
@@ -792,8 +797,8 @@ Scratch directory: /Users/york/scratch/psi4/
      a22220 2b ab    0.1795861145
      b222ba 2a 20    0.1016707880
      a222ab 2b 20    0.1016707880
-     b222ab 2a 20    0.0977400810
      a222ba 2b 20    0.0977400810
+     b222ab 2a 20    0.0977400810
      b22220 a2 ab   -0.0617841380
      a22220 b2 ba   -0.0617841380
      a2b22a 2b 20    0.0608520636
@@ -811,7 +816,7 @@ Scratch directory: /Users/york/scratch/psi4/
         1B1   1.89569501    1B2   1.82969304    2B1   1.10420668    1A1   1.00000000
         2B2   0.21078198    6A1   0.06806469
 
-    Total Energy:  -92.757487749059891
+    Total Energy:  -92.757487749062278
 
   ==> General Determinant-Based CI Solver <==
 
@@ -856,10 +861,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Config.  #Determinants     Time/s
     ---------------------------------
-         1             752  3.345e-03
-         2             752  3.155e-03
+         1             752  2.183e-04
+         2             752  1.941e-04
     ---------------------------------
-    Total:            1504  6.665e-03
+    Total:            1504  4.845e-04
     ---------------------------------
   Number of determinants (GAS): 1504
 
@@ -868,14 +873,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.989e-02 seconds
-        β          1.946e-02 seconds
+        α          1.838e-03 seconds
+        β          1.835e-03 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         5.607e-02 seconds
-        ββ         4.896e-02 seconds
-        αβ         1.185e-01 seconds
+        αα         7.279e-03 seconds
+        ββ         5.734e-03 seconds
+        αβ         1.514e-02 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Initial guess determinants:         50
@@ -911,44 +916,44 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1     -110.819665207387  -1.108e+02  +3.928e-01
-      2     -110.875869428139  -5.620e-02  +2.213e-01
-      3     -110.893177512298  -1.731e-02  +1.205e-01
-      4     -110.898950067933  -5.773e-03  +6.565e-02
-      5     -110.900054232083  -1.104e-03  +3.428e-02
-      6     -110.900532795267  -4.786e-04  +2.145e-02
-      7     -110.900668897369  -1.361e-04  +1.093e-02
-      8     -110.900694549961  -2.565e-05  +4.597e-03
-      9     -110.900703130595  -8.581e-06  +2.401e-03
-     10     -110.900705371348  -2.241e-06  +1.613e-03
-     11     -110.900706025589  -6.542e-07  +8.011e-04
-     12     -110.900706294350  -2.688e-07  +4.852e-04
-     13     -110.900706370855  -7.651e-08  +3.126e-04
-     14     -110.900706391247  -2.039e-08  +1.301e-04
-     15     -110.900706398075  -6.828e-09  +6.881e-05
-     16     -110.900706399764  -1.689e-09  +4.613e-05
-     17     -110.900706400299  -5.357e-10  +2.356e-05
-     18     -110.900706400524  -2.249e-10  +1.338e-05
-     19     -110.900706400579  -5.497e-11  +8.689e-06
-     20     -110.900706400595  -1.556e-11  +3.788e-06
-     21     -110.900706400601  -5.684e-12  +2.056e-06
-     22     -110.900706400602  -1.464e-12  +1.386e-06
-     23     -110.900706400602  -4.547e-13  +6.658e-07
-     24     -110.900706400603  -1.705e-13  +3.716e-07
-     25     -110.900706400603  -7.105e-14  +2.613e-07
-     26     -110.900706400603  +0.000e+00  +1.163e-07
-     27     -110.900706400603  -2.842e-14  +6.493e-08
+      1     -110.819665207390  -1.108e+02  +3.928e-01
+      2     -110.875869428142  -5.620e-02  +2.213e-01
+      3     -110.893177512301  -1.731e-02  +1.205e-01
+      4     -110.898950067936  -5.773e-03  +6.565e-02
+      5     -110.900054232086  -1.104e-03  +3.428e-02
+      6     -110.900532795270  -4.786e-04  +2.145e-02
+      7     -110.900668897371  -1.361e-04  +1.093e-02
+      8     -110.900694549963  -2.565e-05  +4.597e-03
+      9     -110.900703130598  -8.581e-06  +2.401e-03
+     10     -110.900705371351  -2.241e-06  +1.613e-03
+     11     -110.900706025591  -6.542e-07  +8.011e-04
+     12     -110.900706294352  -2.688e-07  +4.852e-04
+     13     -110.900706370857  -7.651e-08  +3.126e-04
+     14     -110.900706391249  -2.039e-08  +1.301e-04
+     15     -110.900706398077  -6.828e-09  +6.881e-05
+     16     -110.900706399766  -1.689e-09  +4.613e-05
+     17     -110.900706400302  -5.357e-10  +2.356e-05
+     18     -110.900706400527  -2.250e-10  +1.338e-05
+     19     -110.900706400582  -5.494e-11  +8.689e-06
+     20     -110.900706400597  -1.558e-11  +3.788e-06
+     21     -110.900706400603  -5.670e-12  +2.056e-06
+     22     -110.900706400604  -1.492e-12  +1.386e-06
+     23     -110.900706400605  -4.547e-13  +6.658e-07
+     24     -110.900706400605  -1.847e-13  +3.716e-07
+     25     -110.900706400605  -7.105e-14  +2.613e-07
+     26     -110.900706400605  +0.000e+00  +1.163e-07
+     27     -110.900706400605  -2.842e-14  +6.493e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 28 iterations.
-  Davidson-Liu procedure took  1.114356 s
+  Davidson-Liu procedure took  0.364060 s
 
-  Done diagonalizing Hamiltonian, 1.391e+00 seconds.
+  Done diagonalizing Hamiltonian, 3.978e-01 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.948e-02 seconds
-        β          1.965e-02 seconds
-  Time spent building 1-rdm: 7.695e-03 seconds
+        α          2.237e-03 seconds
+        β          1.741e-03 seconds
+  Time spent building 1-rdm: 3.945e-04 seconds
 
   ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B2 <==
 
@@ -960,22 +965,22 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------
      a22220 20 2b   -0.5806054159
      b22220 20 2a   -0.5806054159
-     a22220 20 b2    0.2028982986
      b22220 20 a2    0.2028982986
-     b22220 ab 2a    0.1905292361
+     a22220 20 b2    0.2028982986
      a22220 ba 2b    0.1905292361
-     a22220 ab 2b    0.1795861145
+     b22220 ab 2a    0.1905292361
      b22220 ba 2a    0.1795861145
+     a22220 ab 2b    0.1795861145
      b222ba 20 2a    0.1016707880
      a222ab 20 2b    0.1016707880
-     b222ab 20 2a    0.0977400810
      a222ba 20 2b    0.0977400810
+     b222ab 20 2a    0.0977400810
      b22220 ab a2   -0.0617841380
      a22220 ba b2   -0.0617841380
      a2b22a 20 2b    0.0608520636
      b2a22b 20 2a    0.0608520636
-     a22220 ab b2   -0.0567353572
      b22220 ba a2   -0.0567353572
+     a22220 ab b2   -0.0567353572
      b22200 22 2a    0.0521587882
      a22200 22 2b    0.0521587882
      b22220 02 2a   -0.0507663802
@@ -987,24 +992,24 @@ Scratch directory: /Users/york/scratch/psi4/
         1B2   1.89569501    1B1   1.82969304    2B2   1.10420668    1A1   1.00000000
         2B1   0.21078198    6A1   0.06806469
 
-    Total Energy:  -92.757487749059891
+    Total Energy:  -92.757487749062250
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    A1     0     -112.723013184505   0.000000
+       1  (  0)    A1     0     -112.723013184507   0.000000
     --------------------------------------------------------
-       1  (  0)    B1     0      -92.757487749060   0.000000
+       1  (  0)    B1     0      -92.757487749062   0.000000
     --------------------------------------------------------
-       1  (  0)    B2     0      -92.757487749060   0.000000
+       1  (  0)    B2     0      -92.757487749062   0.000000
     --------------------------------------------------------
 
   ==> Computing 1 Coupling Lists <==
 
-        α          2.349e-02 seconds
-        β          2.295e-02 seconds
-  Time spent building 1-rdm: 9.561e-03 seconds
+        α          2.527e-03 seconds
+        β          2.113e-03 seconds
+  Time spent building 1-rdm: 7.056e-04 seconds
 
   ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
 
@@ -1015,9 +1020,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.857e-02 seconds
-        β          1.703e-02 seconds
-  Time spent building 1-rdm: 5.934e-03 seconds
+        α          2.757e-03 seconds
+        β          2.062e-03 seconds
+  Time spent building 1-rdm: 5.622e-04 seconds
 
   ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) B1 <==
 
@@ -1028,9 +1033,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.946e-02 seconds
-        β          2.557e-02 seconds
-  Time spent building 1-rdm: 8.755e-03 seconds
+        α          2.066e-03 seconds
+        β          1.825e-03 seconds
+  Time spent building 1-rdm: 4.561e-04 seconds
 
   ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) B2 <==
 
@@ -1046,6 +1051,14 @@ Scratch directory: /Users/york/scratch/psi4/
        0A1    0B1    -0.03991558     0.00000000     0.00000000     0.03991558
     -------------------------------------------------------------------------
 
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
+
+    Transition from State  0A1  to State  0B1 :
+      Component  1 with value of W = 1.0375
+        Init. Orbital: 1.0000 Orb.  0
+        Final Orbital: 0.9608 Orb.  7
+        
+
   ==> Transitions for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
 
      Init.  Final  Energy [a.u.]    Energy [eV]    Osc. [a.u.]
@@ -1059,6 +1072,14 @@ Scratch directory: /Users/york/scratch/psi4/
     -------------------------------------------------------------------------
        0A1    0B2     0.00000000     0.03991558     0.00000000     0.03991558
     -------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B2 <==
+
+    Transition from State  0A1  to State  0B2 :
+      Component  1 with value of W = 1.0375
+        Init. Orbital: 1.0000 Orb.  0
+        Final Orbital: 0.9608 Orb.  9
+        
 
   ==> Transitions for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B2 <==
 
@@ -1074,6 +1095,14 @@ Scratch directory: /Users/york/scratch/psi4/
        0B1    0B2     0.00000000     0.00000000     0.00000000     0.00000000
     -------------------------------------------------------------------------
 
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1 -> Singlet (Ms = 0) B2 <==
+
+    Transition from State  0B1  to State  0B2 :
+      Component  1 with value of W = 0.9798
+        Init. Orbital: 0.9290 Orb.  7
+        Final Orbital: 0.9290 Orb.  9
+        
+
   ==> Transitions for Singlet (Ms = 0) B1 -> Singlet (Ms = 0) B2 <==
 
      Init.  Final  Energy [a.u.]    Energy [eV]    Osc. [a.u.]
@@ -1083,45 +1112,45 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.583e-02 seconds
-        β          1.613e-02 seconds
-  Time spent building 1-rdm: 6.097e-03 seconds
+        α          3.517e-03 seconds
+        β          2.354e-03 seconds
+  Time spent building 1-rdm: 4.420e-04 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         4.971e-02 seconds
-        ββ         5.158e-02 seconds
-        αβ         1.235e-01 seconds
-  Time spent building 2-rdm: 4.087e-02 seconds
+        αα         5.066e-03 seconds
+        ββ         4.455e-03 seconds
+        αβ         1.532e-02 seconds
+  Time spent building 2-rdm: 3.825e-03 seconds
 
   ==> Computing 3 Coupling Lists <==
 
-        ααα        7.765e-02 seconds
-        ααβ        2.997e-01 seconds
-        αββ        2.927e-01 seconds
-        βββ        7.735e-02 seconds
-  Time spent building 3-rdm: 6.440e-01 seconds
+        ααα        8.945e-03 seconds
+        ααβ        3.093e-02 seconds
+        αββ        3.129e-02 seconds
+        βββ        7.831e-03 seconds
+  Time spent building 3-rdm: 1.508e-01 seconds
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.333e-02 seconds
-        β          1.148e-02 seconds
-  Time spent building 1-rdm: 4.240e-03 seconds
+        α          3.924e-03 seconds
+        β          5.128e-03 seconds
+  Time spent building 1-rdm: 1.180e-03 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         3.727e-02 seconds
-        ββ         3.886e-02 seconds
-        αβ         9.386e-02 seconds
-  Time spent building 2-rdm: 2.644e-02 seconds
+        αα         9.719e-03 seconds
+        ββ         1.024e-02 seconds
+        αβ         2.359e-02 seconds
+  Time spent building 2-rdm: 5.910e-03 seconds
 
   ==> Computing 3 Coupling Lists <==
 
-        ααα        5.750e-02 seconds
-        ααβ        2.167e-01 seconds
-        αββ        2.108e-01 seconds
-        βββ        5.575e-02 seconds
-  Time spent building 3-rdm: 5.671e-01 seconds
+        ααα        1.533e-02 seconds
+        ααβ        3.155e-02 seconds
+        αββ        3.548e-02 seconds
+        βββ        1.214e-02 seconds
+  Time spent building 3-rdm: 2.059e-01 seconds
 
   ==> Semicanonicalize Orbitals <==
 
@@ -1153,7 +1182,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                 0
     DFH Avail. Memory [GiB]:       1.675
-    OpenMP threads:                    8
+    OpenMP threads:                    1
     Algorithm:                     STORE
     AO Core:                        True
     MO Core:                       False
@@ -1165,20 +1194,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.034 s.
+  Timing for density-fitting transformation:                  0.015 s.
 
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Integrals update took     0.138 s.
+  Integrals update took     0.106 s.
   Orbital rotations on spin-free RDMs ...
     Transformed 1 RDMs.
     Transformed 2 RDMs.
     Transformed 3 RDMs.
-  Timing for orbital canonicalization:                        0.529 s.
+  Timing for orbital canonicalization:                        0.388 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
                             written by Chenyang Li
-                                 8 OMP threads
+                                 1 OMP thread
     -----------------------------------------------------------------------
 
   Disclaimer:
@@ -1187,11 +1216,11 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
-    Computing Fock matrix and cleaning JK ....... Done. Timing      0.003 s
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.002 s
     Reading DSRG options ........................ Done. Timing      0.000 s
     Setting ambit MO space ...................... Done. Timing      0.000 s
-    Initializing density cumulants .............. Done. Timing      0.225 s
-    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.001 s
+    Initializing density cumulants .............. Done. Timing      0.234 s
+    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.000 s
 
   ==> Density Cumulant Summary <==
 
@@ -1251,10 +1280,10 @@ Scratch directory: /Users/york/scratch/psi4/
     Max memory for local intermediates             448.00 KB
     Memory currently available                       1.78 GB
 
-    Initializing integrals ...................... Done. Timing      0.011 s
-    Allocating amplitudes ....................... Done. Timing      0.001 s
-    Computing T2 amplitudes minimal ............. Done. Timing      0.019 s
-    Computing T1 amplitudes ..................... Done. Timing      0.005 s
+    Initializing integrals ...................... Done. Timing      0.006 s
+    Allocating amplitudes ....................... Done. Timing      0.000 s
+    Computing T2 amplitudes minimal ............. Done. Timing      0.010 s
+    Computing T1 amplitudes ..................... Done. Timing      0.004 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -1265,19 +1294,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
     T1 amplitudes larger than 0.1000: NULL
     T2 amplitudes larger than 0.1000: NULL
-    Renormalizing 2-body integrals .............. Done. Timing      0.038 s
-    Renormalizing 1-body integrals .............. Done. Timing      0.008 s
-    Computing <0|[Fr, T1]|0> .................... Done. Timing      0.001 s
-    Computing <0|[Fr, T2]|0> .................... Done. Timing      0.002 s
-    Computing <0|[Vr, T1]|0> .................... Done. Timing      0.001 s
-    Computing <0|[Vr, T2]|0> minimal ............ Done. Timing      0.043 s
+    Renormalizing 2-body integrals .............. Done. Timing      0.011 s
+    Renormalizing 1-body integrals .............. Done. Timing      0.002 s
+    Computing <0|[Fr, T1]|0> .................... Done. Timing      0.000 s
+    Computing <0|[Fr, T2]|0> .................... Done. Timing      0.001 s
+    Computing <0|[Vr, T1]|0> .................... Done. Timing      0.000 s
+    Computing <0|[Vr, T2]|0> minimal ............ Done. Timing      0.041 s
     Computing DF <0|[Vr, T2]|0> CCVV ............ Done. Timing      0.000 s
-    Computing DF Hbar1 CAVV ..................... Done. Timing      0.004 s
-    Computing DF Hbar1 CCAV ..................... Done. Timing      0.001 s
+    Computing DF Hbar1 CAVV ..................... Done. Timing      0.003 s
+    Computing DF Hbar1 CCAV ..................... Done. Timing      0.002 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -92.757487749059834
+    E0 (reference)                 =    -92.757487749062292
     < Phi_0 | [Fr, T1] | Phi_0 >   =      0.000000000000000
     < Phi_0 | [Fr, T2] | Phi_0 >   =      0.000000000000000
     < Phi_0 | [Vr, T1] | Phi_0 >   =      0.000000000000000
@@ -1286,8 +1315,8 @@ Scratch directory: /Users/york/scratch/psi4/
       - [Vr, T2] L2 contribution   =      0.000000000000000
       - [Vr, T2] L3 contribution   =      0.000000000000000
     DSRG-MRPT2 correlation energy  =      0.000000000000000
-    DSRG-MRPT2 total energy        =    -92.757487749059834
-    Computing MRPT2 Hbar AAAA minimal ........... Done. Timing      0.091 s
+    DSRG-MRPT2 total energy        =    -92.757487749062292
+    Computing MRPT2 Hbar AAAA minimal ........... Done. Timing      0.042 s
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
@@ -1297,7 +1326,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis ...... Done. Timing      0.000 s
-    Rotating 2-body term to original basis ...... Done. Timing      0.006 s
+    Rotating 2-body term to original basis ...... Done. Timing      0.003 s
 
   ==> General Determinant-Based CI Solver <==
 
@@ -1341,9 +1370,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Config.  #Determinants     Time/s
     ---------------------------------
-         1            1768  4.303e-03
+         1            1768  4.684e-04
     ---------------------------------
-    Total:            1768  4.359e-03
+    Total:            1768  5.776e-04
     ---------------------------------
   Number of determinants (GAS): 1768
 
@@ -1352,14 +1381,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.881e-02 seconds
-        β          1.923e-02 seconds
+        α          5.320e-03 seconds
+        β          9.389e-03 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         5.318e-02 seconds
-        ββ         5.558e-02 seconds
-        αβ         1.090e-01 seconds
+        αα         1.143e-02 seconds
+        ββ         1.139e-02 seconds
+        αβ         3.189e-02 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Initial guess determinants:         50
@@ -1393,40 +1422,40 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1     -130.841638434166  -1.308e+02  +2.188e-01
-      2     -130.861954490304  -2.032e-02  +1.036e-01
-      3     -130.865354605509  -3.400e-03  +4.318e-02
-      4     -130.866111055044  -7.564e-04  +1.685e-02
-      5     -130.866201742836  -9.069e-05  +7.527e-03
-      6     -130.866225372760  -2.363e-05  +3.678e-03
-      7     -130.866230310008  -4.937e-06  +1.895e-03
-      8     -130.866231286026  -9.760e-07  +9.545e-04
-      9     -130.866231691425  -4.054e-07  +4.901e-04
-     10     -130.866231802650  -1.112e-07  +2.920e-04
-     11     -130.866231827005  -2.436e-08  +1.266e-04
-     12     -130.866231833732  -6.727e-09  +6.084e-05
-     13     -130.866231835263  -1.532e-09  +4.308e-05
-     14     -130.866231835763  -4.995e-10  +2.097e-05
-     15     -130.866231835975  -2.120e-10  +1.109e-05
-     16     -130.866231836029  -5.411e-11  +6.951e-06
-     17     -130.866231836043  -1.376e-11  +3.047e-06
-     18     -130.866231836047  -3.922e-12  +1.409e-06
-     19     -130.866231836047  -7.390e-13  +1.048e-06
-     20     -130.866231836048  -3.126e-13  +5.066e-07
-     21     -130.866231836048  -1.421e-13  +2.709e-07
-     22     -130.866231836048  +1.137e-13  +1.713e-07
-     23     -130.866231836048  +2.842e-14  +7.526e-08
+      1     -130.841638434168  -1.308e+02  +2.188e-01
+      2     -130.861954490306  -2.032e-02  +1.036e-01
+      3     -130.865354605511  -3.400e-03  +4.318e-02
+      4     -130.866111055046  -7.564e-04  +1.685e-02
+      5     -130.866201742838  -9.069e-05  +7.527e-03
+      6     -130.866225372762  -2.363e-05  +3.678e-03
+      7     -130.866230310011  -4.937e-06  +1.895e-03
+      8     -130.866231286028  -9.760e-07  +9.545e-04
+      9     -130.866231691427  -4.054e-07  +4.901e-04
+     10     -130.866231802652  -1.112e-07  +2.920e-04
+     11     -130.866231827007  -2.436e-08  +1.266e-04
+     12     -130.866231833734  -6.727e-09  +6.084e-05
+     13     -130.866231835265  -1.532e-09  +4.308e-05
+     14     -130.866231835765  -4.995e-10  +2.097e-05
+     15     -130.866231835977  -2.121e-10  +1.109e-05
+     16     -130.866231836031  -5.397e-11  +6.951e-06
+     17     -130.866231836045  -1.373e-11  +3.047e-06
+     18     -130.866231836049  -3.894e-12  +1.409e-06
+     19     -130.866231836049  -8.242e-13  +1.048e-06
+     20     -130.866231836050  -3.126e-13  +5.066e-07
+     21     -130.866231836050  -1.137e-13  +2.709e-07
+     22     -130.866231836050  +5.684e-14  +1.713e-07
+     23     -130.866231836050  +2.842e-14  +7.526e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 24 iterations.
-  Davidson-Liu procedure took  0.872306 s
+  Davidson-Liu procedure took  0.351710 s
 
-  Done diagonalizing Hamiltonian, 1.141e+00 seconds.
+  Done diagonalizing Hamiltonian, 4.237e-01 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.600e-02 seconds
-        β          1.540e-02 seconds
-  Time spent building 1-rdm: 7.750e-03 seconds
+        α          2.151e-03 seconds
+        β          2.103e-03 seconds
+  Time spent building 1-rdm: 4.816e-04 seconds
 
   ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
 
@@ -1441,8 +1470,8 @@ Scratch directory: /Users/york/scratch/psi4/
      222220 02 20    0.1177853074
      222220 ba ab    0.0909848290
      222220 ab ba    0.0909848290
-     222220 ab ab    0.0713051200
      222220 ba ba    0.0713051200
+     222220 ab ab    0.0713051200
      222220 ab 20   -0.0534191914
      222220 ba 20   -0.0534191914
      222220 20 ba   -0.0534191912
@@ -1454,7 +1483,7 @@ Scratch directory: /Users/york/scratch/psi4/
         5A1   1.96891042    1B1   1.92410866    1B2   1.92410866    2B2   0.09259155
         2B1   0.09259155    6A1   0.02026415
 
-    Total Energy:  -112.723013184504765
+    Total Energy:  -112.723013184506826
 
   ==> General Determinant-Based CI Solver <==
 
@@ -1499,10 +1528,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Config.  #Determinants     Time/s
     ---------------------------------
-         1             752  2.522e-03
-         2             752  2.471e-03
+         1             752  1.914e-04
+         2             752  1.424e-04
     ---------------------------------
-    Total:            1504  5.102e-03
+    Total:            1504  3.925e-04
     ---------------------------------
   Number of determinants (GAS): 1504
 
@@ -1511,14 +1540,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.395e-02 seconds
-        β          1.831e-02 seconds
+        α          3.767e-03 seconds
+        β          2.290e-03 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         4.997e-02 seconds
-        ββ         3.986e-02 seconds
-        αβ         9.530e-02 seconds
+        αα         7.957e-03 seconds
+        ββ         4.688e-03 seconds
+        αβ         1.096e-02 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Initial guess determinants:         50
@@ -1554,44 +1583,44 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1     -110.819665207387  -1.108e+02  +3.928e-01
-      2     -110.875869428139  -5.620e-02  +2.213e-01
-      3     -110.893177512298  -1.731e-02  +1.205e-01
-      4     -110.898950067933  -5.773e-03  +6.565e-02
-      5     -110.900054232083  -1.104e-03  +3.428e-02
-      6     -110.900532795267  -4.786e-04  +2.145e-02
-      7     -110.900668897369  -1.361e-04  +1.093e-02
-      8     -110.900694549961  -2.565e-05  +4.597e-03
-      9     -110.900703130595  -8.581e-06  +2.401e-03
-     10     -110.900705371348  -2.241e-06  +1.613e-03
-     11     -110.900706025589  -6.542e-07  +8.011e-04
-     12     -110.900706294350  -2.688e-07  +4.852e-04
-     13     -110.900706370855  -7.651e-08  +3.126e-04
-     14     -110.900706391247  -2.039e-08  +1.301e-04
-     15     -110.900706398075  -6.828e-09  +6.881e-05
-     16     -110.900706399764  -1.689e-09  +4.613e-05
-     17     -110.900706400299  -5.357e-10  +2.356e-05
-     18     -110.900706400524  -2.250e-10  +1.338e-05
-     19     -110.900706400579  -5.500e-11  +8.689e-06
-     20     -110.900706400595  -1.556e-11  +3.788e-06
-     21     -110.900706400601  -5.670e-12  +2.056e-06
-     22     -110.900706400602  -1.435e-12  +1.386e-06
-     23     -110.900706400603  -4.547e-13  +6.658e-07
-     24     -110.900706400603  -1.705e-13  +3.716e-07
-     25     -110.900706400603  -8.527e-14  +2.613e-07
-     26     -110.900706400603  +0.000e+00  +1.163e-07
-     27     -110.900706400603  -2.842e-14  +6.493e-08
+      1     -110.819665207390  -1.108e+02  +3.928e-01
+      2     -110.875869428142  -5.620e-02  +2.213e-01
+      3     -110.893177512300  -1.731e-02  +1.205e-01
+      4     -110.898950067936  -5.773e-03  +6.565e-02
+      5     -110.900054232086  -1.104e-03  +3.428e-02
+      6     -110.900532795270  -4.786e-04  +2.145e-02
+      7     -110.900668897371  -1.361e-04  +1.093e-02
+      8     -110.900694549963  -2.565e-05  +4.597e-03
+      9     -110.900703130598  -8.581e-06  +2.401e-03
+     10     -110.900705371351  -2.241e-06  +1.613e-03
+     11     -110.900706025591  -6.542e-07  +8.011e-04
+     12     -110.900706294352  -2.688e-07  +4.852e-04
+     13     -110.900706370857  -7.651e-08  +3.126e-04
+     14     -110.900706391249  -2.039e-08  +1.301e-04
+     15     -110.900706398078  -6.828e-09  +6.881e-05
+     16     -110.900706399766  -1.689e-09  +4.613e-05
+     17     -110.900706400302  -5.357e-10  +2.356e-05
+     18     -110.900706400527  -2.249e-10  +1.338e-05
+     19     -110.900706400582  -5.492e-11  +8.689e-06
+     20     -110.900706400597  -1.558e-11  +3.788e-06
+     21     -110.900706400603  -5.656e-12  +2.056e-06
+     22     -110.900706400604  -1.421e-12  +1.386e-06
+     23     -110.900706400605  -4.690e-13  +6.658e-07
+     24     -110.900706400605  -1.563e-13  +3.716e-07
+     25     -110.900706400605  -1.705e-13  +2.613e-07
+     26     -110.900706400605  -1.421e-14  +1.163e-07
+     27     -110.900706400605  -2.842e-14  +6.493e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 28 iterations.
-  Davidson-Liu procedure took  0.870826 s
+  Davidson-Liu procedure took  0.301667 s
 
-  Done diagonalizing Hamiltonian, 1.099e+00 seconds.
+  Done diagonalizing Hamiltonian, 3.340e-01 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.387e-02 seconds
-        β          1.830e-02 seconds
-  Time spent building 1-rdm: 5.009e-03 seconds
+        α          2.623e-03 seconds
+        β          2.324e-03 seconds
+  Time spent building 1-rdm: 4.287e-04 seconds
 
   ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B1 <==
 
@@ -1601,24 +1630,24 @@ Scratch directory: /Users/york/scratch/psi4/
 
          A1 B1 B2    Coefficients
     -----------------------------
-     a22220 2b 20   -0.5806054159
      b22220 2a 20   -0.5806054159
-     b22220 a2 20    0.2028982986
+     a22220 2b 20   -0.5806054159
      a22220 b2 20    0.2028982986
+     b22220 a2 20    0.2028982986
      b22220 2a ab    0.1905292361
      a22220 2b ba    0.1905292361
-     b22220 2a ba    0.1795861145
      a22220 2b ab    0.1795861145
-     b222ba 2a 20    0.1016707880
+     b22220 2a ba    0.1795861145
      a222ab 2b 20    0.1016707880
-     b222ab 2a 20    0.0977400810
+     b222ba 2a 20    0.1016707880
      a222ba 2b 20    0.0977400810
-     b22220 a2 ab   -0.0617841380
+     b222ab 2a 20    0.0977400810
      a22220 b2 ba   -0.0617841380
+     b22220 a2 ab   -0.0617841380
      a2b22a 2b 20    0.0608520636
      b2a22b 2a 20    0.0608520636
-     b22220 a2 ba   -0.0567353572
      a22220 b2 ab   -0.0567353572
+     b22220 a2 ba   -0.0567353572
      b22200 2a 22   -0.0521587882
      a22200 2b 22   -0.0521587882
      b22220 2a 02   -0.0507663802
@@ -1630,7 +1659,7 @@ Scratch directory: /Users/york/scratch/psi4/
         1B1   1.89569501    1B2   1.82969304    2B1   1.10420668    1A1   1.00000000
         2B2   0.21078198    6A1   0.06806469
 
-    Total Energy:  -92.757487749059948
+    Total Energy:  -92.757487749062363
 
   ==> General Determinant-Based CI Solver <==
 
@@ -1675,10 +1704,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Config.  #Determinants     Time/s
     ---------------------------------
-         1             752  2.409e-03
-         2             752  2.114e-03
+         1             752  2.762e-04
+         2             752  1.808e-04
     ---------------------------------
-    Total:            1504  4.602e-03
+    Total:            1504  5.635e-04
     ---------------------------------
   Number of determinants (GAS): 1504
 
@@ -1687,14 +1716,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.411e-02 seconds
-        β          1.499e-02 seconds
+        α          1.904e-03 seconds
+        β          1.773e-03 seconds
 
   ==> Computing 2 Coupling Lists <==
 
-        αα         4.961e-02 seconds
-        ββ         4.183e-02 seconds
-        αβ         8.913e-02 seconds
+        αα         4.822e-03 seconds
+        ββ         4.538e-03 seconds
+        αβ         1.150e-02 seconds
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Initial guess determinants:         50
@@ -1730,44 +1759,44 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1     -110.819665207387  -1.108e+02  +3.928e-01
-      2     -110.875869428139  -5.620e-02  +2.213e-01
-      3     -110.893177512298  -1.731e-02  +1.205e-01
-      4     -110.898950067933  -5.773e-03  +6.565e-02
-      5     -110.900054232083  -1.104e-03  +3.428e-02
-      6     -110.900532795267  -4.786e-04  +2.145e-02
-      7     -110.900668897369  -1.361e-04  +1.093e-02
-      8     -110.900694549961  -2.565e-05  +4.597e-03
-      9     -110.900703130595  -8.581e-06  +2.401e-03
-     10     -110.900705371348  -2.241e-06  +1.613e-03
-     11     -110.900706025589  -6.542e-07  +8.011e-04
-     12     -110.900706294350  -2.688e-07  +4.852e-04
-     13     -110.900706370855  -7.651e-08  +3.126e-04
-     14     -110.900706391247  -2.039e-08  +1.301e-04
-     15     -110.900706398075  -6.828e-09  +6.881e-05
-     16     -110.900706399764  -1.689e-09  +4.613e-05
-     17     -110.900706400299  -5.357e-10  +2.356e-05
-     18     -110.900706400524  -2.249e-10  +1.338e-05
-     19     -110.900706400579  -5.500e-11  +8.689e-06
-     20     -110.900706400595  -1.556e-11  +3.788e-06
-     21     -110.900706400601  -5.699e-12  +2.056e-06
-     22     -110.900706400602  -1.450e-12  +1.386e-06
-     23     -110.900706400603  -4.547e-13  +6.658e-07
-     24     -110.900706400603  -1.705e-13  +3.716e-07
-     25     -110.900706400603  -7.105e-14  +2.613e-07
-     26     -110.900706400603  +0.000e+00  +1.163e-07
-     27     -110.900706400603  -4.263e-14  +6.493e-08
+      1     -110.819665207389  -1.108e+02  +3.928e-01
+      2     -110.875869428142  -5.620e-02  +2.213e-01
+      3     -110.893177512300  -1.731e-02  +1.205e-01
+      4     -110.898950067936  -5.773e-03  +6.565e-02
+      5     -110.900054232086  -1.104e-03  +3.428e-02
+      6     -110.900532795270  -4.786e-04  +2.145e-02
+      7     -110.900668897371  -1.361e-04  +1.093e-02
+      8     -110.900694549963  -2.565e-05  +4.597e-03
+      9     -110.900703130598  -8.581e-06  +2.401e-03
+     10     -110.900705371351  -2.241e-06  +1.613e-03
+     11     -110.900706025591  -6.542e-07  +8.011e-04
+     12     -110.900706294352  -2.688e-07  +4.852e-04
+     13     -110.900706370857  -7.651e-08  +3.126e-04
+     14     -110.900706391249  -2.039e-08  +1.301e-04
+     15     -110.900706398077  -6.828e-09  +6.881e-05
+     16     -110.900706399766  -1.689e-09  +4.613e-05
+     17     -110.900706400302  -5.357e-10  +2.356e-05
+     18     -110.900706400527  -2.249e-10  +1.338e-05
+     19     -110.900706400582  -5.488e-11  +8.689e-06
+     20     -110.900706400597  -1.556e-11  +3.788e-06
+     21     -110.900706400603  -5.684e-12  +2.056e-06
+     22     -110.900706400604  -1.535e-12  +1.386e-06
+     23     -110.900706400605  -4.547e-13  +6.658e-07
+     24     -110.900706400605  -1.705e-13  +3.716e-07
+     25     -110.900706400605  -1.137e-13  +2.613e-07
+     26     -110.900706400605  +0.000e+00  +1.163e-07
+     27     -110.900706400605  -2.842e-14  +6.493e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 28 iterations.
-  Davidson-Liu procedure took  0.889369 s
+  Davidson-Liu procedure took  0.285338 s
 
-  Done diagonalizing Hamiltonian, 1.110e+00 seconds.
+  Done diagonalizing Hamiltonian, 3.113e-01 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.279e-02 seconds
-        β          1.401e-02 seconds
-  Time spent building 1-rdm: 5.034e-03 seconds
+        α          1.879e-03 seconds
+        β          1.681e-03 seconds
+  Time spent building 1-rdm: 4.140e-04 seconds
 
   ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B2 <==
 
@@ -1781,8 +1810,8 @@ Scratch directory: /Users/york/scratch/psi4/
      b22220 20 2a   -0.5806054159
      b22220 20 a2    0.2028982986
      a22220 20 b2    0.2028982986
-     b22220 ab 2a    0.1905292361
      a22220 ba 2b    0.1905292361
+     b22220 ab 2a    0.1905292361
      b22220 ba 2a    0.1795861145
      a22220 ab 2b    0.1795861145
      b222ba 20 2a    0.1016707880
@@ -1793,12 +1822,12 @@ Scratch directory: /Users/york/scratch/psi4/
      a22220 ba b2   -0.0617841380
      a2b22a 20 2b    0.0608520636
      b2a22b 20 2a    0.0608520636
-     a22220 ab b2   -0.0567353572
      b22220 ba a2   -0.0567353572
+     a22220 ab b2   -0.0567353572
      b22200 22 2a    0.0521587882
      a22200 22 2b    0.0521587882
-     b22220 02 2a   -0.0507663802
      a22220 02 2b   -0.0507663802
+     b22220 02 2a   -0.0507663802
     -----------------------------
 
     Occupation Numbers:
@@ -1806,24 +1835,24 @@ Scratch directory: /Users/york/scratch/psi4/
         1B2   1.89569501    1B1   1.82969304    2B2   1.10420668    1A1   1.00000000
         2B1   0.21078198    6A1   0.06806469
 
-    Total Energy:  -92.757487749059976
+    Total Energy:  -92.757487749062349
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    A1     0     -112.723013184505   0.000000
+       1  (  0)    A1     0     -112.723013184507   0.000000
     --------------------------------------------------------
-       1  (  0)    B1     0      -92.757487749060   0.000000
+       1  (  0)    B1     0      -92.757487749062   0.000000
     --------------------------------------------------------
-       1  (  0)    B2     0      -92.757487749060   0.000000
+       1  (  0)    B2     0      -92.757487749062   0.000000
     --------------------------------------------------------
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.744e-02 seconds
-        β          1.721e-02 seconds
-  Time spent building 1-rdm: 8.636e-03 seconds
+        α          2.569e-03 seconds
+        β          2.016e-03 seconds
+  Time spent building 1-rdm: 4.910e-04 seconds
   Orbital rotations on spin-free RDMs ...
     Transformed 1 RDMs.
 
@@ -1836,9 +1865,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.760e-02 seconds
-        β          1.246e-02 seconds
-  Time spent building 1-rdm: 4.574e-03 seconds
+        α          2.147e-03 seconds
+        β          2.031e-03 seconds
+  Time spent building 1-rdm: 4.308e-04 seconds
   Orbital rotations on spin-free RDMs ...
     Transformed 1 RDMs.
 
@@ -1851,9 +1880,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.286e-02 seconds
-        β          1.230e-02 seconds
-  Time spent building 1-rdm: 4.467e-03 seconds
+        α          1.718e-03 seconds
+        β          2.237e-03 seconds
+  Time spent building 1-rdm: 6.076e-04 seconds
   Orbital rotations on spin-free RDMs ...
     Transformed 1 RDMs.
 
@@ -1873,6 +1902,14 @@ Scratch directory: /Users/york/scratch/psi4/
        0A1    0B1    -0.03991558     0.00000000     0.00000000     0.03991558
     -------------------------------------------------------------------------
 
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
+
+    Transition from State  0A1  to State  0B1 :
+      Component  1 with value of W = 1.0375
+        Init. Orbital: 1.0000 Orb.  0
+        Final Orbital: 0.2299 Orb.  6 0.7701 Orb.  7
+        
+
   ==> Transitions for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
 
      Init.  Final  Energy [a.u.]    Energy [eV]    Osc. [a.u.]
@@ -1888,6 +1925,14 @@ Scratch directory: /Users/york/scratch/psi4/
     -------------------------------------------------------------------------
        0A1    0B2     0.00000000     0.03991558     0.00000000     0.03991558
     -------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B2 <==
+
+    Transition from State  0A1  to State  0B2 :
+      Component  1 with value of W = 1.0375
+        Init. Orbital: 1.0000 Orb.  0
+        Final Orbital: 0.2299 Orb.  8 0.7701 Orb.  9
+        
 
   ==> Transitions for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B2 <==
 
@@ -1905,26 +1950,34 @@ Scratch directory: /Users/york/scratch/psi4/
        0B1    0B2     0.00000000     0.00000000     0.00000000     0.00000000
     -------------------------------------------------------------------------
 
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1 -> Singlet (Ms = 0) B2 <==
+
+    Transition from State  0B1  to State  0B2 :
+      Component  1 with value of W = 0.9798
+        Init. Orbital: 0.9990 Orb.  7
+        Final Orbital: 0.9990 Orb.  9
+        
+
   ==> Transitions for Singlet (Ms = 0) B1 -> Singlet (Ms = 0) B2 <==
 
      Init.  Final  Energy [a.u.]    Energy [eV]    Osc. [a.u.]
     ----------------------------------------------------------
-       0B1    0B2    -0.00000000    -0.00000000     0.00000000
+       0B1    0B2     0.00000000     0.00000000     0.00000000
     ----------------------------------------------------------
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.002       0.001       0.000
+    -> C0       0.000       0.001       0.000       0.000
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.339 seconds
-  Time to run job          :       13.629 seconds
-  Total                    :       13.968 seconds
+  Time to prepare integrals:        0.204 seconds
+  Time to run job          :        3.993 seconds
+  Total                    :        4.196 seconds
     Dipole Z singlet A1 root 0 before/after orbital change................................PASSED
     Dipole Z singlet B1 root 0 before/after orbital change................................PASSED
     Dipole Z singlet B2 root 0 before/after orbital change................................PASSED
@@ -1935,8 +1988,10 @@ Scratch directory: /Users/york/scratch/psi4/
     Transition dipole singlet 0A1-0B2 before/after orbital change.........................PASSED
     Transition dipole singlet 0A1-0B1.....................................................PASSED
     Transition dipole singlet 0A1-0B2.....................................................PASSED
+    S_MAX singlet 0A1 -> 0B1..............................................................PASSED
+    S_MAX singlet 0A1 -> 0B2..............................................................PASSED
 
-    Psi4 stopped on: Friday, 22 April 2022 08:44PM
-    Psi4 wall time for execution: 0:00:15.02
+    Psi4 stopped on: Wednesday, 01 June 2022 06:57AM
+    Psi4 wall time for execution: 0:00:05.04
 
 *** Psi4 exiting successfully. Buy a developer a beer!

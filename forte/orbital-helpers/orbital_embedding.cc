@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -529,12 +529,12 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
 
     // Diagonalize Pf_pq for occ and vir space, respectively.
     SharedMatrix P_oo = Pf->get_block(occ, occ);
-    SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
-    SharedVector lo(new Vector("lo", nirrep, nroccpi));
+    auto Uo = std::make_shared<Matrix>("Uo", nirrep, nroccpi, nroccpi);
+    auto lo = std::make_shared<Vector>("lo", nroccpi);
     P_oo->diagonalize(Uo, lo, descending);
 
-    SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
-    SharedVector lv(new Vector("lv", nirrep, nrvirpi));
+    auto Uv = std::make_shared<Matrix>("Uv", nirrep, nrvirpi, nrvirpi);
+    auto lv = std::make_shared<Vector>("lv", nrvirpi);
     SharedMatrix P_vv = Pf->get_block(vir, vir);
     P_vv->diagonalize(Uv, lv, descending);
 

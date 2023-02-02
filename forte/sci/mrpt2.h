@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -57,10 +57,10 @@ class MRPT2 {
     std::vector<double> compute_energy();
 
   private:
-    // The active space integrals
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
     // The options (needed only for memory/binning)
     std::shared_ptr<ForteOptions> options_;
+    // The active space integrals
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
     // MoSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     // The sCI expansion coefficients

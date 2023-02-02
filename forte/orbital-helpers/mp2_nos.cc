@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -478,8 +478,10 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
             }
             size_t ij_pairs_size = ij_pairs.size();
 
-// TODO: On adding default(none) shared(...), we observe symbol not found error on some OSX builds. Investigate and restore.
-//#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, na_Qv, Jab, JKab, Da) reduction(+ : e_aa)
+// TODO: On adding default(none) shared(...), we observe symbol not found error on some OSX builds.
+// Investigate and restore.
+// #pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size,
+// ij_pairs, Bi_vec, Bj_vec, na_Qv, Jab, JKab, Da) reduction(+ : e_aa)
 #pragma omp parallel for reduction(+ : e_aa)
             for (size_t p = 0; p < ij_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
@@ -531,7 +533,8 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
             Bj("iag") = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, b_vir_mos_)("gia");
             auto& Bj_vec = Bj.data();
 
-//#pragma omp parallel for default(none) shared(i_batch_occ_mos, i_naocc, Bi_vec, j_batch_occ_mos, j_nbocc, Bj_vec, na_Qv, nb_Qv, Jab, JKab, Da, Db) reduction(+ : e_ab)
+// #pragma omp parallel for default(none) shared(i_batch_occ_mos, i_naocc, Bi_vec, j_batch_occ_mos,
+// j_nbocc, Bj_vec, na_Qv, nb_Qv, Jab, JKab, Da, Db) reduction(+ : e_ab)
 #pragma omp parallel for reduction(+ : e_ab)
             for (size_t p = 0; p < i_naocc * j_nbocc; ++p) {
                 int thread = omp_get_thread_num();
@@ -604,7 +607,8 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
             }
             size_t ij_pairs_size = ij_pairs.size();
 
-//#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, nb_Qv, Jab, JKab, Db) reduction(+ : e_bb)
+// #pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size,
+// ij_pairs, Bi_vec, Bj_vec, nb_Qv, Jab, JKab, Db) reduction(+ : e_bb)
 #pragma omp parallel for reduction(+ : e_bb)
             for (size_t p = 0; p < ij_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
@@ -965,7 +969,8 @@ void MP2_NOS::compute_df_rmp2_1rdm_vv(ambit::BlockedTensor& D1) {
             }
             size_t ij_pairs_size = ij_pairs.size();
 
-//#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, n_Qv, Jab, JKab, Da) reduction(+ : e_corr)
+// #pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size,
+// ij_pairs, Bi_vec, Bj_vec, n_Qv, Jab, JKab, Da) reduction(+ : e_corr)
 #pragma omp parallel for reduction(+ : e_corr)
             for (size_t p = 0; p < ij_pairs_size; ++p) {
                 int thread = omp_get_thread_num();

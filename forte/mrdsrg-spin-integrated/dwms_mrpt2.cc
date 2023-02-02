@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -702,14 +702,14 @@ DWMS_DSRGPT2::compute_new_eigen(const std::vector<std::pair<psi::SharedVector, d
     out.reserve(nroots);
 
     for (int i = 0; i < nroots; ++i) {
-        psi::SharedVector vec(new Vector("New Eigen Vector State " + std::to_string(i), ndets));
-        psi::SharedVector vec_root = new_vecs->get_column(0, i);
+        auto vec = std::make_shared<Vector>("New Eigen Vector State " + std::to_string(i), ndets);
+        auto vec_root = new_vecs->get_column(0, i);
         for (int j = 0; j < nroots; ++j) {
-            psi::SharedVector temp((old_eigen[j].first)->clone());
-            temp->scale(vec_root->get(j));
+            auto temp = (old_eigen[j].first)->clone();
+            temp.scale(vec_root->get(j));
             vec->add(temp);
         }
-        out.push_back(std::make_pair(vec, new_vals->get(i)));
+        out.emplace_back(vec, new_vals->get(i));
     }
 
     return out;
@@ -1160,16 +1160,16 @@ void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs,
     outfile->Printf("\n");
 
     int nroots = evecs.size();
-    psi::SharedMatrix S(new psi::Matrix("S", nroots, nroots));
+    psi::Matrix S("S", nroots, nroots);
 
     for (int i = 0; i < nroots; ++i) {
         for (int j = i; j < nroots; ++j) {
-            double Sij = evecs[i]->vector_dot(evecs[j]);
-            S->set(i, j, Sij);
-            S->set(j, i, Sij);
+            double Sij = evecs[i]->vector_dot(*evecs[j]);
+            S.set(i, j, Sij);
+            S.set(j, i, Sij);
         }
     }
 
-    S->print();
+    S.print();
 }
 } // namespace forte

@@ -2,23 +2,22 @@
 
 import forte
 
-refEdsrg = -100.2173774849334
-refRe    =    1.7342309621 # in Bohr
+refEdsrg = -100.224425668263
+refRe    =    1.748792 # bohr
 
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 0.918
+  H  1 0.918
 }
 
-set globals{
+set {
   basis                    cc-pvdz
   reference                rhf
-  d_convergence            8
-  e_convergence            13
   restricted_docc          [2,0,1,1]
   active                   [2,0,0,0]
+  d_convergence            8
+  e_convergence            13
   maxiter                  100
   rms_disp_g_convergence   1.0e-6
   max_disp_g_convergence   2.0e-6
@@ -37,7 +36,6 @@ set forte{
   root_sym                 0
   nroot                    1
   dsrg_s                   0.5
-  active_space_solver      fci
 }
 
 Eopt = optimize('forte',dertype=0)

@@ -4,8 +4,8 @@ import forte
 
 # Edsrg and Re are slightly off from using tcscf code
 # because of frozen-core orbitals
-refEdsrg = -100.21737604718
-refRe    =    1.73424630636 # in Bohr
+refEdsrg = -100.224425668263                                     
+refRe    =    1.748792 # bohr          
 
 molecule HF{
   0 1
@@ -17,15 +17,18 @@ molecule HF{
 set globals{
   basis                   cc-pvdz
   reference               rhf
-  d_convergence           10
-  e_convergence           12
-  g_convergence           gau_verytight
   docc                    [3,0,1,1]
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
-  mcscf_e_convergence     12
-  mcscf_r_convergence     8
-  mcscf_maxiter           100
+  d_convergence            8
+  e_convergence            13
+  maxiter                  100
+  rms_disp_g_convergence   1.0e-6
+  max_disp_g_convergence   2.0e-6
+  rms_force_g_convergence  1.0e-8
+  max_force_g_convergence  2.0e-8
+  max_energy_g_convergence 1.0e-10
+
 }
 
 set forte{

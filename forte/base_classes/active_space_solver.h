@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -207,6 +207,9 @@ class ActiveSpaceSolver {
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
+
+    /// Only print the transitions between states with different gas
+    bool gas_diff_only_;
 
     /// Unitary matrices for orbital rotations used to compute dipole moments
     /// The issue is dipole integrals are transformed to semi-canonical orbital basis,

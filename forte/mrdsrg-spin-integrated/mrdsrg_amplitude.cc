@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -1539,7 +1539,7 @@ void MRDSRG::dump_amps_to_disk() {
     // dump amplitudes to the current directory
     if (dump_amps_cwd_) {
         outfile->Printf("\n    Dumping amplitudes to current directory ...");
-        T1_.save( t1_file_cwd_);
+        T1_.save(t1_file_cwd_);
         T2_.save(t2_file_cwd_);
         outfile->Printf(" Done.");
     }

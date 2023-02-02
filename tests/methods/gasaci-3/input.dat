@@ -1,9 +1,6 @@
-#! Generated using commit GITCOMMIT 
 # GAS ACI calculation for core excited state of CO
 
 import forte
-
-memory 6000mb
 
 gsaci = -112.7959612732 #TEST
 gsacipt2 = -112.7969443124 #TEST
@@ -12,20 +9,17 @@ exacipt2 = -92.6922386459 #TEST
 
 molecule CO{
 0 1
-   C
-   O 1 1.123708
+C
+O 1 1.123708
 }
 
 set {
   basis 6-31g**
   e_convergence 10
-  d_convergence 10
+  d_convergence 8
   r_convergence 10
-  guess gwh
   scf_type pk
-  reference rohf
 }
-
 
 set forte {
   active_space_solver aci

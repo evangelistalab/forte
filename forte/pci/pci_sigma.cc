@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -127,9 +127,6 @@ void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b)
 void PCISigmaVector::get_diagonal(psi::Vector& diag) {
     std::memcpy(diag.pointer(), diag_.data(), size_);
 }
-
-void PCISigmaVector::add_bad_roots(
-    std::vector<std::vector<std::pair<size_t, double>>>& bad_states) {}
 
 void PCISigmaVector::compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b) {
     compute_sigma(sigma, b);

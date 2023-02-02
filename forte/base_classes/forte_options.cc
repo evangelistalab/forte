@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -25,6 +25,8 @@
  *
  * @END LICENSE
  */
+
+#include <algorithm>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
@@ -500,6 +502,21 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
                 std::string value = options.get_str(label);
                 // capitalize the string
                 to_upper_string(value);
+                if (item.second.contains("allowed_values")) {
+                    // check that value is allowed
+                    std::vector<std::string> allowed_values;
+                    for (const auto& av : item.second["allowed_values"]) {
+                        allowed_values.push_back(py::cast<std::string>(av));
+                    }
+                    if (std::find(allowed_values.begin(), allowed_values.end(), value) ==
+                        allowed_values.end()) {
+                        std::string msg = "The option " + label + " was set to " + value +
+                                          ", a value that is not allowed.\n Please select one of "
+                                          "the following values [" +
+                                          join(allowed_values, ",") + "]";
+                        throw std::runtime_error(msg);
+                    }
+                }
                 item.second["value"] = py::cast(value);
             }
             if (type == "int_list") {
@@ -535,7 +552,6 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
 py::object process_psi4_array_data(psi::Data& data) {
     auto list = py::list();
     if (data.is_array()) {
-        outfile->Printf("\n Data is an array -> call again");
         // process each element of the array
         size_t n = data.size();
         for (size_t i = 0; i < n; i++) {
@@ -594,69 +610,9 @@ std::string ForteOptions::str() const {
     return s;
 }
 
-std::string ForteOptions::generate_documentation() const {
-    std::vector<std::pair<std::string, std::string>> option_docs_list;
-
-    //    for (const auto& opt : bool_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& default_value = std::get<1>(opt) ? "True" : "False";
-    //        const std::string& description = std::get<2>(opt);
-    //        std::string option_text =
-    //            option_formatter("Boolean", label, default_value, description, "");
-    //        outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    //    for (const auto& opt : int_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& default_value = std::to_string(std::get<1>(opt));
-    //        const std::string& description = std::get<2>(opt);
-    //        std::string option_text =
-    //            option_formatter("Integer", label, default_value, description, "");
-    //        outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    //    for (const auto& opt : double_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& default_value = std::to_string(std::get<1>(opt));
-    //        const std::string& description = std::get<2>(opt);
-    //        std::string option_text = option_formatter("Double", label, default_value,
-    //        description, ""); outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    //    for (const auto& opt : str_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& default_value = std::get<1>(opt);
-    //        const std::string& description = std::get<2>(opt);
-    //        const std::string& allowed_values = to_string(std::get<3>(opt), ", ");
-    //        std::string option_text =
-    //            option_formatter("String", label, default_value, description, allowed_values);
-    //        outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    //    for (const auto& opt : array_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& description = std::get<1>(opt);
-    //        std::string option_text = option_formatter("Array", label, "[]", description, "");
-    //        outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    std::sort(option_docs_list.begin(), option_docs_list.end());
-    std::vector<std::string> options_lines;
-
-    options_lines.push_back(".. _`sec:options`:\n");
-    options_lines.push_back("List of Forte options");
-    options_lines.push_back("=====================\n");
-    options_lines.push_back(".. sectionauthor:: Francesco A. Evangelista\n");
-    for (const auto& p : option_docs_list) {
-        options_lines.push_back(p.second);
-    }
-
-    return join(options_lines, "\n");
+void ForteOptions::clear() {
+    dict_.clear();
+    group_ = "";
 }
 
 std::string rst_bold(const std::string& s) { return "**" + s + "**"; }

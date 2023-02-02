@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -56,7 +56,7 @@ std::string MOSpaceInfo::str() const {
     for (const auto& space : space_names()) {
         s += "space: " + space + " ";
         const auto dim = dimension(space);
-        for (size_t h = 0; h < dim.n(); h++) {
+        for (size_t h = 0, maxh = static_cast<size_t>(dim.n()); h < maxh; h++) {
             s += " " + std::to_string(dim[h]);
         }
         s += '\n';
