@@ -75,12 +75,6 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
         auto rdms =
             as_solver->compute_average_rdms(state_weights_map, rdm_level, RDMsType::spin_free);
 
-        // semicanonical orbitals
-        if (options->get_bool("SEMI_CANONICAL")) {
-            auto semi = SemiCanonical(mo_space_info, ints, options);
-            semi.semicanonicalize(rdms);
-        }
-
         // initialize
         orb_t = std::make_unique<MRPT2_NOS>(rdms, scf_info, options, ints, mo_space_info);
     } else {
