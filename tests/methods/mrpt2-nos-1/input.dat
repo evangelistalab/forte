@@ -44,8 +44,7 @@ set forte{
   pt2no_occ_threshold     0.99
   pt2no_vir_threshold     0.01
 }
-
-Ept2 = energy('forte', ref_wfn=wfn)
+Ezero = energy('forte', ref_wfn=wfn)
 
 # test DSRG-MRPT2 unrelaxed 1RDM core and virtual blocks
 D1c = variable("MRPT2 1RDM CC")
