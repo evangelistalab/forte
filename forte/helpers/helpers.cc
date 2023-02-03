@@ -144,9 +144,9 @@ void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const 
     std::vector<double> tmp(nthreads * (m > n ? m : n));
     auto tmp_begin = tmp.begin();
 
-    int c = std::gcd(m, n);
-    int a = m / c;
-    int b = n / c;
+    auto c = std::gcd(m, n);
+    auto a = m / c;
+    auto b = n / c;
 
     if (c > 1) {
 #pragma omp parallel num_threads(nthreads)

@@ -181,7 +181,7 @@ const psi::Dimension& ForteIntegrals::ncmopi() const { return ncmopi_; }
 
 size_t ForteIntegrals::ncmo() const { return ncmo_; }
 
-std::vector<size_t> ForteIntegrals::cmotomo() const { return cmotomo_; }
+const std::vector<size_t>& ForteIntegrals::cmotomo() const { return cmotomo_; }
 
 void ForteIntegrals::set_print(int print) { print_ = print; }
 
