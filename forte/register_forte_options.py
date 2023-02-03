@@ -623,6 +623,12 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_DIPOLE", False, "Compute (if true) DSRG dipole moments")
 
+    options.add_int("DSRG_MAX_DIPOLE_LEVEL", 0,
+                    "The max body level of DSRG transformed dipole moment (skip if < 1)")
+
+    options.add_int("DSRG_MAX_QUADRUPOLE_LEVEL", 0,
+                    "The max body level of DSRG transformed quadrupole moment (skip if < 1)")
+
     options.add_int("DSRG_MAXITER", 50, "Max iterations for nonperturbative"
                     " MR-DSRG amplitudes update")
 
