@@ -33,7 +33,7 @@ set {
   reference      rhf
   scf_type       df
   basis          def2-svp
-  df_basis_scf   def2-svp-jkfit
+  df_basis_scf   def2-universal-jkfit
   df_basis_mp2   def2-svp-ri
   e_convergence  12
   d_convergence  10

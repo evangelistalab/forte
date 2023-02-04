@@ -81,11 +81,6 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Energy contribution from CCAV block
     double E_V_T2_CCAV();
 
-    /// Energy contribution from CCVV block using DF integrals
-    double compute_Hbar0_CCVV_DF();
-    /// Energy contribution from CCVV block using DiskDF integrals
-    double compute_Hbar0_CCVV_diskDF();
-
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
 
@@ -93,15 +88,34 @@ class SA_MRPT2 : public SA_DSRGPT {
     void compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr = true);
     /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
     void compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr = true);
-    /// Compute Hbar1 from core contraction, renormalize V if Vr is true
-    void compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
-    /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
-    void compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
 
     /// C1 = [Vr, T2] CAVV from compute_Hbar1V_diskDF
     ambit::Tensor C1_VT2_CAVV_;
     /// C1 = [Vr, T2] CCAV from compute_Hbar1C_diskDF
     ambit::Tensor C1_VT2_CCAV_;
+
+    /// Compute DSRG-transformed multipoles
+    void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                            const std::vector<int>& max_levels) override;
+
+    /// Compute CCVV contributions to the CC part of 1-RDM
+    void compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1);
+    /// Compute CCVV contributions to the VV part of 1-RDM
+    void compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1);
+
+    /// Compute CCAV contributions to the CC part of 1-RDM or/and transform multipoles
+    void compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
+                                 const std::vector<ambit::BlockedTensor>& oetens);
+    /// Compute CCAV contributions to the AA and VV parts of 1-RDM or/and transform multipoles
+    void compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
+                                    const std::vector<ambit::BlockedTensor>& oetens);
+
+    /// Compute CAVV contributions to the CC and AA parts of 1-RDM or/and transform multipoles
+    void compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
+                                    const std::vector<ambit::BlockedTensor>& oetens);
+    /// Compute CAVV contributions to the VV part of 1-RDM or/and transform multipoles
+    void compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
+                                 const std::vector<ambit::BlockedTensor>& oetens);
 
     /// Return a vector of empty ambit Tensor objects
     std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);
