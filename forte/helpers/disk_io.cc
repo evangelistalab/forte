@@ -42,7 +42,6 @@
 
 #include "helpers/disk_io.h"
 
-using json = nlohmann::json;
 using namespace psi;
 
 namespace forte {
