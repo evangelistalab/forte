@@ -175,6 +175,7 @@ mrdsrg-spin-integrated/mrdsrg_pt.cc
 mrdsrg-spin-integrated/mrdsrg_smart_s.cc
 mrdsrg-spin-integrated/mrdsrg_srg.cc
 mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
+mrdsrg-spin-integrated/Laplace_dsrg.cc
 orbital-helpers/ao_helper.cc
 orbital-helpers/aosubspace.cc
 orbital-helpers/ci-no/ci-no.cc

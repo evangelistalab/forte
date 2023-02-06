@@ -702,6 +702,7 @@ double SA_MRPT2::E_V_T2_CAVV() {
     double E = C1("vu") * L1_.block("aa")("uv");
 
     t.stop();
+    outfile->Printf("\n    SATEST, %f", E);
     return E;
 }
 
@@ -779,8 +780,9 @@ void SA_MRPT2::compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr) {
         }
 
         V_vec[thread]("efu") = Bm_vec[thread]("ge") * Bva("gfu");
-        S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu") - V_vec[thread]("feu");
-
+        //S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu") - V_vec[thread]("feu");
+        S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu");
+        outfile->Printf("\n    SATEST");
         // scale V by 1 + exp(-s * D^2)
         if (Vr) {
             V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {

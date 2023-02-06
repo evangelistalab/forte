@@ -720,7 +720,13 @@ def register_dsrg_options(options):
 
     options.add_bool("LAPLACE_CORE", True, "Use core or disk algorithm")
     
-    options.add_bool("LAPLACE_ONE_ACTIVE", False, "Use Laplace for one active section")
+#    options.add_bool("LAPLACE_ONE_ACTIVE", False, "Use Laplace for one active section")
+    
+    options.add_bool("LAPLACE_CAVV", False, "Use Laplace for CAVV?")
+    
+    options.add_bool("LAPLACE_CCAV", False, "Use Laplace for CCAV? Should only be applied to really large active spaces")
+
+ #   options.add_double("THETA_NB_CAVV", 0, "theta_NB_cavv")
 
     options.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM")
 

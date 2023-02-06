@@ -107,7 +107,7 @@ class AtomicOrbitalHelper {
 
     void Compute_Cholesky_Density();
     void Compute_Cholesky_Pseudo_Density();
-    void Compute_Cholesky_Pseudo_Density(psi::SharedMatrix RDM);
+    void Compute_Cholesky_Active_Density(psi::SharedMatrix RDM);
     //void Householder_QR();
     //void Compute_L_Directly();
 

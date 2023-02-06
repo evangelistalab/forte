@@ -63,6 +63,8 @@ psi::SharedMatrix initialize_erfc_integral(double Omega, int n_func_pairs, std::
 psi::SharedMatrix erfc_metric (double Omega, std::shared_ptr<ForteIntegrals> ints_forte);
 
 int binary_search_recursive(std::vector<int> A, int key, int low, int high);
+
+psi::SharedMatrix ambit_to_matrix(ambit::Tensor t);
 } // namespace forte
 
 #endif

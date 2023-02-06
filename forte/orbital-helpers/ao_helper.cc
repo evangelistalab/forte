@@ -120,7 +120,7 @@ void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
     }
 }
 
-void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density(psi::SharedMatrix RDM) {
+void AtomicOrbitalHelper::Compute_Cholesky_Active_Density(psi::SharedMatrix RDM) {
     psi::SharedMatrix PAct_single(new psi::Matrix("Single_PAct", nbf_, nbf_));
     std::vector<int> Act_idx(shift_);
     std::iota(Act_idx.begin(), Act_idx.end(), nfrozen_+nrdocc_);

@@ -69,6 +69,7 @@
 #include "three_dsrg_mrpt2.h"
 
 #include "orbital-helpers/Laplace.h"
+#include "Laplace_dsrg.h"
 
 using namespace ambit;
 
@@ -1167,6 +1168,28 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 (no ccvv)");
         // TODO: Implement these without storing V and/or T2 by using blocking
+        if (integral_type_ != DiskDF) {
+            temp.zero();
+            temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
+            temp["vu"] += V_["fEuM"] * T2_["vMfE"];
+            temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
+            temp["VU"] += V_["eFmU"] * T2_["mVeF"];
+            E += temp["vu"] * Gamma1_["uv"];
+            E += temp["VU"] * Gamma1_["UV"];
+            // outfile->Printf("\n E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
+
+            temp.zero();
+            temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
+            temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+            temp["VU"] += 0.5 * V_["VEMN"] * T2_["MNUE"];
+            temp["VU"] += V_["eVnM"] * T2_["nMeU"];
+            E += temp["vu"] * Eta1_["uv"];
+            E += temp["VU"] * Eta1_["UV"];
+            // outfile->Printf("\n E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
+        } else {
+            E += E_VT2_2_one_active();
+        }
+
         /// These terms all have at least two active indices (assume can be store in core).
         temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
         temp["yvxu"] += V_["efxu"] * T2_["yvef"];
@@ -1214,36 +1237,6 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
         E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
         // outfile->Printf("\n V_{VE}^{XW} * T2_{UE}^{YZ} * G1 * E1: %8.6f", E);
 
-        bool laplace_one_active = foptions_->get_bool("LAPLACE_ONE_ACTIVE");
-
-        if (integral_type_ != DiskDF && !laplace_one_active) {
-            outfile->Printf("\n  Using core algorithm for one active section");
-            temp.zero();
-            temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
-            temp["vu"] += V_["fEuM"] * T2_["vMfE"];
-            temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
-            temp["VU"] += V_["eFmU"] * T2_["mVeF"];
-            E += temp["vu"] * Gamma1_["uv"];
-            E += temp["VU"] * Gamma1_["UV"];
-            // outfile->Printf("\n E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
-
-            temp.zero();
-            temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
-            temp["vu"] += V_["vEmN"] * T2_["mNuE"];
-            temp["VU"] += 0.5 * V_["VEMN"] * T2_["MNUE"];
-            temp["VU"] += V_["eVnM"] * T2_["nMeU"];
-            E += temp["vu"] * Eta1_["uv"];
-            E += temp["VU"] * Eta1_["UV"];
-            // outfile->Printf("\n E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
-        } else if (integral_type_ == DiskDF && !laplace_one_active) {
-            outfile->Printf("\n  Using DiskDF algorithm for one active section");
-            E += E_VT2_2_one_active();
-        } else if (integral_type_ == DiskDF && laplace_one_active) {
-            outfile->Printf("\n  Using LAPLACE algorithm (ONLY DISK VERSION) for one active section. This time is not included.");
-            // Don't do anything. The one active section is in the CCVV function.
-        } else {
-            throw psi::PSIEXCEPTION("Only DISK version LAPLACE algorithm is implemented!");
-        }
         // Calculates all but ccvv, cCvV, and CCVV energies
         outfile->Printf("... Done. Timing %15.6f s", timer.get());
     }
@@ -2260,25 +2253,106 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     return (Ealpha + Ebeta + Emixed);
 }
 
+// double THREE_DSRG_MRPT2::E_cavv_coeff(psi::SharedMatrix Gamma1_mat) {
+//     ncore_ = core_mos_.size();
+//     nactive_ = actv_mos_.size();
+//     nvirtual_ = virt_mos_.size();
+//     nthree_ = ints_->nthree();
+
+//     int nfrozen = mo_space_info_->dimension("FROZEN").sum();
+
+//     psi::SharedVector epsilon_active(new psi::Vector("EPS_ACTIVE", nactive_));
+//         int actv_count = 0;
+//         for (auto u : actv_mos_) {
+//             epsilon_active->set(actv_count, Fa_[u]);
+//             actv_count++;
+//         }
+
+//     AtomicOrbitalHelper ao_helper_cavv(Cwfn, epsilon_rdocc, epsilon_active, epsilon_virtual,
+//     laplace_threshold, nactive_, nfrozen, true);
+//     ao_helper_cavv.Compute_Cholesky_Pseudo_Density();
+//     ao_helper_cavv.Compute_Cholesky_Active_Density(Gamma1_mat);
+//     std::vector<psi::SharedMatrix> Occupied_cholesky_cavv = ao_helper_cavv.LOcc_list();
+//     std::vector<psi::SharedMatrix> Active_cholesky_cavv = ao_helper_cavv.LAct_list();
+//     std::vector<psi::SharedMatrix> Virtual_cholesky_cavv = ao_helper_cavv.LVir_list();
+
+// }
+
 double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
-    std::string str = "Computing LT-DSRG-MRPT2 CCVV part (Shuhang Li test)";
-    outfile->Printf("\n    %-40s ...", str.c_str());
+    // std::string str = "Computing LT-DSRG-MRPT2 CCVV part (Shuhang Li test)";
+    // outfile->Printf("\n    %-40s ...", str.c_str());
 
-    bool is_core = foptions_->get_bool("LAPLACE_CORE");
-    if (is_core) {
-        double result = E_ccvv_df_ao();
-        return result;
-    } else {
-        double result = E_ccvv_diskdf_ao();
-        return result;
+    // bool is_core = foptions_->get_bool("LAPLACE_CORE");
+    // if (is_core) {
+    //     double result = E_ccvv_df_ao();
+    //     return result;
+    // } else {
+    //     double result = E_ccvv_diskdf_ao();
+    //     return result;
+    // }
+
+    if (mo_space_info_->nirrep() != 1) {
+        throw psi::PSIEXCEPTION("LT-DSRG-MRPT2 does not work with symmetry.");
     }
-}
+    if (integral_type_ != DiskDF) {
+        throw psi::PSIEXCEPTION("LT-DSRG-MRPT2 requires DiskDF.");
+    }
 
+    ncore_ = core_mos_.size();
+    nactive_ = actv_mos_.size();
+    nvirtual_ = virt_mos_.size();
+    nthree_ = ints_->nthree();
+    int nfrozen = mo_space_info_->dimension("FROZEN").sum();
+
+    psi::SharedVector epsilon_rdocc(new psi::Vector("EPS_RDOCC", ncore_));
+    psi::SharedVector epsilon_virtual(new psi::Vector("EPS_VIRTUAL", nvirtual_));
+    psi::SharedVector epsilon_active(new psi::Vector("EPS_ACTIVE", nactive_));
+
+    int core_count = 0;
+    for (auto m : core_mos_) {
+        epsilon_rdocc->set(core_count, Fa_[m]);
+        core_count++;
+    }
+    int virtual_count = 0;
+    for (auto e : virt_mos_) {
+        epsilon_virtual->set(virtual_count, Fa_[e]);
+        virtual_count++;
+    }
+
+    
+    int actv_count = 0;
+    for (auto u : actv_mos_) {
+        epsilon_active->set(actv_count, Fa_[u]);
+        actv_count++;
+    }
+
+    ambit::Tensor Gamma1a = Gamma1_.block("aa");
+    Gamma1a("pq") = rdms_->SF_L1()("pq");
+
+    ambit::Tensor Eta1a = Eta1_.block("aa");
+    Eta1a.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
+    Eta1a("pq") -= Gamma1a("pq");
+
+    psi::SharedMatrix Gamma1_mat = ambit_to_matrix(Gamma1a);
+    psi::SharedMatrix Eta1_mat = tensor_to_matrix(Eta1a);
+
+    LaplaceDSRG LaplaceDSRG(foptions_, ints_, mo_space_info_, epsilon_rdocc, epsilon_virtual, epsilon_active, Gamma1_mat, Eta1_mat);
+    local_timer timer1;
+    double E_ccvv = LaplaceDSRG.compute_ccvv();
+    outfile->Printf("\n\n  SLccvv takes %8.8f", timer1.get());
+    local_timer timer2;
+    double E_cavv = LaplaceDSRG.compute_cavv();
+    outfile->Printf("\n\n  SLvicavv takes %8.8f", timer2.get());
+    return E_ccvv;
+}
+/*
 double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     std::string str = "Using DiskDF (Shuhang Li test)";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
     bool laplace_one_active = foptions_->get_bool("LAPLACE_ONE_ACTIVE");
+    bool laplace_ccav = foptions_->get_bool("LAPLACE_CCAV");
 
     if (laplace_one_active) {
         outfile->Printf("\n CAVV and CCAV will also use Laplace algorithm. ");
@@ -2292,7 +2366,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     nactive_ = actv_mos_.size();
     nvirtual_ = virt_mos_.size();
     nthree_ = ints_->nthree();
-    
+
     int nfrozen = mo_space_info_->dimension("FROZEN").sum();
 
     double E_J = 0.0;
@@ -2304,6 +2378,10 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     double theta_schwarz = foptions_->get_double("THETA_SCHWARZ");
     double laplace_threshold = foptions_->get_double("LAPLACE_THRESHOLD");
     double theta_schwarz_2 = theta_schwarz * theta_schwarz;
+
+    /// cavv
+    double theta_NB_cavv = foptions_->get_double("THETA_NB_CAVV");
+
 
     psi::SharedMatrix Cwfn = ints_->Ca();
     if (mo_space_info_->nirrep() != 1)
@@ -2333,21 +2411,16 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
         }
     }
 
+    /// Number of MO.
+    int nmo = mo_space_info_->dimension("ALL").sum();
+
     // epsilon_rdocc->print();
     // epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
-    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_, nfrozen);
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_,
+                                  nfrozen);
     int weights = ao_helper.Weights();
-
-    if (laplace_one_active) {
-        AtomicOrbitalHelper ao_helper_cavv(Cwfn, epsilon_rdocc, epsilon_active, epsilon_virtual, laplace_threshold, nactive_, nfrozen, true);
-        AtomicOrbitalHelper ao_helper_ccav(Cwfn, epsilon_rdocc, epsilon_active, epsilon_virtual, laplace_threshold, nactive_, nfrozen, false);
-    }
-
-
-    /// Number of MO.
-    int nmo = mo_space_info_->dimension("ALL").sum();
 
     local_timer timer1;
     ao_helper.Compute_Cholesky_Pseudo_Density();
@@ -2356,20 +2429,19 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     local_timer timer2;
     ao_helper.Compute_Cholesky_Density();
     outfile->Printf("\n\n  Cholesky takes %8.8f", timer2.get());
-    
+
     std::vector<psi::SharedMatrix> Occupied_cholesky = ao_helper.LOcc_list();
     std::vector<psi::SharedMatrix> Virtual_cholesky = ao_helper.LVir_list();
     psi::SharedMatrix Cholesky_Occ = ao_helper.L_Occ_real();
 
     /// |L_Occ| and |L_Vir|
-    std::vector<psi::SharedMatrix> Occupied_cholesky_abs;
-    std::vector<psi::SharedMatrix> Virtual_cholesky_abs;
+    std::vector<psi::SharedMatrix> Occupied_cholesky_abs(weights);
+    std::vector<psi::SharedMatrix> Virtual_cholesky_abs(weights);
 
     /// |L_ChoMO|
-    psi::SharedMatrix Cholesky_Occ_abs = std::make_shared<psi::Matrix>("LOcc_abs", nmo, Cholesky_Occ->coldim());
+    psi::SharedMatrix Cholesky_Occ_abs =
+        std::make_shared<psi::Matrix>("LOcc_abs", nmo, Cholesky_Occ->coldim());
 
-    Occupied_cholesky_abs.resize(weights);
-    Virtual_cholesky_abs.resize(weights);
 
     for (int nweight = 0; nweight < weights; nweight++) {
         Occupied_cholesky_abs[nweight] =
@@ -2394,8 +2466,102 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
         }
     }
 
-    std::vector<int> number_pseudo_occ_list = ao_helper.n_pseudo_occ_list();
-    std::vector<int> number_pseudo_vir_list = ao_helper.n_pseudo_vir_list();
+    //if (laplace_one_active) {
+        // 1-particle density (make a copy) Gamma1a
+        ambit::Tensor Gamma1a = Gamma1_.block("aa");
+        Gamma1a("pq") = rdms_->SF_L1()("pq");
+
+        // 1-hole density  Eta1a
+        // ambit::Tensor Eta1a = Eta1_.block("aa");
+        // Eta1a.iterate(
+        //     [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
+        // Eta1a("pq") -= Gamma1a("pq");
+
+        psi::SharedMatrix Gamma1_mat = ambit_to_matrix(Gamma1a);
+        //psi::SharedMatrix Eta1_mat = tensor_to_matrix(Eta1a);
+
+        AtomicOrbitalHelper ao_helper_cavv(Cwfn, epsilon_rdocc, epsilon_active, epsilon_virtual,
+                                           laplace_threshold, nactive_, nfrozen, true);
+        int weights_cavv = ao_helper_cavv.Weights();
+        ao_helper_cavv.Compute_Cholesky_Pseudo_Density();
+        ao_helper_cavv.Compute_Cholesky_Active_Density(Gamma1_mat);
+        std::vector<psi::SharedMatrix> Occupied_cholesky_cavv = ao_helper_cavv.LOcc_list();
+        std::vector<psi::SharedMatrix> Active_cholesky_cavv = ao_helper_cavv.LAct_list();
+        std::vector<psi::SharedMatrix> Virtual_cholesky_cavv = ao_helper_cavv.LVir_list();
+        std::vector<psi::SharedMatrix> Occupied_cholesky_cavv_abs(weights_cavv);
+        std::vector<psi::SharedMatrix> Active_cholesky_cavv_abs(weights_cavv);
+        std::vector<psi::SharedMatrix> Virtual_cholesky_cavv_abs(weights_cavv);
+
+        for (int nweight = 0; nweight < weights_cavv; nweight++) {
+            Occupied_cholesky_cavv_abs[nweight] = std::make_shared<psi::Matrix>(
+                "LOcc_abs", nmo, Occupied_cholesky_cavv[nweight]->coldim());
+            Active_cholesky_cavv_abs[nweight] = std::make_shared<psi::Matrix>(
+                "LAct_abs", nmo, Active_cholesky_cavv[nweight]->coldim());
+            Virtual_cholesky_cavv_abs[nweight] = std::make_shared<psi::Matrix>(
+                "LVir_abs", nmo, Virtual_cholesky_cavv[nweight]->coldim());
+            for (int u = 0; u < nmo; u++) {
+                for (int i = 0; i < Occupied_cholesky_cavv[nweight]->coldim(); i++) {
+                    Occupied_cholesky_cavv_abs[nweight]->set(
+                        u, i, std::abs(Occupied_cholesky_cavv[nweight]->get(u, i)));
+                }
+                for (int v = 0; v < Active_cholesky_cavv[nweight]->coldim(); v++) {
+                    Active_cholesky_cavv_abs[nweight]->set(
+                        u, v, std::abs(Active_cholesky_cavv[nweight]->get(u, v)));
+                }
+                for (int a = 0; a < Virtual_cholesky_cavv[nweight]->coldim(); a++) {
+                    Virtual_cholesky_cavv_abs[nweight]->set(
+                        u, a, std::abs(Virtual_cholesky_cavv[nweight]->get(u, a)));
+                }
+            }
+        }
+
+        //if (laplace_ccav) {
+            ambit::Tensor Eta1a = Eta1_.block("aa");
+            Eta1a.iterate([&](const std::vector<size_t>& i, double& value) {
+                value = i[0] == i[1] ? 2.0 : 0.0;
+            });
+            Eta1a("pq") -= Gamma1a("pq");
+            psi::SharedMatrix Eta1_mat = ambit_to_matrix(Eta1a);
+
+            AtomicOrbitalHelper ao_helper_ccav(Cwfn, epsilon_rdocc, epsilon_active, epsilon_virtual,
+                                               laplace_threshold, nactive_, nfrozen, false);
+            int weights_ccav = ao_helper_ccav.Weights();
+            ao_helper_ccav.Compute_Cholesky_Pseudo_Density();
+            ao_helper_ccav.Compute_Cholesky_Active_Density(Eta1_mat);
+            std::vector<psi::SharedMatrix> Occupied_cholesky_ccav = ao_helper_ccav.LOcc_list();
+            std::vector<psi::SharedMatrix> Active_cholesky_ccav = ao_helper_ccav.LAct_list();
+            std::vector<psi::SharedMatrix> Virtual_cholesky_ccav = ao_helper_ccav.LVir_list();
+            std::vector<psi::SharedMatrix> Occupied_cholesky_ccav_abs(weights_ccav);
+            std::vector<psi::SharedMatrix> Active_cholesky_ccav_abs(weights_ccav);
+            std::vector<psi::SharedMatrix> Virtual_cholesky_ccav_abs(weights_ccav);
+
+            for (int nweight = 0; nweight < weights_ccav; nweight++) {
+                Occupied_cholesky_ccav_abs[nweight] = std::make_shared<psi::Matrix>(
+                    "LOcc_abs", nmo, Occupied_cholesky_ccav[nweight]->coldim());
+                Active_cholesky_ccav_abs[nweight] = std::make_shared<psi::Matrix>(
+                    "LAct_abs", nmo, Active_cholesky_ccav[nweight]->coldim());
+                Virtual_cholesky_ccav_abs[nweight] = std::make_shared<psi::Matrix>(
+                    "LVir_abs", nmo, Virtual_cholesky_ccav[nweight]->coldim());
+                for (int u = 0; u < nmo; u++) {
+                    for (int i = 0; i < Occupied_cholesky_ccav[nweight]->coldim(); i++) {
+                        Occupied_cholesky_ccav_abs[nweight]->set(
+                            u, i, std::abs(Occupied_cholesky_ccav[nweight]->get(u, i)));
+                    }
+                    for (int v = 0; v < Active_cholesky_ccav[nweight]->coldim(); v++) {
+                        Active_cholesky_ccav_abs[nweight]->set(
+                            u, v, std::abs(Active_cholesky_ccav[nweight]->get(u, v)));
+                    }
+                    for (int a = 0; a < Virtual_cholesky_ccav[nweight]->coldim(); a++) {
+                        Virtual_cholesky_ccav_abs[nweight]->set(
+                            u, a, std::abs(Virtual_cholesky_ccav[nweight]->get(u, a)));
+                    }
+                }
+            }
+        //}
+    //}
+
+    // std::vector<int> number_pseudo_occ_list = ao_helper.n_pseudo_occ_list();
+    // std::vector<int> number_pseudo_vir_list = ao_helper.n_pseudo_vir_list();
 
     // for (int i = 0; i < number_pseudo_occ_list.size(); i++) {
     //     outfile->Printf("\n    pseudo_occ per point %d ", number_pseudo_occ_list[i]);
@@ -2408,14 +2574,15 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     /// Construct C_pq
     psi::SharedMatrix C_pq = erfc_metric(Omega, ints_);
     outfile->Printf("\n    Done with C_pq");
-    ///Overlap matrix
+    /// Overlap matrix
     psi::SharedMatrix S = ints_->wfn()->S();
     outfile->Printf("\n    Done with S");
-    ///Construct list for T_ibar_i matrices.
+    /// Construct list for T_ibar_i matrices.
     std::vector<psi::SharedMatrix> T_ibar_i_list;
     T_ibar_i_list.resize(weights);
     for (int i_weight = 0; i_weight < weights; i_weight++) {
-        T_ibar_i_list[i_weight] = psi::linalg::triplet(Occupied_cholesky[i_weight], S, Cholesky_Occ, true, false, false);
+        T_ibar_i_list[i_weight] =
+            psi::linalg::triplet(Occupied_cholesky[i_weight], S, Cholesky_Occ, true, false, false);
     }
     outfile->Printf("\n    Done with T");
 
@@ -2427,14 +2594,30 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     disk_jk.erfc_three_disk(Omega);
 
     /// Construct (P|iu)
-    std::vector<psi::SharedMatrix> P_iu; /// [([i]_p * ao_list_per_q), ...]
-    P_iu.resize(nthree_);
+    std::vector<psi::SharedMatrix> P_iu(nthree_); /// [([i]_p * ao_list_per_q), ...]
     outfile->Printf("\n    Intialize P_iu");
+
+    //if(laplace_one_active) {
+        std::vector<psi::SharedMatrix> N_px_cavv_batch_list(weights_cavv);
+        std::vector<SparseMap> xbar_p_up_cavv(weights_cavv, SparseMap(nthree_)); 
+        std::vector<std::vector<psi::SharedMatrix>> P_xbar_u_cavv(weights_cavv, std::vector<psi::SharedMatrix>(nthree_));
+        std::vector<SparseMap> xbar_p_for_xbar_up(weights_cavv, SparseMap(nthree_));
+        std::vector<SparseMap> xbar_p(weights_cavv, SparseMap(nthree_));
+        // if (laplace_ccav) {
+        //     std::vector<psi::SharedMatrix> N_px_ccav_batch_list(weights_ccav);
+        //     std::vector<SparseMap> xbar_p_up_ccav(weights_ccav);
+        //     std::vector<std::vector<psi::SharedMatrix>> P_xbar_u_ccav(weights_ccav);
+        // }
+    //}
+
+
+    /// Below is the code for loading data from disk. 
     int file_unit = PSIF_DFSCF_BJ;
     int n_func_pairs = (nmo + 1) * nmo / 2;
     int max_rows = 1;
     std::shared_ptr<PSIO> psio(new PSIO());
-    psi::SharedMatrix loadAOtensor = std::make_shared<psi::Matrix>("DiskDF: Load (A|mn) from DF-SCF", max_rows, n_func_pairs);
+    psi::SharedMatrix loadAOtensor =
+        std::make_shared<psi::Matrix>("DiskDF: Load (A|mn) from DF-SCF", max_rows, n_func_pairs);
     psio->open(file_unit, PSIO_OPEN_OLD);
 
     std::vector<psi::SharedMatrix> amn;
@@ -2446,15 +2629,17 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     SparseMap i_p_up(nthree_);
     SparseMap i_p(nthree_);
     SparseMap i_p_for_i_up(nthree_);
-    
+
     psi::SharedMatrix N_pu = std::make_shared<psi::Matrix>("N_pu", nthree_, nmo);
     N_pu->zero();
     double* N_pu_p = N_pu->get_pointer();
     outfile->Printf("\n    Start loading");
+    
     for (int Q = 0; Q < nthree_; Q += max_rows) {
         int naux = (nthree_ - Q <= max_rows ? nthree_ - Q : max_rows);
         psio_address addr = psio_get_address(PSIO_ZERO, (Q * (int)n_func_pairs) * sizeof(double));
-        psio->read(file_unit, "ERFC Integrals", (char*)(loadAOtensor->pointer()[0]), sizeof(double) * naux * n_func_pairs, addr, &addr);
+        psio->read(file_unit, "ERFC Integrals", (char*)(loadAOtensor->pointer()[0]),
+                   sizeof(double) * naux * n_func_pairs, addr, &addr);
 
         double* add = loadAOtensor->get_pointer();
 
@@ -2485,47 +2670,78 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
                         std::abs(max_per_uq) > row_add_abs ? std::abs(max_per_uq) : row_add_abs;
                     //*M_uv_p = std::abs(*M_uv_p) > row_add_abs ? std::abs(*M_uv_p) : row_add_abs;
                     row_add++;
-                    //M_uv_p++;
+                    // M_uv_p++;
                 }
                 if (std::abs(max_per_uq) > theta_NB) {
-                    ao_list_per_q[Q+q].push_back(u);
+                    ao_list_per_q[Q + q].push_back(u);
                 }
                 *N_pu_p = std::abs(*N_pu_p) > max_per_uq ? std::abs(*N_pu_p) : max_per_uq;
-                *N_pu_batch_p = std::abs(*N_pu_batch_p) > max_per_uq ? std::abs(*N_pu_batch_p) : max_per_uq;
+                *N_pu_batch_p =
+                    std::abs(*N_pu_batch_p) > max_per_uq ? std::abs(*N_pu_batch_p) : max_per_uq;
                 N_pu_p++;
                 N_pu_batch_p++;
             }
             /// Slice Amn -> Amn_new
-            amn_new[q] = submatrix_rows_and_cols(*amn[q], ao_list_per_q[Q+q], ao_list_per_q[Q+q]);
+            amn_new[q] =
+                submatrix_rows_and_cols(*amn[q], ao_list_per_q[Q + q], ao_list_per_q[Q + q]);
         }
-        psi::SharedMatrix N_pi_batch = psi::linalg::doublet(N_pu_batch, Cholesky_Occ_abs, false, false);
+
+        psi::SharedMatrix N_pi_batch =
+            psi::linalg::doublet(N_pu_batch, Cholesky_Occ_abs, false, false);
         double* N_pi_batch_p = N_pi_batch->get_pointer();
-        for  (int q = 0; q < naux; q++) {
+        for (int q = 0; q < naux; q++) {
             for (int i = 0; i < Cholesky_Occ->coldim(); i++) {
                 if (*N_pi_batch_p > theta_NB) {
-                    i_p_up[Q+q].push_back(i);
+                    i_p_up[Q + q].push_back(i);
                 }
                 N_pi_batch_p++;
             }
-            psi::SharedMatrix Cholesky_Occ_new = submatrix_rows_and_cols(*Cholesky_Occ, ao_list_per_q[Q+q], i_p_up[q]);
-            P_iu[Q+q] = psi::linalg::doublet(Cholesky_Occ_new, amn_new[q], true, false);
-            for (int inew = 0; inew < i_p_up[Q+q].size(); inew++) {
-                for (int u = 0; u < ao_list_per_q[Q+q].size(); u++) {
-                    if (std::abs(P_iu[Q+q]->get(inew, u)) > theta_NB) {
-                        i_p_for_i_up[Q+q].push_back(inew);
-                        i_p[Q+q].push_back(i_p_up[q][inew]);
+            psi::SharedMatrix Cholesky_Occ_new =
+                submatrix_rows_and_cols(*Cholesky_Occ, ao_list_per_q[Q + q], i_p_up[Q + q]);
+            P_iu[Q + q] = psi::linalg::doublet(Cholesky_Occ_new, amn_new[q], true, false);
+            for (int inew = 0; inew < i_p_up[Q + q].size(); inew++) {
+                for (int u = 0; u < ao_list_per_q[Q + q].size(); u++) {
+                    if (std::abs(P_iu[Q + q]->get(inew, u)) > theta_NB) {
+                        i_p_for_i_up[Q + q].push_back(inew);
+                        i_p[Q + q].push_back(i_p_up[Q + q][inew]);
                         break;
                     }
                 }
             }
-            P_iu[Q+q] = submatrix_rows(*P_iu[Q+q], i_p_for_i_up[Q+q]);
+            P_iu[Q + q] = submatrix_rows(*P_iu[Q + q], i_p_for_i_up[Q + q]);
         }
+
+        //if (laplace_one_active) {
+            for (int nweight = 0; nweight < weights_cavv; nweight++) {
+                N_px_cavv_batch_list[nweight] = psi::linalg::doublet(N_pu_batch, Active_cholesky_ccav_abs[nweight]);
+                double* N_px_batch_p = N_px_cavv_batch_list[nweight]->get_pointer();
+                for (int q = 0; q < naux; q++) {
+                    for (int x = 0; x < Active_cholesky_ccav_abs[nweight]->coldim(); x++) {
+                        if (*N_px_batch_p > theta_NB_cavv) {
+                            xbar_p_up_cavv[nweight][Q + q].push_back(x);
+                        }
+                        N_px_batch_p++;
+                    }
+                    psi::SharedMatrix Active_cholesky_new = submatrix_rows_and_cols(*Active_cholesky_cavv[nweight], ao_list_per_q[Q + q], xbar_p_up_cavv[nweight][Q + q]);
+                    P_xbar_u_cavv[nweight][Q + q] = psi::linalg::doublet(Active_cholesky_new, amn_new[q], true, false);
+                    for (int inew = 0; inew < xbar_p_up_cavv[nweight][Q + q].size(); inew++) {
+                        for (int u = 0; u < ao_list_per_q[Q + q].size(); u++) {
+                            if (std::abs(P_xbar_u_cavv[nweight][Q + q]->get(inew, u)) > theta_NB_cavv) {
+                                xbar_p_for_xbar_up[nweight][Q + q].push_back(inew);
+                                xbar_p[nweight][Q + q].push_back(xbar_p_up_cavv[nweight][Q + q][inew]);
+                            }
+                        }
+                    }
+                    P_xbar_u_cavv[nweight][Q + q] = submatrix_rows(*P_xbar_u_cavv[nweight][Q + q], xbar_p_for_xbar_up[nweight][Q + q]);
+                }
+            }
+        //}
     }
     psio->close(file_unit, 1);
     loadAOtensor.reset();
     outfile->Printf("\n    End loading");
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
 
     /// Construct [ibar]_p and [abar]_p
     SparseMap i_bar_p_up(nthree_);
@@ -2572,7 +2788,6 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
     std::vector<int> aux_in_B_i;
     std::vector<int> aux_in_B_j;
 
-
     for (int nweight = 0; nweight < weights; nweight++) {
         int nocc = Occupied_cholesky[nweight]->coldim();
         int nvir = Virtual_cholesky[nweight]->coldim();
@@ -2596,7 +2811,8 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
                 N_pi_bar_p++;
             }
 
-            psi::SharedMatrix T_ibar_i_new = submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p[qa]);
+            psi::SharedMatrix T_ibar_i_new =
+                submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p[qa]);
             P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
 
             for (int abar = 0; abar < nvir; abar++) {
@@ -2604,7 +2820,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
                     a_bar_p_up[qa].push_back(abar);
                 }
                 N_pa_bar_p++;
-            } 
+            }
 
             psi::SharedMatrix Pseudo_Vir_Mo = submatrix_rows_and_cols(
                 *Virtual_cholesky[nweight], ao_list_per_q[qa], a_bar_p_up[qa]);
@@ -2665,7 +2881,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
         /// Coulomb contribution.
         /// Construct Z_pq
         P_ibar = invert_map(ibar_p, nocc);
-        //P_abar = invert_map(abar_p, nvir);
+        // P_abar = invert_map(abar_p, nvir);
         Z_pq->zero();
 
         for (int i = 0; i < nocc; i++) {
@@ -2709,46 +2925,61 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
             }
         }
 
-         /// Start ij-prescreening.
+        /// Start ij-prescreening.
         psi::SharedMatrix A_ij_2 = psi::linalg::doublet(Q_ia_2, Q_ia_2, false, true);
         for (int i = 0; i < nocc; i++) {
             for (int j = 0; j < i; j++) {
                 if (A_ij_2->get(i, j) > theta_ij) {
                     vir_intersection_per_ij.clear();
                     aux_intersection_per_ij.clear();
-                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(), P_ibar[j].end(), std::back_inserter(aux_intersection_per_ij));
+                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(),
+                                          P_ibar[j].end(),
+                                          std::back_inserter(aux_intersection_per_ij));
                     aux_in_B_i.clear();
                     std::set_intersection(abar_ibar[i].begin(), abar_ibar[i].end(),
                                           abar_ibar[j].begin(), abar_ibar[j].end(),
                                           std::back_inserter(vir_intersection_per_ij));
                     for (auto aux : aux_intersection_per_ij) {
-                        int idx_aux_i = binary_search_recursive(P_ibar[i], aux, 0, P_ibar[i].size()-1);
+                        int idx_aux_i =
+                            binary_search_recursive(P_ibar[i], aux, 0, P_ibar[i].size() - 1);
                         aux_in_B_i.push_back(idx_aux_i);
                     }
-                    for (int a_idx = 0; a_idx < vir_intersection_per_ij.size(); a_idx++) { // b <= a and j < i
+                    for (int a_idx = 0; a_idx < vir_intersection_per_ij.size();
+                         a_idx++) { // b <= a and j < i
                         for (int b_idx = 0; b_idx <= a_idx; b_idx++) {
                             int a = vir_intersection_per_ij[a_idx];
                             int b = vir_intersection_per_ij[b_idx];
-                            double Schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) * Q_ia_2->get(i, b) * Q_ia_2->get(j, a);
+                            double Schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) *
+                                               Q_ia_2->get(i, b) * Q_ia_2->get(j, a);
                             if (Schwarz_2 > theta_schwarz_2) {
-                                int a_idx_i = binary_search_recursive(abar_ibar[i], a, 0, abar_ibar[i].size()-1);
-                                int b_idx_i = binary_search_recursive(abar_ibar[i], b, 0, abar_ibar[i].size()-1);
-                                int a_idx_j = binary_search_recursive(abar_ibar[j], a, 0, abar_ibar[j].size()-1);
-                                int b_idx_j = binary_search_recursive(abar_ibar[j], b, 0, abar_ibar[j].size()-1);
+                                int a_idx_i = binary_search_recursive(abar_ibar[i], a, 0,
+                                                                      abar_ibar[i].size() - 1);
+                                int b_idx_i = binary_search_recursive(abar_ibar[i], b, 0,
+                                                                      abar_ibar[i].size() - 1);
+                                int a_idx_j = binary_search_recursive(abar_ibar[j], a, 0,
+                                                                      abar_ibar[j].size() - 1);
+                                int b_idx_j = binary_search_recursive(abar_ibar[j], b, 0,
+                                                                      abar_ibar[j].size() - 1);
 
                                 std::vector<int> vec_a_i{a_idx_i};
                                 std::vector<int> vec_b_i{b_idx_i};
                                 std::vector<int> vec_a_j{a_idx_j};
                                 std::vector<int> vec_b_j{b_idx_j};
-                                
-                                psi::SharedMatrix ia = submatrix_rows_and_cols(*B_ia_Q[i], vec_a_i, aux_in_B_i);
-                                psi::SharedMatrix jb = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_b_j, aux_intersection_per_ij);
-                                psi::SharedMatrix ib = submatrix_rows_and_cols(*B_ia_Q[i], vec_b_i, aux_in_B_i);
-                                psi::SharedMatrix ja = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_a_j, aux_intersection_per_ij);
 
-                                psi::SharedMatrix iajb_mat = psi::linalg::doublet(ia, jb, false, true);
+                                psi::SharedMatrix ia =
+                                    submatrix_rows_and_cols(*B_ia_Q[i], vec_a_i, aux_in_B_i);
+                                psi::SharedMatrix jb = submatrix_rows_and_cols(
+                                    *i_bar_a_bar_P[j], vec_b_j, aux_intersection_per_ij);
+                                psi::SharedMatrix ib =
+                                    submatrix_rows_and_cols(*B_ia_Q[i], vec_b_i, aux_in_B_i);
+                                psi::SharedMatrix ja = submatrix_rows_and_cols(
+                                    *i_bar_a_bar_P[j], vec_a_j, aux_intersection_per_ij);
+
+                                psi::SharedMatrix iajb_mat =
+                                    psi::linalg::doublet(ia, jb, false, true);
                                 double* iajb = iajb_mat->get_pointer();
-                                psi::SharedMatrix ibja_mat = psi::linalg::doublet(ib, ja, false, true);
+                                psi::SharedMatrix ibja_mat =
+                                    psi::linalg::doublet(ib, ja, false, true);
                                 double* ibja = ibja_mat->get_pointer();
 
                                 if (a == b) {
@@ -2756,7 +2987,7 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
                                 } else {
                                     E_K += 4 * (*iajb) * (*ibja);
                                 }
-                            } 
+                            }
                         }
                     }
                 }
@@ -2769,7 +3000,6 @@ double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {
 
     return (E_J + E_K);
 }
-
 
 double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     std::string str = "Using DF (Shuhang Li test)";
@@ -2813,7 +3043,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     // epsilon_virtual->print();
 
     /// Construct Cholesky MO coefficients.
-    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_, nfrozen);
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, laplace_threshold, nactive_,
+                                  nfrozen);
     int weights = ao_helper.Weights();
 
     /// Number of MO. (Core orbitals are included. Probably need to change this afterward.)
@@ -2826,8 +3057,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     local_timer timer2;
     ao_helper.Compute_Cholesky_Density();
     outfile->Printf("\n\n  Cholesky takes %8.8f", timer2.get());
-    
-    
+
     std::vector<psi::SharedMatrix> Occupied_cholesky = ao_helper.LOcc_list();
     std::vector<psi::SharedMatrix> Virtual_cholesky = ao_helper.LVir_list();
     psi::SharedMatrix Cholesky_Occ = ao_helper.L_Occ_real();
@@ -2837,8 +3067,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     std::vector<psi::SharedMatrix> Virtual_cholesky_abs(weights);
 
     /// |L_ChoMO|
-    psi::SharedMatrix Cholesky_Occ_abs = std::make_shared<psi::Matrix>("LOcc_abs", nmo, Cholesky_Occ->coldim());
-
+    psi::SharedMatrix Cholesky_Occ_abs =
+        std::make_shared<psi::Matrix>("LOcc_abs", nmo, Cholesky_Occ->coldim());
 
     for (int nweight = 0; nweight < weights; nweight++) {
         Occupied_cholesky_abs[nweight] =
@@ -2877,23 +3107,23 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     /// Construct C_pq
     psi::SharedMatrix C_pq = erfc_metric(Omega, ints_);
 
-    ///Overlap matrix
+    /// Overlap matrix
     psi::SharedMatrix S = ints_->wfn()->S();
 
-    ///Construct list for T_ibar_i matrices.
+    /// Construct list for T_ibar_i matrices.
     std::vector<psi::SharedMatrix> T_ibar_i_list(weights);
 
     for (int i_weight = 0; i_weight < weights; i_weight++) {
-        T_ibar_i_list[i_weight] = psi::linalg::triplet(Occupied_cholesky[i_weight], S, Cholesky_Occ, true, false, false);
+        T_ibar_i_list[i_weight] =
+            psi::linalg::triplet(Occupied_cholesky[i_weight], S, Cholesky_Occ, true, false, false);
     }
 
     /// Construct M_uv, N_pu, amn, and amn_new
     int n_func_pairs = (nmo + 1) * nmo / 2;
     psi::SharedMatrix loadAOtensor = initialize_erfc_integral(Omega, n_func_pairs, ints_);
 
-
-    // Here is a test for diskdf. I am trying to use DiskDFJK object to write erfc three center integrals into disk.
-    // std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
+    // Here is a test for diskdf. I am trying to use DiskDFJK object to write erfc three center
+    // integrals into disk. std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
     // std::shared_ptr<psi::BasisSet> auxiliary = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     // DiskDFJK disk_jk(primary, auxiliary);
     // outfile->Printf("\n    diskdf success ");
@@ -2901,7 +3131,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     // outfile->Printf("\n    erfc success ");
     // psi::SharedMatrix test_loadAOtensor = load_Amn(nthree_, n_func_pairs);
     // outfile->Printf("\n    load success ");
-    
+
     // loadAOtensor->subtract(test_loadAOtensor);
     // loadAOtensor->print();
 
@@ -2967,18 +3197,19 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     std::vector<psi::SharedMatrix> P_iu(nthree_); /// [([i]_p * ao_list_per_q), ...]
 
     /// Construct {i}_p
-    SparseMap i_p(nthree_); /// Use original indices.
+    SparseMap i_p(nthree_);          /// Use original indices.
     SparseMap i_p_for_i_up(nthree_); /// Use new indices from [i]_p.
 
     /// (P|vu) -> (P|iu) transformation
-    for  (int q = 0; q < nthree_; q++) {
+    for (int q = 0; q < nthree_; q++) {
         for (int i = 0; i < Cholesky_Occ->coldim(); i++) {
             if (*N_pi_p > theta_NB) {
                 i_p_up[q].push_back(i);
             }
             N_pi_p++;
         }
-        psi::SharedMatrix Cholesky_Occ_new = submatrix_rows_and_cols(*Cholesky_Occ, ao_list_per_q[q], i_p_up[q]);
+        psi::SharedMatrix Cholesky_Occ_new =
+            submatrix_rows_and_cols(*Cholesky_Occ, ao_list_per_q[q], i_p_up[q]);
         P_iu[q] = psi::linalg::doublet(Cholesky_Occ_new, amn_new[q], true, false);
         /// Construct {i}_p
         for (int inew = 0; inew < i_p_up[q].size(); inew++) {
@@ -2993,9 +3224,9 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
         P_iu[q] = submatrix_rows(*P_iu[q], i_p_for_i_up[q]);
     }
 
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
 
     /// Construct [ibar]_p and [abar]_p
     SparseMap i_bar_p_up(nthree_);
@@ -3042,7 +3273,6 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
     std::vector<int> aux_in_B_i;
     std::vector<int> aux_in_B_j;
 
-
     for (int nweight = 0; nweight < weights; nweight++) {
         int nocc = Occupied_cholesky[nweight]->coldim();
         int nvir = Virtual_cholesky[nweight]->coldim();
@@ -3066,7 +3296,8 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
                 N_pi_bar_p++;
             }
 
-            psi::SharedMatrix T_ibar_i_new = submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p[qa]);
+            psi::SharedMatrix T_ibar_i_new =
+                submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p[qa]);
             P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
 
             for (int abar = 0; abar < nvir; abar++) {
@@ -3074,7 +3305,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
                     a_bar_p_up[qa].push_back(abar);
                 }
                 N_pa_bar_p++;
-            } 
+            }
 
             psi::SharedMatrix Pseudo_Vir_Mo = submatrix_rows_and_cols(
                 *Virtual_cholesky[nweight], ao_list_per_q[qa], a_bar_p_up[qa]);
@@ -3135,7 +3366,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
         /// Coulomb contribution.
         /// Construct Z_pq
         P_ibar = invert_map(ibar_p, nocc);
-        //P_abar = invert_map(abar_p, nvir);
+        // P_abar = invert_map(abar_p, nvir);
         Z_pq->zero();
 
         for (int i = 0; i < nocc; i++) {
@@ -3179,46 +3410,61 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
             }
         }
 
-         /// Start ij-prescreening.
+        /// Start ij-prescreening.
         psi::SharedMatrix A_ij_2 = psi::linalg::doublet(Q_ia_2, Q_ia_2, false, true);
         for (int i = 0; i < nocc; i++) {
             for (int j = 0; j < i; j++) {
                 if (A_ij_2->get(i, j) > theta_ij) {
                     vir_intersection_per_ij.clear();
                     aux_intersection_per_ij.clear();
-                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(), P_ibar[j].end(), std::back_inserter(aux_intersection_per_ij));
+                    std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(),
+                                          P_ibar[j].end(),
+                                          std::back_inserter(aux_intersection_per_ij));
                     aux_in_B_i.clear();
                     std::set_intersection(abar_ibar[i].begin(), abar_ibar[i].end(),
                                           abar_ibar[j].begin(), abar_ibar[j].end(),
                                           std::back_inserter(vir_intersection_per_ij));
                     for (auto aux : aux_intersection_per_ij) {
-                        int idx_aux_i = binary_search_recursive(P_ibar[i], aux, 0, P_ibar[i].size()-1);
+                        int idx_aux_i =
+                            binary_search_recursive(P_ibar[i], aux, 0, P_ibar[i].size() - 1);
                         aux_in_B_i.push_back(idx_aux_i);
                     }
-                    for (int a_idx = 0; a_idx < vir_intersection_per_ij.size(); a_idx++) { // b <= a and j < i
+                    for (int a_idx = 0; a_idx < vir_intersection_per_ij.size();
+                         a_idx++) { // b <= a and j < i
                         for (int b_idx = 0; b_idx <= a_idx; b_idx++) {
                             int a = vir_intersection_per_ij[a_idx];
                             int b = vir_intersection_per_ij[b_idx];
-                            double Schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) * Q_ia_2->get(i, b) * Q_ia_2->get(j, a);
+                            double Schwarz_2 = Q_ia_2->get(i, a) * Q_ia_2->get(j, b) *
+                                               Q_ia_2->get(i, b) * Q_ia_2->get(j, a);
                             if (Schwarz_2 > theta_schwarz_2) {
-                                int a_idx_i = binary_search_recursive(abar_ibar[i], a, 0, abar_ibar[i].size()-1);
-                                int b_idx_i = binary_search_recursive(abar_ibar[i], b, 0, abar_ibar[i].size()-1);
-                                int a_idx_j = binary_search_recursive(abar_ibar[j], a, 0, abar_ibar[j].size()-1);
-                                int b_idx_j = binary_search_recursive(abar_ibar[j], b, 0, abar_ibar[j].size()-1);
+                                int a_idx_i = binary_search_recursive(abar_ibar[i], a, 0,
+                                                                      abar_ibar[i].size() - 1);
+                                int b_idx_i = binary_search_recursive(abar_ibar[i], b, 0,
+                                                                      abar_ibar[i].size() - 1);
+                                int a_idx_j = binary_search_recursive(abar_ibar[j], a, 0,
+                                                                      abar_ibar[j].size() - 1);
+                                int b_idx_j = binary_search_recursive(abar_ibar[j], b, 0,
+                                                                      abar_ibar[j].size() - 1);
 
                                 std::vector<int> vec_a_i{a_idx_i};
                                 std::vector<int> vec_b_i{b_idx_i};
                                 std::vector<int> vec_a_j{a_idx_j};
                                 std::vector<int> vec_b_j{b_idx_j};
-                                
-                                psi::SharedMatrix ia = submatrix_rows_and_cols(*B_ia_Q[i], vec_a_i, aux_in_B_i);
-                                psi::SharedMatrix jb = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_b_j, aux_intersection_per_ij);
-                                psi::SharedMatrix ib = submatrix_rows_and_cols(*B_ia_Q[i], vec_b_i, aux_in_B_i);
-                                psi::SharedMatrix ja = submatrix_rows_and_cols(*i_bar_a_bar_P[j], vec_a_j, aux_intersection_per_ij);
 
-                                psi::SharedMatrix iajb_mat = psi::linalg::doublet(ia, jb, false, true);
+                                psi::SharedMatrix ia =
+                                    submatrix_rows_and_cols(*B_ia_Q[i], vec_a_i, aux_in_B_i);
+                                psi::SharedMatrix jb = submatrix_rows_and_cols(
+                                    *i_bar_a_bar_P[j], vec_b_j, aux_intersection_per_ij);
+                                psi::SharedMatrix ib =
+                                    submatrix_rows_and_cols(*B_ia_Q[i], vec_b_i, aux_in_B_i);
+                                psi::SharedMatrix ja = submatrix_rows_and_cols(
+                                    *i_bar_a_bar_P[j], vec_a_j, aux_intersection_per_ij);
+
+                                psi::SharedMatrix iajb_mat =
+                                    psi::linalg::doublet(ia, jb, false, true);
                                 double* iajb = iajb_mat->get_pointer();
-                                psi::SharedMatrix ibja_mat = psi::linalg::doublet(ib, ja, false, true);
+                                psi::SharedMatrix ibja_mat =
+                                    psi::linalg::doublet(ib, ja, false, true);
                                 double* ibja = ibja_mat->get_pointer();
 
                                 if (a == b) {
@@ -3226,7 +3472,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
                                 } else {
                                     E_K += 4 * (*iajb) * (*ibja);
                                 }
-                            } 
+                            }
                         }
                     }
                 }
@@ -3239,6 +3485,7 @@ double THREE_DSRG_MRPT2::E_ccvv_df_ao() {
 
     return (E_J + E_K);
 }
+*/
 /*
 double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     /// E_{DSRG} -> Conventional basis
@@ -3665,293 +3912,589 @@ double THREE_DSRG_MRPT2::E_VT2_2_core() {
 double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     double Eccva = 0;
     double Eacvv = 0;
+    bool laplace_cavv = foptions_->get_bool("LAPLACE_CAVV");
+    bool laplace_ccav = foptions_->get_bool("LAPLACE_CCAV");
+    if (laplace_cavv && laplace_ccav) {
+        outfile->Printf("\n    CAVV and CCAV have not been calculated. Laplace algorithm will be used.");
+        return (Eacvv + Eccva);
+    }
+
     int nthread = 1;
 #ifdef _OPENMP
     nthread = omp_get_max_threads();
 //    thread = omp_get_thread_num();
 #endif
 
-    /// This block of code assumes that ThreeIntegral are not stored as a member variable.
-    /// Requires the reading from aptei_block which makes code
-    ambit::Tensor Gamma1_aa = Gamma1_.block("aa");
-    ambit::Tensor Gamma1_AA = Gamma1_.block("AA");
+    // /// This block of code assumes that ThreeIntegral are not stored as a member variable.
+    // /// Requires the reading from aptei_block which makes code
+    // ambit::Tensor Gamma1_aa = Gamma1_.block("aa");
+    // ambit::Tensor Gamma1_AA = Gamma1_.block("AA");
 
-    std::vector<ambit::Tensor> Bm_Qe;
-    std::vector<ambit::Tensor> Bm_Qf;
+    // std::vector<ambit::Tensor> Bm_Qe;
+    // std::vector<ambit::Tensor> Bm_Qf;
 
-    std::vector<ambit::Tensor> Vefu;
-    std::vector<ambit::Tensor> Tefv;
-    std::vector<ambit::Tensor> tempTaa;
-    std::vector<ambit::Tensor> tempTAA;
+    // std::vector<ambit::Tensor> Vefu;
+    // std::vector<ambit::Tensor> Tefv;
+    // std::vector<ambit::Tensor> tempTaa;
+    // std::vector<ambit::Tensor> tempTAA;
 
-    local_timer ccvaTimer;
-    for (int thread = 0; thread < nthread; thread++) {
-        Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nvirtual_}));
-        Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
+    if (laplace_cavv) {
+        outfile->Printf("\n    CAVV has not been calculated. Laplace algorithm will be used.");
+    } else {
+        /// This block of code assumes that ThreeIntegral are not stored as a member variable.
+        /// Requires the reading from aptei_block which makes code
+        ambit::Tensor Gamma1_aa = Gamma1_.block("aa");
+        ambit::Tensor Gamma1_AA = Gamma1_.block("AA");
 
-        Vefu.push_back(
-            ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nvirtual_, nactive_}));
-        Tefv.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nvirtual_, nactive_}));
+        std::vector<ambit::Tensor> Bm_Qe;
+        std::vector<ambit::Tensor> Bm_Qf;
 
-        tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
-        tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
-    }
-    // ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_,
-    // avirt_mos_);
-    // ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_,
-    // avirt_mos_);
+        std::vector<ambit::Tensor> Vefu;
+        std::vector<ambit::Tensor> Tefv;
+        std::vector<ambit::Tensor> tempTaa;
+        std::vector<ambit::Tensor> tempTAA;
+        local_timer cavvTimer;
+        for (int thread = 0; thread < nthread; thread++) {
+            Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nvirtual_}));
+            Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
 
-    // Loop over e and f to compute V
+            Vefu.push_back(
+                ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nvirtual_, nactive_}));
+            Tefv.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nvirtual_, nactive_}));
 
-    ambit::Tensor BeuQ = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_);
+            tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
+            tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
+        }
+        // ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_,
+        // avirt_mos_);
+        // ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_,
+        // avirt_mos_);
 
-// std::vector<double>& BemQ_data = BemQ.data();
+        // Loop over e and f to compute V
 
-// I think this loop is typically too small to allow efficient use of
-// OpenMP.  Should probably test this assumption.
+        ambit::Tensor BeuQ = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_);
+
+    // std::vector<double>& BemQ_data = BemQ.data();
+
+    // I think this loop is typically too small to allow efficient use of
+    // OpenMP.  Should probably test this assumption.
 #pragma omp parallel for num_threads(num_threads_)
-    for (size_t m = 0; m < ncore_; m++) {
-        int thread = 0;
+        for (size_t m = 0; m < ncore_; m++) {
+            int thread = 0;
 #ifdef _OPENMP
-        thread = omp_get_thread_num();
+            thread = omp_get_thread_num();
 #endif
-        size_t ma = core_mos_[m];
+            size_t ma = core_mos_[m];
 
-// V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
-// V[efu]_m = V[efmu] + V[efmu] * exp[efmu]
-// T2["mvef"] = V["mvef"] * D["mvef"]
-// temp["uv"] = V * T2
+    // V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
+    // V[efu]_m = V[efmu] + V[efmu] * exp[efmu]
+    // T2["mvef"] = V["mvef"] * D["mvef"]
+    // temp["uv"] = V * T2
 #pragma omp critical
-        { Bm_Qe[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
+            { Bm_Qe[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
 
-        Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
-        Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
+            Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+            Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
 
-        // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
-        // Denom^{mv}_{ef}
-        Tefv[thread].data() = Vefu[thread].data();
-
-        std::vector<double>& T_mv_data = Tefv[thread].data();
-        Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-            double Exp =
-                Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fa_[ma];
-            double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
-                               Fa_[ma]);
-            value = value + value * dsrg_source_->compute_renormalized(Exp);
-            T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                dsrg_source_->compute_renormalized_denominator(D);
-        });
-
-        //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
-        //        value){
-        //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
-        //            Fa_[ea] - Fa_[fa];
-        //            value = value *
-        //            dsrg_source_->compute_renormalized_denominator(D);});
-
-        tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
-        Vefu[thread].zero();
-        Tefv[thread].zero();
-
-        Vefu[thread].zero();
-        Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
-
-        // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
-        // Denom^{mv}_{ef}
-        Tefv[thread].data() = Vefu[thread].data();
-        T_mv_data = Tefv[thread].data();
-        T_mv_data = Tefv[thread].data();
-        Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-            double Exp =
-                Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fb_[ma];
-            double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
-                               Fb_[ma]);
-            value = value + value * dsrg_source_->compute_renormalized(Exp);
-            T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                dsrg_source_->compute_renormalized_denominator(D);
-        });
-
-        //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
-        //        value){
-        //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
-        //            Fa_[ea] - Fa_[fa];
-        //            value = value *
-        //            dsrg_source_->compute_renormalized_denominator(D);});
-
-        tempTAA[thread]("vu") += Vefu[thread]("e, f, u") * Tefv[thread]("e,f, v");
-        tempTaa[thread]("vu") += Vefu[thread]("e,f, u") * Tefv[thread]("e,f, v");
-        Vefu[thread].zero();
-        Tefv[thread].zero();
-
-        Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
-        Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
-
-        // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
-        // Denom^{mv}_{ef}
-
-        Tefv[thread].data() = Vefu[thread].data();
-        T_mv_data = Tefv[thread].data();
-
-        T_mv_data = Tefv[thread].data();
-        Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-            double Exp =
-                Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] - Fb_[ma];
-            double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] -
-                               Fb_[ma]);
-            value = value + value * dsrg_source_->compute_renormalized(Exp);
-            T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                dsrg_source_->compute_renormalized_denominator(D);
-        });
-
-        tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
-    }
-
-    ambit::Tensor tempTAA_all =
-        ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
-    ambit::Tensor tempTaa_all =
-        ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
-    for (int thread = 0; thread < nthread; thread++) {
-        tempTAA_all("v, u") += tempTAA[thread]("v, u");
-        tempTaa_all("v, u") += tempTaa[thread]("v, u");
-    }
-
-    Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
-    Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
-
-    if (print_ > 0) {
-        outfile->Printf("\n\n  CAVV computation takes %8.8f", ccvaTimer.get());
-    }
-
-    std::vector<ambit::Tensor> Bm_vQ;
-    std::vector<ambit::Tensor> Bn_eQ;
-    std::vector<ambit::Tensor> Bm_eQ;
-    std::vector<ambit::Tensor> Bn_vQ;
-
-    std::vector<ambit::Tensor> V_eu;
-    std::vector<ambit::Tensor> T_ev;
-    std::vector<ambit::Tensor> tempTaa_e;
-    std::vector<ambit::Tensor> tempTAA_e;
-
-    ambit::Tensor BmvQ = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_);
-    ambit::Tensor BmvQ_swapped =
-        ambit::Tensor::build(tensor_type_, "Bm_vQ", {ncore_, nthree_, nactive_});
-    BmvQ_swapped("m, Q, u") = BmvQ("Q, m, u");
-    local_timer cavvTimer;
-    for (int thread = 0; thread < nthread; thread++) {
-        Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nactive_}));
-        Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, nvirtual_}));
-        Bm_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
-        Bn_vQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nactive_}));
-
-        V_eu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nactive_}));
-        T_ev.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nactive_}));
-
-        tempTaa_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
-        tempTAA_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
-    }
-    ambit::Tensor Eta1_aa = Eta1_.block("aa");
-    ambit::Tensor Eta1_AA = Eta1_.block("AA");
-
-#pragma omp parallel for num_threads(num_threads_)
-    for (size_t m = 0; m < ncore_; ++m) {
-        size_t ma = core_mos_[m];
-        size_t mb = core_mos_[m];
-        int thread = 0;
-#ifdef _OPENMP
-        thread = omp_get_thread_num();
-#endif
-
-#pragma omp critical
-        { Bm_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
-        std::copy(&BmvQ_swapped.data()[m * nthree_ * nactive_],
-                  &BmvQ_swapped.data()[m * nthree_ * nactive_ + nthree_ * nactive_],
-                  Bm_vQ[thread].data().begin());
-
-        for (size_t n = 0; n < ncore_; ++n) {
-            // alpha-aplha
-            size_t na = core_mos_[n];
-            size_t nb = core_mos_[n];
-
-            std::copy(&BmvQ_swapped.data()[n * nthree_ * nactive_],
-                      &BmvQ_swapped.data()[n * nthree_ * nactive_ + nthree_ * nactive_],
-                      Bn_vQ[thread].data().begin());
-//    Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
-//        value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
-//    });
-#pragma omp critical
-            { Bn_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, na, virt_mos_); }
-
-            // B_{mv}^{Q} * B_{ne}^{Q} - B_{me}^Q * B_{nv}
-            V_eu[thread]("e, u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, e");
-            V_eu[thread]("e, u") -= Bm_eQ[thread]("Q, e") * Bn_vQ[thread]("Q, u");
             // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
             // Denom^{mv}_{ef}
-            T_ev[thread].data() = V_eu[thread].data();
+            Tefv[thread].data() = Vefu[thread].data();
 
-            V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                double Exp = Fa_[actv_mos_[i[1]]] + Fa_[virt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
+            std::vector<double>& T_mv_data = Tefv[thread].data();
+            Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double Exp =
+                    Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fa_[ma];
+                double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
+                                Fa_[ma]);
                 value = value + value * dsrg_source_->compute_renormalized(Exp);
-                double D = Fa_[ma] + Fa_[na] - Fa_[actv_mos_[i[1]]] - Fa_[virt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
                     dsrg_source_->compute_renormalized_denominator(D);
-                ;
             });
 
-            tempTaa_e[thread]("u,v") += 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
-            V_eu[thread].zero();
-            T_ev[thread].zero();
+            //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
+            //        value){
+            //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
+            //            Fa_[ea] - Fa_[fa];
+            //            value = value *
+            //            dsrg_source_->compute_renormalized_denominator(D);});
 
-            // alpha-beta
-            // temp["vu"] += V_["vEmN"] * T2_["mNuE"];
-            //
-            V_eu[thread]("E,u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, E");
-            T_ev[thread].data() = V_eu[thread].data();
-            V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                double Exp = Fa_[actv_mos_[i[1]]] + Fb_[virt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
+            tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
+            Vefu[thread].zero();
+            Tefv[thread].zero();
+
+            Vefu[thread].zero();
+            Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+
+            // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+            // Denom^{mv}_{ef}
+            Tefv[thread].data() = Vefu[thread].data();
+            T_mv_data = Tefv[thread].data();
+            T_mv_data = Tefv[thread].data();
+            Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double Exp =
+                    Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fb_[ma];
+                double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
+                                Fb_[ma]);
                 value = value + value * dsrg_source_->compute_renormalized(Exp);
-                double D = Fa_[ma] + Fb_[nb] - Fa_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
                     dsrg_source_->compute_renormalized_denominator(D);
-                ;
             });
 
-            tempTAA_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M,u");
-            tempTaa_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M, u");
+            //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
+            //        value){
+            //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
+            //            Fa_[ea] - Fa_[fa];
+            //            value = value *
+            //            dsrg_source_->compute_renormalized_denominator(D);});
 
-            // beta-beta
-            V_eu[thread].zero();
-            T_ev[thread].zero();
-            V_eu[thread]("E,U") = Bm_vQ[thread]("Q, U") * Bn_eQ[thread]("Q,E");
-            V_eu[thread]("E,U") -= Bm_eQ[thread]("Q, E") * Bn_vQ[thread]("Q, U");
-            T_ev[thread].data() = V_eu[thread].data();
+            tempTAA[thread]("vu") += Vefu[thread]("e, f, u") * Tefv[thread]("e,f, v");
+            tempTaa[thread]("vu") += Vefu[thread]("e,f, u") * Tefv[thread]("e,f, v");
+            Vefu[thread].zero();
+            Tefv[thread].zero();
 
-            V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                double Exp = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+            Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+            Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
+
+            // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+            // Denom^{mv}_{ef}
+
+            Tefv[thread].data() = Vefu[thread].data();
+            T_mv_data = Tefv[thread].data();
+
+            T_mv_data = Tefv[thread].data();
+            Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double Exp =
+                    Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] - Fb_[ma];
+                double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] -
+                                Fb_[ma]);
                 value = value + value * dsrg_source_->compute_renormalized(Exp);
-                double D = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
                     dsrg_source_->compute_renormalized_denominator(D);
-                ;
             });
 
-            tempTAA_e[thread]("v,u") += 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
-            V_eu[thread].zero();
-            T_ev[thread].zero();
+            tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
+        }
+
+        ambit::Tensor tempTAA_all =
+            ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
+        ambit::Tensor tempTaa_all =
+            ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
+        for (int thread = 0; thread < nthread; thread++) {
+            tempTAA_all("v, u") += tempTAA[thread]("v, u");
+            tempTaa_all("v, u") += tempTaa[thread]("v, u");
+        }
+
+        Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
+        Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
+
+        if (print_ > 0) {
+            outfile->Printf("\n\n  CAVV computation takes %8.8f", cavvTimer.get());
+        }
+    }
+//     local_timer cavvTimer;
+//     for (int thread = 0; thread < nthread; thread++) {
+//         Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nvirtual_}));
+//         Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
+
+//         Vefu.push_back(
+//             ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nvirtual_, nactive_}));
+//         Tefv.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nvirtual_, nactive_}));
+
+//         tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
+//         tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
+//     }
+//     // ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_,
+//     // avirt_mos_);
+//     // ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_,
+//     // avirt_mos_);
+
+//     // Loop over e and f to compute V
+
+//     ambit::Tensor BeuQ = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_);
+
+// // std::vector<double>& BemQ_data = BemQ.data();
+
+// // I think this loop is typically too small to allow efficient use of
+// // OpenMP.  Should probably test this assumption.
+// #pragma omp parallel for num_threads(num_threads_)
+//     for (size_t m = 0; m < ncore_; m++) {
+//         int thread = 0;
+// #ifdef _OPENMP
+//         thread = omp_get_thread_num();
+// #endif
+//         size_t ma = core_mos_[m];
+
+// // V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
+// // V[efu]_m = V[efmu] + V[efmu] * exp[efmu]
+// // T2["mvef"] = V["mvef"] * D["mvef"]
+// // temp["uv"] = V * T2
+// #pragma omp critical
+//         { Bm_Qe[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
+
+//         Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+//         Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
+
+//         // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+//         // Denom^{mv}_{ef}
+//         Tefv[thread].data() = Vefu[thread].data();
+
+//         std::vector<double>& T_mv_data = Tefv[thread].data();
+//         Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//             double Exp =
+//                 Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fa_[ma];
+//             double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
+//                                Fa_[ma]);
+//             value = value + value * dsrg_source_->compute_renormalized(Exp);
+//             T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+//                 dsrg_source_->compute_renormalized_denominator(D);
+//         });
+
+//         //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
+//         //        value){
+//         //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
+//         //            Fa_[ea] - Fa_[fa];
+//         //            value = value *
+//         //            dsrg_source_->compute_renormalized_denominator(D);});
+
+//         tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
+//         Vefu[thread].zero();
+//         Tefv[thread].zero();
+
+//         Vefu[thread].zero();
+//         Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+
+//         // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+//         // Denom^{mv}_{ef}
+//         Tefv[thread].data() = Vefu[thread].data();
+//         T_mv_data = Tefv[thread].data();
+//         T_mv_data = Tefv[thread].data();
+//         Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//             double Exp =
+//                 Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fb_[ma];
+//             double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
+//                                Fb_[ma]);
+//             value = value + value * dsrg_source_->compute_renormalized(Exp);
+//             T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+//                 dsrg_source_->compute_renormalized_denominator(D);
+//         });
+
+//         //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
+//         //        value){
+//         //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
+//         //            Fa_[ea] - Fa_[fa];
+//         //            value = value *
+//         //            dsrg_source_->compute_renormalized_denominator(D);});
+
+//         tempTAA[thread]("vu") += Vefu[thread]("e, f, u") * Tefv[thread]("e,f, v");
+//         tempTaa[thread]("vu") += Vefu[thread]("e,f, u") * Tefv[thread]("e,f, v");
+//         Vefu[thread].zero();
+//         Tefv[thread].zero();
+
+//         Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+//         Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
+
+//         // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+//         // Denom^{mv}_{ef}
+
+//         Tefv[thread].data() = Vefu[thread].data();
+//         T_mv_data = Tefv[thread].data();
+
+//         T_mv_data = Tefv[thread].data();
+//         Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//             double Exp =
+//                 Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] - Fb_[ma];
+//             double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] -
+//                                Fb_[ma]);
+//             value = value + value * dsrg_source_->compute_renormalized(Exp);
+//             T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+//                 dsrg_source_->compute_renormalized_denominator(D);
+//         });
+
+//         tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
+//     }
+
+//     ambit::Tensor tempTAA_all =
+//         ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
+//     ambit::Tensor tempTaa_all =
+//         ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
+//     for (int thread = 0; thread < nthread; thread++) {
+//         tempTAA_all("v, u") += tempTAA[thread]("v, u");
+//         tempTaa_all("v, u") += tempTaa[thread]("v, u");
+//     }
+
+//     Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
+//     Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
+
+//     if (print_ > 0) {
+//         outfile->Printf("\n\n  CAVV computation takes %8.8f", cavvTimer.get());
+//     }
+
+    if (laplace_ccav) {
+        outfile->Printf("\n    CCAV has not been calculated. Laplace algorithm will be used.");
+    } else {
+        std::vector<ambit::Tensor> Bm_vQ;
+        std::vector<ambit::Tensor> Bn_eQ;
+        std::vector<ambit::Tensor> Bm_eQ;
+        std::vector<ambit::Tensor> Bn_vQ;
+
+        std::vector<ambit::Tensor> V_eu;
+        std::vector<ambit::Tensor> T_ev;
+        std::vector<ambit::Tensor> tempTaa_e;
+        std::vector<ambit::Tensor> tempTAA_e;
+
+        ambit::Tensor BmvQ = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_);
+        ambit::Tensor BmvQ_swapped =
+            ambit::Tensor::build(tensor_type_, "Bm_vQ", {ncore_, nthree_, nactive_});
+        BmvQ_swapped("m, Q, u") = BmvQ("Q, m, u");
+        local_timer ccvaTimer;
+        for (int thread = 0; thread < nthread; thread++) {
+            Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nactive_}));
+            Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, nvirtual_}));
+            Bm_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
+            Bn_vQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nactive_}));
+
+            V_eu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nactive_}));
+            T_ev.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nactive_}));
+
+            tempTaa_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
+            tempTAA_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
+        }
+        ambit::Tensor Eta1_aa = Eta1_.block("aa");
+        ambit::Tensor Eta1_AA = Eta1_.block("AA");
+
+#pragma omp parallel for num_threads(num_threads_)
+        for (size_t m = 0; m < ncore_; ++m) {
+            size_t ma = core_mos_[m];
+            size_t mb = core_mos_[m];
+            int thread = 0;
+#ifdef _OPENMP
+            thread = omp_get_thread_num();
+#endif
+
+#pragma omp critical
+            { Bm_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
+            std::copy(&BmvQ_swapped.data()[m * nthree_ * nactive_],
+                    &BmvQ_swapped.data()[m * nthree_ * nactive_ + nthree_ * nactive_],
+                    Bm_vQ[thread].data().begin());
+
+            for (size_t n = 0; n < ncore_; ++n) {
+                // alpha-aplha
+                size_t na = core_mos_[n];
+                size_t nb = core_mos_[n];
+
+                std::copy(&BmvQ_swapped.data()[n * nthree_ * nactive_],
+                        &BmvQ_swapped.data()[n * nthree_ * nactive_ + nthree_ * nactive_],
+                        Bn_vQ[thread].data().begin());
+    //    Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+    //        value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
+    //    });
+#pragma omp critical
+                { Bn_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, na, virt_mos_); }
+
+                // B_{mv}^{Q} * B_{ne}^{Q} - B_{me}^Q * B_{nv}
+                V_eu[thread]("e, u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, e");
+                V_eu[thread]("e, u") -= Bm_eQ[thread]("Q, e") * Bn_vQ[thread]("Q, u");
+                // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+                // Denom^{mv}_{ef}
+                T_ev[thread].data() = V_eu[thread].data();
+
+                V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double Exp = Fa_[actv_mos_[i[1]]] + Fa_[virt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    double D = Fa_[ma] + Fa_[na] - Fa_[actv_mos_[i[1]]] - Fa_[virt_mos_[i[0]]];
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
+                });
+
+                tempTaa_e[thread]("u,v") += 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
+                V_eu[thread].zero();
+                T_ev[thread].zero();
+
+                // alpha-beta
+                // temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+                //
+                V_eu[thread]("E,u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, E");
+                T_ev[thread].data() = V_eu[thread].data();
+                V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double Exp = Fa_[actv_mos_[i[1]]] + Fb_[virt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    double D = Fa_[ma] + Fb_[nb] - Fa_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
+                });
+
+                tempTAA_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M,u");
+                tempTaa_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M, u");
+
+                // beta-beta
+                V_eu[thread].zero();
+                T_ev[thread].zero();
+                V_eu[thread]("E,U") = Bm_vQ[thread]("Q, U") * Bn_eQ[thread]("Q,E");
+                V_eu[thread]("E,U") -= Bm_eQ[thread]("Q, E") * Bn_vQ[thread]("Q, U");
+                T_ev[thread].data() = V_eu[thread].data();
+
+                V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double Exp = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    double D = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
+                });
+
+                tempTAA_e[thread]("v,u") += 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
+                V_eu[thread].zero();
+                T_ev[thread].zero();
+            }
+        }
+
+        ambit::Tensor tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
+        ambit::Tensor tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
+        for (int thread = 0; thread < nthread; thread++) {
+            tempTAA_all("u, v") += tempTAA_e[thread]("u,v");
+            tempTaa_all("u, v") += tempTaa_e[thread]("u,v");
+        }
+        Eccva += tempTaa_all("vu") * Eta1_aa("uv");
+        Eccva += tempTAA_all("VU") * Eta1_AA("UV");
+        if (print_ > 0) {
+            outfile->Printf("\n\n  CCVA takes %8.8f", ccvaTimer.get());
         }
     }
 
-    tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
-    tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
-    for (int thread = 0; thread < nthread; thread++) {
-        tempTAA_all("u, v") += tempTAA_e[thread]("u,v");
-        tempTaa_all("u, v") += tempTaa_e[thread]("u,v");
-    }
-    Eccva += tempTaa_all("vu") * Eta1_aa("uv");
-    Eccva += tempTAA_all("VU") * Eta1_AA("UV");
-    if (print_ > 0) {
-        outfile->Printf("\n\n  CCVA takes %8.8f", cavvTimer.get());
-    }
+//     std::vector<ambit::Tensor> Bm_vQ;
+//     std::vector<ambit::Tensor> Bn_eQ;
+//     std::vector<ambit::Tensor> Bm_eQ;
+//     std::vector<ambit::Tensor> Bn_vQ;
 
+//     std::vector<ambit::Tensor> V_eu;
+//     std::vector<ambit::Tensor> T_ev;
+//     std::vector<ambit::Tensor> tempTaa_e;
+//     std::vector<ambit::Tensor> tempTAA_e;
+
+//     ambit::Tensor BmvQ = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_);
+//     ambit::Tensor BmvQ_swapped =
+//         ambit::Tensor::build(tensor_type_, "Bm_vQ", {ncore_, nthree_, nactive_});
+//     BmvQ_swapped("m, Q, u") = BmvQ("Q, m, u");
+//     local_timer ccvaTimer;
+//     for (int thread = 0; thread < nthread; thread++) {
+//         Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nactive_}));
+//         Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, nvirtual_}));
+//         Bm_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
+//         Bn_vQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nactive_}));
+
+//         V_eu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nactive_}));
+//         T_ev.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nactive_}));
+
+//         tempTaa_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
+//         tempTAA_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
+//     }
+//     ambit::Tensor Eta1_aa = Eta1_.block("aa");
+//     ambit::Tensor Eta1_AA = Eta1_.block("AA");
+
+// #pragma omp parallel for num_threads(num_threads_)
+//     for (size_t m = 0; m < ncore_; ++m) {
+//         size_t ma = core_mos_[m];
+//         size_t mb = core_mos_[m];
+//         int thread = 0;
+// #ifdef _OPENMP
+//         thread = omp_get_thread_num();
+// #endif
+
+// #pragma omp critical
+//         { Bm_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
+//         std::copy(&BmvQ_swapped.data()[m * nthree_ * nactive_],
+//                   &BmvQ_swapped.data()[m * nthree_ * nactive_ + nthree_ * nactive_],
+//                   Bm_vQ[thread].data().begin());
+
+//         for (size_t n = 0; n < ncore_; ++n) {
+//             // alpha-aplha
+//             size_t na = core_mos_[n];
+//             size_t nb = core_mos_[n];
+
+//             std::copy(&BmvQ_swapped.data()[n * nthree_ * nactive_],
+//                       &BmvQ_swapped.data()[n * nthree_ * nactive_ + nthree_ * nactive_],
+//                       Bn_vQ[thread].data().begin());
+// //    Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+// //        value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
+// //    });
+// #pragma omp critical
+//             { Bn_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, na, virt_mos_); }
+
+//             // B_{mv}^{Q} * B_{ne}^{Q} - B_{me}^Q * B_{nv}
+//             V_eu[thread]("e, u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, e");
+//             V_eu[thread]("e, u") -= Bm_eQ[thread]("Q, e") * Bn_vQ[thread]("Q, u");
+//             // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+//             // Denom^{mv}_{ef}
+//             T_ev[thread].data() = V_eu[thread].data();
+
+//             V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//                 double Exp = Fa_[actv_mos_[i[1]]] + Fa_[virt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
+//                 value = value + value * dsrg_source_->compute_renormalized(Exp);
+//                 double D = Fa_[ma] + Fa_[na] - Fa_[actv_mos_[i[1]]] - Fa_[virt_mos_[i[0]]];
+//                 T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+//                     dsrg_source_->compute_renormalized_denominator(D);
+//                 ;
+//             });
+
+//             tempTaa_e[thread]("u,v") += 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
+//             V_eu[thread].zero();
+//             T_ev[thread].zero();
+
+//             // alpha-beta
+//             // temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+//             //
+//             V_eu[thread]("E,u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, E");
+//             T_ev[thread].data() = V_eu[thread].data();
+//             V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//                 double Exp = Fa_[actv_mos_[i[1]]] + Fb_[virt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
+//                 value = value + value * dsrg_source_->compute_renormalized(Exp);
+//                 double D = Fa_[ma] + Fb_[nb] - Fa_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+//                 T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+//                     dsrg_source_->compute_renormalized_denominator(D);
+//                 ;
+//             });
+
+//             tempTAA_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M,u");
+//             tempTaa_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M, u");
+
+//             // beta-beta
+//             V_eu[thread].zero();
+//             T_ev[thread].zero();
+//             V_eu[thread]("E,U") = Bm_vQ[thread]("Q, U") * Bn_eQ[thread]("Q,E");
+//             V_eu[thread]("E,U") -= Bm_eQ[thread]("Q, E") * Bn_vQ[thread]("Q, U");
+//             T_ev[thread].data() = V_eu[thread].data();
+
+//             V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+//                 double Exp = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+//                 value = value + value * dsrg_source_->compute_renormalized(Exp);
+//                 double D = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+//                 T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+//                     dsrg_source_->compute_renormalized_denominator(D);
+//                 ;
+//             });
+
+//             tempTAA_e[thread]("v,u") += 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
+//             V_eu[thread].zero();
+//             T_ev[thread].zero();
+//         }
+//     }
+
+//     tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
+//     tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
+//     for (int thread = 0; thread < nthread; thread++) {
+//         tempTAA_all("u, v") += tempTAA_e[thread]("u,v");
+//         tempTaa_all("u, v") += tempTaa_e[thread]("u,v");
+//     }
+//     Eccva += tempTaa_all("vu") * Eta1_aa("uv");
+//     Eccva += tempTAA_all("VU") * Eta1_AA("UV");
+//     if (print_ > 0) {
+//         outfile->Printf("\n\n  CCVA takes %8.8f", ccvaTimer.get());
+//     }
+
+    outfile->Printf("\n E_cavv: %8.6f", Eacvv);
+    outfile->Printf("\n E_ccav: %8.6f", Eccva);
     return (Eacvv + Eccva);
 }
 
