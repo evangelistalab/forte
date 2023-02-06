@@ -3,7 +3,7 @@ import forte
 refmcscf =   -226.575081996603
 refdsrgpt2 = -226.883026729816
 
-molecule mbenzyne{
+molecule pbenzyne{
   0 1
    C   0.0000000000  -2.5451795941   0.0000000000
    C   0.0000000000   2.5451795941   0.0000000000

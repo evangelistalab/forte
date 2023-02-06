@@ -32,6 +32,7 @@
 #include "psi4/libmints/vector.h"
 
 #include "base_classes/mo_space_info.h"
+#include "helpers/disk_io.h"
 #include "sparse_ci/sigma_vector.h"
 
 #include "ci-no.h"
@@ -81,9 +82,6 @@ CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> opti
 }
 
 CINO::~CINO() {}
-
-psi::SharedMatrix CINO::get_Ua() { return Ua_; }
-psi::SharedMatrix CINO::get_Ub() { return Ub_; }
 
 void CINO::compute_transformation() {
     outfile->Printf("\n\n  Computing CIS natural orbitals\n");
@@ -563,6 +561,10 @@ void CINO::find_active_space_and_transform(
     outfile->Printf("\n  FROZEN_DOCC     = %s", dimension_to_string(noci_fdocc).c_str());
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
     outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
+
+    dump_occupations(
+        "ci_nos_occ",
+        {{"FROZEN_DOCC", noci_fdocc}, {"RESTRICTED_DOCC", noci_rdocc}, {"ACTIVE", noci_actv}});
 
     // Pass the MOSpaceInfo
     // TODO: Re-enable this

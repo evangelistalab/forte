@@ -83,6 +83,11 @@ void SA_MRPT2::startup() {
 
     // initialize tensors for amplitudes
     init_amps();
+
+    // build amplitudes
+    compute_t2();
+    compute_t1();
+    analyze_amplitudes("First-Order", T1_, T2_);
 }
 
 void SA_MRPT2::build_ints() {
@@ -276,11 +281,6 @@ void SA_MRPT2::check_memory() {
 }
 
 double SA_MRPT2::compute_energy() {
-    // build amplitudes
-    compute_t2();
-    compute_t1();
-    analyze_amplitudes("First-Order", T1_, T2_);
-
     // scale the integrals
     renormalize_integrals(true);
 

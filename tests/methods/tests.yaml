@@ -277,6 +277,9 @@ l-bfgs:
 mp2-nos:
    short:
       - mp2-nos-1
+      - mrpt2-nos-1
+   medium:
+      - mrpt2-nos-2
 mr-dsrg-pt2:
    short:
       - mr-dsrg-pt2-1
