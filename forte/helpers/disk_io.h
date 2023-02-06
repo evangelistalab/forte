@@ -32,9 +32,9 @@
 
 #include <algorithm>
 #include <chrono>
-#include <map>
 #include <numeric>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <pybind11/pybind11.h>
@@ -43,6 +43,7 @@
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
+#include "psi4/libmints/dimension.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
@@ -66,6 +67,15 @@ void write_disk_vector_double(const std::string& filename, const std::vector<dou
  * @param data The data to be read
  */
 void read_disk_vector_double(const std::string& filename, std::vector<double>& data);
+
+/**
+ * @brief Dump occupation numbers to disk in json format
+ *
+ * @param filename The name of the json file, e.g., filename = "abc" -> abc.json
+ * @param occ_map The map from space name to occupation numbers per irrep
+ */
+void dump_occupations(const std::string& filename,
+                      std::unordered_map<std::string, psi::Dimension> occ_map);
 
 ///**
 // * @brief Save a BlockedTensor to file

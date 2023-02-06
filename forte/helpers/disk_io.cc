@@ -92,6 +92,39 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
     in.close();
 }
 
+void dump_occupations(const std::string& filename,
+                      std::unordered_map<std::string, psi::Dimension> occ_map) {
+    int nirrep = -1;
+    std::vector<std::string> spaces;
+    for (const auto& [space_name, dim] : occ_map) {
+        if (nirrep == -1) {
+            nirrep = dim.n();
+        } else {
+            if (dim.n() != nirrep)
+                throw std::runtime_error("Inconsistent number of irreps!");
+        }
+        spaces.push_back(space_name);
+    }
+    std::ofstream wfile(filename + ".json");
+    if (wfile.is_open()) {
+        wfile << "{";
+        for (int i = 0, n = spaces.size(); i < n; ++i) {
+            wfile << "\n    \"" << spaces[i] << "\": [";
+            for (int h = 0; h < nirrep; ++h) {
+                wfile << occ_map.at(spaces[i])[h];
+                if (h < (nirrep - 1))
+                    wfile << ",";
+            }
+            wfile << "]";
+            if (i < (n - 1))
+                wfile << ",";
+        }
+        wfile << "\n}";
+    } else {
+        throw std::runtime_error("Unable to open file for dump occupation numbers!");
+    }
+}
+
 // std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
 //                          const std::string& file_prefix) {
 //    auto block_labels = BT.block_labels();

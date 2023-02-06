@@ -1505,4 +1505,170 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
 
     print_done(t_cavv.stop());
 }
+
+psi::SharedMatrix SA_MRPT2::build_1rdm_cc() {
+    timer tcc("1RDM-CC");
+
+    auto D1c = D1_.block("cc");
+
+    if (eri_df_) {
+        compute_1rdm_cc_CCVV_DF(D1_);
+        compute_1rdm_cc_CCAV_DF(D1_, {});
+        compute_1rdm_cc_aa_CAVV_DF(D1_, {});
+    } else {
+        local_timer t;
+        print_contents("Computing CCVV 1RDM CC part");
+        D1c("ij") -= 2.0 * T2_.block("ccvv")("ikab") * S2_.block("ccvv")("jkab");
+        print_done(t.get());
+
+        t.reset();
+        print_contents("Computing CCAV 1RDM CC part");
+        D1c("ij") -=
+            T2_.block("ccav")("ikva") * S2_.block("ccav")("jkua") * Eta1_.block("aa")("uv");
+        D1c("ij") -=
+            T2_.block("ccav")("kiva") * S2_.block("ccav")("kjua") * Eta1_.block("aa")("uv");
+        print_done(t.get());
+
+        t.reset();
+        print_contents("Computing CAVV 1RDM CC part");
+        D1c("ij") -= T2_.block("cavv")("iuab") * S2_.block("cavv")("jvab") * L1_.block("aa")("uv");
+        print_done(t.get());
+    }
+
+    local_timer t;
+    print_contents("Computing T1 contr. to 1RDM CC part");
+
+    D1_["mn"] -= 2.0 * T1_["ne"] * T1_["me"];
+    D1_["mn"] -= T1_["nv"] * T1_["mu"] * Eta1_["uv"];
+
+    D1_["mn"] += T1_["nx"] * T2_["myuv"] * L2_["uvxy"];
+    D1_["mn"] += T1_["mu"] * T2_["nvxy"] * L2_["uvxy"];
+    print_done(t.get());
+
+    t.reset();
+    print_contents("Computing T2 contr. to 1RDM CC part");
+
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_D1cc", {"aaaa"});
+    temp["uvxy"] = L2_["uvxy"];
+    temp["uvxy"] += Eta1_["ux"] * Eta1_["vy"];
+    temp["uvxy"] -= 0.5 * Eta1_["vx"] * Eta1_["uy"];
+    D1c("ij") -= T2_.block("ccaa")("ikuv") * T2_.block("ccaa")("jkxy") * temp.block("aaaa")("uvxy");
+
+    D1_["mn"] -= 0.5 * T2_["mzuv"] * T2_["nwxy"] * L1_["wz"] * L2_["uvxy"];
+
+    D1_["mn"] -= 0.5 * T2_["ynve"] * S2_["xmue"] * L1_["yx"] * Eta1_["uv"];
+    D1_["mn"] -= 0.5 * T2_["nyve"] * S2_["mxue"] * L1_["yx"] * Eta1_["uv"];
+
+    D1_["mn"] -= 0.25 * T2_["nuyz"] * S2_["mvxw"] * L1_["uv"] * Eta1_["xy"] * Eta1_["wz"];
+
+    D1_["mn"] -= T2_["vnye"] * S2_["xmue"] * L2_["uvxy"];
+    D1_["mn"] += T2_["nvye"] * T2_["xmue"] * L2_["uvxy"];
+    D1_["mn"] += T2_["nvye"] * T2_["mxue"] * L2_["uvyx"];
+
+    D1_["mn"] -= 0.5 * T2_["nvzy"] * S2_["mxwu"] * Eta1_["wz"] * L2_["uvxy"];
+    D1_["mn"] += 0.5 * T2_["nvyz"] * T2_["mxwu"] * Eta1_["wz"] * L2_["uvxy"];
+    D1_["mn"] += 0.5 * T2_["nvyz"] * T2_["mxuw"] * Eta1_["wz"] * L2_["uvyx"];
+
+    if (do_cu3_) {
+        if (store_cu3_) {
+            D1c("mn") += T2_.block("caaa")("nwxy") * T2_.block("caaa")("mzuv") * L3_("xyzuwv");
+        } else {
+            throw std::runtime_error("Direct algorithm for D1 CC not available!");
+        }
+    }
+
+    print_done(t.get());
+
+    return tensor_to_matrix(D1_.block("cc"), mo_space_info_->dimension("RESTRICTED_DOCC"));
+}
+
+psi::SharedMatrix SA_MRPT2::build_1rdm_vv() {
+    timer tvv("1RDM-VV");
+
+    auto D1v = D1_.block("vv");
+
+    if (eri_df_) {
+        compute_1rdm_vv_CCVV_DF(D1_);
+        compute_1rdm_vv_CAVV_DF(D1_, {});
+        compute_1rdm_aa_vv_CCAV_DF(D1_, {});
+    } else {
+        local_timer t;
+        print_contents("Computing CCVV 1RDM VV part");
+        D1v("ab") += 2.0 * T2_.block("ccvv")("ijac") * S2_.block("ccvv")("ijbc");
+        print_done(t.get());
+
+        t.reset();
+        print_contents("Computing CAVV 1RDM VV part");
+        D1v("ab") += T2_.block("cavv")("iuac") * S2_.block("cavv")("ivbc") * L1_.block("aa")("uv");
+        D1v("ab") += T2_.block("cavv")("iuca") * S2_.block("cavv")("ivcb") * L1_.block("aa")("uv");
+        print_done(t.get());
+
+        t.reset();
+        print_contents("Computing CCAV 1RDM VV part");
+        D1v("ab") +=
+            T2_.block("ccav")("ijva") * S2_.block("ccav")("ijub") * Eta1_.block("aa")("uv");
+        print_done(t.get());
+    }
+
+    local_timer t;
+    print_contents("Computing T1 contr. to 1RDM VV part");
+
+    D1_["ef"] += 2.0 * T1_["me"] * T1_["mf"];
+    D1_["ef"] += T1_["ue"] * T1_["vf"] * L1_["uv"];
+
+    D1_["ef"] += T1_["ue"] * T2_["xyfv"] * L2_["uvxy"];
+    D1_["ef"] += T1_["xf"] * T2_["uvey"] * L2_["uvxy"];
+    print_done(t.get());
+
+    t.reset();
+    print_contents("Computing T2 contr. to 1RDM VV part");
+
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_D1vv", {"aaaa"});
+    temp["uvxy"] = L2_["uvxy"];
+    temp["uvxy"] += L1_["ux"] * L1_["vy"];
+    temp["uvxy"] -= 0.5 * L1_["vx"] * L1_["uy"];
+    D1v("ab") += T2_.block("aavv")("uvac") * T2_.block("aavv")("xybc") * temp.block("aaaa")("uvxy");
+
+    D1_["ef"] += 0.5 * T2_["uvez"] * T2_["xyfw"] * Eta1_["wz"] * L2_["uvxy"];
+
+    D1_["ef"] += 0.5 * T2_["umxe"] * S2_["vmyf"] * L1_["uv"] * Eta1_["yx"];
+    D1_["ef"] += 0.5 * T2_["muxe"] * S2_["mvyf"] * L1_["uv"] * Eta1_["yx"];
+
+    D1_["ef"] += 0.25 * T2_["uxez"] * S2_["vyfw"] * L1_["uv"] * L1_["xy"] * Eta1_["wz"];
+
+    D1_["ef"] += T2_["vmye"] * S2_["xmuf"] * L2_["uvxy"];
+    D1_["ef"] -= T2_["mvye"] * T2_["xmuf"] * L2_["uvxy"];
+    D1_["ef"] -= T2_["mvye"] * T2_["mxuf"] * L2_["uvyx"];
+
+    D1_["ef"] += 0.5 * T2_["wvey"] * S2_["zxfu"] * L1_["wz"] * L2_["uvxy"];
+    D1_["ef"] -= 0.5 * T2_["vwey"] * T2_["zxfu"] * L1_["wz"] * L2_["uvxy"];
+    D1_["ef"] -= 0.5 * T2_["vwey"] * T2_["xzfu"] * L1_["wz"] * L2_["uvyx"];
+
+    if (do_cu3_) {
+        if (store_cu3_) {
+            D1v("ef") += T2_.block("aava")("uvez") * T2_.block("aava")("xyfw") * L3_("xyzuwv");
+        } else {
+            throw std::runtime_error("Direct algorithm for D1 VV not available!");
+        }
+    }
+
+    print_done(t.get());
+
+    return tensor_to_matrix(D1_.block("vv"), mo_space_info_->dimension("RESTRICTED_UOCC"));
+}
+
+void SA_MRPT2::build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D1v) {
+    print_h2("Build Spin-Summed Unrelaxed 1-RDM (CC and VV)");
+
+    D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"});
+    D1_.block("cc").iterate([&](const std::vector<size_t> i, double& value) {
+        if (i[0] == i[1])
+            value = 2.0;
+    });
+    D1_["uv"] = L1_["uv"];
+
+    D1c = build_1rdm_cc();
+    D1v = build_1rdm_vv();
+}
+
 } // namespace forte

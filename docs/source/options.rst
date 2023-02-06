@@ -141,7 +141,7 @@ Type: str
 
 Default value: CANONICAL
 
-Allowed values: ['CANONICAL', 'LOCAL', 'MP2NO']
+Allowed values: ['CANONICAL', 'LOCAL', 'MP2NO', 'MRPT2NO']
 
 **PRINT**
 
@@ -2328,7 +2328,7 @@ Type: bool
 
 Default value: False
 
-**MP2NO_OCC_THRESHOLD**
+**PT2NO_OCC_THRESHOLD**
 
 Occupancy smaller than which is considered as active
 
@@ -2336,7 +2336,7 @@ Type: float
 
 Default value: 0.98
 
-**MP2NO_VIR_THRESHOLD**
+**PT2NO_VIR_THRESHOLD**
 
 Occupancy greater than which is considered as active
 
