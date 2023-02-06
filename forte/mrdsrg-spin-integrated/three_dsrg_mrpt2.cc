@@ -1309,7 +1309,9 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
 
     if (my_proc == 0) {
         outfile->Printf("... Done. Timing %15.6f s", ccvv_timer.get());
-        outfile->Printf("\n  Eccvv: %8.10f", Eccvv);
+        if (ccvv_algorithm != "LT-DSRG") {
+            outfile->Printf("\n  Eccvv: %8.10f", Eccvv);
+        }
     }
 
     //     double all_e = 0.0;
@@ -2290,7 +2292,13 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
     //     double result = E_ccvv_diskdf_ao();
     //     return result;
     // }
+    bool laplace_cavv = foptions_->get_bool("LAPLACE_CAVV");
+    bool laplace_ccav = foptions_->get_bool("LAPLACE_CCAV");
 
+    double E_cavv = 0.0;
+    double E_ccav = 0.0;
+    double E_ccvv = 0.0;
+    
     if (mo_space_info_->nirrep() != 1) {
         throw psi::PSIEXCEPTION("LT-DSRG-MRPT2 does not work with symmetry.");
     }
@@ -2338,13 +2346,27 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
     psi::SharedMatrix Eta1_mat = tensor_to_matrix(Eta1a);
 
     LaplaceDSRG LaplaceDSRG(foptions_, ints_, mo_space_info_, epsilon_rdocc, epsilon_virtual, epsilon_active, Gamma1_mat, Eta1_mat);
+
     local_timer timer1;
-    double E_ccvv = LaplaceDSRG.compute_ccvv();
-    outfile->Printf("\n\n  SLccvv takes %8.8f", timer1.get());
-    local_timer timer2;
-    double E_cavv = LaplaceDSRG.compute_cavv();
-    outfile->Printf("\n\n  SLvicavv takes %8.8f", timer2.get());
-    return E_ccvv;
+    E_ccvv = LaplaceDSRG.compute_ccvv();
+    outfile->Printf("\n\n  LAPLACE: ccvv takes %8.8f", timer1.get());
+    outfile->Printf("\n  LAPLACE: E_ccvv %8.10f", E_ccvv);
+
+    if (laplace_cavv) {
+        local_timer timer2;
+        E_cavv = LaplaceDSRG.compute_cavv();
+        outfile->Printf("\n\n  LAPLACE: cavv takes %8.8f", timer2.get());
+        outfile->Printf("\n  LAPLACE: E_cavv %8.10f", E_cavv);
+    }
+
+    if (laplace_ccav) {
+        local_timer timer3;
+        //E_ccav = LaplaceDSRG.compute_ccav();
+        outfile->Printf("\n\n  LAPLACE: ccav takes %8.8f", timer3.get());
+        outfile->Printf("\n  LAPLACE: E_ccav %8.10f", E_ccav);
+    }
+
+    return (E_ccvv + E_cavv + E_ccav);
 }
 /*
 double THREE_DSRG_MRPT2::E_ccvv_diskdf_ao() {

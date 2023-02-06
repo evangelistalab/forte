@@ -63,7 +63,7 @@ LaplaceDenominator::LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std
 LaplaceDenominator::~LaplaceDenominator() {}
 
 void LaplaceDenominator::decompose_ccvv() {
-    outfile->Printf("\n  ==> FORTE Laplace Denominator <==\n\n");
+    outfile->Printf("\n\n  ==> FORTE Laplace Denominator <==\n\n");
     int nocc = eps_occ_->dimpi()[0];
     int nvir = eps_vir_->dimpi()[0];
 
@@ -240,7 +240,7 @@ void LaplaceDenominator::decompose_ccvv() {
 }
 
 void LaplaceDenominator::decompose_cavv() {
-    outfile->Printf("\n  ==> FORTE Laplace Denominator (CAVV) <==\n\n");
+    outfile->Printf("\n\n  ==> FORTE Laplace Denominator (CAVV) <==\n\n");
     int nocc = eps_occ_->dimpi()[0];
     int nvir = eps_vir_->dimpi()[0];
     int nact = eps_act_->dimpi()[0];
@@ -428,7 +428,7 @@ void LaplaceDenominator::decompose_cavv() {
 }
 
 void LaplaceDenominator::decompose_ccav() {
-    outfile->Printf("\n  ==> FORTE Laplace Denominator (CCAV) <==\n\n");
+    outfile->Printf("\n\n  ==> FORTE Laplace Denominator (CCAV) <==\n\n");
     int nocc = eps_occ_->dimpi()[0];
     int nvir = eps_vir_->dimpi()[0];
     int nact = eps_act_->dimpi()[0];

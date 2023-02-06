@@ -51,7 +51,8 @@ class LaplaceDSRG {
     double Omega_;
     double theta_schwarz_;
     double laplace_threshold_;
-    double theta_schwarz_2_;
+  //  double theta_schwarz_2_;
+    double theta_ij_sqrt_;
 
     //double theta_NB_cavv_;
 

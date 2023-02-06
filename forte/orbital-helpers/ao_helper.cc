@@ -86,7 +86,7 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
     nbf_ = CMO_->rowspi()[0];
 }
 
-AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n Done with AO helper class"); }
+AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n    Done with AO helper class"); }
 
 void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
     psi::SharedMatrix POcc_single(new psi::Matrix("Single_POcc", nbf_, nbf_));
