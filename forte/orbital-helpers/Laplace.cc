@@ -258,10 +258,14 @@ psi::SharedMatrix initialize_erfc_integral(double Omega, int n_func_pairs, std::
 psi::SharedMatrix erfc_metric (double Omega, std::shared_ptr<ForteIntegrals> ints_forte) {
     std::shared_ptr<psi::BasisSet> auxiliary = ints_forte->wfn()->get_basisset("DF_BASIS_MP2");
     auto Jinv = std::make_shared<psi::FittingMetric>(auxiliary, true);
+    auto Jinv_no_erfc = std::make_shared<psi::FittingMetric>(auxiliary, true);
     Jinv->form_full_eig_inverse_erfc(Omega, 1E-12);
+    Jinv_no_erfc->form_fitting_metric();
     ///Jinv->form_full_eig_inverse(1E-12);
     psi::SharedMatrix Jinv_metric = Jinv->get_metric();
-    return Jinv_metric;
+    psi::SharedMatrix Jinv_metric_no_erfc = Jinv_no_erfc->get_metric();
+    psi::SharedMatrix Jinv_combine = psi::linalg::triplet(Jinv_metric, Jinv_metric_no_erfc, Jinv_metric, false, false, false);
+    return Jinv_combine;
 }
 
 int binary_search_recursive(std::vector<int> A, int key, int low, int high) {

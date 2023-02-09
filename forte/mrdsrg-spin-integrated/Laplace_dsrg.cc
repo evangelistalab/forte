@@ -68,7 +68,12 @@ LaplaceDSRG::LaplaceDSRG(std::shared_ptr<ForteOptions> options,
 
     /// ccav
 
+    // psi::SharedMatrix C_pq_test = erfc_metric(Omega_, ints_);
+    // psi::SharedMatrix C_pq_ori = erfc_metric(0.0, ints_);
+    // C_pq_ori->power(-1.0, 1e-10);
+
     C_pq_ = erfc_metric(Omega_, ints_);
+    
     outfile->Printf("\n    Done with C_pq");
     S_ = ints_->wfn()->S();
     outfile->Printf("\n    Done with S");
