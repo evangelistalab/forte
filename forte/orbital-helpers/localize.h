@@ -50,11 +50,7 @@ class Localize : public OrbitalTransform {
              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // Compute the rotation matrices
-    void compute_transformation();
-
-    // Return the matrices
-    psi::SharedMatrix get_Ua();
-    psi::SharedMatrix get_Ub();
+    void compute_transformation() override;
 
     // Sets the orbitals to localize by first/last indices
     void set_orbital_space(std::vector<int>& orbital_spaces);
@@ -63,9 +59,6 @@ class Localize : public OrbitalTransform {
     void set_orbital_space(std::vector<std::string>& labels);
 
   private:
-    psi::SharedMatrix Ua_;
-    psi::SharedMatrix Ub_;
-
     // orbitals to localize
     std::vector<int> orbital_spaces_;
 

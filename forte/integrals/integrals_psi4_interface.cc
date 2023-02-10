@@ -74,7 +74,7 @@ void Psi4Integrals::base_initialize_psi4() {
     df_fitting_cutoff_ = options_->get_double("DF_FITTING_CONDITION");
 
     setup_psi4_ints();
-    build_dipole_ints_ao();
+    build_multipole_ints_ao();
 
     if (not skip_build_) {
         transform_one_electron_integrals();
@@ -369,7 +369,28 @@ void Psi4Integrals::rotate_mos() {
     wfn_->epsilon_b()->copy(eps_a_new);
 }
 
-void Psi4Integrals::build_dipole_ints_ao() {
+psi::SharedMatrix Psi4Integrals::Ca_AO() const {
+    auto aotoso = wfn_->aotoso();
+    auto nao = nso_;
+
+    auto Ca_ao = std::make_shared<psi::Matrix>("Ca_AO", nao, nmo_);
+
+    // Transform from the SO to the AO basis
+    for (int h = 0, index = 0; h < nirrep_; ++h) {
+        auto nso = nsopi_[h];
+        if (nso == 0)
+            continue;
+
+        for (int i = 0, nmo_this = nmopi_[h]; i < nmo_this; ++i) {
+            // notes: LDA value is nso (not nao, see libqt/blas_intfc23.cc)
+            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca_->pointer(h)[0][i],
+                    nmo_this, 0.0, &Ca_ao->pointer()[0][index++], nmo_);
+        }
+    }
+    return Ca_ao;
+}
+
+void Psi4Integrals::build_multipole_ints_ao() {
     std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
     std::shared_ptr<IntegralFactory> ints_fac = std::make_shared<IntegralFactory>(basisset);
     int nbf = basisset->nbf();
@@ -381,67 +402,40 @@ void Psi4Integrals::build_dipole_ints_ao() {
     }
     std::shared_ptr<OneBodyAOInt> aodOBI(ints_fac->ao_dipole());
     aodOBI->compute(dipole_ints_ao_);
-}
 
-std::vector<std::shared_ptr<psi::Matrix>> Psi4Integrals::mo_dipole_ints(const bool& alpha,
-                                                                        const bool& resort) {
-    if (alpha) {
-        return dipole_ints_mo_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
-    } else {
-        return dipole_ints_mo_helper(wfn_->Cb_subset("AO"), wfn_->epsilon_b(), resort);
+    quadrupole_ints_ao_.clear();
+    for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
+        std::string name = "AO Quadrupole " + direction;
+        quadrupole_ints_ao_.push_back(std::make_shared<psi::Matrix>(name, nbf, nbf));
     }
+    std::shared_ptr<OneBodyAOInt> aoqOBI(ints_fac->ao_quadrupole());
+    aoqOBI->compute(quadrupole_ints_ao_);
 }
 
-std::vector<std::shared_ptr<psi::Matrix>>
-Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon,
-                                     const bool& resort) {
-    std::vector<std::shared_ptr<psi::Matrix>> MOdipole_ints;
+std::vector<psi::SharedMatrix> Psi4Integrals::mo_dipole_ints() const {
+    auto Cao = Ca_AO();
+    std::vector<psi::SharedMatrix> dipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
-        std::shared_ptr<psi::Matrix> modipole(dipole_ints_ao_[i]->clone());
-        modipole->set_name("MO Dipole " + names[i]);
-        modipole->transform(Cao);
-        MOdipole_ints.push_back(modipole);
+        psi::SharedMatrix dipole(dipole_ints_ao_[i]->clone());
+        dipole->set_name("MO Dipole " + names[i]);
+        dipole->transform(Cao);
+        dipole_ints.push_back(dipole);
     }
+    return dipole_ints;
+}
 
-    if (resort) {
-        // figure out the correspondence between C1 and Pitzer
-        std::vector<std::tuple<double, int, int>> order;
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int i = 0; i < nmopi_[h]; ++i) {
-                order.emplace_back(epsilon->get(h, i), i, h);
-            }
-        }
-        std::sort(order.begin(), order.end());
-
-        std::vector<int> irrep_offset(nirrep_, 0);
-        for (int h = 1, sum = 0; h < nirrep_; ++h) {
-            sum += nmopi_[h - 1];
-            irrep_offset[h] = sum;
-        }
-
-        std::vector<int> indices;
-        for (int iC1 = 0; iC1 < (int)nmo_; ++iC1) {
-            int i = std::get<1>(order[iC1]);
-            int h = std::get<2>(order[iC1]);
-            indices.push_back(irrep_offset[h] + i);
-        }
-
-        for (int i = 0; i < 3; ++i) {
-            std::shared_ptr<psi::Matrix> modipole(
-                new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
-            for (int p = 0; p < (int)nmo_; ++p) {
-                int np = indices[p];
-                for (int q = 0; q < (int)nmo_; ++q) {
-                    int nq = indices[q];
-                    modipole->set(np, nq, MOdipole_ints[i]->get(p, q));
-                }
-            }
-            MOdipole_ints[i] = modipole;
-        }
+std::vector<psi::SharedMatrix> Psi4Integrals::mo_quadrupole_ints() const {
+    auto Cao = Ca_AO();
+    std::vector<psi::SharedMatrix> quadrupole_ints;
+    std::vector<std::string> names{"XX", "XY", "XZ", "YY", "YZ", "ZZ"};
+    for (int i = 0; i < 6; ++i) {
+        psi::SharedMatrix Qpole(quadrupole_ints_ao_[i]->clone());
+        Qpole->set_name("MO Quadrupole " + names[i]);
+        Qpole->transform(Cao);
+        quadrupole_ints.push_back(Qpole);
     }
-
-    return MOdipole_ints;
+    return quadrupole_ints;
 }
 
 void Psi4Integrals::make_fock_matrix(ambit::Tensor gamma_a, ambit::Tensor gamma_b) {
@@ -716,7 +710,7 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
     if (JK_status_ == JKStatus::finalized) {
         outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
-        jk_initialize(0.7);
+        jk_initialize(0.8);
     }
 
     auto nactvpi = mo_space_info_->dimension("ACTIVE");

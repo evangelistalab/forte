@@ -67,6 +67,14 @@ enum class IntegralSpinRestriction { Restricted, Unrestricted };
 enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Custom };
 
 /**
+ * @brief The order of three-index integrals when calling
+ *
+ * In Forte, the auxiliary index is by default the first index (i.e., Qpq).
+ * However, pqQ order is more convenient for implementing DF-MRPT2.
+ */
+enum ThreeIntsBlockOrder { Qpq, pqQ };
+
+/**
  * @brief The ForteIntegrals class is a base class for transforming and storing MO integrals
  *
  * ForteIntegrals provides a common interface for using one- and two-electron integrals
@@ -177,6 +185,9 @@ class ForteIntegrals {
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const;
 
+    /// Return the mapping from correlated MO to full MO (frozen + correlated)
+    const std::vector<size_t>& cmotomo() const;
+
     /// Set printing level
     void set_print(int print);
 
@@ -248,7 +259,8 @@ class ForteIntegrals {
     // Three-index integral functions (DF, Cholesky)
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>&,
                                                const std::vector<size_t>&,
-                                               const std::vector<size_t>&);
+                                               const std::vector<size_t>&,
+                                               ThreeIntsBlockOrder order = Qpq);
 
     /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
@@ -364,19 +376,25 @@ class ForteIntegrals {
     /// Print the one- and two-electron integrals to the output
     void print_ints();
 
-    /// Obtain AO dipole integrals [X, Y, Z]
-    /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nmo * nmo
-    std::vector<std::shared_ptr<psi::Matrix>> ao_dipole_ints() const;
+    /// Orbital coefficients in AO x MO basis where MO is Pitzer order
+    virtual psi::SharedMatrix Ca_AO() const = 0;
 
-    /**
-     * Compute MO dipole integrals
-     * @param alpha if true, compute MO dipole using Ca, else Cb
-     * @param resort if true, MOdipole ints are sorted to Pitzer order, otherwise in C1 order
-     * @return a vector of MOdipole ints in X, Y, Z order,
-     *         each of which is a nmo by nmo std::shared_ptr<psi::Matrix>
-     */
-    virtual std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha = true,
-                                                                     const bool& resort = false);
+    /// Obtain AO dipole integrals [X, Y, Z]
+    /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nao * nao
+    std::vector<psi::SharedMatrix> ao_dipole_ints() const;
+
+    /// Obtain AO quadrupole integrals [XX, XY, XZ, YY, YZ, ZZ]
+    std::vector<psi::SharedMatrix> ao_quadrupole_ints() const;
+
+    /// Compute MO dipole integrals (frozen orbitals included)
+    /// @return a vector of MO dipole ints in X, Y, Z order,
+    ///         each of which is a nmo x nmo psi::SharedMatrix in Pitzer order
+    virtual std::vector<psi::SharedMatrix> mo_dipole_ints() const;
+
+    /// Compute MO quadrupole integrals (frozen orbitals included)
+    /// @return a vector of MO quadrupole ints in XX, XY, XZ, YY, YZ, ZZ order,
+    ///         each of which is a nmo x nmo psi::SharedMatrix in Pitzer order
+    virtual std::vector<psi::SharedMatrix> mo_quadrupole_ints() const;
 
   protected:
     // ==> Class data <==
@@ -496,12 +514,10 @@ class ForteIntegrals {
 
     /// AO dipole integrals
     std::vector<std::shared_ptr<psi::Matrix>> dipole_ints_ao_;
-    /// Compute AO dipole integrals
-    virtual void build_dipole_ints_ao();
-    /// Compute MO dipole integrals
-    virtual std::vector<std::shared_ptr<psi::Matrix>>
-    dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
-                          const bool& resort);
+    /// AO quadrupole integrals
+    std::vector<std::shared_ptr<psi::Matrix>> quadrupole_ints_ao_;
+    /// Compute AO dipole and quadrupole integrals
+    virtual void build_multipole_ints_ao();
 
     // ==> Class private functions <==
 
@@ -572,22 +588,26 @@ class Psi4Integrals : public ForteIntegrals {
     std::tuple<psi::SharedMatrix, psi::SharedMatrix>
     make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) override;
 
+    /// Orbital coefficients in AO x MO basis, where MO is in Pitzer order
+    psi::SharedMatrix Ca_AO() const override;
+
+    /// Build and return MO dipole integrals (X, Y, Z) in Pitzer order
+    std::vector<psi::SharedMatrix> mo_dipole_ints() const override;
+
+    /// Build and return MO quadrupole integrals (XX, XY, XZ, YY, YZ, ZZ) in Pitzer order
+    std::vector<psi::SharedMatrix> mo_quadrupole_ints() const override;
+
   private:
     void base_initialize_psi4();
     void setup_psi4_ints();
     void transform_one_electron_integrals();
-    void build_dipole_ints_ao() override;
     void compute_frozen_one_body_operator() override;
-    //    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub)
-    //    override;
     void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
                          bool re_transform = true) override;
     void rotate_mos() override;
-    std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha,
-                                                             const bool& resort) override;
-    std::vector<std::shared_ptr<psi::Matrix>>
-    dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
-                          const bool& resort) override;
+
+    /// Build AO dipole and quadrupole integrals
+    void build_multipole_ints_ao() override;
 
     /// Make a shared pointer to a Psi4 JK object
     void make_psi4_JK();

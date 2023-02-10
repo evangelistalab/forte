@@ -91,6 +91,9 @@ class CustomIntegrals : public ForteIntegrals {
     std::tuple<psi::SharedMatrix, psi::SharedMatrix>
     make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) override;
 
+    /// Orbital coefficients in AO x MO basis where MO is in Pitzer order
+    psi::SharedMatrix Ca_AO() const override;
+
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,

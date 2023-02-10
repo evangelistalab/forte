@@ -68,10 +68,7 @@ class CINO : public OrbitalTransform {
     // ==> Class Interface <==
 
     /// Compute the energy
-    void compute_transformation();
-
-    psi::SharedMatrix get_Ua();
-    psi::SharedMatrix get_Ub();
+    void compute_transformation() override;
 
   private:
     // ==> Class data <==

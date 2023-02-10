@@ -66,7 +66,7 @@ def register_driver_options(options):
         "If a value is provided it overrides the multiplicity of Psi4."
     )
     options.add_int("ROOT_SYM", None, 'The symmetry of the electronic state. (zero based)')
-    options.add_str("ORBITAL_TYPE", "CANONICAL", ['CANONICAL', 'LOCAL', 'MP2NO'], 'Type of orbitals to use')
+    options.add_str("ORBITAL_TYPE", "CANONICAL", ['CANONICAL', 'LOCAL', 'MP2NO', 'MRPT2NO'], 'Type of orbitals to use')
 
     options.add_str('MINAO_BASIS', 'STO-3G', "The basis used to define an orbital subspace")
 
@@ -638,6 +638,12 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_DIPOLE", False, "Compute (if true) DSRG dipole moments")
 
+    options.add_int("DSRG_MAX_DIPOLE_LEVEL", 0,
+                    "The max body level of DSRG transformed dipole moment (skip if < 1)")
+
+    options.add_int("DSRG_MAX_QUADRUPOLE_LEVEL", 0,
+                    "The max body level of DSRG transformed quadrupole moment (skip if < 1)")
+
     options.add_int("DSRG_MAXITER", 50, "Max iterations for nonperturbative"
                     " MR-DSRG amplitudes update")
 
@@ -933,8 +939,8 @@ def register_old_options(options):
 
     options.add_bool("NAT_ACT", False, "Use Natural Orbitals to suggest active space?")
 
-    options.add_double("MP2NO_OCC_THRESHOLD", 0.98, "Occupancy smaller than which is considered as active")
-    options.add_double("MP2NO_VIR_THRESHOLD", 0.02, "Occupancy greater than which is considered as active")
+    options.add_double("PT2NO_OCC_THRESHOLD", 0.98, "Occupancy smaller than which is considered as active")
+    options.add_double("PT2NO_VIR_THRESHOLD", 0.02, "Occupancy greater than which is considered as active")
 
     options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 

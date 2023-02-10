@@ -137,6 +137,7 @@ integrals/distribute_df_integrals.cc
 integrals/integrals.cc
 integrals/integrals_psi4_interface.cc
 integrals/make_integrals.cc
+integrals/one_body_integrals.cc
 integrals/parallel_ccvv_algorithms.cc
 integrals/paralleldfmo.cc
 mrdsrg-helper/dsrg_mem.cc
@@ -160,6 +161,7 @@ mrdsrg-spin-adapted/sa_mrdsrg.cc
 mrdsrg-spin-adapted/sa_mrdsrg_amps.cc
 mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
 mrdsrg-spin-adapted/sa_mrpt2.cc
+mrdsrg-spin-adapted/sa_mrpt2_oeprop.cc
 mrdsrg-spin-adapted/sa_mrpt3.cc
 mrdsrg-spin-integrated/dsrg_mrpt2.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
@@ -184,6 +186,7 @@ orbital-helpers/fragment_projector.cc
 orbital-helpers/iao_builder.cc
 orbital-helpers/localize.cc
 orbital-helpers/mp2_nos.cc
+orbital-helpers/mrpt2_nos.cc
 orbital-helpers/orbital_embedding.cc
 orbital-helpers/orbitaloptimizer.cc
 orbital-helpers/pao_builder.cc

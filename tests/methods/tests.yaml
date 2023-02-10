@@ -284,6 +284,9 @@ l-bfgs:
 mp2-nos:
    short:
       - mp2-nos-1
+      - mrpt2-nos-1
+   medium:
+      - mrpt2-nos-2
 mr-dsrg-pt2:
    short:
       - mr-dsrg-pt2-1
@@ -337,18 +340,22 @@ mrdsrg-spin-adapted:
    short:
       - mrdsrg-spin-adapted-1
       - mrdsrg-spin-adapted-3
+      - mrdsrg-spin-adapted-7
    medium:
       - mrdsrg-spin-adapted-2
       - mrdsrg-spin-adapted-4
       - mrdsrg-spin-adapted-5
+      - mrdsrg-spin-adapted-6
 mrdsrg-spin-adapted-pt2:
    short:
       - mrdsrg-spin-adapted-pt2-1
       - mrdsrg-spin-adapted-pt2-2
       - mrdsrg-spin-adapted-pt2-5
+      - mrdsrg-spin-adapted-pt2-7
    medium:
       - mrdsrg-spin-adapted-pt2-3
       - mrdsrg-spin-adapted-pt2-4
+      - mrdsrg-spin-adapted-pt2-6
 mrdsrg-spin-adapted-pt3:
    short:
       - mrdsrg-spin-adapted-pt3-1

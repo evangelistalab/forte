@@ -81,6 +81,13 @@ void CustomIntegrals::initialize() {
     print_timing("preparing custom (FCIDUMP) integrals", int_timer.get());
 }
 
+psi::SharedMatrix CustomIntegrals::Ca_AO() const {
+    auto nmo = nmopi_.sum();
+    auto Ca_ao = std::make_shared<psi::Matrix>("Ca_AO", nmo, nmo);
+    Ca_ao->identity();
+    return Ca_ao;
+}
+
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     return aphys_tei_aa_[aptei_index(p, q, r, s)];
 }

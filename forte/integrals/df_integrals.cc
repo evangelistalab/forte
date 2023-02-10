@@ -157,12 +157,20 @@ double** DFIntegrals::three_integral_pointer() { return ThreeIntegral_->pointer(
 
 ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                 const std::vector<size_t>& p,
-                                                const std::vector<size_t>& q) {
-    ambit::Tensor ReturnTensor =
-        ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
-    ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = three_integral(A[i[0]], p[i[1]], q[i[2]]);
-    });
+                                                const std::vector<size_t>& q,
+                                                ThreeIntsBlockOrder order) {
+    ambit::Tensor ReturnTensor;
+    if (order == pqQ) {
+        ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), A.size()});
+        ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = three_integral(A[i[2]], p[i[0]], q[i[1]]);
+        });
+    } else {
+        ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
+        ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = three_integral(A[i[0]], p[i[1]], q[i[2]]);
+        });
+    }
     return ReturnTensor;
 }
 
@@ -196,28 +204,6 @@ void DFIntegrals::gather_integrals() {
                         mem_info.second.c_str());
     }
 
-    psi::Dimension nsopi_ = wfn_->nsopi();
-    std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
-    std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
-    // std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao",nso_,nmopi_.sum()));
-    std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
-
-    // Transform from the SO to the AO basis
-    for (int h = 0, index = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < nmopi_[h]; ++i) {
-            size_t nao = nso_;
-            size_t nso = nsopi_[h];
-
-            if (!nso)
-                continue;
-
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca->pointer(h)[0][i],
-                    nmopi_[h], 0.0, &Ca_ao->pointer()[0][index], nmopi_.sum());
-
-            index += 1;
-        }
-    }
-
     // B_{pq}^Q -> MO without frozen core
 
     // Constructs the DF function
@@ -244,7 +230,7 @@ void DFIntegrals::gather_integrals() {
     df->print_header();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
-    df->add_space("ALL", Ca_ao);
+    df->add_space("ALL", Ca_AO());
 
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.

@@ -37,8 +37,8 @@
 
 #include "base_classes/state_info.h"
 #include "base_classes/rdms.h"
+#include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
-
 namespace forte {
 
 class ActiveSpaceMethod;
@@ -85,10 +85,16 @@ class ActiveSpaceSolver {
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
     /// Compute permanent dipole moments
-    void compute_dipole_moment();
+    void compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+
+    /// Compute permanent quadrupole moments
+    void compute_quadrupole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+
+    /// Compute transition dipole moments
+    void compute_transition_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
     /// Compute the oscillator strengths assuming same orbitals
-    void compute_fosc_same_orbs();
+    void compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
     /// Compute the contracted CI energy
     const std::map<StateInfo, std::vector<double>>&
@@ -130,6 +136,11 @@ class ActiveSpaceSolver {
     /// @param as_ints the pointer to a set of acitve-space integrals
     void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
         as_ints_ = as_ints;
+    }
+
+    /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
+    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
+        as_mp_ints_ = as_mp_ints;
     }
 
     /// Return the map of StateInfo to the wave function file name
@@ -174,6 +185,9 @@ class ActiveSpaceSolver {
     /// The one-electron integrals and scalar energy contains contributions from the
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
+
+    /// The multipole integrals for the active space
+    std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints_;
 
     /// User-provided options
     std::shared_ptr<ForteOptions> options_;

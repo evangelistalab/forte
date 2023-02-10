@@ -136,7 +136,4 @@ void Localize::compute_transformation() {
     }
 }
 
-psi::SharedMatrix Localize::get_Ua() { return Ua_; }
-psi::SharedMatrix Localize::get_Ub() { return Ub_; }
-
 } // namespace forte

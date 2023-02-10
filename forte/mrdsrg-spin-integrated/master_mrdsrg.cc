@@ -450,9 +450,8 @@ void MASTER_DSRG::init_dm_ints() {
         dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
-    std::vector<psi::SharedMatrix> dm_a = ints_->mo_dipole_ints(true, true);
-    std::vector<psi::SharedMatrix> dm_b = ints_->mo_dipole_ints(false, true);
-    fill_MOdm(dm_a, dm_b);
+    std::vector<psi::SharedMatrix> dm_a = ints_->mo_dipole_ints();
+    fill_MOdm(dm_a, dm_a); // beta-spin integrals are equivalent to those of alpha-spin
     compute_dm_ref();
 
     // prepare transformed dipole integrals
