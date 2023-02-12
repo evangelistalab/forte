@@ -235,6 +235,13 @@ class ProcedureDSRG:
                 self.energies.append((e_dsrg, e_relax))
                 break
 
+            if self.do_multi_state: 
+                state_map = forte.to_state_nroots_map(self.state_weights_map)
+                write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
+                print('   Save SA-DSRG dressed integrals to disk (dsrg_ints.json).\n')
+                psi4.core.print_out('\n\nSave SA-DSRG dressed integrals to disk (dsrg_ints.json).\n\n')
+
+
             # Spit out contracted SA-DSRG energy
             if self.do_multi_state and self.multi_state_type == "SA_SUB":
                 max_rdm_level = 3 if self.options.get_bool("FORM_HBAR3") else 2
