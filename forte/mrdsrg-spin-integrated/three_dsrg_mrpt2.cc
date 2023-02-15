@@ -2281,6 +2281,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
 // }
 
 double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
+    // std::cout << "before" << ints_.use_count() << std::endl;
+    // std::shared_ptr<ForteIntegrals> ints2 = ints_;
+    // std::cout << "second" << ints_.use_count() << std::endl;
     // std::string str = "Computing LT-DSRG-MRPT2 CCVV part (Shuhang Li test)";
     // outfile->Printf("\n    %-40s ...", str.c_str());
 

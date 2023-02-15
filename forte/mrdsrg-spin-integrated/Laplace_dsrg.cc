@@ -84,7 +84,11 @@ LaplaceDSRG::LaplaceDSRG(std::shared_ptr<ForteOptions> options,
     DiskDFJK disk_jk(primary_, auxiliary_);
     disk_jk.erfc_three_disk(Omega_);
 
-    ints_.reset();
+    std::cout << ints_.use_count() << std::endl;
+
+    //ints_->~ForteIntegrals();
+    
+    //std::cout << ints_.use_count() << std::endl;
 
     print_header();
 }
@@ -216,7 +220,7 @@ double LaplaceDSRG::compute_ccvv() {
                     row_add++;
                     // M_uv_p++;
                 }
-                if (std::abs(max_per_uq) > theta_NB_) {
+                if (std::abs(max_per_uq) >= theta_NB_) {
                     ao_list_per_q[Q + q].push_back(u);
                 }
                 *N_pu_p = std::abs(*N_pu_p) > max_per_uq ? std::abs(*N_pu_p) : max_per_uq;
@@ -235,7 +239,7 @@ double LaplaceDSRG::compute_ccvv() {
         double* N_pi_batch_p = N_pi_batch->get_pointer();
         for (int q = 0; q < naux; q++) {
             for (int i = 0; i < Cholesky_Occ_->coldim(); i++) {
-                if (*N_pi_batch_p > theta_NB_) {
+                if (std::abs(*N_pi_batch_p) >= theta_NB_) {
                     i_p_up[Q + q].push_back(i);
                 }
                 N_pi_batch_p++;
@@ -245,7 +249,7 @@ double LaplaceDSRG::compute_ccvv() {
             P_iu[Q + q] = psi::linalg::doublet(Cholesky_Occ_new, amn_new[q], true, false);
             for (int inew = 0; inew < i_p_up[Q + q].size(); inew++) {
                 for (int u = 0; u < ao_list_per_q[Q + q].size(); u++) {
-                    if (std::abs(P_iu[Q + q]->get(inew, u)) > theta_NB_) {
+                    if (std::abs(P_iu[Q + q]->get(inew, u)) >= theta_NB_) {
                         i_p_for_i_up[Q + q].push_back(inew);
                         i_p_[Q + q].push_back(i_p_up[Q + q][inew]);
                         break;
@@ -321,7 +325,7 @@ double LaplaceDSRG::compute_ccvv() {
             ibar_p[qa].clear();
             abar_p[qa].clear();
             for (int ibar = 0; ibar < nocc; ibar++) {
-                if (std::abs(*N_pi_bar_p) > theta_NB_) {
+                if (std::abs(*N_pi_bar_p) >= theta_NB_) {
                     i_bar_p_up[qa].push_back(ibar);
                 }
                 N_pi_bar_p++;
@@ -332,7 +336,7 @@ double LaplaceDSRG::compute_ccvv() {
             P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
 
             for (int abar = 0; abar < nvir; abar++) {
-                if (std::abs(*N_pa_bar_p) > theta_NB_) {
+                if (std::abs(*N_pa_bar_p) >= theta_NB_) {
                     a_bar_p_up[qa].push_back(abar);
                 }
                 N_pa_bar_p++;
@@ -345,7 +349,7 @@ double LaplaceDSRG::compute_ccvv() {
             /// Construct {ibar}_p.
             for (int i = 0; i < P_ibar_abar[qa]->rowdim(); i++) {
                 for (int a = 0; a < P_ibar_abar[qa]->coldim(); a++) {
-                    if (std::abs(P_ibar_abar[qa]->get(i, a)) > theta_NB_) {
+                    if (std::abs(P_ibar_abar[qa]->get(i, a)) >= theta_NB_) {
                         ibar_p[qa].push_back(i_bar_p_up[qa][i]);
                         break;
                     }
@@ -386,7 +390,7 @@ double LaplaceDSRG::compute_ccvv() {
             abar_ibar[i].clear();
             for (int a = 0; a < nvir; a++) {
                 for (int q = 0; q < nthree_; q++) {
-                    if (std::abs(i_bar_a_bar_P[i]->get(a, q)) > theta_NB_) {
+                    if (std::abs(i_bar_a_bar_P[i]->get(a, q)) >= theta_NB_) {
                         abar_ibar[i].push_back(a);
                         break;
                     }
@@ -446,7 +450,7 @@ double LaplaceDSRG::compute_ccvv() {
         psi::SharedMatrix A_ij = psi::linalg::doublet(Q_ia, Q_ia, false, true);
         for (int i = 0; i < nocc; i++) {
             for (int j = 0; j < i; j++) {
-                if (A_ij->get(i, j) > theta_ij_sqrt_) {
+                if (std::abs(A_ij->get(i, j)) >= theta_ij_sqrt_) {
                     vir_intersection_per_ij.clear();
                     aux_intersection_per_ij.clear();
                     std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_ibar[j].begin(),
@@ -468,7 +472,7 @@ double LaplaceDSRG::compute_ccvv() {
                             int b = vir_intersection_per_ij[b_idx];
                             double Schwarz = Q_ia->get(i, a) * Q_ia->get(j, b) *
                                                Q_ia->get(i, b) * Q_ia->get(j, a);
-                            if (Schwarz > theta_schwarz_) {
+                            if (std::abs(Schwarz) >= theta_schwarz_) {
                                 int a_idx_i = binary_search_recursive(abar_ibar[i], a, 0,
                                                                       abar_ibar[i].size() - 1);
                                 int b_idx_i = binary_search_recursive(abar_ibar[i], b, 0,
@@ -650,7 +654,7 @@ double LaplaceDSRG::compute_cavv() {
                     row_add++;
                     // M_uv_p++;
                 }
-                if (std::abs(max_per_uq) > theta_NB_) {
+                if (std::abs(max_per_uq) >= theta_NB_) {
                     ao_list_per_q[Q + q].push_back(u);
                 }
                 *N_pu_p = std::abs(*N_pu_p) > max_per_uq ? std::abs(*N_pu_p) : max_per_uq;
@@ -670,7 +674,7 @@ double LaplaceDSRG::compute_cavv() {
             double* N_px_batch_p = N_px_cavv_batch->get_pointer();
             for (int q = 0; q < naux; q++) {
                 for (int x = 0; x < Active_cholesky_cavv_abs_[nweight]->coldim(); x++) {
-                    if (*N_px_batch_p > theta_NB_) {
+                    if (std::abs(*N_px_batch_p) >= theta_NB_) {
                         xbar_p_up_cavv[nweight][Q + q].push_back(x);
                     }
                     N_px_batch_p++;
@@ -682,7 +686,7 @@ double LaplaceDSRG::compute_cavv() {
                     psi::linalg::doublet(Active_cholesky_new, amn_new[q], true, false);
                 for (int inew = 0; inew < xbar_p_up_cavv[nweight][Q + q].size(); inew++) {
                     for (int u = 0; u < ao_list_per_q[Q + q].size(); u++) {
-                        if (std::abs(P_xbar_u_cavv[nweight][Q + q]->get(inew, u)) > theta_NB_) {
+                        if (std::abs(P_xbar_u_cavv[nweight][Q + q]->get(inew, u)) >= theta_NB_) {
                             xbar_u_p_for_xbar_up[nweight][Q + q].push_back(inew);
                             xbar_u_p[nweight][Q + q].push_back(
                                 xbar_p_up_cavv[nweight][Q + q][inew]);
@@ -791,7 +795,7 @@ double LaplaceDSRG::compute_cavv() {
             abar_p[qa].clear();
             xbar_p[qa].clear();
             for (int ibar = 0; ibar < nocc; ibar++) {
-                if (std::abs(*N_pi_bar_p) > theta_NB_) {
+                if (std::abs(*N_pi_bar_p) >= theta_NB_) {
                     i_bar_p_up[qa].push_back(ibar);
                 }
                 N_pi_bar_p++;
@@ -802,7 +806,7 @@ double LaplaceDSRG::compute_cavv() {
             P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
 
             for (int abar = 0; abar < nvir; abar++) {
-                if (std::abs(*N_pa_bar_p) > theta_NB_) {
+                if (std::abs(*N_pa_bar_p) >= theta_NB_) {
                     a_bar_p_up[qa].push_back(abar);
                 }
                 N_pa_bar_p++;
@@ -817,7 +821,7 @@ double LaplaceDSRG::compute_cavv() {
             /// Construct {ibar}_p.
             for (int i = 0; i < P_ibar_abar[qa]->rowdim(); i++) {
                 for (int a = 0; a < P_ibar_abar[qa]->coldim(); a++) {
-                    if (std::abs(P_ibar_abar[qa]->get(i, a)) > theta_NB_) {
+                    if (std::abs(P_ibar_abar[qa]->get(i, a)) >= theta_NB_) {
                         ibar_p[qa].push_back(i_bar_p_up[qa][i]);
                         break;
                     }
@@ -827,7 +831,7 @@ double LaplaceDSRG::compute_cavv() {
             /// Construct {xbar}_p.
             for (int x = 0; x < P_xbar_abar[qa]->rowdim(); x++) {
                 for (int a = 0; a < P_xbar_abar[qa]->coldim(); a++) {
-                    if (std::abs(P_xbar_abar[qa]->get(x, a)) > theta_NB_) {
+                    if (std::abs(P_xbar_abar[qa]->get(x, a)) >= theta_NB_) {
                         xbar_p[qa].push_back(xbar_u_p[nweight][qa][x]);
                         break;
                     }
@@ -885,7 +889,7 @@ double LaplaceDSRG::compute_cavv() {
             abar_ibar[i].clear();
             for (int a = 0; a < nvir; a++) {
                 for (int q = 0; q < nthree_; q++) {
-                    if (std::abs(i_bar_a_bar_P[i]->get(a, q)) > theta_NB_) {
+                    if (std::abs(i_bar_a_bar_P[i]->get(a, q)) >= theta_NB_) {
                         abar_ibar[i].push_back(a);
                         break;
                     }
@@ -899,7 +903,7 @@ double LaplaceDSRG::compute_cavv() {
             abar_xbar[x].clear();
             for (int a = 0; a < nvir; a++) {
                 for (int q = 0; q < nthree_; q++) {
-                    if (std::abs(x_bar_a_bar_P[x]->get(a, q)) > theta_NB_) {
+                    if (std::abs(x_bar_a_bar_P[x]->get(a, q)) >= theta_NB_) {
                         abar_xbar[x].push_back(a);
                         break;
                     }
@@ -985,7 +989,7 @@ double LaplaceDSRG::compute_cavv() {
         psi::SharedMatrix Aa_ix = psi::linalg::doublet(Q_ia, Q_xa, false, true); // (occ * act)
         for (int i = 0; i < nocc; i++) {
             for (int x = 0; x < nact; x++) {
-                if (Aa_ix->get(i, x) > theta_ij_sqrt_) {
+                if (std::abs(Aa_ix->get(i, x)) >= theta_ij_sqrt_) {
                     vir_intersection_per_ix.clear();
                     aux_intersection_per_ix.clear();
                     std::set_intersection(P_ibar[i].begin(), P_ibar[i].end(), P_xbar[x].begin(),
@@ -1006,7 +1010,7 @@ double LaplaceDSRG::compute_cavv() {
                             int b = vir_intersection_per_ix[b_idx];
                             double Schwarz = Q_ia->get(i, a) * Q_xa->get(x, b) * Q_ia->get(i, b) *
                                              Q_xa->get(x, a);
-                            if (Schwarz > theta_schwarz_) {
+                            if (std::abs(Schwarz) >= theta_schwarz_) {
                                 int a_idx_i = binary_search_recursive(abar_ibar[i], a, 0,
                                                                       abar_ibar[i].size() - 1);
                                 int b_idx_i = binary_search_recursive(abar_ibar[i], b, 0,
