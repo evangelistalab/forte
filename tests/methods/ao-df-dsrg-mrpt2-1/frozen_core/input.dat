@@ -15,7 +15,7 @@ set globals{
    scf_type     df
    d_convergence           10
    e_convergence           12
-   df_basis_mp2   def2-universal-jkfit
+   df_basis_mp2   def2-tzvp-ri
    df_basis_scf   def2-universal-jkfit
    basis          def2-tzvp
 #   freeze_core    true
@@ -33,12 +33,16 @@ set forte{
    root_sym              0
    nroot                 1
    dsrg_s                10000000.0
-   int_type              df
+   int_type              diskdf
    correlation_solver    three-dsrg-mrpt2
-   print                 0
-   AO_DSRG_MRPT2         true
-   laplace_threshold     1e-8
-   laplace_core          false
+  ccvv_algorithm        lt-dsrg
+  theta_NB              1e-6
+  theta_ij              1e-5
+  theta_schwarz         1e-9
+  omega                 0.1
+  laplace_threshold     1e-6
+  LAPLACE_CAVV          false
+  LAPLACE_CCAV          false
    active_space_solver              fci
 }
 

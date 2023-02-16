@@ -84,7 +84,7 @@ LaplaceDSRG::LaplaceDSRG(std::shared_ptr<ForteOptions> options,
     DiskDFJK disk_jk(primary_, auxiliary_);
     disk_jk.erfc_three_disk(Omega_);
 
-    std::cout << ints_.use_count() << std::endl;
+    //std::cout << ints_.use_count() << std::endl;
 
     //ints_->~ForteIntegrals();
     

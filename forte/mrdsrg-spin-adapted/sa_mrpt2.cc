@@ -487,7 +487,8 @@ double SA_MRPT2::compute_Hbar0_CCVV_DF() {
             }
 
             J_vec[thread]("ef") = Bm_vec[thread]("ge") * Bn_vec[thread]("gf");
-            JK_vec[thread]("ef") = 2.0 * J_vec[thread]("ef") - J_vec[thread]("fe");
+            //JK_vec[thread]("ef") = 2.0 * J_vec[thread]("ef") - J_vec[thread]("fe");
+            JK_vec[thread]("ef") = 2.0 * J_vec[thread]("ef");
 
             J_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                 double D = Fm + Fn - Fdiag_[virt_mos_[i[0]]] - Fdiag_[virt_mos_[i[1]]];
@@ -504,6 +505,7 @@ double SA_MRPT2::compute_Hbar0_CCVV_DF() {
     }
 
     print_done(t_ccvv.stop());
+    outfile->Printf("\n    SATEST ccvv, %f", E);
     return E;
 }
 
@@ -781,9 +783,9 @@ void SA_MRPT2::compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr) {
 
         V_vec[thread]("efu") = Bm_vec[thread]("ge") * Bva("gfu");
         //S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu") - V_vec[thread]("feu");
-        //S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu");
-        S_vec[thread]("efu") = - V_vec[thread]("feu");
-        outfile->Printf("\n    SHUHANG LI: SATEST");
+        S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu");
+        //S_vec[thread]("efu") = - V_vec[thread]("feu");
+        outfile->Printf("\n    SHUHANG LI: SATEST coulomb");
         // scale V by 1 + exp(-s * D^2)
         if (Vr) {
             V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
