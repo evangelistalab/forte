@@ -1015,14 +1015,14 @@ double LaplaceDSRG::compute_cavv() {
                                                                       abar_ibar[i].size() - 1);
                                 int b_idx_i = binary_search_recursive(abar_ibar[i], b, 0,
                                                                       abar_ibar[i].size() - 1);
-                                int a_idx_x = binary_search_recursive(abar_xbar[x], a, 0,
-                                                                      abar_xbar[x].size() - 1);
-                                int b_idx_x = binary_search_recursive(abar_xbar[x], b, 0,
-                                                                      abar_xbar[x].size() - 1);
+                                // int a_idx_x = binary_search_recursive(abar_xbar[x], a, 0,
+                                //                                       abar_xbar[x].size() - 1);
+                                // int b_idx_x = binary_search_recursive(abar_xbar[x], b, 0,
+                                //                                       abar_xbar[x].size() - 1);
                                 std::vector<int> vec_a_i{a_idx_i};
                                 std::vector<int> vec_b_i{b_idx_i};
-                                std::vector<int> vec_a_x{a_idx_x};
-                                std::vector<int> vec_b_x{b_idx_x};
+                                std::vector<int> vec_a_x{a};
+                                std::vector<int> vec_b_x{b};
 
                                 psi::SharedMatrix ia =
                                     submatrix_rows_and_cols(*B_ia_Q[i], vec_a_i, aux_in_B_i);
