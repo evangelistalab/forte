@@ -47,6 +47,8 @@ class LaplaceDSRG {
 
     /// Thresholds
     double theta_NB_;
+    double theta_NB_IAP_;
+    //double theta_NB_XAP_;
     double theta_ij_;
     double Omega_;
     double theta_schwarz_;

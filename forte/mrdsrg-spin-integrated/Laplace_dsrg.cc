@@ -56,6 +56,7 @@ LaplaceDSRG::LaplaceDSRG(std::shared_ptr<ForteOptions> options,
     nvirtual_ = eps_virtual_->dim();
 
     theta_NB_ = foptions_->get_double("THETA_NB");
+    theta_NB_IAP_ = foptions_->get_double("THETA_NB_IAP");
     theta_ij_ = foptions_->get_double("THETA_IJ");
     Omega_ = foptions_->get_double("OMEGA");
     theta_schwarz_ = foptions_->get_double("THETA_SCHWARZ");
@@ -102,6 +103,7 @@ void LaplaceDSRG::print_header() {
     std::vector<std::pair<std::string, bool>> calculation_info_bool;
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"theta_NB", theta_NB_},
+        {"theta_NB_IAP", theta_NB_IAP_},
         {"theta_ij", theta_ij_},
         {"Omega", Omega_},
         {"theta_schwarz", theta_schwarz_},
@@ -349,7 +351,7 @@ double LaplaceDSRG::compute_ccvv() {
             /// Construct {ibar}_p.
             for (int i = 0; i < P_ibar_abar[qa]->rowdim(); i++) {
                 for (int a = 0; a < P_ibar_abar[qa]->coldim(); a++) {
-                    if (std::abs(P_ibar_abar[qa]->get(i, a)) >= theta_NB_) {
+                    if (std::abs(P_ibar_abar[qa]->get(i, a)) >= theta_NB_IAP_) {
                         ibar_p[qa].push_back(i_bar_p_up[qa][i]);
                         break;
                     }
@@ -390,7 +392,7 @@ double LaplaceDSRG::compute_ccvv() {
             abar_ibar[i].clear();
             for (int a = 0; a < nvir; a++) {
                 for (int q = 0; q < nthree_; q++) {
-                    if (std::abs(i_bar_a_bar_P[i]->get(a, q)) >= theta_NB_) {
+                    if (std::abs(i_bar_a_bar_P[i]->get(a, q)) >= theta_NB_IAP_) {
                         abar_ibar[i].push_back(a);
                         break;
                     }
@@ -821,7 +823,7 @@ double LaplaceDSRG::compute_cavv() {
             /// Construct {ibar}_p.
             for (int i = 0; i < P_ibar_abar[qa]->rowdim(); i++) {
                 for (int a = 0; a < P_ibar_abar[qa]->coldim(); a++) {
-                    if (std::abs(P_ibar_abar[qa]->get(i, a)) >= theta_NB_) {
+                    if (std::abs(P_ibar_abar[qa]->get(i, a)) >= theta_NB_IAP_) {
                         ibar_p[qa].push_back(i_bar_p_up[qa][i]);
                         break;
                     }
@@ -831,7 +833,7 @@ double LaplaceDSRG::compute_cavv() {
             /// Construct {xbar}_p.
             for (int x = 0; x < P_xbar_abar[qa]->rowdim(); x++) {
                 for (int a = 0; a < P_xbar_abar[qa]->coldim(); a++) {
-                    if (std::abs(P_xbar_abar[qa]->get(x, a)) >= theta_NB_) {
+                    if (std::abs(P_xbar_abar[qa]->get(x, a)) >= theta_NB_IAP_) {
                         xbar_p[qa].push_back(xbar_u_p[nweight][qa][x]);
                         break;
                     }
@@ -889,7 +891,7 @@ double LaplaceDSRG::compute_cavv() {
             abar_ibar[i].clear();
             for (int a = 0; a < nvir; a++) {
                 for (int q = 0; q < nthree_; q++) {
-                    if (std::abs(i_bar_a_bar_P[i]->get(a, q)) >= theta_NB_) {
+                    if (std::abs(i_bar_a_bar_P[i]->get(a, q)) >= theta_NB_IAP_) {
                         abar_ibar[i].push_back(a);
                         break;
                     }
@@ -903,7 +905,7 @@ double LaplaceDSRG::compute_cavv() {
             abar_xbar[x].clear();
             for (int a = 0; a < nvir; a++) {
                 for (int q = 0; q < nthree_; q++) {
-                    if (std::abs(x_bar_a_bar_P[x]->get(a, q)) >= theta_NB_) {
+                    if (std::abs(x_bar_a_bar_P[x]->get(a, q)) >= theta_NB_IAP_) {
                         abar_xbar[x].push_back(a);
                         break;
                     }

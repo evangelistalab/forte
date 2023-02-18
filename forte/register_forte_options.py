@@ -709,6 +709,8 @@ def register_dsrg_options(options):
     options.add_bool("AO_DSRG_MRPT2", False, "Do AO-DSRG-MRPT2 if true (not available)")
     
     options.add_double("THETA_NB", 0, "theta_NB")
+ 
+    options.add_double("THETA_NB_IAP", 0, "theta_NB_IAP")
 
     options.add_double("THETA_IJ", 0, "theta_ij")
    
