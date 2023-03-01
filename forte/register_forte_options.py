@@ -719,7 +719,24 @@ def register_dsrg_options(options):
     options.add_double("OMEGA", 0, "Omega for erfc attenuated coulomb operator")
     
     options.add_double("LAPLACE_THRESHOLD", 1e-10, "laplace threshold")
+  
+# CAVV thresholds
+    options.add_double("THETA_NB_CAVV", 0, "theta_NB")
 
+    options.add_double("THETA_NB_IAP_CAVV", 0, "theta_NB_IAP")
+
+    options.add_double("THETA_IJ_CAVV", 0, "theta_ij")
+
+    options.add_double("THETA_SCHWARZ_CAVV", 0, "theta_schwarz")
+# CCAV thresholds
+    options.add_double("THETA_NB_CCAV", 0, "theta_NB")
+
+    options.add_double("THETA_NB_IAP_CCAV", 0, "theta_NB_IAP")
+
+    options.add_double("THETA_IJ_CCAV", 0, "theta_ij")
+
+    options.add_double("THETA_SCHWARZ_CCAV", 0, "theta_schwarz")
+     
     options.add_bool("LAPLACE_CORE", True, "Use core or disk algorithm")
     
 #    options.add_bool("LAPLACE_ONE_ACTIVE", False, "Use Laplace for one active section")

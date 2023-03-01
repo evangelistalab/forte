@@ -2364,7 +2364,7 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
 
     if (laplace_ccav) {
         local_timer timer3;
-        //E_ccav = LaplaceDSRG.compute_ccav();
+        E_ccav = LaplaceDSRG.compute_ccav();
         outfile->Printf("\n\n  LAPLACE: ccav takes %8.8f", timer3.get());
         outfile->Printf("\n  LAPLACE: E_ccav %8.10f", E_ccav);
     }

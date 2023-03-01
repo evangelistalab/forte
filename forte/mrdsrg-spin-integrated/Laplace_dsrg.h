@@ -46,18 +46,30 @@ class LaplaceDSRG {
     int nvirtual_;
 
     /// Thresholds
+    double Omega_;
+    double laplace_threshold_;
+    /// CCVV
     double theta_NB_;
     double theta_NB_IAP_;
-    //double theta_NB_XAP_;
     double theta_ij_;
-    double Omega_;
     double theta_schwarz_;
-    double laplace_threshold_;
-  //  double theta_schwarz_2_;
     double theta_ij_sqrt_;
 
-    //double theta_NB_cavv_;
+    /// CAVV
+    double theta_NB_cavv_;
+    double theta_NB_IAP_cavv_;
+    double theta_ij_cavv_;
+    double theta_schwarz_cavv_;
+    double theta_ij_sqrt_cavv_;
 
+    /// CCAV
+    double theta_NB_ccav_;
+    double theta_NB_IAP_ccav_;
+    double theta_ij_ccav_;
+    double theta_schwarz_ccav_;
+    double theta_ij_sqrt_ccav_;
+
+    /// Energy
     double E_J_;
     double E_K_;
 
@@ -84,6 +96,12 @@ class LaplaceDSRG {
     psi::SharedMatrix Gamma1_mat_;
 
     /// CCAV
+    std::vector<psi::SharedMatrix> Occupied_cholesky_ccav_;
+    std::vector<psi::SharedMatrix> Occupied_cholesky_ccav_abs_;
+    std::vector<psi::SharedMatrix> Active_cholesky_ccav_;
+    std::vector<psi::SharedMatrix> Active_cholesky_ccav_abs_;
+    std::vector<psi::SharedMatrix> Virtual_cholesky_ccav_;
+    std::vector<psi::SharedMatrix> Virtual_cholesky_ccav_abs_;
     psi::SharedMatrix Eta1_mat_;
 };
 } // namespace forte

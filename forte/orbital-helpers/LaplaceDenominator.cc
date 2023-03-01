@@ -76,6 +76,9 @@ void LaplaceDenominator::decompose_ccvv() {
     double B = 2.0 * (E_HUMO - E_LOMO);
     double R = B / A;
 
+    outfile->Printf("  The smallest denominator: %f. \n", A);
+    outfile->Printf("  The largest denominator: %f. \n", B);
+
     // Pick appropriate quadrature file and read contents
     std::string PSIDATADIR = Process::environment.get_datadir();
     std::string err_table_filename = PSIDATADIR + "/quadratures/1_x/error.bin";
@@ -265,6 +268,9 @@ void LaplaceDenominator::decompose_cavv() {
 
     double R = B / A;
 
+    outfile->Printf("  The smallest denominator: %f. \n", A);
+    outfile->Printf("  The largest denominator: %f. \n", B);
+
     // Pick appropriate quadrature file and read contents
     std::string PSIDATADIR = Process::environment.get_datadir();
     std::string err_table_filename = PSIDATADIR + "/quadratures/1_x/error.bin";
@@ -452,6 +458,9 @@ void LaplaceDenominator::decompose_ccav() {
     double B = E_vir_max + E_act_max - 2 * E_occ_min;
 
     double R = B / A;
+
+    outfile->Printf("  The smallest denominator: %f. \n", A);
+    outfile->Printf("  The largest denominator: %f. \n", B);
 
     // Pick appropriate quadrature file and read contents
     std::string PSIDATADIR = Process::environment.get_datadir();
