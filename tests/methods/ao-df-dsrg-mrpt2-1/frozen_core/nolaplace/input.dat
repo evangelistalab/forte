@@ -1,0 +1,55 @@
+df_mp2 = -75.0976236806439772
+import forte
+molecule {
+  0 1
+  O  0.0  0.0 0.0
+  H  0.0  0.0 -1.0
+  H  0.0  0.0  1.0
+  units bohr
+  no_reorient
+  symmetry c1
+}
+
+set globals{
+   reference    RHF
+   scf_type     df
+   d_convergence           10
+   e_convergence           12
+   df_basis_mp2   def2-tzvp-ri
+   df_basis_scf   def2-universal-jkfit
+   basis          def2-tzvp
+#   freeze_core    true
+  # MP2_TYPE                CONV
+}
+energy('scf')
+
+
+set forte{
+   #restricted_docc      [2,0,0,0]
+   #active               [1,0,0,1]
+   frozen_docc           [1]
+   restricted_docc       [4]
+   active                [0]
+   root_sym              0
+   nroot                 1
+   dsrg_s                10000000.0
+   int_type              diskdf
+   correlation_solver    three-dsrg-mrpt2
+#  ccvv_algorithm        lt-dsrg
+#  theta_NB              1e-6
+#  theta_ij              1e-6
+#  theta_schwarz         1e-9
+#  omega                 0.1
+#  laplace_threshold     1e-6
+#  LAPLACE_CAVV          false
+#  LAPLACE_CCAV          false
+   active_space_solver              fci
+}
+
+#ref = energy('scf')
+forte_energy = energy('forte')
+compare_values(df_mp2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+
+#df_mp2 = energy('mp2')
+#compare_values(df_mp2,variable("CURRENT ENERGY"),10,"DF-MP2 energy")
+

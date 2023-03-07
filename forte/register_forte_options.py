@@ -33,7 +33,7 @@ def register_forte_options(options):
 def register_driver_options(options):
     options.set_group("")
     options.add_str(
-        'JOB_TYPE', 'NEWDRIVER', ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP'],
+        'JOB_TYPE', 'NEWDRIVER', ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP', 'TDACI'],
         'Specify the job type'
     )
 
@@ -553,7 +553,7 @@ def register_tdaci_options(options):
 
     options.add_bool("TDACI_PRINT_WFN", False, "Print coefficients to files")
 
-    options.add_array("TDACI_OCC_ORB", "Print the occupation at integral time itervals for these orbitals")
+    options.add_int_list("TDACI_OCC_ORB", "Print the occupation at integral time itervals for these orbitals")
 
     options.add_int("TDACI_KRYLOV_DIM", 5, "Dimension of Krylov subspace for Lanczos method")
 
@@ -564,7 +564,6 @@ def register_tdaci_options(options):
     options.add_double("TDACI_PRESCREEN_THRESH", 1e-12, "Prescreening threshold")
 
     options.add_bool("TDACI_TEST_OCC", False, "Test the occupation vectors")
-
 
 def register_fci_mo_options(options):
     options.set_group("FCIMO")
