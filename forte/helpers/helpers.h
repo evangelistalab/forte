@@ -105,6 +105,7 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 /**
  * Returns the Ms as a string, using fractions if needed
  */
+
 std::string get_ms_string(double twice_ms);
 
 /**

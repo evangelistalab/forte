@@ -202,6 +202,7 @@ sci/detci.cc
 sci/fci_mo.cc
 sci/mrpt2.cc
 sci/sci.cc
+sci/tdaci.cc
 sparse_ci/ci_reference.cc
 sparse_ci/determinant_functions.cc
 sparse_ci/determinant_hashvector.cc
@@ -217,6 +218,7 @@ sparse_ci/sparse_fact_exp.cc
 sparse_ci/sparse_hamiltonian.cc
 sparse_ci/sq_operator.cc
 sparse_ci/sparse_state_vector.cc
+sparse_ci/operator.cc
 v2rdm/v2rdm.cc
 )
 
