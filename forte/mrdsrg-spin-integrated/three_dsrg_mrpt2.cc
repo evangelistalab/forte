@@ -2329,18 +2329,21 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
         epsilon_rdocc->set(core_count, Fa_[m]);
         core_count++;
     }
+    epsilon_rdocc->print();
+
     int virtual_count = 0;
     for (auto e : virt_mos_) {
         epsilon_virtual->set(virtual_count, Fa_[e]);
         virtual_count++;
     }
-
+    epsilon_virtual->print();
     
     int actv_count = 0;
     for (auto u : actv_mos_) {
         epsilon_active->set(actv_count, Fa_[u]);
         actv_count++;
     }
+    epsilon_active->print();
 
     ambit::Tensor Gamma1a = Gamma1_.block("aa");
     Gamma1a("pq") = rdms_->SF_L1()("pq");
