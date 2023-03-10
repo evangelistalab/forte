@@ -155,6 +155,12 @@ class ActiveSpaceSolver {
     /// Set residual convergence
     void set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
 
+    /// Set the max number of iterations
+    void set_maxiter(int maxiter) { maxiter_ = maxiter; }
+
+    /// Set if die when not converged
+    void set_die_if_not_converged(bool die) { die_if_not_converged_ = die; }
+
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
@@ -218,6 +224,12 @@ class ActiveSpaceSolver {
 
     /// The residual 2-norm convergence criterion
     double r_convergence_ = 1.0e-6;
+
+    /// The max number of iterations
+    int maxiter_ = 100;
+
+    /// Die if not converged
+    bool die_if_not_converged_ = true;
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;

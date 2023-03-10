@@ -103,8 +103,8 @@ class DETCI : public ActiveSpaceMethod {
     /// Number of irreps
     int nirrep_;
 
-    /// Max iteration of Davidson-Liu
-    int maxiter_;
+    // /// Max iteration of Davidson-Liu
+    // int maxiter_;
 
     /// Number of guess basis for Davidson-Liu
     int dl_guess_size_;
@@ -121,6 +121,8 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Diagonalize the Hamiltonian
     void diagonalize_hamiltonian();
+    std::shared_ptr<SparseCISolver> sparse_ci_solver_;
+    void set_ci_solver();
     /// Prepare Davidson-Liu solver
     std::shared_ptr<SparseCISolver> prepare_ci_solver();
     /// Algorithm to build sigma vector

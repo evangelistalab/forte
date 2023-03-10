@@ -261,6 +261,12 @@ class ActiveSpaceMethod {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet);
 
+    /// Set max number of iterations
+    void set_maxiter(int maxiter);
+
+    /// Set die if not converged
+    void set_die_if_not_converged(bool die);
+
   protected:
     /// The list of active orbitals (absolute ordering)
     std::vector<size_t> active_mo_;
@@ -317,6 +323,12 @@ class ActiveSpaceMethod {
     bool dump_wfn_ = false;
     /// The file name for storing wave function (determinants, CI coefficients)
     std::string wfn_filename_;
+
+    /// Max number of iterations
+    int maxiter_ = 100;
+
+    /// Die if not converged
+    bool die_if_not_converged_ = true;
 };
 
 /**

@@ -499,9 +499,7 @@ void DavidsonLiuSolver::check_G_hermiticity() {
     double maxnonherm = 0.0;
     for (size_t i = 0; i < basis_size_; ++i) {
         for (size_t j = i + 1; j < basis_size_; ++j) {
-            if (i != j) {
-                maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
-            }
+            maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
         }
     }
     if (maxnonherm > nonhermitian_G_threshold_) {
@@ -511,6 +509,14 @@ void DavidsonLiuSolver::check_G_hermiticity() {
         std::string msg =
             "DavidsonLiuSolver::check_G_hermiticity(): the Hamiltonian in not Hermitian";
         throw std::runtime_error(msg);
+    } else {
+        for (size_t i = 0; i < basis_size_; ++i) {
+            for (size_t j = i + 1; j < basis_size_; ++j) {
+                auto od = 0.5 * (G->get(i, j) + G->get(j, i));
+                G->set(i, j, od);
+                G->set(j, i, od);
+            }
+        }
     }
 }
 

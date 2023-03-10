@@ -15,6 +15,7 @@
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
 #include "sparse_ci/ci_reference.h"
+#include "sparse_ci/sparse_ci_solver.h"
 #include "detci.h"
 
 using namespace psi;
@@ -40,12 +41,17 @@ void DETCI::startup() {
 
     state_label_ = state_.multiplicity_label() + " (Ms = " + get_ms_string(twice_ms_) + ") " +
                    state_.irrep_label();
+
+    actv_space_type_ = options_->get_str("ACTIVE_REF_TYPE");
+    exclude_hf_in_cid_ = options_->get_bool("DETCI_CISD_NO_HF");
+
+    // build determinants
+    build_determinant_space();
+
+    sparse_ci_solver_ = std::make_shared<SparseCISolver>();
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
-    actv_space_type_ = options->get_str("ACTIVE_REF_TYPE");
-    exclude_hf_in_cid_ = options->get_bool("DETCI_CISD_NO_HF");
-
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     ci_print_threshold_ = options->get_double("DETCI_PRINT_CIVEC");
@@ -78,9 +84,6 @@ DETCI::~DETCI() {
 
 double DETCI::compute_energy() {
     print_h2("General Determinant-Based CI Solver");
-
-    // build determinants
-    build_determinant_space();
 
     // diagonalize Hamiltonian
     diagonalize_hamiltonian();
@@ -146,16 +149,19 @@ void DETCI::diagonalize_hamiltonian() {
 
     print_h2("Diagonalizing Hamiltonian " + state_label_);
 
-    auto solver = prepare_ci_solver();
+    // auto sparse_ci_solver_ = prepare_ci_solver();
+    set_ci_solver();
 
     if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
         sigma_vector_type_ = SigmaVectorType::Full;
     }
 
+    outfile->Printf("\np_space size: %zu, nroot_ = %zu, multi = %d", p_space_.size(), nroot_,
+                    multiplicity_);
     auto sigma_vector =
         make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
     std::tie(evals_, evecs_) =
-        solver->diagonalize_hamiltonian(p_space_, sigma_vector, nroot_, multiplicity_);
+        sparse_ci_solver_->diagonalize_hamiltonian(p_space_, sigma_vector, nroot_, multiplicity_);
 
     // add energy offset
     double energy_offset = as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy();
@@ -165,9 +171,39 @@ void DETCI::diagonalize_hamiltonian() {
     }
 
     // spin
-    spin2_ = solver->spin();
+    spin2_ = sparse_ci_solver_->spin();
 
     outfile->Printf("\n\n  Done diagonalizing Hamiltonian, %.3e seconds.", tdiag.stop());
+}
+
+void DETCI::set_ci_solver() {
+    sparse_ci_solver_->set_parallel(true);
+    sparse_ci_solver_->set_spin_project(true);
+    sparse_ci_solver_->set_print_details(not quiet_);
+
+    sparse_ci_solver_->set_e_convergence(e_convergence_);
+    sparse_ci_solver_->set_r_convergence(r_convergence_);
+    sparse_ci_solver_->set_maxiter_davidson(maxiter_);
+    sparse_ci_solver_->set_die_if_not_converged(die_if_not_converged_);
+
+    sparse_ci_solver_->set_ncollapse_per_root(ncollapse_per_root_);
+    sparse_ci_solver_->set_nsubspace_per_root(nsubspace_per_root_);
+
+    // if (read_wfn_guess_) {
+    //     outfile->Printf("\n  Reading wave function from disk as initial guess:");
+    //     std::string status = read_initial_guess(wfn_filename_) ? "Success" : "Failed";
+    //     outfile->Printf(" %s!", status.c_str());
+    // }
+
+    sparse_ci_solver_->set_guess_dimension(dl_guess_size_);
+    // if (not initial_guess_.empty()) {
+    //     sparse_ci_solver_->set_initial_guess(initial_guess_);
+    // }
+
+    if (not projected_roots_.empty()) {
+        sparse_ci_solver_->set_root_project(true);
+        sparse_ci_solver_->add_bad_states(projected_roots_);
+    }
 }
 
 std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
@@ -179,6 +215,7 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     solver->set_e_convergence(e_convergence_);
     solver->set_r_convergence(r_convergence_);
     solver->set_maxiter_davidson(maxiter_);
+    solver->set_die_if_not_converged(die_if_not_converged_);
 
     solver->set_ncollapse_per_root(ncollapse_per_root_);
     solver->set_nsubspace_per_root(nsubspace_per_root_);

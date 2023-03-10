@@ -172,11 +172,15 @@ double MCSCF_2STEP::compute_energy() {
 
     // convergence for final CI
     double r_conv = options_->get_double("R_CONVERGENCE");
-    std::shared_ptr<ActiveSpaceSolver> as_solver;
+    auto state_nroots_map = to_state_nroots_map(state_weights_map_);
+    auto as_solver = make_active_space_solver(ci_type_, state_nroots_map, scf_info_, mo_space_info_,
+                                              cas_grad.active_space_ints(), options_);
+    as_solver->set_maxiter(15);
+    as_solver->set_die_if_not_converged(false);
 
     // perform a perfect initial CI
     double e_c = diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
-                                         {print_ ? print_ : 1, e_conv_, r_conv, false, false});
+                                         {print_ ? print_ : 1, e_conv_, 1.0e-2, false, false});
     auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);
     cas_grad.evaluate(R, dG);
@@ -226,12 +230,13 @@ double MCSCF_2STEP::compute_energy() {
         }
 
         // CI convergence criteria along the way
-        double dl_e_conv = 5.0e-7;
-        double dl_r_conv = 8.0e-5;
+        double dl_e_conv = 1.0e-6;
+        double dl_r_conv = 1.0e-3;
 
         // start iterations
         lbfgs_param->maxiter = micro_miniter_;
-        bool dump_wfn = ci_type_ == "DETCI";
+        // bool dump_wfn = ci_type_ == "DETCI";
+        bool dump_wfn = false;
         bool skip_de_conv = ci_type_.find("DMRG") != std::string::npos;
         std::vector<CASSCF_HISTORY> history;
 
@@ -444,10 +449,11 @@ double
 MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
                                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<int, double, double, bool, bool>& params) {
-    auto state_nroots_map = to_state_nroots_map(state_weights_map_);
-    as_solver = make_active_space_solver(ci_type_, state_nroots_map, scf_info_, mo_space_info_,
-                                         fci_ints, options_);
+    // auto state_nroots_map = to_state_nroots_map(state_weights_map_);
+    // as_solver = make_active_space_solver(ci_type_, state_nroots_map, scf_info_, mo_space_info_,
+    //                                      fci_ints, options_);
 
+    // const auto& [print, e_conv, r_conv, read_wfn_guess, dump_wfn] = params;
     int print;
     double e_conv, r_conv;
     bool read_wfn_guess, dump_wfn;

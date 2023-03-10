@@ -63,6 +63,9 @@ class SigmaVector {
 
     std::shared_ptr<ActiveSpaceIntegrals> as_ints() { return fci_ints_; }
 
+    /// Update active space integrals
+    void set_as_ints(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+
     SigmaVectorType sigma_vector_type() const { return sigma_vector_type_; }
     std::string label() const { return label_; }
 

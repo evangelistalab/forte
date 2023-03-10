@@ -43,6 +43,7 @@ namespace forte {
 
 class SigmaVector;
 class ActiveSpaceIntegrals;
+class DavidsonLiuSolver;
 
 /**
  * @brief The SparseCISolver class
@@ -122,6 +123,9 @@ class SparseCISolver {
     /// Set option to force diagonalization type
     void set_force_diag(bool value);
 
+    /// Set option to die if not converged
+    void set_die_if_not_converged(bool die);
+
     /// Set the size of the guess space
     void set_guess_dimension(size_t value) { dl_guess_ = value; }
 
@@ -129,6 +133,11 @@ class SparseCISolver {
     void set_initial_guess(const std::vector<std::vector<std::pair<size_t, double>>>& guess);
     void manual_guess(bool value);
     void set_num_vecs(size_t value);
+
+    /// Initialize Davidson-Liu solver
+    void init_dls(size_t size, size_t nroots);
+    /// Free Davidson-Liu solver
+    void free_dls();
 
   private:
     std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
@@ -169,6 +178,8 @@ class SparseCISolver {
     size_t dl_guess_ = 50;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
+    /// Die if not converged
+    bool die_if_not_converged_ = true;
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -178,6 +189,9 @@ class SparseCISolver {
         guess_; // nroot of guess size of (id, coefficent)
     // Number of guess vectors
     size_t nvec_ = 10;
+
+    /// Davidson-Liu solver
+    std::shared_ptr<DavidsonLiuSolver> dls_ = nullptr;
 };
 } // namespace forte
 

@@ -67,6 +67,17 @@ std::shared_ptr<SigmaVector> make_sigma_vector(const std::vector<Determinant>& s
     return make_sigma_vector(dhv, fci_ints, max_memory, sigma_type);
 }
 
+void SigmaVector::set_as_ints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+        fci_ints_ = as_ints;
+
+        // update diagonal Hamiltonian
+        diag_.resize(size_);
+        for (size_t I = 0; I < size_; ++I) {
+            const Determinant& detI = space_.get_det(I);
+            diag_[I] = fci_ints_->energy(detI);
+        }
+    }
+
 SigmaVectorFull::SigmaVectorFull(const DeterminantHashVec& space,
                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space, fci_ints, SigmaVectorType::Full, "SigmaVectorFull") {}
