@@ -36,6 +36,7 @@ namespace forte {
 
 class FCIVector;
 class StringLists;
+class DavidsonLiuSolver;
 
 /**
  * @brief The FCISolver class
@@ -138,12 +139,13 @@ class FCISolver : public ActiveSpaceMethod {
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
     size_t subspace_per_root_ = 4;
-    /// Iterations for FCI
-    int fci_iterations_ = 30;
     /// Test the RDMs?
     bool test_rdms_ = false;
     /// Print the NO from the 1-RDM
     bool print_no_ = false;
+
+    /// Davidson-Liu solver
+    std::unique_ptr<DavidsonLiuSolver> dl_solver_;
 
     // ==> Class functions <==
 

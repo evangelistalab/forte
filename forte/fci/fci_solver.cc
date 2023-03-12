@@ -70,11 +70,12 @@ FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo>
     // TODO: read this info from the base class
     na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
     nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
+    startup();
 }
 
 void FCISolver::set_ntrial_per_root(int value) { ntrial_per_root_ = value; }
 
-void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
+void FCISolver::set_fci_iterations(int value) { maxiter_ = value; }
 
 void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
@@ -93,8 +94,8 @@ psi::SharedMatrix FCISolver::ci_wave_functions() {
 
 void FCISolver::startup() {
     // Create the string lists
-    lists_ = std::shared_ptr<StringLists>(
-        new StringLists(twoSubstituitionVVOO, active_dim_, core_mo_, active_mo_, na_, nb_, print_));
+    lists_ = std::make_shared<StringLists>(twoSubstituitionVVOO, active_dim_, core_mo_, active_mo_,
+                                           na_, nb_, print_);
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h) {
@@ -119,6 +120,8 @@ void FCISolver::startup() {
             outfile->Printf("    %-39s %10d\n", str_dim.first.c_str(), str_dim.second);
         }
     }
+
+    FCIVector::allocate_temp_space(lists_, print_);
 }
 
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
@@ -138,9 +141,6 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
  */
 double FCISolver::compute_energy() {
     local_timer t;
-    startup();
-
-    FCIVector::allocate_temp_space(lists_, print_);
 
     FCIVector Hdiag(lists_, symmetry_);
     C_ = std::make_shared<FCIVector>(lists_, symmetry_);
@@ -153,67 +153,79 @@ double FCISolver::compute_energy() {
     psi::SharedVector b(new Vector("b", fci_size));
     psi::SharedVector sigma(new Vector("sigma", fci_size));
 
-    Hdiag.copy_to(sigma);
+    size_t guess_size = std::min(collapse_per_root_ * nroot_, fci_size);
 
-    DavidsonLiuSolver dls(fci_size, nroot_);
-    dls.set_e_convergence(e_convergence_);
-    dls.set_r_convergence(r_convergence_);
-    dls.set_print_level(print_);
-    dls.set_collapse_per_root(collapse_per_root_);
-    dls.set_subspace_per_root(subspace_per_root_);
-    dls.startup(sigma);
+    if (!restart_ or !dl_solver_) {
+        Hdiag.copy_to(sigma);
 
-    size_t guess_size = dls.collapse_size();
-    auto guess = initial_guess(Hdiag, guess_size, as_ints_);
+        dl_solver_ = std::make_unique<DavidsonLiuSolver>(fci_size, nroot_);
+        dl_solver_->startup(sigma);
 
-    std::vector<int> guess_list;
-    for (size_t g = 0; g < guess.size(); ++g) {
-        if (guess[g].first == multiplicity_)
-            guess_list.push_back(g);
-    }
-
-    // number of guess to be used
-    size_t nguess = std::min(guess_list.size(), guess_size);
-
-    if (nguess == 0) {
-        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
-                                "multiplicity.\n\n");
-    }
-
-    for (size_t n = 0; n < nguess; ++n) {
-        HC.set(guess[guess_list[n]].second);
-        HC.copy_to(sigma);
-        dls.add_guess(sigma);
-    }
-
-    // Prepare a list of bad roots to project out and pass them to the solver
-    std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
-    int gr = 0;
-    for (auto& g : guess) {
-        if (g.first != multiplicity_) {
-            if (print_ > 0) {
-                outfile->Printf("\n  Projecting out root %d", gr);
-            }
-            HC.set(g.second);
-            HC.copy_to(sigma);
-            std::vector<std::pair<size_t, double>> bad_root;
-            for (size_t I = 0; I < fci_size; ++I) {
-                if (std::fabs(sigma->get(I)) > 1.0e-12) {
-                    bad_root.push_back(std::make_pair(I, sigma->get(I)));
-                }
-            }
-            bad_roots.push_back(bad_root);
+        auto guess = initial_guess(Hdiag, guess_size, as_ints_);
+        std::vector<int> guess_list;
+        for (size_t g = 0; g < guess.size(); ++g) {
+            if (guess[g].first == multiplicity_)
+                guess_list.push_back(g);
         }
-        gr += 1;
+
+        // number of guess to be used
+        size_t nguess = std::min(guess_list.size(), guess_size);
+
+        if (nguess == 0) {
+            throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
+                                    "multiplicity.\n\n");
+        }
+
+        for (size_t n = 0; n < nguess; ++n) {
+            HC.set(guess[guess_list[n]].second);
+            HC.copy_to(sigma);
+            dl_solver_->add_guess(sigma);
+        }
+
+        // Prepare a list of bad roots to project out and pass them to the solver
+        std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
+        int gr = 0;
+        for (auto& g : guess) {
+            if (g.first != multiplicity_) {
+                if (print_ > 0) {
+                    outfile->Printf("\n  Projecting out root %d", gr);
+                }
+                HC.set(g.second);
+                HC.copy_to(sigma);
+                std::vector<std::pair<size_t, double>> bad_root;
+                for (size_t I = 0; I < fci_size; ++I) {
+                    if (std::fabs(sigma->get(I)) > 1.0e-12) {
+                        bad_root.push_back(std::make_pair(I, sigma->get(I)));
+                    }
+                }
+                bad_roots.push_back(bad_root);
+            }
+            gr += 1;
+        }
+        dl_solver_->set_project_out(bad_roots);
+    } else {
+        // need to update old sigma vectors in DL solver
+        for (size_t i = 0, basis_size = dl_solver_->basis_size(); i < basis_size; ++i) {
+            dl_solver_->get_b(b, i);
+            C_->copy(b);
+            C_->Hamiltonian(HC, as_ints_);
+            HC.copy_to(sigma);
+            dl_solver_->set_sigma(sigma, i);
+        }
     }
-    dls.set_project_out(bad_roots);
+
+    dl_solver_->set_e_convergence(e_convergence_);
+    dl_solver_->set_r_convergence(r_convergence_);
+    dl_solver_->set_print_level(print_);
+    dl_solver_->set_collapse_per_root(collapse_per_root_);
+    dl_solver_->set_subspace_per_root(subspace_per_root_);
 
     SolverStatus converged = SolverStatus::NotConverged;
 
     if (print_) {
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
-        outfile->Printf("\n  Energy   convergence: %.2e", dls.get_e_convergence());
-        outfile->Printf("\n  Residual convergence: %.2e", dls.get_r_convergence());
+        outfile->Printf("\n  Energy   convergence: %.2e", e_convergence_);
+        outfile->Printf("\n  Residual convergence: %.2e", r_convergence_);
         outfile->Printf("\n  -----------------------------------------------------");
         outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
         outfile->Printf("\n  -----------------------------------------------------");
@@ -221,28 +233,30 @@ double FCISolver::compute_energy() {
 
     double old_avg_energy = 0.0;
     int real_cycle = 1;
-    for (int cycle = 0; cycle < fci_iterations_; ++cycle) {
-        bool add_sigma = true;
-        do {
-            dls.get_b(b);
-            C_->copy(b);
-            C_->Hamiltonian(HC, as_ints_);
-            HC.copy_to(sigma);
-            add_sigma = dls.add_sigma(sigma);
-        } while (add_sigma);
+    for (int cycle = 0; cycle < maxiter_; ++cycle) {
+        if (!restart_ or cycle) {
+            bool add_sigma = true;
+            do {
+                dl_solver_->get_b(b);
+                C_->copy(b);
+                C_->Hamiltonian(HC, as_ints_);
+                HC.copy_to(sigma);
+                add_sigma = dl_solver_->add_sigma(sigma);
+            } while (add_sigma);
+        }
 
-        converged = dls.update();
+        converged = dl_solver_->update();
 
         if (converged != SolverStatus::Collapse) {
             // compute the average energy
             double avg_energy = 0.0;
             for (size_t r = 0; r < nroot_; ++r) {
-                avg_energy += dls.eigenvalues()->get(r);
+                avg_energy += dl_solver_->eigenvalues()->get(r);
             }
             avg_energy /= static_cast<double>(nroot_);
 
             // compute the average residual
-            auto r = dls.residuals();
+            auto r = dl_solver_->residuals();
             double avg_residual =
                 std::accumulate(r.begin(), r.end(), 0.0) / static_cast<double>(nroot_);
 
@@ -267,33 +281,34 @@ double FCISolver::compute_energy() {
     }
 
     if (converged == SolverStatus::NotConverged) {
-        outfile->Printf("\n  FCI did not converge!");
-        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_MAXITER.");
+        if (die_if_not_converged_) {
+            outfile->Printf("\n  FCI did not converge!");
+            throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_MAXITER.");
+        }
     }
 
     // Compute final eigenvectors
-    dls.get_results();
+    dl_solver_->get_results();
 
     // Copy eigen values and eigen vectors
-    evals_ = dls.eigenvalues();
+    evals_ = dl_solver_->eigenvalues();
     energies_ = std::vector<double>(nroot_, 0.0);
     spin2_ = std::vector<double>(nroot_, 0.0);
     for (size_t r = 0; r < nroot_; r++) {
         energies_[r] = evals_->get(r);
-        C_->copy(dls.eigenvector(r));
+        C_->copy(dl_solver_->eigenvector(r));
         spin2_[r] = C_->compute_spin2();
     }
-    eigen_vecs_ = dls.eigenvectors();
+    eigen_vecs_ = dl_solver_->eigenvectors();
 
     // Print determinants
     if (print_) {
         for (size_t r = 0; r < nroot_; ++r) {
             outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
-            C_->copy(dls.eigenvector(r));
+            C_->copy(dl_solver_->eigenvector(r));
             std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
                 C_->max_abs_elements(guess_size * ntrial_per_root_);
-            // psi::Dimension nactvpi = mo_space_info_->dimension("ACTIVE");
 
             for (auto& det_config : dets_config) {
                 double ci_abs, ci;
@@ -326,15 +341,15 @@ double FCISolver::compute_energy() {
                 outfile->Printf("%15.8f", ci);
             }
 
-            double root_energy = dls.eigenvalues()->get(r);
+            double root_energy = dl_solver_->eigenvalues()->get(r);
 
             outfile->Printf("\n\n    Total Energy: %20.12f, <S^2>: %8.6f", root_energy, spin2_[r]);
         }
     }
 
-    //    // Optionally, test the RDMs
+    // Optionally, test the RDMs
     if (test_rdms_) {
-        C_->copy(dls.eigenvector(root_));
+        C_->copy(dl_solver_->eigenvector(root_));
         if (print_) {
             std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
             print_h2(title_rdm);
@@ -348,7 +363,7 @@ double FCISolver::compute_energy() {
     //        C_->print_natural_orbitals(mo_space_info_);
     //    }
 
-    energy_ = dls.eigenvalues()->get(root_);
+    energy_ = dl_solver_->eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
 

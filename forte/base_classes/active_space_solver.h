@@ -134,9 +134,7 @@ class ActiveSpaceSolver {
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
     /// @param as_ints the pointer to a set of acitve-space integrals
-    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-        as_ints_ = as_ints;
-    }
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
     void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
