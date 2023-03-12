@@ -114,6 +114,14 @@ SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
     auto evals = std::make_shared<psi::Vector>("e", nroot);
 
     sigma_vector->add_bad_roots(bad_states_);
+
+    // initiate a Davidson-Liu solver
+    if (!dl_solver_) {
+        dl_solver_ = std::make_unique<DavidsonLiuSolver>(dim_space, nroot);
+        auto hdiag = std::make_shared<psi::Vector>("Hdiag", dim_space);
+        sigma_vector->get_diagonal(*hdiag);
+        dl_solver_->startup(hdiag);
+    }
     davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
 
     return std::make_pair(evals, evecs);
@@ -512,103 +520,108 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
                                          int multiplicity) {
     local_timer dl;
     size_t fci_size = sigma_vector->size();
-    DavidsonLiuSolver dls(fci_size, nroot);
-    dls.set_e_convergence(e_convergence_);
-    dls.set_r_convergence(r_convergence_);
-    dls.set_print_level(0);
+
+    dl_solver_->set_e_convergence(e_convergence_);
+    dl_solver_->set_r_convergence(r_convergence_);
+    dl_solver_->set_print_level(0);
 
     // allocate vectors
-    psi::SharedVector b(new Vector("b", fci_size));
-    psi::SharedVector sigma(new Vector("sigma", fci_size));
+    auto b = std::make_shared<psi::Vector>("b", fci_size);
+    auto sigma = std::make_shared<psi::Vector>("sigma", fci_size);
 
-    // get and pass diagonal
-    sigma_vector->get_diagonal(*sigma);
-    dls.startup(sigma);
-
-    std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
-    size_t guess_size = std::min(nvec_, dls.collapse_size());
-
-    // generate a set of initial guesses
-    auto guess = initial_guess(space, sigma_vector, nroot, multiplicity);
-
-    double guess_max_energy = -1.0e10;
-
-    outfile->Printf("\n\n  Setting initial guess and roots to project");
-
-    if (set_guess_) {
-        // Use previous solution as guess
-        if (print_details_)
-            outfile->Printf("\n  Adding %zu guess vectors by user", guess_.size());
-        for (const auto& guess_root : guess_) {
-            b->zero();
-            for (size_t I = 0, max_I = guess_root.size(); I < max_I; ++I) {
-                b->set(guess_root[I].first, guess_root[I].second);
-            }
-            double norm = sqrt(1.0 / b->norm());
-            b->scale(norm);
-            dls.add_guess(b);
+    if (restart_) {
+        // need to update old sigma vectors in DL solver
+        for (size_t i = 0, basis_size = dl_solver_->basis_size(); i < basis_size; ++i) {
+            dl_solver_->get_b(b, i);
+            sigma_vector->compute_sigma(sigma, b);
+            dl_solver_->set_sigma(sigma, i);
         }
     } else {
-        // Use the initial guess. Here we sort out the roots of correct multiplicity
-        std::vector<int> guess_list;
-        for (size_t g = 0; g < guess.size(); ++g) {
-            if (std::get<0>(guess[g]) == multiplicity)
-                guess_list.push_back(g);
-        }
+        std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
+        size_t guess_size = std::min(nvec_, dl_solver_->collapse_size());
 
-        // number of guess to be used
-        size_t nguess = std::min(guess_list.size(), guess_size);
+        // generate a set of initial guesses
+        auto guess = initial_guess(space, sigma_vector, nroot, multiplicity);
 
-        if (nguess == 0) {
-            throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
-                                    "requested multiplicity.\n\n");
-        }
+        double guess_max_energy = -1.0e10;
 
-        for (size_t n = 0; n < nguess; ++n) {
-            b->zero();
-            for (auto& guess_vec_info : std::get<2>(guess[guess_list[n]])) {
-                b->set(guess_vec_info.first, guess_vec_info.second);
-            }
-            int guess_multiplicity = std::get<0>(guess[guess_list[n]]);
-            double guess_energy = std::get<1>(guess[guess_list[n]]);
+        outfile->Printf("\n\n  Setting initial guess and roots to project");
 
+        if (set_guess_) {
+            // Use previous solution as guess
             if (print_details_)
-                outfile->Printf("\n  Adding guess %-3d      2S+1 = %-3d  E = %.6f", n,
-                                guess_multiplicity, guess_energy);
-            dls.add_guess(b);
-            guess_max_energy = std::max(guess_max_energy, guess_energy);
-        }
-    }
+                outfile->Printf("\n  Adding %zu guess vectors by user", guess_.size());
+            for (const auto& guess_root : guess_) {
+                b->zero();
+                for (size_t I = 0, max_I = guess_root.size(); I < max_I; ++I) {
+                    b->set(guess_root[I].first, guess_root[I].second);
+                }
+                double norm = sqrt(1.0 / b->norm());
+                b->scale(norm);
+                dl_solver_->add_guess(b);
+            }
+        } else {
+            // Use the initial guess. Here we sort out the roots of correct multiplicity
+            std::vector<int> guess_list;
+            for (size_t g = 0; g < guess.size(); ++g) {
+                if (std::get<0>(guess[g]) == multiplicity)
+                    guess_list.push_back(g);
+            }
 
-    if (spin_project_) {
-        // Prepare a list of bad roots to project out and pass them to the solver
-        bad_roots.clear();
-        size_t rejected = 0;
-        for (auto& g : guess) {
-            int guess_multiplicity = std::get<0>(g);
-            double guess_energy = std::get<1>(g);
-            // project out the guess with differnt multiplicity and energy lower than the good
-            // guesses
-            if ((guess_multiplicity != multiplicity) and (guess_energy <= guess_max_energy)) {
-                outfile->Printf("\n  Projecting out guess  2S+1 = %-3d  E = %.6f",
-                                guess_multiplicity, guess_energy);
+            // number of guess to be used
+            size_t nguess = std::min(guess_list.size(), guess_size);
 
-                bad_roots.push_back(std::get<2>(g));
-                rejected += 1;
+            if (nguess == 0) {
+                throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
+                                        "requested multiplicity.\n\n");
+            }
+
+            for (size_t n = 0; n < nguess; ++n) {
+                b->zero();
+                for (auto& guess_vec_info : std::get<2>(guess[guess_list[n]])) {
+                    b->set(guess_vec_info.first, guess_vec_info.second);
+                }
+                int guess_multiplicity = std::get<0>(guess[guess_list[n]]);
+                double guess_energy = std::get<1>(guess[guess_list[n]]);
+
+                if (print_details_)
+                    outfile->Printf("\n  Adding guess %-3d      2S+1 = %-3d  E = %.6f", n,
+                                    guess_multiplicity, guess_energy);
+                dl_solver_->add_guess(b);
+                guess_max_energy = std::max(guess_max_energy, guess_energy);
             }
         }
-        outfile->Printf("\n\n  Projecting out %zu solutions", rejected);
-        dls.set_project_out(bad_roots);
-    } else {
-        outfile->Printf("\n\n  Projecting out no solutions");
+
+        if (spin_project_) {
+            // Prepare a list of bad roots to project out and pass them to the solver
+            bad_roots.clear();
+            size_t rejected = 0;
+            for (auto& g : guess) {
+                int guess_multiplicity = std::get<0>(g);
+                double guess_energy = std::get<1>(g);
+                // project out the guess with differnt multiplicity and energy lower than the good
+                // guesses
+                if ((guess_multiplicity != multiplicity) and (guess_energy <= guess_max_energy)) {
+                    outfile->Printf("\n  Projecting out guess  2S+1 = %-3d  E = %.6f",
+                                    guess_multiplicity, guess_energy);
+
+                    bad_roots.push_back(std::get<2>(g));
+                    rejected += 1;
+                }
+            }
+            outfile->Printf("\n\n  Projecting out %zu solutions", rejected);
+            dl_solver_->set_project_out(bad_roots);
+        } else {
+            outfile->Printf("\n\n  Projecting out no solutions");
+        }
     }
 
     SolverStatus converged = SolverStatus::NotConverged;
 
     if (print_details_) {
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
-        outfile->Printf("\n  Energy   convergence: %.2e", dls.get_e_convergence());
-        outfile->Printf("\n  Residual convergence: %.2e", dls.get_r_convergence());
+        outfile->Printf("\n  Energy   convergence: %.2e", e_convergence_);
+        outfile->Printf("\n  Residual convergence: %.2e", r_convergence_);
         outfile->Printf("\n  -----------------------------------------------------");
         outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
         outfile->Printf("\n  -----------------------------------------------------");
@@ -618,26 +631,28 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     int real_cycle = 1;
 
     for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
-        bool add_sigma = true;
-        do {
-            dls.get_b(b);
-            sigma_vector->compute_sigma(sigma, b);
+        if (!restart_ or cycle) {
+            bool add_sigma = true;
+            do {
+                dl_solver_->get_b(b);
+                sigma_vector->compute_sigma(sigma, b);
+                add_sigma = dl_solver_->add_sigma(sigma);
+            } while (add_sigma);
+        }
 
-            add_sigma = dls.add_sigma(sigma);
-        } while (add_sigma);
-
-        converged = dls.update();
+        // converged = dls.update();
+        converged = dl_solver_->update();
 
         if (converged != SolverStatus::Collapse) {
             // compute the average energy
             double avg_energy = 0.0;
             for (int r = 0; r < nroot; ++r) {
-                avg_energy += dls.eigenvalues()->get(r);
+                avg_energy += dl_solver_->eigenvalues()->get(r);
             }
             avg_energy /= static_cast<double>(nroot);
 
             // compute the average residual
-            auto r = dls.residuals();
+            auto r = dl_solver_->residuals();
             double avg_residual =
                 std::accumulate(r.begin(), r.end(), 0.0) / static_cast<double>(nroot);
 
@@ -669,10 +684,9 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         }
     }
 
-    //    dls.get_results();
     spin_.clear();
-    psi::SharedVector evals = dls.eigenvalues();
-    psi::SharedMatrix evecs = dls.eigenvectors();
+    psi::SharedVector evals = dl_solver_->eigenvalues();
+    psi::SharedMatrix evecs = dl_solver_->eigenvectors();
     for (int r = 0; r < nroot; ++r) {
         Eigenvalues->set(r, evals->get(r));
         for (size_t I = 0; I < fci_size; ++I) {

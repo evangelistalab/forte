@@ -30,6 +30,7 @@
 #define _sparse_ci_h_
 
 #include "sparse_ci/determinant_hashvector.h"
+#include "helpers/iterative_solvers.h"
 
 #define BIGNUM 1E100
 #define MAXIT 100
@@ -188,6 +189,9 @@ class SparseCISolver {
     bool die_if_not_converged_ = true;
     /// Restart mode
     bool restart_ = false;
+
+    /// Davidson-Liu solver
+    std::unique_ptr<DavidsonLiuSolver> dl_solver_;
 };
 } // namespace forte
 

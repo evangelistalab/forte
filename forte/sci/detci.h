@@ -119,14 +119,19 @@ class DETCI : public ActiveSpaceMethod {
     /// Number of trial vectors per root for Davidson-Liu
     int nsubspace_per_root_;
 
+    /// Sparse CI solver
+    std::unique_ptr<SparseCISolver> sparse_ci_solver_;
+    /// Set up sparse CI solver
+    void set_sparse_ci_solver();
+
     /// Diagonalize the Hamiltonian
     void diagonalize_hamiltonian();
-    /// Prepare Davidson-Liu solver
-    std::shared_ptr<SparseCISolver> prepare_ci_solver();
     /// Algorithm to build sigma vector
     SigmaVectorType sigma_vector_type_;
     /// Max memory can be used for sigma build
     size_t sigma_max_memory_;
+    /// Sigma vector builder
+    std::shared_ptr<SigmaVector> sigma_vector_;
 
     /// Eigen vectors
     psi::SharedMatrix evecs_;

@@ -40,12 +40,21 @@ void DETCI::startup() {
 
     state_label_ = state_.multiplicity_label() + " (Ms = " + get_ms_string(twice_ms_) + ") " +
                    state_.irrep_label();
+
+    sparse_ci_solver_ = std::make_unique<SparseCISolver>();
+
+    actv_space_type_ = options_->get_str("ACTIVE_REF_TYPE");
+    exclude_hf_in_cid_ = options_->get_bool("DETCI_CISD_NO_HF");
+    build_determinant_space();
+
+    sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
+    sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD")))
+        sigma_vector_type_ = SigmaVectorType::Full;
+    sigma_vector_ = make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
-    actv_space_type_ = options->get_str("ACTIVE_REF_TYPE");
-    exclude_hf_in_cid_ = options->get_bool("DETCI_CISD_NO_HF");
-
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     ci_print_threshold_ = options->get_double("DETCI_PRINT_CIVEC");
@@ -58,9 +67,6 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
 
     ncollapse_per_root_ = options->get_int("DL_COLLAPSE_PER_ROOT");
     nsubspace_per_root_ = options->get_int("DL_SUBSPACE_PER_ROOT");
-
-    sigma_vector_type_ = string_to_sigma_vector_type(options->get_str("DIAG_ALGORITHM"));
-    sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 
     read_wfn_guess_ = options_->get_bool("READ_ACTIVE_WFN_GUESS");
     dump_wfn_ = options_->get_bool("DUMP_ACTIVE_WFN");
@@ -78,9 +84,6 @@ DETCI::~DETCI() {
 
 double DETCI::compute_energy() {
     print_h2("General Determinant-Based CI Solver");
-
-    // build determinants
-    build_determinant_space();
 
     // diagonalize Hamiltonian
     diagonalize_hamiltonian();
@@ -146,16 +149,12 @@ void DETCI::diagonalize_hamiltonian() {
 
     print_h2("Diagonalizing Hamiltonian " + state_label_);
 
-    auto solver = prepare_ci_solver();
+    set_sparse_ci_solver();
 
-    if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
-        sigma_vector_type_ = SigmaVectorType::Full;
-    }
+    sigma_vector_->set_active_space_ints(as_ints_);
 
-    auto sigma_vector =
-        make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
     std::tie(evals_, evecs_) =
-        solver->diagonalize_hamiltonian(p_space_, sigma_vector, nroot_, multiplicity_);
+        sparse_ci_solver_->diagonalize_hamiltonian(p_space_, sigma_vector_, nroot_, multiplicity_);
 
     // add energy offset
     double energy_offset = as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy();
@@ -165,25 +164,24 @@ void DETCI::diagonalize_hamiltonian() {
     }
 
     // spin
-    spin2_ = solver->spin();
+    spin2_ = sparse_ci_solver_->spin();
 
     outfile->Printf("\n\n  Done diagonalizing Hamiltonian, %.3e seconds.", tdiag.stop());
 }
 
-std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
-    auto solver = std::make_shared<SparseCISolver>();
-    solver->set_parallel(true);
-    solver->set_spin_project(true);
-    solver->set_print_details(not quiet_);
+void DETCI::set_sparse_ci_solver() {
+    sparse_ci_solver_->set_parallel(true);
+    sparse_ci_solver_->set_spin_project(true);
+    sparse_ci_solver_->set_print_details(not quiet_);
 
-    solver->set_e_convergence(e_convergence_);
-    solver->set_r_convergence(r_convergence_);
-    solver->set_maxiter_davidson(maxiter_);
-    solver->set_die_if_not_converged(die_if_not_converged_);
-    solver->set_restart(restart_);
+    sparse_ci_solver_->set_e_convergence(e_convergence_);
+    sparse_ci_solver_->set_r_convergence(r_convergence_);
+    sparse_ci_solver_->set_maxiter_davidson(maxiter_);
+    sparse_ci_solver_->set_die_if_not_converged(die_if_not_converged_);
+    sparse_ci_solver_->set_restart(restart_);
 
-    solver->set_ncollapse_per_root(ncollapse_per_root_);
-    solver->set_nsubspace_per_root(nsubspace_per_root_);
+    sparse_ci_solver_->set_ncollapse_per_root(ncollapse_per_root_);
+    sparse_ci_solver_->set_nsubspace_per_root(nsubspace_per_root_);
 
     if (read_wfn_guess_) {
         outfile->Printf("\n  Reading wave function from disk as initial guess:");
@@ -191,17 +189,15 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
         outfile->Printf(" %s!", status.c_str());
     }
 
-    solver->set_guess_dimension(dl_guess_size_);
+    sparse_ci_solver_->set_guess_dimension(dl_guess_size_);
     if (not initial_guess_.empty()) {
-        solver->set_initial_guess(initial_guess_);
+        sparse_ci_solver_->set_initial_guess(initial_guess_);
     }
 
     if (not projected_roots_.empty()) {
-        solver->set_root_project(true);
-        solver->add_bad_states(projected_roots_);
+        sparse_ci_solver_->set_root_project(true);
+        sparse_ci_solver_->add_bad_states(projected_roots_);
     }
-
-    return solver;
 }
 
 void DETCI::compute_1rdms() {
