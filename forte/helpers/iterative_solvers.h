@@ -96,13 +96,20 @@ class DavidsonLiuSolver {
 
     /// Return the size of the collapse vectors
     size_t collapse_size() const;
+    /// Return the sigma size
+    size_t sigma_size() const;
+    /// Return the basis size
+    size_t basis_size() const;
 
     /// Add a guess basis vector
     void add_guess(psi::SharedVector vec);
     /// Get a basis vector
     void get_b(psi::SharedVector vec);
+    void get_b(psi::SharedVector vec, size_t i);
     /// Add a sigma vector
     bool add_sigma(psi::SharedVector vec);
+    /// Set a sigma vector
+    void set_sigma(psi::SharedVector vec, size_t i);
 
     void set_project_out(std::vector<sparse_vec> project_out);
 

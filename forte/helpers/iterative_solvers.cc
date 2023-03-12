@@ -102,6 +102,10 @@ void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = 
 
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
+size_t DavidsonLiuSolver::sigma_size() const { return sigma_size_; }
+
+size_t DavidsonLiuSolver::basis_size() const { return basis_size_; }
+
 void DavidsonLiuSolver::add_guess(psi::SharedVector vec) {
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
@@ -118,6 +122,14 @@ void DavidsonLiuSolver::get_b(psi::SharedVector vec) {
     }
 }
 
+void DavidsonLiuSolver::get_b(psi::SharedVector vec, size_t i) {
+    PRINT_VARS("get_b")
+    // Give the i-th b
+    for (size_t j = 0; j < size_; ++j) {
+        vec->set(j, b_->get(i, j));
+    }
+}
+
 bool DavidsonLiuSolver::add_sigma(psi::SharedVector vec) {
     PRINT_VARS("add_sigma")
     // Place the new sigma vector at the end
@@ -126,6 +138,14 @@ bool DavidsonLiuSolver::add_sigma(psi::SharedVector vec) {
     }
     sigma_size_++;
     return (sigma_size_ < basis_size_);
+}
+
+void DavidsonLiuSolver::set_sigma(psi::SharedVector vec, size_t i) {
+    PRINT_VARS("set_sigma")
+    // Set the i-th sigma vector
+    for (size_t j = 0; j < size_; ++j) {
+        sigma_->set(j, i, vec->get(j));
+    }
 }
 
 void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
