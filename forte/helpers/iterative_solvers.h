@@ -154,15 +154,15 @@ class DavidsonLiuSolver {
     /// The print level
     size_t print_level_ = 1;
     /// Eigenvalue convergence threshold
-    double e_convergence_ = 1.0e-12;
+    double e_convergence_ = 1.0e-8;
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
     /// The threshold used to discard correction vectors
     double schmidt_threshold_ = 1.0e-8;
     /// The threshold used to detect a nonhermitian Hamiltonian
-    double nonhermitian_G_threshold_ = 1.0e-12;
+    double nonhermitian_G_threshold_ = 1.0e-10;
     /// The threshold used to detect nonorthogonality among the roots
-    double orthogonality_threshold_ = 1.0e-12;
+    double orthogonality_threshold_ = 1.0e-10;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested

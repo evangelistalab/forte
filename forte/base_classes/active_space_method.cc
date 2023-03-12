@@ -89,6 +89,12 @@ void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
 
+void ActiveSpaceMethod::set_maxiter(int maxiter) { maxiter_ = maxiter; }
+
+void ActiveSpaceMethod::set_die_if_not_converged(bool die) { die_if_not_converged_ = die; }
+
+void ActiveSpaceMethod::set_restart(bool restart) { restart_ = restart; }
+
 void ActiveSpaceMethod::save_transition_rdms(
     const std::vector<std::shared_ptr<RDMs>>& rdms,
     const std::vector<std::pair<size_t, size_t>>& root_list,

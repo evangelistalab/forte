@@ -179,6 +179,8 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     solver->set_e_convergence(e_convergence_);
     solver->set_r_convergence(r_convergence_);
     solver->set_maxiter_davidson(maxiter_);
+    solver->set_die_if_not_converged(die_if_not_converged_);
+    solver->set_restart(restart_);
 
     solver->set_ncollapse_per_root(ncollapse_per_root_);
     solver->set_nsubspace_per_root(nsubspace_per_root_);

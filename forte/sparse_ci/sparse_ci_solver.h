@@ -130,6 +130,11 @@ class SparseCISolver {
     void manual_guess(bool value);
     void set_num_vecs(size_t value);
 
+    /// Set option to die if not converged
+    void set_die_if_not_converged(bool die);
+    /// Set if in restart mode
+    void set_restart(bool restart);
+
   private:
     std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
     initial_guess(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
@@ -178,6 +183,11 @@ class SparseCISolver {
         guess_; // nroot of guess size of (id, coefficent)
     // Number of guess vectors
     size_t nvec_ = 10;
+
+    /// Die if not converged
+    bool die_if_not_converged_ = true;
+    /// Restart mode
+    bool restart_ = false;
 };
 } // namespace forte
 

@@ -89,6 +89,10 @@ void SparseCISolver::set_initial_guess(
 
 void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
 
+void SparseCISolver::set_die_if_not_converged(bool die) { die_if_not_converged_ = die; }
+
+void SparseCISolver::set_restart(bool restart) { restart_ = restart; }
+
 std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
 SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
                                         std::shared_ptr<SigmaVector> sigma_vector, int nroot,
@@ -658,9 +662,11 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     }
 
     if (converged != SolverStatus::Converged) {
-        std::string msg = "\n  The Davidson-Liu algorithm did not converge! Consider increasing "
-                          "the option DL_MAXITER.";
-        throw std::runtime_error(msg);
+        if (die_if_not_converged_) {
+            std::string msg = "\n  The Davidson-Liu algorithm did not converge! Consider "
+                              "increasing the option DL_MAXITER.";
+            throw std::runtime_error(msg);
+        }
     }
 
     //    dls.get_results();

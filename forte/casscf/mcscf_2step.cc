@@ -172,11 +172,24 @@ double MCSCF_2STEP::compute_energy() {
 
     // convergence for final CI
     double r_conv = options_->get_double("R_CONVERGENCE");
-    std::shared_ptr<ActiveSpaceSolver> as_solver;
 
-    // perform a perfect initial CI
-    double e_c = diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
-                                         {print_ ? print_ : 1, e_conv_, r_conv, false, false});
+    auto as_solver =
+        make_active_space_solver(ci_type_, to_state_nroots_map(state_weights_map_), scf_info_,
+                                 mo_space_info_, cas_grad.active_space_ints(), options_);
+    as_solver->set_print(print_);
+    as_solver->set_e_convergence(e_conv_);
+    as_solver->set_r_convergence(1.0e-2);
+    as_solver->set_maxiter(15);
+    as_solver->set_die_if_not_converged(false);
+
+    const auto state_energies_map = as_solver->compute_energy();
+    auto e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
+
+    // std::shared_ptr<ActiveSpaceSolver> as_solver;
+
+    // // perform a perfect initial CI
+    // double e_c = diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
+    //                                      {print_ ? print_ : 1, e_conv_, r_conv, false, false});
     auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);
     cas_grad.evaluate(R, dG);
@@ -231,7 +244,8 @@ double MCSCF_2STEP::compute_energy() {
 
         // start iterations
         lbfgs_param->maxiter = micro_miniter_;
-        bool dump_wfn = ci_type_ == "DETCI";
+        // bool dump_wfn = ci_type_ == "DETCI";
+        bool dump_wfn = false;
         bool skip_de_conv = ci_type_.find("DMRG") != std::string::npos;
         std::vector<CASSCF_HISTORY> history;
 
@@ -445,8 +459,8 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solv
                                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<int, double, double, bool, bool>& params) {
     auto state_nroots_map = to_state_nroots_map(state_weights_map_);
-    as_solver = make_active_space_solver(ci_type_, state_nroots_map, scf_info_, mo_space_info_,
-                                         fci_ints, options_);
+    // as_solver = make_active_space_solver(ci_type_, state_nroots_map, scf_info_, mo_space_info_,
+    //                                      fci_ints, options_);
 
     int print;
     double e_conv, r_conv;
@@ -457,6 +471,10 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solv
     as_solver->set_e_convergence(e_conv);
     as_solver->set_r_convergence(r_conv);
     as_solver->set_read_initial_guess(read_wfn_guess);
+    as_solver->set_maxiter(15);
+    as_solver->set_die_if_not_converged(false);
+    as_solver->set_restart(true);
+    as_solver->set_active_space_integrals(fci_ints);
 
     const auto state_energies_map = as_solver->compute_energy();
 
