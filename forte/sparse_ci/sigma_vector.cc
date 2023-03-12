@@ -46,6 +46,17 @@ SigmaVectorType string_to_sigma_vector_type(std::string type) {
     return SigmaVectorType::Dynamic;
 }
 
+void SigmaVector::set_active_space_ints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    fci_ints_ = as_ints;
+
+    // update diagonal Hamiltonian
+    diag_.resize(size_);
+    for (size_t I = 0; I < size_; ++I) {
+        const Determinant& detI = space_.get_det(I);
+        diag_[I] = fci_ints_->energy(detI);
+    }
+}
+
 std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
                                                std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                                size_t max_memory, SigmaVectorType sigma_type) {

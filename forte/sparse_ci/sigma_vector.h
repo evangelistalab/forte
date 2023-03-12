@@ -73,6 +73,9 @@ class SigmaVector {
     add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& /*bad_states*/) {}
     virtual double compute_spin(const std::vector<double>& c) = 0;
 
+    /// Update active space integrals
+    void set_active_space_ints(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+
   protected:
     const DeterminantHashVec& space_;
     /// the active space integrals
