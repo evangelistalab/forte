@@ -2324,6 +2324,14 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
     psi::SharedVector epsilon_virtual(new psi::Vector("EPS_VIRTUAL", nvirtual_));
     psi::SharedVector epsilon_active(new psi::Vector("EPS_ACTIVE", nactive_));
 
+    for (auto i : Fa_) {
+        outfile->Printf("\n  orbital energy  %8.10f", i);
+    }
+
+    for (auto i : Fa_) {
+        outfile->Printf("\n  BETA orbital energy  %8.10f", i);
+    }
+
     int core_count = 0;
     for (auto m : core_mos_) {
         epsilon_rdocc->set(core_count, Fa_[m]);
