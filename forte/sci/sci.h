@@ -95,6 +95,9 @@ class SelectedCIMethod {
     virtual void set_method_variables(
         std::string ex_alg, size_t nroot_method, size_t root,
         const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) = 0;
+    void set_active_space_ints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+        as_ints_ = as_ints;
+    }
     /// Getters
     virtual DeterminantHashVec get_PQ_space() = 0;
     virtual std::shared_ptr<psi::Matrix> get_PQ_evecs() = 0;
