@@ -96,8 +96,6 @@ void LaplaceDenominator::decompose_ccvv() {
             "LaplaceQuadrature: Cannot locate R property file for quadrature rules (should be "
             "PSIDATADIR/quadratures/1_x/R_avail.bin)");
 
-    std::cout<<PSIDATADIR;
-
     int nk = 53;
     int nR = 99;
 
@@ -266,10 +264,12 @@ void LaplaceDenominator::decompose_cavv() {
     double E_act_max = eps_act_->get(0, nact - 1);
     double E_act_min = eps_act_->get(0, 0);
 
+    
+
     for (int i = 0; i < nvir; i++) {
         double E_vir_min_test = eps_vir_->get(0, i);
         double E_test = 2 * E_vir_min_test - E_occ_max - E_act_max;
-        if (E_test < 1) {
+        if (E_test < delta_) {
             vir_start_ += 1; 
         } else {
             break;
@@ -431,7 +431,6 @@ void LaplaceDenominator::decompose_cavv() {
     double *e_o = eps_occ_->pointer();
     double *e_v = eps_vir_->pointer();
     double *e_a = eps_act_->pointer();
-    std::cout<< "nvir" << nvir <<"\n";
 
     for (int k = 0; k < nvector_; k++) {
         for (int i = 0; i < nocc; i++) {
@@ -476,7 +475,7 @@ void LaplaceDenominator::decompose_ccav() {
     for (int i = 0; i < nvir; i++) {
         double E_vir_min_test = eps_vir_->get(0, i);
         double E_test = E_vir_min_test + E_act_min - 2 * E_occ_max;
-        if (E_test < 1) {
+        if (E_test < delta_) {
             vir_start_ += 1; 
         } else {
             break;

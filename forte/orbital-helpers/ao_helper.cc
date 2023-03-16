@@ -86,9 +86,6 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
     nvir_ = Virtual_Laplace_->colspi()[0];
     vir_start_ = laplace.vir_start();
     shift_ += vir_start_;
-    std::cout<<nvir_ << "\n";
-    std::cout<<shift_<< "\n";
-    std::cout<<nact_<< "\n";
     nbf_ = CMO_->rowspi()[0];
 }
 
