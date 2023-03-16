@@ -52,6 +52,8 @@ void DETCI::startup() {
     if (p_space_.size() < 500 and (not options_->get_bool("FORCE_DIAG_METHOD")))
         sigma_vector_type_ = SigmaVectorType::Full;
     sigma_vector_ = make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
+    if (sigma_vector_type_ == SigmaVectorType::SparseList)
+        sub_lists_ = sigma_vector_->substitution_lists();
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {

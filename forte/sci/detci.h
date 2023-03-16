@@ -13,6 +13,8 @@
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sigma_vector.h"
 
+class DeterminantSubstitutionLists;
+
 namespace forte {
 class DETCI : public ActiveSpaceMethod {
   public:
@@ -41,7 +43,8 @@ class DETCI : public ActiveSpaceMethod {
     /// Transition RDMs override
     std::vector<std::shared_ptr<RDMs>>
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level, RDMsType rdm_type) override;
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType rdm_type) override;
 
     /// Return the CI wave functions for current state symmetry
     psi::SharedMatrix ci_wave_functions() override { return evecs_; }
@@ -91,6 +94,8 @@ class DETCI : public ActiveSpaceMethod {
     DeterminantHashVec p_space_;
     /// Build determinant space
     void build_determinant_space();
+    /// Substitution lists
+    std::shared_ptr<DeterminantSubstitutionLists> sub_lists_;
 
     /// State label
     std::string state_label_;

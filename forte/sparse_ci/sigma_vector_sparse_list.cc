@@ -79,6 +79,10 @@ void SigmaVectorSparseList::get_diagonal(psi::Vector& diag) {
     }
 }
 
+std::shared_ptr<DeterminantSubstitutionLists> SigmaVectorSparseList::substitution_lists() {
+    return op_;
+}
+
 void SigmaVectorSparseList::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     auto a_list_ = op_->a_list_;
     auto b_list_ = op_->b_list_;

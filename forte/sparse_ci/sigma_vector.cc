@@ -57,6 +57,10 @@ void SigmaVector::set_active_space_ints(std::shared_ptr<ActiveSpaceIntegrals> as
     }
 }
 
+std::shared_ptr<DeterminantSubstitutionLists> SigmaVector::substitution_lists() {
+    throw std::runtime_error("Subclass needs to override this!");
+}
+
 std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
                                                std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                                size_t max_memory, SigmaVectorType sigma_type) {
