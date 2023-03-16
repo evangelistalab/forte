@@ -47,6 +47,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_hashvector.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
@@ -60,6 +61,7 @@ namespace forte {
 
 class ForteOptions;
 class SCFInfo;
+class SigmaVector;
 
 /// Set the FCI_MO options
 void set_FCI_MO_options(ForteOptions& foptions);
@@ -211,7 +213,7 @@ class FCI_MO : public ActiveSpaceMethod {
     void set_safe_to_read_density_files(bool safe) { safe_to_read_density_files_ = safe; }
 
     /// Set fci_int_ pointer
-    void set_fci_int(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    void set_fci_int(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { as_ints_ = fci_ints; }
 
     /// Set multiplicity
     void set_multiplicity(int multiplicity) { multi_ = multiplicity; }
@@ -242,7 +244,7 @@ class FCI_MO : public ActiveSpaceMethod {
     void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens);
 
     /// Return fci_int_ pointer
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return fci_ints_; }
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return as_ints_; }
 
     /// Return the vector of determinants
     const vecdet& p_space() const { return determinant_; }
@@ -294,7 +296,6 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Integrals
     std::shared_ptr<ForteIntegrals> integral_;
     std::string int_type_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     /// Reference Type
     std::string ref_type_;
@@ -378,6 +379,7 @@ class FCI_MO : public ActiveSpaceMethod {
     vecdet determinant_;
     std::vector<Determinant> dominant_dets_;
     std::vector<vecdet> p_spaces_;
+    DeterminantHashVec det_hash_vec_;
 
     /// Size of Singles Determinants
     size_t singles_size_;
@@ -410,6 +412,11 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
     /// The algorithm for diagonalization
     std::string diag_algorithm_;
+
+    /// Sparse CI solver
+    std::shared_ptr<SparseCISolver> sparse_ci_solver_;
+    /// Sigma vector builder
+    std::shared_ptr<SigmaVector> sigma_vector_;
 
     /// Diagonalize the Hamiltonian
     void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,

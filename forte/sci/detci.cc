@@ -49,7 +49,7 @@ void DETCI::startup() {
 
     sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
     sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
-    if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD")))
+    if (p_space_.size() < 500 and (not options_->get_bool("FORCE_DIAG_METHOD")))
         sigma_vector_type_ = SigmaVectorType::Full;
     sigma_vector_ = make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
 }

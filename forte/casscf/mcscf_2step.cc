@@ -173,7 +173,8 @@ double MCSCF_2STEP::compute_energy() {
     bool no_orb_opt = (!opt_orbs_ or !nrot);
 
     // convergence for final CI
-    double r_conv = options_->get_double("R_CONVERGENCE");
+    auto r_conv = options_->get_double("R_CONVERGENCE");
+    auto as_maxiter = options_->get_int("DL_MAXITER");
 
     auto as_solver =
         make_active_space_solver(ci_type_, to_state_nroots_map(state_weights_map_), scf_info_,
@@ -181,7 +182,7 @@ double MCSCF_2STEP::compute_energy() {
     as_solver->set_print(print_);
     as_solver->set_e_convergence(e_conv_);
     as_solver->set_r_convergence(no_orb_opt ? r_conv : 1.0e-2);
-    as_solver->set_maxiter(no_orb_opt? maxiter_ : 15);
+    as_solver->set_maxiter(no_orb_opt ? as_maxiter : 15);
     as_solver->set_die_if_not_converged(no_orb_opt);
 
     // initial CI and resulting RDMs
@@ -236,14 +237,10 @@ double MCSCF_2STEP::compute_energy() {
         }
 
         // CI solver set up
-        bool restart = false;
-        for (const std::string& s: {"FCI", "DETCI"}) {
-            if (ci_type_ == s) {
-                restart = true;
-            }
-        }
+        bool restart = (ci_type_ == "FCI" or ci_type_ == "DETCI" or ci_type_ == "CAS");
         as_solver->set_restart(restart);
         as_solver->set_die_if_not_converged(false);
+        as_solver->set_maxiter(restart ? 15 : as_maxiter);
 
         // CI convergence criteria along the way
         double dl_e_conv = 5.0e-7;
@@ -376,9 +373,9 @@ double MCSCF_2STEP::compute_energy() {
     }
 
     // perform final CI using converged orbitals
-    energy_ = diagonalize_hamiltonian(
-        as_solver, cas_grad.active_space_ints(),
-        {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
+    energy_ =
+        diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
+                                {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
         auto final_orbs = options_->get_str("CASSCF_FINAL_ORBITAL");
@@ -459,10 +456,9 @@ bool MCSCF_2STEP::is_single_reference() {
     return false;
 }
 
-double
-MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
-                                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                     const std::tuple<int, double, double, bool>& params) {
+double MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
+                                            std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                            const std::tuple<int, double, double, bool>& params) {
     const auto& [print, e_conv, r_conv, dump_wfn] = params;
     as_solver->set_print(print);
     as_solver->set_e_convergence(e_conv);
