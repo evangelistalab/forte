@@ -168,6 +168,8 @@ psi::SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
 
 std::vector<double> DavidsonLiuSolver::residuals() const { return residual_; }
 
+void DavidsonLiuSolver::reset_convergence() { converged_ = 0; }
+
 SolverStatus DavidsonLiuSolver::update() {
     // If converged or exceeded the maximum number of iterations return true
     // if ((converged_ >= nroot_) or (iter_ > maxiter_)) return

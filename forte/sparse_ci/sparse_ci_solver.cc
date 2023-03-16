@@ -536,6 +536,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
             sigma_vector->compute_sigma(sigma, b);
             dl_solver_->set_sigma(sigma, i);
         }
+        // reset convergence count in DL solver
+        dl_solver_->reset_convergence();
     } else {
         std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
         size_t guess_size = std::min(nvec_, dl_solver_->collapse_size());
@@ -631,16 +633,12 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     int real_cycle = 1;
 
     for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
-        if (!restart_ or cycle) {
-            bool add_sigma = true;
-            do {
-                dl_solver_->get_b(b);
-                sigma_vector->compute_sigma(sigma, b);
-                add_sigma = dl_solver_->add_sigma(sigma);
-            } while (add_sigma);
+        while (dl_solver_->sigma_size() < dl_solver_->basis_size()) {
+            dl_solver_->get_b(b);
+            sigma_vector->compute_sigma(sigma, b);
+            dl_solver_->add_sigma(sigma);
         }
 
-        // converged = dls.update();
         converged = dl_solver_->update();
 
         if (converged != SolverStatus::Collapse) {

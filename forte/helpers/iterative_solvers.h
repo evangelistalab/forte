@@ -132,6 +132,9 @@ class DavidsonLiuSolver {
     /// A vector with the 2-norm of the residual for each root
     std::vector<double> residuals() const;
 
+    /// Reset convergence
+    void reset_convergence();
+
   private:
     // ==> Class Private Functions <==
 

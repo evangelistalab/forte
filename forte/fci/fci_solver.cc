@@ -212,6 +212,8 @@ double FCISolver::compute_energy() {
             HC.copy_to(sigma);
             dl_solver_->set_sigma(sigma, i);
         }
+        // reset convergence count in DL solver
+        dl_solver_->reset_convergence();
     }
 
     dl_solver_->set_e_convergence(e_convergence_);
@@ -234,15 +236,13 @@ double FCISolver::compute_energy() {
     double old_avg_energy = 0.0;
     int real_cycle = 1;
     for (int cycle = 0; cycle < maxiter_; ++cycle) {
-        if (!restart_ or cycle) {
-            bool add_sigma = true;
-            do {
-                dl_solver_->get_b(b);
-                C_->copy(b);
-                C_->Hamiltonian(HC, as_ints_);
-                HC.copy_to(sigma);
-                add_sigma = dl_solver_->add_sigma(sigma);
-            } while (add_sigma);
+        bool add_sigma = dl_solver_->sigma_size() < dl_solver_->basis_size();
+        while (add_sigma) {
+            dl_solver_->get_b(b);
+            C_->copy(b);
+            C_->Hamiltonian(HC, as_ints_);
+            HC.copy_to(sigma);
+            add_sigma = dl_solver_->add_sigma(sigma);
         }
 
         converged = dl_solver_->update();
