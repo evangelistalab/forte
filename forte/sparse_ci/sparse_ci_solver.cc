@@ -116,7 +116,7 @@ SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
     sigma_vector->add_bad_roots(bad_states_);
 
     // initiate a Davidson-Liu solver
-    if (!dl_solver_) {
+    if (!dl_solver_ or !restart_) {
         dl_solver_ = std::make_unique<DavidsonLiuSolver>(dim_space, nroot);
         auto hdiag = std::make_shared<psi::Vector>("Hdiag", dim_space);
         sigma_vector->get_diagonal(*hdiag);
