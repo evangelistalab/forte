@@ -112,14 +112,14 @@ double TDACI::compute_energy() {
             ref_occs[p] += value;
         }
     }
-    save_vector(ref_occs, "aci-occ.txt"); ///好像得到了ci-coefficients的平方。
+    save_vector(ref_occs, "aci-occ.txt");
 
     // 2. Generate the n-1 Determinants (not just core)
     for (int i = 0; i < nact; ++i) {
         annihilate_wfn(aci_dets, ann_dets_, i);
     }
     size_t nann = ann_dets_.size();
-    outfile->Printf("\n  Number of cationic determinants: %zu", ann_dets_.size()); /// 没看具体细节，但是生成了n-1 determinants.
+    outfile->Printf("\n  Number of cationic determinants: %zu", ann_dets_.size());
 
     // 3. Build the full n-1 Hamiltonian if not screening
     std::vector<std::string> det_str(nann);
@@ -138,11 +138,11 @@ double TDACI::compute_energy() {
             }
         }
         save_vector(det_str, "determinants.txt");
-    } /// 生成full n-1 hamiltonian. determinants basis. 若使用propogation,不建立这个矩阵。
+    }
 
     // 4. Prepare initial state by removing an electron from aci wfn
     // DeterminantHashVec core_dets;
-    SharedVector core_coeffs = std::make_shared<Vector>("init", nann); /// 新的ci coefficients.
+    SharedVector core_coeffs = std::make_shared<Vector>("init", nann);
     core_coeffs->zero();
 
     const det_hashvec& dets = aci_dets.wfn_hash();
@@ -152,11 +152,11 @@ double TDACI::compute_energy() {
         auto& detI = dets[I];
         if (detI.get_alfa_bit(hole) == true) {
             Determinant adet(detI);
-            adet.set_alfa_bit(hole, false); /// 把这个n determinant上的某个电子删除。删除的是alpha电子。
-            size_t idx = ann_dets_.get_idx(adet); /// 得到这个新的n-1 determinant 在新的determinants basis中的位置。
+            adet.set_alfa_bit(hole, false); 
+            size_t idx = ann_dets_.get_idx(adet); 
             core_coeffs->set(idx,
-                             core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI), 0));/// coefficient累加。
-            core_dets_.add(adet);/// 对应的determinant。
+                             core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI), 0));
+            core_dets_.add(adet);
         }
     }
     outfile->Printf("\n  Size of initial state: %zu", core_dets_.size());
@@ -204,7 +204,7 @@ double TDACI::compute_energy() {
         double tval = test_occ();
     }
 
-    return en; /// 有一些问题，好像没有计算能量？？？？
+    return en;
 }
 
 void TDACI::propagate_list(SharedVector C0) {
