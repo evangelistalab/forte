@@ -68,6 +68,7 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
     nrdocc_ = eps_rdocc_->dim();
     nvir_ = eps_virtual_->dim();
     nbf_ = CMO_->rowspi()[0];
+    vir_start_ = 0;
 }
 
 AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_act,
@@ -82,7 +83,12 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
     weights_ = Occupied_Laplace_->rowspi()[0];
     nrdocc_ = eps_rdocc_->dim();
     nact_ = eps_active_->dim();
-    nvir_ = eps_virtual_->dim();
+    nvir_ = Virtual_Laplace_->colspi()[0];
+    vir_start_ = laplace.vir_start();
+    shift_ += vir_start_;
+    std::cout<<nvir_ << "\n";
+    std::cout<<shift_<< "\n";
+    std::cout<<nact_<< "\n";
     nbf_ = CMO_->rowspi()[0];
 }
 
@@ -122,7 +128,7 @@ void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
 
 void AtomicOrbitalHelper::Compute_Cholesky_Active_Density(psi::SharedMatrix RDM) {
     psi::SharedMatrix PAct_single(new psi::Matrix("Single_PAct", nbf_, nbf_));
-    std::vector<int> Act_idx(shift_);
+    std::vector<int> Act_idx(nact_);
     std::iota(Act_idx.begin(), Act_idx.end(), nfrozen_+nrdocc_);
     psi::SharedMatrix C_Act = submatrix_cols(*CMO_, Act_idx);
     psi::SharedMatrix D_Act = psi::linalg::doublet(C_Act, RDM, false, false);
@@ -131,7 +137,7 @@ void AtomicOrbitalHelper::Compute_Cholesky_Active_Density(psi::SharedMatrix RDM)
     for (int w = 0; w < weights_; w++) {
         for (int mu = 0; mu < nbf_; mu++) {
             for (int nu = 0; nu < nbf_; nu++) {
-                for (int u = 0; u < shift_; u++) {
+                for (int u = 0; u < nact_; u++) {
                     value_act += D_Act->get(mu, u) * C_Act->get(nu, u) * Active_Laplace_->get(w, u);
                 }
                 PAct_single->set(mu, nu, value_act);
@@ -145,21 +151,11 @@ void AtomicOrbitalHelper::Compute_Cholesky_Active_Density(psi::SharedMatrix RDM)
 }
 
 void AtomicOrbitalHelper::Compute_Cholesky_Density() {
-    //psi::SharedMatrix POcc_real(new psi::Matrix("Real_POcc", nbf_, nbf_));
-    //psi::SharedMatrix PVir_real(new psi::Matrix("Real_PVir", nbf_, nbf_));
     std::vector<int> Occ_idx(nrdocc_);
     std::iota(Occ_idx.begin(), Occ_idx.end(), nfrozen_);
-    std::vector<int> Vir_idx(nvir_);
-    std::iota(Vir_idx.begin(), Vir_idx.end(), nfrozen_ + nrdocc_ + shift_);
     psi::SharedMatrix C_Occ = submatrix_cols(*CMO_, Occ_idx);
-    //psi::SharedMatrix C_Vir = submatrix_cols(*CMO_, Vir_idx);
-
     POcc_real_ = psi::linalg::doublet(C_Occ, C_Occ, false, true);
-    //PVir_real_ = psi::linalg::doublet(C_Vir, C_Vir, false, true);
-
     L_Occ_real_ = POcc_real_->partial_cholesky_factorize(1e-10);
-    //L_Occ_real_->print();
-    //L_Vir_real_ = PVir_real_->partial_cholesky_factorize(1e-10);
 }
 /*
 void AtomicOrbitalHelper::Householder_QR() {

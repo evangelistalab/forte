@@ -22,6 +22,8 @@ class LaplaceDSRG {
     double compute_cavv();
     double compute_ccav();
     void print_header();
+    int vir_start_cavv() { return vir_start_cavv_; }
+    int vir_start_ccav() { return vir_start_ccav_; }
 
   protected:
     std::shared_ptr<ForteOptions> foptions_;
@@ -61,6 +63,8 @@ class LaplaceDSRG {
     double theta_ij_cavv_;
     double theta_schwarz_cavv_;
     double theta_ij_sqrt_cavv_;
+    int vir_start_cavv_;
+  
 
     /// CCAV
     double theta_NB_ccav_;
@@ -68,6 +72,7 @@ class LaplaceDSRG {
     double theta_ij_ccav_;
     double theta_schwarz_ccav_;
     double theta_ij_sqrt_ccav_;
+    int vir_start_ccav_;
 
     /// Energy
     double E_J_;

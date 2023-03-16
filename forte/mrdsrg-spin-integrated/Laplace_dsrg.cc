@@ -535,6 +535,7 @@ double LaplaceDSRG::compute_cavv() {
                                        laplace_threshold_, nactive_, nfrozen_, true);
 
     int weights_cavv = ao_helper_cavv.Weights();
+    vir_start_cavv_ = ao_helper_cavv.vir_start();
     ao_helper_cavv.Compute_Cholesky_Pseudo_Density();
     ao_helper_cavv.Compute_Cholesky_Active_Density(Gamma1_mat_);
     Occupied_cholesky_cavv_ = ao_helper_cavv.LOcc_list();
@@ -763,7 +764,6 @@ double LaplaceDSRG::compute_cavv() {
         int nocc = Occupied_cholesky_cavv_[nweight]->coldim();
         int nvir = Virtual_cholesky_cavv_[nweight]->coldim();
         int nact = Active_cholesky_cavv_[nweight]->coldim();
-
         psi::SharedMatrix N_pi_bar =
             psi::linalg::doublet(N_pu, Occupied_cholesky_cavv_abs_[nweight], false, false);
         double* N_pi_bar_p = N_pi_bar->get_pointer();
@@ -787,7 +787,6 @@ double LaplaceDSRG::compute_cavv() {
             psi::SharedMatrix T_ibar_i_new =
                 submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p_[qa]);
             P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
-
             for (int abar = 0; abar < nvir; abar++) {
                 if (std::abs(*N_pa_bar_p) >= theta_NB_cavv_) {
                     a_bar_p_up[qa].push_back(abar);
@@ -1039,6 +1038,7 @@ double LaplaceDSRG::compute_ccav() {
                                        laplace_threshold_, nactive_, nfrozen_, false);
 
     int weights_ccav = ao_helper_ccav.Weights();
+    vir_start_ccav_ = ao_helper_ccav.vir_start();
     ao_helper_ccav.Compute_Cholesky_Pseudo_Density();
     ao_helper_ccav.Compute_Cholesky_Active_Density(Eta1_mat_);
     Occupied_cholesky_ccav_ = ao_helper_ccav.LOcc_list();

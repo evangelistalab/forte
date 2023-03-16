@@ -72,6 +72,7 @@ class AtomicOrbitalHelper {
     /// How many orbitals does it take to go from occupied to virtual (ie should
     /// be active)
     int shift_;
+    int vir_start_;
     int nfrozen_;
 
   public:
@@ -94,6 +95,8 @@ class AtomicOrbitalHelper {
     psi::SharedMatrix POcc_real() { return POcc_real_; }
     
     int Weights() { return weights_; }
+
+    int vir_start() { return vir_start_; }
 
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance);

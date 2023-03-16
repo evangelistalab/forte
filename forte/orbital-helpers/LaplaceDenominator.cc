@@ -96,6 +96,8 @@ void LaplaceDenominator::decompose_ccvv() {
             "LaplaceQuadrature: Cannot locate R property file for quadrature rules (should be "
             "PSIDATADIR/quadratures/1_x/R_avail.bin)");
 
+    std::cout<<PSIDATADIR;
+
     int nk = 53;
     int nR = 99;
 
@@ -255,21 +257,36 @@ void LaplaceDenominator::decompose_cavv() {
 
     // double A = 2.0 * (E_LUMO - E_HOMO); // min
     // double B = 2.0 * (E_HUMO - E_LOMO); // max
+    vir_start_ = 0;
 
     double E_vir_max = eps_vir_->get(0, nvir - 1);
-    double E_vir_min = eps_vir_->get(0, 0);
+    //double E_vir_min = eps_vir_->get(0, 0);
     double E_occ_max = eps_occ_->get(0, nocc - 1);
     double E_occ_min = eps_occ_->get(0, 0);
     double E_act_max = eps_act_->get(0, nact - 1);
     double E_act_min = eps_act_->get(0, 0);
 
+    for (int i = 0; i < nvir; i++) {
+        double E_vir_min_test = eps_vir_->get(0, i);
+        double E_test = 2 * E_vir_min_test - E_occ_max - E_act_max;
+        if (E_test < 1) {
+            vir_start_ += 1; 
+        } else {
+            break;
+        }
+    }
+
+    double E_vir_min = eps_vir_->get(0, vir_start_);
     double A = 2 * E_vir_min - E_occ_max - E_act_max;
     double B = 2 * E_vir_max - E_occ_min - E_act_min;
+
+    nvir -= vir_start_;
 
     double R = B / A;
 
     outfile->Printf("  The smallest denominator: %f. \n", A);
     outfile->Printf("  The largest denominator: %f. \n", B);
+    outfile->Printf("  Number of unselected virtual orbitals: %d. \n", vir_start_);
 
     // Pick appropriate quadrature file and read contents
     std::string PSIDATADIR = Process::environment.get_datadir();
@@ -414,13 +431,14 @@ void LaplaceDenominator::decompose_cavv() {
     double *e_o = eps_occ_->pointer();
     double *e_v = eps_vir_->pointer();
     double *e_a = eps_act_->pointer();
+    std::cout<< "nvir" << nvir <<"\n";
 
     for (int k = 0; k < nvector_; k++) {
         for (int i = 0; i < nocc; i++) {
             dop[k][i] = pow(omega[k], 0.25) * exp(alpha[k] * e_o[i]);
         }
         for (int a = 0; a < nvir; a++) {
-            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * e_v[a]);
+            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * e_v[a + vir_start_]);
         }
         for (int u = 0; u < nact; u++) {
             dap[k][u] = pow(omega[k], 0.25) * exp(alpha[k] * e_a[u]);
@@ -446,21 +464,37 @@ void LaplaceDenominator::decompose_ccav() {
 
     // double A = 2.0 * (E_LUMO - E_HOMO); // min
     // double B = 2.0 * (E_HUMO - E_LOMO); // max
+    vir_start_ = 0;
 
     double E_vir_max = eps_vir_->get(0, nvir - 1);
-    double E_vir_min = eps_vir_->get(0, 0);
+    //double E_vir_min = eps_vir_->get(0, 0);
     double E_occ_max = eps_occ_->get(0, nocc - 1);
     double E_occ_min = eps_occ_->get(0, 0);
     double E_act_max = eps_act_->get(0, nact - 1);
     double E_act_min = eps_act_->get(0, 0);
+
+    for (int i = 0; i < nvir; i++) {
+        double E_vir_min_test = eps_vir_->get(0, i);
+        double E_test = E_vir_min_test + E_act_min - 2 * E_occ_max;
+        if (E_test < 1) {
+            vir_start_ += 1; 
+        } else {
+            break;
+        }
+    }
+
+    double E_vir_min = eps_vir_->get(0, vir_start_);
 
     double A = E_vir_min + E_act_min - 2 * E_occ_max;
     double B = E_vir_max + E_act_max - 2 * E_occ_min;
 
     double R = B / A;
 
+    nvir -= vir_start_;
+
     outfile->Printf("  The smallest denominator: %f. \n", A);
     outfile->Printf("  The largest denominator: %f. \n", B);
+    outfile->Printf("  Number of unselected virtual orbitals: %d. \n", vir_start_);
 
     // Pick appropriate quadrature file and read contents
     std::string PSIDATADIR = Process::environment.get_datadir();
@@ -611,7 +645,7 @@ void LaplaceDenominator::decompose_ccav() {
             dop[k][i] = pow(omega[k], 0.25) * exp(alpha[k] * e_o[i]);
         }
         for (int a = 0; a < nvir; a++) {
-            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * e_v[a]);
+            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * e_v[a + vir_start_]);
         }
         for (int u = 0; u < nact; u++) {
             dap[k][u] = pow(omega[k], 0.25) * exp(-alpha[k] * e_a[u]);

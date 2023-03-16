@@ -24,6 +24,8 @@ class LaplaceDenominator {
      int nvector_;
      // Maximum error norm allowed in denominator
      double delta_;
+     // The first selected virtual orbital
+     int vir_start_ = 0;
 
      bool cavv_;
 
@@ -40,6 +42,7 @@ class LaplaceDenominator {
      psi::SharedMatrix denominator_occ() const { return denominator_occ_; }
      psi::SharedMatrix denominator_vir() const { return denominator_vir_; }
      psi::SharedMatrix denominator_act() const { return denominator_act_; }
+     int vir_start() const { return vir_start_; }
 };
 }
 
