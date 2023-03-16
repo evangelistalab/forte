@@ -167,6 +167,9 @@ void FCI_MO::startup() {
     if (ipea_ != "NONE") {
         compute_orbital_extents();
     }
+
+    // form determinants
+    form_p_space();
 }
 
 void FCI_MO::read_options() {
@@ -318,9 +321,6 @@ double FCI_MO::compute_energy() {
 }
 
 std::vector<double> FCI_MO::compute_ss_energies() {
-    // form determinants
-    form_p_space();
-
     // diagonalize the CASCI Hamiltonian
     bool noHF = options_->get_bool("FCIMO_CISD_NOHF");
     if (multi_ == 1 && root_sym_ == 0 &&

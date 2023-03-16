@@ -103,9 +103,6 @@ class DETCI : public ActiveSpaceMethod {
     /// Number of irreps
     int nirrep_;
 
-    // /// Max iteration of Davidson-Liu
-    // int maxiter_;
-
     /// Number of guess basis for Davidson-Liu
     int dl_guess_size_;
     /// Initial guess vector
