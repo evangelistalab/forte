@@ -80,8 +80,7 @@ void ASCI::pre_iter_preparation() {
 
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_, state_);
-    ref.build_reference(initial_reference_);
-    P_space_ = initial_reference_;
+    ref.build_reference(P_space_);
 
     if (quiet_mode_) {
         sparse_solver_->set_print_details(false);
@@ -102,7 +101,7 @@ void ASCI::startup() {
     // Build the reference determinant and compute its energy
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_, state_);
-    ref.build_reference(initial_reference_);
+    ref.build_reference(P_space_);
 
     // Read options
     nroot_ = options_->get_int("NROOT");

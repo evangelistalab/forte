@@ -107,21 +107,19 @@ double DETCI::compute_energy() {
 }
 
 void DETCI::build_determinant_space() {
-    std::vector<Determinant> dets;
-
     CI_Reference ci_ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                         wfn_irrep_, state_);
     if (actv_space_type_ == "GAS") {
-        ci_ref.build_gas_reference(dets);
+        ci_ref.build_gas_reference(p_space_);
     } else if (actv_space_type_ == "DOCI") {
-        ci_ref.build_doci_reference(dets);
+        ci_ref.build_doci_reference(p_space_);
     } else if (actv_space_type_ == "CAS") {
-        ci_ref.build_cas_reference_full(dets);
+        ci_ref.build_cas_reference_full(p_space_);
     } else {
-        ci_ref.build_ci_reference(dets, !exclude_hf_in_cid_);
+        ci_ref.build_ci_reference(p_space_, !exclude_hf_in_cid_);
     }
 
-    auto size = dets.size();
+    auto size = p_space_.size();
     if (size == 0) {
         outfile->Printf("\n  No determinant found that matches the state requested!");
         outfile->Printf("\n  Please check the input (symmetry, multiplicity, etc.)!");
@@ -132,15 +130,13 @@ void DETCI::build_determinant_space() {
 
     if (print_ > 2) {
         print_h2("Determinants");
-        for (const auto& det : dets) {
+        for (const auto& det : p_space_) {
             outfile->Printf("\n  %s", str(det, nactv_).c_str());
         }
     }
     if (not quiet_) {
         outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
     }
-
-    p_space_ = DeterminantHashVec(dets);
 }
 
 void DETCI::diagonalize_hamiltonian() {

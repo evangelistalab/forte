@@ -34,6 +34,7 @@
 #include "base_classes/mo_space_info.h"
 #include "base_classes/scf_info.h"
 #include "base_classes/state_info.h"
+#include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
 
@@ -137,25 +138,25 @@ class CI_Reference {
     ~CI_Reference();
 
     /// Build a reference
-    void build_reference(std::vector<Determinant>& ref_space);
+    void build_reference(DeterminantHashVec& ref_space);
 
     /// Build the CAS reference (with a high limit of basis functions)
-    void build_cas_reference(std::vector<Determinant>& ref_space);
+    void build_cas_reference(DeterminantHashVec& ref_space);
 
     /// Build the complete CAS reference
-    void build_cas_reference_full(std::vector<Determinant>& ref_space);
+    void build_cas_reference_full(DeterminantHashVec& ref_space);
 
     /// Build the doubly occupied CI reference
-    void build_doci_reference(std::vector<Determinant>& ref_space);
+    void build_doci_reference(DeterminantHashVec& ref_space);
 
     /// Build active-space CIS/CID/CISD reference
-    void build_ci_reference(std::vector<Determinant>& ref_space, bool include_rhf = true);
+    void build_ci_reference(DeterminantHashVec& ref_space, bool include_rhf = true);
 
     /// Build the complete GAS reference
-    void build_gas_reference(std::vector<Determinant>& ref_space);
+    void build_gas_reference(DeterminantHashVec& ref_space);
 
     /// Build single lowest energy state
-    void build_gas_single(std::vector<Determinant>& ref_space);
+    void build_gas_single(DeterminantHashVec& ref_space);
 
     /// Set the reference type
     void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
