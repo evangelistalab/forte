@@ -93,9 +93,6 @@ void FCIVector::compute_rdms(int max_order) {
         rdm_timing.push_back(t.get());
     }
 
-    if (max_order >= 4) {
-    }
-
     // Print RDM timings
     if (print_ > 0) {
         for (size_t n = 0; n < rdm_timing.size(); ++n) {
@@ -109,6 +106,12 @@ double FCIVector::energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_int
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
+    auto& data_a = opdm_a_.data();
+    auto& data_b = opdm_b_.data();
+    auto& data_aa = tpdm_aa_.data();
+    auto& data_ab = tpdm_ab_.data();
+    auto& data_bb = tpdm_bb_.data();
+
     double nuclear_repulsion_energy =
         psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
 
@@ -118,8 +121,8 @@ double FCIVector::energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_int
 
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
-            energy_1rdm += opdm_a_[ncmo_ * p + q] * fci_ints->oei_a(p, q);
-            energy_1rdm += opdm_b_[ncmo_ * p + q] * fci_ints->oei_b(p, q);
+            energy_1rdm += data_a[ncmo_ * p + q] * fci_ints->oei_a(p, q);
+            energy_1rdm += data_b[ncmo_ * p + q] * fci_ints->oei_b(p, q);
         }
     }
 
@@ -129,13 +132,13 @@ double FCIVector::energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_int
                 for (size_t s = 0; s < ncmo_; ++s) {
                     if (na >= 2)
                         energy_2rdm +=
-                            0.25 * tpdm_aa_[tei_index(p, q, r, s)] * fci_ints->tei_aa(p, q, r, s);
+                            0.25 * data_aa[tei_index(p, q, r, s)] * fci_ints->tei_aa(p, q, r, s);
                     if ((na >= 1) and (nb >= 1))
                         energy_2rdm +=
-                            tpdm_ab_[tei_index(p, q, r, s)] * fci_ints->tei_ab(p, q, r, s);
+                            data_ab[tei_index(p, q, r, s)] * fci_ints->tei_ab(p, q, r, s);
                     if (nb >= 2)
                         energy_2rdm +=
-                            0.25 * tpdm_bb_[tei_index(p, q, r, s)] * fci_ints->tei_bb(p, q, r, s);
+                            0.25 * data_bb[tei_index(p, q, r, s)] * fci_ints->tei_bb(p, q, r, s);
                 }
             }
         }
@@ -153,8 +156,9 @@ double FCIVector::energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_int
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
-    rdm.assign(ncmo_ * ncmo_, 0.0);
+void FCIVector::compute_1rdm(ambit::Tensor& rdm, bool alfa) {
+    rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo_, ncmo_});
+    auto& rdm_data = rdm.data();
 
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -192,7 +196,7 @@ void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
                             double* y = &(Ch[vo[ss].J][0]);
                             double* c = &(Ch[vo[ss].I][0]);
                             for (size_t L = 0; L < maxL; ++L) {
-                                rdm[p_abs * ncmo_ + q_abs] += c[L] * y[L] * H;
+                                rdm_data[p_abs * ncmo_ + q_abs] += c[L] * y[L] * H;
                             }
                         }
                     }
@@ -206,7 +210,7 @@ void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
     for (int p = 0; p < no_; ++p) {
         outfile->Printf("\n");
         for (int q = 0; q < no_; ++q) {
-            outfile->Printf("%15.12f ",rdm[oei_index(p,q)]);
+            outfile->Printf("%15.12f ",rdm_data[oei_index(p,q)]);
         }
     }
 #endif
@@ -216,8 +220,10 @@ void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
  * Compute the aa/bb two-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = aa, false = bb
  */
-void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+void FCIVector::compute_2rdm_aa(ambit::Tensor& rdm, bool alfa) {
+    rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "2RDM_AA" : "2RDM_BB",
+                               {ncmo_, ncmo_, ncmo_, ncmo_});
+    auto& rdm_data = rdm.data();
     // Notation
     // ha - symmetry of alpha strings
     // hb - symmetry of beta strings
@@ -263,10 +269,10 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
                         }
                     }
 
-                    rdm[tei_index(p_abs, q_abs, p_abs, q_abs)] += rdm_element;
-                    rdm[tei_index(p_abs, q_abs, q_abs, p_abs)] -= rdm_element;
-                    rdm[tei_index(q_abs, p_abs, p_abs, q_abs)] -= rdm_element;
-                    rdm[tei_index(q_abs, p_abs, q_abs, p_abs)] += rdm_element;
+                    rdm_data[tei_index(p_abs, q_abs, p_abs, q_abs)] += rdm_element;
+                    rdm_data[tei_index(p_abs, q_abs, q_abs, p_abs)] -= rdm_element;
+                    rdm_data[tei_index(q_abs, p_abs, p_abs, q_abs)] -= rdm_element;
+                    rdm_data[tei_index(q_abs, p_abs, q_abs, p_abs)] += rdm_element;
                 }
             }
             // Loop over (p>q) > (r>s)
@@ -297,14 +303,14 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
                             }
                         }
 
-                        rdm[tei_index(p_abs, q_abs, r_abs, s_abs)] += rdm_element;
-                        rdm[tei_index(q_abs, p_abs, r_abs, s_abs)] -= rdm_element;
-                        rdm[tei_index(p_abs, q_abs, s_abs, r_abs)] -= rdm_element;
-                        rdm[tei_index(q_abs, p_abs, s_abs, r_abs)] += rdm_element;
-                        rdm[tei_index(r_abs, s_abs, p_abs, q_abs)] += rdm_element;
-                        rdm[tei_index(r_abs, s_abs, q_abs, p_abs)] -= rdm_element;
-                        rdm[tei_index(s_abs, r_abs, p_abs, q_abs)] -= rdm_element;
-                        rdm[tei_index(s_abs, r_abs, q_abs, p_abs)] += rdm_element;
+                        rdm_data[tei_index(p_abs, q_abs, r_abs, s_abs)] += rdm_element;
+                        rdm_data[tei_index(q_abs, p_abs, r_abs, s_abs)] -= rdm_element;
+                        rdm_data[tei_index(p_abs, q_abs, s_abs, r_abs)] -= rdm_element;
+                        rdm_data[tei_index(q_abs, p_abs, s_abs, r_abs)] += rdm_element;
+                        rdm_data[tei_index(r_abs, s_abs, p_abs, q_abs)] += rdm_element;
+                        rdm_data[tei_index(r_abs, s_abs, q_abs, p_abs)] -= rdm_element;
+                        rdm_data[tei_index(s_abs, r_abs, p_abs, q_abs)] -= rdm_element;
+                        rdm_data[tei_index(s_abs, r_abs, q_abs, p_abs)] += rdm_element;
                     }
                 }
             }
@@ -316,8 +322,8 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
         for (int q = 0; q <= p; ++q) {
             for (int r = 0; r < no_; ++r) {
                 for (int s = 0; s <= r; ++s) {
-                    if (std::fabs(rdm[tei_index(p,q,r,s)]) > 1.0e-12){
-                        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm[tei_index(p,q,r,s)]);
+                    if (std::fabs(rdm_data[tei_index(p,q,r,s)]) > 1.0e-12){
+                        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm_data[tei_index(p,q,r,s)]);
 
                     }
                 }
@@ -331,8 +337,9 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
  * Compute the ab two-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = aa, false = bb
  */
-void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+void FCIVector::compute_2rdm_ab(ambit::Tensor& rdm) {
+    rdm = ambit::Tensor::build(ambit::CoreTensor, "2RDM_AB", {ncmo_, ncmo_, ncmo_, ncmo_});
+    auto& rdm_data = rdm.data();
 
     // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
@@ -374,7 +381,7 @@ void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
                                         for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
                                             double V = static_cast<double>(vo_alfa[SSa].sign *
                                                                            vo_beta[SSb].sign);
-                                            rdm[tei_index(p_abs, r_abs, q_abs, s_abs)] +=
+                                            rdm_data[tei_index(p_abs, r_abs, q_abs, s_abs)] +=
                                                 Y[vo_alfa[SSa].J][vo_beta[SSb].J] *
                                                 C[vo_alfa[SSa].I][vo_beta[SSb].I] * V;
                                         }
@@ -393,8 +400,8 @@ void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
         for (int q = 0; q < no_; ++q) {
             for (int r = 0; r < no_; ++r) {
                 for (int s = 0; s < no_; ++s) {
-                    if (std::fabs(rdm[tei_index(p,q,r,s)]) > 1.0e-12){
-                        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm[tei_index(p,q,r,s)]);
+                    if (std::fabs(rdm_data[tei_index(p,q,r,s)]) > 1.0e-12){
+                        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm_data[tei_index(p,q,r,s)]);
 
                     }
                 }
@@ -404,8 +411,10 @@ void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
 #endif
 }
 
-void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+void FCIVector::compute_3rdm_aaa(ambit::Tensor& rdm, bool alfa) {
+    rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "3RDM_AAA" : "3RDM_BBB",
+                               {ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_});
+    auto& rdm_data = rdm.data();
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
         size_t maxK =
@@ -452,7 +461,7 @@ void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
 
                             rdm_value *= sign;
 
-                            rdm[six_index(p, q, r, s, t, u)] += rdm_value;
+                            rdm_data[six_index(p, q, r, s, t, u)] += rdm_value;
                         }
                     }
                 }
@@ -461,8 +470,10 @@ void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
     }
 }
 
-void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+void FCIVector::compute_3rdm_aab(ambit::Tensor& rdm) {
+    rdm = ambit::Tensor::build(ambit::CoreTensor, "3RDM_AAB",
+                               {ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_});
+    auto& rdm_data = rdm.data();
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
         size_t maxK = lists_->alfa_graph_2h()->strpi(h_K);
@@ -500,7 +511,7 @@ void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
                                             size_t a = Nel.p;
                                             size_t N = Nel.J;
                                             short sign = Iel.sign * Jel.sign * Mel.sign * Nel.sign;
-                                            rdm[six_index(p, q, r, s, t, a)] +=
+                                            rdm_data[six_index(p, q, r, s, t, a)] +=
                                                 sign * C_I_p[I][M] * C_J_p[J][N];
                                         }
                                     }
@@ -514,8 +525,10 @@ void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
     }
 }
 
-void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+void FCIVector::compute_3rdm_abb(ambit::Tensor& rdm) {
+    rdm = ambit::Tensor::build(ambit::CoreTensor, "3RDM_ABB",
+                               {ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_});
+    auto& rdm_data = rdm.data();
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
         size_t maxK = lists_->alfa_graph_1h()->strpi(h_K);
@@ -554,9 +567,8 @@ void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
                                             size_t N = Nel.J;
                                             short sign =
                                                 Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
-                                            rdm[six_index(p, q, r, s, t, a)] +=
+                                            rdm_data[six_index(p, q, r, s, t, a)] +=
                                                 sign * C_I_p[I][M] * C_J_p[J][N];
-                                            //}//End of if statement
                                         }
                                     }
                                 }
@@ -625,6 +637,14 @@ void FCIVector::rdm_test() {
     bool test_3rdm_aab = true;
     bool test_3rdm_abb = true;
 
+    auto data_aa = tpdm_aa_.data();
+    auto data_ab = tpdm_ab_.data();
+    auto data_bb = tpdm_bb_.data();
+    auto data_aaa = tpdm_aaa_.data();
+    auto data_aab = tpdm_aab_.data();
+    auto data_abb = tpdm_abb_.data();
+    auto data_bbb = tpdm_bbb_.data();
+
     outfile->Printf("\n\n==> RDMs Test <==\n");
     if (test_2rdm_aa) {
         double error_2rdm_aa = 0.0;
@@ -647,18 +667,11 @@ void FCIVector::rdm_test() {
                             }
                         }
                         if (std::fabs(rdm) > 1.0e-12) {
-                            //                            outfile->Printf("\n
-                            //                            D2(aaaa)[%3lu][%3lu][%3lu][%3lu] =
-                            //                            %18.12lf "
-                            //                                            "(%18.12lf,%18.12lf)",
-                            //                                            p, q, r, s, rdm -
-                            //                                            tpdm_aa_[tei_index(p, q,
-                            //                                            r,
-                            //                                            s)], rdm,
-                            //                                            tpdm_aa_[tei_index(p, q,
-                            //                                            r,
-                            //                                            s)]);
-                            error_2rdm_aa += std::fabs(rdm - tpdm_aa_[tei_index(p, q, r, s)]);
+                            // outfile->Printf("\n D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = % 18.12lf "
+                            //                 "(%18.12lf,%18.12lf)",
+                            //                 p, q, r, s, rdm - data_aa[tei_index(p, q, r, s)],
+                            //                 rdm, data_aa[tei_index(p, q, r, s)]);
+                            error_2rdm_aa += std::fabs(rdm - data_aa[tei_index(p, q, r, s)]);
                         }
                     }
                 }
@@ -689,12 +702,11 @@ void FCIVector::rdm_test() {
                             }
                         }
                         if (std::fabs(rdm) > 1.0e-12) {
-                            //                            outfile->Printf("\n
-                            //                            D2(bbbb)[%3lu][%3lu][%3lu][%3lu]
-                            //                            = %18.12lf
-                            //                            (%18.12lf,%18.12lf)",
-                            //                            p,q,r,s,rdm-tpdm_bb_[tei_index(p,q,r,s)],rdm,tpdm_bb_[tei_index(p,q,r,s)]);
-                            error_2rdm_bb += std::fabs(rdm - tpdm_bb_[tei_index(p, q, r, s)]);
+                            // outfile->Printf("\n D2(bbbb)[%3lu][%3lu][%3lu][%3lu] = %18.12lf "
+                            //                 "(%18.12lf,%18.12lf)",
+                            //                 p, q, r, s, rdm - data_bb[tei_index(p, q, r, s)],
+                            //                 rdm, data_bb[tei_index(p, q, r, s)]);
+                            error_2rdm_bb += std::fabs(rdm - data_bb[tei_index(p, q, r, s)]);
                         }
                     }
                 }
@@ -725,12 +737,11 @@ void FCIVector::rdm_test() {
                             }
                         }
                         if (std::fabs(rdm) > 1.0e-12) {
-                            //                            outfile->Printf("\n
-                            //                            D2(abab)[%3lu][%3lu][%3lu][%3lu]
-                            //                            = %18.12lf
-                            //                            (%18.12lf,%18.12lf)",
-                            //                            p,q,r,s,rdm-tpdm_ab_[tei_index(p,q,r,s)],rdm,tpdm_ab_[tei_index(p,q,r,s)]);
-                            error_2rdm_ab += std::fabs(rdm - tpdm_ab_[tei_index(p, q, r, s)]);
+                            // outfile->Printf("\n D2(abab)[%3lu][%3lu][%3lu][%3lu] = %18.12lf "
+                            //                 "(%18.12lf,%18.12lf)",
+                            //                 p, q, r, s, rdm - data_ab[tei_index(p, q, r, s)],
+                            //                 rdm, data_ab[tei_index(p, q, r, s)]);
+                            error_2rdm_ab += std::fabs(rdm - data_ab[tei_index(p, q, r, s)]);
                         }
                     }
                 }
@@ -766,13 +777,11 @@ void FCIVector::rdm_test() {
                                 }
                                 if (std::fabs(rdm) > 1.0e-12) {
                                     size_t index = six_index(p, q, r, s, t, a);
-                                    double rdm_comp = tpdm_aab_[index];
-                                    //                                    outfile->Printf("\n
-                                    //                                    D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                    //                                    =
-                                    //                                    %18.12lf
-                                    //                                    (%18.12lf,%18.12lf)",
-                                    //                                                    p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    double rdm_comp = data_aab[index];
+                                    // outfile->Printf(
+                                    //     "\n D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = "
+                                    //     "%18.12lf (%18.12lf,%18.12lf)",
+                                    //     p, q, r, s, t, a, rdm - rdm_comp, rdm, rdm_comp);
                                     error_3rdm_aab += std::fabs(rdm - rdm_comp);
                                 }
                             }
@@ -811,13 +820,11 @@ void FCIVector::rdm_test() {
                                 }
                                 if (std::fabs(rdm) > 1.0e-12) {
                                     size_t index = six_index(p, q, r, s, t, a);
-                                    double rdm_comp = tpdm_abb_[index];
-                                    //                                    outfile->Printf("\n
-                                    //                                    D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                    //                                    =
-                                    //                                    %18.12lf
-                                    //                                    (%18.12lf,%18.12lf)",
-                                    //                                                    p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    double rdm_comp = data_abb[index];
+                                    // outfile->Printf(
+                                    //     "\n D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = "
+                                    //     "%18.12lf (%18.12lf,%18.12lf)",
+                                    //     p, q, r, s, t, a, rdm - rdm_comp, rdm, rdm_comp);
                                     error_3rdm_abb += std::fabs(rdm - rdm_comp);
                                 }
                             }
@@ -857,13 +864,11 @@ void FCIVector::rdm_test() {
                                 }
                                 if (std::fabs(rdm) > 1.0e-12) {
                                     size_t index = six_index(p, q, r, s, t, a);
-                                    double rdm_comp = tpdm_aaa_[index];
-                                    //                                    outfile->Printf("\n
-                                    //                                    D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                    //                                    =
-                                    //                                    %18.12lf
-                                    //                                    (%18.12lf,%18.12lf)",
-                                    //                                                    p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    double rdm_comp = data_aaa[index];
+                                    // outfile->Printf(
+                                    //     "\n D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = "
+                                    //     "%18.12lf (%18.12lf,%18.12lf)",
+                                    //     p, q, r, s, t, a, rdm - rdm_comp, rdm, rdm_comp);
                                     error_3rdm_aaa += std::fabs(rdm - rdm_comp);
                                 }
                             }
@@ -903,13 +908,11 @@ void FCIVector::rdm_test() {
                                 }
                                 if (std::fabs(rdm) > 1.0e-12) {
                                     size_t index = six_index(p, q, r, s, t, a);
-                                    double rdm_comp = tpdm_bbb_[index];
-                                    //                                    outfile->Printf("\n
-                                    //                                    D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                    //                                    =
-                                    //                                    %18.12lf
-                                    //                                    (%18.12lf,%18.12lf)",
-                                    //                                                    p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    double rdm_comp = data_bbb[index];
+                                    // outfile->Printf(
+                                    //     "\n D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = "
+                                    //     "%18.12lf (%18.12lf,%18.12lf)",
+                                    //     p, q, r, s, t, a, rdm - rdm_comp, rdm, rdm_comp);
                                     error_3rdm_bbb += std::fabs(rdm - rdm_comp);
                                 }
                             }

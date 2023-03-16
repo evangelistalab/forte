@@ -379,8 +379,7 @@ void FCISolver::compute_rdms_root(size_t root1, size_t /*root2*/, int max_rdm_le
             throw psi::PSIEXCEPTION(error);
         }
 
-        psi::SharedVector evec(eigen_vecs_->get_row(0, root1));
-        C_->copy(evec);
+        C_->copy(eigen_vecs_->get_row(0, root1));
         if (print_) {
             std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root1);
             print_h2(title_rdm);
@@ -577,86 +576,23 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
 
         if (max_rdm_level >= 1) {
             // One-particle density matrices in the active space
-            std::vector<double>& opdm_a = C_->opdm_a();
-            std::vector<double>& opdm_b = C_->opdm_b();
-            g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact, nact});
-            g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact, nact});
-            if (na_ >= 1) {
-                g1a.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = opdm_a[i[0] * nact + i[1]];
-                });
-            }
-            if (nb_ >= 1) {
-                g1b.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = opdm_b[i[0] * nact + i[1]];
-                });
-            }
+            g1a = C_->opdm_a();
+            g1b = C_->opdm_b();
         }
 
         if (max_rdm_level >= 2) {
             // Two-particle density matrices in the active space
-            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact, nact, nact, nact});
-            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact, nact, nact, nact});
-            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact, nact, nact, nact});
-
-            if (na_ >= 2) {
-                std::vector<double>& tpdm_aa = C_->tpdm_aa();
-                g2aa.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_aa[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-                });
-            }
-            if ((na_ >= 1) and (nb_ >= 1)) {
-                std::vector<double>& tpdm_ab = C_->tpdm_ab();
-                g2ab.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_ab[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-                });
-            }
-            if (nb_ >= 2) {
-                std::vector<double>& tpdm_bb = C_->tpdm_bb();
-                g2bb.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-                });
-            }
+            g2aa = C_->tpdm_aa();
+            g2ab = C_->tpdm_ab();
+            g2bb = C_->tpdm_bb();
         }
 
         if (max_rdm_level >= 3) {
             // Three-particle density matrices in the active space
-            g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa",
-                                         {nact, nact, nact, nact, nact, nact});
-            g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab",
-                                         {nact, nact, nact, nact, nact, nact});
-            g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb",
-                                         {nact, nact, nact, nact, nact, nact});
-            g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb",
-                                         {nact, nact, nact, nact, nact, nact});
-            if (na_ >= 3) {
-                std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
-                g3aaa.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_aaa[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                     i[4] * nact + i[5]];
-                });
-            }
-            if ((na_ >= 2) and (nb_ >= 1)) {
-                std::vector<double>& tpdm_aab = C_->tpdm_aab();
-                g3aab.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_aab[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                     i[4] * nact + i[5]];
-                });
-            }
-            if ((na_ >= 1) and (nb_ >= 2)) {
-                std::vector<double>& tpdm_abb = C_->tpdm_abb();
-                g3abb.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_abb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                     i[4] * nact + i[5]];
-                });
-            }
-            if (nb_ >= 3) {
-                std::vector<double>& tpdm_bbb = C_->tpdm_bbb();
-                g3bbb.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                     i[4] * nact + i[5]];
-                });
-            }
+            g3aaa = C_->tpdm_aaa();
+            g3aab = C_->tpdm_aab();
+            g3abb = C_->tpdm_abb();
+            g3bbb = C_->tpdm_bbb();
         }
 
         if (type == RDMsType::spin_dependent) {
@@ -671,22 +607,26 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
                                                                       g3aaa, g3aab, g3abb, g3bbb));
             }
         } else {
-            g1a("pq") += g1b("pq");
+            ambit::Tensor g1, g2, g3;
+            g1 = g1a.clone();
+            g1("pq") += g1b("pq");
             if (max_rdm_level > 1) {
-                g2aa("pqrs") += g2ab("pqrs") + g2ab("qpsr");
-                g2aa("pqrs") += g2bb("pqrs");
+                g2 = g2aa.clone();
+                g2("pqrs") += g2ab("pqrs") + g2ab("qpsr");
+                g2("pqrs") += g2bb("pqrs");
             }
             if (max_rdm_level > 2) {
-                g3aaa("pqrstu") += g3aab("pqrstu") + g3aab("prqsut") + g3aab("qrptus");
-                g3aaa("pqrstu") += g3abb("pqrstu") + g3abb("qprtsu") + g3abb("rpqust");
-                g3aaa("pqrstu") += g3bbb("pqrstu");
+                g3 = g3aaa.clone();
+                g3("pqrstu") += g3aab("pqrstu") + g3aab("prqsut") + g3aab("qrptus");
+                g3("pqrstu") += g3abb("pqrstu") + g3abb("qprtsu") + g3abb("rpqust");
+                g3("pqrstu") += g3bbb("pqrstu");
             }
             if (max_rdm_level == 1)
-                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a));
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1));
             if (max_rdm_level == 2)
-                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a, g2aa));
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1, g2));
             if (max_rdm_level == 3)
-                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a, g2aa, g3aaa));
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1, g2, g3));
         }
     }
     return refs;
