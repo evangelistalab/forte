@@ -62,34 +62,25 @@ void FCIVector::compute_rdms(int max_order) {
 
     if (max_order >= 1) {
         local_timer t;
-        if (na >= 1)
-            compute_1rdm(opdm_a_, true);
-        if (nb >= 1)
-            compute_1rdm(opdm_b_, false);
+        compute_1rdm(opdm_a_, true);
+        compute_1rdm(opdm_b_, false);
         rdm_timing.push_back(t.get());
     }
 
     if (max_order >= 2) {
         local_timer t;
-        if (na >= 2)
-            compute_2rdm_aa(tpdm_aa_, true);
-        if (nb >= 2)
-            compute_2rdm_aa(tpdm_bb_, false);
-        if ((na >= 1) and (nb >= 1))
-            compute_2rdm_ab(tpdm_ab_);
+        compute_2rdm_aa(tpdm_aa_, true);
+        compute_2rdm_aa(tpdm_bb_, false);
+        compute_2rdm_ab(tpdm_ab_);
         rdm_timing.push_back(t.get());
     }
 
     if (max_order >= 3) {
         local_timer t;
-        if (na >= 3)
-            compute_3rdm_aaa(tpdm_aaa_, true);
-        if (nb >= 3)
-            compute_3rdm_aaa(tpdm_bbb_, false);
-        if ((na >= 2) and (nb >= 1))
-            compute_3rdm_aab(tpdm_aab_);
-        if ((na >= 1) and (nb >= 2))
-            compute_3rdm_abb(tpdm_abb_);
+        compute_3rdm_aaa(tpdm_aaa_, true);
+        compute_3rdm_aaa(tpdm_bbb_, false);
+        compute_3rdm_aab(tpdm_aab_);
+        compute_3rdm_abb(tpdm_abb_);
         rdm_timing.push_back(t.get());
     }
 
@@ -160,6 +151,13 @@ void FCIVector::compute_1rdm(ambit::Tensor& rdm, bool alfa) {
     rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo_, ncmo_});
     auto& rdm_data = rdm.data();
 
+    auto na = alfa_graph_->nones();
+    auto nb = beta_graph_->nones();
+    if (alfa and (na < 1))
+        return;
+    if ((!alfa) and (nb < 1))
+        return;
+
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
         if (detpi_[alfa_sym] > 0) {
@@ -224,6 +222,14 @@ void FCIVector::compute_2rdm_aa(ambit::Tensor& rdm, bool alfa) {
     rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "2RDM_AA" : "2RDM_BB",
                                {ncmo_, ncmo_, ncmo_, ncmo_});
     auto& rdm_data = rdm.data();
+
+    auto na = alfa_graph_->nones();
+    auto nb = beta_graph_->nones();
+    if (alfa and (na < 2))
+        return;
+    if ((!alfa) and (nb < 2))
+        return;
+
     // Notation
     // ha - symmetry of alpha strings
     // hb - symmetry of beta strings
@@ -341,6 +347,11 @@ void FCIVector::compute_2rdm_ab(ambit::Tensor& rdm) {
     rdm = ambit::Tensor::build(ambit::CoreTensor, "2RDM_AB", {ncmo_, ncmo_, ncmo_, ncmo_});
     auto& rdm_data = rdm.data();
 
+    auto na = alfa_graph_->nones();
+    auto nb = beta_graph_->nones();
+    if ((na < 1) or (nb < 1))
+        return;
+
     // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
         int Ib_sym = Ia_sym ^ symmetry_;
@@ -416,6 +427,13 @@ void FCIVector::compute_3rdm_aaa(ambit::Tensor& rdm, bool alfa) {
                                {ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_});
     auto& rdm_data = rdm.data();
 
+    auto na = alfa_graph_->nones();
+    auto nb = beta_graph_->nones();
+    if (alfa and (na < 3))
+        return;
+    if ((!alfa) and (nb < 3))
+        return;
+
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
         size_t maxK =
             alfa ? lists_->alfa_graph_3h()->strpi(h_K) : lists_->beta_graph_3h()->strpi(h_K);
@@ -475,6 +493,11 @@ void FCIVector::compute_3rdm_aab(ambit::Tensor& rdm) {
                                {ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_});
     auto& rdm_data = rdm.data();
 
+    auto na = alfa_graph_->nones();
+    auto nb = beta_graph_->nones();
+    if (na < 2 or nb < 1)
+        return;
+
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
         size_t maxK = lists_->alfa_graph_2h()->strpi(h_K);
         for (int h_L = 0; h_L < nirrep_; ++h_L) {
@@ -529,6 +552,11 @@ void FCIVector::compute_3rdm_abb(ambit::Tensor& rdm) {
     rdm = ambit::Tensor::build(ambit::CoreTensor, "3RDM_ABB",
                                {ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_});
     auto& rdm_data = rdm.data();
+
+    auto na = alfa_graph_->nones();
+    auto nb = beta_graph_->nones();
+    if (na < 1 or nb < 2)
+        return;
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
         size_t maxK = lists_->alfa_graph_1h()->strpi(h_K);

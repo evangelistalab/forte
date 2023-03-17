@@ -561,12 +561,6 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
 
         compute_rdms_root(roots.first, roots.second, max_rdm_level);
 
-        size_t nact = active_dim_.sum();
-        size_t nact2 = nact * nact;
-        size_t nact3 = nact2 * nact;
-        size_t nact4 = nact3 * nact;
-        size_t nact5 = nact4 * nact;
-
         ambit::Tensor g1a, g1b;
         ambit::Tensor g2aa, g2ab, g2bb;
         ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
@@ -608,8 +602,10 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
             }
         } else {
             ambit::Tensor g1, g2, g3;
-            g1 = g1a.clone();
-            g1("pq") += g1b("pq");
+            if (max_rdm_level > 0) {
+                g1 = g1a.clone();
+                g1("pq") += g1b("pq");
+            }
             if (max_rdm_level > 1) {
                 g2 = g2aa.clone();
                 g2("pqrs") += g2ab("pqrs") + g2ab("qpsr");
