@@ -263,11 +263,13 @@ void CI_Reference::build_ci_reference(DeterminantHashVec& ref_space, bool includ
     if (nact_ == 0) {
         Determinant det;
         ref_space.add(det);
+        initial_det_ = det;
         return;
     }
 
     Determinant det(get_occupation());
     outfile->Printf("\n  %s", str(det, nact_).c_str());
+    initial_det_ = det;
 
     if (include_rhf)
         ref_space.add(det);
@@ -457,6 +459,8 @@ void CI_Reference::build_cas_reference(DeterminantHashVec& ref_space) {
                 // Check symmetry
                 if (sym == root_sym_) {
                     ref_space.add(det);
+                    if (!ref_space.size())
+                        initial_det_ = det;
                 }
 
             } while (std::next_permutation(tmp_det_b.begin(), tmp_det_b.begin() + na));
@@ -519,6 +523,8 @@ void CI_Reference::build_cas_reference_full(DeterminantHashVec& ref_space) {
         for (size_t a = 0, a_size = a_strings[ha].size(); a < a_size; ++a) {
             for (size_t b = 0, b_size = b_strings[hb].size(); b < b_size; ++b) {
                 ref_space.add(Determinant(a_strings[ha][a], b_strings[hb][b]));
+                if (!ref_space.size())
+                    initial_det_ = Determinant(a_strings[ha][a], b_strings[hb][b]);
             }
         }
     }
@@ -594,6 +600,8 @@ void CI_Reference::build_doci_reference(DeterminantHashVec& ref_space) {
     for (int h = 0; h < nirrep_; ++h) {
         for (const auto& a : strings_per_irrep[h]) {
             ref_space.add(Determinant(a, a));
+            if (!ref_space.size())
+                initial_det_ = Determinant(a, a);
         }
     }
 }
@@ -865,6 +873,7 @@ void CI_Reference::build_gas_single(DeterminantHashVec& ref_space) {
             }
             if (e_min != 0.0) {
                 ref_space.add(det_min);
+                initial_det_ = det_min;
                 outfile->Printf("\n    Reference determinant: %s", str(det_min, nact_).c_str());
                 break;
             }
@@ -975,6 +984,8 @@ void CI_Reference::build_gas_reference(DeterminantHashVec& ref_space) {
             int hb = root_sym_ ^ ha;
             for (const auto& a : a_strings[ha]) {
                 for (const auto& b : b_strings[hb]) {
+                    if (!ref_space.size())
+                        initial_det_ = Determinant(a, b);
                     ref_space.add(Determinant(a, b));
                     n++;
                 }

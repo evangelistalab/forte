@@ -127,6 +127,9 @@ class CI_Reference {
     build_gas_occ_string(const std::vector<std::vector<std::vector<bool>>>& gas_strings,
                          const std::vector<std::vector<size_t>>& rel_mos);
 
+    /// Initial determinant
+    Determinant initial_det_;
+
   public:
     /// Default constructor
     CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
@@ -174,8 +177,11 @@ class CI_Reference {
                std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>>
     gas_double_criterion();
 
-    /// return gas_electrons_
+    /// Return gas_electrons_
     std::vector<std::vector<int>> gas_electrons();
+
+    /// Return the initial determinant
+    const Determinant& initial_determinant() const { return initial_det_; }
 };
 } // namespace forte
 

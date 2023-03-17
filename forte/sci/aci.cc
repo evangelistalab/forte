@@ -586,8 +586,7 @@ void AdaptiveCI::pre_iter_preparation() {
         }
         int particle = (root_ - 1) - (hole_ * ncstate);
 
-        P_space_.clear();
-        Determinant det = one_cycle_ ? PQ_space_[0] : P_space_[0];
+        Determinant det(ref.initial_determinant());
         Determinant detb(det);
         std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
         outfile->Printf("\n  %s", str(det, nact_).c_str());
@@ -605,6 +604,8 @@ void AdaptiveCI::pre_iter_preparation() {
         }
         outfile->Printf("\n  %s", str(det, nact_).c_str());
         outfile->Printf("\n  %s", str(detb, nact_).c_str());
+
+        P_space_.clear();
         P_space_.add(det);
         P_space_.add(detb);
     }
