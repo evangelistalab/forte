@@ -341,7 +341,6 @@ bool DavidsonLiuSolver::subspace_collapse() {
     if (collapse_size_ + nroot_ > subspace_size_) { // in this case I will never
                                                     // be able to add new
                                                     // vectors
-
         // collapse vectors
         collapse_vectors();
 

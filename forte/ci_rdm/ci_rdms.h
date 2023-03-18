@@ -38,6 +38,7 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sorted_string_list.h"
 
+class DeterminantSubstitutionLists;
 namespace forte {
 
 class CI_RDMS {
@@ -81,7 +82,11 @@ class CI_RDMS {
     void compute_1rdm_sf(std::vector<double>& opdm);
 
     void compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
+    void compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
+                         std::shared_ptr<DeterminantSubstitutionLists> op);
     void compute_1rdm_sf_op(std::vector<double>& opdm);
+    void compute_1rdm_sf_op(std::vector<double>& opdm,
+                            std::shared_ptr<DeterminantSubstitutionLists> op);
 
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
@@ -89,7 +94,12 @@ class CI_RDMS {
 
     void compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                          std::vector<double>& tprdm_bb);
+    void compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+                         std::vector<double>& tprdm_bb,
+                         std::shared_ptr<DeterminantSubstitutionLists> op);
     void compute_2rdm_sf_op(std::vector<double>& tpdm);
+    void compute_2rdm_sf_op(std::vector<double>& tpdm,
+                            std::shared_ptr<DeterminantSubstitutionLists> op);
 
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
@@ -101,9 +111,13 @@ class CI_RDMS {
 
     void compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                               std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+                              std::vector<double>& tprdm_bb);
+    void compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
+                              std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                               std::vector<double>& tprdm_bb, std::vector<double>& tprdm_aaa,
                               std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
                               std::vector<double>& tprdm_bbb);
+    void compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2);
     void compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2,
                                  std::vector<double>& rdm3);
 
@@ -240,6 +254,8 @@ class CI_RDMS {
                    int u, bool half = false);
 
     // Function to build non-trivial mixed-spin components of 1-, 2-, and 3- RDMs
+    void make_ab(SortedStringList a_sorted_string_list_, const std::vector<String>& sorted_astr,
+                 const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab);
     void make_ab(SortedStringList a_sorted_string_list_, const std::vector<String>& sorted_astr,
                  const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab,
                  std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb);

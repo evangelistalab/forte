@@ -531,7 +531,7 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     if (restart_) {
         // need to update old sigma vectors in DL solver
-        for (size_t i = 0, basis_size = dl_solver_->basis_size(); i < basis_size; ++i) {
+        for (size_t i = 0, sigma_size = dl_solver_->sigma_size(); i < sigma_size; ++i) {
             dl_solver_->get_b(b, i);
             sigma_vector->compute_sigma(sigma, b);
             dl_solver_->set_sigma(sigma, i);

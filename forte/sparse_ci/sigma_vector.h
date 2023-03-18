@@ -79,6 +79,9 @@ class SigmaVector {
     /// Get substitution list if available
     virtual std::shared_ptr<DeterminantSubstitutionLists> substitution_lists();
 
+    /// Reset stored stuff
+    virtual void reset() {}
+
   protected:
     const DeterminantHashVec& space_;
     /// the active space integrals

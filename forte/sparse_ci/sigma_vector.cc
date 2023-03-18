@@ -55,6 +55,8 @@ void SigmaVector::set_active_space_ints(std::shared_ptr<ActiveSpaceIntegrals> as
         const Determinant& detI = space_.get_det(I);
         diag_[I] = fci_ints_->energy(detI);
     }
+
+    reset();
 }
 
 std::shared_ptr<DeterminantSubstitutionLists> SigmaVector::substitution_lists() {
