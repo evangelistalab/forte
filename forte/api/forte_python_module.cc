@@ -91,6 +91,10 @@ double get_master_screen_threshold();
 void export_ActiveSpaceMethod(py::module& m) {
     py::class_<ActiveSpaceMethod>(m, "ActiveSpaceMethod")
         .def("compute_energy", &ActiveSpaceMethod::compute_energy)
+        .def("set_maxiter", &ActiveSpaceMethod::set_maxiter, "Set max number of iterations")
+        .def("set_die_if_not_converged", &ActiveSpaceMethod::set_die_if_not_converged,
+             "Set if stops when iterations are not converged")
+        .def("set_restart", &ActiveSpaceMethod::set_restart, "Set to restart mode")
         .def("dump_wave_function", &ActiveSpaceMethod::dump_wave_function)
         .def("read_wave_function", &ActiveSpaceMethod::read_wave_function);
 }
@@ -108,6 +112,10 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Set the active space integrals manually")
         .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
              "Set unitary matrices for changing orbital basis in RDMs when computing dipoles")
+        .def("set_maxiter", &ActiveSpaceSolver::set_maxiter, "Set max number of iterations")
+        .def("set_die_if_not_converged", &ActiveSpaceSolver::set_die_if_not_converged,
+             "Set if stops when iterations are not converged")
+        .def("set_restart", &ActiveSpaceSolver::set_restart, "Set to restart mode")
         .def("compute_dipole_moment", &ActiveSpaceSolver::compute_dipole_moment,
              "Compute transition dipole moment")
         .def("compute_quadrupole_moment", &ActiveSpaceSolver::compute_quadrupole_moment,
