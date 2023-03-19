@@ -49,6 +49,11 @@ class DETCI : public ActiveSpaceMethod {
     /// Return the CI wave functions for current state symmetry
     psi::SharedMatrix ci_wave_functions() override { return evecs_; }
 
+    /// Return the determinants
+    DeterminantHashVec determinants() const { return p_space_; }
+    /// Return the number of active orbitals
+    psi::Dimension actv_dim() const { return actv_dim_; }
+
     /// Set options override
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
@@ -157,7 +162,7 @@ class DETCI : public ActiveSpaceMethod {
     std::vector<ambit::Tensor> compute_trans_3rdms_sosd(int root1, int root2);
     /// Compute the (transition) RDMs using dynamic algorithm
     /// same orbital, same set of determinants
-    std::shared_ptr<RDMs> compute_trans_rdms_sosd_dynamic(int root1, int root2, int max_rdm_level,
+    std::shared_ptr<RDMs> compute_trans_rdms_sosd_dynamic(CI_RDMS& ci_rdms, int max_rdm_level,
                                                           RDMsType rdm_type);
 
     /// Printing for CI_RDMs

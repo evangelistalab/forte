@@ -75,6 +75,9 @@ class CI_RDMS {
     // so be sure this is enabled. Also, the most efficient algorithm computes
     // all RDMs (1,2 and 3) in one function, but soon I'll write functions to grab
     // separate RDMs (however, these should be avoided).
+
+    // Notes on the dynamic algorithm: currently (03/20/2023) transition RDMs
+    // are not supported because the J loop starts from I + 1.
     //***
 
     // Compute rdms
