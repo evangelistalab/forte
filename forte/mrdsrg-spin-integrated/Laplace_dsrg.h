@@ -50,6 +50,7 @@ class LaplaceDSRG {
     /// Thresholds
     double Omega_;
     double laplace_threshold_;
+    double vir_tol_;
     /// CCVV
     double theta_NB_;
     double theta_NB_IAP_;

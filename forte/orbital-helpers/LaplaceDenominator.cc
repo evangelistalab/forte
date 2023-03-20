@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 #include <utility>
+#include <math.h>
 
 #include "psi4/lib3index/dftensor.h"
 #include "psi4/psifiles.h"
@@ -51,8 +52,8 @@ LaplaceDenominator::LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std
     decompose_ccvv();
 }
 
-LaplaceDenominator::LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std::shared_ptr<psi::Vector> eps_act, std::shared_ptr<psi::Vector> eps_vir, double delta, bool cavv)
-    : eps_occ_(eps_occ), eps_vir_(eps_vir), eps_act_(eps_act), delta_(delta), cavv_(cavv) {
+LaplaceDenominator::LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std::shared_ptr<psi::Vector> eps_act, std::shared_ptr<psi::Vector> eps_vir, double delta, bool cavv, double vir_tol)
+    : eps_occ_(eps_occ), eps_vir_(eps_vir), eps_act_(eps_act), delta_(delta), cavv_(cavv), vir_tol_(vir_tol) {
     if (cavv_) {
         decompose_cavv();
     } else {
@@ -264,12 +265,10 @@ void LaplaceDenominator::decompose_cavv() {
     double E_act_max = eps_act_->get(0, nact - 1);
     double E_act_min = eps_act_->get(0, 0);
 
-    
-
     for (int i = 0; i < nvir; i++) {
         double E_vir_min_test = eps_vir_->get(0, i);
         double E_test = 2 * E_vir_min_test - E_occ_max - E_act_max;
-        if (E_test < delta_) {
+        if (E_test < vir_tol_) {
             vir_start_ += 1; 
         } else {
             break;
@@ -475,7 +474,7 @@ void LaplaceDenominator::decompose_ccav() {
     for (int i = 0; i < nvir; i++) {
         double E_vir_min_test = eps_vir_->get(0, i);
         double E_test = E_vir_min_test + E_act_min - 2 * E_occ_max;
-        if (E_test < delta_) {
+        if (E_test < vir_tol_) {
             vir_start_ += 1; 
         } else {
             break;

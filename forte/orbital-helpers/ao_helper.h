@@ -106,7 +106,7 @@ class AtomicOrbitalHelper {
 
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_act,
                                          psi::SharedVector eps_vir, double laplace_tolerance,
-                                         int shift, int nfrozen, bool cavv);
+                                         int shift, int nfrozen, bool cavv, double vir_tol);
 
     void Compute_Cholesky_Density();
     void Compute_Cholesky_Pseudo_Density();

@@ -54,6 +54,7 @@ LaplaceDSRG::LaplaceDSRG(std::shared_ptr<ForteOptions> options,
     ncore_ = eps_rdocc_->dim();
     nactive_ = eps_active_->dim();
     nvirtual_ = eps_virtual_->dim();
+    vir_tol_ = foptions_->get_double("VIR_TOL");
     /// CCVV
     theta_NB_ = foptions_->get_double("THETA_NB");
     theta_NB_IAP_ = foptions_->get_double("THETA_NB_IAP");
@@ -111,7 +112,8 @@ void LaplaceDSRG::print_header() {
         {"theta_NB_cavv", theta_NB_cavv_}, {"theta_NB_IAP_cavv", theta_NB_IAP_cavv_},
         {"theta_ij_cavv", theta_ij_cavv_}, {"theta_schwarz_cavv", theta_schwarz_cavv_},
         {"theta_NB_ccav", theta_NB_ccav_}, {"theta_NB_IAP_ccav", theta_NB_IAP_ccav_},
-        {"theta_ij_ccav", theta_ij_ccav_}, {"theta_schwarz_ccav", theta_schwarz_ccav_}};
+        {"theta_ij_ccav", theta_ij_ccav_}, {"theta_schwarz_ccav", theta_schwarz_ccav_},
+        {"vir_tol", vir_tol_}};
     print_selected_options("Calculation Information", calculation_info_string,
                            calculation_info_bool, calculation_info_double, calculation_info_int);
 }
@@ -532,7 +534,7 @@ double LaplaceDSRG::compute_cavv() {
     E_J_ = 0.0;
     E_K_ = 0.0;
     AtomicOrbitalHelper ao_helper_cavv(Cwfn_, eps_rdocc_, eps_active_, eps_virtual_,
-                                       laplace_threshold_, nactive_, nfrozen_, true);
+                                       laplace_threshold_, nactive_, nfrozen_, true, vir_tol_);
 
     int weights_cavv = ao_helper_cavv.Weights();
     vir_start_cavv_ = ao_helper_cavv.vir_start();
@@ -1035,7 +1037,7 @@ double LaplaceDSRG::compute_ccav() {
     E_J_ = 0.0;
     E_K_ = 0.0;
     AtomicOrbitalHelper ao_helper_ccav(Cwfn_, eps_rdocc_, eps_active_, eps_virtual_,
-                                       laplace_threshold_, nactive_, nfrozen_, false);
+                                       laplace_threshold_, nactive_, nfrozen_, false, vir_tol_);
 
     int weights_ccav = ao_helper_ccav.Weights();
     vir_start_ccav_ = ao_helper_ccav.vir_start();

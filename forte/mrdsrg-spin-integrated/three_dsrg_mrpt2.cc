@@ -3083,10 +3083,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
                     Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fa_[ma];
                 double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
                                 Fa_[ma]);
-                //value = value + value * dsrg_source_->compute_renormalized(Exp);
-                // T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                //     dsrg_source_->compute_renormalized_denominator(D);
-                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *= 1/D;
+                value = value + value * dsrg_source_->compute_renormalized(Exp);
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+                    dsrg_source_->compute_renormalized_denominator(D);
             });
 
             //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
@@ -3113,10 +3112,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
                     Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fb_[ma];
                 double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
                                 Fb_[ma]);
-                //value = value + value * dsrg_source_->compute_renormalized(Exp);
-                // T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                //     dsrg_source_->compute_renormalized_denominator(D);
-                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *= 1/D;
+                value = value + value * dsrg_source_->compute_renormalized(Exp);
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+                    dsrg_source_->compute_renormalized_denominator(D);
             });
 
             //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
@@ -3146,10 +3144,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
                     Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] - Fb_[ma];
                 double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] -
                                 Fb_[ma]);
-                //value = value + value * dsrg_source_->compute_renormalized(Exp);
-                // T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                //     dsrg_source_->compute_renormalized_denominator(D);
-                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *= 1/D;
+                value = value + value * dsrg_source_->compute_renormalized(Exp);
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+                    dsrg_source_->compute_renormalized_denominator(D);
             });
 
             tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
@@ -3380,11 +3377,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
 
                 V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                     double Exp = Fa_[actv_mos_[i[1]]] + Fa_[virt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
-                    //value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
                     double D = Fa_[ma] + Fa_[na] - Fa_[actv_mos_[i[1]]] - Fa_[virt_mos_[i[0]]];
-                    // T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
-                    //     dsrg_source_->compute_renormalized_denominator(D);
-                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *= 1/D;
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
                 });
 
                 tempTaa_e[thread]("u,v") += 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
@@ -3398,11 +3395,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
                 T_ev[thread].data() = V_eu[thread].data();
                 V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                     double Exp = Fa_[actv_mos_[i[1]]] + Fb_[virt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
-                    //value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
                     double D = Fa_[ma] + Fb_[nb] - Fa_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
-                    // T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
-                    //     dsrg_source_->compute_renormalized_denominator(D);
-                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *= 1/D;
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
                 });
 
                 tempTAA_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M,u");
@@ -3417,11 +3414,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
 
                 V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                     double Exp = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
-                    //value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
                     double D = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
-                    // T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
-                    //     dsrg_source_->compute_renormalized_denominator(D);
-                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *= 1/D;
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
                 });
 
                 tempTAA_e[thread]("v,u") += 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");

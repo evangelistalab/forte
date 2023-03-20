@@ -719,6 +719,8 @@ def register_dsrg_options(options):
     options.add_double("OMEGA", 0, "Omega for erfc attenuated coulomb operator")
     
     options.add_double("LAPLACE_THRESHOLD", 1e-10, "laplace threshold")
+    
+    options.add_double("VIR_TOL", 0, "vir_tol")
   
 # CAVV thresholds
     options.add_double("THETA_NB_CAVV", 0, "theta_NB")

@@ -27,6 +27,8 @@ class LaplaceDenominator {
      // The first selected virtual orbital
      int vir_start_ = 0;
 
+     double vir_tol_;
+
      bool cavv_;
 
      void decompose_ccvv();
@@ -37,7 +39,7 @@ class LaplaceDenominator {
 
     public:
      LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ_, std::shared_ptr<psi::Vector> eps_vir, double delta);
-     LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std::shared_ptr<psi::Vector> eps_act, std::shared_ptr<psi::Vector> eps_vir, double delta, bool cavv);
+     LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std::shared_ptr<psi::Vector> eps_act, std::shared_ptr<psi::Vector> eps_vir, double delta, bool cavv, double vir_tol);
      ~LaplaceDenominator();
      psi::SharedMatrix denominator_occ() const { return denominator_occ_; }
      psi::SharedMatrix denominator_vir() const { return denominator_vir_; }
