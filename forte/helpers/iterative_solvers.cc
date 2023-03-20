@@ -35,15 +35,15 @@
 #include "helpers/iterative_solvers.h"
 
 #define PRINT_VARS(msg)                                                                            \
-    //    std::vector<std::pair<size_t, std::string>> v = {{collapse_size_, "collapse_size_"},           \
-//                                                     {subspace_size_, "subspace_size_"},           \
-//                                                     {basis_size_, "basis_size_"},                 \
-//                                                     {sigma_size_, "sigma_size_"},                 \
-//                                                     {nroot_, "nroot_"}};                          \
-//    outfile->Printf("\n\n => %s <=", msg);                                                         \
-//    for (auto vk : v) {                                                                            \
-//        outfile->Printf("\n    %-30s  %zu", vk.second.c_str(), vk.first);                          \
-//    }
+    // std::vector<std::pair<size_t, std::string>> v = {{collapse_size_, "collapse_size_"},           \
+    //                                                  {subspace_size_, "subspace_size_"},           \
+    //                                                  {basis_size_, "basis_size_"},                 \
+    //                                                  {sigma_size_, "sigma_size_"},                 \
+    //                                                  {nroot_, "nroot_"}};                          \
+    // outfile->Printf("\n\n => %s <=", msg);                                                         \
+    // for (auto vk : v) {                                                                            \
+    //     outfile->Printf("\n    %-30s  %zu", vk.second.c_str(), vk.first);                          \
+    // }
 
 using namespace psi;
 
@@ -146,6 +146,10 @@ void DavidsonLiuSolver::set_sigma(psi::SharedVector vec, size_t i) {
     for (size_t j = 0; j < size_; ++j) {
         sigma_->set(j, i, vec->get(j));
     }
+}
+
+void DavidsonLiuSolver::set_hdiag(psi::SharedVector hdiag) {
+    h_diag->copy(*hdiag);
 }
 
 void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {

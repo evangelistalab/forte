@@ -115,13 +115,6 @@ SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
 
     sigma_vector->add_bad_roots(bad_states_);
 
-    // initiate a Davidson-Liu solver
-    if (!dl_solver_ or !restart_) {
-        dl_solver_ = std::make_unique<DavidsonLiuSolver>(dim_space, nroot);
-        auto hdiag = std::make_shared<psi::Vector>("Hdiag", dim_space);
-        sigma_vector->get_diagonal(*hdiag);
-        dl_solver_->startup(hdiag);
-    }
     davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
 
     return std::make_pair(evals, evecs);
@@ -521,15 +514,14 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     local_timer dl;
     size_t fci_size = sigma_vector->size();
 
-    dl_solver_->set_e_convergence(e_convergence_);
-    dl_solver_->set_r_convergence(r_convergence_);
-    dl_solver_->set_print_level(0);
-
     // allocate vectors
     auto b = std::make_shared<psi::Vector>("b", fci_size);
     auto sigma = std::make_shared<psi::Vector>("sigma", fci_size);
 
-    if (restart_) {
+    if (dl_solver_ and restart_) {
+        // set new diagonal Hamiltonian
+        sigma_vector->get_diagonal(*sigma);
+        dl_solver_->set_hdiag(sigma);
         // need to update old sigma vectors in DL solver
         for (size_t i = 0, sigma_size = dl_solver_->sigma_size(); i < sigma_size; ++i) {
             dl_solver_->get_b(b, i);
@@ -539,6 +531,13 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         // reset convergence count in DL solver
         dl_solver_->reset_convergence();
     } else {
+        // initialize DL solver
+        dl_solver_ = std::make_unique<DavidsonLiuSolver>(fci_size, nroot);
+        sigma_vector->get_diagonal(*sigma);
+        dl_solver_->startup(sigma);
+        dl_solver_->set_collapse_per_root(ncollapse_per_root_);
+        dl_solver_->set_subspace_per_root(nsubspace_per_root_);
+
         std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
         size_t guess_size = std::min(nvec_, dl_solver_->collapse_size());
 
@@ -617,6 +616,10 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
             outfile->Printf("\n\n  Projecting out no solutions");
         }
     }
+
+    dl_solver_->set_e_convergence(e_convergence_);
+    dl_solver_->set_r_convergence(r_convergence_);
+    dl_solver_->set_print_level(0);
 
     SolverStatus converged = SolverStatus::NotConverged;
 

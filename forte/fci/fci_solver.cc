@@ -160,6 +160,8 @@ double FCISolver::compute_energy() {
 
         dl_solver_ = std::make_unique<DavidsonLiuSolver>(fci_size, nroot_);
         dl_solver_->startup(sigma);
+        dl_solver_->set_collapse_per_root(collapse_per_root_);
+        dl_solver_->set_subspace_per_root(subspace_per_root_);
 
         auto guess = initial_guess(Hdiag, guess_size, as_ints_);
         std::vector<int> guess_list;
@@ -204,8 +206,11 @@ double FCISolver::compute_energy() {
         }
         dl_solver_->set_project_out(bad_roots);
     } else {
+        // set new diagonal Hamiltonian
+        Hdiag.copy_to(sigma);
+        dl_solver_->set_hdiag(sigma);
         // need to update old sigma vectors in DL solver
-        for (size_t i = 0, basis_size = dl_solver_->basis_size(); i < basis_size; ++i) {
+        for (size_t i = 0, sigma_size = dl_solver_->sigma_size(); i < sigma_size; ++i) {
             dl_solver_->get_b(b, i);
             C_->copy(b);
             C_->Hamiltonian(HC, as_ints_);
@@ -219,8 +224,6 @@ double FCISolver::compute_energy() {
     dl_solver_->set_e_convergence(e_convergence_);
     dl_solver_->set_r_convergence(r_convergence_);
     dl_solver_->set_print_level(print_);
-    dl_solver_->set_collapse_per_root(collapse_per_root_);
-    dl_solver_->set_subspace_per_root(subspace_per_root_);
 
     SolverStatus converged = SolverStatus::NotConverged;
 

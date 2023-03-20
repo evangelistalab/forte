@@ -110,6 +110,8 @@ class DavidsonLiuSolver {
     bool add_sigma(psi::SharedVector vec);
     /// Set a sigma vector
     void set_sigma(psi::SharedVector vec, size_t i);
+    /// Set diagonal Hamiltonian elements
+    void set_hdiag(psi::SharedVector hdiag);
 
     void set_project_out(std::vector<sparse_vec> project_out);
 
