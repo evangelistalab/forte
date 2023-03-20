@@ -143,7 +143,7 @@ class DMRGSolver : public ActiveSpaceMethod {
 
     /// Return the RDMs for the current state
     std::shared_ptr<RDMs> fill_current_rdms(std::shared_ptr<CheMPS2::DMRG> solver,
-                                            const bool do_3rdm, RDMsType rdm_type);
+                                            const int max_rdm_level, RDMsType rdm_type);
 };
 } // namespace forte
 #endif // _dmrgsolver_h_
