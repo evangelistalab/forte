@@ -1827,8 +1827,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
             BefJKVec.push_back(ambit::Tensor::build(tensor_type_, "BefJK", {nvirtual_, nvirtual_}));
             RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {nvirtual_, nvirtual_}));
         }
-        // bool ao_dsrg_check = foptions_->get_bool("AO_DSRG_MRPT2");
-        bool ao_dsrg_check = true;
+        bool ao_dsrg_check = false;
 
 #pragma omp parallel for num_threads(num_threads_) reduction(+ : Ealpha, Ebeta, Emixed)
         for (size_t m = 0; m < ncore_; ++m) {
