@@ -98,11 +98,11 @@ class AtomicOrbitalHelper {
 
     int vir_start() { return vir_start_; }
 
-    AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
-                        double laplace_tolerance);
+    // AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
+    //                     double laplace_tolerance);
     
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
-                        double laplace_tolerance, int shift, int nfrozen);
+                        double laplace_tolerance, int shift, int nfrozen, double vir_tol);
 
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_act,
                                          psi::SharedVector eps_vir, double laplace_tolerance,

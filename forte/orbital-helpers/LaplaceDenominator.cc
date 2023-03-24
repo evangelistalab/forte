@@ -47,8 +47,8 @@ bool from_string(T &t, const std::string &s, std::ios_base &(*f)(std::ios_base &
 }
 
 
-LaplaceDenominator::LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std::shared_ptr<psi::Vector> eps_vir, double delta)
-    : eps_occ_(eps_occ), eps_vir_(eps_vir), delta_(delta) {
+LaplaceDenominator::LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std::shared_ptr<psi::Vector> eps_vir, double delta, double vir_tol)
+    : eps_occ_(eps_occ), eps_vir_(eps_vir), delta_(delta), vir_tol_(vir_tol){
     decompose_ccvv();
 }
 
@@ -68,17 +68,34 @@ void LaplaceDenominator::decompose_ccvv() {
     int nocc = eps_occ_->dimpi()[0];
     int nvir = eps_vir_->dimpi()[0];
 
+    vir_start_ = 0;
+
     double E_LOMO = eps_occ_->get(0, 0);
     double E_HOMO = eps_occ_->get(0, nocc - 1);
-    double E_LUMO = eps_vir_->get(0, 0);
+    //double E_LUMO = eps_vir_->get(0, 0);
     double E_HUMO = eps_vir_->get(0, nvir - 1);
+
+    for (int i = 0; i < nvir; i++) {
+        double E_LUMO = eps_vir_->get(0, i);
+        double E_test = 2.0 * (E_LUMO - E_HOMO);
+        if (E_test < vir_tol_) {
+            vir_start_ += 1; 
+        } else {
+            break;
+        }
+    }
+    
+    double E_LUMO = eps_vir_->get(0, vir_start_);
 
     double A = 2.0 * (E_LUMO - E_HOMO);
     double B = 2.0 * (E_HUMO - E_LOMO);
     double R = B / A;
 
+    nvir -= vir_start_;
+
     outfile->Printf("  The smallest denominator: %f. \n", A);
     outfile->Printf("  The largest denominator: %f. \n", B);
+    outfile->Printf("  Number of unselected virtual orbitals: %d. \n", vir_start_);
 
     // Pick appropriate quadrature file and read contents
     std::string PSIDATADIR = Process::environment.get_datadir();
@@ -228,7 +245,7 @@ void LaplaceDenominator::decompose_ccvv() {
             dop[k][i] = pow(omega[k], 0.25) * exp(alpha[k] * e_o[i]);
         }
         for (int a = 0; a < nvir; a++) {
-            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * e_v[a]);
+            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * e_v[a + vir_start_]);
         }
         // for (int i = 0; i < nocc; i++) {
         //     for (int a = 0; a < nvir; a++) {

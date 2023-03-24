@@ -38,7 +38,7 @@ class LaplaceDenominator {
      void decompose_ccav();
 
     public:
-     LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ_, std::shared_ptr<psi::Vector> eps_vir, double delta);
+     LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ_, std::shared_ptr<psi::Vector> eps_vir, double delta, double vir_tol);
      LaplaceDenominator(std::shared_ptr<psi::Vector> eps_occ, std::shared_ptr<psi::Vector> eps_act, std::shared_ptr<psi::Vector> eps_vir, double delta, bool cavv, double vir_tol);
      ~LaplaceDenominator();
      psi::SharedMatrix denominator_occ() const { return denominator_occ_; }

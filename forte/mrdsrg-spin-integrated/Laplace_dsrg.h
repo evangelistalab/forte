@@ -22,6 +22,7 @@ class LaplaceDSRG {
     double compute_cavv();
     double compute_ccav();
     void print_header();
+    int vir_start() { return vir_start_; }
     int vir_start_cavv() { return vir_start_cavv_; }
     int vir_start_ccav() { return vir_start_ccav_; }
 
@@ -57,6 +58,7 @@ class LaplaceDSRG {
     double theta_ij_;
     double theta_schwarz_;
     double theta_ij_sqrt_;
+    int vir_start_;
 
     /// CAVV
     double theta_NB_cavv_;

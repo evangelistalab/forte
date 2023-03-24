@@ -44,31 +44,32 @@ using namespace psi;
 
 namespace forte {
 
-AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
-                                         psi::SharedVector eps_vir, double laplace_tolerance)
-    : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
-    LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
-    Occupied_Laplace_ = laplace.denominator_occ();
-    Virtual_Laplace_ = laplace.denominator_vir();
-    weights_ = Occupied_Laplace_->rowspi()[0];
-    nrdocc_ = eps_rdocc_->dim();
-    nvir_ = eps_virtual_->dim();
-    nbf_ = CMO_->rowspi()[0];
-    shift_ = 0;
-}
+// AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
+//                                          psi::SharedVector eps_vir, double laplace_tolerance)
+//     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
+//     LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_, 0);
+//     Occupied_Laplace_ = laplace.denominator_occ();
+//     Virtual_Laplace_ = laplace.denominator_vir();
+//     weights_ = Occupied_Laplace_->rowspi()[0];
+//     nrdocc_ = eps_rdocc_->dim();
+//     nvir_ = eps_virtual_->dim();
+//     nbf_ = CMO_->rowspi()[0];
+//     shift_ = 0;
+// }
 AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
                                          psi::SharedVector eps_vir, double laplace_tolerance,
-                                         int shift, int nfrozen)
+                                         int shift, int nfrozen, double vir_tol)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
       shift_(shift), nfrozen_(nfrozen) {
-    LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
+    LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_, vir_tol);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
     weights_ = Occupied_Laplace_->rowspi()[0];
     nrdocc_ = eps_rdocc_->dim();
-    nvir_ = eps_virtual_->dim();
+    nvir_ = Virtual_Laplace_->colspi()[0];
     nbf_ = CMO_->rowspi()[0];
-    vir_start_ = 0;
+    vir_start_ = laplace.vir_start();
+    shift_ += vir_start_;
 }
 
 AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_act,
@@ -116,10 +117,10 @@ void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
         psi::SharedMatrix LVir = PVir_single->partial_cholesky_factorize(1e-10);
         LOcc_list_.push_back(LOcc);
         LVir_list_.push_back(LVir);
-        POcc_list_.push_back(POcc_single);
-        PVir_list_.push_back(PVir_single);
-        n_pseudo_occ_list_.push_back(LOcc->coldim());
-        n_pseudo_vir_list_.push_back(LVir->coldim());
+        //POcc_list_.push_back(POcc_single);
+        //PVir_list_.push_back(PVir_single);
+        //n_pseudo_occ_list_.push_back(LOcc->coldim());
+        //n_pseudo_vir_list_.push_back(LVir->coldim());
     }
 }
 
@@ -143,7 +144,7 @@ void AtomicOrbitalHelper::Compute_Cholesky_Active_Density(psi::SharedMatrix RDM)
         }
         psi::SharedMatrix LAct = PAct_single->partial_cholesky_factorize(1e-10);
         LAct_list_.push_back(LAct);
-        n_pseudo_vir_list_.push_back(LAct->coldim());
+        //n_pseudo_vir_list_.push_back(LAct->coldim());
     }
 }
 

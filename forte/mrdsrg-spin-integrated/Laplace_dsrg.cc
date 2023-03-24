@@ -122,8 +122,9 @@ double LaplaceDSRG::compute_ccvv() {
     E_J_ = 0.0;
     E_K_ = 0.0;
     AtomicOrbitalHelper ao_helper(Cwfn_, eps_rdocc_, eps_virtual_, laplace_threshold_, nactive_,
-                                  nfrozen_);
+                                  nfrozen_, vir_tol_);
     int weights = ao_helper.Weights();
+    vir_start_ = ao_helper.vir_start();
     ao_helper.Compute_Cholesky_Pseudo_Density();
     ao_helper.Compute_Cholesky_Density();
     Occupied_cholesky_ = ao_helper.LOcc_list();
@@ -524,8 +525,8 @@ double LaplaceDSRG::compute_ccvv() {
         }
     }
 
-    std::cout << E_J_ << "\n";
-    std::cout << E_K_ << "\n";
+    // std::cout << E_J_ << "\n";
+    // std::cout << E_K_ << "\n";
 
     return (E_J_ + E_K_);
 }
@@ -1027,8 +1028,8 @@ double LaplaceDSRG::compute_cavv() {
         }
     }
 
-    std::cout << "cavv" << E_J_ << "\n";
-    std::cout << "cavv" << E_K_ << "\n";
+    // std::cout << "cavv" << E_J_ << "\n";
+    // std::cout << "cavv" << E_K_ << "\n";
 
     return (E_J_ + E_K_);
 }
@@ -1530,8 +1531,8 @@ double LaplaceDSRG::compute_ccav() {
         }
     }
 
-    std::cout << "ccav" << E_J_ << "\n";
-    std::cout << "ccav" << E_K_ << "\n";
+    // std::cout << "ccav" << E_J_ << "\n";
+    // std::cout << "ccav" << E_K_ << "\n";
 
     return (E_J_ + E_K_);
 }
