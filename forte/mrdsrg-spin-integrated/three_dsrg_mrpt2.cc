@@ -79,8 +79,7 @@ namespace forte {
 
 #ifdef _OPENMP
 #include <omp.h>
-// bool THREE_DSRG_MRPT2::have_omp_ = true;
-bool THREE_DSRG_MRPT2::have_omp_ = false;
+bool THREE_DSRG_MRPT2::have_omp_ = true;
 #else
 #define omp_get_max_threads() 1
 #define omp_get_thread_num() 0
