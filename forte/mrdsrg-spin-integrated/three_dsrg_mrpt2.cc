@@ -92,8 +92,8 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(std::shared_ptr<RDMs> rdms, std::shared_ptr<S
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
-    // num_threads_ = omp_get_max_threads();
-    num_threads_ = 1;
+    num_threads_ = omp_get_max_threads();
+    //num_threads_ = 1;
     /// Get processor number
     int nproc = 1;
     int my_proc = 0;

@@ -320,6 +320,8 @@ double LaplaceDSRG::compute_ccvv() {
     for (int nweight = 0; nweight < weights; nweight++) {
         int nocc = Occupied_cholesky_[nweight]->coldim();
         int nvir = Virtual_cholesky_[nweight]->coldim();
+        // keep track of ij prescreening
+        int unselected_occ = 0;
 
         psi::SharedMatrix N_pi_bar =
             psi::linalg::doublet(N_pu, Occupied_cholesky_abs_[nweight], false, false);
@@ -520,9 +522,12 @@ double LaplaceDSRG::compute_ccvv() {
                             }
                         }
                     }
+                } else {
+                    unselected_occ += 1;
                 }
             }
         }
+        outfile->Printf("  Number of unselected ij pairs: %d. \n", unselected_occ);
     }
 
     // std::cout << E_J_ << "\n";
