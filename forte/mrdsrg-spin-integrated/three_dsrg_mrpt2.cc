@@ -2322,24 +2322,25 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
 
     local_timer timer1;
     E_ccvv = LaplaceDSRG->compute_ccvv();
-    vir_start = LaplaceDSRG->vir_start();
     outfile->Printf("\n\n  LAPLACE: ccvv takes %8.8f", timer1.get());
     outfile->Printf("\n  LAPLACE: E_ccvv %8.10f", E_ccvv);
+
+    vir_start = LaplaceDSRG->vir_start();
 
     if (laplace_cavv) {
         local_timer timer2;
         E_cavv = LaplaceDSRG->compute_cavv();
-        vir_start_cavv = LaplaceDSRG->vir_start_cavv();
         outfile->Printf("\n\n  LAPLACE: cavv takes %8.8f", timer2.get());
         outfile->Printf("\n  LAPLACE: E_cavv %8.10f", E_cavv);
+        vir_start_cavv = LaplaceDSRG->vir_start_cavv();
     }
 
     if (laplace_ccav) {
         local_timer timer3;
         E_ccav = LaplaceDSRG->compute_ccav();
-        vir_start_ccav = LaplaceDSRG->vir_start_ccav();
         outfile->Printf("\n\n  LAPLACE: ccav takes %8.8f", timer3.get());
         outfile->Printf("\n  LAPLACE: E_ccav %8.10f", E_ccav);
+        vir_start_ccav = LaplaceDSRG->vir_start_ccav();
     }
 
     LaplaceDSRG.reset();
