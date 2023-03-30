@@ -229,6 +229,9 @@ void LaplaceDenominator::decompose_ccvv() {
         omega[k] /= A;
     }
 
+    // Fermi-level
+    double Fermi = (E_LUMO + E_HOMO)/2;
+
     denominator_occ_ = std::make_shared<psi::Matrix>("Occupied Laplace Delta Tensor", nvector_, nocc);
     denominator_vir_ = std::make_shared<psi::Matrix>("Virtual Laplace Delta Tensor", nvector_, nvir);
     // denominator_ = std::make_shared<Matrix>("OV Laplace Delta Tensor", nvector_, nocc * nvir);
@@ -242,10 +245,10 @@ void LaplaceDenominator::decompose_ccvv() {
 
     for (int k = 0; k < nvector_; k++) {
         for (int i = 0; i < nocc; i++) {
-            dop[k][i] = pow(omega[k], 0.25) * exp(alpha[k] * e_o[i]);
+            dop[k][i] = pow(omega[k], 0.25) * exp(alpha[k] * (e_o[i] - Fermi));
         }
         for (int a = 0; a < nvir; a++) {
-            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * e_v[a + vir_start_]);
+            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * (e_v[a + vir_start_] - Fermi));
         }
         // for (int i = 0; i < nocc; i++) {
         //     for (int a = 0; a < nvir; a++) {
