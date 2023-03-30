@@ -89,7 +89,8 @@ void LaplaceDenominator::decompose_ccvv() {
 
     double A = 2.0 * (E_LUMO - E_HOMO);
     double B = 2.0 * (E_HUMO - E_LOMO);
-    double R = B / A;
+    //double R = B / A;
+    double R = B;
 
     nvir -= vir_start_;
 
@@ -224,10 +225,10 @@ void LaplaceDenominator::decompose_ccvv() {
     //    printf("  %24.16E, %24.16E\n", omega[k], alpha[k]);
 
     // Cast weights back to problem size
-    for (int k = 0; k < nvector_; k++) {
-        alpha[k] /= A;
-        omega[k] /= A;
-    }
+    // for (int k = 0; k < nvector_; k++) {
+    //     alpha[k] /= A;
+    //     omega[k] /= A;
+    // }
 
     // Fermi-level
     double Fermi = (E_LUMO + E_HOMO)/2;
