@@ -90,7 +90,7 @@ void LaplaceDenominator::decompose_ccvv() {
     double A = 2.0 * (E_LUMO - E_HOMO);
     double B = 2.0 * (E_HUMO - E_LOMO);
     //double R = B / A;
-    double R = B;
+    double R = B / 1.044679;
 
     nvir -= vir_start_;
 
