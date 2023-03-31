@@ -119,6 +119,7 @@ void LaplaceDSRG::print_header() {
 }
 
 double LaplaceDSRG::compute_ccvv() {
+    local_timer loadingTime;
     E_J_ = 0.0;
     E_K_ = 0.0;
     AtomicOrbitalHelper ao_helper(Cwfn_, eps_rdocc_, eps_virtual_, laplace_threshold_, nactive_,
@@ -272,6 +273,8 @@ double LaplaceDSRG::compute_ccvv() {
     loadAOtensor.reset();
     outfile->Printf("\n    End loading");
 
+    outfile->Printf("\n\n  Loading takes %8.8f", loadingTime.get());
+
     /// Construct [ibar]_p and [abar]_p
     SparseMap i_bar_p_up(nthree_);
     SparseMap a_bar_p_up(nthree_);
@@ -316,6 +319,8 @@ double LaplaceDSRG::compute_ccvv() {
     std::vector<int> aux_intersection_per_ij;
     std::vector<int> aux_in_B_i;
     std::vector<int> aux_in_B_j;
+
+    local_timer looptime;
 
     for (int nweight = 0; nweight < weights; nweight++) {
         int nocc = Occupied_cholesky_[nweight]->coldim();
@@ -437,6 +442,8 @@ double LaplaceDSRG::compute_ccvv() {
             E_J_ -= 2 * D_pq->get_row(0, q)->vector_dot(*D_pq->get_column(0, q));
         }
 
+        outfile->Printf("\n\n  Coulomb finished %8.8f", looptime.get());
+
         /// Exchange part
         B_ia_Q.resize(nocc);
         Q_ia = std::make_shared<psi::Matrix>("Q_ia", nocc, nvir);
@@ -456,6 +463,8 @@ double LaplaceDSRG::compute_ccvv() {
                 Q_ia->set(i, abar_ibar[i][abar], sqrt(Q_value_2));
             }
         }
+
+        outfile->Printf("\n\n  ii Exchange finished %8.8f", looptime.get());
 
         /// Start ij-prescreening.
         psi::SharedMatrix A_ij = psi::linalg::doublet(Q_ia, Q_ia, false, true);
@@ -527,6 +536,7 @@ double LaplaceDSRG::compute_ccvv() {
                 }
             }
         }
+        outfile->Printf("\n\n  Exchange finished %8.8f", looptime.get());
         outfile->Printf("  Number of unselected ij pairs: %d. \n", unselected_occ);
     }
 
