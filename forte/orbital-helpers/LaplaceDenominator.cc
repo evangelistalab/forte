@@ -89,8 +89,8 @@ void LaplaceDenominator::decompose_ccvv() {
 
     double A = 2.0 * (E_LUMO - E_HOMO);
     double B = 2.0 * (E_HUMO - E_LOMO);
-    //double R = B / A;
-    double R = B / 1.044679;
+    double R = B / A;
+    //double R = B / 1.044679;
 
     nvir -= vir_start_;
 
@@ -226,13 +226,13 @@ void LaplaceDenominator::decompose_ccvv() {
 
     //Cast weights back to problem size
     for (int k = 0; k < nvector_; k++) {
-        alpha[k] /= 1.044679;
-        omega[k] /= 1.044679;
+        alpha[k] /= A;
+        omega[k] /= A;
     }
 
     // Fermi-level
-    //double Fermi = (E_LUMO + E_HOMO)/2;
-    double Fermi = 0.0;
+    double Fermi = (E_LUMO + E_HOMO)/2;
+    // double Fermi = 0.0;
 
     denominator_occ_ = std::make_shared<psi::Matrix>("Occupied Laplace Delta Tensor", nvector_, nocc);
     denominator_vir_ = std::make_shared<psi::Matrix>("Virtual Laplace Delta Tensor", nvector_, nvir);
@@ -306,8 +306,8 @@ void LaplaceDenominator::decompose_cavv() {
 
     nvir -= vir_start_;
 
-    //double R = B / A;
-    double R = B; // no scale
+    double R = B / A;
+    // double R = B; // no scale
 
     outfile->Printf("  The smallest denominator: %f. \n", A);
     outfile->Printf("  The largest denominator: %f. \n", B);
@@ -440,10 +440,10 @@ void LaplaceDenominator::decompose_cavv() {
     //    printf("  %24.16E, %24.16E\n", omega[k], alpha[k]);
 
     // Cast weights back to problem size
-    // for (int k = 0; k < nvector_; k++) {
-    //     alpha[k] /= A;
-    //     omega[k] /= A;
-    // }
+    for (int k = 0; k < nvector_; k++) {
+        alpha[k] /= A;
+        omega[k] /= A;
+    }
 
     // // Fermi-level
     // double Fermi = (E_vir_min + E_HOMO)/2; ???? How to calculate fermi-level in this case.
@@ -515,8 +515,8 @@ void LaplaceDenominator::decompose_ccav() {
     double A = E_vir_min + E_act_min - 2 * E_occ_max;
     double B = E_vir_max + E_act_max - 2 * E_occ_min;
 
-    //double R = B / A;
-    double R = B; // no scale
+    double R = B / A;
+    // double R = B; // no scale
 
     nvir -= vir_start_;
 
@@ -651,10 +651,10 @@ void LaplaceDenominator::decompose_ccav() {
     //    printf("  %24.16E, %24.16E\n", omega[k], alpha[k]);
 
     // Cast weights back to problem size
-    // for (int k = 0; k < nvector_; k++) {
-    //     alpha[k] /= A;
-    //     omega[k] /= A;
-    // }
+    for (int k = 0; k < nvector_; k++) {
+        alpha[k] /= A;
+        omega[k] /= A;
+    }
 
     denominator_occ_ = std::make_shared<psi::Matrix>("Occupied Laplace Delta Tensor", nvector_, nocc);
     denominator_vir_ = std::make_shared<psi::Matrix>("Virtual Laplace Delta Tensor", nvector_, nvir);
