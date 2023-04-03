@@ -261,6 +261,15 @@ class ActiveSpaceMethod {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet);
 
+    /// Get the model space
+    DeterminantHashVec get_PQ_space();
+
+    /// Get model space coefficients
+    psi::SharedMatrix get_PQ_evecs();
+
+    /// Return the integrals
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints();
+
   protected:
     /// The list of active orbitals (absolute ordering)
     std::vector<size_t> active_mo_;
@@ -282,6 +291,10 @@ class ActiveSpaceMethod {
     /// The one-electron integrals and scalar energy contains contributions from the
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
+
+    DeterminantHashVec final_wfn_;
+
+    std::shared_ptr<psi::Matrix> evecs_;
 
     // ==> Base Class Handles [can be changed before running compute_energy()]  <==
 

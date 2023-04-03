@@ -839,10 +839,6 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatr
     }
 }
 
-DeterminantHashVec ExcitedStateSolver::get_PQ_space() { return final_wfn_; }
-
-psi::SharedMatrix ExcitedStateSolver::get_PQ_evecs() { return evecs_; }
-
 ExcitedStateSolver::~ExcitedStateSolver() {
     // remove wave function file if calculated transition dipole
     if (transition_dipole_) {
@@ -856,8 +852,6 @@ ExcitedStateSolver::~ExcitedStateSolver() {
 void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ = ex_alg; }
 
 void ExcitedStateSolver::set_core_excitation(bool core_ex) { core_ex_ = core_ex; }
-
-std::shared_ptr<ActiveSpaceIntegrals> ExcitedStateSolver::get_as_ints() { return as_ints_; }
 
 void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
 } // namespace forte

@@ -47,7 +47,7 @@
 #include "orbital-helpers/iao_builder.h"
 #include "orbital-helpers/localize.h"
 
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 #include "ci_ex_states/excited_state_solver.h"
 #include "sci/aci.h"
 
@@ -129,7 +129,7 @@ class TDACI {
                                                              DeterminantHashVec& PQ_space, double dt); 
 
     void propagate_RK4_list(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
-                                                             DeterminantHashVec& PQ_space,WFNOperator& op, double dt); 
+                                                             DeterminantHashVec& PQ_space,DeterminantSubstitutionLists& op, double dt); 
     // The core state determinant space
     DeterminantHashVec core_dets_;
     DeterminantHashVec ann_dets_;
@@ -143,7 +143,7 @@ class TDACI {
                         DeterminantHashVec& PQ_space, std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i);
 
     // Compute Hc using coupling lists
-    void complex_sigma_build( std::vector<double>& sigma_r, std::vector<double>& sigma_i,std::vector<double>& c_r, std::vector<double>& c_i,DeterminantHashVec& dethash, WFNOperator& op);
+    void complex_sigma_build( std::vector<double>& sigma_r, std::vector<double>& sigma_i,std::vector<double>& c_r, std::vector<double>& c_i,DeterminantHashVec& dethash, DeterminantSubstitutionLists& op);
 
     // Test occupation vectors using ref_occ_n.txt file
     double test_occ();

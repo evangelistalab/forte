@@ -89,6 +89,12 @@ void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
 
+DeterminantHashVec ActiveSpaceMethod::get_PQ_space() { return final_wfn_; }
+
+psi::SharedMatrix ActiveSpaceMethod::get_PQ_evecs() { return evecs_; }
+
+std::shared_ptr<ActiveSpaceIntegrals> ActiveSpaceMethod::as_ints() { return as_ints_; }
+
 void ActiveSpaceMethod::save_transition_rdms(
     const std::vector<std::shared_ptr<RDMs>>& rdms,
     const std::vector<std::pair<size_t, size_t>>& root_list,

@@ -82,15 +82,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Set the printing level
     void set_quiet(bool quiet);
 
-    /// Get the model space
-    DeterminantHashVec get_PQ_space();
-
-    /// Get model space coefficients
-    psi::SharedMatrix get_PQ_evecs();
-
-    /// Return the integrals
-    std::shared_ptr<ActiveSpaceIntegrals> get_as_ints();
-
     /// Dump temporary wave function to disk
     void dump_wave_function(const std::string& filename) override;
 
@@ -100,8 +91,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     read_wave_function(const std::string& filename) override;
 
   protected:
-    DeterminantHashVec final_wfn_;
-
     /// The number of active orbitals
     size_t nact_;
     std::unique_ptr<SelectedCIMethod> sci_;
@@ -116,8 +105,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    /// The CI coeffiecients
-    std::shared_ptr<psi::Matrix> evecs_;
     /// Computes RDMs without coupling lists
     bool direct_rdms_ = false;
     /// Run test for the RDMs

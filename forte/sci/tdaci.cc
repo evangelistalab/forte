@@ -123,7 +123,7 @@ double TDACI::compute_energy() {
 
     // 3. Build the full n-1 Hamiltonian if not screening
     std::vector<std::string> det_str(nann);
-    as_ints_ = aci->get_as_ints();
+    as_ints_ = aci->as_ints();
     SharedMatrix full_aH = std::make_shared<Matrix>("aH", nann, nann);
     if (build_full_H) {
         for (size_t I = 0; I < nann; ++I) {
@@ -234,7 +234,7 @@ void TDACI::propagate_list(SharedVector C0) {
     
     // Compute couplings for sigma builds
     auto mo_sym = mo_space_info_->symmetry("ACTIVE");
-    WFNOperator op(mo_sym, as_ints_);
+    DeterminantSubstitutionLists op(as_ints_);
     op.set_quiet_mode(true);
 
     op.build_strings(ann_dets_);
@@ -1335,7 +1335,7 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
         } else if (options_->get_str("TDACI_PROPAGATOR") == "RK4_SELECT_LIST") {
             // build coupling lists
             auto mo_sym = mo_space_info_->symmetry("ACTIVE");
-            WFNOperator op(mo_sym, as_ints_);
+            DeterminantSubstitutionLists op(as_ints_);
             op.set_quiet_mode(true);
 
             op.build_strings(PQ_space);
@@ -1978,17 +1978,10 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<d
 
     // outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
-//void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
-//                               std::vector<double>& PQ_coeffs_i,
-//                               DeterminantHashVec& PQ_space, WFNOperator& op, double dt) {
-//
-//    Timer total;
-//    size_t npq = PQ_space.size();
-//}
 
 void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
                                std::vector<double>& PQ_coeffs_i,
-                               DeterminantHashVec& PQ_space, WFNOperator& op, double dt) {
+                               DeterminantHashVec& PQ_space, DeterminantSubstitutionLists& op, double dt) {
 
     Timer total;
     size_t npq = PQ_space.size();
@@ -2061,7 +2054,7 @@ void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
 
 void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double>& sigma_i,
                                 std::vector<double>& c_r, std::vector<double>& c_i,
-                                DeterminantHashVec& dethash, WFNOperator& op) {
+                                DeterminantHashVec& dethash, DeterminantSubstitutionLists& op) {
 
     auto& dets = dethash.wfn_hash();
     size_t size = dets.size();
