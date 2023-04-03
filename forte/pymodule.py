@@ -173,7 +173,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
         wfn_new = ref_wfn
     else:
         # test if input Ca has the correct dimension
-        if Ca.rowdim() != nmopi or Ca.coldim() != nmopi:
+        if Ca.rowdim() != ref_wfn.nsopi() or Ca.coldim() != nmopi:
             raise ValueError("Invalid orbitals: different basis set / molecule")
 
         new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
