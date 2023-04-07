@@ -97,6 +97,25 @@ void export_Determinant(py::module& m) {
         .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
         .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
 
+    py::class_<Configuration>(m, "Configuration")
+        .def(py::init<>())
+        .def(py::init<const Determinant&>())
+
+        .def(
+            "str", [](const Configuration& a, int n) { return str(a, n); },
+            "n"_a = Configuration::norb(),
+            "Get the string representation of the Slater determinant") // uses str() defined in
+                                                                       // determinant.hpp
+        .def("is_empt", &Configuration::is_empt, "n"_a, "Is orbital n empty?")
+        .def("is_docc", &Configuration::is_docc, "n"_a, "Is orbital n doubly occupied?")
+        .def("is_socc", &Configuration::is_socc, "n"_a, "Is orbital n singly occupied?")
+        .def("set_occ", &Configuration::set_occ, "n"_a, "value"_a, "Set the value of an alpha bit")
+        .def("__repr__", [](const Configuration& a) { return str(a); })
+        .def("__str__", [](const Configuration& a) { return str(a); })
+        .def("__eq__", [](const Configuration& a, const Configuration& b) { return a == b; })
+        .def("__lt__", [](const Configuration& a, const Configuration& b) { return a < b; })
+        .def("__hash__", [](const Configuration& a) { return Configuration::Hash()(a); });
+
     m.def(
         "det",
         [](const std::string& s) {
