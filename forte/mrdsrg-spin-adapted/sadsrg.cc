@@ -951,15 +951,13 @@ void SADSRG::canonicalize_B(const std::unordered_set<std::string>& blocks) {
         const auto& U1 = U_.block(U1_block);
         const auto& U2 = U_.block(U2_block);
 
-        // create file
-        std::string filename = chk_filename_prefix_ + ".Bcan." + block + ".bin";
-        FILE* fp = fopen(filename.c_str(), "wb");
-
         // determine largest chunk of B to be transformed
         const auto& mos1 = label_to_spacemo_[block[0]];
         const auto& mos2 = label_to_spacemo_[block[1]];
         auto n1 = mos1.size();
         auto n2 = mos2.size();
+        if (n1 == 0 or n2 == 0)
+            continue;
         auto N = n1 * n2;
         auto nQ = aux_mos_.size();
 
@@ -982,6 +980,10 @@ void SADSRG::canonicalize_B(const std::unordered_set<std::string>& blocks) {
         // batches of virtual indices
         auto batch_Q = split_vector(aux_mos_, max_nQ);
         auto nbatches = batch_Q.size();
+
+        // create file
+        std::string filename = chk_filename_prefix_ + ".Bcan." + block + ".bin";
+        FILE* fp = fopen(filename.c_str(), "wb");
 
         // loop over auxiliary index
         for (size_t n = 0; n < nbatches; ++n) {
