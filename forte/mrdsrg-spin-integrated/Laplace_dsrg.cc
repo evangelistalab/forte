@@ -69,6 +69,7 @@ LaplaceDSRG::LaplaceDSRG(std::shared_ptr<ForteOptions> options,
     theta_ij_cavv_ = foptions_->get_double("THETA_IJ_CAVV");
     theta_schwarz_cavv_ = foptions_->get_double("THETA_SCHWARZ_CAVV");
     theta_ij_sqrt_cavv_ = sqrt(theta_ij_cavv_);
+    theta_NB_XAP_cavv_ = foptions_->get_double("THETA_NB_XAP_CAVV");
     /// CCAV
     theta_NB_ccav_ = foptions_->get_double("THETA_NB_CCAV");
     theta_NB_IAP_ccav_ = foptions_->get_double("THETA_NB_IAP_CCAV");
@@ -110,10 +111,10 @@ void LaplaceDSRG::print_header() {
         {"theta_NB", theta_NB_},           {"theta_NB_IAP", theta_NB_IAP_},
         {"theta_ij", theta_ij_},           {"theta_schwarz", theta_schwarz_},
         {"theta_NB_cavv", theta_NB_cavv_}, {"theta_NB_IAP_cavv", theta_NB_IAP_cavv_},
-        {"theta_ij_cavv", theta_ij_cavv_}, {"theta_schwarz_cavv", theta_schwarz_cavv_},
-        {"theta_NB_ccav", theta_NB_ccav_}, {"theta_NB_IAP_ccav", theta_NB_IAP_ccav_},
-        {"theta_ij_ccav", theta_ij_ccav_}, {"theta_schwarz_ccav", theta_schwarz_ccav_},
-        {"vir_tol", vir_tol_}};
+        {"theta_NB_XAP_cavv", theta_NB_XAP_cavv_}, {"theta_ij_cavv", theta_ij_cavv_}, 
+        {"theta_schwarz_cavv", theta_schwarz_cavv_}, {"theta_NB_ccav", theta_NB_ccav_}, 
+        {"theta_NB_IAP_ccav", theta_NB_IAP_ccav_}, {"theta_ij_ccav", theta_ij_ccav_},
+        {"theta_schwarz_ccav", theta_schwarz_ccav_}, {"vir_tol", vir_tol_}};
     print_selected_options("Calculation Information", calculation_info_string,
                            calculation_info_bool, calculation_info_double, calculation_info_int);
 }
@@ -885,6 +886,7 @@ double LaplaceDSRG::compute_cavv() {
                     }
                 }
             }
+            outfile->Printf("\n\n  Number for i %d", abar_ibar[i].size());
         }
 
         /// Construct {abar}_xbar.
@@ -893,12 +895,13 @@ double LaplaceDSRG::compute_cavv() {
             abar_xbar[x].clear();
             for (int a = 0; a < nvir; a++) {
                 for (int q = 0; q < nthree_; q++) {
-                    if (std::abs(x_bar_a_bar_P[x]->get(a, q)) >= theta_NB_IAP_cavv_) {
+                    if (std::abs(x_bar_a_bar_P[x]->get(a, q)) >= theta_NB_XAP_cavv_) {
                         abar_xbar[x].push_back(a);
                         break;
                     }
                 }
             }
+            outfile->Printf("\n\n  Number for x %d", abar_xbar[x].size());
         }
         /// Coulomb contribution.
         /// Construct Z_pq

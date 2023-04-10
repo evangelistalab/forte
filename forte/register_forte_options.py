@@ -727,6 +727,8 @@ def register_dsrg_options(options):
 
     options.add_double("THETA_NB_IAP_CAVV", 0, "theta_NB_IAP")
 
+    options.add_double("THETA_NB_XAP_CAVV", 0, "theta_NB_XAP")
+
     options.add_double("THETA_IJ_CAVV", 0, "theta_ij")
 
     options.add_double("THETA_SCHWARZ_CAVV", 0, "theta_schwarz")
