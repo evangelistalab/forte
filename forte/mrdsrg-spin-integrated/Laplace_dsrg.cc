@@ -274,7 +274,7 @@ double LaplaceDSRG::compute_ccvv() {
     loadAOtensor.reset();
     outfile->Printf("\n    End loading");
 
-    outfile->Printf("\n\n  Loading takes %8.8f", loadingTime.get());
+    //outfile->Printf("\n\n  Loading takes %8.8f", loadingTime.get());
 
     /// Construct [ibar]_p and [abar]_p
     SparseMap i_bar_p_up(nthree_);
@@ -443,7 +443,7 @@ double LaplaceDSRG::compute_ccvv() {
             E_J_ -= 2 * D_pq->get_row(0, q)->vector_dot(*D_pq->get_column(0, q));
         }
 
-        outfile->Printf("\n\n  Coulomb finished %8.8f", looptime.get());
+        //outfile->Printf("\n\n  Coulomb finished %8.8f", looptime.get());
 
         /// Exchange part
         B_ia_Q.resize(nocc);
@@ -465,7 +465,7 @@ double LaplaceDSRG::compute_ccvv() {
             }
         }
 
-        outfile->Printf("\n\n  ii Exchange finished %8.8f", looptime.get());
+        //outfile->Printf("\n\n  ii Exchange finished %8.8f", looptime.get());
 
         /// Start ij-prescreening.
         psi::SharedMatrix A_ij = psi::linalg::doublet(Q_ia, Q_ia, false, true);
@@ -537,8 +537,8 @@ double LaplaceDSRG::compute_ccvv() {
                 }
             }
         }
-        outfile->Printf("\n\n  Exchange finished %8.8f", looptime.get());
-        outfile->Printf("  Number of unselected ij pairs: %d. \n", unselected_occ);
+        //outfile->Printf("\n\n  Exchange finished %8.8f", looptime.get());
+        //outfile->Printf("  Number of unselected ij pairs: %d. \n", unselected_occ);
     }
 
     // std::cout << E_J_ << "\n";
@@ -886,7 +886,7 @@ double LaplaceDSRG::compute_cavv() {
                     }
                 }
             }
-            outfile->Printf("\n\n  Number for i %d", abar_ibar[i].size());
+            //outfile->Printf("\n\n  Number for i %d", abar_ibar[i].size());
         }
 
         /// Construct {abar}_xbar.
@@ -901,7 +901,7 @@ double LaplaceDSRG::compute_cavv() {
                     }
                 }
             }
-            outfile->Printf("\n\n  Number for x %d", abar_xbar[x].size());
+            //outfile->Printf("\n\n  Number for x %d", abar_xbar[x].size());
         }
         /// Coulomb contribution.
         /// Construct Z_pq
