@@ -69,6 +69,7 @@ LaplaceDSRG::LaplaceDSRG(std::shared_ptr<ForteOptions> options,
     theta_ij_cavv_ = foptions_->get_double("THETA_IJ_CAVV");
     theta_schwarz_cavv_ = foptions_->get_double("THETA_SCHWARZ_CAVV");
     theta_ij_sqrt_cavv_ = sqrt(theta_ij_cavv_);
+    theta_XNB_cavv_ = foptions_->get_double("THETA_XNB_CAVV");
     theta_NB_XAP_cavv_ = foptions_->get_double("THETA_NB_XAP_CAVV");
     /// CCAV
     theta_NB_ccav_ = foptions_->get_double("THETA_NB_CCAV");
@@ -677,7 +678,7 @@ double LaplaceDSRG::compute_cavv() {
             double* N_px_batch_p = N_px_cavv_batch->get_pointer();
             for (int q = 0; q < naux; q++) {
                 for (int x = 0; x < Active_cholesky_cavv_abs_[nweight]->coldim(); x++) {
-                    if (std::abs(*N_px_batch_p) >= theta_NB_cavv_) {
+                    if (std::abs(*N_px_batch_p) >= theta_XNB_cavv_) {
                         xbar_p_up_cavv[nweight][Q + q].push_back(x);
                     }
                     N_px_batch_p++;
@@ -689,7 +690,7 @@ double LaplaceDSRG::compute_cavv() {
                     psi::linalg::doublet(Active_cholesky_new, amn_new[q], true, false);
                 for (int inew = 0; inew < xbar_p_up_cavv[nweight][Q + q].size(); inew++) {
                     for (int u = 0; u < ao_list_per_q[Q + q].size(); u++) {
-                        if (std::abs(P_xbar_u_cavv[nweight][Q + q]->get(inew, u)) >= theta_NB_cavv_) {
+                        if (std::abs(P_xbar_u_cavv[nweight][Q + q]->get(inew, u)) >= theta_XNB_cavv_) {
                             xbar_u_p_for_xbar_up[nweight][Q + q].push_back(inew);
                             xbar_u_p[nweight][Q + q].push_back(
                                 xbar_p_up_cavv[nweight][Q + q][inew]);
@@ -832,7 +833,7 @@ double LaplaceDSRG::compute_cavv() {
             /// Construct {xbar}_p.
             for (int x = 0; x < P_xbar_abar[qa]->rowdim(); x++) {
                 for (int a = 0; a < P_xbar_abar[qa]->coldim(); a++) {
-                    if (std::abs(P_xbar_abar[qa]->get(x, a)) >= theta_NB_IAP_cavv_) {
+                    if (std::abs(P_xbar_abar[qa]->get(x, a)) >= theta_NB_XAP_cavv_) {
                         xbar_p[qa].push_back(xbar_u_p[nweight][qa][x]);
                         break;
                     }

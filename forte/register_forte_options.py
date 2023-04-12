@@ -724,6 +724,8 @@ def register_dsrg_options(options):
   
 # CAVV thresholds
     options.add_double("THETA_NB_CAVV", 0, "theta_NB")
+  
+    options.add_double("THETA_XNB_CAVV", 0, "theta_XNB")
 
     options.add_double("THETA_NB_IAP_CAVV", 0, "theta_NB_IAP")
 

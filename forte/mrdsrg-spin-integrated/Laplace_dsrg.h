@@ -62,6 +62,7 @@ class LaplaceDSRG {
 
     /// CAVV
     double theta_NB_cavv_;
+    double theta_XNB_cavv_;
     double theta_NB_IAP_cavv_;
     double theta_NB_XAP_cavv_;
     double theta_ij_cavv_;
