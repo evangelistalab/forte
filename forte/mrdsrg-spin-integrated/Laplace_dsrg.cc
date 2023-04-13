@@ -112,10 +112,11 @@ void LaplaceDSRG::print_header() {
         {"theta_NB", theta_NB_},           {"theta_NB_IAP", theta_NB_IAP_},
         {"theta_ij", theta_ij_},           {"theta_schwarz", theta_schwarz_},
         {"theta_NB_cavv", theta_NB_cavv_}, {"theta_NB_IAP_cavv", theta_NB_IAP_cavv_},
-        {"theta_NB_XAP_cavv", theta_NB_XAP_cavv_}, {"theta_ij_cavv", theta_ij_cavv_}, 
-        {"theta_schwarz_cavv", theta_schwarz_cavv_}, {"theta_NB_ccav", theta_NB_ccav_}, 
-        {"theta_NB_IAP_ccav", theta_NB_IAP_ccav_}, {"theta_ij_ccav", theta_ij_ccav_},
-        {"theta_schwarz_ccav", theta_schwarz_ccav_}, {"vir_tol", vir_tol_}};
+        {"theta_XNB_cavv",theta_XNB_cavv_},{"theta_NB_XAP_cavv", theta_NB_XAP_cavv_}, 
+        {"theta_ij_cavv", theta_ij_cavv_}, {"theta_schwarz_cavv", theta_schwarz_cavv_}, 
+        {"theta_NB_ccav", theta_NB_ccav_}, {"theta_NB_IAP_ccav", theta_NB_IAP_ccav_}, 
+        {"theta_ij_ccav", theta_ij_ccav_}, {"theta_schwarz_ccav", theta_schwarz_ccav_}, 
+        {"vir_tol", vir_tol_}};
     print_selected_options("Calculation Information", calculation_info_string,
                            calculation_info_bool, calculation_info_double, calculation_info_int);
 }

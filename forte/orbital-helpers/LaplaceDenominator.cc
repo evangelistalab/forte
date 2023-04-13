@@ -259,8 +259,8 @@ void LaplaceDenominator::decompose_ccvv() {
         // }
     }
 
-    denominator_occ_->print();
-    denominator_vir_->print();
+    // denominator_occ_->print();
+    // denominator_vir_->print();
 
     delete[] alpha;
     delete[] omega;
@@ -446,7 +446,7 @@ void LaplaceDenominator::decompose_cavv() {
     }
 
     // // Fermi-level
-    // double Fermi = (E_vir_min + E_HOMO)/2; ???? How to calculate fermi-level in this case.
+    double Fermi = (E_vir_min + E_act_max)/2; //???? How to calculate fermi-level in this case.
 
     denominator_occ_ = std::make_shared<psi::Matrix>("Occupied Laplace Delta Tensor", nvector_, nocc);
     denominator_vir_ = std::make_shared<psi::Matrix>("Virtual Laplace Delta Tensor", nvector_, nvir);
@@ -462,13 +462,13 @@ void LaplaceDenominator::decompose_cavv() {
 
     for (int k = 0; k < nvector_; k++) {
         for (int i = 0; i < nocc; i++) {
-            dop[k][i] = pow(omega[k], 0.25) * exp(alpha[k] * e_o[i]);
+            dop[k][i] = pow(omega[k], 0.25) * exp(alpha[k] * (e_o[i] - Fermi));
         }
         for (int a = 0; a < nvir; a++) {
-            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * e_v[a + vir_start_]);
+            dvp[k][a] = pow(omega[k], 0.25) * exp(-alpha[k] * (e_v[a + vir_start_] - Fermi));
         }
         for (int u = 0; u < nact; u++) {
-            dap[k][u] = pow(omega[k], 0.25) * exp(alpha[k] * e_a[u]);
+            dap[k][u] = pow(omega[k], 0.25) * exp(alpha[k] * (e_a[u] - Fermi));
         }
     }
 

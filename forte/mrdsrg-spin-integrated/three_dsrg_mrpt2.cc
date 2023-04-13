@@ -2301,6 +2301,8 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
         actv_count++;
     }
 
+    epsilon_active->print();
+
     ambit::Tensor Gamma1a = Gamma1_.block("aa").clone();
     Gamma1a("pq") = rdms_->SF_L1()("pq");
 
