@@ -97,6 +97,7 @@ ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc
 ci_rdm/ci_rdms_sf.cc
 dmrg/dmrgsolver.cc
+fci/string_address.cc
 fci/binary_graph.cc
 fci/fci_solver.cc
 fci/fci_vector.cc

@@ -74,6 +74,8 @@ template <size_t N> class BitArray {
     /// the number of words used to store the bits
     static constexpr size_t nwords_ = bits_to_words(nbits);
 
+    BitArray() {}
+
     // get the value of bit in position pos
     bool get_bit(size_t pos) const { return this->getword(pos) & maskbit(pos); }
 
@@ -301,6 +303,21 @@ template <size_t N> class BitArray {
         return ~word_t(0);
     }
 
+    // uint64_t find_lowest_one_bit_at_pos(size_t pos) {
+    //     size_t n = whichword(pos); // word where we find pos
+    //     pos = whichbit(pos);       // the position within word n
+    //     for (; n < nwords_; n++) {
+    //         // find a word that is not 0
+    //         if (words_[n] != word_t(0)) {
+    //             // get the lowest set bit after pos
+    //             return ui64_find_lowest_one_bit_at_pos(words_[n], pos) + n * bits_per_word;
+    //         }
+    //         pos = 0; // reset pos after searching once
+    //     }
+    //     // if the BitArray object is zero then return ~0
+    //     return ~word_t(0);
+    // }
+
     /// Implements the operation: (a & b) == b
     bool fast_a_and_b_equal_b(const BitArray<N>& b) const {
         bool result = false;
@@ -370,6 +387,30 @@ template <size_t N> class BitArray {
             return (count % 2 == 0) ? ui64_sign(getword(n), whichbit(n))
                                     : -ui64_sign(getword(n), whichbit(n));
         }
+    }
+
+    /// @brief Find the irreducible representation of a product of spin orbitals
+    /// @param temp the input BitArray
+    /// @param irrep a vector of irrep values
+    /// @return the irrep
+    int symmetry(const std::vector<int>& irrep) const {
+        int sym = 0;
+        uint64_t pos;
+        // loop over all words
+        for (size_t n = 0; n < nwords_; n++) {
+            pos = 0;
+            // find all 1s in this word
+            while (pos < 64) { // this could be replaced by a loop
+                // find the lowest set bit starting at pos
+                pos = ui64_find_lowest_one_bit_at_pos(words_[n], pos);
+                // If pos is less than 64 compute the symmetry and increment
+                if (pos < 64) {
+                    sym ^= irrep[pos + n * bits_per_word];
+                    pos++; // must be here
+                }
+            }
+        }
+        return sym;
     }
 
     /// Return the sign for a pair of second quantized operators
@@ -484,6 +525,20 @@ template <size_t N> class BitArray {
     std::array<word_t, nwords_> words_ = {};
 #endif
 };
+
+template <size_t N> std::string str(const BitArray<N>& ba, int n = BitArray<N>::nbits) {
+    std::string s;
+    s += "|";
+    for (int p = 0; p < n; ++p) {
+        if (ba.get_bit(p)) {
+            s += "1";
+        } else {
+            s += "0";
+        }
+    }
+    s += ">";
+    return s;
+}
 
 } // namespace forte
 

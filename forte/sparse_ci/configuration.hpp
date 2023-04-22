@@ -55,9 +55,9 @@ template <size_t N> class ConfigurationImpl : public BitArray<N> {
     // compilation pass, here we declare all the member variables and functions inherited and used
     using BitArray<N>::nbits;
     // using BitArray<N>::bits_per_word;
-    // using BitArray<N>::nwords_;
+    using BitArray<N>::nwords_;
     using BitArray<N>::words_;
-    // using BitArray<N>::count;
+    using BitArray<N>::count;
     using BitArray<N>::get_bit;
     using BitArray<N>::set_bit;
     using BitArray<N>::maskbit;
@@ -92,11 +92,11 @@ template <size_t N> class ConfigurationImpl : public BitArray<N> {
     /// Constructor from a bit array
     ConfigurationImpl(const BitArray<N>& ba) : BitArray<N>(ba) {}
 
-    /// Construct the determinant from an occupation vector that
-    /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+    /// Construct a configuration from a determinant object
     explicit ConfigurationImpl(const DeterminantImpl<N>& d) {
-        for (int p = 0; p < nbits_half; ++p) {
-            set_occ(p, static_cast<int>(d.get_alfa_bit(p)) + static_cast<int>(d.get_beta_bit(p)));
+        for (size_t k = 0; k < nwords_half; ++k) {
+            words_[k] = d.words_[k] & d.words_[k + nwords_half];
+            words_[k + nwords_half] = d.words_[k] ^ d.words_[k + nwords_half];
         }
     }
 
@@ -133,6 +133,48 @@ template <size_t N> class ConfigurationImpl : public BitArray<N> {
             return words_[1] & maskbit(pos);
         } else {
             return get_bit(pos + socc_bit_offset);
+        }
+    }
+
+    /// Count the number of doubly occupied orbitals
+    int count_docc() const { return count(0, nwords_half); }
+
+    /// Count the number of singly occupied orbitals
+    int count_socc() const { return count(nwords_half, nwords_); }
+
+    /// Return a vector with the indices of the doubly occupied orbitals
+    /// @param docc_vec is a vector large enough to contain the list of orbitals
+    void get_docc_vec(int norb, std::vector<int>& docc_vec) const {
+        if (static_cast<size_t>(norb) > nbits_half) {
+            throw std::range_error("Configuration::get_docc_vec(...) was passed a value of norb (" +
+                                   std::to_string(norb) +
+                                   "), which is larger than the maximum number of orbitals (" +
+                                   std::to_string(nbits_half) + ").");
+        }
+        int k = 0;
+        for (int p = 0; p < norb; ++p) {
+            if (is_docc(p)) {
+                docc_vec[k] = p;
+                k++;
+            }
+        }
+    }
+
+    /// Return a vector with the indices of the singly occupied orbitals
+    /// @param socc_vec is a vector large enough to contain the list of orbitals
+    void get_socc_vec(int norb, std::vector<int>& socc_vec) const {
+        if (static_cast<size_t>(norb) > nbits_half) {
+            throw std::range_error("Configuration::get_socc_vec(...) was passed a value of norb (" +
+                                   std::to_string(norb) +
+                                   "), which is larger than the maximum number of orbitals (" +
+                                   std::to_string(nbits_half) + ").");
+        }
+        int k = 0;
+        for (int p = 0; p < norb; ++p) {
+            if (is_socc(p)) {
+                socc_vec[k] = p;
+                k++;
+            }
         }
     }
 };

@@ -14,6 +14,12 @@ def test_configuration_constructors():
     d1 = det("22+-0-+")
     c1 = forte.Configuration(d1)
     assert c1.str(7) == '|2211011>'
+    # test the counting functions
+    assert c1.count_docc() == 2
+    assert c1.count_socc() == 4
+    # test functions that extract lists
+    assert c1.get_docc_vec() == [0,1]
+    assert c1.get_socc_vec() == [2,3,5,6]
 
 def test_configurationt_getset():
     """Test get/set operations"""
@@ -58,6 +64,7 @@ def test_configurationt_ops():
     assert c4 < c2
     assert c4 < c3
 
-test_configuration_constructors()
-test_configurationt_getset()
-test_configurationt_ops()
+if __name__ == "__main__":
+    test_configuration_constructors()
+    test_configurationt_getset()
+    test_configurationt_ops()

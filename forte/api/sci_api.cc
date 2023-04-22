@@ -36,6 +36,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
 
+#include "fci/string_address.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_state_vector.h"
@@ -80,6 +81,7 @@ void export_Determinant(py::module& m) {
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
         .def("count_alfa", &Determinant::count_alfa, "Count the number of set alpha bits")
         .def("count_beta", &Determinant::count_beta, "Count the number of set beta bits")
+        .def("symmetry", &Determinant::symmetry, "Get the symmetry")
         .def(
             "gen_excitation",
             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
@@ -97,6 +99,14 @@ void export_Determinant(py::module& m) {
         .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
         .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
 
+    py::class_<String>(m, "String")
+        .def(py::init<>())
+        .def("__repr__", [](const String& a) { return str(a); })
+        .def("__str__", [](const String& a) { return str(a); })
+        .def("__eq__", [](const String& a, const String& b) { return a == b; })
+        .def("__lt__", [](const String& a, const String& b) { return a < b; })
+        .def("__hash__", [](const String& a) { return String::Hash()(a); });
+
     py::class_<Configuration>(m, "Configuration")
         .def(py::init<>())
         .def(py::init<const Determinant&>())
@@ -110,6 +120,28 @@ void export_Determinant(py::module& m) {
         .def("is_docc", &Configuration::is_docc, "n"_a, "Is orbital n doubly occupied?")
         .def("is_socc", &Configuration::is_socc, "n"_a, "Is orbital n singly occupied?")
         .def("set_occ", &Configuration::set_occ, "n"_a, "value"_a, "Set the value of an alpha bit")
+        .def("count_docc", &Configuration::count_docc,
+             "Count the number of doubly occupied orbitals")
+        .def("count_socc", &Configuration::count_socc,
+             "Count the number of singly occupied orbitals")
+        .def(
+            "get_docc_vec",
+            [](const Configuration& c) {
+                int dim = c.count_docc();
+                std::vector<int> l(dim);
+                c.get_docc_vec(Configuration::norb(), l);
+                return l;
+            },
+            "Get a list of the doubly occupied orbitals")
+        .def(
+            "get_socc_vec",
+            [](const Configuration& c) {
+                int dim = c.count_socc();
+                std::vector<int> l(dim);
+                c.get_socc_vec(Configuration::norb(), l);
+                return l;
+            },
+            "Get a list of the singly occupied orbitals")
         .def("__repr__", [](const Configuration& a) { return str(a); })
         .def("__str__", [](const Configuration& a) { return str(a); })
         .def("__eq__", [](const Configuration& a, const Configuration& b) { return a == b; })
@@ -119,6 +151,13 @@ void export_Determinant(py::module& m) {
     m.def(
         "det",
         [](const std::string& s) {
+            size_t nchar = s.size();
+            if (nchar > Determinant::norb()) {
+                std::string msg = "The forte.det function was passed a string of length greather "
+                                  "than the maximum determinant size: " +
+                                  std::to_string(Determinant::norb());
+                throw std::runtime_error(msg);
+            }
             Determinant d;
             int k = 0;
             for (const char cc : s) {
@@ -135,8 +174,33 @@ void export_Determinant(py::module& m) {
             }
             return d;
         },
-        "Make a determinant from a string (e.g., \'2+-0\'). 2 or x/X = doubly occupied MO, + or "
+        "Make a determinant from a string (e.g., \'2+-0\'). 2 or x/X = doubly occupied MO, "
+        "+ or "
         "a/A = alpha, - or b/B = beta. Orbital occupations are read from left to right.");
+
+    m.def(
+        "str",
+        [](const std::string& s) {
+            size_t nchar = s.size();
+            if (nchar > String::nbits) {
+                std::string msg = "The forte.str function was passed a string of length greather "
+                                  "than the maximum size: " +
+                                  std::to_string(String::nbits);
+                throw std::runtime_error(msg);
+            }
+            String str;
+            int k = 0;
+            for (const char cc : s) {
+                const char c = tolower(cc);
+                if (c == '1') {
+                    str.set_bit(k, true);
+                }
+                ++k;
+            }
+            return str;
+        },
+        "Make a string from a text string (e.g., \'1001\'). 1 = occupied MO, 0 = unoccupied MO. "
+        "Orbital occupations are read from left to right.");
 
     m.def(
         "spin2", [](const Determinant& lhs, const Determinant& rhs) { return spin2(lhs, rhs); },
@@ -151,6 +215,12 @@ void export_Determinant(py::module& m) {
         .def("determinants", &DeterminantHashVec::determinants, "Return a vector of Determinants")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
+
+    py::class_<StringAddress>(m, "StringAddress")
+        .def(py::init<const std::vector<int>&>())
+        .def("rel_add", &StringAddress::rel_add)
+        .def("sym", &StringAddress::sym, "Return the symmetry of string")
+        .def("strpi", &StringAddress::strpi, "Return the number of strings per irrep");
 
     py::class_<SparseOperator>(m, "SparseOperator")
         .def(py::init<bool>(), "antihermitian"_a = false)

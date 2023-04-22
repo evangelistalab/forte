@@ -32,19 +32,6 @@ namespace forte {
 class BinaryGraph {
   public:
     /*
-     * Constructor which takes a vector with symmetry of each orbital
-     * @param n lenght of the string
-     * @param k number of 1s
-     * @param symm symmetry of each orbital
-     * @param nirr number of irreps
-     */
-    BinaryGraph(int n, int k, std::vector<int> symm, int nirr)
-        : nbits_(n), nones_(k), nirrep_(nirr), symmetry(symm) {
-        startup();
-        generate_weights();
-    }
-
-    /*
      * Constructor which takes a vector with size of each irrep
      * @param n lenght of the string
      * @param k number of 1s
@@ -95,55 +82,7 @@ class BinaryGraph {
         }
     }
 
-    size_t abs_add(bool* string) {
-        size_t add = 0;
-        int k = 0; // number of 1s
-        int h = 0; // irrep of the string
-        for (int n = 0; (k < nones_) and (n < nbits_); ++n) {
-            if (string[n]) {
-                ++k;
-                h ^= symmetry[n];
-                add += weight0[n][h][k];
-            }
-        }
-        return (add + offset[h]);
-    }
-
-    size_t abs_add(std::vector<bool>& string) {
-#ifdef BIN_GRAPH_TEST
-        test_string(string, nones_, nbits_);
-#endif
-        size_t add = 0;
-        int k = 0; // number of 1s
-        int h = 0; // irrep of the string
-        for (int n = 0; (k < nones_) and (n < nbits_); ++n) {
-            if (string[n]) {
-                ++k;
-                h ^= symmetry[n];
-                add += weight0[n][h][k];
-            }
-        }
-        return (add + offset[h]);
-    }
-
     size_t rel_add(bool* string) {
-#ifdef BIN_GRAPH_TEST
-        test_string(string, nones_, nbits_);
-#endif
-        size_t add = 0;
-        int k = 0; // number of 1s
-        int h = 0; // irrep of the string
-        for (int n = 0; (k < nones_) and (n < nbits_); ++n) {
-            if (string[n]) {
-                ++k;
-                h ^= symmetry[n];
-                add += weight0[n][h][k];
-            }
-        }
-        return add;
-    }
-
-    size_t rel_add(std::vector<bool>& string) {
 #ifdef BIN_GRAPH_TEST
         test_string(string, nones_, nbits_);
 #endif
@@ -173,19 +112,6 @@ class BinaryGraph {
         return h;
     }
 
-    int sym(std::vector<bool>& string) {
-#ifdef BIN_GRAPH_TEST
-        test_string(string, nones_, nbits_);
-#endif
-        int h = 0;
-        for (int n = 0; n < nbits_; ++n) {
-            if (string[n]) {
-                h = h ^ symmetry[n];
-            }
-        }
-        return h;
-    }
-
     size_t nstr() {
         size_t sum = 0;
         for (int h = 0; h < nirrep_; ++h) {
@@ -197,7 +123,6 @@ class BinaryGraph {
     size_t strpi(int h) const { return strpi_[h]; }
     int nbits() const { return nbits_; }
     int nones() const { return nones_; }
-    int nirrep() const { return nirrep_; }
 
   private:
     void startup() {
