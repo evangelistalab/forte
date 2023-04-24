@@ -208,16 +208,6 @@ void StringLists::make_pair_list(NNList& list) {
         }
         pairpi_.push_back(list[pq_sym].size());
     }
-    //  int h = 0;
-    //  foreach(PairList& list_irrep,list){
-    //    outfile->Printf("\n Irrep %d",h);
-    //    foreach(Pair& pq, list_irrep){
-    //
-    //      outfile->Printf("\n Pair [%2d,%2d]",pq.first,pq.second);
-    //    }
-    //    h++;
-    //  }
-    //
 }
 
 void StringLists::make_strings(GraphPtr graph, StringList& list) {

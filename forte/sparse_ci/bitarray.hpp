@@ -96,6 +96,12 @@ template <size_t N> class BitArray {
             return *this;
         }
 
+        // assignment operator for write access
+        Proxy& operator=(const Proxy& other) {
+            *this = static_cast<bool>(other);
+            return *this;
+        }
+
         friend void swap(Proxy a, Proxy b) {
             bool temp = static_cast<bool>(a);
             a = static_cast<bool>(b);
