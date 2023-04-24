@@ -140,6 +140,14 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// set beta bit pos to val
     void set_beta_bit(size_t pos, bool val) { set_bit(pos + beta_bit_offset, val); }
 
+    /// set the alpha/beta strings
+    void set_str(const BitArray<nbits_half>& sa, const BitArray<nbits_half>& sb) {
+        for (size_t n = 0; n < nwords_half; n++) {
+            words_[n] = sa.get_word(n);
+            words_[n + nwords_half] = sb.get_word(n);
+        }
+    }
+
     // Comparison operators
     static bool less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
         return rhs < lhs;

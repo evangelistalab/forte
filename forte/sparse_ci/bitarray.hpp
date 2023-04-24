@@ -188,6 +188,9 @@ template <size_t N> class BitArray {
         getword(pos) ^= (-val ^ getword(pos)) & maskbit(pos); // if-free implementation
     }
 
+    /// get a word in position pos
+    word_t get_word(size_t pos) const { return words_[pos]; }
+
     /// set a word in position pos
     void set_word(size_t pos, word_t word) { words_[pos] = word; }
 
