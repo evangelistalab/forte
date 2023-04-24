@@ -108,6 +108,7 @@ template <size_t N> class BitArray {
     };
 
     Proxy operator[](size_t index) { return Proxy(getword(index), whichbit(index)); }
+    bool operator[](size_t index) const { return get_bit(index); }
 
     class iterator {
       public:
@@ -153,11 +154,15 @@ template <size_t N> class BitArray {
             return copy;
         }
 
+        // TODO: This should be tested!
         iterator operator+(difference_type n) const {
             iterator result = *this;
-            for (difference_type i = 0; i < n; ++i) {
-                ++result;
-            }
+            const auto overage = result.index_ + (n % bits_per_word);
+            result.word_it_ += (n + overage) / bits_per_word;
+            result.index_ += overage % bits_per_word;
+            // for (difference_type i = 0; i < n; ++i) {
+            //     ++result;
+            // }
             return result;
         }
 

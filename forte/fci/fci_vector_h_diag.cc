@@ -38,7 +38,7 @@
 #include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
 #include "fci_vector.h"
-#include "string_address.h"
+#include "binary_graph.hpp"
 
 using namespace psi;
 

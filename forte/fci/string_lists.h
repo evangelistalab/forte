@@ -34,9 +34,8 @@
 #include <map>
 #include <vector>
 #include <utility>
-#include <bitset>
 
-#include "string_address.h"
+#include "binary_graph.hpp"
 #include "helpers/timer.h"
 #include "sparse_ci/determinant.h"
 
@@ -87,7 +86,7 @@ struct H3StringSubstitution {
         : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
 };
 
-typedef std::shared_ptr<StringAddress> GraphPtr;
+typedef std::shared_ptr<BinaryGraph> GraphPtr;
 typedef std::vector<std::vector<String>> StringList;
 typedef std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>> VOList;
 typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
@@ -263,7 +262,7 @@ class StringLists {
 
     void startup();
 
-    StringList make_strings(int ne);
+    void make_strings(GraphPtr graph, StringList& list);
 
     void make_pair_list(NNList& list);
 
@@ -274,7 +273,7 @@ class StringLists {
     void make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
-    void make_1h_list(int ne, GraphPtr graph_1h, H1List& list);
+    void make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list);
     /// Make 2-hole lists (I -> a_p a_q I = sgn J)
     void make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list);
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)

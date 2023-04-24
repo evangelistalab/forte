@@ -23,6 +23,8 @@ bool test_string(std::vector<bool>& string, int nones, int nbits);
 bool test_string(bool* string, int nones, int nbits);
 #endif
 
+#include "sparse_ci/determinant.h"
+
 namespace forte {
 
 /**
@@ -99,7 +101,37 @@ class BinaryGraph {
         return add;
     }
 
+    size_t rel_add(const String& string) {
+#ifdef BIN_GRAPH_TEST
+        test_string(string, nones_, nbits_);
+#endif
+        size_t add = 0;
+        int k = 0; // number of 1s
+        int h = 0; // irrep of the string
+        for (int n = 0; (k < nones_) and (n < nbits_); ++n) {
+            if (string[n]) {
+                ++k;
+                h ^= symmetry[n];
+                add += weight0[n][h][k];
+            }
+        }
+        return add;
+    }
+
     int sym(bool* string) {
+#ifdef BIN_GRAPH_TEST
+        test_string(string, nones_, nbits_);
+#endif
+        int h = 0;
+        for (int n = 0; n < nbits_; ++n) {
+            if (string[n]) {
+                h = h ^ symmetry[n];
+            }
+        }
+        return h;
+    }
+
+    int sym(const String& string) {
 #ifdef BIN_GRAPH_TEST
         test_string(string, nones_, nbits_);
 #endif

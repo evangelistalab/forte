@@ -57,32 +57,34 @@ void StringLists::startup() {
         cmopi_int.push_back(cmopi_[h]);
     }
 
-    for (size_t h = 0; h < nirrep_; h++) {
+    for (int h = 0; h < nirrep_; h++) {
         fill_n(back_inserter(cmo_sym_), cmopi_int[h], h); // insert h irrep_size[h] times
     }
 
     // Allocate the alfa and beta graphs
-    pair_graph_ = std::make_shared<StringAddress>(ncmo_, 2, cmopi_int);
+    alfa_graph_ = std::make_shared<BinaryGraph>(ncmo_, na_, cmopi_int);
+    beta_graph_ = std::make_shared<BinaryGraph>(ncmo_, nb_, cmopi_int);
+    pair_graph_ = std::make_shared<BinaryGraph>(ncmo_, 2, cmopi_int);
 
     if (na_ >= 1) {
-        alfa_graph_1h_ = std::make_shared<StringAddress>(ncmo_, na_ - 1, cmopi_int);
+        alfa_graph_1h_ = std::make_shared<BinaryGraph>(ncmo_, na_ - 1, cmopi_int);
     }
     if (nb_ >= 1) {
-        beta_graph_1h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 1, cmopi_int);
+        beta_graph_1h_ = std::make_shared<BinaryGraph>(ncmo_, nb_ - 1, cmopi_int);
     }
 
     if (na_ >= 2) {
-        alfa_graph_2h_ = std::make_shared<StringAddress>(ncmo_, na_ - 2, cmopi_int);
+        alfa_graph_2h_ = std::make_shared<BinaryGraph>(ncmo_, na_ - 2, cmopi_int);
     }
     if (nb_ >= 2) {
-        beta_graph_2h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 2, cmopi_int);
+        beta_graph_2h_ = std::make_shared<BinaryGraph>(ncmo_, nb_ - 2, cmopi_int);
     }
 
     if (na_ >= 3) {
-        alfa_graph_3h_ = std::make_shared<StringAddress>(ncmo_, na_ - 3, cmopi_int);
+        alfa_graph_3h_ = std::make_shared<BinaryGraph>(ncmo_, na_ - 3, cmopi_int);
     }
     if (nb_ >= 3) {
-        beta_graph_3h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 3, cmopi_int);
+        beta_graph_3h_ = std::make_shared<BinaryGraph>(ncmo_, nb_ - 3, cmopi_int);
     }
 
     nas_ = 0;
@@ -105,8 +107,8 @@ void StringLists::startup() {
 
     {
         local_timer t;
-        alfa_list_ = make_strings(na_);
-        beta_list_ = make_strings(nb_);
+        make_strings(alfa_graph_, alfa_list_);
+        make_strings(beta_graph_, beta_list_);
         str_list_timer += t.get();
     }
     {
@@ -218,25 +220,52 @@ void StringLists::make_pair_list(NNList& list) {
     //
 }
 
-StringList StringLists::make_strings(int ne) {
-    // number of orbitals and electrons
-    const int n = ncmo_;
-    const int k = ne;
-    auto list = StringList(nirrep_, std::vector<String>());
+void StringLists::make_strings(GraphPtr graph, StringList& list) {
+    for (int h = 0; h < nirrep_; ++h) {
+        list.push_back(std::vector<String>(graph->strpi(h)));
+    }
+
+    int n = graph->nbits();
+    int k = graph->nones();
+
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         String I;
+        const auto Ibegin = I.begin();
+        const auto Iend =
+            I.begin() + n; // this is important, otherwise we would generate all permutations
         // Generate the strings 1111100000
         //                      { k }{n-k}
-        I.zero();
+        for (int i = 0; i < n - k; ++i)
+            I[i] = false; // 0
         for (int i = std::max(0, n - k); i < n; ++i)
-            I[i] = true;
+            I[i] = true; // 1
         do {
-            size_t sym_I = I.symmetry(cmo_sym_);
-            list[sym_I].push_back(I);
-        } while (std::next_permutation(I.begin(), I.begin() + n));
+            size_t sym_I = graph->sym(I);
+            size_t add_I = graph->rel_add(I);
+            list[sym_I][add_I] = I;
+        } while (std::next_permutation(Ibegin, Iend)); // I.begin(), I.begin() + n));
     }
-    return list;
 }
+
+// StringList StringLists::make_strings(int ne) {
+//     // number of orbitals and electrons
+//     const int n = ncmo_;
+//     const int k = ne;
+//     auto list = StringList(nirrep_, std::vector<String>());
+//     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
+//         String I;
+//         // Generate the strings 1111100000
+//         //                      { k }{n-k}
+//         I.zero();
+//         for (int i = std::max(0, n - k); i < n; ++i)
+//             I[i] = true;
+//         do {
+//             size_t sym_I = I.symmetry(cmo_sym_);
+//             list[sym_I].push_back(I);
+//         } while (std::next_permutation(I.begin(), I.begin() + n));
+//     }
+//     return list;
+// }
 
 short StringLists::string_sign(const bool* I, size_t n) {
     short sign = 1;
