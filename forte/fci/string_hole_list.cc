@@ -53,44 +53,41 @@ std::vector<H1StringSubstitution>& StringLists::get_beta_1h_list(int h_I, size_t
     return beta_1h_list[I_tuple];
 }
 
-void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) {
-    int n = graph->nbits();
-    int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
+void StringLists::make_1h_list(int ne, GraphPtr graph_1h, H1List& list) {
+    int n = ncmo_;
+    int k = ne;
+    String I, J;
 
-    if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (int h_I = 0; h_I < nirrep_; ++h_I) {
-            // Generate the strings 1111100000
-            //                      { k }{n-k}
-            for (int i = 0; i < n - k; ++i)
-                I[i] = false; // 0
-            for (int i = std::max(0, n - k); i < n; ++i)
-                I[i] = true; // 1
-            do {
-                if (graph->sym(I) == h_I) {
-                    size_t add_I = graph->rel_add(I);
-                    for (size_t p = 0; p < ncmo_; ++p) {
-                        // copy I to J
-                        for (int i = 0; i < n; ++i)
-                            J[i] = I[i];
-                        if (J[p]) {
-                            J[p] = false;
-                            short sign = string_sign(J, p);
+    // if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
+    //     for (int h_I = 0; h_I < nirrep_; ++h_I) {
+    //         // Generate the strings 1111100000
+    //         //                      { k }{n-k}
+    //         I.zero();
+    //         for (int i = std::max(0, n - k); i < n; ++i)
+    //             I[i] = true; // 1
+    //         do {
 
-                            int h_J = graph_1h->sym(J);
-                            size_t add_J = graph_1h->rel_add(J);
+    //             if (I.symmetry(cmo_sym_) == h_I) {
+    //                 size_t add_I = graph->rel_add(I);
+    //                 for (size_t p = 0; p < ncmo_; ++p) {
+    //                     // copy I to J
+    //                     for (int i = 0; i < n; ++i)
+    //                         J[i] = I[i];
+    //                     if (J[p]) {
+    //                         J[p] = false;
+    //                         short sign = string_sign(J, p);
 
-                            std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
-                            list[I_tuple].push_back(H1StringSubstitution(sign, p, add_I));
-                        }
-                    }
-                }
-            } while (std::next_permutation(I, I + n));
-        }
-    } // End loop over h
-    delete[] J;
-    delete[] I;
+    //                         int h_J = graph_1h->sym(J);
+    //                         size_t add_J = graph_1h->rel_add(J);
+
+    //                         std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+    //                         list[I_tuple].push_back(H1StringSubstitution(sign, p, add_I));
+    //                     }
+    //                 }
+    //             }
+    //         } while (std::next_permutation(I, I + n));
+    //     }
+    // } // End loop over h
 }
 
 std::vector<H2StringSubstitution>& StringLists::get_alfa_2h_list(int h_I, size_t add_I, int h_J) {

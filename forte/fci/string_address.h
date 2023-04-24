@@ -43,17 +43,22 @@ namespace forte {
 class StringAddress {
   public:
     // ==> Class Constructor and Destructor <==
-    StringAddress(const std::vector<int>& irrep_size);
+    StringAddress(const std::vector<std::vector<String>>& strings);
     ~StringAddress() = default;
 
     // ==> Class Interface <==
-    size_t rel_add(const String& s);
+    void push_back(const String& s, int irrep);
+    size_t add(const String& s);
+    size_t rel_add(bool* b);
     int sym(const String& s) const;
+    int sym(bool* b);
     size_t strpi(int h) const;
+    // size_t nstr() const;
 
   private:
     // ==> Class Data <==
-    std::vector<int> symmetry_; // symmetry of each orbital
+    int nirrep_;                // number of irreps
+    size_t nstr_;               // number of strings
     std::vector<size_t> strpi_; // number of strings in each irrep
     std::unordered_map<String, std::pair<int32_t, int32_t>, String::Hash> address_;
 };

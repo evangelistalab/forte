@@ -217,9 +217,9 @@ void export_Determinant(py::module& m) {
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
     py::class_<StringAddress>(m, "StringAddress")
-        .def(py::init<const std::vector<int>&>())
-        .def("rel_add", &StringAddress::rel_add)
-        .def("sym", &StringAddress::sym, "Return the symmetry of string")
+        .def(py::init<const std::vector<std::vector<String>>&>())
+        .def("rel_add", &StringAddress::add)
+        // .def("sym", &StringAddress::sym, "Return the symmetry of string")
         .def("strpi", &StringAddress::strpi, "Return the number of strings per irrep");
 
     py::class_<SparseOperator>(m, "SparseOperator")

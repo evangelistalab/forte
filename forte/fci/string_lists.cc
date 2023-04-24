@@ -27,6 +27,7 @@
  */
 
 #include <algorithm>
+#include <numeric>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -40,50 +41,48 @@ namespace forte {
 StringLists::StringLists(RequiredLists required_lists, psi::Dimension cmopi,
                          std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo, size_t na,
                          size_t nb, int print)
-    : required_lists_(required_lists), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo),
-      na_(na), nb_(nb), print_(print) {
+    : required_lists_(required_lists), nirrep_(cmopi.n()), ncmo_(cmopi.sum()), cmopi_(cmopi),
+      cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo), na_(na), nb_(nb), print_(print) {
     startup();
 }
 
 void StringLists::startup() {
-    nirrep_ = cmopi_.n();
-    ncmo_ = cmopi_.sum();
-
     cmopi_offset_.push_back(0);
     for (int h = 1; h < nirrep_; ++h) {
         cmopi_offset_.push_back(cmopi_offset_[h - 1] + cmopi_[h - 1]);
     }
 
     std::vector<int> cmopi_int;
-
     for (int h = 0; h < nirrep_; ++h) {
         cmopi_int.push_back(cmopi_[h]);
     }
 
+    for (size_t h = 0; h < nirrep_; h++) {
+        fill_n(back_inserter(cmo_sym_), cmopi_int[h], h); // insert h irrep_size[h] times
+    }
+
     // Allocate the alfa and beta graphs
-    alfa_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_, cmopi_int));
-    beta_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_, cmopi_int));
-    pair_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, 2, cmopi_int));
+    pair_graph_ = std::make_shared<StringAddress>(ncmo_, 2, cmopi_int);
 
     if (na_ >= 1) {
-        alfa_graph_1h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 1, cmopi_int));
+        alfa_graph_1h_ = std::make_shared<StringAddress>(ncmo_, na_ - 1, cmopi_int);
     }
     if (nb_ >= 1) {
-        beta_graph_1h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 1, cmopi_int));
+        beta_graph_1h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 1, cmopi_int);
     }
 
     if (na_ >= 2) {
-        alfa_graph_2h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 2, cmopi_int));
+        alfa_graph_2h_ = std::make_shared<StringAddress>(ncmo_, na_ - 2, cmopi_int);
     }
     if (nb_ >= 2) {
-        beta_graph_2h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 2, cmopi_int));
+        beta_graph_2h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 2, cmopi_int);
     }
 
     if (na_ >= 3) {
-        alfa_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 3, cmopi_int));
+        alfa_graph_3h_ = std::make_shared<StringAddress>(ncmo_, na_ - 3, cmopi_int);
     }
     if (nb_ >= 3) {
-        beta_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 3, cmopi_int));
+        beta_graph_3h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 3, cmopi_int);
     }
 
     nas_ = 0;
@@ -106,8 +105,8 @@ void StringLists::startup() {
 
     {
         local_timer t;
-        make_strings(alfa_graph_, alfa_list_);
-        make_strings(beta_graph_, beta_list_);
+        alfa_list_ = make_strings(na_);
+        beta_list_ = make_strings(nb_);
         str_list_timer += t.get();
     }
     {
@@ -166,12 +165,12 @@ void StringLists::startup() {
         outfile->Printf("\n  Number of beta electrons      = %zu", nb_);
         outfile->Printf("\n  Number of alpha strings       = %zu", nas_);
         outfile->Printf("\n  Number of beta strings        = %zu", nbs_);
-        if (na_ >= 3) {
-            outfile->Printf("\n  Number of alpha strings (N-3) = %zu", alfa_graph_3h_->nstr());
-        }
-        if (nb_ >= 3) {
-            outfile->Printf("\n  Number of beta strings (N-3)  = %zu", beta_graph_3h_->nstr());
-        }
+        // if (na_ >= 3) {
+        //     outfile->Printf("\n  Number of alpha strings (N-3) = %zu", alfa_graph_3h_->nstr());
+        // }
+        // if (nb_ >= 3) {
+        //     outfile->Printf("\n  Number of beta strings (N-3)  = %zu", beta_graph_3h_->nstr());
+        // }
         outfile->Printf("\n  Timing for strings        = %10.3f s", str_list_timer);
         outfile->Printf("\n  Timing for NN strings     = %10.3f s", nn_list_timer);
         outfile->Printf("\n  Timing for VO strings     = %10.3f s", vo_list_timer);
@@ -219,37 +218,24 @@ void StringLists::make_pair_list(NNList& list) {
     //
 }
 
-void StringLists::make_strings(GraphPtr graph, StringList& list) {
-    for (int h = 0; h < nirrep_; ++h) {
-        list.push_back(std::vector<std::bitset<Determinant::nbits_half>>(graph->strpi(h)));
-    }
-
-    int n = graph->nbits();
-    int k = graph->nones();
-
+StringList StringLists::make_strings(int ne) {
+    // number of orbitals and electrons
+    const int n = ncmo_;
+    const int k = ne;
+    auto list = StringList(nirrep_, std::vector<String>());
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        bool* I = new bool[n];
-        std::bitset<Determinant::nbits_half> I_bs(n);
-
+        String I;
         // Generate the strings 1111100000
         //                      { k }{n-k}
-        for (int i = 0; i < n - k; ++i)
-            I[i] = false; // 0
+        I.zero();
         for (int i = std::max(0, n - k); i < n; ++i)
-            I[i] = true; // 1
+            I[i] = true;
         do {
-            size_t sym_I = graph->sym(I);
-            size_t add_I = graph->rel_add(I);
-            // copy I to J
-            for (int i = 0; i < n; ++i)
-                I_bs[i] = I[i];
-
-            list[sym_I][add_I] = I_bs;
-
-        } while (std::next_permutation(I, I + n));
-
-        delete[] I;
+            size_t sym_I = I.symmetry(cmo_sym_);
+            list[sym_I].push_back(I);
+        } while (std::next_permutation(I.begin(), I.begin() + n));
     }
+    return list;
 }
 
 short StringLists::string_sign(const bool* I, size_t n) {
@@ -268,82 +254,4 @@ void StringLists::print_string(bool* I, size_t n) {
     }
 }
 
-///*
-// #ifdef PRINT_COMBINATIONS
-//     cout << "\n p = " << p << " q = " << q;
-//     cout << "\n b = ";
-//     for ( int i = 0 ; i < n ; ++i){
-//       cout << b[i] ? 1 : 0;
-//     }
-//     cout << "\n I = ";
-//     for ( int i = 0 ; i < ncmos; ++i){
-//       cout << I[i] ? 1 : 0;
-//     }
-//     cout << "  Add(I) = " << graph->address(I);
-//     cout << "\n J = ";
-//     for ( int i = 0 ; i < ncmos; ++i){
-//       cout << J[i] ? 1 : 0;
-//     }
-//     cout << "  Add(J) = " <<  graph->address(J);
-//     cout << "\n sign = " << sign << endl
-// #endif
-// #include "Memory/Memory.h"
-
-//  int n = graph->nbits() - 2 - (p==q ? 0 : 1);
-//  int k = graph->nones() - 2;
-//  bool* b = new bool[n];
-//  bool* I = new bool[ncmos];
-//  bool* J = new bool[ncmos];
-
-//  for(int h = 0; h < nirrep_; ++h){
-//    // Create the key to the map
-//    std::tuple<size_t,size_t,size_t,size_t,int> pqrs_pair(p,q,r,s,h);
-
-//    for(int i = 0; i < ncmos; ++i) I[i] = J[i] = false; // 0
-
-//    I[q] = true;
-//    I[s] = true;
-
-//    J[s] = false;
-//    J[r] = true;
-//    J[q] = false;
-//    J[p] = true;
-
-//    // Generate the strings 1111100000
-//    //                      { k }{n-k}
-//    for(int i = 0; i < n - k; ++i) b[i] = false; // 0
-//    for(int i = n - k; i < n; ++i) b[i] = true;  // 1
-//    do{
-//      int k = 0;
-//      short sign = 1;
-//      for (int i = 0; i < min(p,q) ; ++i){
-//        J[i] = I[i] = b[k];
-//        k++;
-//      }
-//      for (int i = min(p,q) + 1; i < max(p,q) ; ++i){
-//        J[i] = I[i] = b[k];
-//        if(b[k])
-//          sign *= -1;
-//        k++;
-//      }
-//      for (int i = max(p,q) + 1; i < ncmos ; ++i){
-//        J[i] = I[i] = b[k];
-//        k++;
-//      }
-//      I[p] = 0;
-//      I[q] = 1;
-//      J[q] = 0;
-//      J[p] = 1;
-
-//      // Add the sting only of irrep(I) is h
-//      if(graph->sym(I) == h)
-//        list[pq_pair].push_back(StringSubstitution(sign,graph->rel_add(I),graph->rel_add(J)));
-//  } while (std::next_permutation(b,b+n));
-
-//  }  // End loop over h
-
-//  delete[] J;
-//  delete[] I;
-//  delete[] b;
-//*/
 } // namespace forte

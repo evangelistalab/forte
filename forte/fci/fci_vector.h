@@ -43,7 +43,7 @@ class Vector;
 
 namespace forte {
 class ActiveSpaceIntegrals;
-class BinaryGraph;
+class StringAddress;
 class MOSpaceInfo;
 class StringLists;
 
@@ -146,9 +146,9 @@ class FCIVector {
     std::shared_ptr<StringLists> lists_;
     // Graphs
     /// The alpha string graph
-    std::shared_ptr<BinaryGraph> alfa_graph_;
+    std::shared_ptr<StringAddress> alfa_graph_;
     /// The beta string graph
-    std::shared_ptr<BinaryGraph> beta_graph_;
+    std::shared_ptr<StringAddress> beta_graph_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
     std::vector<double> opdm_a_;

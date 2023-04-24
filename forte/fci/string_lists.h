@@ -36,7 +36,7 @@
 #include <utility>
 #include <bitset>
 
-#include "binary_graph.hpp"
+#include "string_address.h"
 #include "helpers/timer.h"
 #include "sparse_ci/determinant.h"
 
@@ -87,8 +87,8 @@ struct H3StringSubstitution {
         : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
 };
 
-typedef std::shared_ptr<BinaryGraph> GraphPtr;
-typedef std::vector<std::vector<std::bitset<Determinant::nbits_half>>> StringList;
+typedef std::shared_ptr<StringAddress> GraphPtr;
+typedef std::vector<std::vector<String>> StringList;
 typedef std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>> VOList;
 typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
     VOVOList;
@@ -144,12 +144,8 @@ class StringLists {
     GraphPtr alfa_graph_3h() { return alfa_graph_3h_; }
     GraphPtr beta_graph_3h() { return beta_graph_3h_; }
 
-    std::bitset<Determinant::nbits_half> alfa_str(size_t h, size_t I) const {
-        return alfa_list_[h][I];
-    }
-    std::bitset<Determinant::nbits_half> beta_str(size_t h, size_t I) const {
-        return beta_list_[h][I];
-    }
+    String alfa_str(size_t h, size_t I) const { return alfa_list_[h][I]; }
+    String beta_str(size_t h, size_t I) const { return beta_list_[h][I]; }
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q, int h);
@@ -186,11 +182,13 @@ class StringLists {
     /// Flag for the type of list required
     RequiredLists required_lists_;
     /// The number of irreps
-    int nirrep_;
+    const int nirrep_;
     /// The total number of correlated molecular orbitals
-    size_t ncmo_;
+    const size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
     psi::Dimension cmopi_;
+    /// The symmetry of the correlated molecular orbitals
+    std::vector<int> cmo_sym_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
     /// The mapping between correlated molecular orbitals and all orbitals
@@ -265,7 +263,7 @@ class StringLists {
 
     void startup();
 
-    void make_strings(GraphPtr graph, StringList& list);
+    StringList make_strings(int ne);
 
     void make_pair_list(NNList& list);
 
@@ -276,7 +274,7 @@ class StringLists {
     void make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
-    void make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list);
+    void make_1h_list(int ne, GraphPtr graph_1h, H1List& list);
     /// Make 2-hole lists (I -> a_p a_q I = sgn J)
     void make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list);
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
