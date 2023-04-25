@@ -93,8 +93,7 @@ psi::SharedMatrix FCISolver::ci_wave_functions() {
 
 void FCISolver::startup() {
     // Create the string lists
-    lists_ = std::shared_ptr<StringLists>(
-        new StringLists(twoSubstituitionVVOO, active_dim_, core_mo_, active_mo_, na_, nb_, print_));
+    lists_ = std::make_shared<StringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h) {
@@ -430,8 +429,7 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     //    Determinant det(nact);
     enforce_spin_completeness(bsdets, nact);
     if (bsdets.size() > num_dets) {
-        bool* Ia = new bool[nact];
-        bool* Ib = new bool[nact];
+        String Ia, Ib;
         size_t nnew_dets = bsdets.size() - num_dets;
         if (print_ > 0) {
             outfile->Printf("\n  Initial guess space is incomplete.\n  Adding "
@@ -451,8 +449,6 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
             std::tuple<double, size_t, size_t, size_t> d(0.0, h, add_Ia, add_Ib);
             dets.push_back(d);
         }
-        delete[] Ia;
-        delete[] Ib;
     }
     num_dets = dets.size();
 

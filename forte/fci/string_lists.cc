@@ -38,11 +38,10 @@ using namespace psi;
 
 namespace forte {
 
-StringLists::StringLists(RequiredLists required_lists, psi::Dimension cmopi,
-                         std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo, size_t na,
-                         size_t nb, int print)
-    : required_lists_(required_lists), nirrep_(cmopi.n()), ncmo_(cmopi.sum()), cmopi_(cmopi),
-      cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo), na_(na), nb_(nb), print_(print) {
+StringLists::StringLists(psi::Dimension cmopi, std::vector<size_t> core_mo,
+                         std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print)
+    : nirrep_(cmopi.n()), ncmo_(cmopi.sum()), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo),
+      fomo_to_mo_(core_mo), na_(na), nb_(nb), print_(print) {
     startup();
 }
 
@@ -146,17 +145,18 @@ void StringLists::startup() {
         make_3h_list(beta_graph_, beta_graph_3h_, beta_3h_list);
         h3_list_timer += t.get();
     }
-    if (required_lists_ == twoSubstituitionVVOO) {
+    {
         local_timer t;
         make_vvoo_list(alfa_graph_, alfa_vvoo_list);
         make_vvoo_list(beta_graph_, beta_vvoo_list);
         vvoo_list_timer += t.get();
-    } else if (required_lists_ == twoSubstituitionVOVO) {
-        local_timer t;
-        make_vovo_list(alfa_graph_, alfa_vovo_list);
-        make_vovo_list(beta_graph_, beta_vovo_list);
-        vovo_list_timer += t.get();
     }
+    //  else if (required_lists_ == twoSubstituitionVOVO) {
+    //     local_timer t;
+    //     make_vovo_list(alfa_graph_, alfa_vovo_list);
+    //     make_vovo_list(beta_graph_, beta_vovo_list);
+    //     vovo_list_timer += t.get();
+    // }
 
     double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer +
                         vvoo_list_timer + vovo_list_timer;
@@ -178,7 +178,7 @@ void StringLists::startup() {
         outfile->Printf("\n  Timing for VO strings     = %10.3f s", vo_list_timer);
         outfile->Printf("\n  Timing for OO strings     = %10.3f s", oo_list_timer);
         outfile->Printf("\n  Timing for VVOO strings   = %10.3f s", vvoo_list_timer);
-        outfile->Printf("\n  Timing for VOVO strings   = %10.3f s", vovo_list_timer);
+        // outfile->Printf("\n  Timing for VOVO strings   = %10.3f s", vovo_list_timer);
         outfile->Printf("\n  Timing for 1-hole strings = %10.3f s", h1_list_timer);
         outfile->Printf("\n  Timing for 2-hole strings = %10.3f s", h2_list_timer);
         outfile->Printf("\n  Timing for 3-hole strings = %10.3f s", h3_list_timer);
@@ -220,8 +220,8 @@ void StringLists::make_strings(GraphPtr graph, StringList& list) {
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         String I;
-        const auto Ibegin = I.begin();
-        const auto Iend =
+        const auto I_begin = I.begin();
+        const auto I_end =
             I.begin() + n; // this is important, otherwise we would generate all permutations
         // Generate the strings 1111100000
         //                      { k }{n-k}
@@ -233,7 +233,7 @@ void StringLists::make_strings(GraphPtr graph, StringList& list) {
             size_t sym_I = graph->sym(I);
             size_t add_I = graph->rel_add(I);
             list[sym_I][add_I] = I;
-        } while (std::next_permutation(Ibegin, Iend)); // I.begin(), I.begin() + n));
+        } while (std::next_permutation(I_begin, I_end));
     }
 }
 
@@ -256,21 +256,5 @@ void StringLists::make_strings(GraphPtr graph, StringList& list) {
 //     }
 //     return list;
 // }
-
-short StringLists::string_sign(const bool* I, size_t n) {
-    short sign = 1;
-    for (size_t i = 0; i < n; ++i) { // This runs up to the operator before n
-        if (I[i])
-            sign *= -1;
-    }
-    return (sign);
-}
-
-void StringLists::print_string(bool* I, size_t n) {
-    // outfile->Printf();
-    for (size_t i = 0; i < n; ++i) {
-        outfile->Printf("%1d", I[i]);
-    }
-}
 
 } // namespace forte

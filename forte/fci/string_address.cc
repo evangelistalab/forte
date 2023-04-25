@@ -68,23 +68,7 @@ size_t StringAddress::add(const String& s) {
     return it->second.first;
 }
 
-// size_t StringAddress::rel_add(bool* b) {
-//     tmp_.zero();
-//     for (int i = 0; i < nbits_; i++) {
-//         tmp_.set_bit(i, b[i]);
-//     }
-//     return add(tmp_);
-// }
-
 // int StringAddress::sym(const String& s) const { return s.symmetry(symmetry_); }
-
-// int StringAddress::sym(bool* b) {
-//     tmp_.zero();
-//     for (int i = 0; i < nbits_; i++) {
-//         tmp_.set_bit(i, b[i]);
-//     }
-//     return tmp_.symmetry(symmetry_);
-// }
 
 size_t StringAddress::strpi(int h) const { return strpi_[h]; }
 

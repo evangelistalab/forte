@@ -91,17 +91,22 @@ void StringLists::make_vo_list(GraphPtr graph, VOList& list) {
 void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
     int n = graph->nbits() - 1 - (p == q ? 0 : 1);
     int k = graph->nones() - 1;
-    String b, I, J;
+    std::vector<int8_t> b(n); // vector<int8_t> is fast to generate the permutations
+    String I, J;
+    auto b_begin = b.begin();
+    auto b_end = b.begin() + n;
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
             std::tuple<size_t, size_t, int> pq_pair(p, q, h);
+
             // Generate the strings 1111100000
             //                      { k }{n-k}
             for (int i = 0; i < n - k; ++i)
                 b[i] = false; // 0
             for (int i = std::max(0, n - k); i < n; ++i)
                 b[i] = true; // 1
+
             do {
                 int k = 0;
                 short sign = 1;
@@ -128,7 +133,7 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
                 if (graph->sym(I) == h)
                     list[pq_pair].push_back(
                         StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
-            } while (std::next_permutation(b.begin(), b.begin() + n));
+            } while (std::next_permutation(b_begin, b_end));
 
         } // End loop over h
     }

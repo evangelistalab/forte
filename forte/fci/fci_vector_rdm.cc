@@ -570,8 +570,7 @@ void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
 }
 
 void FCIVector::rdm_test() {
-    bool* Ia = new bool[ncmo_];
-    bool* Ib = new bool[ncmo_];
+    String Ia, Ib;
 
     // Generate the strings 1111100000
     //                      { k }{n-k}
@@ -612,8 +611,8 @@ void FCIVector::rdm_test() {
                 dets_map[d] = num_det;
                 num_det++;
             }
-        } while (std::next_permutation(Ib, Ib + ncmo_));
-    } while (std::next_permutation(Ia, Ia + ncmo_));
+        } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo_));
+    } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo_));
 
     Determinant I; // <- xsize (no_);
 
@@ -921,8 +920,6 @@ void FCIVector::rdm_test() {
         psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         outfile->Printf("\n    BBBBBB 3-RDM Error : %+e", error_3rdm_bbb);
     }
-    delete[] Ia;
-    delete[] Ib;
 }
 
 double FCIVector::compute_spin2() {

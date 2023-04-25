@@ -1,3 +1,31 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #ifndef _binary_graph_hpp_
 #define _binary_graph_hpp_
 
@@ -6,22 +34,11 @@
  *  binary_graph
  *
  *  Created by Francesco Evangelista on 3/6/09.
- *  Copyright 2009 Francesco Evangelista. All rights reserved.
  *
  */
 
 #include <iostream>
 #include <vector>
-
-//#define BIN_GRAPH_TEST
-
-#ifdef BIN_GRAPH_TEST
-#include "psi4/psi4-dec.h"
-#include "psi4/libpsi4util/PsiOutStream.h"
-
-bool test_string(std::vector<bool>& string, int nones, int nbits);
-bool test_string(bool* string, int nones, int nbits);
-#endif
 
 #include "sparse_ci/determinant.h"
 
@@ -84,27 +101,7 @@ class BinaryGraph {
         }
     }
 
-    size_t rel_add(bool* string) {
-#ifdef BIN_GRAPH_TEST
-        test_string(string, nones_, nbits_);
-#endif
-        size_t add = 0;
-        int k = 0; // number of 1s
-        int h = 0; // irrep of the string
-        for (int n = 0; (k < nones_) and (n < nbits_); ++n) {
-            if (string[n]) {
-                ++k;
-                h ^= symmetry[n];
-                add += weight0[n][h][k];
-            }
-        }
-        return add;
-    }
-
     size_t rel_add(const String& string) {
-#ifdef BIN_GRAPH_TEST
-        test_string(string, nones_, nbits_);
-#endif
         size_t add = 0;
         int k = 0; // number of 1s
         int h = 0; // irrep of the string
@@ -118,31 +115,7 @@ class BinaryGraph {
         return add;
     }
 
-    int sym(bool* string) {
-#ifdef BIN_GRAPH_TEST
-        test_string(string, nones_, nbits_);
-#endif
-        int h = 0;
-        for (int n = 0; n < nbits_; ++n) {
-            if (string[n]) {
-                h = h ^ symmetry[n];
-            }
-        }
-        return h;
-    }
-
-    int sym(const String& string) {
-#ifdef BIN_GRAPH_TEST
-        test_string(string, nones_, nbits_);
-#endif
-        int h = 0;
-        for (int n = 0; n < nbits_; ++n) {
-            if (string[n]) {
-                h = h ^ symmetry[n];
-            }
-        }
-        return h;
-    }
+    int sym(const String& string) { return string.symmetry(symmetry); }
 
     size_t nstr() {
         size_t sum = 0;

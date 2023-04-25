@@ -85,7 +85,7 @@ template <size_t N> class BitArray {
 
     class Proxy {
       public:
-        Proxy(word_t& word, size_t index) : word_(word), mask_(1ULL << index) {}
+        Proxy(word_t& word, size_t index) : word_(word), mask_(maskbit(index)) {}
 
         // conversion to bool for read access
         operator bool() const { return word_ & mask_; }
@@ -102,6 +102,7 @@ template <size_t N> class BitArray {
             return *this;
         }
 
+        // swap function
         friend void swap(Proxy a, Proxy b) {
             bool temp = static_cast<bool>(a);
             a = static_cast<bool>(b);

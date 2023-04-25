@@ -106,9 +106,6 @@ typedef std::pair<int, int> Pair;
 typedef std::vector<Pair> PairList;
 typedef std::vector<PairList> NNList;
 
-// Enum for selecting substitution lists with one or one and two substitutions
-enum RequiredLists { oneSubstituition, twoSubstituitionVVOO, twoSubstituitionVOVO };
-
 /**
  * @brief The StringLists class
  *
@@ -118,8 +115,8 @@ class StringLists {
   public:
     // ==> Constructor and Destructor <==
 
-    StringLists(RequiredLists required_lists, psi::Dimension cmopi, std::vector<size_t> core_mo,
-                std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print);
+    StringLists(psi::Dimension cmopi, std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo,
+                size_t na, size_t nb, int print);
     ~StringLists() {}
 
     // ==> Class Public Functions <==
@@ -158,10 +155,10 @@ class StringLists {
     std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I, size_t add_I, int h_J);
     std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I, size_t add_I, int h_J);
 
-    std::vector<StringSubstitution>& get_alfa_vovo_list(size_t p, size_t q, size_t r, size_t s,
-                                                        int h);
-    std::vector<StringSubstitution>& get_beta_vovo_list(size_t p, size_t q, size_t r, size_t s,
-                                                        int h);
+    // std::vector<StringSubstitution>& get_alfa_vovo_list(size_t p, size_t q, size_t r, size_t s,
+    //                                                     int h);
+    // std::vector<StringSubstitution>& get_beta_vovo_list(size_t p, size_t q, size_t r, size_t s,
+    //                                                     int h);
 
     std::vector<StringSubstitution>& get_alfa_oo_list(int pq_sym, size_t pq, int h);
     std::vector<StringSubstitution>& get_beta_oo_list(int pq_sym, size_t pq, int h);
@@ -178,8 +175,6 @@ class StringLists {
   private:
     // ==> Class Data <==
 
-    /// Flag for the type of list required
-    RequiredLists required_lists_;
     /// The number of irreps
     const int nirrep_;
     /// The total number of correlated molecular orbitals
@@ -279,15 +274,11 @@ class StringLists {
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
     void make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list);
 
-    void make_vovo_list(GraphPtr graph, VOVOList& list);
-    void make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r, int s);
-
     void make_vvoo_list(GraphPtr graph, VVOOList& list);
     void make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s);
 
-    short string_sign(const bool* I, size_t n);
-
-    void print_string(bool* I, size_t n);
+    // void make_vovo_list(GraphPtr graph, VOVOList& list);
+    // void make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r, int s);
 };
 } // namespace forte
 

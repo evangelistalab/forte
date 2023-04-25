@@ -49,9 +49,6 @@ class StringAddress {
     // ==> Class Interface <==
     void push_back(const String& s, int irrep);
     size_t add(const String& s);
-    // size_t rel_add(bool* b);
-    // int sym(const String& s) const;
-    // int sym(bool* b);
     size_t strpi(int h) const;
     // size_t nstr() const;
 
