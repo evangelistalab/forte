@@ -151,12 +151,6 @@ void StringLists::startup() {
         make_vvoo_list(beta_graph_, beta_vvoo_list);
         vvoo_list_timer += t.get();
     }
-    //  else if (required_lists_ == twoSubstituitionVOVO) {
-    //     local_timer t;
-    //     make_vovo_list(alfa_graph_, alfa_vovo_list);
-    //     make_vovo_list(beta_graph_, beta_vovo_list);
-    //     vovo_list_timer += t.get();
-    // }
 
     double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer +
                         vvoo_list_timer + vovo_list_timer;
@@ -237,24 +231,23 @@ void StringLists::make_strings(GraphPtr graph, StringList& list) {
     }
 }
 
-// StringList StringLists::make_strings(int ne) {
-//     // number of orbitals and electrons
-//     const int n = ncmo_;
-//     const int k = ne;
-//     auto list = StringList(nirrep_, std::vector<String>());
-//     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-//         String I;
-//         // Generate the strings 1111100000
-//         //                      { k }{n-k}
-//         I.zero();
-//         for (int i = std::max(0, n - k); i < n; ++i)
-//             I[i] = true;
-//         do {
-//             size_t sym_I = I.symmetry(cmo_sym_);
-//             list[sym_I].push_back(I);
-//         } while (std::next_permutation(I.begin(), I.begin() + n));
-//     }
-//     return list;
-// }
+StringList StringLists::make_strings(const int norb, const int ne) {
+    auto list = StringList(nirrep_, std::vector<String>());
+    if ((ne >= 0) and (ne <= norb)) {
+        String I;
+        const auto I_begin = I.begin();
+        const auto I_end = I.begin() + norb;
+        // Generate the strings 1111100000
+        //                      { k }{n-k}
+        I.zero();
+        for (int i = std::max(0, norb - ne); i < norb; ++i)
+            I[i] = true;
+        do {
+            size_t sym_I = I.symmetry(cmo_sym_);
+            list[sym_I].push_back(I);
+        } while (std::next_permutation(I_begin, I_end));
+    }
+    return list;
+}
 
 } // namespace forte

@@ -114,24 +114,22 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) 
                 if (graph->sym(I) == h_I) {
                     size_t add_I = graph->rel_add(I);
                     for (size_t q = 0; q < ncmo_; ++q) {
-                        for (size_t p = 0; p < ncmo_; ++p) {
-                            if (p != q) {
-                                if (I[q] and I[p]) {
-                                    J = I;
-                                    J[q] = false;
-                                    short q_sign = J.slater_sign(q);
-                                    J[p] = false;
-                                    short p_sign = J.slater_sign(p);
+                        for (size_t p = q + 1; p < ncmo_; ++p) {
+                            if (I[q] and I[p]) {
+                                J = I;
+                                J[q] = false;
+                                short q_sign = J.slater_sign(q);
+                                J[p] = false;
+                                short p_sign = J.slater_sign(p);
 
-                                    short sign = p_sign * q_sign;
+                                short sign = p_sign * q_sign;
 
-                                    int h_J = graph_2h->sym(J);
-                                    size_t add_J = graph_2h->rel_add(J);
+                                int h_J = graph_2h->sym(J);
+                                size_t add_J = graph_2h->rel_add(J);
 
-                                    std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
-                                    list[I_tuple].push_back(
-                                        H2StringSubstitution(sign, p, q, add_I));
-                                }
+                                std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+                                list[I_tuple].push_back(H2StringSubstitution(sign, p, q, add_I));
+                                list[I_tuple].push_back(H2StringSubstitution(-sign, q, p, add_I));
                             }
                         }
                     }
@@ -176,26 +174,34 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
 
                     // apply a_r I
                     for (size_t r = 0; r < ncmo_; ++r) {
-                        for (size_t q = 0; q < ncmo_; ++q) {
-                            for (size_t p = 0; p < ncmo_; ++p) {
-                                if ((p != q) and (p != r) and (q != r)) {
-                                    if (I[r] and I[q] and I[p]) {
-                                        J = I;
-                                        J[r] = false;
-                                        short r_sign = J.slater_sign(r);
-                                        J[q] = false;
-                                        short q_sign = J.slater_sign(q);
-                                        J[p] = false;
-                                        short p_sign = J.slater_sign(p);
-                                        short sign = p_sign * q_sign * r_sign;
+                        for (size_t q = r + 1; q < ncmo_; ++q) {
+                            for (size_t p = q + 1; p < ncmo_; ++p) {
+                                if (I[r] and I[q] and I[p]) {
+                                    J = I;
+                                    J[r] = false;
+                                    short r_sign = J.slater_sign(r);
+                                    J[q] = false;
+                                    short q_sign = J.slater_sign(q);
+                                    J[p] = false;
+                                    short p_sign = J.slater_sign(p);
+                                    short sign = p_sign * q_sign * r_sign;
 
-                                        int h_J = graph_3h->sym(J);
-                                        size_t add_J = graph_3h->rel_add(J);
+                                    int h_J = graph_3h->sym(J);
+                                    size_t add_J = graph_3h->rel_add(J);
 
-                                        std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
-                                        list[I_tuple].push_back(
-                                            H3StringSubstitution(sign, p, q, r, add_I));
-                                    }
+                                    std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(+sign, p, q, r, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(-sign, p, r, q, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(-sign, q, p, r, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(+sign, q, r, p, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(-sign, r, q, p, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(+sign, r, p, q, add_I));
                                 }
                             }
                         }

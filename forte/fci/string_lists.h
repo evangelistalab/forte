@@ -90,8 +90,6 @@ typedef std::shared_ptr<BinaryGraph> GraphPtr;
 typedef std::vector<std::vector<String>> StringList;
 typedef std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>> VOList;
 typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
-    VOVOList;
-typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
     VVOOList;
 typedef std::map<std::tuple<int, size_t, int>, std::vector<StringSubstitution>> OOList;
 
@@ -155,11 +153,6 @@ class StringLists {
     std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I, size_t add_I, int h_J);
     std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I, size_t add_I, int h_J);
 
-    // std::vector<StringSubstitution>& get_alfa_vovo_list(size_t p, size_t q, size_t r, size_t s,
-    //                                                     int h);
-    // std::vector<StringSubstitution>& get_beta_vovo_list(size_t p, size_t q, size_t r, size_t s,
-    //                                                     int h);
-
     std::vector<StringSubstitution>& get_alfa_oo_list(int pq_sym, size_t pq, int h);
     std::vector<StringSubstitution>& get_beta_oo_list(int pq_sym, size_t pq, int h);
 
@@ -218,9 +211,6 @@ class StringLists {
     /// The OO string lists
     OOList alfa_oo_list;
     OOList beta_oo_list;
-    /// The VOVO string lists
-    VOVOList alfa_vovo_list;
-    VOVOList beta_vovo_list;
     /// The VVOO string lists
     VVOOList alfa_vvoo_list;
     VVOOList beta_vvoo_list;
@@ -253,9 +243,14 @@ class StringLists {
     GraphPtr alfa_graph_3h_;
     /// The beta string graph for N - 3 electrons
     GraphPtr beta_graph_3h_;
+
     // ==> Class Functions <==
 
     void startup();
+
+    /// Make strings of for norb bits with ne of these set to 1 and (norb - ne) set to 0
+    /// @return strings sorted according to their irrep
+    StringList make_strings(const int norb, const int ne);
 
     void make_strings(GraphPtr graph, StringList& list);
 
@@ -276,9 +271,6 @@ class StringLists {
 
     void make_vvoo_list(GraphPtr graph, VVOOList& list);
     void make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s);
-
-    // void make_vovo_list(GraphPtr graph, VOVOList& list);
-    // void make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r, int s);
 };
 } // namespace forte
 
