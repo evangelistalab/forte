@@ -77,6 +77,15 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
 void dump_occupations(const std::string& filename,
                       std::unordered_map<std::string, psi::Dimension> occ_map);
 
+/**
+ * @brief Save a psi4 vector to file
+ * @param filename The file name
+ * @param vec The psi4 vector to be saved
+ * @param overwrite Overwrite if the file exists
+ */
+void save_psi4_vector(const std::string& filename, psi::Vector vec, psi::Dimension padding,
+                      bool overwrite = true);
+
 ///**
 // * @brief Save a BlockedTensor to file
 // * @param BT The BlockedTensor to be dumped to files

@@ -52,7 +52,8 @@ class SA_MRPT2 : public SA_DSRGPT {
     double compute_energy() override;
 
     /// Compute the core-core and virtual-virtual parts of the unrelaxed 1-RDM
-    void build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D1v);
+    void build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D1v,
+                              psi::SharedMatrix& D1a);
 
   protected:
     /// Start-up function called in the constructor
@@ -119,7 +120,7 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Compute CAVV contributions to the VV part of 1-RDM or/and transform multipoles
     void compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
                                  const std::vector<ambit::BlockedTensor>& oetens);
-    
+
     /// Unrelaxed 1-RDM
     ambit::BlockedTensor D1_;
 
@@ -127,6 +128,8 @@ class SA_MRPT2 : public SA_DSRGPT {
     psi::SharedMatrix build_1rdm_cc();
     /// Compute the virtual-virtual part of the unrelaxed 1-RDM
     psi::SharedMatrix build_1rdm_vv();
+    /// Compute the active-active part of the unrelaxed 1-RDM
+    psi::SharedMatrix build_1rdm_aa(bool build_aa_large_t2 = false);
 
     /// Return a vector of empty ambit Tensor objects
     std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);

@@ -37,6 +37,7 @@
 #include "integrals/integrals.h"
 
 #include "orbital-helpers/localize.h"
+#include "orbital-helpers/mrpt2_nos.h"
 #include "orbital-helpers/semi_canonicalize.h"
 
 namespace py = pybind11;
@@ -70,7 +71,19 @@ void export_Localize(py::module& m) {
         .def("get_Ub", &Localize::get_Ub, "Get Ub rotation");
 }
 
-/// export SemiCanonical class
+/// Export the MRPT2_NOS class
+void export_MRPT2NOS(py::module& m) {
+    py::class_<MRPT2_NOS>(m, "MRPT2_NOS")
+        .def(
+            py::init<std::shared_ptr<RDMs>, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+                     std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>(),
+            "rdms"_a, "scf_info"_a, "options"_a, "ints"_a, "mo_space_info"_a)
+        .def("compute_transformation", &OrbitalTransform::compute_transformation)
+        .def("get_Ua", &OrbitalTransform::get_Ua, "Get Ua rotation")
+        .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
+}
+
+/// Export the SemiCanonical class
 void export_SemiCanonical(py::module& m) {
     py::class_<SemiCanonical>(m, "SemiCanonical")
         .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,

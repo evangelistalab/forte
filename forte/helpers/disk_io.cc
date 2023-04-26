@@ -28,6 +28,7 @@
 
 #include <numeric>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sys/stat.h>
 
@@ -90,6 +91,35 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
     in.read(reinterpret_cast<char*>(&data[0]), data_size * sizeof(double));
 
     in.close();
+}
+
+void save_psi4_vector(const std::string& filename, psi::Vector vec, psi::Dimension padding,
+                      bool overwrite) {
+    // check if file exists or not
+    struct stat buf;
+    if (stat(filename.c_str(), &buf) == 0) {
+        if (overwrite) {
+            // delete the file
+            if (remove(filename.c_str()) != 0) {
+                std::string msg = "Error when deleting " + filename;
+                perror(msg.c_str());
+            }
+        } else {
+            std::string error = "File " + filename + " already exists.";
+            throw psi::PSIEXCEPTION(error.c_str());
+        }
+    }
+
+    std::ofstream file(filename);
+    file << "# Irrep  Index  Value";
+    for (int h = 0, nirrep = vec.nirrep(); h < nirrep; ++h) {
+        for (int i = 0, limit = vec.dim(h), shift = padding[h]; i < limit; ++i) {
+            file << '\n' << h << "  " << std::setw(6) << i + shift;
+            file << std::scientific << std::setprecision(12);
+            file << std::setw(20) << vec.get(h, i);
+        }
+    }
+    file.close();
 }
 
 void dump_occupations(const std::string& filename,

@@ -82,6 +82,7 @@ void export_SparseCISolver(py::module& m);
 void export_ForteCubeFile(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
+void export_MRPT2NOS(py::module& m);
 void export_SemiCanonical(py::module& m);
 
 void set_master_screen_threshold(double value);
@@ -269,6 +270,7 @@ PYBIND11_MODULE(_forte, m) {
     export_Symmetry(m);
     export_OrbitalTransform(m);
     export_Localize(m);
+    export_MRPT2NOS(m);
     export_SemiCanonical(m);
 
     export_Determinant(m);

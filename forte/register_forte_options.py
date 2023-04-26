@@ -610,6 +610,8 @@ def register_dsrg_options(options):
         "DSRG_RSC_THRESHOLD", 1.0e-12, "The treshold for terminating the recursive single commutator approximation"
     )
 
+    options.add_bool("DSRG_FNO", False, "Perform frozen-natural-orbital based on DSRG-MRPT2")
+
     options.add_str(
         "T_ALGORITHM", "DSRG", ["DSRG", "DSRG_NOSEMI", "SELEC", "ISA"],
         "The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA "
@@ -927,6 +929,12 @@ def register_old_options(options):
     options.add_double("PT2NO_OCC_THRESHOLD", 0.98, "Occupancy smaller than which is considered as active")
     options.add_double("PT2NO_VIR_THRESHOLD", 0.02, "Occupancy greater than which is considered as active")
 
+    options.add_double("PT2NO_FNO_THRESHOLD", 1.0e-5,
+                       "Occupancy smaller than which will be discarded for virtuals")
+    
+    options.add_bool("MRPT2NO_ACTV_ROTATE", False,
+                     "Rotate orbitals so that the active is in the position suggested by natural orbitals")
+    
     options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
     options.add_str("REFERENCE", "", "The SCF refernce type")

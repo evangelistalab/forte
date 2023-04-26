@@ -240,7 +240,7 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Eta1_;
     /// Two-body density cumulant
     ambit::BlockedTensor L2_;
-    /// Two-body density cumulant
+    /// Three-body density cumulant
     ambit::Tensor L3_;
 
     // ==> Fock matrix related <==

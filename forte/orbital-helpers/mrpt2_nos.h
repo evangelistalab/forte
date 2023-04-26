@@ -48,6 +48,7 @@ class MRPT2_NOS : public OrbitalTransform {
               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     void compute_transformation();
+
   private:
     /// Pointer to ForteOptions
     std::shared_ptr<ForteOptions> options_;
@@ -59,9 +60,13 @@ class MRPT2_NOS : public OrbitalTransform {
     psi::SharedMatrix D1c_;
     /// DSRG-MRPT2 1-RDM VV part
     psi::SharedMatrix D1v_;
+    /// DSRG-MRPT2 1-RDM AA part
+    psi::SharedMatrix D1a_;
 
     /// Suggest active space
-    void suggest_active_space(const psi::Vector& D1c_evals, const psi::Vector& D1v_evals);
+    std::vector<std::vector<std::pair<int, int>>>
+    suggest_active_space(const psi::Vector& D1c_evals, const psi::Vector& D1v_evals,
+                         const psi::Vector& D1a_evals);
 };
 } // namespace forte
 
