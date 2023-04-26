@@ -592,18 +592,12 @@ void FCIVector::rdm_test() {
     std::map<Determinant, size_t> dets_map;
 
     std::vector<double> C;
-    std::vector<bool> a_occ(ncmo_);
-    std::vector<bool> b_occ(ncmo_);
 
     size_t num_det = 0;
     do {
-        for (size_t i = 0; i < ncmo_; ++i)
-            a_occ[i] = Ia[i];
         do {
-            for (size_t i = 0; i < ncmo_; ++i)
-                b_occ[i] = Ib[i];
             if ((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == static_cast<int>(symmetry_)) {
-                Determinant d(a_occ, b_occ);
+                Determinant d(Ia, Ib);
                 dets.push_back(d);
                 double c = C_[alfa_graph_->sym(Ia)]->get(alfa_graph_->rel_add(Ia),
                                                          beta_graph_->rel_add(Ib));

@@ -405,24 +405,10 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
 
     // Build the full determinants
     size_t nact = active_mo_.size();
-    for (auto det : dets) {
-        double e;
-        size_t h, add_Ia, add_Ib;
-        std::tie(e, h, add_Ia, add_Ib) = det;
-        String Ia_v = lists_->alfa_str(h, add_Ia);
-        String Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
-
-        std::vector<bool> Ia(nact, false);
-        std::vector<bool> Ib(nact, false);
-
-        for (size_t i = 0; i < nact; ++i) {
-            if (Ia_v[i])
-                Ia[i] = true;
-            if (Ib_v[i])
-                Ib[i] = true;
-        }
-        Determinant bsdet(Ia, Ib);
-        bsdets.push_back(bsdet);
+    for (const auto& [e, h, add_Ia, add_Ib] : dets) {
+        String Ia = lists_->alfa_str(h, add_Ia);
+        String Ib = lists_->beta_str(h ^ symmetry_, add_Ib);
+        bsdets.emplace_back(Ia, Ib);
     }
 
     // Make sure that the spin space is complete
