@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 #include <algorithm>
+#include <cmath>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
@@ -34,8 +35,6 @@
 #include "integrals/active_space_integrals.h"
 #include "fci_vector.h"
 #include "binary_graph.hpp"
-
-// using namespace psi;
 
 namespace forte {
 
