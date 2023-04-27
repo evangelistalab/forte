@@ -41,6 +41,7 @@
 
 namespace forte {
 
+/// A structure to store the address of a determinant
 struct DetAddress {
     const int alfa_sym;
     const size_t alfa_string;
@@ -49,6 +50,7 @@ struct DetAddress {
         : alfa_sym(alfa_sym_), alfa_string(alfa_string_), beta_string(beta_string_) {}
 };
 
+/// A structure to store how tow strings are connected
 struct StringSubstitution {
     const int16_t sign;
     const size_t I;
@@ -273,13 +275,17 @@ class StringLists {
     /// @return strings sorted according to their irrep
     StringList make_strings(const int norb, const int ne);
 
+    /// Make the string list
     void make_strings(GraphPtr graph, StringList& list);
 
+    /// Make the pair list
     void make_pair_list(NNList& list);
 
+    /// Make the VO list
     void make_vo_list(GraphPtr graph, VOList& list);
     void make_vo(GraphPtr graph, VOList& list, int p, int q);
 
+    /// Make the OO list
     void make_oo_list(GraphPtr graph, OOList& list);
     void make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq);
 
@@ -290,6 +296,7 @@ class StringLists {
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
     void make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list);
 
+    /// Make the VVOO list
     void make_vvoo_list(GraphPtr graph, VVOOList& list);
     void make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s);
 };

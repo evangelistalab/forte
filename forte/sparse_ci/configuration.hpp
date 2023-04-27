@@ -30,13 +30,6 @@
 #ifndef _configuration_h_
 #define _configuration_h_
 
-// #include <string>
-// #include <vector>
-// #include <iostream>
-
-// #include "bitarray.hpp"
-// #include "bitwise_operations.hpp"
-
 namespace forte {
 
 /**
@@ -54,22 +47,12 @@ template <size_t N> class ConfigurationImpl : public BitArray<N> {
     // Since the template parent (BitArray) of this template class is not instantiated during the
     // compilation pass, here we declare all the member variables and functions inherited and used
     using BitArray<N>::nbits;
-    // using BitArray<N>::bits_per_word;
     using BitArray<N>::nwords_;
     using BitArray<N>::words_;
     using BitArray<N>::count;
     using BitArray<N>::get_bit;
     using BitArray<N>::set_bit;
     using BitArray<N>::maskbit;
-    // using BitArray<N>::whichbit;
-    // using BitArray<N>::whichword;
-    // using BitArray<N>::getword;
-    // using BitArray<N>::slater_sign;
-    // using BitArray<N>::operator|;
-    // using BitArray<N>::operator^;
-    // using BitArray<N>::operator&;
-    // using BitArray<N>::fast_a_xor_b_count;
-    // using BitArray<N>::fast_a_and_b_eq_zero;
 
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;
@@ -212,4 +195,4 @@ std::string str(const ConfigurationImpl<N>& d, int n = ConfigurationImpl<N>::nbi
 
 } // namespace forte
 
-#endif // _determinant_hpp_
+#endif // _configuration_h_

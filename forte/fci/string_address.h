@@ -38,25 +38,35 @@ namespace forte {
 
 /**
  * @brief The StringAddress class
- * This class helps compute the address of a string
+ * This class computes the address of a string
  */
 class StringAddress {
   public:
     // ==> Class Constructor and Destructor <==
+    /// @brief Default constructor
     StringAddress(const std::vector<std::vector<String>>& strings);
+    /// @brief Default destructor
     ~StringAddress() = default;
 
     // ==> Class Interface <==
+    /// @brief Add a string with a given irrep
     void push_back(const String& s, int irrep);
-    size_t add(const String& s);
+    /// @brief Return the address of a string within an irrep
+    size_t add(const String& s) const;
+    /// @brief Return the irrep of a string
+    int sym(const String& s) const;
+    /// @brief Return the number of strings in an irrep
     size_t strpi(int h) const;
-    // size_t nstr() const;
 
   private:
     // ==> Class Data <==
-    int nirrep_;                // number of irreps
-    size_t nstr_;               // number of strings
-    std::vector<size_t> strpi_; // number of strings in each irrep
+    /// number of irreps
+    int nirrep_;
+    /// number of strings
+    size_t nstr_;
+    /// number of strings in each irrep
+    std::vector<size_t> strpi_;
+    /// Map from string to address and irrep
     std::unordered_map<String, std::pair<int32_t, int32_t>, String::Hash> address_;
 };
 } // namespace forte

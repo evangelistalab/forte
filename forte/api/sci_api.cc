@@ -218,8 +218,8 @@ void export_Determinant(py::module& m) {
 
     py::class_<StringAddress>(m, "StringAddress")
         .def(py::init<const std::vector<std::vector<String>>&>())
-        .def("rel_add", &StringAddress::add)
-        // .def("sym", &StringAddress::sym, "Return the symmetry of string")
+        .def("add", &StringAddress::add, "Return a string address")
+        .def("sym", &StringAddress::sym, "Return the symmetry of string")
         .def("strpi", &StringAddress::strpi, "Return the number of strings per irrep");
 
     py::class_<SparseOperator>(m, "SparseOperator")

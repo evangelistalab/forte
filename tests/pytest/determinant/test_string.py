@@ -15,15 +15,16 @@ def test_str_constructors():
 def test_str_address():
     """Test string address"""
     print("Testing string address")
-    str_add = forte.StringAddress([2,2])
-    strings = [str("1100"),str("1010"),str("0011"),str("1111"),str("0101"),str("0001"),str("0010")]
-    addresses = [0, 0, 1, 2, 1, 2, 3]
-    for s,a in zip(strings,addresses):
-        assert str_add.rel_add(s) == a
-    for s,a in zip(strings,addresses):
-        assert str_add.rel_add(s) == a
-
-    for h, nh in zip([0,1],[3,4]):
+    strings = [[str("1100"),str("0011"),str("1111")],[],[],[str("1010"),str("0101"),str("0001"),str("0010")]]
+    str_add = forte.StringAddress(strings)
+    test_strings = [str("1100"),str("0011"),str("1111"),str("1010"),str("0101"),str("0001"),str("0010")]
+    address = [0, 1, 2, 0, 1, 2, 3]
+    symmetry = [0, 0, 0, 3, 3, 3, 3]
+    for s,a in zip(test_strings,address):
+        assert str_add.add(s) == a
+    for s,a in zip(test_strings,symmetry):
+        assert str_add.sym(s) == a        
+    for h, nh in zip([0,3],[3,4]):
         assert str_add.strpi(h) == nh
 
 if __name__ == "__main__":

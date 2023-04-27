@@ -30,13 +30,6 @@
 
 namespace forte {
 
-// StringAddress::StringAddress(const std::vector<int>& irrep_size) : strpi_(irrep_size.size(), 0) {
-//     size_t nirreps = irrep_size.size();
-//     for (size_t h = 0; h < nirreps; h++) {
-//         fill_n(back_inserter(symmetry_), irrep_size[h], h); // insert h irrep_size[h] times
-//     }
-// }
-
 StringAddress::StringAddress(const std::vector<std::vector<String>>& strings)
     : nirrep_(strings.size()), nstr_(0), strpi_(strings.size(), 0) {
     for (int h = 0; h < nirrep_; h++) {
@@ -54,28 +47,10 @@ void StringAddress::push_back(const String& s, int irrep) {
     nstr_++;
 }
 
-size_t StringAddress::add(const String& s) {
-    auto it = address_.find(s);
-    if (it == address_.end()) {
-        // int symm = s.symmetry(symmetry_);
-        // size_t add = strpi_[symm];
-        // address_[s] = std::pair(add, symm);
-        // strpi_[symm] += 1;
-        // nstr_++;
-        // return add;
-        return 0;
-    }
-    return it->second.first;
-}
+size_t StringAddress::add(const String& s) const { return address_.at(s).first; }
 
-// int StringAddress::sym(const String& s) const { return s.symmetry(symmetry_); }
+int StringAddress::sym(const String& s) const { return address_.at(s).second; }
 
 size_t StringAddress::strpi(int h) const { return strpi_[h]; }
-
-// int StringAddress::nbits() const { return nbits_; }
-
-// int StringAddress::nones() const { return nones_; }
-
-// size_t StringAddress::nstr() const { return nstr_; }
 
 } // namespace forte

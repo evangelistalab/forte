@@ -394,15 +394,14 @@ bool DavidsonLiuSolver::schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t 
                                     psi::SharedMatrix vvec, int l) {
     double** A = Amat->pointer();
     double* v = vvec->pointer()[l];
-    double dotval, normval;
 
     for (size_t i = 0; i < rows; i++) {
-        dotval = C_DDOT(cols, A[i], 1, v, 1);
+        const auto dotval = C_DDOT(cols, A[i], 1, v, 1);
         for (size_t I = 0; I < cols; I++)
             v[I] -= dotval * A[i][I];
     }
 
-    normval = std::sqrt(C_DDOT(cols, v, 1, v, 1));
+    const auto normval = std::sqrt(C_DDOT(cols, v, 1, v, 1));
     if (normval < schmidt_threshold_)
         return false;
     for (size_t I = 0; I < cols; I++)
