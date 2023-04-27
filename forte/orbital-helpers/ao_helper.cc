@@ -31,6 +31,7 @@
 #include "psi4/libmints/sieve.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 
 #include "psi4/lib3index/denominator.h"
 #include "psi4/libfock/jk.h"
@@ -105,7 +106,7 @@ void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& prim
 void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
                                                   std::shared_ptr<psi::BasisSet>& auxiliary) {
     Compute_Psuedo_Density();
-    MemDFJK jk(primary, auxiliary);
+    MemDFJK jk(primary, auxiliary, psi::Process::environment.options);
     jk.initialize();
     jk.compute();
     auto AO_Trans_Screen = std::make_shared<Matrix>("AOTrans", weights_, nbf_ * nbf_);
