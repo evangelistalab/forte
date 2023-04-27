@@ -476,9 +476,13 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         make_hamiltonian(as_ints, state_map)
 
     if active_space_solver_type == 'EXTERNAL':
-        write_external_active_space_file(as_ints, state_map, mo_space_info)
+        write_external_active_space_file(as_ints, state_map, mo_space_info, "as_ints.json")
+        msg = 'External solver: save active space integrals to as_ints.json'
+        print(msg)
+        psi4.core.print_out(msg)
+
         if not os.path.isfile('rdms.json'):
-            msg = '\n  rdms.json file not present: External solver wrote integrals to disk'
+            msg = 'External solver: rdms.json file not present, exit.'
             print(msg)
             psi4.core.print_out(msg)
             # finish the computation

@@ -223,13 +223,13 @@ class ProcedureDSRG:
             if self.options.get_str('ACTIVE_SPACE_SOLVER') == 'EXTERNAL':
                 state_map = forte.to_state_nroots_map(self.state_weights_map)
                 write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
-                print('External solver wrote DSRG dressed integrals to disk')
-                psi4.core.print_out('External solver wrote DSRG dressed integrals to disk')
+                msg = 'External solver: save DSRG dressed integrals to dsrg_ints.json'
+                print(msg)
+                psi4.core.print_out(msg)
 
                 if self.options.get_bool("EXTERNAL_PARTIAL_RELAX"):
                     active_space_solver_2 = forte.make_active_space_solver(
-                        'FCI', state_map, self.scf_info, self.mo_space_info, ints_dressed, self.options
-                    )
+                        self.options.get_str('EXT_RELAX_SOLVER'), state_map, self.scf_info, self.mo_space_info, ints_dressed, self.options)
                     active_space_solver_2.set_Uactv(self.Ua, self.Ub)
                     e_relax = list(active_space_solver_2.compute_energy().values())[0][0]
                 self.energies.append((e_dsrg, e_relax))
