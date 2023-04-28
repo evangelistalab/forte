@@ -25,22 +25,22 @@ def test_configurationt_getset():
     """Test get/set operations"""
     print("Testing configuration interface")
     c = forte.Configuration()
-    assert c.is_empt(0) == 1
-    assert c.is_docc(0) == 0
-    assert c.is_docc(7) == 0
-    assert c.is_socc(0) == 0
-    assert c.is_socc(7) == 0
+    assert c.is_empt(0) == True
+    assert c.is_docc(0) == False
+    assert c.is_docc(7) == False
+    assert c.is_socc(0) == False
+    assert c.is_socc(7) == False
     c.set_occ(7, 2)
-    assert c.is_docc(7) == 1
-    assert c.is_empt(7) == 0
-    assert c.is_socc(7) == 0
+    assert c.is_docc(7) == True
+    assert c.is_empt(7) == False
+    assert c.is_socc(7) == False
     c.set_occ(7, 1)
-    assert c.is_socc(7) == 1
-    assert c.is_docc(7) == 0
+    assert c.is_socc(7) == True
+    assert c.is_docc(7) == False
     c.set_occ(7, 0)
-    assert c.is_docc(7) == 0    
-    assert c.is_socc(7) == 0
-    assert c.is_empt(7) == 1
+    assert c.is_docc(7) == False
+    assert c.is_socc(7) == False
+    assert c.is_empt(7) == True
 
 def test_configurationt_ops():
     """Test class operators"""
