@@ -406,8 +406,8 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     // Build the full determinants
     size_t nact = active_mo_.size();
     for (const auto& [e, h, add_Ia, add_Ib] : dets) {
-        String Ia = lists_->alfa_str(h, add_Ia);
-        String Ib = lists_->beta_str(h ^ symmetry_, add_Ib);
+        auto Ia = lists_->alfa_str(h, add_Ia);
+        auto Ib = lists_->beta_str(h ^ symmetry_, add_Ib);
         bsdets.emplace_back(Ia, Ib);
     }
 
