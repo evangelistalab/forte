@@ -302,8 +302,8 @@ double FCISolver::compute_energy() {
                 if (ci_abs < 0.1)
                     continue;
 
-                String Ia_v = lists_->alfa_str(h, add_Ia);
-                String Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+                auto Ia_v = lists_->alfa_str(h, add_Ia);
+                auto Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
 
                 outfile->Printf("\n    ");
                 size_t offset = 0;
