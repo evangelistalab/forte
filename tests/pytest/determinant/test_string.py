@@ -4,20 +4,21 @@
 import forte
 import pytest
 
-def str(s):
+def make_str(s):
     return forte.str(s)
 
 def test_str_constructors():
     """Test class constructors"""
     print("Testing string interface")
-    s1 = str("1100")
+    s1 = make_str("1100")
 
 def test_str_address():
     """Test string address"""
     print("Testing string address")
-    strings = [[str("1100"),str("0011"),str("1111")],[],[],[str("1010"),str("0101"),str("0001"),str("0010")]]
+    strings = [["1100","0011","1111"],[],[],["1010","0101","0001","0010"]]
+    strings = [[make_str(s) for s in strings_irrep] for strings_irrep in strings]
     str_add = forte.StringAddress(strings)
-    test_strings = [str("1100"),str("0011"),str("1111"),str("1010"),str("0101"),str("0001"),str("0010")]
+    test_strings = [make_str(s) for s in ["1100","0011","1111","1010","0101","0001","0010"]]
     address = [0, 1, 2, 0, 1, 2, 3]
     symmetry = [0, 0, 0, 3, 3, 3, 3]
     for s,a in zip(test_strings,address):
