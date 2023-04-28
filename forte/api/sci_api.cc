@@ -36,6 +36,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
 
+#include "fci/string_address.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_state_vector.h"
@@ -51,7 +52,9 @@ namespace forte {
 
 /// Export the Determinant class
 void export_Determinant(py::module& m) {
-    py::class_<Determinant>(m, "Determinant")
+    py::class_<Determinant>(m, "Determinant",
+                            "A class for representing a Slater determinant. The number of orbitals "
+                            "is determined at compile time and is set to a multiple of 64.")
         .def(py::init<>())
         .def(py::init<const Determinant&>())
         .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
@@ -80,6 +83,7 @@ void export_Determinant(py::module& m) {
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
         .def("count_alfa", &Determinant::count_alfa, "Count the number of set alpha bits")
         .def("count_beta", &Determinant::count_beta, "Count the number of set beta bits")
+        .def("symmetry", &Determinant::symmetry, "Get the symmetry")
         .def(
             "gen_excitation",
             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
@@ -97,9 +101,93 @@ void export_Determinant(py::module& m) {
         .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
         .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
 
+    py::class_<String>(
+        m, "String",
+        "A class for representing the occupation pattern of alpha or beta spin orbitals. The "
+        "number of orbitals is determined at compile time and is set to a multiple of 64.")
+        .def(py::init<>(), "Build an empty string")
+        .def(
+            "__repr__", [](const String& a) { return str(a); },
+            "Get the string representation of the string")
+        .def(
+            "__str__", [](const String& a) { return str(a); },
+            "Get the string representation of the string")
+        .def(
+            "__eq__", [](const String& a, const String& b) { return a == b; },
+            "Check if two strings are equal")
+        .def(
+            "__lt__", [](const String& a, const String& b) { return a < b; },
+            "Check if a string is less than another string")
+        .def(
+            "__hash__", [](const String& a) { return String::Hash()(a); },
+            "Get the hash of the string");
+
+    py::class_<Configuration>(
+        m, "Configuration",
+        "A class to represent an electron configuration. A configuration stores information "
+        "about "
+        "the doubly and singly occupied orbitals. However, it does not store information about "
+        "how "
+        "the spin of singly occupied orbitals. The number of orbitals is determined at "
+        "compile time and is set to a multiple of 64.")
+        .def(py::init<>(), "Build an empty configuration")
+        .def(py::init<const Determinant&>(), "Build a configuration from a determinant")
+        .def(
+            "str", [](const Configuration& a, int n) { return str(a, n); },
+            "n"_a = Configuration::norb(),
+            "Get the string representation of the Slater determinant")
+        .def("is_empt", &Configuration::is_empt, "n"_a, "Is orbital n empty?")
+        .def("is_docc", &Configuration::is_docc, "n"_a, "Is orbital n doubly occupied?")
+        .def("is_socc", &Configuration::is_socc, "n"_a, "Is orbital n singly occupied?")
+        .def("set_occ", &Configuration::set_occ, "n"_a, "value"_a, "Set the value of an alpha bit")
+        .def("count_docc", &Configuration::count_docc,
+             "Count the number of doubly occupied orbitals")
+        .def("count_socc", &Configuration::count_socc,
+             "Count the number of singly occupied orbitals")
+        .def(
+            "get_docc_vec",
+            [](const Configuration& c) {
+                int dim = c.count_docc();
+                std::vector<int> l(dim);
+                c.get_docc_vec(Configuration::norb(), l);
+                return l;
+            },
+            "Get a list of the doubly occupied orbitals")
+        .def(
+            "get_socc_vec",
+            [](const Configuration& c) {
+                int dim = c.count_socc();
+                std::vector<int> l(dim);
+                c.get_socc_vec(Configuration::norb(), l);
+                return l;
+            },
+            "Get a list of the singly occupied orbitals")
+        .def(
+            "__repr__", [](const Configuration& a) { return str(a); },
+            "Get the string representation of the configuration")
+        .def(
+            "__str__", [](const Configuration& a) { return str(a); },
+            "Get the string representation of the configuration")
+        .def(
+            "__eq__", [](const Configuration& a, const Configuration& b) { return a == b; },
+            "Check if two configurations are equal")
+        .def(
+            "__lt__", [](const Configuration& a, const Configuration& b) { return a < b; },
+            "Check if a configuration is less than another configuration")
+        .def(
+            "__hash__", [](const Configuration& a) { return Configuration::Hash()(a); },
+            "Get the hash of the configuration");
+
     m.def(
         "det",
         [](const std::string& s) {
+            size_t nchar = s.size();
+            if (nchar > Determinant::norb()) {
+                std::string msg = "The forte.det function was passed a string of length greather "
+                                  "than the maximum determinant size: " +
+                                  std::to_string(Determinant::norb());
+                throw std::runtime_error(msg);
+            }
             Determinant d;
             int k = 0;
             for (const char cc : s) {
@@ -116,14 +204,41 @@ void export_Determinant(py::module& m) {
             }
             return d;
         },
-        "Make a determinant from a string (e.g., \'2+-0\'). 2 or x/X = doubly occupied MO, + or "
+        "Make a determinant from a string (e.g., \'2+-0\'). 2 or x/X = doubly occupied MO, "
+        "+ or "
         "a/A = alpha, - or b/B = beta. Orbital occupations are read from left to right.");
+
+    m.def(
+        "str",
+        [](const std::string& s) {
+            size_t nchar = s.size();
+            if (nchar > String::nbits) {
+                std::string msg = "The forte.str function was passed a string of length greather "
+                                  "than the maximum size: " +
+                                  std::to_string(String::nbits);
+                throw std::runtime_error(msg);
+            }
+            String str;
+            int k = 0;
+            for (const char cc : s) {
+                const char c = tolower(cc);
+                if (c == '1') {
+                    str.set_bit(k, true);
+                }
+                ++k;
+            }
+            return str;
+        },
+        "Make a string from a text string (e.g., \'1001\'). 1 = occupied MO, 0 = unoccupied MO. "
+        "Orbital occupations are read from left to right.");
 
     m.def(
         "spin2", [](const Determinant& lhs, const Determinant& rhs) { return spin2(lhs, rhs); },
         "Compute a matrix element of the S^2 operator");
 
-    py::class_<DeterminantHashVec>(m, "DeterminantHashVec")
+    py::class_<DeterminantHashVec>(
+        m, "DeterminantHashVec",
+        "A vector of determinants and a hash table combined into a single object.")
         .def(py::init<>())
         .def(py::init<const std::vector<Determinant>&>())
         .def(py::init<const det_hashvec&>())
@@ -133,7 +248,14 @@ void export_Determinant(py::module& m) {
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
-    py::class_<SparseOperator>(m, "SparseOperator")
+    py::class_<StringAddress>(m, "StringAddress", "A class to compute the address of a string")
+        .def(py::init<const std::vector<std::vector<String>>&>(),
+             "Construct a StringAddress object from a list of lists of strings")
+        .def("add", &StringAddress::add, "Return the address of a string")
+        .def("sym", &StringAddress::sym, "Return the symmetry of a string")
+        .def("strpi", &StringAddress::strpi, "Return the number of strings per irrep");
+
+    py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
         .def(py::init<bool>(), "antihermitian"_a = false)
         .def("add_term",
              py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
@@ -153,7 +275,8 @@ void export_Determinant(py::module& m) {
         .def("latex", &SparseOperator::latex)
         .def("adjoint", &SparseOperator::adjoint);
 
-    py::class_<SQOperator>(m, "SQOperator")
+    py::class_<SQOperator>(m, "SQOperator",
+                           "A class to represent a string of creation/annihilation operators")
         .def(py::init<double, const Determinant&, const Determinant&>())
         .def("coefficient", &SQOperator::coefficient)
         .def("cre", &SQOperator::cre)
@@ -164,7 +287,7 @@ void export_Determinant(py::module& m) {
         .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
         .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
 
-    py::class_<StateVector>(m, "StateVector")
+    py::class_<StateVector>(m, "StateVector", "A class to represent a vector of determinants")
         .def(py::init<const det_hash<double>&>())
         .def(py::init<const StateVector&>())
         .def(
@@ -179,19 +302,22 @@ void export_Determinant(py::module& m) {
              [](StateVector& v, const Determinant& d, const double val) { v[d] = val; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
 
-    py::class_<SparseHamiltonian>(m, "SparseHamiltonian")
+    py::class_<SparseHamiltonian>(m, "SparseHamiltonian",
+                                  "A class to represent a sparse Hamiltonian")
         .def(py::init<std::shared_ptr<ActiveSpaceIntegrals>>())
         .def("compute", &SparseHamiltonian::compute)
         .def("compute_on_the_fly", &SparseHamiltonian::compute_on_the_fly)
         .def("timings", &SparseHamiltonian::timings);
 
-    py::class_<SparseExp>(m, "SparseExp")
+    py::class_<SparseExp>(m, "SparseExp", "A class to compute the exponential of a sparse operator")
         .def(py::init<>())
         .def("compute", &SparseExp::compute, "sop"_a, "state"_a, "algorithm"_a = "cached",
              "scaling_factor"_a = 1.0, "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
         .def("timings", &SparseExp::timings);
 
-    py::class_<SparseFactExp>(m, "SparseFactExp")
+    py::class_<SparseFactExp>(
+        m, "SparseFactExp",
+        "A class to compute the product exponential of a sparse operator using factorization")
         .def(py::init<bool>(), "phaseless"_a = false)
         .def("compute", &SparseFactExp::compute, "sop"_a, "state"_a, "algorithm"_a = "cached",
              "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
@@ -229,7 +355,8 @@ void export_SigmaVector(py::module& m) {
 }
 
 void export_SparseCISolver(py::module& m) {
-    py::class_<SparseCISolver, std::shared_ptr<SparseCISolver>>(m, "SparseCISolver")
+    py::class_<SparseCISolver, std::shared_ptr<SparseCISolver>>(
+        m, "SparseCISolver", "A class to represent a sparse CI solver")
         .def(py::init<>())
         .def("diagonalize_hamiltonian",
              (std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>(

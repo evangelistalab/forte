@@ -91,6 +91,18 @@ inline uint64_t ui64_find_lowest_one_bit(uint64_t x) {
 }
 
 /**
+ * @brief Bit-scan to find next set bit after position pos
+ * @param x the uint64_t integer to test
+ * @param pos the position where we should start scanning (must be less than 64)
+ * @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
+ */
+inline uint64_t ui64_find_lowest_one_bit_at_pos(uint64_t x, int pos) {
+    const uint64_t mask = uint64_t(~0) << pos; // set all bits to one and shift left
+    x &= mask;
+    return ui64_find_lowest_one_bit(x);
+}
+
+/**
  * @brief Clear the lowest bit set in a uint64_t word
  * @param x the uint64_t word
  * @return a modified version of x with the lowest bit set to 1 turned into a 0

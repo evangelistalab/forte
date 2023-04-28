@@ -82,10 +82,9 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
         int q = nn_list[pq_sym][pq].second;
 
         int n = graph->nbits() - 2;
-        bool* b = new bool[n];
-        bool* I = new bool[ncmo_];
-        bool* J = new bool[ncmo_];
-
+        String b, I, J;
+        auto b_begin = b.begin();
+        auto b_end = b.begin() + n;
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
             std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
@@ -118,12 +117,8 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
                 if (graph->sym(I) == h)
                     list[pq_pair].push_back(
                         StringSubstitution(1, graph->rel_add(I), graph->rel_add(J)));
-            } while (std::next_permutation(b, b + n));
+            } while (std::next_permutation(b_begin, b_end));
         } // End loop over h
-
-        delete[] J;
-        delete[] I;
-        delete[] b;
     }
 }
 } // namespace forte

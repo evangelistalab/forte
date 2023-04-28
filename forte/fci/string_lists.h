@@ -34,7 +34,6 @@
 #include <map>
 #include <vector>
 #include <utility>
-#include <bitset>
 
 #include "binary_graph.hpp"
 #include "helpers/timer.h"
@@ -42,73 +41,67 @@
 
 namespace forte {
 
+/// A structure to store the address of a determinant
 struct DetAddress {
-    int alfa_sym;
-    size_t alfa_string;
-    size_t beta_string;
+    const int alfa_sym;
+    const size_t alfa_string;
+    const size_t beta_string;
     DetAddress(const int& alfa_sym_, const size_t& alfa_string_, const size_t& beta_string_)
         : alfa_sym(alfa_sym_), alfa_string(alfa_string_), beta_string(beta_string_) {}
 };
 
+/// A structure to store how tow strings are connected
 struct StringSubstitution {
-    short sign;
-    size_t I;
-    size_t J;
+    const int16_t sign;
+    const size_t I;
+    const size_t J;
     StringSubstitution(const int& sign_, const size_t& I_, const size_t& J_)
         : sign(sign_), I(I_), J(J_) {}
 };
 
 /// 1-hole string substitution
 struct H1StringSubstitution {
-    short sign;
-    short p;
-    size_t J;
-    H1StringSubstitution(short sign_, short p_, size_t J_) : sign(sign_), p(p_), J(J_) {}
+    const int16_t sign;
+    const int16_t p;
+    const size_t J;
+    H1StringSubstitution(int16_t sign_, int16_t p_, size_t J_) : sign(sign_), p(p_), J(J_) {}
 };
 
 /// 2-hole string substitution
 struct H2StringSubstitution {
-    short sign;
-    short p;
-    short q;
+    const int16_t sign;
+    const int16_t p;
+    const int16_t q;
     size_t J;
-    H2StringSubstitution(short sign_, short p_, short q_, size_t J_)
+    H2StringSubstitution(int16_t sign_, int16_t p_, int16_t q_, size_t J_)
         : sign(sign_), p(p_), q(q_), J(J_) {}
 };
 
 /// 3-hole string substitution
 struct H3StringSubstitution {
-    short sign;
-    short p;
-    short q;
-    short r;
-    size_t J;
-    H3StringSubstitution(short sign_, short p_, short q_, short r_, size_t J_)
+    const int16_t sign;
+    const int16_t p;
+    const int16_t q;
+    const int16_t r;
+    const size_t J;
+    H3StringSubstitution(int16_t sign_, int16_t p_, int16_t q_, int16_t r_, size_t J_)
         : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
 };
 
-typedef std::shared_ptr<BinaryGraph> GraphPtr;
-typedef std::vector<std::vector<std::bitset<Determinant::nbits_half>>> StringList;
-typedef std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>> VOList;
-typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
-    VOVOList;
-typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
-    VVOOList;
-typedef std::map<std::tuple<int, size_t, int>, std::vector<StringSubstitution>> OOList;
+using GraphPtr = std::shared_ptr<BinaryGraph>;
+using StringList = std::vector<std::vector<String>>;
+using VOList = std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>>;
+using VVOOList =
+    std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>;
+using OOList = std::map<std::tuple<int, size_t, int>, std::vector<StringSubstitution>>;
 
-/// 1-hole list
-typedef std::map<std::tuple<int, size_t, int>, std::vector<H1StringSubstitution>> H1List;
-/// 2-hole list
-typedef std::map<std::tuple<int, size_t, int>, std::vector<H2StringSubstitution>> H2List;
-/// 3-hole list
-typedef std::map<std::tuple<int, size_t, int>, std::vector<H3StringSubstitution>> H3List;
+using H1List = std::map<std::tuple<int, size_t, int>, std::vector<H1StringSubstitution>>;
+using H2List = std::map<std::tuple<int, size_t, int>, std::vector<H2StringSubstitution>>;
+using H3List = std::map<std::tuple<int, size_t, int>, std::vector<H3StringSubstitution>>;
 
-typedef std::pair<int, int> Pair;
-typedef std::vector<Pair> PairList;
-typedef std::vector<PairList> NNList;
-
-// Enum for selecting substitution lists with one or one and two substitutions
-enum RequiredLists { oneSubstituition, twoSubstituitionVVOO, twoSubstituitionVOVO };
+using Pair = std::pair<int, int>;
+using PairList = std::vector<Pair>;
+using NNList = std::vector<PairList>;
 
 /**
  * @brief The StringLists class
@@ -119,20 +112,45 @@ class StringLists {
   public:
     // ==> Constructor and Destructor <==
 
-    StringLists(RequiredLists required_lists, psi::Dimension cmopi, std::vector<size_t> core_mo,
-                std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print);
+    /// @brief Constructor
+    /// @param cmopi number of correlated MOs per irrep
+    /// @param core_mo core MOs
+    /// @param cmo_to_mo mapping from correlated MOs to MOs
+    /// @param na number of alpha electrons
+    /// @param nb number of beta electrons
+    /// @param print print level
+    StringLists(psi::Dimension cmopi, std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo,
+                size_t na, size_t nb, int print);
+
     ~StringLists() {}
 
     // ==> Class Public Functions <==
 
+    /// @return the number of alpha electrons
     size_t na() const { return na_; }
-    int nirrep() const { return nirrep_; }
-    size_t ncmo() const { return ncmo_; }
-    std::vector<size_t> cmo_to_mo() const { return cmo_to_mo_; }
-    std::vector<size_t> fomo_to_mo() const { return fomo_to_mo_; }
-    psi::Dimension cmopi() const { return cmopi_; }
-    std::vector<size_t> cmopi_offset() const { return cmopi_offset_; }
+
+    /// @return the number of beta electrons
     size_t nb() const { return nb_; }
+
+    /// @return the number of irreps
+    int nirrep() const { return nirrep_; }
+
+    /// @return the number of correlated MOs
+    size_t ncmo() const { return ncmo_; }
+
+    /// @return the mapping from correlated MOs to MOs
+    std::vector<size_t> cmo_to_mo() const { return cmo_to_mo_; }
+
+    /// @return the mapping from frozen MOs to correlated MOs
+    std::vector<size_t> fomo_to_mo() const { return fomo_to_mo_; }
+
+    /// @return the number of correlated MOs per irrep
+    psi::Dimension cmopi() const { return cmopi_; }
+
+    /// @return the offset of correlated MOs per irrep
+    std::vector<size_t> cmopi_offset() const { return cmopi_offset_; }
+
+    /// @return the number of pairs per irrep
     size_t pairpi(int h) const { return pairpi_[h]; }
 
     GraphPtr alfa_graph() { return alfa_graph_; }
@@ -144,12 +162,8 @@ class StringLists {
     GraphPtr alfa_graph_3h() { return alfa_graph_3h_; }
     GraphPtr beta_graph_3h() { return beta_graph_3h_; }
 
-    std::bitset<Determinant::nbits_half> alfa_str(size_t h, size_t I) const {
-        return alfa_list_[h][I];
-    }
-    std::bitset<Determinant::nbits_half> beta_str(size_t h, size_t I) const {
-        return beta_list_[h][I];
-    }
+    String alfa_str(size_t h, size_t I) const { return alfa_list_[h][I]; }
+    String beta_str(size_t h, size_t I) const { return beta_list_[h][I]; }
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q, int h);
@@ -163,11 +177,6 @@ class StringLists {
     std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I, size_t add_I, int h_J);
     std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I, size_t add_I, int h_J);
 
-    std::vector<StringSubstitution>& get_alfa_vovo_list(size_t p, size_t q, size_t r, size_t s,
-                                                        int h);
-    std::vector<StringSubstitution>& get_beta_vovo_list(size_t p, size_t q, size_t r, size_t s,
-                                                        int h);
-
     std::vector<StringSubstitution>& get_alfa_oo_list(int pq_sym, size_t pq, int h);
     std::vector<StringSubstitution>& get_beta_oo_list(int pq_sym, size_t pq, int h);
 
@@ -178,19 +187,17 @@ class StringLists {
 
     Pair get_nn_list_pair(int h, int n) const { return nn_list[h][n]; }
 
-    //  size_t get_nalfa_strings() const {return nas;}
-    //  size_t get_nbeta_strings() const {return nbs;}
   private:
     // ==> Class Data <==
 
-    /// Flag for the type of list required
-    RequiredLists required_lists_;
     /// The number of irreps
-    int nirrep_;
+    const int nirrep_;
     /// The total number of correlated molecular orbitals
-    size_t ncmo_;
+    const size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
     psi::Dimension cmopi_;
+    /// The symmetry of the correlated molecular orbitals
+    std::vector<int> cmo_sym_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
     /// The mapping between correlated molecular orbitals and all orbitals
@@ -226,9 +233,6 @@ class StringLists {
     /// The OO string lists
     OOList alfa_oo_list;
     OOList beta_oo_list;
-    /// The VOVO string lists
-    VOVOList alfa_vovo_list;
-    VOVOList beta_vovo_list;
     /// The VVOO string lists
     VVOOList alfa_vvoo_list;
     VVOOList beta_vvoo_list;
@@ -261,17 +265,27 @@ class StringLists {
     GraphPtr alfa_graph_3h_;
     /// The beta string graph for N - 3 electrons
     GraphPtr beta_graph_3h_;
+
     // ==> Class Functions <==
 
+    /// Startup the class
     void startup();
 
+    /// Make strings of for norb bits with ne of these set to 1 and (norb - ne) set to 0
+    /// @return strings sorted according to their irrep
+    StringList make_strings(const int norb, const int ne);
+
+    /// Make the string list
     void make_strings(GraphPtr graph, StringList& list);
 
+    /// Make the pair list
     void make_pair_list(NNList& list);
 
+    /// Make the VO list
     void make_vo_list(GraphPtr graph, VOList& list);
     void make_vo(GraphPtr graph, VOList& list, int p, int q);
 
+    /// Make the OO list
     void make_oo_list(GraphPtr graph, OOList& list);
     void make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq);
 
@@ -282,15 +296,9 @@ class StringLists {
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
     void make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list);
 
-    void make_vovo_list(GraphPtr graph, VOVOList& list);
-    void make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r, int s);
-
+    /// Make the VVOO list
     void make_vvoo_list(GraphPtr graph, VVOOList& list);
     void make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s);
-
-    short string_sign(const bool* I, size_t n);
-
-    void print_string(bool* I, size_t n);
 };
 } // namespace forte
 
