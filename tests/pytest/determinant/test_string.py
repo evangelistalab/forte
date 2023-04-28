@@ -11,6 +11,8 @@ def test_str_constructors():
     """Test class constructors"""
     print("Testing string interface")
     s1 = make_str("1100")
+    assert str(s1) == f"|1100{'0' * (forte.Determinant.norb() - 4)}>"
+    assert repr(s1) == f"|1100{'0' * (forte.Determinant.norb() - 4)}>"    
 
 def test_str_address():
     """Test string address"""
