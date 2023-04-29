@@ -83,12 +83,6 @@ void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
     }
 }
 
-/**
- * Generate all the pairs of strings I,J connected by a^{+}_p a_q a^{+}_r a_s
- * that is: |J> = ± a^{+}_p a_q a^{+}_r a_s |I>. p,q,r, and s are absolute
- * indices.
- * assumes that p > q and r > s.
- */
 void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s) {
     // Sort pqrs
     int a[4];
@@ -124,9 +118,8 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
     int k = graph->nones() - 2;
 
     if (k >= 0 and n >= 0 and (n >= k)) {
-        bool* b = new bool[n];
-        bool* I = new bool[ncmo_];
-        bool* J = new bool[ncmo_];
+        std::vector<int8_t> b(n);
+        String I, J;
 
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
@@ -166,9 +159,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                     k++;
                 }
                 if (graph->sym(I) == h) {
-                    // Copy I to J
-                    for (int i = 0; i < static_cast<int>(ncmo_); ++i)
-                        J[i] = I[i];
+                    J = I;
                     short sign = 1;
                     // Apply a^{+}_p a^{+}_q a_s a_r to I
                     for (int i = s; i < r; ++i)
@@ -178,138 +169,18 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                     J[s] = false;
                     if (!J[q]) { // q = 0
                         J[q] = true;
-                        for (int i = 0; i < q; ++i)
-                            if (J[i])
-                                sign *= -1;
+                        sign *= J.slater_sign(q);
                         if (!J[p]) { // p = 0
                             J[p] = true;
-                            for (int i = 0; i < p; ++i)
-                                if (J[i])
-                                    sign *= -1;
-
+                            sign *= J.slater_sign(p);
                             list[pqrs_pair].push_back(
                                 StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
                         }
                     }
                 }
-            } while (std::next_permutation(b, b + n));
+            } while (std::next_permutation(b.begin(), b.end()));
         } // End loop over h
-        delete[] b;
-        delete[] I;
-        delete[] J;
     }
 }
 
-void StringLists::make_vovo_list(GraphPtr graph, VOVOList& list) {
-    // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
-        int rs_sym = pq_sym;
-        // Loop over irreps of p,r
-        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
-            int q_sym = pq_sym ^ p_sym;
-            for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
-                int s_sym = rs_sym ^ r_sym;
-                for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                    for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                        for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                            for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
-                                int p_abs = p_rel + cmopi_offset_[p_sym];
-                                int q_abs = q_rel + cmopi_offset_[q_sym];
-                                int r_abs = r_rel + cmopi_offset_[r_sym];
-                                int s_abs = s_rel + cmopi_offset_[s_sym];
-                                make_VOVO(graph, list, p_abs, q_abs, r_abs, s_abs);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Generate all the pairs of strings I,J connected by a^{+}_p a_q a^{+}_r a_s
- * that is: |J> = ± a^{+}_p a_q a^{+}_r a_s |I>. p,q,r, and s are absolute
- * indices.
- */
-void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r, int s) {
-    int n = graph->nbits();
-    int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
-
-    for (int h = 0; h < nirrep_; ++h) {
-        // Create the key to the map
-        std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
-
-        // Generate the strings 1111100000
-        //                      { k }{n-k}
-        for (int i = 0; i < n - k; ++i)
-            I[i] = false; // 0
-        for (int i = n - k; i < n; ++i)
-            I[i] = true; // 1
-        do {
-            if (graph->sym(I) == h) {
-                // Copy I to J
-                for (int i = 0; i < static_cast<int>(ncmo_); ++i)
-                    J[i] = I[i];
-
-                short sign = 1;
-                // Apply a^{+}_p a_q a^{+}_r a_s to I
-                if (J[s]) { // s = 1
-                    J[s] = false;
-                    for (int i = 0; i < s; ++i)
-                        if (J[i])
-                            sign *= -1;
-                    if (!J[r]) { // r = 0
-                        J[r] = true;
-                        for (int i = 0; i < r; ++i)
-                            if (J[i])
-                                sign *= -1;
-                        if (J[q]) { // q = 1
-                            J[q] = false;
-                            for (int i = 0; i < q; ++i)
-                                if (J[i])
-                                    sign *= -1;
-                            if (!J[p]) { // p = 0
-                                J[p] = true;
-                                for (int i = 0; i < p; ++i)
-                                    if (J[i])
-                                        sign *= -1;
-                                // Add the sting only of irrep(I) is h
-                                list[pqrs_pair].push_back(
-                                    StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
-                            }
-                        }
-                    }
-                }
-            }
-        } while (std::next_permutation(I, I + n));
-    } // End loop over h
-
-    delete[] I;
-    delete[] J;
-}
-
-/**
- * Returns a vector of tuples containing the sign,I, and J connected by a^{+}_p
- * a_q
- * that is: J = ± a^{+}_p a_q I. p and q are absolute indices.
- */
-std::vector<StringSubstitution>& StringLists::get_alfa_vovo_list(size_t p, size_t q, size_t r,
-                                                                 size_t s, int h) {
-    std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
-    return alfa_vovo_list[pqrs_pair];
-}
-
-/**
- * Returns a vector of tuples containing the sign,I, and J connected by a^{+}_p
- * a_q
- * that is: J = ± a^{+}_p a_q I. p and q are absolute indices.
- */
-std::vector<StringSubstitution>& StringLists::get_beta_vovo_list(size_t p, size_t q, size_t r,
-                                                                 size_t s, int h) {
-    std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
-    return beta_vovo_list[pqrs_pair];
-}
 } // namespace forte

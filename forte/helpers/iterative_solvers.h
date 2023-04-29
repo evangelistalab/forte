@@ -153,6 +153,9 @@ class DavidsonLiuSolver {
     void compute_residual_norm();
     /// Project out undesired roots
     void project_out_roots(psi::SharedMatrix v);
+    /// Perform the Schmidt orthogonalization (add a new vector to the subspace)
+    bool schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t cols, psi::SharedMatrix vvec,
+                     int l);
     /// Normalize the correction vectors and return the norm of the vectors before they were
     /// normalized
     std::vector<double> normalize_vectors(psi::SharedMatrix v, size_t n);

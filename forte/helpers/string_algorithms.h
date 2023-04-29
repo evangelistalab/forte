@@ -35,6 +35,7 @@
 
 namespace forte {
 
+/// Split a string into a vector of strings using a delimiter
 std::vector<std::string> split_string(const std::string& str, const std::string& delimiter);
 
 /// Convert all lower case letters in a string to the upper case

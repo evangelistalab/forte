@@ -33,6 +33,7 @@
 #include <unordered_map>
 
 #include "determinant.hpp"
+#include "configuration.hpp"
 
 namespace forte {
 
@@ -41,6 +42,7 @@ size_t constexpr Norb2 = 2 * Norb;
 
 using String = BitArray<Norb>;
 using Determinant = DeterminantImpl<Norb2>;
+using Configuration = ConfigurationImpl<Norb2>;
 
 using det_vec = std::vector<Determinant>;
 template <typename T = double>
