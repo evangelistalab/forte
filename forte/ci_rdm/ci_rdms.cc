@@ -188,12 +188,15 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
 }
 
 void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
-
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
     op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
+    compute_1rdm_op(oprdm_a, oprdm_b, op);
+}
 
+void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
+                              std::shared_ptr<DeterminantSubstitutionLists> op) {
     local_timer build;
     oprdm_a.assign(norb2_, 0.0);
     oprdm_b.assign(norb2_, 0.0);
@@ -338,7 +341,12 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
     op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->tp_s_lists(wfn_);
+    compute_2rdm_op(tprdm_aa, tprdm_ab, tprdm_bb, op);
+}
 
+void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+                              std::vector<double>& tprdm_bb,
+                              std::shared_ptr<DeterminantSubstitutionLists> op) {
     local_timer build;
 
     tprdm_aa.assign(norb4_, 0.0);
@@ -735,7 +743,6 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
 
 void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                               std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
-
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
     op->set_quiet_mode(not print_);
     op->build_strings(wfn_);

@@ -80,9 +80,9 @@ FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
 
     // setup integrals
     if (as_ints != nullptr) {
-        fci_ints_ = as_ints;
+        as_ints_ = as_ints;
     } else {
-        fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        as_ints_ = std::make_shared<ActiveSpaceIntegrals>(
             integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
             mo_space_info_->symmetry("ACTIVE"),
             mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
@@ -92,8 +92,8 @@ FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
             integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
         ambit::Tensor tei_active_bb =
             integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints_->compute_restricted_one_body_operator();
+        as_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        as_ints_->compute_restricted_one_body_operator();
     }
 }
 
@@ -108,7 +108,7 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     startup();
 
     // setup integrals
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+    as_ints_ = std::make_shared<ActiveSpaceIntegrals>(
         integral_, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
         mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
     ambit::Tensor tei_active_aa =
@@ -117,8 +117,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
         integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
     ambit::Tensor tei_active_bb =
         integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints_->compute_restricted_one_body_operator();
+    as_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    as_ints_->compute_restricted_one_body_operator();
 }
 
 FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
@@ -133,9 +133,9 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
 
     // setup integrals
     if (fci_ints != nullptr) {
-        fci_ints_ = fci_ints;
+        as_ints_ = fci_ints;
     } else {
-        fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        as_ints_ = std::make_shared<ActiveSpaceIntegrals>(
             integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
             mo_space_info_->symmetry("ACTIVE"),
             mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
@@ -145,8 +145,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
             integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
         ambit::Tensor tei_active_bb =
             integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints_->compute_restricted_one_body_operator();
+        as_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        as_ints_->compute_restricted_one_body_operator();
     }
 }
 
@@ -167,6 +167,19 @@ void FCI_MO::startup() {
     if (ipea_ != "NONE") {
         compute_orbital_extents();
     }
+
+    // form determinants
+    form_p_space();
+    det_hash_vec_ = DeterminantHashVec(determinant_);
+
+    // build sigma vector
+    auto sigma_max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
+    auto sigma_vector_type = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    if (determinant_.size() < 500 and (not options_->get_bool("FORCE_DIAG_METHOD")))
+        sigma_vector_type = SigmaVectorType::Full;
+    sigma_vector_ = make_sigma_vector(det_hash_vec_, as_ints_, sigma_max_memory, sigma_vector_type);
+
+    sparse_ci_solver_ = std::make_unique<SparseCISolver>();
 }
 
 void FCI_MO::read_options() {
@@ -197,6 +210,9 @@ void FCI_MO::read_options() {
 
     // digonalization algorithm
     diag_algorithm_ = options_->get_str("DIAG_ALGORITHM");
+
+    // number of max iterations
+    maxiter_ = options_->get_int("DL_MAXITER");
 
     // number of Irrep
     nirrep_ = mo_space_info_->nirrep();
@@ -318,9 +334,6 @@ double FCI_MO::compute_energy() {
 }
 
 std::vector<double> FCI_MO::compute_ss_energies() {
-    // form determinants
-    form_p_space();
-
     // diagonalize the CASCI Hamiltonian
     bool noHF = options_->get_bool("FCIMO_CISD_NOHF");
     if (multi_ == 1 && root_sym_ == 0 &&
@@ -530,7 +543,7 @@ void FCI_MO::form_det_cis() {
     }
 
     // add HF determinant at the end if root_sym = 0
-    if (root_sym_ == 0) {
+    if (root_sym_ == 0 && multi_ == 1 && !options_->get_bool("FCIMO_CISD_NOHF")) {
         determinant_.push_back(Determinant(string_ref, string_ref));
     }
 
@@ -617,7 +630,7 @@ void FCI_MO::form_det_cisd() {
     }
 
     // add HF determinant at the end if root_sym = 0
-    if (root_sym_ == 0) {
+    if (root_sym_ == 0 && multi_ == 1 && !options_->get_bool("FCIMO_CISD_NOHF")) {
         determinant_.push_back(Determinant(string_ref, string_ref));
     }
 
@@ -846,54 +859,42 @@ std::vector<double> FCI_MO::compute_T1_percentage() {
 
 void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
                                 std::vector<std::pair<psi::SharedVector, double>>& eigen) {
+    eigen.clear();
+    size_t det_size = p_space.size();
+
     // recompute RHF determinant
     std::vector<bool> string_ref = Form_String_Ref();
     Determinant rhf(string_ref, string_ref);
 
-    // test if RHF determinant is the last one in det
-    Determinant det_back(p_space.back());
-    if (rhf == det_back) {
-        eigen.clear();
-        size_t det_size = p_space.size();
+    // compute RHF energy
+    outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
+    outfile->Printf("\n  Recompute RHF energy ... ");
+    double Erhf = as_ints_->energy(rhf) + as_ints_->scalar_energy() + e_nuc_;
+    psi::SharedVector rhf_vec(new psi::Vector("RHF Eigen Vector", det_size + 1));
+    rhf_vec->set(det_size, 1.0);
+    eigen.push_back(std::make_pair(rhf_vec, Erhf));
+    outfile->Printf("Done.");
 
-        // compute RHF energy
-        outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
-        outfile->Printf("\n  Recompute RHF energy ... ");
-        double Erhf = fci_ints_->energy(rhf) + fci_ints_->scalar_energy() + e_nuc_;
-        psi::SharedVector rhf_vec(new psi::Vector("RHF Eigen Vector", det_size));
-        rhf_vec->set(det_size - 1, 1.0);
-        eigen.push_back(std::make_pair(rhf_vec, Erhf));
-        outfile->Printf("Done.");
+    // compute the rest of the states
+    if (nroot > 1) {
+        outfile->Printf("\n  The upcoming diagonalization excludes RHF determinant.\n");
 
-        // compute the rest of the states
-        if (nroot > 1) {
-            outfile->Printf("\n  The upcoming diagonalization excludes RHF determinant.\n");
+        int nroot_noHF = nroot - 1;
+        std::vector<std::pair<psi::SharedVector, double>> eigen_noHF;
+        Diagonalize_H(p_space, multi, nroot_noHF, eigen_noHF);
 
-            int nroot_noHF = nroot - 1;
-            vecdet p_space_noHF(p_space);
-            p_space_noHF.pop_back();
-            std::vector<std::pair<psi::SharedVector, double>> eigen_noHF;
-            Diagonalize_H(p_space_noHF, multi, nroot_noHF, eigen_noHF);
+        for (int i = 0; i < nroot_noHF; ++i) {
+            psi::SharedVector vec_noHF = eigen_noHF[i].first;
+            double Ethis = eigen_noHF[i].second;
 
-            for (int i = 0; i < nroot_noHF; ++i) {
-                psi::SharedVector vec_noHF = eigen_noHF[i].first;
-                double Ethis = eigen_noHF[i].second;
-
-                std::string name = "Root " + std::to_string(i) + " Eigen Vector";
-                psi::SharedVector vec(new psi::Vector(name, det_size));
-                for (size_t n = 0; n < det_size - 1; ++n) {
-                    vec->set(n, vec_noHF->get(n));
-                }
-
-                eigen.push_back(std::make_pair(vec, Ethis));
+            std::string name = "Root " + std::to_string(i) + " Eigen Vector";
+            psi::SharedVector vec(new psi::Vector(name, det_size + 1));
+            for (size_t n = 0; n < det_size; ++n) {
+                vec->set(n, vec_noHF->get(n));
             }
-        }
 
-    } else {
-        outfile->Printf("\n  Error: RHF determinant NOT at the end of the determinant vector.");
-        outfile->Printf("\n    Diagonalize_H_noHF only works for root_sym = 0.");
-        throw psi::PSIEXCEPTION("RHF determinant NOT at the end of determinant vector. "
-                                "Problem at Diagonalize_H_noHF of FCI_MO.");
+            eigen.push_back(std::make_pair(vec, Ethis));
+        }
     }
 }
 
@@ -907,44 +908,40 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     eigen.clear();
 
     // DL solver
-    SparseCISolver sparse_solver;
-    sparse_solver.set_e_convergence(econv_);
-    sparse_solver.set_r_convergence(rconv_);
-    sparse_solver.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
+    sparse_ci_solver_->set_e_convergence(econv_);
+    sparse_ci_solver_->set_r_convergence(rconv_);
+    sparse_ci_solver_->set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+    sparse_ci_solver_->set_maxiter_davidson(maxiter_);
+    sparse_ci_solver_->set_die_if_not_converged(die_if_not_converged_);
+    sparse_ci_solver_->set_restart(restart_);
+    sparse_ci_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     if (projected_roots_.size() != 0) {
-        sparse_solver.set_root_project(true);
-        sparse_solver.add_bad_states(projected_roots_);
+        sparse_ci_solver_->set_root_project(true);
+        sparse_ci_solver_->add_bad_states(projected_roots_);
     }
     if (initial_guess_.size() != 0) {
-        sparse_solver.set_initial_guess(initial_guess_);
+        sparse_ci_solver_->set_initial_guess(initial_guess_);
     }
     if (!quiet_) {
-        sparse_solver.set_print_details(true);
+        sparse_ci_solver_->set_print_details(true);
     }
 
     // setup eigen values and vectors
     psi::SharedMatrix evecs;
     psi::SharedVector evals;
 
-    // use determinant map
-    DeterminantHashVec detmap(p_space);
-
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
-    auto sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
-    size_t max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
-    auto sigma_vector = make_sigma_vector(detmap, as_ints_, max_memory, sigma_vector_type_);
+    sigma_vector_->set_active_space_ints(as_ints_);
     std::tie(evals, evecs) =
-        sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nroot, multi);
+        sparse_ci_solver_->diagonalize_hamiltonian(det_hash_vec_, sigma_vector_, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)
-    double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
+    double energy_offset = as_ints_->scalar_energy() + e_nuc_;
     for (int i = 0; i != nroot; ++i) {
         double value = evals->get(i);
         eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
     }
-    spin2_ = sparse_solver.spin();
+    spin2_ = sparse_ci_solver_->spin();
 
     if (!quiet_) {
         outfile->Printf("  Done. Timing %15.6f s", tdiagH.get());
@@ -1039,7 +1036,7 @@ void FCI_MO::compute_permanent_dipole() {
     for (size_t A = 0; A < nroot_; ++A) {
         std::string trans_name = std::to_string(A) + " -> " + std::to_string(A);
 
-        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, A);
+        CI_RDMS ci_rdms(as_ints_, determinant_, evecs, A, A);
         std::vector<double> opdm_a, opdm_b;
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
@@ -1158,7 +1155,7 @@ void FCI_MO::compute_transition_dipole() {
         for (size_t B = A + 1; B < nroot_; ++B) {
             std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
 
-            CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, B);
+            CI_RDMS ci_rdms(as_ints_, determinant_, evecs, A, B);
             std::vector<double> opdm_a, opdm_b;
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
@@ -1287,7 +1284,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         }
 
         // CI_RDMS for the targeted root
-        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, root_, root_);
+        CI_RDMS ci_rdms(as_ints_, determinant_, evecs, root_, root_);
 
         if (dm0_sum > 1.0e-12) {
             // compute RDMS and put into BlockedTensor format
@@ -1324,7 +1321,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
                 std::string name = generate_name(multi, i, irrep);
                 std::vector<double> dm(3, 0.0);
 
-                CI_RDMS ci_rdms(fci_ints_, p_spaces_[n], evecs, i, i);
+                CI_RDMS ci_rdms(as_ints_, p_spaces_[n], evecs, i, i);
 
                 if (dm0_sum > 1.0e-12) {
                     // compute RDMS and put into BlockedTensor format
@@ -1385,7 +1382,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         }
 
         // CI_RDMS for the targeted root
-        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, root_, root_);
+        CI_RDMS ci_rdms(as_ints_, determinant_, evecs, root_, root_);
 
         if (dm0_sum > 1.0e-12) {
             // compute RDMS and put into BlockedTensor format
@@ -1423,7 +1420,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
                 std::string name = generate_name(multi, i, irrep);
                 std::vector<double> dm(3, 0.0);
 
-                CI_RDMS ci_rdms(fci_ints_, p_spaces_[n], evecs, i, i);
+                CI_RDMS ci_rdms(as_ints_, p_spaces_[n], evecs, i, i);
 
                 if (dm0_sum > 1.0e-12) {
                     // compute RDMS and put into BlockedTensor format
@@ -1488,7 +1485,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                 double Eex = eigens_[A][j].second - eigens_[A][i].second;
                 std::vector<double> osc(3, 0.0);
 
-                CI_RDMS ci_rdms(fci_ints_, p_spaces_[A], evecs0, i, j);
+                CI_RDMS ci_rdms(as_ints_, p_spaces_[A], evecs0, i, j);
 
                 ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                 ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -1546,7 +1543,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                     double Eex = eigens_[B][j].second - eigens_[A][i].second;
                     std::vector<double> osc(3, 0.0);
 
-                    CI_RDMS ci_rdms(fci_ints_, p_space, evecs, i, j + nroots0);
+                    CI_RDMS ci_rdms(as_ints_, p_space, evecs, i, j + nroots0);
 
                     ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                     ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -1608,7 +1605,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                 double Eex = eigens_[A][j].second - eigens_[A][i].second;
                 std::vector<double> osc(3, 0.0);
 
-                CI_RDMS ci_rdms(fci_ints_, p_spaces_[A], evecs0, i, j);
+                CI_RDMS ci_rdms(as_ints_, p_spaces_[A], evecs0, i, j);
 
                 ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                 ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -1667,7 +1664,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                     double Eex = eigens_[B][j].second - eigens_[A][i].second;
                     std::vector<double> osc(3, 0.0);
 
-                    CI_RDMS ci_rdms(fci_ints_, p_space, evecs, i, j + nroots0);
+                    CI_RDMS ci_rdms(as_ints_, p_space, evecs, i, j + nroots0);
 
                     ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                     ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -2737,7 +2734,7 @@ psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::Sh
             // compute transition density
             ambit::Tensor Da = ambit::Tensor::build(CoreTensor, "Da", {nactv_, nactv_});
             ambit::Tensor Db = ambit::Tensor::build(CoreTensor, "Da", {nactv_, nactv_});
-            CI_RDMS ci_rdms(fci_ints_, p_space, civecs, M, N);
+            CI_RDMS ci_rdms(as_ints_, p_space, civecs, M, N);
             ci_rdms.compute_1rdm(Da.data(), Db.data());
 
             // compute Fock elements
@@ -2970,7 +2967,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
         // Important! need to shift root2 when two states are different
         int root2_shifted = (state2 == state_) ? root2 : nroot_ + root2;
 
-        CI_RDMS ci_rdms(fci_ints_, p_space, evecs, root1, root2_shifted);
+        CI_RDMS ci_rdms(as_ints_, p_space, evecs, root1, root2_shifted);
 
         if (rdm_level == 1) {
             ci_rdms.compute_1rdm(out[0].data(), out[1].data());
@@ -3029,7 +3026,7 @@ ambit::Tensor FCI_MO::compute_n_rdm_sf(const vecdet& p_space, psi::SharedMatrix 
     // Important! need to shift root2 when two states are different
     int root2_shifted = (state2 == state_) ? root2 : nroot_ + root2;
 
-    CI_RDMS ci_rdms(fci_ints_, p_space, evecs, root1, root2_shifted);
+    CI_RDMS ci_rdms(as_ints_, p_space, evecs, root1, root2_shifted);
 
     if (rdm_level == 1) {
         ci_rdms.compute_1rdm_sf(out.data());
@@ -3085,7 +3082,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
             read_disk_vector_double(filenames[i], out[i].data());
         }
     } else {
-        CI_RDMS ci_rdms(fci_ints_, p_space, evecs, root1, root2);
+        CI_RDMS ci_rdms(as_ints_, p_space, evecs, root1, root2);
 
         if (rdm_level == 1) {
             ci_rdms.compute_1rdm(out[0].data(), out[1].data());

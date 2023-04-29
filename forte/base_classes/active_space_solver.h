@@ -134,9 +134,7 @@ class ActiveSpaceSolver {
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
     /// @param as_ints the pointer to a set of acitve-space integrals
-    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-        as_ints_ = as_ints;
-    }
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
     void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
@@ -163,6 +161,13 @@ class ActiveSpaceSolver {
         Ua_actv_ = Ua;
         Ub_actv_ = Ub;
     }
+
+    /// Set the max number of iterations
+    void set_maxiter(int maxiter) { maxiter_ = maxiter; }
+    /// Set if die when not converged
+    void set_die_if_not_converged(bool die) { die_if_not_converged_ = die; }
+    /// Set if in restart mode
+    void set_restart(bool restart) { restart_ = restart; }
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
@@ -218,6 +223,13 @@ class ActiveSpaceSolver {
 
     /// The residual 2-norm convergence criterion
     double r_convergence_ = 1.0e-6;
+
+    /// The max number of iterations
+    int maxiter_ = 100;
+    /// Die if not converged
+    bool die_if_not_converged_ = true;
+    /// Restart mode
+    bool restart_ = false;
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;

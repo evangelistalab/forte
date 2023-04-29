@@ -57,6 +57,8 @@ class SigmaVectorDynamic : public SigmaVector {
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
+    void reset() override;
+
   protected:
     SigmaVectorMode mode_ = SigmaVectorMode::Dynamic;
     /// The number of threads
@@ -66,6 +68,7 @@ class SigmaVectorDynamic : public SigmaVector {
     size_t nmo_ = 0;
     /// Number of sigma builds
     int num_builds_ = 0;
+    /// The zero threshold for H_IJ
     double H_threshold_ = 1.0e-14;
     /// A temporary sigma vector of size N_det
     std::vector<double> temp_b_;

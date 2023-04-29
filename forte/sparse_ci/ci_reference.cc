@@ -96,7 +96,7 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
 
 CI_Reference::~CI_Reference() {}
 
-void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_reference(DeterminantHashVec& ref_space) {
     if (ref_type_ == "CAS") {
         outfile->Printf("\n  Maximum reference space size: %zu", subspace_size_);
         build_cas_reference(ref_space);
@@ -258,19 +258,21 @@ CI_Reference::gas_double_criterion() {
     return std::make_tuple(aa_criterion, bb_criterion, ab_criterion);
 }
 
-void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool include_rhf) {
+void CI_Reference::build_ci_reference(DeterminantHashVec& ref_space, bool include_rhf) {
     // Special case. If there are no active orbitals return an empty determinant
     if (nact_ == 0) {
         Determinant det;
-        ref_space.push_back(det);
+        ref_space.add(det);
+        initial_det_ = det;
         return;
     }
 
     Determinant det(get_occupation());
     outfile->Printf("\n  %s", str(det, nact_).c_str());
+    initial_det_ = det;
 
     if (include_rhf)
-        ref_space.push_back(det);
+        ref_space.add(det);
 
     if ((ref_type_ == "CIS") or (ref_type_ == "CISD")) {
         std::vector<int> aocc = det.get_alfa_occ(nact_);
@@ -291,7 +293,7 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool 
                     Determinant new_det(det);
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
-                    ref_space.push_back(new_det);
+                    ref_space.add(new_det);
                 }
             }
         }
@@ -304,7 +306,7 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool 
                     Determinant new_det(det);
                     new_det.set_beta_bit(ii, false);
                     new_det.set_beta_bit(aa, true);
-                    ref_space.push_back(new_det);
+                    ref_space.add(new_det);
                 }
             }
         }
@@ -336,7 +338,7 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool 
                             new_det.set_alfa_bit(jj, false);
                             new_det.set_alfa_bit(aa, true);
                             new_det.set_alfa_bit(bb, true);
-                            ref_space.push_back(new_det);
+                            ref_space.add(new_det);
                         }
                     }
                 }
@@ -358,7 +360,7 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool 
                             new_det.set_beta_bit(jj, false);
                             new_det.set_alfa_bit(aa, true);
                             new_det.set_beta_bit(bb, true);
-                            ref_space.push_back(new_det);
+                            ref_space.add(new_det);
                         }
                     }
                 }
@@ -380,7 +382,7 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool 
                             new_det.set_beta_bit(jj, false);
                             new_det.set_beta_bit(aa, true);
                             new_det.set_beta_bit(bb, true);
-                            ref_space.push_back(new_det);
+                            ref_space.add(new_det);
                         }
                     }
                 }
@@ -389,7 +391,7 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space, bool 
     }
 }
 
-void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_cas_reference(DeterminantHashVec& ref_space) {
     int nact = mo_space_info_->size("ACTIVE");
 
     // Get the active mos
@@ -456,7 +458,9 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
                 }
                 // Check symmetry
                 if (sym == root_sym_) {
-                    ref_space.push_back(det);
+                    ref_space.add(det);
+                    if (!ref_space.size())
+                        initial_det_ = det;
                 }
 
             } while (std::next_permutation(tmp_det_b.begin(), tmp_det_b.begin() + na));
@@ -506,7 +510,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
     outfile->Printf("\n  Reference generated from %d MOs", na);
 }
 
-void CI_Reference::build_cas_reference_full(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_cas_reference_full(DeterminantHashVec& ref_space) {
     ref_space.clear();
 
     // build alpha and beta strings
@@ -518,7 +522,9 @@ void CI_Reference::build_cas_reference_full(std::vector<Determinant>& ref_space)
         int hb = ha ^ root_sym_;
         for (size_t a = 0, a_size = a_strings[ha].size(); a < a_size; ++a) {
             for (size_t b = 0, b_size = b_strings[hb].size(); b < b_size; ++b) {
-                ref_space.emplace_back(a_strings[ha][a], b_strings[hb][b]);
+                ref_space.add(Determinant(a_strings[ha][a], b_strings[hb][b]));
+                if (!ref_space.size())
+                    initial_det_ = Determinant(a_strings[ha][a], b_strings[hb][b]);
             }
         }
     }
@@ -581,7 +587,7 @@ CI_Reference::build_occ_string_subspace(size_t norb, size_t nele, const std::vec
     return out;
 }
 
-void CI_Reference::build_doci_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_doci_reference(DeterminantHashVec& ref_space) {
     if (root_sym_ != 0) {
         outfile->Printf("\n  State must be totally symmetric for DOCI.");
         throw psi::PSIEXCEPTION("DOCI reference can only be under totally symmetric irrep.");
@@ -593,7 +599,9 @@ void CI_Reference::build_doci_reference(std::vector<Determinant>& ref_space) {
     // combine alpha and beta strings to form determinant
     for (int h = 0; h < nirrep_; ++h) {
         for (const auto& a : strings_per_irrep[h]) {
-            ref_space.emplace_back(a, a);
+            ref_space.add(Determinant(a, a));
+            if (!ref_space.size())
+                initial_det_ = Determinant(a, a);
         }
     }
 }
@@ -646,7 +654,7 @@ CI_Reference::build_gas_occ_string(const std::vector<std::vector<std::vector<boo
     return out;
 }
 
-void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_gas_single(DeterminantHashVec& ref_space) {
     // build the determinant from aufbau principle
     print_gas_scf_epsilon();
     get_gas_occupation();
@@ -791,7 +799,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         size_t max_sub_orb = 0;
 
         // Make sure only one ref is selected.
-        if (!ref_space.empty()) {
+        if (ref_space.size()) {
             break;
         }
 
@@ -864,16 +872,17 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                 }
             }
             if (e_min != 0.0) {
-                ref_space.push_back(det_min);
+                ref_space.add(det_min);
+                initial_det_ = det_min;
                 outfile->Printf("\n    Reference determinant: %s", str(det_min, nact_).c_str());
                 break;
             }
             sub_orb++;
-        } while ((sub_orb < max_sub_orb) && (ref_space.empty()));
+        } while ((sub_orb < max_sub_orb) && (ref_space.size() == 0));
     }
 }
 
-void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_gas_reference(DeterminantHashVec& ref_space) {
     print_gas_scf_epsilon();
     get_gas_occupation();
 
@@ -975,7 +984,9 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
             int hb = root_sym_ ^ ha;
             for (const auto& a : a_strings[ha]) {
                 for (const auto& b : b_strings[hb]) {
-                    ref_space.emplace_back(a, b);
+                    if (!ref_space.size())
+                        initial_det_ = Determinant(a, b);
+                    ref_space.add(Determinant(a, b));
                     n++;
                 }
             }

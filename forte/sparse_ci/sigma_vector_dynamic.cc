@@ -121,6 +121,30 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
 
 SigmaVectorDynamic::~SigmaVectorDynamic() { print_SigmaVectorDynamic_stats(); }
 
+void SigmaVectorDynamic::reset() {
+    num_builds_ = 0;
+    H_IJ_list_.clear();
+    H_IJ_list_.resize(total_space_);
+
+    size_t space_per_thread = total_space_ / num_threads_;
+    for (int t = 0; t < num_threads_; ++t) {
+        H_IJ_list_thread_limit_[t] = (t + 1) * space_per_thread;
+
+        H_IJ_aa_list_thread_start_[t] = t * space_per_thread;
+        H_IJ_aa_list_thread_end_[t] = t * space_per_thread;
+
+        H_IJ_bb_list_thread_start_[t] = t * space_per_thread;
+        H_IJ_bb_list_thread_end_[t] = t * space_per_thread;
+
+        H_IJ_abab_list_thread_start_[t] = t * space_per_thread;
+        H_IJ_abab_list_thread_end_[t] = t * space_per_thread;
+
+        first_aa_onthefly_group_[t] = t;
+        first_bb_onthefly_group_[t] = t;
+        first_abab_onthefly_group_[t] = t;
+    }
+}
+
 void SigmaVectorDynamic::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
 

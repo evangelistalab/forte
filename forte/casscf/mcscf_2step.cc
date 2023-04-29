@@ -170,19 +170,30 @@ double MCSCF_2STEP::compute_energy() {
     // set up initial guess for rotation matrix (R = 0)
     auto R = std::make_shared<psi::Vector>("R", nrot);
 
-    // convergence for final CI
-    double r_conv = options_->get_double("R_CONVERGENCE");
-    std::shared_ptr<ActiveSpaceSolver> as_solver;
+    bool no_orb_opt = (!opt_orbs_ or !nrot);
 
-    // perform a perfect initial CI
-    double e_c = diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
-                                         {print_ ? print_ : 1, e_conv_, r_conv, false, false});
+    // convergence for final CI
+    auto r_conv = options_->get_double("R_CONVERGENCE");
+    auto as_maxiter = options_->get_int("DL_MAXITER");
+
+    auto as_solver =
+        make_active_space_solver(ci_type_, to_state_nroots_map(state_weights_map_), scf_info_,
+                                 mo_space_info_, cas_grad.active_space_ints(), options_);
+    as_solver->set_print(print_);
+    as_solver->set_e_convergence(e_conv_);
+    as_solver->set_r_convergence(no_orb_opt ? r_conv : 1.0e-2);
+    as_solver->set_maxiter(no_orb_opt ? as_maxiter : 15);
+    as_solver->set_die_if_not_converged(no_orb_opt);
+
+    // initial CI and resulting RDMs
+    const auto state_energies_map = as_solver->compute_energy();
+    auto e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
     auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);
     cas_grad.evaluate(R, dG);
 
     // Case 1: if there is no orbital optimization
-    if (not opt_orbs_ or nrot == 0) {
+    if (no_orb_opt) {
         energy_ = e_c;
         pass_energy_to_psi4();
         if (der_type_ == "FIRST") {
@@ -225,14 +236,19 @@ double MCSCF_2STEP::compute_energy() {
             diis_manager.set_vector_size(R.get());
         }
 
+        // CI solver set up
+        bool restart = (ci_type_ == "FCI" or ci_type_ == "DETCI" or ci_type_ == "CAS");
+        as_solver->set_restart(restart);
+        as_solver->set_die_if_not_converged(false);
+        as_solver->set_maxiter(restart ? 15 : as_maxiter);
+
         // CI convergence criteria along the way
         double dl_e_conv = 5.0e-7;
         double dl_r_conv = 8.0e-5;
 
         // start iterations
         lbfgs_param->maxiter = micro_miniter_;
-        bool dump_wfn = ci_type_ == "DETCI";
-        bool skip_de_conv = ci_type_.find("DMRG") != std::string::npos;
+        bool skip_de_conv = (ci_type_.find("DMRG") != std::string::npos);
         std::vector<CASSCF_HISTORY> history;
 
         for (int macro = 1; macro <= maxiter_; ++macro) {
@@ -345,7 +361,7 @@ double MCSCF_2STEP::compute_energy() {
             auto fci_ints = cas_grad.active_space_ints();
             auto print_level = debug_print_ ? 5 : print_;
             e_c = diagonalize_hamiltonian(as_solver, fci_ints,
-                                          {print_level, dl_e_conv, dl_r_conv, true, dump_wfn});
+                                          {print_level, dl_e_conv, dl_r_conv, false});
             rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
         }
 
@@ -357,9 +373,9 @@ double MCSCF_2STEP::compute_energy() {
     }
 
     // perform final CI using converged orbitals
-    energy_ = diagonalize_hamiltonian(
-        as_solver, cas_grad.active_space_ints(),
-        {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+    energy_ =
+        diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
+                                {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
         auto final_orbs = options_->get_str("CASSCF_FINAL_ORBITAL");
@@ -393,7 +409,7 @@ double MCSCF_2STEP::compute_energy() {
             if (not is_single_reference()) {
                 diagonalize_hamiltonian(
                     as_solver, cas_grad.active_space_ints(),
-                    {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
+                    {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
             }
 
             // recompute gradient due to canonicalization
@@ -440,23 +456,15 @@ bool MCSCF_2STEP::is_single_reference() {
     return false;
 }
 
-double
-MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
-                                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                     const std::tuple<int, double, double, bool, bool>& params) {
-    auto state_nroots_map = to_state_nroots_map(state_weights_map_);
-    as_solver = make_active_space_solver(ci_type_, state_nroots_map, scf_info_, mo_space_info_,
-                                         fci_ints, options_);
-
-    int print;
-    double e_conv, r_conv;
-    bool read_wfn_guess, dump_wfn;
-    std::tie(print, e_conv, r_conv, read_wfn_guess, dump_wfn) = params;
-
+double MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
+                                            std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                            const std::tuple<int, double, double, bool>& params) {
+    const auto& [print, e_conv, r_conv, dump_wfn] = params;
     as_solver->set_print(print);
     as_solver->set_e_convergence(e_conv);
     as_solver->set_r_convergence(r_conv);
-    as_solver->set_read_initial_guess(read_wfn_guess);
+    as_solver->set_die_if_not_converged(false);
+    as_solver->set_active_space_integrals(fci_ints);
 
     const auto state_energies_map = as_solver->compute_energy();
 

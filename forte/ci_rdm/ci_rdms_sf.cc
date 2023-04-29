@@ -86,7 +86,11 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
     op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
+    compute_1rdm_sf_op(opdm, op);
+}
 
+void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm,
+                                 std::shared_ptr<DeterminantSubstitutionLists> op) {
     opdm.assign(norb2_, 0.0);
     timer build("Build SF 1-RDM");
 
@@ -229,7 +233,11 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
     op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->tp_s_lists(wfn_);
+    compute_2rdm_sf_op(tpdm, op);
+}
 
+void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm,
+                                 std::shared_ptr<DeterminantSubstitutionLists> op) {
     tpdm.assign(norb4_, 0.0);
     timer build("Build SF 2-RDM");
 
@@ -1163,11 +1171,308 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
     }
 }
 
+void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2) {
+    rdm1.assign(norb2_, 0.0);
+    rdm2.assign(norb4_, 0.0);
+
+    SortedStringList a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
+    SortedStringList b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
+    const std::vector<String>& sorted_bstr = b_sorted_string_list_.sorted_half_dets();
+    size_t num_bstr = sorted_bstr.size();
+    const auto& sorted_b_dets = b_sorted_string_list_.sorted_dets();
+    const auto& sorted_a_dets = a_sorted_string_list_.sorted_dets();
+    local_timer diag;
+    //*-  Diagonal Contributions  -*//
+    for (size_t I = 0; I < dim_space_; ++I) {
+        size_t Ia = b_sorted_string_list_.add(I);
+        double CIa = evecs_->get(Ia, root1_) * evecs_->get(Ia, root2_);
+        String det_a = sorted_b_dets[I].get_alfa_bits();
+        String det_b = sorted_b_dets[I].get_beta_bits();
+
+        for (size_t nda = 0; nda < na_; ++nda) {
+            size_t p = det_a.find_first_one();
+            rdm1[p * norb_ + p] += CIa;
+
+            String det_ac(det_a);
+            det_a.clear_first_one();
+            for (size_t ndaa = nda; ndaa < na_; ++ndaa) {
+                size_t q = det_ac.find_first_one();
+                // aa 2-rdm
+                rdm2[p * norb3_ + q * norb2_ + p * norb_ + q] += CIa;
+                rdm2[q * norb3_ + p * norb2_ + q * norb_ + p] += CIa;
+                rdm2[p * norb3_ + q * norb2_ + q * norb_ + p] -= CIa;
+                rdm2[q * norb3_ + p * norb2_ + p * norb_ + q] -= CIa;
+                det_ac.clear_first_one();
+            }
+
+            String det_bc(det_b);
+            for (size_t n = 0; n < nb_; ++n) {
+                size_t q = det_bc.find_first_one();
+                rdm2[p * norb3_ + q * norb2_ + p * norb_ + q] += CIa;
+                rdm2[q * norb3_ + p * norb2_ + q * norb_ + p] += CIa;
+                det_bc.clear_first_one();
+            }
+        }
+        det_a = sorted_b_dets[I].get_alfa_bits();
+        det_b = sorted_b_dets[I].get_beta_bits();
+        size_t Ib = a_sorted_string_list_.add(I);
+        double CIb = evecs_->get(Ib, root1_) * evecs_->get(Ib, root2_);
+        for (size_t ndb = 0; ndb < nb_; ++ndb) {
+            size_t p = det_b.find_first_one();
+
+            // b -1rdm
+            rdm1[p * norb_ + p] += CIb;
+            String det_bc(det_b);
+            for (size_t ndbb = ndb; ndbb < nb_; ++ndbb) {
+                size_t q = det_bc.find_first_one();
+                // bb-2rdm
+                rdm2[p * norb3_ + q * norb2_ + p * norb_ + q] += CIb;
+                rdm2[q * norb3_ + p * norb2_ + q * norb_ + p] += CIb;
+                rdm2[p * norb3_ + q * norb2_ + q * norb_ + p] -= CIb;
+                rdm2[q * norb3_ + p * norb2_ + p * norb_ + q] -= CIb;
+                det_bc.clear_first_one();
+            }
+            det_b.clear_first_one();
+        }
+    }
+    outfile->Printf("\n  Diag takes %1.6f", diag.get());
+
+    local_timer aaa;
+    //-* All Alpha RDMs *-//
+
+    // loop through all beta strings
+    for (size_t bstr = 0; bstr < num_bstr; ++bstr) {
+        const String& Ib = sorted_bstr[bstr];
+        const auto& range_I = b_sorted_string_list_.range(Ib);
+
+        String Ia;
+        String Ja;
+        size_t first_I = range_I.first;
+        size_t last_I = range_I.second;
+
+        // Double loop through determinants with same beta string
+        for (size_t I = first_I; I < last_I; ++I) {
+            Ia = sorted_b_dets[I].get_alfa_bits();
+            double CI = evecs_->get(b_sorted_string_list_.add(I), root1_);
+            for (size_t J = I + 1; J < last_I; ++J) {
+                Ja = sorted_b_dets[J].get_alfa_bits();
+                String IJa = Ia ^ Ja;
+
+                int ndiff = IJa.count();
+
+                if (ndiff == 2) {
+                    // 1-rdm
+                    String Ia_sub = Ia & IJa;
+                    u_int64_t p = Ia_sub.find_first_one();
+                    String Ja_sub = Ja & IJa;
+                    u_int64_t q = Ja_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ia.slater_sign(p, q);
+                    rdm1[p * norb_ + q] += value;
+                    rdm1[q * norb_ + p] += value;
+
+                    // 2-rdm
+                    auto Iac = Ia;
+                    Iac ^= Ia_sub;
+                    for (size_t nbit_a = 1; nbit_a < na_; nbit_a++) {
+                        uint64_t m = Iac.find_first_one();
+                        rdm2[p * norb3_ + m * norb2_ + q * norb_ + m] += value;
+                        rdm2[m * norb3_ + p * norb2_ + q * norb_ + m] -= value;
+                        rdm2[m * norb3_ + p * norb2_ + m * norb_ + q] += value;
+                        rdm2[p * norb3_ + m * norb2_ + m * norb_ + q] -= value;
+
+                        rdm2[q * norb3_ + m * norb2_ + p * norb_ + m] += value;
+                        rdm2[m * norb3_ + q * norb2_ + p * norb_ + m] -= value;
+                        rdm2[m * norb3_ + q * norb2_ + m * norb_ + p] += value;
+                        rdm2[q * norb3_ + m * norb2_ + m * norb_ + p] -= value;
+                        Iac.clear_first_one();
+                    }
+                    auto Ibc = Ib;
+                    for (size_t nidx = 0; nidx < nb_; ++nidx) {
+                        uint64_t n = Ibc.find_first_one();
+                        rdm2[p * norb3_ + n * norb2_ + q * norb_ + n] += value;
+                        rdm2[q * norb3_ + n * norb2_ + p * norb_ + n] += value;
+                        rdm2[n * norb3_ + p * norb2_ + n * norb_ + q] += value;
+                        rdm2[n * norb3_ + q * norb2_ + n * norb_ + p] += value;
+                        Ibc.clear_first_one();
+                    }
+                } else if (ndiff == 4) {
+                    // 2-rdm
+                    auto Ia_sub = Ia & IJa;
+                    uint64_t p = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t q = Ia_sub.find_first_one();
+
+                    auto Ja_sub = Ja & IJa;
+                    uint64_t r = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t s = Ja_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ia.slater_sign(p, q) * Ja.slater_sign(r, s);
+
+                    rdm2[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                    rdm2[p * norb3_ + q * norb2_ + s * norb_ + r] -= value;
+                    rdm2[q * norb3_ + p * norb2_ + r * norb_ + s] -= value;
+                    rdm2[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
+
+                    rdm2[r * norb3_ + s * norb2_ + p * norb_ + q] += value;
+                    rdm2[s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                    rdm2[r * norb3_ + s * norb2_ + q * norb_ + p] -= value;
+                    rdm2[s * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                }
+            }
+        }
+    }
+    outfile->Printf("\n all alpha takes %1.6f", aaa.get());
+
+    //- All beta RDMs -//
+    local_timer bbb;
+    // loop through all alpha strings
+    const std::vector<String>& sorted_astr = a_sorted_string_list_.sorted_half_dets();
+    size_t num_astr = sorted_astr.size();
+    for (size_t astr = 0; astr < num_astr; ++astr) {
+        const String& Ia = sorted_astr[astr];
+        const auto& range_I = a_sorted_string_list_.range(Ia);
+
+        String Ib;
+        String Jb;
+        String IJb;
+        size_t first_I = range_I.first;
+        size_t last_I = range_I.second;
+
+        // Double loop through determinants with same alpha string
+        for (size_t I = first_I; I < last_I; ++I) {
+            Ib = sorted_a_dets[I].get_beta_bits();
+            double CI = evecs_->get(a_sorted_string_list_.add(I), root1_);
+            for (size_t J = I + 1; J < last_I; ++J) {
+                Jb = sorted_a_dets[J].get_beta_bits();
+                IJb = Ib ^ Jb;
+                int ndiff = IJb.count();
+
+                if (ndiff == 2) {
+                    auto Ib_sub = Ib & IJb;
+                    uint64_t p = Ib_sub.find_first_one();
+                    auto Jb_sub = Jb & IJb;
+                    uint64_t q = Jb_sub.find_first_one();
+                    double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+
+                    double value = Csq * Ib.slater_sign(p, q);
+                    rdm1[p * norb_ + q] += value;
+                    rdm1[q * norb_ + p] += value;
+                    auto Ibc = Ib;
+                    Ibc ^= Ib_sub;
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
+                        uint64_t m = Ibc.find_first_one();
+                        rdm2[p * norb3_ + m * norb2_ + q * norb_ + m] += value;
+                        rdm2[m * norb3_ + p * norb2_ + q * norb_ + m] -= value;
+                        rdm2[m * norb3_ + p * norb2_ + m * norb_ + q] += value;
+                        rdm2[p * norb3_ + m * norb2_ + m * norb_ + q] -= value;
+
+                        rdm2[q * norb3_ + m * norb2_ + p * norb_ + m] += value;
+                        rdm2[m * norb3_ + q * norb2_ + p * norb_ + m] -= value;
+                        rdm2[m * norb3_ + q * norb2_ + m * norb_ + p] += value;
+                        rdm2[q * norb3_ + m * norb2_ + m * norb_ + p] -= value;
+                        Ibc.clear_first_one();
+                    }
+                    auto Iac = Ia;
+                    for (size_t nidx = 0; nidx < na_; ++nidx) {
+                        uint64_t n = Iac.find_first_one();
+                        rdm2[n * norb3_ + p * norb2_ + n * norb_ + q] += value;
+                        rdm2[n * norb3_ + q * norb2_ + n * norb_ + p] += value;
+                        rdm2[p * norb3_ + n * norb2_ + q * norb_ + n] += value;
+                        rdm2[q * norb3_ + n * norb2_ + p * norb_ + n] += value;
+                        Iac.clear_first_one();
+                    }
+                } else if (ndiff == 4) {
+                    auto Ib_sub = Ib & IJb;
+                    uint64_t p = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t q = Ib_sub.find_first_one();
+
+                    auto Jb_sub = Jb & IJb;
+                    uint64_t r = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t s = Jb_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ib.slater_sign(p, q) * Jb.slater_sign(r, s);
+                    rdm2[p * norb3_ + q * norb2_ + r * norb_ + s] += value;
+                    rdm2[p * norb3_ + q * norb2_ + s * norb_ + r] -= value;
+                    rdm2[q * norb3_ + p * norb2_ + r * norb_ + s] -= value;
+                    rdm2[q * norb3_ + p * norb2_ + s * norb_ + r] += value;
+
+                    rdm2[r * norb3_ + s * norb2_ + p * norb_ + q] += value;
+                    rdm2[s * norb3_ + r * norb2_ + p * norb_ + q] -= value;
+                    rdm2[r * norb3_ + s * norb2_ + q * norb_ + p] -= value;
+                    rdm2[s * norb3_ + r * norb2_ + q * norb_ + p] += value;
+                }
+            }
+        }
+    }
+    outfile->Printf("\n all beta takes %1.6f", bbb.get());
+
+    //- Alpha-Beta RDMs -//
+    local_timer mix;
+    double d2 = 0.0;
+    for (auto& detIa : sorted_astr) {
+        const auto& range_I = a_sorted_string_list_.range(detIa);
+        String detIJa_common;
+        String Ib;
+        String Jb;
+        String IJb;
+        for (auto& detJa : sorted_astr) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = detIJa_common.count();
+            if (ndiff == 2) {
+                local_timer t2;
+                auto Ia_d = detIa & detIJa_common;
+                uint64_t p = Ia_d.find_first_one();
+                auto Ja_d = detJa & detIJa_common;
+                uint64_t s = Ja_d.find_first_one();
+
+                const auto& range_J = a_sorted_string_list_.range(detJa);
+                size_t first_I = range_I.first;
+                size_t last_I = range_I.second;
+                size_t first_J = range_J.first;
+                size_t last_J = range_J.second;
+                double sign_Ips = detIa.slater_sign(p, s);
+                double sign_IJ = detIa.slater_sign(p) * detJa.slater_sign(s);
+                for (size_t I = first_I; I < last_I; ++I) {
+                    Ib = sorted_a_dets[I].get_beta_bits();
+                    double CI = evecs_->get(a_sorted_string_list_.add(I), root1_);
+                    for (size_t J = first_J; J < last_J; ++J) {
+                        Jb = sorted_a_dets[J].get_beta_bits();
+                        IJb = Ib ^ Jb;
+                        int nbdiff = IJb.count();
+                        if (nbdiff == 2) {
+                            double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                            auto Ib_sub = Ib & IJb;
+                            uint64_t q = Ib_sub.find_first_one();
+                            auto Jb_sub = Jb & IJb;
+                            uint64_t r = Jb_sub.find_first_one();
+
+                            double value =
+                                Csq * sign_Ips * Ib.slater_sign(q, r); // * ui64_slater_sign(Jb,r);
+                            rdm2[p * norb3_ + q * norb2_ + s * norb_ + r] += value;
+                            rdm2[q * norb3_ + p * norb2_ + r * norb_ + s] += value;
+                        }
+                    }
+                }
+                d2 += t2.get();
+            }
+        }
+    }
+    outfile->Printf("\n  2dif: %1.6f", d2);
+    outfile->Printf("\n all alpha/beta takes %1.6f", mix.get());
+}
+
 void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2,
                                       std::vector<double>& rdm3) {
-    rdm1.resize(norb2_, 0.0);
-    rdm2.resize(norb4_, 0.0);
-    rdm3.resize(norb6_, 0.0);
+    rdm1.assign(norb2_, 0.0);
+    rdm2.assign(norb4_, 0.0);
+    rdm3.assign(norb6_, 0.0);
 
     SortedStringList a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
     SortedStringList b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);

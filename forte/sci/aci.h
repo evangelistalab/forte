@@ -138,8 +138,6 @@ class AdaptiveCI : public SelectedCIMethod {
 
     // ==> Class data <==
 
-    /// The reference determinant
-    std::vector<Determinant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
     bool set_ints_ = false;

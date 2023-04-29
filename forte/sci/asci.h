@@ -124,8 +124,6 @@ class ASCI : public SelectedCIMethod {
     /// Storage of past roots
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
 
-    /// The reference determinant
-    std::vector<Determinant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
     /// The last iteration

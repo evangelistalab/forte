@@ -31,6 +31,7 @@
 
 #include <vector>
 
+#include "ambit/tensor.h"
 #include "psi4/libmints/dimension.h"
 
 #define CAPRICCIO_USE_DAXPY 1
@@ -84,15 +85,15 @@ class FCIVector {
     double dot(FCIVector& wfn);
     double dot(std::shared_ptr<FCIVector>& wfn);
 
-    std::vector<double>& opdm_a() { return opdm_a_; }
-    std::vector<double>& opdm_b() { return opdm_b_; }
-    std::vector<double>& tpdm_aa() { return tpdm_aa_; }
-    std::vector<double>& tpdm_ab() { return tpdm_ab_; }
-    std::vector<double>& tpdm_bb() { return tpdm_bb_; }
-    std::vector<double>& tpdm_aaa() { return tpdm_aaa_; }
-    std::vector<double>& tpdm_aab() { return tpdm_aab_; }
-    std::vector<double>& tpdm_abb() { return tpdm_abb_; }
-    std::vector<double>& tpdm_bbb() { return tpdm_bbb_; }
+    ambit::Tensor opdm_a() { return opdm_a_; }
+    ambit::Tensor opdm_b() { return opdm_b_; }
+    ambit::Tensor tpdm_aa() { return tpdm_aa_; }
+    ambit::Tensor tpdm_ab() { return tpdm_ab_; }
+    ambit::Tensor tpdm_bb() { return tpdm_bb_; }
+    ambit::Tensor tpdm_aaa() { return tpdm_aaa_; }
+    ambit::Tensor tpdm_aab() { return tpdm_aab_; }
+    ambit::Tensor tpdm_abb() { return tpdm_abb_; }
+    ambit::Tensor tpdm_bbb() { return tpdm_bbb_; }
 
     // Operations on the wave function
     void Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
@@ -151,15 +152,15 @@ class FCIVector {
     std::shared_ptr<BinaryGraph> beta_graph_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
-    std::vector<double> opdm_a_;
-    std::vector<double> opdm_b_;
-    std::vector<double> tpdm_aa_;
-    std::vector<double> tpdm_ab_;
-    std::vector<double> tpdm_bb_;
-    std::vector<double> tpdm_aaa_;
-    std::vector<double> tpdm_aab_;
-    std::vector<double> tpdm_abb_;
-    std::vector<double> tpdm_bbb_;
+    ambit::Tensor opdm_a_;
+    ambit::Tensor opdm_b_;
+    ambit::Tensor tpdm_aa_;
+    ambit::Tensor tpdm_ab_;
+    ambit::Tensor tpdm_bb_;
+    ambit::Tensor tpdm_aaa_;
+    ambit::Tensor tpdm_aab_;
+    ambit::Tensor tpdm_abb_;
+    ambit::Tensor tpdm_bbb_;
 
     // ==> Class Static Data <==
 
@@ -200,29 +201,29 @@ class FCIVector {
     // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]
 
     /// Compute the matrix elements of the same 1-RDM <a^+_{p} a_{q}>
-    void compute_1rdm(std::vector<double>& rdm, bool alfa);
+    void compute_1rdm(ambit::Tensor& rdm, bool alfa);
 
     // 2-RDM elements are stored in the format
     // <a^+_{p} a^+_{q} a_{s} a_r> -> rdm[tei_index(p,q,r,s)]
 
     /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all indices
     /// alpha or beta)
-    void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
+    void compute_2rdm_aa(ambit::Tensor& rdm, bool alfa);
     /// Compute the matrix elements of the alpha-beta 2-RDM <a^+_{pa} a^+_{qb} a_{sb} a_{ra}>
-    void compute_2rdm_ab(std::vector<double>& rdm);
+    void compute_2rdm_ab(ambit::Tensor& rdm);
 
     // 3-RDM elements are stored in the format
     // <a^+_p a^+_q a^+_r a_u a_t a_s> -> rdm[six_index(p,q,r,s,t,u)]
 
     /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a_s a_r> (with all indices
     /// alpha or beta)
-    void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
+    void compute_3rdm_aaa(ambit::Tensor& rdm, bool alfa);
     /// Compute the matrix elements of the alpha-alpha-beta 3-RDM <a^+_{pa} a^+_{qa} a^+_{rb} a_{ub}
     /// a_{ta} a_{sa}>
-    void compute_3rdm_aab(std::vector<double>& rdm);
+    void compute_3rdm_aab(ambit::Tensor& rdm);
     /// Compute the matrix elements of the alpha-beta-beta 3-RDM <a^+_{pa} a^+_{qb} a^+_{rb} a_{ub}
     /// a_{tb} a_{sa}>
-    void compute_3rdm_abb(std::vector<double>& rdm);
+    void compute_3rdm_abb(ambit::Tensor& rdm);
 };
 } // namespace forte
 

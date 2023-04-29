@@ -35,15 +35,15 @@
 #include "helpers/iterative_solvers.h"
 
 #define PRINT_VARS(msg)                                                                            \
-    //    std::vector<std::pair<size_t, std::string>> v = {{collapse_size_, "collapse_size_"},           \
-//                                                     {subspace_size_, "subspace_size_"},           \
-//                                                     {basis_size_, "basis_size_"},                 \
-//                                                     {sigma_size_, "sigma_size_"},                 \
-//                                                     {nroot_, "nroot_"}};                          \
-//    outfile->Printf("\n\n => %s <=", msg);                                                         \
-//    for (auto vk : v) {                                                                            \
-//        outfile->Printf("\n    %-30s  %zu", vk.second.c_str(), vk.first);                          \
-//    }
+    // std::vector<std::pair<size_t, std::string>> v = {{collapse_size_, "collapse_size_"},           \
+    //                                                  {subspace_size_, "subspace_size_"},           \
+    //                                                  {basis_size_, "basis_size_"},                 \
+    //                                                  {sigma_size_, "sigma_size_"},                 \
+    //                                                  {nroot_, "nroot_"}};                          \
+    // outfile->Printf("\n\n => %s <=", msg);                                                         \
+    // for (auto vk : v) {                                                                            \
+    //     outfile->Printf("\n    %-30s  %zu", vk.second.c_str(), vk.first);                          \
+    // }
 
 using namespace psi;
 
@@ -102,6 +102,10 @@ void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = 
 
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
+size_t DavidsonLiuSolver::sigma_size() const { return sigma_size_; }
+
+size_t DavidsonLiuSolver::basis_size() const { return basis_size_; }
+
 void DavidsonLiuSolver::add_guess(psi::SharedVector vec) {
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
@@ -118,6 +122,14 @@ void DavidsonLiuSolver::get_b(psi::SharedVector vec) {
     }
 }
 
+void DavidsonLiuSolver::get_b(psi::SharedVector vec, size_t i) {
+    PRINT_VARS("get_b")
+    // Give the i-th b
+    for (size_t j = 0; j < size_; ++j) {
+        vec->set(j, b_->get(i, j));
+    }
+}
+
 bool DavidsonLiuSolver::add_sigma(psi::SharedVector vec) {
     PRINT_VARS("add_sigma")
     // Place the new sigma vector at the end
@@ -126,6 +138,18 @@ bool DavidsonLiuSolver::add_sigma(psi::SharedVector vec) {
     }
     sigma_size_++;
     return (sigma_size_ < basis_size_);
+}
+
+void DavidsonLiuSolver::set_sigma(psi::SharedVector vec, size_t i) {
+    PRINT_VARS("set_sigma")
+    // Set the i-th sigma vector
+    for (size_t j = 0; j < size_; ++j) {
+        sigma_->set(j, i, vec->get(j));
+    }
+}
+
+void DavidsonLiuSolver::set_hdiag(psi::SharedVector hdiag) {
+    h_diag->copy(*hdiag);
 }
 
 void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
@@ -147,6 +171,8 @@ psi::SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
 }
 
 std::vector<double> DavidsonLiuSolver::residuals() const { return residual_; }
+
+void DavidsonLiuSolver::reset_convergence() { converged_ = 0; }
 
 SolverStatus DavidsonLiuSolver::update() {
     // If converged or exceeded the maximum number of iterations return true
@@ -319,7 +345,6 @@ bool DavidsonLiuSolver::subspace_collapse() {
     if (collapse_size_ + nroot_ > subspace_size_) { // in this case I will never
                                                     // be able to add new
                                                     // vectors
-
         // collapse vectors
         collapse_vectors();
 
@@ -519,9 +544,7 @@ void DavidsonLiuSolver::check_G_hermiticity() {
     double maxnonherm = 0.0;
     for (size_t i = 0; i < basis_size_; ++i) {
         for (size_t j = i + 1; j < basis_size_; ++j) {
-            if (i != j) {
-                maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
-            }
+            maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
         }
     }
     if (maxnonherm > nonhermitian_G_threshold_) {
@@ -531,6 +554,14 @@ void DavidsonLiuSolver::check_G_hermiticity() {
         std::string msg =
             "DavidsonLiuSolver::check_G_hermiticity(): the Hamiltonian in not Hermitian";
         throw std::runtime_error(msg);
+    } else {
+        for (size_t i = 0; i < basis_size_; ++i) {
+            for (size_t j = i + 1; j < basis_size_; ++j) {
+                auto od = 0.5 * (G->get(i, j) + G->get(j, i));
+                G->set(i, j, od);
+                G->set(j, i, od);
+            }
+        }
     }
 }
 

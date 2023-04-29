@@ -96,13 +96,22 @@ class DavidsonLiuSolver {
 
     /// Return the size of the collapse vectors
     size_t collapse_size() const;
+    /// Return the sigma size
+    size_t sigma_size() const;
+    /// Return the basis size
+    size_t basis_size() const;
 
     /// Add a guess basis vector
     void add_guess(psi::SharedVector vec);
     /// Get a basis vector
     void get_b(psi::SharedVector vec);
+    void get_b(psi::SharedVector vec, size_t i);
     /// Add a sigma vector
     bool add_sigma(psi::SharedVector vec);
+    /// Set a sigma vector
+    void set_sigma(psi::SharedVector vec, size_t i);
+    /// Set diagonal Hamiltonian elements
+    void set_hdiag(psi::SharedVector hdiag);
 
     void set_project_out(std::vector<sparse_vec> project_out);
 
@@ -124,6 +133,9 @@ class DavidsonLiuSolver {
 
     /// A vector with the 2-norm of the residual for each root
     std::vector<double> residuals() const;
+
+    /// Reset convergence
+    void reset_convergence();
 
   private:
     // ==> Class Private Functions <==
@@ -157,15 +169,15 @@ class DavidsonLiuSolver {
     /// The print level
     size_t print_level_ = 1;
     /// Eigenvalue convergence threshold
-    double e_convergence_ = 1.0e-12;
+    double e_convergence_ = 1.0e-8;
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
     /// The threshold used to discard correction vectors
     double schmidt_threshold_ = 1.0e-8;
     /// The threshold used to detect a nonhermitian Hamiltonian
-    double nonhermitian_G_threshold_ = 1.0e-12;
+    double nonhermitian_G_threshold_ = 1.0e-10;
     /// The threshold used to detect nonorthogonality among the roots
-    double orthogonality_threshold_ = 1.0e-12;
+    double orthogonality_threshold_ = 1.0e-10;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested

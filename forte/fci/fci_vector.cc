@@ -338,7 +338,9 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    auto opdm = std::make_shared<psi::Matrix>(new psi::Matrix("OPDM", active_dim, active_dim));
+    auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
+    const auto& data_a = opdm_a_.data();
+    const auto& data_b = opdm_b_.data();
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -346,10 +348,10 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
             for (int v = 0; v < active_dim[h]; v++) {
                 double gamma_uv = 0.0;
                 if (na > 0) {
-                    gamma_uv += opdm_a_[(u + offset) * ncmo_ + v + offset];
+                    gamma_uv += data_a[(u + offset) * ncmo_ + v + offset];
                 }
                 if (nb > 0) {
-                    gamma_uv += opdm_b_[(u + offset) * ncmo_ + v + offset];
+                    gamma_uv += data_b[(u + offset) * ncmo_ + v + offset];
                 }
                 opdm->set(h, u, v, gamma_uv);
             }

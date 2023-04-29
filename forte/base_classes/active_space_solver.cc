@@ -82,22 +82,35 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
         as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
     }
+
+    // initialize active space method
+    for (const auto& state_nroot : state_nroots_map_) {
+        const auto& state = state_nroot.first;
+        size_t nroot = state_nroot.second;
+        std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
+            method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+        state_method_map_[state] = method;
+    }
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
 
+void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    as_ints_ = as_ints;
+    for (auto& [state, nroot] : state_nroots_map_) {
+        state_method_map_[state]->set_active_space_integrals(as_ints);
+    }
+}
+
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
     state_energies_map_.clear();
-    for (const auto& state_nroot : state_nroots_map_) {
-        const auto& state = state_nroot.first;
-        size_t nroot = state_nroot.second;
-        // compute the energy of state and save it
-        std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
-            method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+    for (const auto& [state, method] : state_method_map_) {
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
-        state_method_map_[state] = method;
+        method->set_maxiter(maxiter_);
+        method->set_die_if_not_converged(die_if_not_converged_);
+        method->set_restart(restart_);
 
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();

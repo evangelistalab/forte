@@ -53,6 +53,8 @@ class SigmaVectorSparseList : public SigmaVector {
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
+    std::shared_ptr<DeterminantSubstitutionLists> substitution_lists() override;
+
   protected:
     bool print_;
     bool use_disk_ = false;

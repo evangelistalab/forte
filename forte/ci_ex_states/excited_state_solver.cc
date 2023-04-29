@@ -130,6 +130,11 @@ double ExcitedStateSolver::compute_energy() {
         psi::outfile->Printf("\n  Using %d thread(s)", omp_get_max_threads());
     }
 
+    // Set up CI options
+    sparse_solver_->set_e_convergence(e_convergence_);
+    sparse_solver_->set_r_convergence(r_convergence_);
+    sparse_solver_->set_maxiter_davidson(maxiter_);
+
     // Compute wavefunction and energy
     size_t dim;
     int nrun = 1;
@@ -176,6 +181,7 @@ double ExcitedStateSolver::compute_energy() {
         }
 
         sci_->set_method_variables(ex_alg_, nroot_method, root_, old_roots_);
+        sci_->set_active_space_ints(as_ints_);
 
         sci_->compute_energy();
 

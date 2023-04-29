@@ -15,6 +15,7 @@
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
 #include "sparse_ci/ci_reference.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 #include "detci.h"
 
 using namespace psi;
@@ -40,12 +41,31 @@ void DETCI::startup() {
 
     state_label_ = state_.multiplicity_label() + " (Ms = " + get_ms_string(twice_ms_) + ") " +
                    state_.irrep_label();
+
+    sparse_ci_solver_ = std::make_unique<SparseCISolver>();
+
+    actv_space_type_ = options_->get_str("ACTIVE_REF_TYPE");
+    exclude_hf_in_cid_ = options_->get_bool("DETCI_CISD_NO_HF");
+    build_determinant_space();
+
+    sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
+    sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    if (p_space_.size() < 500 and (not options_->get_bool("FORCE_DIAG_METHOD")))
+        sigma_vector_type_ = SigmaVectorType::Full;
+    sigma_vector_ = make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
+    if (sigma_vector_type_ == SigmaVectorType::SparseList)
+        sub_lists_ = sigma_vector_->substitution_lists();
+    else {
+        sub_lists_ = std::make_shared<DeterminantSubstitutionLists>(as_ints_);
+        sub_lists_->build_strings(p_space_);
+        sub_lists_->op_s_lists(p_space_);
+        if (sigma_vector_type_ == SigmaVectorType::Full) {
+            sub_lists_->tp_s_lists(p_space_);
+        }
+    }
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
-    actv_space_type_ = options->get_str("ACTIVE_REF_TYPE");
-    exclude_hf_in_cid_ = options->get_bool("DETCI_CISD_NO_HF");
-
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     ci_print_threshold_ = options->get_double("DETCI_PRINT_CIVEC");
@@ -59,28 +79,26 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     ncollapse_per_root_ = options->get_int("DL_COLLAPSE_PER_ROOT");
     nsubspace_per_root_ = options->get_int("DL_SUBSPACE_PER_ROOT");
 
-    sigma_vector_type_ = string_to_sigma_vector_type(options->get_str("DIAG_ALGORITHM"));
-    sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
-
     read_wfn_guess_ = options_->get_bool("READ_ACTIVE_WFN_GUESS");
     dump_wfn_ = options_->get_bool("DUMP_ACTIVE_WFN");
 }
 
 DETCI::~DETCI() {
-    // remove wave function file
-    if (not dump_wfn_) {
-        if (!wfn_filename_.empty() and std::remove(wfn_filename_.c_str()) != 0) {
-            outfile->Printf("\n  DETCI wave function %s not available.", state_.str().c_str());
-            std::perror("Error when deleting DETCI wave function. See output file.");
-        }
-    }
+    // save wave functions
+    if (dump_wfn_ and !wfn_filename_.empty())
+        dump_wave_function(wfn_filename_);
+
+    // // remove wave function file
+    // if (not dump_wfn_) {
+    //     if (!wfn_filename_.empty() and std::remove(wfn_filename_.c_str()) != 0) {
+    //         outfile->Printf("\n  DETCI wave function %s not available.", state_.str().c_str());
+    //         std::perror("Error when deleting DETCI wave function. See output file.");
+    //     }
+    // }
 }
 
 double DETCI::compute_energy() {
     print_h2("General Determinant-Based CI Solver");
-
-    // build determinants
-    build_determinant_space();
 
     // diagonalize Hamiltonian
     diagonalize_hamiltonian();
@@ -93,9 +111,6 @@ double DETCI::compute_energy() {
         print_ci_wfn();
     }
 
-    // save wave functions by default
-    dump_wave_function(wfn_filename_);
-
     // push to psi4 environment
     double energy = energies_[root_];
     psi::Process::environment.globals["CURRENT ENERGY"] = energy;
@@ -104,21 +119,19 @@ double DETCI::compute_energy() {
 }
 
 void DETCI::build_determinant_space() {
-    std::vector<Determinant> dets;
-
     CI_Reference ci_ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                         wfn_irrep_, state_);
     if (actv_space_type_ == "GAS") {
-        ci_ref.build_gas_reference(dets);
+        ci_ref.build_gas_reference(p_space_);
     } else if (actv_space_type_ == "DOCI") {
-        ci_ref.build_doci_reference(dets);
+        ci_ref.build_doci_reference(p_space_);
     } else if (actv_space_type_ == "CAS") {
-        ci_ref.build_cas_reference_full(dets);
+        ci_ref.build_cas_reference_full(p_space_);
     } else {
-        ci_ref.build_ci_reference(dets, !exclude_hf_in_cid_);
+        ci_ref.build_ci_reference(p_space_, !exclude_hf_in_cid_);
     }
 
-    auto size = dets.size();
+    auto size = p_space_.size();
     if (size == 0) {
         outfile->Printf("\n  No determinant found that matches the state requested!");
         outfile->Printf("\n  Please check the input (symmetry, multiplicity, etc.)!");
@@ -129,15 +142,13 @@ void DETCI::build_determinant_space() {
 
     if (print_ > 2) {
         print_h2("Determinants");
-        for (const auto& det : dets) {
+        for (const auto& det : p_space_) {
             outfile->Printf("\n  %s", str(det, nactv_).c_str());
         }
     }
     if (not quiet_) {
         outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
     }
-
-    p_space_ = DeterminantHashVec(dets);
 }
 
 void DETCI::diagonalize_hamiltonian() {
@@ -146,16 +157,12 @@ void DETCI::diagonalize_hamiltonian() {
 
     print_h2("Diagonalizing Hamiltonian " + state_label_);
 
-    auto solver = prepare_ci_solver();
+    set_sparse_ci_solver();
 
-    if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
-        sigma_vector_type_ = SigmaVectorType::Full;
-    }
+    sigma_vector_->set_active_space_ints(as_ints_);
 
-    auto sigma_vector =
-        make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
     std::tie(evals_, evecs_) =
-        solver->diagonalize_hamiltonian(p_space_, sigma_vector, nroot_, multiplicity_);
+        sparse_ci_solver_->diagonalize_hamiltonian(p_space_, sigma_vector_, nroot_, multiplicity_);
 
     // add energy offset
     double energy_offset = as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy();
@@ -165,23 +172,24 @@ void DETCI::diagonalize_hamiltonian() {
     }
 
     // spin
-    spin2_ = solver->spin();
+    spin2_ = sparse_ci_solver_->spin();
 
     outfile->Printf("\n\n  Done diagonalizing Hamiltonian, %.3e seconds.", tdiag.stop());
 }
 
-std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
-    auto solver = std::make_shared<SparseCISolver>();
-    solver->set_parallel(true);
-    solver->set_spin_project(true);
-    solver->set_print_details(not quiet_);
+void DETCI::set_sparse_ci_solver() {
+    sparse_ci_solver_->set_parallel(true);
+    sparse_ci_solver_->set_spin_project(true);
+    sparse_ci_solver_->set_print_details(not quiet_);
 
-    solver->set_e_convergence(e_convergence_);
-    solver->set_r_convergence(r_convergence_);
-    solver->set_maxiter_davidson(maxiter_);
+    sparse_ci_solver_->set_e_convergence(e_convergence_);
+    sparse_ci_solver_->set_r_convergence(r_convergence_);
+    sparse_ci_solver_->set_maxiter_davidson(maxiter_);
+    sparse_ci_solver_->set_die_if_not_converged(die_if_not_converged_);
+    sparse_ci_solver_->set_restart(restart_);
 
-    solver->set_ncollapse_per_root(ncollapse_per_root_);
-    solver->set_nsubspace_per_root(nsubspace_per_root_);
+    sparse_ci_solver_->set_ncollapse_per_root(ncollapse_per_root_);
+    sparse_ci_solver_->set_nsubspace_per_root(nsubspace_per_root_);
 
     if (read_wfn_guess_) {
         outfile->Printf("\n  Reading wave function from disk as initial guess:");
@@ -189,17 +197,15 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
         outfile->Printf(" %s!", status.c_str());
     }
 
-    solver->set_guess_dimension(dl_guess_size_);
+    sparse_ci_solver_->set_guess_dimension(dl_guess_size_);
     if (not initial_guess_.empty()) {
-        solver->set_initial_guess(initial_guess_);
+        sparse_ci_solver_->set_initial_guess(initial_guess_);
     }
 
     if (not projected_roots_.empty()) {
-        solver->set_root_project(true);
-        solver->add_bad_states(projected_roots_);
+        sparse_ci_solver_->set_root_project(true);
+        sparse_ci_solver_->add_bad_states(projected_roots_);
     }
-
-    return solver;
 }
 
 void DETCI::compute_1rdms() {
@@ -210,7 +216,7 @@ void DETCI::compute_1rdms() {
         CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, N, N);
         std::vector<double> opdm_a, opdm_b;
         ci_rdms.set_print(print_ci_rdms_);
-        ci_rdms.compute_1rdm_op(opdm_a, opdm_b);
+        ci_rdms.compute_1rdm_op(opdm_a, opdm_b, sub_lists_);
 
         std::string name = "Root " + std::to_string(N) + " of " + state_label_;
         auto da = std::make_shared<psi::Matrix>("D1a " + name, actv_dim_, actv_dim_);
@@ -470,21 +476,44 @@ DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm
 
     std::vector<std::shared_ptr<RDMs>> rdms;
 
-    for (auto& root_pair : root_list) {
-        auto root1 = root_pair.first;
-        auto root2 = root_pair.second;
+    // special case for 1-RDMs
+    if (max_rdm_level == 1) {
+        for (const auto& [root1, root2] : root_list) {
+            auto D1 = compute_trans_1rdms_sosd(root1, root2);
+            if (rdm_type == RDMsType::spin_dependent) {
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(D1[0], D1[1]));
+            } else {
+                auto opdm = D1[0].clone();
+                opdm.set_name("D1");
+                opdm("pq") += D1[1]("pq");
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(opdm));
+            }
+        }
+        return rdms;
+    }
+
+    // special case for dynamic algorithm
+    if (sigma_vector_type_ == SigmaVectorType::Dynamic) {
+        for (const auto& [root1, root2] : root_list) {
+            CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+            ci_rdms.set_print(print_ci_rdms_);
+            rdms.push_back(compute_trans_rdms_sosd_dynamic(ci_rdms, max_rdm_level, rdm_type));
+        }
+        return rdms;
+    }
+
+    // for 2- and 3-RDMs
+    for (const auto& [root1, root2] : root_list) {
+        auto D1 = compute_trans_1rdms_sosd(root1, root2);
 
         if (rdm_type == RDMsType::spin_dependent) {
-            auto D1 = compute_trans_1rdms_sosd(root1, root2);
-            std::vector<ambit::Tensor> D2, D3;
-            if (max_rdm_level > 1)
-                D2 = compute_trans_2rdms_sosd(root1, root2);
+            auto D2 = compute_trans_2rdms_sosd(root1, root2);
+
+            std::vector<ambit::Tensor> D3;
             if (max_rdm_level > 2)
                 D3 = compute_trans_3rdms_sosd(root1, root2);
 
-            if (max_rdm_level == 1) {
-                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(D1[0], D1[1]));
-            } else if (max_rdm_level == 2) {
+            if (max_rdm_level == 2) {
                 rdms.emplace_back(
                     std::make_shared<RDMsSpinDependent>(D1[0], D1[1], D2[0], D2[1], D2[2]));
             } else {
@@ -495,30 +524,78 @@ DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm
             CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
             ci_rdms.set_print(print_ci_rdms_);
 
-            auto D1 = ambit::Tensor::build(CoreTensor, "D1", std::vector<size_t>(2, nactv_));
-            ci_rdms.compute_1rdm_sf_op(D1.data());
+            auto G1 = ambit::Tensor::build(CoreTensor, "D1", std::vector<size_t>(2, nactv_));
+            G1("pq") += D1[0]("pq");
+            G1("pq") += D1[1]("pq");
 
-            ambit::Tensor D2, D3;
-            if (max_rdm_level > 1) {
-                D2 = ambit::Tensor::build(CoreTensor, "D2", std::vector<size_t>(4, nactv_));
-                ci_rdms.compute_2rdm_sf_op(D2.data());
-            }
+            auto D2 = ambit::Tensor::build(CoreTensor, "D2", std::vector<size_t>(4, nactv_));
+            ci_rdms.compute_2rdm_sf_op(D2.data(), sub_lists_);
+
+            ambit::Tensor D3;
             if (max_rdm_level > 2) {
                 D3 = ambit::Tensor::build(CoreTensor, "D3", std::vector<size_t>(6, nactv_));
                 ci_rdms.compute_3rdm_sf_op(D3.data());
             }
 
-            if (max_rdm_level == 1) {
-                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1));
-            } else if (max_rdm_level == 2) {
-                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2));
+            if (max_rdm_level == 2) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(G1, D2));
             } else {
-                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2, D3));
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(G1, D2, D3));
             }
         }
     }
 
     return rdms;
+}
+
+std::shared_ptr<RDMs> DETCI::compute_trans_rdms_sosd_dynamic(CI_RDMS& ci_rdms, int max_rdm_level,
+                                                             RDMsType rdm_type) {
+    if (rdm_type == RDMsType::spin_dependent) {
+        auto a = ambit::Tensor::build(CoreTensor, "D1a", std::vector<size_t>(2, nactv_));
+        auto b = ambit::Tensor::build(CoreTensor, "D1b", std::vector<size_t>(2, nactv_));
+        auto& a_data = a.data();
+        auto& b_data = b.data();
+
+        auto aa = ambit::Tensor::build(CoreTensor, "D2aa", std::vector<size_t>(4, nactv_));
+        auto ab = ambit::Tensor::build(CoreTensor, "D2ab", std::vector<size_t>(4, nactv_));
+        auto bb = ambit::Tensor::build(CoreTensor, "D2bb", std::vector<size_t>(4, nactv_));
+        auto& aa_data = aa.data();
+        auto& ab_data = ab.data();
+        auto& bb_data = bb.data();
+
+        if (max_rdm_level < 3) {
+            ci_rdms.compute_rdms_dynamic(a_data, b_data, aa_data, ab_data, bb_data);
+            return std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb);
+        } else {
+            auto aaa = ambit::Tensor::build(CoreTensor, "D3aaa", std::vector<size_t>(6, nactv_));
+            auto aab = ambit::Tensor::build(CoreTensor, "D3aab", std::vector<size_t>(6, nactv_));
+            auto abb = ambit::Tensor::build(CoreTensor, "D3abb", std::vector<size_t>(6, nactv_));
+            auto bbb = ambit::Tensor::build(CoreTensor, "D3bbb", std::vector<size_t>(6, nactv_));
+            auto& aaa_data = aaa.data();
+            auto& aab_data = aab.data();
+            auto& abb_data = abb.data();
+            auto& bbb_data = bbb.data();
+            ci_rdms.compute_rdms_dynamic(a_data, b_data, aa_data, ab_data, bb_data, aaa_data,
+                                         aab_data, abb_data, bbb_data);
+            return std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb, aaa, aab, abb, bbb);
+        }
+    } else {
+        auto opdm = ambit::Tensor::build(CoreTensor, "D1", std::vector<size_t>(2, nactv_));
+        auto& opdm_data = opdm.data();
+
+        auto tpdm = ambit::Tensor::build(CoreTensor, "D2", std::vector<size_t>(4, nactv_));
+        auto& tpdm_data = tpdm.data();
+
+        if (max_rdm_level < 3) {
+            ci_rdms.compute_rdms_dynamic_sf(opdm_data, tpdm_data);
+            return std::make_shared<RDMsSpinFree>(opdm, tpdm);
+        } else {
+            auto t3pdm = ambit::Tensor::build(CoreTensor, "D3", std::vector<size_t>(6, nactv_));
+            auto& t3pdm_data = t3pdm.data();
+            ci_rdms.compute_rdms_dynamic_sf(opdm_data, tpdm_data, t3pdm_data);
+            return std::make_shared<RDMsSpinFree>(opdm, tpdm, t3pdm);
+        }
+    }
 }
 
 std::vector<ambit::Tensor> DETCI::compute_trans_1rdms_sosd(int root1, int root2) {
@@ -541,7 +618,7 @@ std::vector<ambit::Tensor> DETCI::compute_trans_1rdms_sosd(int root1, int root2)
     } else {
         CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
         ci_rdms.set_print(print_ci_rdms_);
-        ci_rdms.compute_1rdm_op(a_data, b_data);
+        ci_rdms.compute_1rdm_op(a_data, b_data, sub_lists_);
     }
 
     return {a, b};
@@ -557,7 +634,7 @@ std::vector<ambit::Tensor> DETCI::compute_trans_2rdms_sosd(int root1, int root2)
 
     CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
     ci_rdms.set_print(print_ci_rdms_);
-    ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
+    ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data, sub_lists_);
 
     return {aa, ab, bb};
 }
@@ -589,17 +666,13 @@ DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
         throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
 
-    // read wave function from method2
-    size_t norbs2;
-    std::vector<Determinant> dets2;
-    SharedMatrix evecs2;
-    std::tie(norbs2, dets2, evecs2) = method2->read_wave_function(method2->wfn_filename());
-
-    if (norbs2 != size_t(nactv_)) {
+    auto ci_other = std::dynamic_pointer_cast<DETCI>(method2);
+    if (ci_other->actv_dim() != actv_dim_) {
         throw std::runtime_error("DETCI Error: Inconsistent number of active orbitals");
     }
 
-    size_t nroot2 = evecs2->coldim();
+    auto evecs2 = ci_other->ci_wave_functions();
+    auto dets2 = ci_other->determinants();
 
     // combine with current set of determinants
     DeterminantHashVec dets(dets2);
@@ -610,6 +683,7 @@ DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
 
     // fill in eigen vectors
     size_t ndets = dets.size();
+    size_t nroot2 = evecs2->coldim();
     size_t nroots = nroot_ + nroot2;
     auto evecs = std::make_shared<psi::Matrix>("evecs combined", ndets, nroots);
 
@@ -618,16 +692,27 @@ DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
             evecs->set(dets[det], n, evecs_->get(p_space_[det], n));
         }
     }
-
-    for (size_t I = 0, size = dets2.size(); I < size; ++I) {
-        const auto& det = dets2[I];
+    for (const auto& det : dets2) {
         for (size_t n = 0; n < nroot2; ++n) {
-            evecs->set(dets[det], n + nroot_, evecs2->get(I, n));
+            evecs->set(dets[det], n + nroot_, evecs2->get(dets[det], n));
         }
     }
 
     // loop over roots and compute the transition RDMs
     std::vector<std::shared_ptr<RDMs>> rdms;
+
+    // // special case for dynamic algorithm
+    // if (sigma_vector_type_ == SigmaVectorType::Dynamic) {
+    //     for (const auto& roots_pair : root_list) {
+    //         size_t root1 = roots_pair.first;
+    //         size_t root2 = roots_pair.second + nroot_;
+    //         CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
+    //         ci_rdms.set_print(false);
+    //         rdms.push_back(compute_trans_rdms_sosd_dynamic(ci_rdms, max_rdm_level, rdm_type));
+    //     }
+    //     return rdms;
+    // }
+
     for (const auto& roots_pair : root_list) {
         size_t root1 = roots_pair.first;
         size_t root2 = roots_pair.second + nroot_;
@@ -647,8 +732,6 @@ DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
             if (max_rdm_level == 1) {
                 rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b));
             } else {
-                ci_rdms.set_print(true);
-
                 // compute 2-RDM
                 std::vector<size_t> dim4(4, nactv_);
                 auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", dim4);
@@ -688,8 +771,6 @@ DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
             if (max_rdm_level == 1) {
                 rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1));
             } else {
-                ci_rdms.set_print(true);
-
                 // compute 2-RDM
                 std::vector<size_t> dim4(4, nactv_);
                 auto D2 = ambit::Tensor::build(CoreTensor, "TD2", dim4);

@@ -540,16 +540,12 @@ void AdaptiveCI::pre_iter_preparation() {
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_, state_);
 
-    ref.build_reference(initial_reference_);
-
     if (one_cycle_) {
-        PQ_space_ = initial_reference_;
+        ref.build_reference(PQ_space_);
         PQ_space_.make_spin_complete(nact_);
     } else {
-        P_space_ = initial_reference_;
+        ref.build_reference(P_space_);
     }
-
-    // P_space_ = initial_reference_;
 
     // If the ACI iteration is within the gas space, calculate
     // gas_info and the criterion for single and double excitations
@@ -590,8 +586,7 @@ void AdaptiveCI::pre_iter_preparation() {
         }
         int particle = (root_ - 1) - (hole_ * ncstate);
 
-        P_space_.clear();
-        Determinant det = initial_reference_[0];
+        Determinant det(ref.initial_determinant());
         Determinant detb(det);
         std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
         outfile->Printf("\n  %s", str(det, nact_).c_str());
@@ -609,6 +604,8 @@ void AdaptiveCI::pre_iter_preparation() {
         }
         outfile->Printf("\n  %s", str(det, nact_).c_str());
         outfile->Printf("\n  %s", str(detb, nact_).c_str());
+
+        P_space_.clear();
         P_space_.add(det);
         P_space_.add(detb);
     }
