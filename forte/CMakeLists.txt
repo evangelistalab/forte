@@ -203,6 +203,7 @@ sci/fci_mo.cc
 sci/mrpt2.cc
 sci/sci.cc
 sparse_ci/ci_reference.cc
+sparse_ci/ci_spin_adaptation.cc
 sparse_ci/determinant_functions.cc
 sparse_ci/determinant_hashvector.cc
 sparse_ci/determinant_substitution_lists.cc

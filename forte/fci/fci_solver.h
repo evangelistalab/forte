@@ -36,6 +36,7 @@ namespace forte {
 
 class FCIVector;
 class StringLists;
+class SpinAdapter;
 
 /**
  * @brief The FCISolver class
@@ -87,6 +88,8 @@ class FCISolver : public ActiveSpaceMethod {
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
+    /// Spin adapt the FCI wave function
+    void set_spin_adapt(bool value);
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
     void set_test_rdms(bool value) { test_rdms_ = value; }
@@ -112,6 +115,9 @@ class FCISolver : public ActiveSpaceMethod {
     /// A object that stores string information
     std::shared_ptr<StringLists> lists_;
 
+    /// A object that handles spin adaptation
+    std::shared_ptr<SpinAdapter> spin_adapter_;
+
     /// The FCI energy
     double energy_;
 
@@ -129,9 +135,9 @@ class FCISolver : public ActiveSpaceMethod {
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
-    /// The multiplicity (2S + 1) of the state to target.
-    /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
-    int multiplicity_;
+    // /// The multiplicity (2S + 1) of the state to target.
+    // /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
+    // int multiplicity_;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_ = 1;
     /// The number of collapse vectors for each root
@@ -144,6 +150,8 @@ class FCISolver : public ActiveSpaceMethod {
     bool test_rdms_ = false;
     /// Print the NO from the 1-RDM
     bool print_no_ = false;
+    /// Spin adapt the FCI wave function?
+    bool spin_adapt_ = false;
 
     // ==> Class functions <==
 

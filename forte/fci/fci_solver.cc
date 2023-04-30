@@ -38,6 +38,7 @@
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_functions.hpp"
+#include "sparse_ci/ci_spin_adaptation.h"
 #include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
@@ -66,7 +67,7 @@ FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo>
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
       active_dim_(mo_space_info->dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
-      symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
+      symmetry_(state.irrep()) {
     // TODO: read this info from the base class
     na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
     nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
@@ -79,6 +80,8 @@ void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
 void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
+
+void FCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
 
 psi::SharedMatrix FCISolver::ci_wave_functions() {
     if (eigen_vecs_ == nullptr)
@@ -102,20 +105,32 @@ void FCISolver::startup() {
         ndfci += nastr * nbstr;
     }
 
+    if (spin_adapt_) {
+        spin_adapter_ =
+            std::make_shared<SpinAdapter>(na_, nb_, state().multiplicity() - 1, state().twice_ms());
+    }
+
     if (print_) {
         // Print a summary of options
         std::vector<std::pair<std::string, int>> calculation_info{
             {"Number of determinants", ndfci},
             {"Symmetry", symmetry_},
-            {"Multiplicity", multiplicity_},
+            {"Multiplicity", state().multiplicity()},
             {"Number of roots", nroot_},
             {"Target root", root_},
             {"Trial vectors per root", ntrial_per_root_}};
+
+        std::vector<std::pair<std::string, bool>> calculation_info_bool{
+            {"Spin adapt", spin_adapt_}};
 
         // Print some information
         outfile->Printf("\n\n  ==> FCI Solver <==\n\n");
         for (auto& str_dim : calculation_info) {
             outfile->Printf("    %-39s %10d\n", str_dim.first.c_str(), str_dim.second);
+        }
+        for (auto& str_dim : calculation_info_bool) {
+            outfile->Printf("    %-39s %10s\n", str_dim.first.c_str(),
+                            str_dim.second ? "true" : "false");
         }
     }
 }
@@ -130,6 +145,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_print(options->get_int("PRINT"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
     set_r_convergence(options->get_double("R_CONVERGENCE"));
+    set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
 }
 
 /*
@@ -167,7 +183,7 @@ double FCISolver::compute_energy() {
 
     std::vector<int> guess_list;
     for (size_t g = 0; g < guess.size(); ++g) {
-        if (guess[g].first == multiplicity_)
+        if (guess[g].first == state().multiplicity())
             guess_list.push_back(g);
     }
 
@@ -189,7 +205,7 @@ double FCISolver::compute_energy() {
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
     int gr = 0;
     for (auto& g : guess) {
-        if (g.first != multiplicity_) {
+        if (g.first != state().multiplicity()) {
             if (print_ > 0) {
                 outfile->Printf("\n  Projecting out root %d", gr);
             }

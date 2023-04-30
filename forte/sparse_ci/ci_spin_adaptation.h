@@ -29,15 +29,49 @@
 #ifndef _spin_adaptation_h_
 #define _spin_adaptation_h_
 
+#include <vector>
+
+#include "sparse_ci/determinant.h"
+
 namespace forte {
 
 /// @brief A class to perform spin adaptation on a CI wavefunction
-class SpinAdaptation {
-    ///
-    SpinAdaptation(){};
-    ~SpinAdaptation();
+class SpinAdapter {
+  public:
+    /// Class constructor
+    /// @param dets A vector of determinants to be spin adapted
+    SpinAdapter(int na, int nb, int twoS, int twoMs);
+
+    void csf_C_to_det_C(const std::vector<double>& csf_C, std::vector<double>& det_C);
+
+    void det_C_to_csf_C(const std::vector<double>& det_C, std::vector<double>& csf_C);
+
+    /// @brief A function to generate all the CSFs from a configuration
+    auto conf_to_csfs(const Configuration& conf, int twoS, int twoMs)
+        -> std::vector<std::vector<double>>;
 
   private:
+    /// @brief The number of alpha electrons
+    int na_;
+    /// @brief The number of beta electrons
+    int nb_;
+    /// @brief Twice the spin quantum number (2S)
+    int twoS_;
+    /// @brief Twice the spin projection quantum number (2Ms)
+    int twoMs_;
+    /// @brief A vector with the number of CSFs that contribute to a determinant
+    std::vector<size_t> det_to_csf_size_;
+    /// @brief A vector with the number of determinants that contribute to a CSF
+    std::vector<size_t> csf_to_det_size_;
+    /// @brief A vector used to store information on how to map the determinants to CSFs
+    std::vector<std::tuple<size_t, double>> det_to_csf_coeff_;
+    /// @brief A vector used to store information on how to map the CSFs to determinants
+    std::vector<std::tuple<size_t, double>> csf_to_det_coeff_;
+
+    /// A function to generate all possible spin couplings
+    /// @param N The number of unpaired electrons
+    /// @param twoS Twice the spin quantum number
+    auto make_spin_couplings(int N, int twoS) -> std::vector<String>;
 };
 
 } // namespace forte
