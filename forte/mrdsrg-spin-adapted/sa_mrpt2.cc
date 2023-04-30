@@ -207,7 +207,7 @@ void SA_MRPT2::init_amps() {
     timer t("Initialize T1 and T2");
     print_contents("Allocating amplitudes");
 
-    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+//    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
 
     if (eri_df_) {
         std::vector<std::string> blocks{"aavv", "ccaa", "caav", "acav", "aava", "caaa", "aaaa"};

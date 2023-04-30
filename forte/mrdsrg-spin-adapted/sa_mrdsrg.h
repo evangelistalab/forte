@@ -113,10 +113,6 @@ class SA_MRDSRG : public SADSRG {
     ambit::BlockedTensor B_;
     /// Generalized Fock matrix
     ambit::BlockedTensor F_;
-    /// Single excitation amplitude
-    ambit::BlockedTensor T1_;
-    /// Double excitation amplitude
-    ambit::BlockedTensor T2_;
     /// Difference of consecutive singles
     ambit::BlockedTensor DT1_;
     /// Difference of consecutive doubles
@@ -153,13 +149,31 @@ class SA_MRDSRG : public SADSRG {
     void guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Update T1 in every iteration
     void update_t1();
+    /// Update T1 using projective conditions
+    void update_t1_proj();
+
+    /// Denominator of T1 core-actv block in orthogonalized basis
+    ambit::Tensor Aca_;
+    /// Residual of T1 core-actv block update in orthogonalized basis
+    ambit::Tensor Oca_;
+    /// Denominator of T1 actv-virt block in orthogonalized basis
+    ambit::Tensor Aav_;
+    /// Residual of T1 actv-virt block update in orthogonalized basis
+    ambit::Tensor Oav_;
+
+    /// Compute core-actv block denominator for projective T1 update
+    void compute_proj_denom_ca();
+    /// Compute actv-virt block denominator for projective T1 update
+    void compute_proj_denom_av();
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
-    /// Compute DSRG-transformed Hamiltonian Hbar sequentially
+    /// Compute DSRG-transformed Hamiltonian sequentially
     void compute_hbar_sequential();
     /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator
     void compute_hbar_qc();
+    /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator sequentially
+    void compute_hbar_qc_sequential();
 
     /// Add H2's Hermitian conjugate to itself, H2 need to contain gGgG block
     void add_hermitian_conjugate(BlockedTensor& H2);

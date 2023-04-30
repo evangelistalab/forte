@@ -154,6 +154,7 @@ mrdsrg-spin-adapted/sadsrg.cc
 mrdsrg-spin-adapted/sadsrg_amps_analysis.cc
 mrdsrg-spin-adapted/sadsrg_block_labels.cc
 mrdsrg-spin-adapted/sadsrg_comm.cc
+mrdsrg-spin-adapted/sadsrg_orbital_rotation.cc
 mrdsrg-spin-adapted/sa_dsrgpt.cc
 mrdsrg-spin-adapted/sa_ldsrg2.cc
 mrdsrg-spin-adapted/sa_mrdsrg.cc

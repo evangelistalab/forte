@@ -366,7 +366,9 @@ PYBIND11_MODULE(_forte, m) {
              "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
-        .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
+        .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files")
+        .def("is_brueckner_converged", &SADSRG::is_brueckner_converged,
+             "Return true if DSRG Brueckner orbital rotation is converged");
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")

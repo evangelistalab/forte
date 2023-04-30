@@ -51,8 +51,13 @@ void SA_MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, B
 }
 
 void SA_MRDSRG::update_t() {
-    update_t2();
-    update_t1();
+    if (t1_type_ == "PROJECT") {
+        update_t1_proj();
+        update_t2();
+    } else {
+        update_t2();
+        update_t1();
+    }
 }
 
 void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) {
@@ -416,6 +421,168 @@ void SA_MRDSRG::update_t1() {
 
     // reset the active part of Hbar2
     Hbar1_["uv"] = Hbar1copy["uv"];
+}
+
+void SA_MRDSRG::update_t1_proj() {
+    /// update T1 according to <{a^i_a} Hbar^a_i> = 0
+    DT1_["ia"] = T1_["ia"];
+
+    // core-virt block
+    const auto& Hbar1cv_data = Hbar1_.block("cv").data();
+    auto dim_v = Hbar1_.block("cv").dim(1);
+    T1_.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
+        auto i0 = label_to_spacemo_['c'][i[0]];
+        auto i1 = label_to_spacemo_['v'][i[1]];
+        value += Hbar1cv_data[i[0] * dim_v + i[1]] / (Fdiag_[i0] - Fdiag_[i1]);
+    });
+
+    // core-actv block
+    // 1. residual in original basis
+    auto Nca = ambit::BlockedTensor::build(tensor_type_, "Nca", {"ca"});
+    Nca["mz"] += 0.5 * Hbar1_["mu"] * Eta1_["uz"];
+    Nca["mz"] -= 0.5 * Hbar2_["xmuv"] * L2_["uvxz"];
+
+    // 2. transform residual to orthogonal basis
+    Oca_("mz") = Nca.block("ca")("mw") * Xca_("wz");
+
+    // 3. update in orthogonal basis
+    auto Oca = Oca_.clone();
+    Oca_("mz") = Oca("mz") * Aca_("mz");
+    // auto& Oca_data = Oca_.data();
+    // const auto& Aca_data = Aca_.data();
+    // std::transform(Oca_data.begin(), Oca_data.end(), Aca_data.begin(), Oca_data.begin(),
+    //                [](double n, double d) { return n * d; });
+    // Oca_.print();
+
+    // 4. transform update to original basis
+    T1_.block("ca")("mu") -= Oca_("mz") * Xca_("uz");
+
+    // actv-virt block
+    // 1. residual in original basis
+    auto Nav = ambit::BlockedTensor::build(tensor_type_, "Nav", {"av"});
+    Nav["ze"] += 0.5 * Hbar1_["ue"] * L1_["zu"];
+    Nav["ze"] += 0.5 * Hbar2_["uvex"] * L2_["zxuv"];
+
+    // 2. transform residual to orthogonal basis
+    Oav_("ze") = Nav.block("av")("we") * Xav_("wz");
+
+    // 3. update in orthogonal basis
+    auto Oav = Oav_.clone();
+    Oav_("ze") = Oav("ze") * Aav_("ze");
+    // auto& Oav_data = Oav_.data();
+    // const auto& Aav_data = Aav_.data();
+    // std::transform(Oav_data.begin(), Oav_data.end(), Aav_data.begin(), Oav_data.begin(),
+    //                [](double n, double d) { return n * d; });
+    // Oav_.print();
+
+    // 4. transform update to original basis
+    T1_.block("av")("ue") -= Oav_("ze") * Xav_("uz");
+
+    // compute difference
+    DT1_["ia"] -= T1_["ia"];
+    DT1_.scale(-1.0);
+    T1rms_ = DT1_.norm();
+    // DT1_.print();
+
+    // compute norm and find maximum
+    T1max_ = T1_.norm(0);
+    T1norm_ = T1_.norm(2);
+}
+
+void SA_MRDSRG::compute_proj_denom_ca() {
+    // compute diagonal elements of Jacobian in orthogonal basis
+    // <{m^+ v} [H, {u^+ n} - {n^+ u}]> X_uu' X_vu' δ_mn
+
+    auto I = ambit::BlockedTensor::build(tensor_type_, "I", {"cc"});
+    I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
+
+    // TODO: need to optimize
+    // 1. directly form caa
+    // 2. density fitting integrals
+    auto Dccaa = ambit::BlockedTensor::build(tensor_type_, "Dccaa", {"ccaa"});
+
+    Dccaa["mnuv"] += 0.5 * F_["vx"] * Eta1_["xu"] * I["nm"];
+    Dccaa["mnuv"] -= 0.5 * F_["nm"] * Eta1_["vu"];
+    Dccaa["mnuv"] += 0.25 * V_["xnmy"] * Eta1_["vx"] * Eta1_["yu"];
+    Dccaa["mnuv"] -= 0.25 * V_["nxmy"] * Eta1_["vx"] * Eta1_["yu"];
+    Dccaa["mnuv"] -= 0.5 * V_["vwxy"] * L2_["xyuw"] * I["mn"];
+    Dccaa["mnuv"] += 0.5 * V_["nxmy"] * L2_["vyux"];
+    Dccaa["mnuv"] -= (1.0 / 6.0) * V_["xnmy"] * L2_["vyux"];
+    Dccaa["mnuv"] += (1.0 / 6.0) * V_["xnmy"] * L2_["yvux"];
+
+    // only keep for m = n
+    auto ncore = core_mos_.size();
+    auto nactv = actv_mos_.size();
+    auto Dcaa = ambit::Tensor::build(tensor_type_, "Dcaa", {ncore, nactv, nactv});
+
+    const auto& Dccaa_data = Dccaa.block("ccaa").data();
+    auto ccaa_dim3 = ncore * nactv * nactv;
+    auto ccaa_dim2 = nactv * nactv;
+
+    Dcaa.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = Dccaa_data[i[0] * ccaa_dim3 + i[0] * ccaa_dim2 + i[1] * nactv + i[2]];
+    });
+
+    // transform to orthogonal T1 basis
+    auto nactv_h = Xca_.dim(1);
+    Aca_ = ambit::Tensor::build(tensor_type_, "Inverse of Diag. Jacobian ca", {ncore, nactv_h});
+    Aca_("mx") = Dcaa("muv") * Xca_("ux") * Xca_("vx");
+
+    // TODO: decide we store inverse or the actual denominator
+    Aca_.iterate([&](const std::vector<size_t>& i, double& value) { value = 1.0 / value; });
+    // Aca_.print();
+}
+
+void SA_MRDSRG::compute_proj_denom_av() {
+    // compute diagonal elements of Jacobian in orthogonal basis
+    // <{v^+ f} [H, {e^+ u} - {u^+ e}]> X_uu' X_vu' δ_ef
+
+    auto I = ambit::BlockedTensor::build(tensor_type_, "I", {"vv"});
+    I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
+
+    // TODO: need to optimize
+    // 1. directly form vaa
+    // 2. density fitting integrals
+    auto Dvvaa = ambit::BlockedTensor::build(tensor_type_, "Dvvaa", {"vvaa"});
+
+    Dvvaa["efuv"] += 0.5 * F_["ef"] * L1_["vu"];
+    Dvvaa["efuv"] -= 0.5 * F_["xu"] * L1_["vx"] * I["ef"];
+    Dvvaa["efuv"] -= 0.25 * V_["eyfx"] * L1_["xu"] * L1_["vy"];
+    Dvvaa["efuv"] += 0.25 * V_["yefx"] * L1_["xu"] * L1_["vy"];
+    Dvvaa["efuv"] -= 0.5 * V_["xyuw"] * L2_["vwxy"] * I["ef"];
+    Dvvaa["efuv"] += 0.5 * V_["exfy"] * L2_["vyux"];
+    Dvvaa["efuv"] -= (1.0 / 6.0) * V_["xefy"] * L2_["vyux"];
+    Dvvaa["efuv"] += (1.0 / 6.0) * V_["xefy"] * L2_["yvux"];
+
+    // only keep for e = f
+    auto nvirt = virt_mos_.size();
+    auto nactv = actv_mos_.size();
+    auto Dvaa = ambit::Tensor::build(tensor_type_, "Dvaa", {nvirt, nactv, nactv});
+
+    const auto& Dvvaa_data = Dvvaa.block("vvaa").data();
+    auto vvaa_dim3 = nvirt * nactv * nactv;
+    auto vvaa_dim2 = nactv * nactv;
+
+    Dvaa.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = Dvvaa_data[i[0] * vvaa_dim3 + i[0] * vvaa_dim2 + i[1] * nactv + i[2]];
+    });
+
+    // transform to orthogonal T1 basis
+    auto nactv_p = Xav_.dim(1);
+    Aav_ = ambit::Tensor::build(tensor_type_, "Inverse of Diag. Jacobian av", {nactv_p, nvirt});
+    Aav_("xe") = Dvaa("euv") * Xav_("ux") * Xav_("vx");
+
+    // TODO: decide we store inverse or the actual denominator
+    Aav_.iterate([&](const std::vector<size_t>& i, double& value) { value = 1.0 / value; });
+    // Aav_.print();
 }
 
 void SA_MRDSRG::dump_amps_to_disk() {

@@ -34,6 +34,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "sa_mrdsrg.h"
@@ -54,15 +55,15 @@ SA_MRDSRG::SA_MRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_in
 
 void SA_MRDSRG::read_options() {
     corrlv_string_ = foptions_->get_str("CORR_LEVEL");
-    std::vector<std::string> available{"LDSRG2", "LDSRG2_QC"};
+    std::vector<std::string> available{"LDSRG2", "LDSRG2_QC", "CC2"};
     if (std::find(available.begin(), available.end(), corrlv_string_) == available.end()) {
         outfile->Printf("\n  Warning: CORR_LEVEL option %s is not implemented.",
                         corrlv_string_.c_str());
         outfile->Printf("\n  Changed CORR_LEVEL option to LDSRG2_QC");
 
         corrlv_string_ = "LDSRG2_QC";
-        warnings_.push_back(std::make_tuple("Unsupported CORR_LEVEL", "Change to LDSRG2_QC",
-                                            "Change options in input.dat"));
+        warnings_.emplace_back("Unsupported CORR_LEVEL", "Change to LDSRG2_QC",
+                               "Change options in input.dat");
     }
 
     sequential_Hbar_ = foptions_->get_bool("DSRG_HBAR_SEQ");
@@ -71,7 +72,7 @@ void SA_MRDSRG::read_options() {
     rsc_ncomm_ = foptions_->get_int("DSRG_RSC_NCOMM");
     rsc_conv_ = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
-    maxiter_ = foptions_->get_int("MAXITER");
+    maxiter_ = foptions_->get_int("DSRG_MAXITER");
     e_conv_ = foptions_->get_double("E_CONVERGENCE");
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
 
@@ -106,6 +107,17 @@ void SA_MRDSRG::startup() {
 
     t1_file_cwd_ = "forte.mrdsrg.adapted.t1.bin";
     t2_file_cwd_ = "forte.mrdsrg.adapted.t2.bin";
+
+    // build transformation matrix to orthogonalize T1 excited basis
+    if (t1_type_ == "PROJECT") {
+        // allocate residuals in orthogonal basis
+        Oca_ = ambit::Tensor::build(tensor_type_, "Omega ca", {core_mos_.size(), Xca_.dim(1)});
+        Oav_ = ambit::Tensor::build(tensor_type_, "Omega av", {Xav_.dim(1), virt_mos_.size()});
+
+        // compute denominators
+        compute_proj_denom_ca();
+        compute_proj_denom_av();
+    }
 }
 
 void SA_MRDSRG::print_options() {
@@ -134,7 +146,8 @@ void SA_MRDSRG::print_options() {
         {"Reference relaxation", relax_ref_},
         {"3RDM algorithm", L3_algorithm_},
         {"Core-Virtual source type", ccvv_source_},
-        {"T1 amplitudes initial guess", t1_guess_}};
+        {"T1 amplitudes initial guess", t1_guess_},
+        {"T1 amplitudes type", t1_type_}};
 
     if (internal_amp_ != "NONE") {
         calculation_info_string.emplace_back("Internal amplitudes levels", internal_amp_);
@@ -148,9 +161,19 @@ void SA_MRDSRG::print_options() {
         {"Read amplitudes from current dir", read_amps_cwd_},
         {"Write amplitudes to current dir", dump_amps_cwd_}};
 
+    if (brueckner_) {
+        calculation_info_bool.emplace_back("DSRG Brueckner orbitals", brueckner_);
+        calculation_info_double.emplace_back("Brueckner convergence", brueckner_conv_);
+    }
+
     // print information
     print_selected_options("Computation Information", calculation_info_string,
                            calculation_info_bool, calculation_info_double, calculation_info_int);
+
+    // stop if there are some conflicts
+    if (corrlv_string_ == "LDSRG2_QC" and !eri_df_ and sequential_Hbar_) {
+        throw std::runtime_error("Sequential LDSRG2_QC only available with DF/CD integrals!");
+    }
 }
 
 void SA_MRDSRG::check_memory() {
@@ -221,7 +244,7 @@ void SA_MRDSRG::build_ints() {
 
 double SA_MRDSRG::compute_energy() {
     // build initial amplitudes
-    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+    //    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
     guess_t(V_, T2_, F_, T1_, B_);
 
@@ -237,6 +260,10 @@ double SA_MRDSRG::compute_energy() {
     //    }
     //    default: { Etotal += compute_energy_ldsrg2_qc(); }
     //    }
+
+    if (brueckner_) {
+        brueckner_orbital_rotation(T1_);
+    }
 
     return Etotal;
 }

@@ -39,8 +39,8 @@ namespace forte {
 /// export ForteIntegrals
 void export_ForteIntegrals(py::module& m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
-        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
-        .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
+        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during constructor")
+        .def("nmo", &ForteIntegrals::nmo, "Return the total number of molecular orbitals")
         .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
         .def("frozen_core_energy", &ForteIntegrals::frozen_core_energy,
              "Return the frozen core energy")

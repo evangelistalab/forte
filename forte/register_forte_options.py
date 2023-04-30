@@ -591,7 +591,7 @@ def register_dsrg_options(options):
 
     options.add_str(
         "CORR_LEVEL", "PT2",
-        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2", "LDSRG2_P3", "QDSRG2_P3"],
+        ["PT2", "PT3", "CC2", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2", "LDSRG2_P3", "QDSRG2_P3"],
         "Correlation level of MR-DSRG (used in mrdsrg code, "
         "LDSRG2_P3 and QDSRG2_P3 not implemented)"
     )
@@ -769,6 +769,21 @@ def register_dsrg_options(options):
     )
 
     options.add_bool("DSRG_RDM_MS_AVG", False, "Form Ms-averaged density if true")
+
+    options.add_str("DSRG_T1_AMPS_TYPE", "MANY_BODY", ["MANY_BODY", "PROJECT"],
+                    "T1 conditions for MRDSRG")
+
+    options.add_double("DSRG_T1_AMPS_PROJ_CUTOFF", 0.05,
+                       "Cutoff for removal linear dependencies of internally contracted singles")
+
+    options.add_bool("DSRG_BRUECKNER", False,
+                     "Rotate orbitals such that MRDSRG T1 amplitudes become zero")
+
+    options.add_double("BRUECKNER_CONVERGENCE", 1.0e-6,
+                       "Threshold to consider Brueckner orbitals converged")
+
+    options.add_int("BRUECKNER_MAXITER", 40,
+                    "The max number of iterations for Brueckner orbital update")
 
 
 def register_dwms_options(options):
