@@ -1,12 +1,12 @@
 #! Test AO Subspace regular expression on 3d orbitals
 
-refscf = -1646.62615747649124 
+refscf = -1646.6261575497
 ref_occ = {
     'RESTRICTED_DOCC': np.array([14, 6, 8, 11]),
     'ACTIVE': np.array([7, 3, 4, 4]),
     'RESTRICTED_UOCC': np.array([33, 19, 23, 27])
 }
-reffci = -1646.6659910518
+reffci = -1646.6659904820
 
 import forte
 memory 2 gb

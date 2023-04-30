@@ -74,6 +74,119 @@ template <size_t N> class BitArray {
     /// the number of words used to store the bits
     static constexpr size_t nwords_ = bits_to_words(nbits);
 
+    using container_t = std::array<word_t, nwords_>;
+
+    BitArray() {}
+    BitArray(const std::vector<bool>& v) {
+        for (size_t i = 0, maxi = v.size(); i < maxi; i++) {
+            set_bit(i, v[i]);
+        }
+    }
+
+    class Proxy {
+      public:
+        Proxy(word_t& word, size_t index) : word_(word), mask_(maskbit(index)) {}
+
+        // conversion to bool for read access
+        operator bool() const { return word_ & mask_; }
+
+        // assignment operator for write access
+        Proxy& operator=(bool val) {
+            word_ ^= (-val ^ word_) & mask_; // if-free implementation
+            return *this;
+        }
+
+        // assignment operator for write access
+        Proxy& operator=(const Proxy& other) {
+            *this = static_cast<bool>(other);
+            return *this;
+        }
+
+        // swap function
+        friend void swap(Proxy a, Proxy b) {
+            bool temp = static_cast<bool>(a);
+            a = static_cast<bool>(b);
+            b = temp;
+        }
+
+      private:
+        word_t& word_;
+        word_t mask_;
+    };
+
+    Proxy operator[](size_t index) { return Proxy(getword(index), whichbit(index)); }
+    bool operator[](size_t index) const { return get_bit(index); }
+
+    class iterator {
+      public:
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = Proxy;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type;
+
+        iterator(typename container_t::iterator word_it, size_t index)
+            : word_it_(word_it), index_(index) {}
+
+        reference operator*() const { return Proxy(*word_it_, index_); }
+
+        iterator& operator++() {
+            ++index_;
+            if (index_ == bits_per_word) {
+                ++word_it_;
+                index_ = 0;
+            }
+            return *this;
+        }
+
+        iterator operator++(int) {
+            iterator copy = *this;
+            ++(*this);
+            return copy;
+        }
+
+        iterator& operator--() {
+            if (index_ == 0) {
+                --word_it_;
+                index_ = bits_per_word - 1;
+            } else {
+                --index_;
+            }
+            return *this;
+        }
+
+        iterator operator--(int) {
+            iterator copy = *this;
+            --(*this);
+            return copy;
+        }
+
+        // TODO: This should be tested!
+        iterator operator+(difference_type n) const {
+            iterator result = *this;
+            const auto overage = result.index_ + (n % bits_per_word);
+            result.word_it_ += (n + overage) / bits_per_word;
+            result.index_ += overage % bits_per_word;
+            // for (difference_type i = 0; i < n; ++i) {
+            //     ++result;
+            // }
+            return result;
+        }
+
+        bool operator==(const iterator& other) const {
+            return (word_it_ == other.word_it_) and (index_ == other.index_);
+        }
+
+        bool operator!=(const iterator& other) const { return !(*this == other); }
+
+      private:
+        typename container_t::iterator word_it_;
+        size_t index_;
+    };
+
+    iterator begin() { return iterator(words_.begin(), 0); }
+    iterator end() { return iterator(words_.end(), 0); }
+
     // get the value of bit in position pos
     bool get_bit(size_t pos) const { return this->getword(pos) & maskbit(pos); }
 
@@ -81,6 +194,9 @@ template <size_t N> class BitArray {
     void set_bit(size_t pos, bool val) {
         getword(pos) ^= (-val ^ getword(pos)) & maskbit(pos); // if-free implementation
     }
+
+    /// get a word in position pos
+    word_t get_word(size_t pos) const { return words_[pos]; }
 
     /// set a word in position pos
     void set_word(size_t pos, word_t word) { words_[pos] = word; }
@@ -301,6 +417,21 @@ template <size_t N> class BitArray {
         return ~word_t(0);
     }
 
+    // uint64_t find_lowest_one_bit_at_pos(size_t pos) {
+    //     size_t n = whichword(pos); // word where we find pos
+    //     pos = whichbit(pos);       // the position within word n
+    //     for (; n < nwords_; n++) {
+    //         // find a word that is not 0
+    //         if (words_[n] != word_t(0)) {
+    //             // get the lowest set bit after pos
+    //             return ui64_find_lowest_one_bit_at_pos(words_[n], pos) + n * bits_per_word;
+    //         }
+    //         pos = 0; // reset pos after searching once
+    //     }
+    //     // if the BitArray object is zero then return ~0
+    //     return ~word_t(0);
+    // }
+
     /// Implements the operation: (a & b) == b
     bool fast_a_and_b_equal_b(const BitArray<N>& b) const {
         bool result = false;
@@ -370,6 +501,30 @@ template <size_t N> class BitArray {
             return (count % 2 == 0) ? ui64_sign(getword(n), whichbit(n))
                                     : -ui64_sign(getword(n), whichbit(n));
         }
+    }
+
+    /// @brief Find the irreducible representation of a product of spin orbitals
+    /// @param temp the input BitArray
+    /// @param irrep a vector of irrep values
+    /// @return the irrep
+    int symmetry(const std::vector<int>& irrep) const {
+        int sym = 0;
+        uint64_t pos;
+        // loop over all words
+        for (size_t n = 0; n < nwords_; n++) {
+            pos = 0;
+            // find all 1s in this word
+            while (pos < 64) { // this could be replaced by a loop
+                // find the lowest set bit starting at pos
+                pos = ui64_find_lowest_one_bit_at_pos(words_[n], pos);
+                // If pos is less than 64 compute the symmetry and increment
+                if (pos < 64) {
+                    sym ^= irrep[pos + n * bits_per_word];
+                    pos++; // must be here
+                }
+            }
+        }
+        return sym;
     }
 
     /// Return the sign for a pair of second quantized operators
@@ -481,10 +636,34 @@ template <size_t N> class BitArray {
     std::array<word_t, nwords_> words_;
 #else
     /// The bits stored as a vector of words (initialized to zero at construction)
-    std::array<word_t, nwords_> words_ = {};
+    container_t words_ = {};
 #endif
 };
 
+template <size_t N> std::string str(const BitArray<N>& ba, int n = BitArray<N>::nbits) {
+    std::string s;
+    s += "|";
+    for (int p = 0; p < n; ++p) {
+        if (ba.get_bit(p)) {
+            s += "1";
+        } else {
+            s += "0";
+        }
+    }
+    s += ">";
+    return s;
+}
+
 } // namespace forte
+
+namespace std {
+template <size_t N>
+void swap(typename forte::BitArray<N>::Proxy& a, typename forte::BitArray<N>::Proxy& b) {
+    bool temp_a = static_cast<bool>(a);
+    bool temp_b = static_cast<bool>(b);
+    a = temp_b;
+    b = temp_a;
+}
+} // namespace std
 
 #endif // _bitarray_hpp_

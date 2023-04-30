@@ -208,7 +208,7 @@ SolverStatus DavidsonLiuSolver::update() {
             // check that the norm of the correction vector (before normalization) is "not small"
             if (f_norm[k] > 0.01 * r_convergence_) {
                 // Schmidt-orthogonalize the correction vector
-                if (schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
+                if (schmidt_add(b_, basis_size_, size_, f, k)) {
                     basis_size_++; // <- Increase L if we add one more basis vector
                     num_added += 1;
                 } else {
@@ -334,7 +334,7 @@ bool DavidsonLiuSolver::subspace_collapse() {
         for (size_t k = 0; k < collapse_size_; k++) {
             double norm_bnew_k = std::fabs(bnew->get_row(0, k)->norm());
             if (norm_bnew_k > schmidt_threshold_) {
-                if (schmidt_add(b_->pointer(), k, size_, bnew->pointer()[k])) {
+                if (schmidt_add(b_, k, size_, bnew, k)) {
                     basis_size_++; // <- Increase L if we add one more basis vector
                 }
             }
@@ -364,7 +364,7 @@ bool DavidsonLiuSolver::subspace_collapse() {
         basis_size_ = 0;
         sigma_size_ = 0;
         for (size_t k = 0; k < collapse_size_; k++) {
-            if (schmidt_add(b_->pointer(), k, size_, bnew->pointer()[k])) {
+            if (schmidt_add(b_, k, size_, bnew, k)) {
                 basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
@@ -387,6 +387,26 @@ void DavidsonLiuSolver::collapse_vectors() {
             }
         }
     }
+}
+
+/// add a new vector and orthogonalize it against the existing ones
+bool DavidsonLiuSolver::schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t cols,
+                                    psi::SharedMatrix vvec, int l) {
+    double** A = Amat->pointer();
+    double* v = vvec->pointer()[l];
+
+    for (size_t i = 0; i < rows; i++) {
+        const auto dotval = C_DDOT(cols, A[i], 1, v, 1);
+        for (size_t I = 0; I < cols; I++)
+            v[I] -= dotval * A[i][I];
+    }
+
+    const auto normval = std::sqrt(C_DDOT(cols, v, 1, v, 1));
+    if (normval < schmidt_threshold_)
+        return false;
+    for (size_t I = 0; I < cols; I++)
+        A[rows][I] = v[I] / normval;
+    return true;
 }
 
 std::pair<bool, bool> DavidsonLiuSolver::check_convergence() {

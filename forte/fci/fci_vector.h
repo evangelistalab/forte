@@ -180,10 +180,6 @@ class FCIVector {
     void startup();
     void cleanup();
 
-    /// Compute the energy of a determinant
-    double determinant_energy(bool*& Ia, bool*& Ib, int n,
-                              std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
     // ==> Class Private Functions <==
 
     size_t oei_index(size_t p, size_t q) const { return ncmo_ * p + q; }

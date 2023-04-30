@@ -26,45 +26,31 @@
  * @END LICENSE
  */
 
-#include "binary_graph.hpp"
+#include "string_address.h"
 
-#ifdef BIN_GRAPH_TEST
-#include "psi4/psi4-dec.h"
-#include "psi4/libpsi4util/PsiOutStream.h"
+namespace forte {
 
-bool test_string(std::vector<bool>& string, int nones, int nbits) {
-    if (string.size() != nbits) {
-        psi::outfile->Printf(
-            "\n  size_t abs_add(std::vector<bool>& string) called with string of %zu bits",
-            string.size());
-        exit(1);
+StringAddress::StringAddress(const std::vector<std::vector<String>>& strings)
+    : nirrep_(strings.size()), nstr_(0), strpi_(strings.size(), 0) {
+    for (int h = 0; h < nirrep_; h++) {
+        const auto& strings_h = strings[h];
+        for (const auto& s : strings_h) {
+            push_back(s, h);
+        }
     }
-    int nos = 0;
-    for (auto b : string) {
-        if (b)
-            nos += 1;
-    }
-    if (nos != nones) {
-        psi::outfile->Printf(
-            "\n  size_t abs_add(std::vector<bool>& string) called with string with on %d bits",
-            nos);
-        exit(1);
-    }
-    return true;
 }
 
-bool test_string(bool* string, int nones, int nbits) {
-    int nos = 0;
-    for (int n = 0; n < nbits; ++n) {
-        if (string[n])
-            nos += 1;
-    }
-    if (nos != nones) {
-        psi::outfile->Printf(
-            "\n  size_t abs_add(std::vector<bool>& string) called with string with on %d bits ",
-            nos);
-        exit(1);
-    }
-    return true;
+void StringAddress::push_back(const String& s, int irrep) {
+    size_t add = strpi_[irrep];
+    address_[s] = std::pair(add, irrep);
+    strpi_[irrep] += 1;
+    nstr_++;
 }
-#endif
+
+size_t StringAddress::add(const String& s) const { return address_.at(s).first; }
+
+int StringAddress::sym(const String& s) const { return address_.at(s).second; }
+
+size_t StringAddress::strpi(int h) const { return strpi_[h]; }
+
+} // namespace forte
