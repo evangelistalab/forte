@@ -167,24 +167,23 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
 
     std::vector<Determinant> dets;
 
-    std::vector<bool> occupation_a(nactv_);
-    std::vector<bool> occupation_b(nactv_);
+    String Ia, Ib;
 
     // add the reference determinant
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
         int aocc_h = aoccpi_[h];
         for (int i = 0; i < aocc_h; i++) {
-            occupation_a[i + offset] = true;
+            Ia[i + offset] = true;
         }
         int bocc_h = boccpi_[h];
         for (int i = 0; i < bocc_h; i++) {
-            occupation_b[i + offset] = true;
+            Ib[i + offset] = true;
         }
         offset += actvpi_[h];
     }
 
-    Determinant ref(occupation_a, occupation_b);
+    Determinant ref(Ia, Ib);
 
     // add the reference only to the total symmetric irrep
     if (irrep == 0) {

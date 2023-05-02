@@ -570,8 +570,7 @@ void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
 }
 
 void FCIVector::rdm_test() {
-    bool* Ia = new bool[ncmo_];
-    bool* Ib = new bool[ncmo_];
+    String Ia, Ib;
 
     // Generate the strings 1111100000
     //                      { k }{n-k}
@@ -593,18 +592,12 @@ void FCIVector::rdm_test() {
     std::map<Determinant, size_t> dets_map;
 
     std::vector<double> C;
-    std::vector<bool> a_occ(ncmo_);
-    std::vector<bool> b_occ(ncmo_);
 
     size_t num_det = 0;
     do {
-        for (size_t i = 0; i < ncmo_; ++i)
-            a_occ[i] = Ia[i];
         do {
-            for (size_t i = 0; i < ncmo_; ++i)
-                b_occ[i] = Ib[i];
             if ((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == static_cast<int>(symmetry_)) {
-                Determinant d(a_occ, b_occ);
+                Determinant d(Ia, Ib);
                 dets.push_back(d);
                 double c = C_[alfa_graph_->sym(Ia)]->get(alfa_graph_->rel_add(Ia),
                                                          beta_graph_->rel_add(Ib));
@@ -612,8 +605,8 @@ void FCIVector::rdm_test() {
                 dets_map[d] = num_det;
                 num_det++;
             }
-        } while (std::next_permutation(Ib, Ib + ncmo_));
-    } while (std::next_permutation(Ia, Ia + ncmo_));
+        } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo_));
+    } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo_));
 
     Determinant I; // <- xsize (no_);
 
@@ -921,8 +914,6 @@ void FCIVector::rdm_test() {
         psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         outfile->Printf("\n    BBBBBB 3-RDM Error : %+e", error_3rdm_bbb);
     }
-    delete[] Ia;
-    delete[] Ib;
 }
 
 double FCIVector::compute_spin2() {

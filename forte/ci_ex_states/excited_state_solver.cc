@@ -431,17 +431,17 @@ ExcitedStateSolver::read_wave_function(const std::string& filename) {
         norbs = det_str.size() - 2;
 
         // form determinant
-        std::vector<bool> alpha(norbs, false), beta(norbs, false);
+        String Ia, Ib;
         for (size_t i = 0; i < norbs; ++i) {
             char x = det_str[i + 1];
             if (x == '2' or x == '+') {
-                alpha[i] = true;
+                Ia[i] = true;
             }
             if (x == '2' or x == '-') {
-                beta[i] = true;
+                Ib[i] = true;
             }
         }
-        det_space.emplace_back(alpha, beta);
+        det_space.emplace_back(Ia, Ib);
 
         size_t last = next + 1, n = 0;
         while ((next = line.find(delimiter, last)) != std::string::npos) {
