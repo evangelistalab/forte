@@ -472,8 +472,6 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver = forte.make_active_space_solver(
         active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
     )
-    if options.get_bool("WRITE_AS_H"):
-        make_hamiltonian(as_ints, state_map)
 
     if active_space_solver_type == 'EXTERNAL':
         write_external_active_space_file(as_ints, state_map, mo_space_info, "as_ints.json")

@@ -26,19 +26,19 @@ def read_wavefunction(ref_wfn):
         data = json.load(f)
         C_read = data["Ca"]
 
-        C_list = []
-        for i in range(len(C_read)):
-            if not C_read[i]:
-                C_list.append(None)
-            else:
-                C_list.append(np.asarray(C_read[i]))
-        # print(C_list)
-        if ref_wfn.nirrep() != 1:
-            C_mat = psi4.core.Matrix.from_array(C_list)
-        else:  # C1 no spatial symmetry, input is list(np.ndarray)
-            C_mat = psi4.core.Matrix.from_array([np.asarray(C_list)])
-        ref_wfn.Ca().copy(C_mat)
-        ref_wfn.Cb().copy(C_mat)
+    C_list = []
+    for i in range(len(C_read)):
+        if not C_read[i]:
+            C_list.append(None)
+        else:
+            C_list.append(np.asarray(C_read[i]))
+
+    if ref_wfn.nirrep() != 1:
+        C_mat = psi4.core.Matrix.from_array(C_list)
+    else:  # C1 no spatial symmetry, input is list(np.ndarray)
+        C_mat = psi4.core.Matrix.from_array([np.asarray(C_list)])
+    ref_wfn.Ca().copy(C_mat)
+    ref_wfn.Cb().copy(C_mat)
 
 
 def write_external_active_space_file(as_ints, state_map, mo_space_info, json_file="forte_ints.json"):
@@ -143,20 +143,6 @@ def make_hamiltonian(as_ints, state_map):
                           
         print(f'\n==> Active Space Hamiltonian <==\n')
         print(f'\n{H}')
-        
-        evals, _ = np.linalg.eigh(H)
-        e_casci = evals[0] + scalar_e
-        print(f'\nCASCI Energy = {e_casci}')
-
-        dets_str = [d.str(4) for d in dets]
-        as_ham = {'dets_list': dets_str,
-                  'hamiltonian': H.tolist(),
-                  'scalar_e': scalar_e,
-                  'e_ci': e_casci, }
-
-        import json
-        with open(f'as_ham.json', 'w') as file:
-            json.dump(as_ham, file, indent=4)
 
 
 def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level):
@@ -308,44 +294,6 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
 
     with open('ref_rdms.json', 'w+') as f:
         json.dump(file, f, sort_keys=True, indent=2)
-
-
-#import functools
-
-#dets = []
-#orbs = range(nact)
-
-## get the symmetry of each active orbital
-#act_sym = mo_space_info.symmetry('ACTIVE')
-
-#nact_ael = sum(nact_aelpi)
-#nact_bel = sum(nact_belpi)
-#print(f'Number of alpha electrons: {nact_ael}')
-#print(f'Number of beta electrons:  {nact_bel}')
-
-## or we could use the more fancy looping below that avoid computing half of the matrix elements
-## for I, detI in enumerate(dets):
-##     H[I][I] = as_ints.slater_rules(detI,detI) # diagonal term
-##     for J, detJ in enumerate(dets[:I]):
-##         HIJ = as_ints.slater_rules(detI,detJ) # off-diagonal term (only upper half)
-##         H[I][J] = H[J][I] = HIJ
-
-#print(H)
-#evals, evecs = np.linalg.eigh(H)
-
-#psi4_fci = -74.846380133240530
-#print(f'FCI Energy = {evals[0] + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy()}')
-#print(f'FCI Energy Error = {evals[0] + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy()- psi4_fci}')
-
-#index_hf = dets.index(ref)
-#print(f'Index of the HF determinant in the FCI vector {index_hf}')
-
-#file = {
-#    "hamiltonian" : {"data" : [(0,0,0.0)],
-#                     "description" : "matrix elements of the Hamiltonian as a list of tuples (I,J,<I|H|J>)"},
-#    "determinants" : {"data" : [(1,1,0,0),(0,0,1,1)],
-#                     "description" : "the basis of determinants (I) in occupation number representation (I = i_1 i_2 ... i_nso)"},
-#}
 
 
 def read_external_active_space_file(as_ints, state_map):

@@ -81,9 +81,6 @@ def register_driver_options(options):
         "Initial guess for active space wave functions"
     )
 
-    options.add_bool(
-        "WRITE_AS_H", False, "Write active-space Hamiltonian matrix to as_ham.json for external computations"
-    )
     options.add_bool("WRITE_RDM", False, "Save RDMs to ref_rdms.json for external computations")
 
     # TODO: Remove these in the future since they are redundant with READ/DUMP_ORBITALS (although they use different formats json vs. numpy)
