@@ -161,6 +161,9 @@ class ActiveSpaceIntegrals {
     /// Print the alpha-alpha integrals
     void print();
 
+    /// Add (scalar, oei, tei) another ActiveSpaceIntegrals
+    void add(std::shared_ptr<ActiveSpaceIntegrals> as_ints, const double factor = 1.0);
+
   private:
     // ==> Class Private Data <==
 
@@ -193,15 +196,6 @@ class ActiveSpaceIntegrals {
     /// The beta-beta antisymmetrized two-electron integrals in physicist
     /// notation
     std::vector<double> tei_bb_;
-    /// The diagonal alpha-alpha antisymmetrized two-electron integrals in
-    /// physicist notation
-    std::vector<double> diag_tei_aa_;
-    /// The diagonal alpha-beta antisymmetrized two-electron integrals in
-    /// physicist notation
-    std::vector<double> diag_tei_ab_;
-    /// The diagonal beta-beta antisymmetrized two-electron integrals in
-    /// physicist notation
-    std::vector<double> diag_tei_bb_;
     /// A vector of indices for the active molecular orbitals
     std::vector<size_t> active_mo_;
     /// A vector of the symmetry ofthe active molecular orbitals

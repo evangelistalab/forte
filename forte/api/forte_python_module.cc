@@ -321,6 +321,8 @@ PYBIND11_MODULE(_forte, m) {
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
         .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
         .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
+        .def("add", &ActiveSpaceIntegrals::add, "Add another integrals to this one", "as_ints"_a,
+             "factor"_a = 1.0)
         .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
 
     // export ActiveMultipoleIntegrals
@@ -371,19 +373,19 @@ PYBIND11_MODULE(_forte, m) {
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
 
-    // export spin-adapted DSRG-MRPT2
-    py::class_<SA_MRPT2>(m, "SA_MRPT2")
-        .def("compute_energy", &SA_MRPT2::compute_energy, "Compte the DSRG-MRPT2 energy")
-        .def("compute_Heff_actv", &SA_MRPT2::compute_Heff_actv,
-             "Return the DSRG dressed ActiveSpaceIntegrals")
-        .def("compute_mp_eff_actv", &SA_MRPT2::compute_mp_eff_actv,
-             "Return the DSRG dressed ActiveMultipoleIntegrals")
-        .def("set_Uactv", &SA_MRPT2::set_Uactv, "Ua"_a,
-             "Set active part orbital rotation matrix (from original to semicanonical)")
-        .def("set_active_space_solver", &SA_MRPT2::set_active_space_solver,
-             "Set the pointer of ActiveSpaceSolver")
-        .def("set_state_weights_map", &SA_MRPT2::set_state_weights_map,
-             "Set the map from state to the weights of all computed roots");
+//     // export spin-adapted DSRG-MRPT2
+//     py::class_<SA_MRPT2>(m, "SA_MRPT2")
+//         .def("compute_energy", &SA_MRPT2::compute_energy, "Compte the DSRG-MRPT2 energy")
+//         .def("compute_Heff_actv", &SA_MRPT2::compute_Heff_actv,
+//              "Return the DSRG dressed ActiveSpaceIntegrals")
+//         .def("compute_mp_eff_actv", &SA_MRPT2::compute_mp_eff_actv,
+//              "Return the DSRG dressed ActiveMultipoleIntegrals")
+//         .def("set_Uactv", &SA_MRPT2::set_Uactv, "Ua"_a,
+//              "Set active part orbital rotation matrix (from original to semicanonical)")
+//         .def("set_active_space_solver", &SA_MRPT2::set_active_space_solver,
+//              "Set the pointer of ActiveSpaceSolver")
+//         .def("set_state_weights_map", &SA_MRPT2::set_state_weights_map,
+//              "Set the map from state to the weights of all computed roots");
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")

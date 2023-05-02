@@ -176,9 +176,6 @@ void ActiveSpaceIntegrals::startup() {
     tei_aa_.resize(nmo4_);
     tei_ab_.resize(nmo4_);
     tei_bb_.resize(nmo4_);
-    diag_tei_aa_.resize(nmo2_);
-    diag_tei_ab_.resize(nmo2_);
-    diag_tei_bb_.resize(nmo2_);
     frozen_core_energy_ = ints_->frozen_core_energy();
 }
 
@@ -543,6 +540,27 @@ void ActiveSpaceIntegrals::print() {
             }
         }
     }
+}
+
+void ActiveSpaceIntegrals::add(std::shared_ptr<ActiveSpaceIntegrals> as_ints, const double factor) {
+    if (as_ints->active_mo_symmetry() != active_mo_symmetry_)
+        throw std::runtime_error("Inconsistent active orbitals cannot be added!");
+
+    scalar_energy_ += factor * as_ints->scalar_energy();
+
+    auto add_op = [&factor](double lhs, double rhs) { return lhs + factor * rhs; };
+
+    std::transform(oei_a_.begin(), oei_a_.end(), as_ints->oei_a_vector().begin(), oei_a_.begin(),
+                   add_op);
+    std::transform(oei_b_.begin(), oei_b_.end(), as_ints->oei_b_vector().begin(), oei_b_.begin(),
+                   add_op);
+
+    std::transform(tei_aa_.begin(), tei_aa_.end(), as_ints->tei_aa_vector().begin(),
+                   tei_aa_.begin(), add_op);
+    std::transform(tei_ab_.begin(), tei_ab_.end(), as_ints->tei_ab_vector().begin(),
+                   tei_ab_.begin(), add_op);
+    std::transform(tei_bb_.begin(), tei_bb_.end(), as_ints->tei_bb_vector().begin(),
+                   tei_bb_.begin(), add_op);
 }
 
 std::shared_ptr<ActiveSpaceIntegrals>
