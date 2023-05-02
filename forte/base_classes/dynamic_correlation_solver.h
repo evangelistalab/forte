@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -37,6 +37,7 @@
 #include "base_classes/rdms.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
+#include "integrals/one_body_integrals.h"
 
 namespace forte {
 
@@ -60,6 +61,11 @@ class DynamicCorrelationSolver {
 
     /// Compute dressed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv() = 0;
+
+    /// Compute dressed multipole integrals
+    virtual std::shared_ptr<ActiveMultipoleIntegrals> compute_mp_eff_actv() {
+        throw std::runtime_error("Need to overload this function");
+    }
 
     /// Destructor
     virtual ~DynamicCorrelationSolver() = default;

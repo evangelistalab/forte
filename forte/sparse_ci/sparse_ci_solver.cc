@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -100,7 +100,7 @@ SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
 
     if ((!force_diag_ and (space.size() <= 200)) or
         sigma_vector->sigma_vector_type() == SigmaVectorType::Full) {
-        outfile->Printf("\n\n  Performing diagonalization of the H matrix");
+        outfile->Printf("\n\n  Performing full diagonalization of the H matrix");
         const std::vector<Determinant> dets = space.determinants();
         return diagonalize_hamiltonian_full(dets, sigma_vector->as_ints(), nroot, multiplicity);
     }
@@ -431,7 +431,7 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
     H.transform(S2evecs);
 
     // Find groups of solutions with same spin
-    double Stollerance = 1.0e-6;
+    double Stollerance = 1.0e-9;
     std::map<int, std::vector<int>> mult_list;
     for (size_t i = 0; i < nguess; ++i) {
         double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))

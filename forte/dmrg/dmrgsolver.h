@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -143,7 +143,7 @@ class DMRGSolver : public ActiveSpaceMethod {
 
     /// Return the RDMs for the current state
     std::shared_ptr<RDMs> fill_current_rdms(std::shared_ptr<CheMPS2::DMRG> solver,
-                                            const bool do_3rdm, RDMsType rdm_type);
+                                            const int max_rdm_level, RDMsType rdm_type);
 };
 } // namespace forte
 #endif // _dmrgsolver_h_

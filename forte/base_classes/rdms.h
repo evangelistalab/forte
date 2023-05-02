@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,6 +29,7 @@
 #ifndef _rdms_h_
 #define _rdms_h_
 
+#include <string>
 #include <vector>
 #include <ambit/tensor.h>
 #include "psi4/libmints/matrix.h"
@@ -91,6 +92,19 @@ class MOSpaceInfo;
  * >>> g2bb("pqrs") += 0.5 * xg2bb("pqrs");
  * >>> rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb);
  *
+ * The RDMs can be dumped to disk by calling
+ *
+ * >>> rdms->dump_to_disk("casci.1a1");
+ *
+ * This will generate a series of files with names begining with "casci.1a1",
+ * such as casci.1a1.g1a.bin, casci.1a1.g1b.bin, casci.1a1.g2aa.bin, ...
+ * If these files are available, it is possible to initialize an RDMs object via
+ *
+ * >>> auto frdms = RDMs::build_from_disk(2, RDMsType::spin_dependent, "casci.1a1");
+ *
+ * which tries to read the following files: casci.1a1.g1a.bin, casci.1a1.g1b.bin,
+ * casci.1a1.g2aa.bin, casci.1a1.g2ab.bin, and casci.1a1.g2ab.bin.
+ * Note that names after the prefix (g1a.bin, g2aa.bin, ...) are hard coded.
  */
 
 enum class RDMsType { spin_dependent, spin_free };
@@ -99,7 +113,11 @@ class RDMs {
   public:
     /// Build a zero-valued RDMs object
     static std::shared_ptr<RDMs> build(size_t max_rdm_level, size_t n_orbs, RDMsType type);
+    /// Initialize RDMs from disk
+    static std::shared_ptr<RDMs> build_from_disk(size_t max_rdm_level, RDMsType type,
+                                                 const std::string& filename_prefix = "");
 
+    /// Default desctructor
     virtual ~RDMs(){};
 
     /// @return the max RDM level
@@ -122,6 +140,11 @@ class RDMs {
 
     /// Rotate the current RDMs using the input unitary matrices
     virtual void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) = 0;
+
+    /// Save the current RDMs to disk (binary files)
+    virtual void dump_to_disk(const std::string& filename_prefix = "") const = 0;
+    /// Save the spin-summed 1-RDMs to disk in human readable form
+    void save_SF_G1(const std::string& filename);
 
     // static methods
 
@@ -230,7 +253,8 @@ class RDMs {
     size_t n_orbs_ = 0;
 
     /// Test if the RDM dimensions are valid
-    void _test_rdm_dims(const ambit::Tensor& T, const std::string& name) const;
+    void _test_rdm_dims(const ambit::Tensor& T, const std::string& name,
+                        size_t desired_dim_size) const;
     /// Test if a function is asked for the correct level of RDMs
     void _test_rdm_level(const size_t& level, const std::string& name) const;
     /// Test if RDMs rotation can be bypassed (i.e., if Ua and Ub are identity matrices)
@@ -313,6 +337,9 @@ class RDMsSpinDependent : public RDMs {
 
     /// Rotate the current RDMs using the input unitary matrices
     void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) override;
+
+    /// Save the current RDMs to disk
+    void dump_to_disk(const std::string& filename_prefix = "") const override;
 
   private:
     /// The alpha 1-RDM
@@ -407,6 +434,9 @@ class RDMsSpinFree : public RDMs {
 
     /// Rotate the current RDMs using the input unitary matrices
     void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) override;
+
+    /// Save the current RDMs to disk
+    void dump_to_disk(const std::string& filename_prefix = "") const override;
 
   private:
     /// Spin-free (spin-summed) 1-RDM defined as G1[pq] = g1a[pq] + g1b[pq]

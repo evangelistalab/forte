@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -69,9 +69,17 @@ const std::vector<size_t>& StateInfo::gas_min() const { return gas_min_; }
 const std::vector<size_t>& StateInfo::gas_max() const { return gas_max_; }
 
 bool StateInfo::operator<(const StateInfo& rhs) const {
-    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_) <
-           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_, rhs.gas_min_,
-                    rhs.gas_max_);
+    // Make sure the roots are in increasing energy order for core-excited state calcualtions
+    if ((gas_min_ == rhs.gas_min_) && (gas_max_ == rhs.gas_max_)) {
+        return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) <
+               std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
+    } else if (gas_max_ == rhs.gas_max_) {
+        // The state with a smaller gas occupation in the first gas space is 'bigger'.
+        // Ground state is smaller than core-excited state under this definition.
+        return gas_min_ > rhs.gas_min_;
+    } else {
+        return gas_max_ > rhs.gas_max_;
+    }
 }
 
 bool StateInfo::operator!=(const StateInfo& rhs) const {
@@ -117,7 +125,7 @@ StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
         twice_ms = std::lround(2.0 * options->get_double("MS"));
     }
 
-    if (((nel - twice_ms) % 2) != 0){
+    if (((nel - twice_ms) % 2) != 0) {
         throw std::runtime_error("\n\n  make_state_info_from_psi: Wrong value of M_s.\n\n");
     }
 

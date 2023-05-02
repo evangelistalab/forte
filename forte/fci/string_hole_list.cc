@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -56,9 +56,7 @@ std::vector<H1StringSubstitution>& StringLists::get_beta_1h_list(int h_I, size_t
 void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) {
     int n = graph->nbits();
     int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
-
+    String I, J;
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
             // Generate the strings 1111100000
@@ -71,12 +69,10 @@ void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) 
                 if (graph->sym(I) == h_I) {
                     size_t add_I = graph->rel_add(I);
                     for (size_t p = 0; p < ncmo_; ++p) {
-                        // copy I to J
-                        for (int i = 0; i < n; ++i)
-                            J[i] = I[i];
-                        if (J[p]) {
+                        if (I[p]) {
+                            J = I;
                             J[p] = false;
-                            short sign = string_sign(J, p);
+                            short sign = J.slater_sign(p);
 
                             int h_J = graph_1h->sym(J);
                             size_t add_J = graph_1h->rel_add(J);
@@ -86,11 +82,9 @@ void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) 
                         }
                     }
                 }
-            } while (std::next_permutation(I, I + n));
+            } while (std::next_permutation(I.begin(), I.begin() + n));
         }
     } // End loop over h
-    delete[] J;
-    delete[] I;
 }
 
 std::vector<H2StringSubstitution>& StringLists::get_alfa_2h_list(int h_I, size_t add_I, int h_J) {
@@ -106,8 +100,7 @@ std::vector<H2StringSubstitution>& StringLists::get_beta_2h_list(int h_I, size_t
 void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) {
     int n = graph->nbits();
     int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
+    String I, J;
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
@@ -121,37 +114,29 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) 
                 if (graph->sym(I) == h_I) {
                     size_t add_I = graph->rel_add(I);
                     for (size_t q = 0; q < ncmo_; ++q) {
-                        for (size_t p = 0; p < ncmo_; ++p) {
-                            if (p != q) {
-                                // copy I to J
-                                for (int i = 0; i < n; ++i)
-                                    J[i] = I[i];
-                                if (J[q]) {
-                                    J[q] = false;
-                                    short q_sign = string_sign(J, q);
-                                    if (J[p]) {
-                                        J[p] = false;
-                                        short p_sign = string_sign(J, p);
+                        for (size_t p = q + 1; p < ncmo_; ++p) {
+                            if (I[q] and I[p]) {
+                                J = I;
+                                J[q] = false;
+                                short q_sign = J.slater_sign(q);
+                                J[p] = false;
+                                short p_sign = J.slater_sign(p);
 
-                                        short sign = p_sign * q_sign;
+                                short sign = p_sign * q_sign;
 
-                                        int h_J = graph_2h->sym(J);
-                                        size_t add_J = graph_2h->rel_add(J);
+                                int h_J = graph_2h->sym(J);
+                                size_t add_J = graph_2h->rel_add(J);
 
-                                        std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
-                                        list[I_tuple].push_back(
-                                            H2StringSubstitution(sign, p, q, add_I));
-                                    }
-                                }
+                                std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+                                list[I_tuple].push_back(H2StringSubstitution(sign, p, q, add_I));
+                                list[I_tuple].push_back(H2StringSubstitution(-sign, q, p, add_I));
                             }
                         }
                     }
                 }
-            } while (std::next_permutation(I, I + n));
+            } while (std::next_permutation(I.begin(), I.begin() + n));
         }
     } // End loop over h
-    delete[] J;
-    delete[] I;
 }
 
 std::vector<H3StringSubstitution>& StringLists::get_alfa_3h_list(int h_I, size_t add_I, int h_J) {
@@ -173,8 +158,7 @@ std::vector<H3StringSubstitution>& StringLists::get_beta_3h_list(int h_I, size_t
 void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) {
     int n = graph->nbits();
     int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
+    String I, J;
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
@@ -190,43 +174,41 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
 
                     // apply a_r I
                     for (size_t r = 0; r < ncmo_; ++r) {
-                        for (size_t q = 0; q < ncmo_; ++q) {
-                            for (size_t p = 0; p < ncmo_; ++p) {
-                                if ((p != q) and (p != r) and (q != r)) {
-                                    // copy I to J
-                                    for (int i = 0; i < n; ++i)
-                                        J[i] = I[i];
-                                    if (J[r]) {
-                                        J[r] = false;
-                                        short r_sign = string_sign(J, r);
-                                        if (J[q]) {
-                                            J[q] = false;
-                                            short q_sign = string_sign(J, q);
-                                            if (J[p]) {
-                                                J[p] = false;
-                                                short p_sign = string_sign(J, p);
+                        for (size_t q = r + 1; q < ncmo_; ++q) {
+                            for (size_t p = q + 1; p < ncmo_; ++p) {
+                                if (I[r] and I[q] and I[p]) {
+                                    J = I;
+                                    J[r] = false;
+                                    short r_sign = J.slater_sign(r);
+                                    J[q] = false;
+                                    short q_sign = J.slater_sign(q);
+                                    J[p] = false;
+                                    short p_sign = J.slater_sign(p);
+                                    short sign = p_sign * q_sign * r_sign;
 
-                                                short sign = p_sign * q_sign * r_sign;
+                                    int h_J = graph_3h->sym(J);
+                                    size_t add_J = graph_3h->rel_add(J);
 
-                                                int h_J = graph_3h->sym(J);
-                                                size_t add_J = graph_3h->rel_add(J);
-
-                                                std::tuple<int, size_t, int> I_tuple(h_J, add_J,
-                                                                                     h_I);
-                                                list[I_tuple].push_back(
-                                                    H3StringSubstitution(sign, p, q, r, add_I));
-                                            }
-                                        }
-                                    }
+                                    std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(+sign, p, q, r, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(-sign, p, r, q, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(-sign, q, p, r, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(+sign, q, r, p, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(-sign, r, q, p, add_I));
+                                    list[I_tuple].push_back(
+                                        H3StringSubstitution(+sign, r, p, q, add_I));
                                 }
                             }
                         }
                     }
                 }
-            } while (std::next_permutation(I, I + n));
+            } while (std::next_permutation(I.begin(), I.begin() + n));
         } // End loop over h
     }
-    delete[] J;
-    delete[] I;
 }
 } // namespace forte

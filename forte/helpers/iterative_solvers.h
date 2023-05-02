@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -128,8 +128,10 @@ class DavidsonLiuSolver {
   private:
     // ==> Class Private Functions <==
 
-    /// Check that the eigenvectors are orthogonal
-    bool check_orthogonality();
+    /// Check that the eigenvectors are orthogonal. Throws if fails
+    void check_orthogonality();
+    /// Check that the mini-Hamiltonian is Hermitian. Throws if fails
+    void check_G_hermiticity();
     /// Check if the the iterative procedure has converged
     /// @return a pair of boolean (is_energy_converged,is_residual_converged)
     std::pair<bool, bool> check_convergence();
@@ -139,6 +141,9 @@ class DavidsonLiuSolver {
     void compute_residual_norm();
     /// Project out undesired roots
     void project_out_roots(psi::SharedMatrix v);
+    /// Perform the Schmidt orthogonalization (add a new vector to the subspace)
+    bool schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t cols, psi::SharedMatrix vvec,
+                     int l);
     /// Normalize the correction vectors and return the norm of the vectors before they were
     /// normalized
     std::vector<double> normalize_vectors(psi::SharedMatrix v, size_t n);
@@ -157,6 +162,10 @@ class DavidsonLiuSolver {
     double r_convergence_ = 1.0e-6;
     /// The threshold used to discard correction vectors
     double schmidt_threshold_ = 1.0e-8;
+    /// The threshold used to detect a nonhermitian Hamiltonian
+    double nonhermitian_G_threshold_ = 1.0e-12;
+    /// The threshold used to detect nonorthogonality among the roots
+    double orthogonality_threshold_ = 1.0e-12;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested

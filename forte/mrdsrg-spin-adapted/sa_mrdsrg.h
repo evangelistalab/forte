@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -87,7 +87,7 @@ class SA_MRDSRG : public SADSRG {
     bool restart_amps_;
 
     /// Prefix for file name for restart
-    std::string restart_file_prefix_;
+    std::string chk_filename_prefix_;
 
     /// Dump the converged amplitudes to disk
     void dump_amps_to_disk() override;
@@ -190,6 +190,12 @@ class SA_MRDSRG : public SADSRG {
 
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
+
+    /// Compute DSRG-transformed multipoles
+    void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                            const std::vector<int>& max_levels) override;
+    /// Compute DSRG-transformed multipoles using LDSRG(1) or LDSRG(2)
+    void compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int max_level, int ind);
 };
 } // namespace forte
 

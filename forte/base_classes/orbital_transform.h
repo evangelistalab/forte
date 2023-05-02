@@ -25,18 +25,19 @@ class OrbitalTransform {
 
     virtual void compute_transformation() = 0;
 
-    virtual psi::SharedMatrix get_Ua() = 0;
+    psi::SharedMatrix get_Ua() { return Ua_; };
 
-    virtual psi::SharedMatrix get_Ub() = 0;
+    psi::SharedMatrix get_Ub() { return Ub_; };
 
+  protected:
     // The integrals
     std::shared_ptr<ForteIntegrals> ints_;
     /// The MOSpace info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-  private:
+    /// @brief Unitary matrix for alpha orbital rotations
     psi::SharedMatrix Ua_;
-
+    /// @brief Unitary matrix for beta orbital rotations
     psi::SharedMatrix Ub_;
 };
 

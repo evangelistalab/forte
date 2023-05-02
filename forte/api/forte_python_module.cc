@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -61,6 +61,7 @@
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-adapted/sadsrg.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
+#include "integrals/one_body_integrals.h"
 
 #include "post_process/spin_corr.h"
 
@@ -107,6 +108,10 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Set the active space integrals manually")
         .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
              "Set unitary matrices for changing orbital basis in RDMs when computing dipoles")
+        .def("compute_dipole_moment", &ActiveSpaceSolver::compute_dipole_moment,
+             "Compute transition dipole moment")
+        .def("compute_quadrupole_moment", &ActiveSpaceSolver::compute_quadrupole_moment,
+             "Compute transition quadrupole moment")
         .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs,
              "Compute the oscillator strength assuming using same orbitals")
         .def("state_ci_wfn_map", &ActiveSpaceSolver::state_ci_wfn_map,
@@ -318,6 +323,17 @@ PYBIND11_MODULE(_forte, m) {
         .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
         .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
 
+    // export ActiveMultipoleIntegrals
+    py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(
+        m, "ActiveMultipoleIntegrals")
+        .def("compute_electronic_dipole", &ActiveMultipoleIntegrals::compute_electronic_dipole)
+        .def("compute_electronic_quadrupole",
+             &ActiveMultipoleIntegrals::compute_electronic_quadrupole)
+        .def("nuclear_dipole", &ActiveMultipoleIntegrals::nuclear_dipole)
+        .def("nuclear_quadrupole", &ActiveMultipoleIntegrals::nuclear_quadrupole)
+        .def("set_dipole_name", &ActiveMultipoleIntegrals::set_dp_name)
+        .def("set_quadrupole_name", &ActiveMultipoleIntegrals::set_qp_name);
+
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
@@ -348,6 +364,8 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &SADSRG::compute_energy, "Compute the DSRG energy")
         .def("compute_Heff_actv", &SADSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("compute_mp_eff_actv", &SADSRG::compute_mp_eff_actv,
+             "Return the DSRG dressed ActiveMultipoleIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
         .def("set_active_space_solver", &SADSRG::set_active_space_solver,

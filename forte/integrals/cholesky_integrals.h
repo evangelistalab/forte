@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -73,7 +73,8 @@ class CholeskyIntegrals : public Psi4Integrals {
 
     double** three_integral_pointer() override;
     ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
-                                       const std::vector<size_t>& q) override;
+                                       const std::vector<size_t>& q,
+                                       ThreeIntsBlockOrder order = Qpq) override;
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                  const std::vector<size_t>&) override;
     /// Do not use this if you are using CD/DF integrals

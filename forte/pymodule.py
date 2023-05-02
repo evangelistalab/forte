@@ -173,8 +173,19 @@ def prepare_psi4_ref_wfn(options, **kwargs):
         wfn_new = ref_wfn
     else:
         # test if input Ca has the correct dimension
-        if Ca.rowdim() != nmopi or Ca.coldim() != nmopi:
-            raise ValueError("Invalid orbitals: different basis set / molecule")
+        if Ca.rowdim() != ref_wfn.nsopi() or Ca.coldim() != nmopi:
+            p4print("\n  Expecting orbital dimensions:\n")
+            p4print("\n  row:    ")
+            ref_wfn.nsopi().print_out()
+            p4print("  column: ")
+            nmopi.print_out()
+            p4print("\n  Actual orbital dimensions:\n")
+            p4print("\n  row:    ")
+            Ca.rowdim().print_out()
+            p4print("  column: ")
+            Ca.coldim().print_out()
+            msg = "Invalid orbitals: different basis set / molecule! Check output for more."
+            raise ValueError(msg)
 
         new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
 

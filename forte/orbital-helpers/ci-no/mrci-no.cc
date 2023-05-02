@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -33,6 +33,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "psi4/libmints/vector.h"
+#include "helpers/disk_io.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "base_classes/mo_space_info.h"
@@ -92,9 +93,6 @@ MRCINO::MRCINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
 }
 
 MRCINO::~MRCINO() {}
-
-psi::SharedMatrix MRCINO::get_Ua() { return Ua_; }
-psi::SharedMatrix MRCINO::get_Ub() { return Ub_; }
 
 void MRCINO::compute_transformation() {
     outfile->Printf("\n\n  Computing CIS natural orbitals\n");
@@ -561,19 +559,19 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
     gamma_a_vir->set_name("Gamma alpha virtual");
 
     // Diagonalize alpha density matrix
-    psi::SharedMatrix NO_A_occ(new psi::Matrix(aoccpi, aoccpi));
-    psi::SharedMatrix NO_A_vir(new psi::Matrix(avirpi, avirpi));
-    psi::SharedVector OCC_A_occ(new Vector("Occupied ALPHA OCCUPATION", aoccpi));
-    psi::SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
+    auto NO_A_occ = std::make_shared<psi::Matrix>(aoccpi, aoccpi);
+    auto NO_A_vir = std::make_shared<psi::Matrix>(avirpi, avirpi);
+    auto OCC_A_occ = std::make_shared<Vector>("Occupied ALPHA OCCUPATION", aoccpi);
+    auto OCC_A_vir = std::make_shared<Vector>("Virtual ALPHA OCCUPATION", avirpi);
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
     gamma_a_vir->diagonalize(NO_A_vir, OCC_A_vir, descending);
     //    OCC_A_occ->print();
     //    OCC_A_vir->print();
 
-    OCC_A->set_block(aocc_slice, OCC_A_occ);
-    NO_A->set_block(aocc_slice, aocc_slice, NO_A_occ);
-    OCC_A->set_block(avir_slice, OCC_A_vir);
-    NO_A->set_block(avir_slice, avir_slice, NO_A_vir);
+    OCC_A->set_block(aocc_slice, *OCC_A_occ);
+    NO_A->set_block(aocc_slice, aocc_slice, *NO_A_occ);
+    OCC_A->set_block(avir_slice, *OCC_A_vir);
+    NO_A->set_block(avir_slice, avir_slice, *NO_A_vir);
 
     /// Diagonalize Beta density matrix
     psi::Dimension boccpi = ints_->wfn()->nbetapi() - fdoccpi_;
@@ -581,27 +579,27 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
 
     // Grab the beta occupied/virtual block of the density matrix
     Slice bocc_slice(zero_dim, boccpi);
-    psi::SharedMatrix gamma_b_occ = gamma.second->get_block(bocc_slice, bocc_slice);
+    auto gamma_b_occ = gamma.second->get_block(bocc_slice, bocc_slice);
     gamma_b_occ->set_name("Gamma beta occupied");
 
     Slice bvir_slice(boccpi, corrpi_);
-    psi::SharedMatrix gamma_b_vir = gamma.second->get_block(bvir_slice, bvir_slice);
+    auto gamma_b_vir = gamma.second->get_block(bvir_slice, bvir_slice);
     gamma_b_vir->set_name("Gamma beta virtual");
 
     // Diagonalize beta density matrix
-    psi::SharedMatrix NO_B_occ(new psi::Matrix(boccpi, boccpi));
-    psi::SharedMatrix NO_B_vir(new psi::Matrix(bvirpi, bvirpi));
-    psi::SharedVector OCC_B_occ(new Vector("Occupied BETA OCCUPATION", boccpi));
-    psi::SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
+    auto NO_B_occ = std::make_shared<psi::Matrix>(boccpi, boccpi);
+    auto NO_B_vir = std::make_shared<psi::Matrix>(bvirpi, bvirpi);
+    auto OCC_B_occ = std::make_shared<Vector>("Occupied BETA OCCUPATION", aoccpi);
+    auto OCC_B_vir = std::make_shared<Vector>("Virtual BETA OCCUPATION", avirpi);
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
     gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
     //        OCC_B_occ->print();
     //        OCC_B_vir->print();
 
-    OCC_B->set_block(bocc_slice, OCC_B_occ);
-    NO_B->set_block(bocc_slice, bocc_slice, NO_B_occ);
-    OCC_B->set_block(bvir_slice, OCC_B_vir);
-    NO_B->set_block(bvir_slice, bvir_slice, NO_B_vir);
+    OCC_B->set_block(bocc_slice, *OCC_B_occ);
+    NO_B->set_block(bocc_slice, bocc_slice, *NO_B_occ);
+    OCC_B->set_block(bvir_slice, *OCC_B_vir);
+    NO_B->set_block(bvir_slice, bvir_slice, *NO_B_vir);
 
     //        gamma.first->diagonalize(NO_A, OCC_A, descending);
     //        gamma.second->diagonalize(NO_B, OCC_B, descending);
@@ -690,6 +688,10 @@ void MRCINO::find_active_space_and_transform(
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
     outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
     // outfile->Printf("\n  RESTRICTED_UOCC = %s", dimension_to_string(noci_rducc).c_str());
+
+    dump_occupations(
+        "mrci_nos_occ",
+        {{"FROZEN_DOCC", noci_fdocc}, {"RESTRICTED_DOCC", noci_rdocc}, {"ACTIVE", noci_actv}});
 
     // Pass the MOSpaceInfo
     //   if (mrcino_auto) {

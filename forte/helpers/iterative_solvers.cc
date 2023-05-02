@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -71,6 +71,7 @@ void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
     bnew = std::make_shared<psi::Matrix>("bnew", subspace_size_, size_);
     f = std::make_shared<psi::Matrix>("f", subspace_size_, size_);
     sigma_ = std::make_shared<psi::Matrix>("sigma", size_, subspace_size_);
+    sigma_->zero();
 
     G = std::make_shared<psi::Matrix>("G", subspace_size_, subspace_size_);
     S = std::make_shared<psi::Matrix>("S", subspace_size_, subspace_size_);
@@ -161,6 +162,7 @@ SolverStatus DavidsonLiuSolver::update() {
     // form and diagonalize mini-matrix
     G->zero();
     G->gemm(false, false, 1.0, b_, sigma_, 0.0);
+    check_G_hermiticity();
     G->diagonalize(alpha, lambda);
 
     bool is_energy_converged = false;
@@ -206,7 +208,7 @@ SolverStatus DavidsonLiuSolver::update() {
             // check that the norm of the correction vector (before normalization) is "not small"
             if (f_norm[k] > 0.01 * r_convergence_) {
                 // Schmidt-orthogonalize the correction vector
-                if (schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
+                if (schmidt_add(b_, basis_size_, size_, f, k)) {
                     basis_size_++; // <- Increase L if we add one more basis vector
                     num_added += 1;
                 } else {
@@ -326,12 +328,13 @@ bool DavidsonLiuSolver::subspace_collapse() {
 
         // Copy them into place
         b_->zero();
+        sigma_->zero();
         basis_size_ = 0;
         sigma_size_ = 0;
         for (size_t k = 0; k < collapse_size_; k++) {
             double norm_bnew_k = std::fabs(bnew->get_row(0, k)->norm());
             if (norm_bnew_k > schmidt_threshold_) {
-                if (schmidt_add(b_->pointer(), k, size_, bnew->pointer()[k])) {
+                if (schmidt_add(b_, k, size_, bnew, k)) {
                     basis_size_++; // <- Increase L if we add one more basis vector
                 }
             }
@@ -357,10 +360,11 @@ bool DavidsonLiuSolver::subspace_collapse() {
 
         // Copy them into place
         b_->zero();
+        sigma_->zero();
         basis_size_ = 0;
         sigma_size_ = 0;
         for (size_t k = 0; k < collapse_size_; k++) {
-            if (schmidt_add(b_->pointer(), k, size_, bnew->pointer()[k])) {
+            if (schmidt_add(b_, k, size_, bnew, k)) {
                 basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
@@ -383,6 +387,26 @@ void DavidsonLiuSolver::collapse_vectors() {
             }
         }
     }
+}
+
+/// add a new vector and orthogonalize it against the existing ones
+bool DavidsonLiuSolver::schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t cols,
+                                    psi::SharedMatrix vvec, int l) {
+    double** A = Amat->pointer();
+    double* v = vvec->pointer()[l];
+
+    for (size_t i = 0; i < rows; i++) {
+        const auto dotval = C_DDOT(cols, A[i], 1, v, 1);
+        for (size_t I = 0; I < cols; I++)
+            v[I] -= dotval * A[i][I];
+    }
+
+    const auto normval = std::sqrt(C_DDOT(cols, v, 1, v, 1));
+    if (normval < schmidt_threshold_)
+        return false;
+    for (size_t I = 0; I < cols; I++)
+        A[rows][I] = v[I] / normval;
+    return true;
 }
 
 std::pair<bool, bool> DavidsonLiuSolver::check_convergence() {
@@ -456,40 +480,58 @@ void DavidsonLiuSolver::get_results() {
     //    }
 }
 
-bool DavidsonLiuSolver::check_orthogonality() {
-    bool is_orthonormal = true;
-
+void DavidsonLiuSolver::check_orthogonality() {
     // Compute the overlap matrix
     S->gemm(false, true, 1.0, b_, b_, 0.0);
 
-    // Check for orthogonality
+    // Check for normalization
+    double maxdiag = 0.0;
     for (size_t i = 0; i < basis_size_; ++i) {
-        double diag = S->get(i, i);
-        double zero = false;
-        double one = false;
-        if (std::fabs(diag - 1.0) < 1.e-6) {
-            one = true;
-        }
-        if (std::fabs(diag) < 1.e-6) {
-            zero = true;
-        }
-        if ((not zero) and (not one)) {
-            if (is_orthonormal) {
-                outfile->Printf("\n  WARNING: Vector %d is not normalized or zero", i);
-                is_orthonormal = false;
-            }
-        }
-        double offdiag = 0.0;
-        for (size_t j = i + 1; j < basis_size_; ++j) {
-            offdiag += std::fabs(S->get(i, j));
-        }
-        if (offdiag > 1.0e-6) {
-            if (is_orthonormal) {
-                outfile->Printf("\n  WARNING: The vectors are not orthogonal");
-                is_orthonormal = false;
+        maxdiag = std::max(maxdiag, std::fabs(S->get(i, i) - 1.0));
+    }
+    if (maxdiag > orthogonality_threshold_) {
+        S->print();
+        outfile->Printf("\n  Maximum absolute deviation from normalization: %e", maxdiag);
+        std::string msg =
+            "DavidsonLiuSolver::check_orthogonality(): eigenvectors are not normalized!";
+        throw std::runtime_error(msg);
+    }
+
+    // Check for orthogonality
+    double maxoffdiag = 0.0;
+    for (size_t i = 0; i < basis_size_; ++i) {
+        for (size_t j = 0; j < basis_size_; ++j) {
+            if (i != j) {
+                maxoffdiag = std::max(maxoffdiag, std::fabs(S->get(i, j)));
             }
         }
     }
-    return is_orthonormal;
+    if (maxoffdiag > orthogonality_threshold_) {
+        S->print();
+        outfile->Printf("\n  Maximum absolute off-diagonal element of the overlap: %e", maxoffdiag);
+        std::string msg =
+            "DavidsonLiuSolver::check_orthogonality(): eigenvectors are not orthogonal!";
+        throw std::runtime_error(msg);
+    }
 }
+
+void DavidsonLiuSolver::check_G_hermiticity() {
+    double maxnonherm = 0.0;
+    for (size_t i = 0; i < basis_size_; ++i) {
+        for (size_t j = i + 1; j < basis_size_; ++j) {
+            if (i != j) {
+                maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
+            }
+        }
+    }
+    if (maxnonherm > nonhermitian_G_threshold_) {
+        G->print();
+        outfile->Printf("\n  Maximum absolute off-diagonal element of the Hamiltonian: %e",
+                        maxnonherm);
+        std::string msg =
+            "DavidsonLiuSolver::check_G_hermiticity(): the Hamiltonian in not Hermitian";
+        throw std::runtime_error(msg);
+    }
+}
+
 } // namespace forte

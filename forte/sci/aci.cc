@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -220,11 +220,11 @@ void AdaptiveCI::find_q_space() {
 
     if (screen_alg == "AVERAGE") {
         if (gas_iteration_) {
-            get_gas_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+            get_gas_excited_determinants_avg(num_ref_roots_, P_evecs_, P_evals_, P_space_, F_space);
         }
         // multiroot
         else {
-            get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+            get_excited_determinants_avg(num_ref_roots_, P_evecs_, P_evals_, P_space_, F_space);
         }
     } else if (screen_alg == "SR") {
         if (gas_iteration_) {
@@ -867,10 +867,10 @@ void AdaptiveCI::print_nos() {
         offset += nactpi_[h];
     }
 
-    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, nactpi_, nactpi_));
-    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, nactpi_, nactpi_));
+    auto OCC_A = std::make_shared<Vector>("ALPHA OCCUPATION", nactpi_);
+    auto OCC_B = std::make_shared<Vector>("BETA OCCUPATION", nactpi_);
+    auto NO_A = std::make_shared<psi::Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_B = std::make_shared<psi::Matrix>(nirrep_, nactpi_, nactpi_);
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);

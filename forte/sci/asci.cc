@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -215,8 +215,8 @@ void ASCI::find_q_space() {
     // This will contain all the determinants
     PQ_space_.clear();
     // Add the P-space determinants and zero the hash
-    const det_hashvec& detmap = P_space_.wfn_hash();
-    for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
+    const auto& detmap = P_space_.wfn_hash();
+    for (auto it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
         V_hash.erase(*it);
     }
     //  PQ_space.swap(P_space);
@@ -237,13 +237,13 @@ void ASCI::find_q_space() {
     if (options_->get_str("SCI_EXCITED_ALGORITHM") == "AVERAGE") {
         for (const auto& I : V_hash) {
             double criteria = 0.0;
-            for (size_t n = 0; n < nroot_; ++n) {
+            for (int n = 0; n < num_ref_roots_; ++n) {
                 double delta = as_ints_->energy(I.first) - P_evals_->get(n);
                 double V = I.second;
 
                 criteria += (V / delta);
             }
-            criteria /= nroot_;
+            criteria /= num_ref_roots_;
             F_space[N] = std::make_pair(std::fabs(criteria), I.first);
 
             N++;
@@ -360,10 +360,10 @@ void ASCI::print_nos() {
         }
         offset += nactpi_[h];
     }
-    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, nactpi_, nactpi_));
-    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, nactpi_, nactpi_));
+    auto OCC_A = std::make_shared<Vector>("ALPHA OCCUPATION", nactpi_);
+    auto OCC_B = std::make_shared<Vector>("BETA OCCUPATION", nactpi_);
+    auto NO_A = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_B = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);

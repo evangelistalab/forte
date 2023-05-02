@@ -1,5 +1,3 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refmcscf   = -99.406065223640
@@ -10,33 +8,33 @@ refudsrg   = -99.498863733468  # truncate dsrg_rsc_ncomm to 4
 refprdsrg  = -99.500365370010  # truncate dsrg_rsc_ncomm to 4
 refrdsrg   = -99.500183053364  # truncate dsrg_rsc_ncomm to 4
 
-memory 500 mb
-
 molecule HF{
 0 1
 F
-H  1 R
-R = 1.50
+H 1 1.5
 }
 
 set globals{
-  basis                  3-21g
-  reference              twocon
-  e_convergence          8
-  maxiter                100
-  docc                   [3,0,1,1]
-}
-
-set mcscf{
-  docc                   [2,0,1,1]
-  socc                   [2,0,0,0]
-  maxiter                1000
-  level_shift            0.5
-  d_convergence          10
-  e_convergence          12
+  basis                   3-21g
+  docc                    [3,0,1,1]
 }
 
 set forte{
+   job_type                mcscf_two_step
+   active_space_solver     fci
+   restricted_docc         [2,0,1,1]
+   active                  [2,0,0,0]
+   root_sym                0
+   nroot                   1
+   casscf_e_convergence    12
+   casscf_g_convergence    8
+}
+
+Emcscf, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+
+set forte{
+  job_type               newdriver
   active_space_solver    fci
   correlation_solver     sa-mrdsrg
   int_type               cholesky
@@ -54,9 +52,6 @@ set forte{
   dsrg_read_amps         true
   dsrg_rsc_ncomm         4
 }
-
-Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 energy('forte', ref_wfn=wfn)
 compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")

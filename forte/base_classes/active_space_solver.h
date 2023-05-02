@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,8 +41,8 @@ class BlockedTensor;
 #include "psi4/libmints/matrix.h"
 #include "base_classes/state_info.h"
 #include "base_classes/rdms.h"
+#include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
-
 namespace forte {
 
 class ActiveSpaceMethod;
@@ -89,10 +89,16 @@ class ActiveSpaceSolver {
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
     /// Compute permanent dipole moments
-    void compute_dipole_moment();
+    void compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+
+    /// Compute permanent quadrupole moments
+    void compute_quadrupole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+
+    /// Compute transition dipole moments
+    void compute_transition_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
     /// Compute the oscillator strengths assuming same orbitals
-    void compute_fosc_same_orbs();
+    void compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
     /// Compute the contracted CI energy
     const std::map<StateInfo, std::vector<double>>&
@@ -168,6 +174,11 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
+    /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
+    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
+        as_mp_ints_ = as_mp_ints;
+    }
+
     /// Return the map of StateInfo to the wave function file name
     std::map<StateInfo, std::string> state_filename_map() const { return state_filename_map_; }
 
@@ -213,6 +224,9 @@ class ActiveSpaceSolver {
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
+    /// The multipole integrals for the active space
+    std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints_;
+
     /// User-provided options
     std::shared_ptr<ForteOptions> options_;
 
@@ -245,6 +259,9 @@ class ActiveSpaceSolver {
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
+
+    /// Only print the transitions between states with different gas
+    bool gas_diff_only_;
 
     /// Unitary matrices for orbital rotations used to compute dipole moments
     /// The issue is dipole integrals are transformed to semi-canonical orbital basis,

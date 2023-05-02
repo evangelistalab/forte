@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -107,9 +107,9 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
 
     outfile->Printf("\n ****** Orthogonalize C_pao ******");
     // Orthogonalize C_pao
-    SharedMatrix U(new Matrix("U", nirrep_, nbfA, nbfA));
-    SharedVector lambda(new Vector("lambda", nirrep_, nbfA));
-    SharedMatrix S_pao_A = linalg::triplet(C_pao, S_, C_pao, true, false, false);
+    auto U = std::make_shared<Matrix>("U", nirrep_, nbfA, nbfA);
+    auto lambda = std::make_shared<Vector>("lambda", nbfA);
+    auto S_pao_A = linalg::triplet(C_pao, S_, C_pao, true, false, false);
     S_pao_A->diagonalize(U, lambda, descending);
 
     // Truncate A_virtual and build s_-1/2

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -320,7 +320,7 @@ void AdaptiveCI::get_excited_determinants_avg(
                                 }
                                 // thread_ex_dets[i * nobeta + a] =
                                 // std::make_pair(new_det,coupling);
-                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                thread_ex_dets.emplace_back(new_det, coupling);
                             }
                         }
                     }
@@ -354,7 +354,7 @@ void AdaptiveCI::get_excited_determinants_avg(
                                         // noalpha*noalpha*nvalpha +
                                         // j*nvalpha*noalpha +  a*nvalpha + b ]
                                         // = std::make_pair(new_det,coupling);
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.emplace_back(new_det, coupling);
                                     }
                                 }
                             }
@@ -1216,12 +1216,12 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
                 bin_f_space[pair.first] += pair.second;
             }
         }
-        //#pragma omp critical
-        //        {
-        //            for (auto& pair : E_b_t[thread_id]) {
-        //                bin_E_space[pair.first] += pair.second;
-        //            }
-        //        }
+        // #pragma omp critical
+        //         {
+        //             for (auto& pair : E_b_t[thread_id]) {
+        //                 bin_E_space[pair.first] += pair.second;
+        //             }
+        //         }
 
 #pragma omp barrier
         if (thread_id == 0)

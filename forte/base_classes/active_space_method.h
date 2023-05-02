@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -37,12 +37,14 @@ namespace ambit {
 class BlockedTensor;
 }
 
-#include "base_classes/rdms.h"
-#include "base_classes/state_info.h"
-#include "sparse_ci/determinant.h"
-#include "sparse_ci/determinant_hashvector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+
+#include "base_classes/rdms.h"
+#include "base_classes/state_info.h"
+#include "integrals/one_body_integrals.h"
+#include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
 
@@ -137,6 +139,11 @@ class ActiveSpaceMethod {
                     std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
                     RDMsType type) = 0;
 
+    /// Dump transition RDMs to disk
+    void save_transition_rdms(const std::vector<std::shared_ptr<RDMs>>& rdms,
+                              const std::vector<std::pair<size_t, size_t>>& root_list,
+                              std::shared_ptr<ActiveSpaceMethod> method2);
+
     /// Compute the overlap of two wave functions acted by complementary operators
     /// Return a map from state to roots of values
     /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
@@ -202,17 +209,27 @@ class ActiveSpaceMethod {
     compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
                              const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
+    /// Compute permanent dipole moments (electronic + nuclear)
+    std::vector<psi::SharedVector>
+    compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                             std::vector<std::pair<size_t, size_t>>& root_list);
+
+    /// Compute permanent quadrupole moments (electronic + nuclear)
+    std::vector<psi::SharedVector>
+    compute_permanent_quadrupole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                                 const std::vector<std::pair<size_t, size_t>>& root_list);
+
     /// Compute transition dipole moments assuming same orbitals
-    std::vector<std::vector<double>>
-    compute_transition_dipole_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                        std::shared_ptr<ActiveSpaceMethod> method2,
-                                        const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+    std::vector<psi::SharedVector>
+    compute_transition_dipole_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                                        const std::vector<std::pair<size_t, size_t>>& root_list,
+                                        std::shared_ptr<ActiveSpaceMethod> method2);
 
     /// Compute oscillator strength assuming same orbitals
     std::vector<double>
-    compute_oscillator_strength_same_orbs(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2,
-                                          const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+    compute_oscillator_strength_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                                          const std::vector<std::pair<size_t, size_t>>& root_list,
+                                          std::shared_ptr<ActiveSpaceMethod> method2);
 
     /// Dump the wave function to file
     /// @param file name
@@ -279,6 +296,9 @@ class ActiveSpaceMethod {
     /// Set if we dump the wave function to disk
     void set_dump_wfn(bool dump);
 
+    /// Set if we dump the transition dipole moment to disk
+    void set_dump_trdm(bool dump);
+
     /// Set the file name for storing wave function on disk
     /// @param name the wave function file name
     void set_wfn_filename(const std::string& name);
@@ -344,6 +364,8 @@ class ActiveSpaceMethod {
 
     /// Read wave function from disk as initial guess?
     bool read_wfn_guess_ = false;
+    /// Dump transition density matrix to disk?
+    bool dump_trdm_ = false;
     /// Dump wave function to disk?
     bool dump_wfn_ = false;
     /// The file name for storing wave function (determinants, CI coefficients)

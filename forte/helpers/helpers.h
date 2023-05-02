@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -54,9 +54,9 @@ class Options;
 namespace forte {
 
 /// Spin cases for 1-, 2-, and 3-body tensors
-enum class Spin1 {a, b};
-enum class Spin2 {aa, ab, bb};
-enum class Spin3 {aaa, aab, abb, bbb};
+enum class Spin1 { a, b };
+enum class Spin2 { aa, ab, bb };
+enum class Spin3 { aaa, aab, abb, bbb };
 
 /**
  * @brief Convert an ambit tensor to a numpy ndarray.
@@ -137,8 +137,11 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
 
 template <typename T>
 std::vector<std::vector<T>> split_vector(const std::vector<T>& vec, size_t max_length) {
-    std::vector<std::vector<T>> out_vec;
     size_t vec_size = vec.size();
+    if (max_length == 0 or vec_size == 0)
+        throw std::runtime_error("Cannot split vector of size 0!");
+
+    std::vector<std::vector<T>> out_vec;
 
     size_t n_even = vec_size / max_length;
     for (size_t i = 0, begin = 0, end = max_length; i < n_even; ++i) {
@@ -181,6 +184,19 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
         }
     }
 }
+
+/**
+ * @brief Apply in-place matrix transposition based on the algorithm of Catanzaro, Keller, Garland.
+ * @param data the matrix stored in row-major format
+ * @param m the number of rows of the matrix
+ * @param n the number of columns of the matrix
+ *
+ * See Algorithm 1 of DOI: 10.1145/2555243.2555253.
+ * Also see https://github.com/bryancatanzaro/inplace
+ */
+void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const size_t n);
+
+void push_to_psi4_env_globals(double value, const std::string& label);
 
 namespace math {
 /// Return the number of combinations of n identical objects

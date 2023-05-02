@@ -115,6 +115,9 @@ class ProcedureDSRG:
         self.do_dipole = do_dipole
         self.dipoles = []
 
+        self.max_dipole_level = options.get_int("DSRG_MAX_DIPOLE_LEVEL")
+        self.max_quadrupole_level = options.get_int("DSRG_MAX_QUADRUPOLE_LEVEL")
+
         # Set up Forte objects
         self.active_space_solver = active_space_solver
         self.state_weights_map = state_weights_map
@@ -127,6 +130,7 @@ class ProcedureDSRG:
         # DSRG solver related
         self.dsrg_solver = None
         self.Heff_implemented = False
+        self.Meff_implemented = False
         self.converged = False
         self.energies = []  # energies along the relaxation steps
         self.energies_environment = {}  # energies pushed to Psi4 environment globals
@@ -161,6 +165,7 @@ class ProcedureDSRG:
             self.dsrg_solver.set_state_weights_map(self.state_weights_map)
             self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
+            self.Meff_implemented = True
         elif self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
             self.dsrg_solver = forte.make_dsrg_so_y(*args)
         elif self.solver_type == "SOMRDSRG":
@@ -215,6 +220,8 @@ class ProcedureDSRG:
             #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
             #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
+            if self.Meff_implemented and (self.max_dipole_level > 0 or self.max_quadrupole_level > 0):
+                asmpints = self.dsrg_solver.compute_mp_eff_actv()
 
             # Spit out contracted SA-DSRG energy
             if self.do_multi_state and self.multi_state_type == "SA_SUB":
@@ -230,6 +237,14 @@ class ProcedureDSRG:
             # and the current semi-canonical basis
             self.active_space_solver.set_Uactv(self.Ua, self.Ub)
             state_energies_list = self.active_space_solver.compute_energy()
+
+            if self.Meff_implemented:
+                if self.max_dipole_level > 0:
+                    self.active_space_solver.compute_dipole_moment(asmpints)
+                if self.max_quadrupole_level > 0:
+                    self.active_space_solver.compute_quadrupole_moment(asmpints);
+                if self.max_dipole_level > 0:
+                    self.active_space_solver.compute_fosc_same_orbs(asmpints)
 
             # Reorder weights if needed
             if self.state_ci_wfn_map is not None:

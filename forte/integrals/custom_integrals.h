@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -90,6 +90,9 @@ class CustomIntegrals : public ForteIntegrals {
     /// Make the active Fock matrix using unrestricted equation
     std::tuple<psi::SharedMatrix, psi::SharedMatrix>
     make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) override;
+
+    /// Orbital coefficients in AO x MO basis where MO is in Pitzer order
+    psi::SharedMatrix Ca_AO() const override;
 
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 

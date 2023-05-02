@@ -7,6 +7,7 @@ refscf = -76.0172965561
 refaci = -65.52803723267440716
 refacipt2 = -55.02612867161270316
 refosc_0a1_0b1 =  0.00000307 
+s_max_0a1_0b1 = 0.00986351
 
 memory 6000mb
 molecule h2o{
@@ -53,3 +54,4 @@ eaci = energy('forte', ref_wfn=wfn)
 compare_values(refaci, eaci, 8, "Averaged ACI energy")
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"), 6, "ACI+PT2 energy")
 compare_values(refosc_0a1_0b1, variable("OSC. SINGLET 0A1 -> 0B1"), 6, "Oscillator strength singlet 0A1 -> 0B1")
+compare_values(s_max_0a1_0b1, variable("TRANS SINGLET S_MAX 0A1 -> 0B1"), 6, "S_MAX singlet 0A1 -> 0B1")

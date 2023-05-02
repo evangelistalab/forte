@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -79,6 +79,13 @@ void CustomIntegrals::initialize() {
     gather_integrals();
     freeze_core_orbitals();
     print_timing("preparing custom (FCIDUMP) integrals", int_timer.get());
+}
+
+psi::SharedMatrix CustomIntegrals::Ca_AO() const {
+    auto nmo = nmopi_.sum();
+    auto Ca_ao = std::make_shared<psi::Matrix>("Ca_AO", nmo, nmo);
+    Ca_ao->identity();
+    return Ca_ao;
 }
 
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
