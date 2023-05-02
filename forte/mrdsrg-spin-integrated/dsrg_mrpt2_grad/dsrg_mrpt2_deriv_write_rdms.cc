@@ -109,7 +109,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     outfile->Printf("Done");
 
     // DSRG-MRPT2 dipole moment
-    auto mo_dipole_ints = ints_->mo_dipole_ints(true, true); // just take alpha spin
+    auto mo_dipole_ints = ints_->mo_dipole_ints(); // just take alpha spin
     std::map<char, std::vector<size_t>> idxmap_abs;
     idxmap_abs = {{'c', core_all_},
                   {'a', actv_all_},
