@@ -29,6 +29,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "psi4/libmints/wavefunction.h"
 #include "helpers/helpers.h"
 #include "integrals/integrals.h"
 
@@ -39,6 +40,7 @@ namespace forte {
 /// export ForteIntegrals
 void export_ForteIntegrals(py::module& m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
+        .def("wfn", &ForteIntegrals::wfn, "Psi4 Wavefunction")
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
         .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
         .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")

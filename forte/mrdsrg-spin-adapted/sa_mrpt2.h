@@ -51,9 +51,11 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Compute the corr_level energy with fixed reference
     double compute_energy() override;
 
-    /// Compute the core-core and virtual-virtual parts of the unrelaxed 1-RDM
+    /// Compute the diagonal parts of the unrelaxed 1-RDM
     void build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D1v,
                               psi::SharedMatrix& D1a);
+    /// Compute the virtual part of the unrelaxed 1-RDM
+    psi::SharedMatrix build_1rdm_unrelaxed_virt();
 
   protected:
     /// Start-up function called in the constructor

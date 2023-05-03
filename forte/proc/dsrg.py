@@ -122,6 +122,10 @@ class ProcedureDSRG:
         self.options = options
         self.scf_info = scf_info
 
+        # Set PT2 FNO shifts
+        self.fno_pt2_energy_shift = 0.0
+        self.fno_pt2_Heff_shift = None
+
         # DSRG solver related
         self.dsrg_solver = None
         self.Heff_implemented = False
@@ -197,7 +201,10 @@ class ProcedureDSRG:
         # Perform the initial un-relaxed DSRG
         self.make_dsrg_solver()
         self.dsrg_setup()
-        e_dsrg = self.dsrg_solver.compute_energy()
+        e_dsrg = self.dsrg_solver.compute_energy() + self.fno_pt2_energy_shift
+        if self.fno_pt2_energy_shift != 0.0:
+            psi4.core.print_out(f"\n    DSRG-MRPT2 FNO energy correction: {self.fno_pt2_energy_shift:20.15f}")
+            psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy : {e_dsrg:20.15f}")
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
         self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items() if 'ROOT' in k}
@@ -215,6 +222,9 @@ class ProcedureDSRG:
             #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
             #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
+            if self.fno_pt2_Heff_shift is not None:
+                ints_dressed.add(self.fno_pt2_Heff_shift, 1.0)
+                psi4.core.print_out("\n\n  Applied DSRG-MRPT2 FNO corrections to dressed integrals.")
             if self.Meff_implemented and (self.max_dipole_level > 0 or self.max_quadrupole_level > 0):
                 asmpints = self.dsrg_solver.compute_mp_eff_actv()
 
@@ -303,7 +313,10 @@ class ProcedureDSRG:
             self.make_dsrg_solver()
             self.dsrg_setup()
             self.dsrg_solver.set_read_cwd_amps(not self.restart_amps)  # don't read from cwd if checkpoint available
-            e_dsrg = self.dsrg_solver.compute_energy()
+            e_dsrg = self.dsrg_solver.compute_energy() + self.fno_pt2_energy_shift
+            if self.fno_pt2_energy_shift != 0.0:
+                psi4.core.print_out(f"\n    DSRG-MRPT2 FNO energy correction: {self.fno_pt2_energy_shift:20.15f}")
+                psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy : {e_dsrg:20.15f}")
 
         self.dsrg_cleanup()
 
@@ -479,3 +492,8 @@ class ProcedureDSRG:
 
                     if self.do_dipole and (not self.do_multi_state):
                         psi4.core.set_scalar_variable('FULLY RELAXED DIPOLE', self.dipoles[-1][1][-1])
+
+    def set_fno_shift(self, e_shift, h_shift):
+        """ Set energy and integral shifts due to FNO. """
+        self.fno_pt2_energy_shift = e_shift
+        self.fno_pt2_Heff_shift = h_shift

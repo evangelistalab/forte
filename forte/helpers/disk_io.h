@@ -81,6 +81,7 @@ void dump_occupations(const std::string& filename,
  * @brief Save a psi4 vector to file
  * @param filename The file name
  * @param vec The psi4 vector to be saved
+ * @param padding The index shifts
  * @param overwrite Overwrite if the file exists
  */
 void save_psi4_vector(const std::string& filename, psi::Vector vec, psi::Dimension padding,

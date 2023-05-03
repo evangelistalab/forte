@@ -78,9 +78,10 @@ void export_MRPT2NOS(py::module& m) {
             py::init<std::shared_ptr<RDMs>, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>(),
             "rdms"_a, "scf_info"_a, "options"_a, "ints"_a, "mo_space_info"_a)
-        .def("compute_transformation", &OrbitalTransform::compute_transformation)
-        .def("get_Ua", &OrbitalTransform::get_Ua, "Get Ua rotation")
-        .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
+        .def("compute_transformation", &MRPT2_NOS::compute_transformation)
+        .def("compute_fno", &MRPT2_NOS::compute_fno)
+        .def("get_Ua", &MRPT2_NOS::get_Ua, "Get Ua rotation")
+        .def("get_Ub", &MRPT2_NOS::get_Ub, "Get Ub rotation");
 }
 
 /// Export the SemiCanonical class

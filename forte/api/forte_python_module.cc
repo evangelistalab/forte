@@ -373,19 +373,24 @@ PYBIND11_MODULE(_forte, m) {
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
 
-//     // export spin-adapted DSRG-MRPT2
-//     py::class_<SA_MRPT2>(m, "SA_MRPT2")
-//         .def("compute_energy", &SA_MRPT2::compute_energy, "Compte the DSRG-MRPT2 energy")
-//         .def("compute_Heff_actv", &SA_MRPT2::compute_Heff_actv,
-//              "Return the DSRG dressed ActiveSpaceIntegrals")
-//         .def("compute_mp_eff_actv", &SA_MRPT2::compute_mp_eff_actv,
-//              "Return the DSRG dressed ActiveMultipoleIntegrals")
-//         .def("set_Uactv", &SA_MRPT2::set_Uactv, "Ua"_a,
-//              "Set active part orbital rotation matrix (from original to semicanonical)")
-//         .def("set_active_space_solver", &SA_MRPT2::set_active_space_solver,
-//              "Set the pointer of ActiveSpaceSolver")
-//         .def("set_state_weights_map", &SA_MRPT2::set_state_weights_map,
-//              "Set the map from state to the weights of all computed roots");
+    // export spin-adapted DSRG-MRPT2
+    py::class_<SA_MRPT2>(m, "SA_MRPT2")
+        .def(
+            py::init<std::shared_ptr<RDMs>, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+                     std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
+        .def("compute_energy", &SA_MRPT2::compute_energy, "Compte the DSRG-MRPT2 energy")
+        .def("compute_Heff_actv", &SA_MRPT2::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("compute_mp_eff_actv", &SA_MRPT2::compute_mp_eff_actv,
+             "Return the DSRG dressed ActiveMultipoleIntegrals")
+        .def("set_Uactv", &SA_MRPT2::set_Uactv, "Ua"_a,
+             "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_active_space_solver", &SA_MRPT2::set_active_space_solver,
+             "Set the pointer of ActiveSpaceSolver")
+        .def("set_state_weights_map", &SA_MRPT2::set_state_weights_map,
+             "Set the map from state to the weights of all computed roots")
+        .def("clean_checkpoints", &SA_MRPT2::clean_checkpoints,
+             "Delete amplitudes checkpoint files");
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")

@@ -33,6 +33,7 @@
 #include "psi4/libmints/vector.h"
 
 #include "base_classes/mo_space_info.h"
+#include "integrals/active_space_integrals.h"
 #include "integrals/integrals.h"
 #include "base_classes/rdms.h"
 #include "base_classes/orbital_transform.h"
@@ -47,7 +48,10 @@ class MRPT2_NOS : public OrbitalTransform {
               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    void compute_transformation();
+    void compute_transformation() override;
+
+    /// Transform to frozen-natural orbitals basis
+    psi::SharedMatrix compute_fno();
 
   private:
     /// Pointer to ForteOptions

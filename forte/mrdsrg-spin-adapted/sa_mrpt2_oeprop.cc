@@ -1830,4 +1830,14 @@ void SA_MRPT2::build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D
     D1a = build_1rdm_aa(false);
 }
 
+psi::SharedMatrix SA_MRPT2::build_1rdm_unrelaxed_virt() {
+    D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"});
+    D1_.block("cc").iterate([&](const std::vector<size_t> i, double& value) {
+        if (i[0] == i[1])
+            value = 2.0;
+    });
+    D1_["uv"] = L1_["uv"];
+    return build_1rdm_vv();
+}
+
 } // namespace forte
