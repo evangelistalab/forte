@@ -106,8 +106,10 @@ void FCISolver::startup() {
     }
 
     if (spin_adapt_) {
-        spin_adapter_ =
-            std::make_shared<SpinAdapter>(na_, nb_, state().multiplicity() - 1, state().twice_ms());
+        spin_adapter_ = std::make_shared<SpinAdapter>(na_, nb_, state().multiplicity() - 1,
+                                                      state().twice_ms(), lists_->ncmo());
+        auto dets = lists_->make_determinants(symmetry_);
+        spin_adapter_->prepare_couplings(dets);
     }
 
     if (print_) {

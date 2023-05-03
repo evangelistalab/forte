@@ -2,11 +2,15 @@
 *.d
 *.so
 *.pyc
+*.log
+*.dat
+*.clean
 Makefile.*
 Makefile
 timer.dat
 *~
 forte/version.h
+forte.egg-info
 
 # Qt Creator project files
 *.config

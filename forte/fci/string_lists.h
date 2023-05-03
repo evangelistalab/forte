@@ -162,8 +162,15 @@ class StringLists {
     GraphPtr alfa_graph_3h() { return alfa_graph_3h_; }
     GraphPtr beta_graph_3h() { return beta_graph_3h_; }
 
-    String alfa_str(size_t h, size_t I) const { return alfa_list_[h][I]; }
-    String beta_str(size_t h, size_t I) const { return beta_list_[h][I]; }
+    /// @return the alpha string list
+    const auto& alfa_strings() const { return alfa_strings_; }
+    /// @return the beta string list
+    const auto& beta_strings() const { return beta_string_; }
+    /// @return the alpha string in irrep h and index I
+    String alfa_str(size_t h, size_t I) const { return alfa_strings_[h][I]; }
+    /// @return the beta string in irrep h and index I
+    String beta_str(size_t h, size_t I) const { return beta_string_[h][I]; }
+    std::vector<Determinant> make_determinants(int symmetry) const;
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q, int h);
@@ -212,8 +219,8 @@ class StringLists {
     size_t nas_;
     /// The number of beta strings
     size_t nbs_;
-    /// The number of FCI determinants
-    size_t nfcidets_;
+    /// The number of determinants
+    size_t ndets_;
     /// The total number of orbital pairs per irrep
     std::vector<int> pairpi_;
     /// The offset array for pairpi
@@ -222,9 +229,10 @@ class StringLists {
     int print_ = 0;
 
     // String lists
-    /// The string lists
-    StringList alfa_list_;
-    StringList beta_list_;
+    /// The alpha strings stored by irrep and address
+    StringList alfa_strings_;
+    /// The beta strings stored by irrep and address
+    StringList beta_string_;
     /// The pair string list
     NNList nn_list;
     /// The VO string lists
@@ -273,7 +281,7 @@ class StringLists {
 
     /// Make strings of for norb bits with ne of these set to 1 and (norb - ne) set to 0
     /// @return strings sorted according to their irrep
-    StringList make_strings(const int norb, const int ne);
+    StringList make_strings(const int norb, const int ne, GraphPtr address);
 
     /// Make the string list
     void make_strings(GraphPtr graph, StringList& list);
