@@ -157,7 +157,7 @@ class ProcedureDSRG:
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
             self.dsrg_solver = forte.make_dsrg_method(*args)
-            self.dsrg_solver.set_state_weights_map(self.state_weights_map)  # TODO: merge?
+            self.dsrg_solver.set_state_weights_map(self.state_weights_map)
             self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
         elif self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:

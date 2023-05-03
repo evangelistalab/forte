@@ -684,7 +684,7 @@ double f_norm(std::vector<double> const& vec) {
 double diff_f_norm(std::vector<double> const& vec1, std::vector<double> const& vec2) {
     double accum = 0.0;
     if (vec1.size() != vec2.size()) {
-        exit(1);
+        throw PSIEXCEPTION("diff_f_norm: Input vectors must have same size.");
     }
     for (int i = 0; i < vec1.size(); ++i) {
         double diff = vec1[i] - vec2[i];
@@ -1430,7 +1430,7 @@ void DSRG_MRPT2::gmres_solver(std::vector<double> & x_new) {
 
 void DSRG_MRPT2::solve_linear_iter() {
     set_zvec_moinfo();
-    set_b(dim, preidx, block_dim);
+    set_b(dim, block_dim);
     std::vector<double> solution(dim, 0.0);
     gmres_solver(solution);
 

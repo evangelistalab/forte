@@ -10,7 +10,7 @@ using namespace psi;
 
 namespace forte {
 
-void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, int> block_dim) {
+void DSRG_MRPT2::set_b(int dim, const std::map<string, int>& block_dim) {
     outfile->Printf("\n    Initializing b of the Linear System ............. ");
     b.resize(dim);
     /*-----------------------------------------------------------------------*
@@ -186,7 +186,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
     for (const std::string& block : {"vc", "ca", "va", "aa"}) {
         (temp2.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             if (block != "aa") {
-                int index = preidx[block] + i[0] * block_dim[block] + i[1];
+                int index = preidx[block] + i[0] * block_dim.at(block) + i[1];
                 b.at(index) = value;
             } else if (block == "aa" && i[0] > i[1]) {
                 int index = preidx[block] + i[0] * (i[0] - 1) / 2 + i[1];

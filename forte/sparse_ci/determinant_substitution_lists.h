@@ -81,8 +81,11 @@ class DeterminantSubstitutionLists {
     /// Build the coupling lists for bbb 3-body operators
     void lists_3bbb(const DeterminantHashVec& wfn);
 
+    // Clear coupling lists for 1-body operators
     void clear_op_s_lists();
+    // Clear coupling lists for 2-body operators
     void clear_tp_s_lists();
+    // Clear coupling lists for 3-body operators
     void clear_3p_s_lists();
 
     /*- Operators -*/

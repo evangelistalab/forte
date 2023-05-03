@@ -289,7 +289,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      */
     void write_2rdm_spin_dependent();
     /**
-     * Write density terms of (P|Q)^x and (pq|Q)^x, where P and Q are auxiliary basis.
+     * Write the density terms contracted with (P|Q)^x and (pq|Q)^x, where P and Q are auxiliary basis functions.
      */
     void write_df_rdm();
     /**
@@ -310,8 +310,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /**
      * Solve the Linear System Ax=b and yield Z using iterative methods.
      */
-    void set_preconditioner(std::vector<double>&);
-    void gmres_solver(std::vector<double>&);
+    void set_preconditioner(std::vector<double>& D);
+    void gmres_solver(std::vector<double>& x_new);
     void solve_linear_iter();
     void z_vector_contraction(std::vector<double> &, std::vector<double> &);
     void pre_contract();
@@ -353,7 +353,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * Setting the b of the Linear System Ax=b.
      * Parameters: preidx, block_dim
      */
-    void set_b(int, std::map<string, int>, std::map<string, int>);
+    void set_b(int dim, const std::map<string, int>& block_dim);
     /**
      * The diagonal core-core, virtual-virtual blocks 
      * and the diagonal entries of the active-active block of the OPDM Z.
