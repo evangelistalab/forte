@@ -234,13 +234,13 @@ class ProcedureDSRG:
                     e_relax = list(active_space_solver_2.compute_energy().values())[0][0]
                 self.energies.append((e_dsrg, e_relax))
                 break
-
-            if self.do_multi_state: 
+            
+            if self.do_multi_state and self.options.get_bool("SAVE_SA_DSRG_INTS"):
                 state_map = forte.to_state_nroots_map(self.state_weights_map)
                 write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
-                print('   Save SA-DSRG dressed integrals to disk (dsrg_ints.json).\n')
-                psi4.core.print_out('\n\nSave SA-DSRG dressed integrals to disk (dsrg_ints.json).\n\n')
-
+                msg = '\n\nSave SA-DSRG dressed integrals to dsrg_ints.json\n\n'
+                print(msg)
+                psi4.core.print_out(msg)
 
             # Spit out contracted SA-DSRG energy
             if self.do_multi_state and self.multi_state_type == "SA_SUB":

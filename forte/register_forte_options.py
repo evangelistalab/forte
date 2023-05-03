@@ -91,7 +91,7 @@ def register_driver_options(options):
     options.add_bool(
         "EXTERNAL_PARTIAL_RELAX", False,
         "Perform one relaxation step after building the DSRG effective Hamiltonian when using `external` active space solver")
-    
+
     options.add_str(
         'EXT_RELAX_SOLVER', 'FCI', ['FCI', 'DETCI', 'CAS'], 'Active space solver used in the relaxation when using `external` active space solver'
     )
@@ -784,6 +784,8 @@ def register_dsrg_options(options):
     )
 
     options.add_bool("DSRG_RDM_MS_AVG", False, "Form Ms-averaged density if true")
+
+    options.add_bool("SAVE_SA_DSRG_INTS", False, "Save SA-DSRG dressed integrals to dsrg_ints.json")
 
 
 def register_dwms_options(options):
