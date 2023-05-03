@@ -1,0 +1,70 @@
+# Test DSRG-MRPT2 FNO and PT2 corrections
+
+ref_escf    = -152.976768854792113
+ref_efno_c  =   -0.016920429572735
+ref_ept2_s0 = -153.550159832259851
+ref_ept2_s1 = -153.392970452426312
+
+import forte
+memory 4 gb
+
+molecule acetaldehyde{
+0 1
+C -0.00234503  0.00000000  0.87125063
+C -1.75847785  0.00000000 -1.34973671
+O  2.27947397  0.00000000  0.71968028
+H -0.92904537  0.00000000  2.73929404
+H -2.97955463  1.66046488 -1.25209463
+H -2.97955463 -1.66046488 -1.25209463
+H -0.70043433  0.00000000 -3.11066412
+
+units bohr
+nocom
+noreorient
+}
+
+set globals{
+scf_type      df
+reference     rhf
+basis         aug-cc-pvtz
+df_basis_scf  aug-cc-pvtz-jkfit
+df_basis_mp2  aug-cc-pvtz-jkfit
+maxiter       100
+d_convergence 1.0e-6
+e_convergence 1.0e-8
+}
+escf, wfn = energy('scf', return_wfn=True)
+compare_values(ref_escf, escf, 7, "SCF energy")
+wfn_cas = wfn.from_file("wfn_casscf")
+wfn.Ca().copy(wfn_cas.Ca())
+
+# remove natural occupation file
+import os
+if os.path.isfile("NAT_OCC_VIRT"):
+    os.remove("NAT_OCC_VIRT")
+
+set forte{
+int_type            df
+active_space_solver fci
+correlation_solver  sa-mrdsrg
+corr_level          pt2
+frozen_docc         [3,0]
+restricted_docc     [5,1]
+active              [3,2]
+avg_state           [[0,1,1],[1,1,1]]
+dsrg_s              0.50
+calc_type           sa
+dl_maxiter          500
+threepdc            zero
+dsrg_fno            true
+dsrg_fno_cutoff     1.0e-4
+semi_canonical      false
+}
+energy('forte', ref_wfn=wfn)
+compare_values(ref_efno_c, variable("FNO ENERGY CORRECTION"), 7, "FNO energy correction")
+compare_values(ref_ept2_s0, variable("ENERGY ROOT 0 1AP"), 7, "SA-DSRG-MRPT2 energy 0 1AP")
+compare_values(ref_ept2_s1, variable("ENERGY ROOT 0 1APP"), 7, "SA-DSRG-MRPT2 energy 0 1APP")
+
+# remove natural orbital file
+if os.path.isfile("NAT_OCC_VIRT"):
+    os.remove("NAT_OCC_VIRT")

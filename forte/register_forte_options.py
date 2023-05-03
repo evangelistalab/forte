@@ -614,6 +614,8 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_FNO_PT2_CORRECTION", True, "PT2 correction to the discarded FNOs")
 
+    options.add_double("DSRG_FNO_PT2_S", 0.5, "The DSRG flow parameter s for PT2 FNO correction")
+
     options.add_double("DSRG_FNO_CUTOFF", 1.0e-5, "The cutoff used to discard FNOs")
 
     options.add_str(

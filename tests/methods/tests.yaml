@@ -231,6 +231,11 @@ fci:
       - fci-ex-1 # moved to pytest
       - fci-rdms-1 # moved to pytest
       - fci-one-electron # moved to pytest
+fno:
+   short:
+      - fno-1
+      - fno-2
+      - fno-3
 gasci:
    short:
       - gasci-1

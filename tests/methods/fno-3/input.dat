@@ -1,0 +1,53 @@
+# Test FNO PT2 correction on unrelaxed DSRG-MRPT2
+
+import forte
+
+refcasscf    = -109.090719613198587
+refpt2       = -109.245583534409747
+
+molecule N2{
+N
+N  1 R
+R = 1.120
+}
+
+set {
+basis                  cc-pvdz
+reference              rhf
+scf_type               pk
+maxiter                300
+e_convergence          10
+d_convergence          8
+docc                   [3,0,0,0,0,2,1,1]
+restricted_docc        [2,0,0,0,0,2,0,0]
+active                 [1,0,1,1,0,1,1,1]
+mcscf_maxiter          100
+mcscf_r_convergence    8
+mcscf_e_convergence    10
+mcscf_diis_start       6
+}
+Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
+compare_values(refcasscf, variable("CURRENT ENERGY"), 10, "CASSCF energy")
+
+# remove natural occupation file
+import os
+if os.path.isfile("NAT_OCC_VIRT"):
+    os.remove("NAT_OCC_VIRT")
+
+set forte {
+active_space_solver detci
+correlation_solver  dsrg-mrpt2
+frozen_docc         [1,0,0,0,0,1,0,0]
+frozen_uocc         [0,0,0,0,0,0,0,0]
+restricted_docc     [1,0,0,0,0,1,0,0]
+active              [1,0,1,1,0,1,1,1]
+dsrg_s              0.5
+ntrial_per_root     56
+dsrg_fno            true
+dsrg_fno_cutoff     1.0e-3
+}
+Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
+compare_values(refpt2, variable("CURRENT ENERGY"), 10, "DSRG-MRPT2 unrelaxed energy")
+
+if os.path.isfile("NAT_OCC_VIRT"):
+    os.remove("NAT_OCC_VIRT")
