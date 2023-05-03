@@ -386,10 +386,12 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &DSRG_MRPT::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
-    
-    py::class_<TDACI>(m, "TDACI")
-        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>, std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ActiveSpaceIntegrals>>())
-	.def("compute_energy", &TDACI::compute_energy, "Compute TD-ACI");
+
+    // export the time-dependent ACI code
+    py::class_<TDACI>(m, "TDACI", "Time-dependent ACI")
+        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+                      std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ActiveSpaceIntegrals>>())
+        .def("compute_energy", &TDACI::compute_energy, "Compute TD-ACI");
 
     py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
         .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>,
