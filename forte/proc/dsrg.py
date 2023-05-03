@@ -1,27 +1,27 @@
 #
 # @BEGIN LICENSE
 #
-# Psi4: an open-source quantum chemistry software package
+# Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+# that implements a variety of quantum chemistry methods for strongly
+# correlated electrons.
 #
-# Copyright (c) 2007-2019 The Psi4 Developers.
+# Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
 #
-# The copyrights for code used from other parties are included in
+#  The copyrights for code used from other parties are included in
 # the corresponding files.
 #
-# This file is part of Psi4.
-#
-# Psi4 is free software; you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, version 3.
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# Psi4 is distributed in the hope that it will be useful,
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License along
-# with Psi4; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 # @END LICENSE
 #
