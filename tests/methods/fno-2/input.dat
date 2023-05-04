@@ -55,7 +55,6 @@ avg_state           [[0,1,1],[1,1,1]]
 dsrg_s              2.0
 calc_type           sa
 dl_maxiter          500
-threepdc            zero
 dsrg_fno            true
 dsrg_fno_cutoff     1.0e-4
 dsrg_fno_pt2_s      0.5

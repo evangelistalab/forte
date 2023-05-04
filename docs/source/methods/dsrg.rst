@@ -1453,6 +1453,11 @@ The FNO MR-DSRG procedure add the following additional steps before a regular MR
   - In step (1), the DSRG-MRPT2 ccvv amplitudes have the same expressions to those of MP2.
     This behavior is hard coded in :code:`proc/dsrg_fno.py` by the option :code:`CCVV_SOURCE`.
 
+  - If option :code:`THREEPDC` is set to :code:`ZERO`, 3-RDM will also be ignored for the
+    1-RDM build of DSRG-MRPT2.
+    The resulting quasi-natural orbitals are thus approximated, but the error is negligible.
+    This behavior can be changed by modifying :code:`max_rdm_level` in :code:`proc/dsrg_fno.py`.
+
   - Because the recommended flow parameter is different between MRPT2 and others,
     the flow parameter for MRPT2 related steps [i.e., (1) and (3)] is controlled by option
     :code:`DSRG_FNO_PT2_S`.
@@ -1552,13 +1557,15 @@ and the untruncated SA-DSRG-PT3 gives ::
 
 The resulting SA-DSRG-PT3 vertical excitation energies are:
 
-=====================  =====================
-Method                 :math:`\Delta E` / eV
-=====================  =====================
-FNO (PT2 uncorrected)          4.434
-FNO (PT2 corrected)            4.443
-untruncated                    4.442
-=====================  =====================
+============================================  =====================
+Method                                         :math:`\Delta E` / eV
+============================================  =====================
+FNO (PT2 uncorrected, w/o :math:`\lambda_3`)         4.4346
+FNO (PT2 uncorrected, w/  :math:`\lambda_3`)         4.4336
+FNO (PT2 corrected, w/o :math:`\lambda_3`)           4.4434
+FNO (PT2 corrected, w/  :math:`\lambda_3`)           4.4425
+untruncated                                          4.4418
+============================================  =====================
 
 where the PT2 corrected FNO result is in excellent agreement with that of the complete SA-DSRG-PT3.
 
