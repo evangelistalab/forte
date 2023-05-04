@@ -63,8 +63,6 @@ class ExternalActiveSpaceMethod : public ActiveSpaceMethod {
     /// Returns the reduced density matrices up to a given rank (max_rdm_level)
     std::vector<std::shared_ptr<RDMs>> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                             int max_rdm_level, RDMsType type) override;
-    // std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-    //                        int max_rdm_level) override;
 
     /// Returns the transition reduced density matrices between roots of different symmetry up to a
     /// given level (max_rdm_level)
@@ -76,14 +74,16 @@ class ExternalActiveSpaceMethod : public ActiveSpaceMethod {
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
+    /// The number of alpha electrons
     size_t na_;
+    /// The number of beta electrons
     size_t nb_;
+    /// The number of active orbitals
     size_t nactv_;
 
   private:
     ///  Whether gamma2 are stored
     bool twopdc_;
-
     ///  Whether gamma3 are stored
     bool threepdc_;
     /// The alpha 1-RDM
