@@ -62,11 +62,11 @@ set forte {
   active_ref_type hf
   dl_maxiter 500
   aci_prescreen_threshold 0.0
-  TDACI_PROPAGATOR exact
-  TDACI_NSTEP 100
-  TDACI_TIMESTEP 1.0
-  TDACI_HOLE 0
-  TDACI_OCC_ORB [0]
+  TDCI_PROPAGATOR exact
+  TDCI_NSTEP 100
+  TDCI_TIMESTEP 1.0
+  TDCI_HOLE 0
+  TDCI_OCC_ORB [0]
   tdaci_test_occ true
 }                                        
                                          

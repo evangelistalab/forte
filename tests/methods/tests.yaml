@@ -369,9 +369,9 @@ read-orbitals:
    short:
       - read-orbitals-1
       - read-orbitals-2
-tdaci:
+tdci:
    short:
-      - tdaci-1
+      - tdci-1
 
 x2c:
    short:

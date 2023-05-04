@@ -62,15 +62,16 @@
 namespace forte {
 
 class Reference;
+class ActiveSpaceMethod;
 
 /// Set the ACI options
-void set_TDACI_options(ForteOptions& foptions);
+void set_TDCI_options(ForteOptions& foptions);
 
 /**
- * @brief The TDACI class
- * This class implements an adaptive CI algorithm
+ * @brief The TDCI class
+ * This class implements time propagation for CI states
  */
-class TDACI {
+class TDCI {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -81,10 +82,12 @@ class TDACI {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    TDACI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    TDCI(std::shared_ptr<ActiveSpaceMethod> active_space_method, std::shared_ptr<SCFInfo> scf_info,
+         std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+         std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Destructor
-    ~TDACI();
+    ~TDCI();
 
     // ==> Class Interface <==
 
@@ -92,17 +95,17 @@ class TDACI {
     double compute_energy();
 
   private:
-    StateInfo state_;
     std::shared_ptr<SCFInfo> scf_info_;
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
     std::shared_ptr<ForteOptions> options_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_; 
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    std::shared_ptr<ActiveSpaceMethod> active_space_method_;
 
     std::vector<std::vector<double>> occupations_;
 
-    void annihilate_wfn( DeterminantHashVec& olddets, DeterminantHashVec& adets, int frz_orb );
+    void annihilate_wfn(DeterminantHashVec& olddets, DeterminantHashVec& adets, int frz_orb);
 
-    void renormalize_wfn( std::vector<double>& acoeffs );
+    void renormalize_wfn(std::vector<double>& acoeffs);
 
     void save_matrix(psi::SharedMatrix mat, std::string str);
     void save_vector(psi::SharedVector vec, std::string str);
@@ -111,45 +114,51 @@ class TDACI {
     void save_vector(std::vector<std::string>& vec, std::string str);
 
     void propagate_exact(psi::SharedVector C0, psi::SharedMatrix H);
-    void propagate_cn( psi::SharedVector C0, psi::SharedMatrix H);
-    void propagate_taylor1( psi::SharedVector C0, psi::SharedMatrix H);
-    void propagate_taylor2( psi::SharedVector C0, psi::SharedMatrix H);
-    void propagate_RK4( psi::SharedVector C0, psi::SharedMatrix H);
-    void propagate_QCN( psi::SharedVector C0, psi::SharedMatrix H);
-    void propagate_lanczos( psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_cn(psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_taylor1(psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_taylor2(psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_RK4(psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_QCN(psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_lanczos(psi::SharedVector C0, psi::SharedMatrix H);
 
-    void compute_tdaci_select(psi::SharedVector C0);
-    
+    void compute_tdci_select(psi::SharedVector C0);
+
     void propagate_list(psi::SharedVector C0);
 
-    void propagate_exact_select( std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
-                                                            DeterminantHashVec& PQ_space, double dt);
+    void propagate_exact_select(std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i,
+                                DeterminantHashVec& PQ_space, double dt);
 
-    void propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
-                                                             DeterminantHashVec& PQ_space, double dt); 
+    void propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i,
+                              DeterminantHashVec& PQ_space, double dt);
 
-    void propagate_RK4_list(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
-                                                             DeterminantHashVec& PQ_space,DeterminantSubstitutionLists& op, double dt); 
+    void propagate_RK4_list(std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i,
+                            DeterminantHashVec& PQ_space, DeterminantSubstitutionLists& op,
+                            double dt);
     // The core state determinant space
     DeterminantHashVec core_dets_;
     DeterminantHashVec ann_dets_;
-    std::vector<double> compute_occupation( psi::SharedVector Cr, psi::SharedVector Ci, std::vector<int>& orb);
-    std::vector<double> compute_occupation( DeterminantHashVec& dets, std::vector<double>& Cr, std::vector<double>& Ci, std::vector<int>& orb);
+    std::vector<double> compute_occupation(psi::SharedVector Cr, psi::SharedVector Ci,
+                                           std::vector<int>& orb);
+    std::vector<double> compute_occupation(DeterminantHashVec& dets, std::vector<double>& Cr,
+                                           std::vector<double>& Ci, std::vector<int>& orb);
 
-    void get_PQ_space( DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r, std::vector<double>& P_coeffs_i,
-                       DeterminantHashVec& PQ_space,std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i);
+    void get_PQ_space(DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r,
+                      std::vector<double>& P_coeffs_i, DeterminantHashVec& PQ_space,
+                      std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i);
 
-    void update_P_space(DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r, std::vector<double>& P_coeffs_i,
-                        DeterminantHashVec& PQ_space, std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i);
+    void update_P_space(DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r,
+                        std::vector<double>& P_coeffs_i, DeterminantHashVec& PQ_space,
+                        std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i);
 
     // Compute Hc using coupling lists
-    void complex_sigma_build( std::vector<double>& sigma_r, std::vector<double>& sigma_i,std::vector<double>& c_r, std::vector<double>& c_i,DeterminantHashVec& dethash, DeterminantSubstitutionLists& op);
+    void complex_sigma_build(std::vector<double>& sigma_r, std::vector<double>& sigma_i,
+                             std::vector<double>& c_r, std::vector<double>& c_i,
+                             DeterminantHashVec& dethash, DeterminantSubstitutionLists& op);
 
     // Test occupation vectors using ref_occ_n.txt file
     double test_occ();
-
 };
 
 } // namespace forte
 
-#endif // _tdaci_h_
+#endif // _tdci_h_

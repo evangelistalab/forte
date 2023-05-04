@@ -259,16 +259,13 @@ class ActiveSpaceMethod {
     void set_print(int level);
 
     /// Quiet mode (no printing, for use with CASSCF)
-    void set_quite_mode(bool quiet);
+    void set_quiet_mode(bool quiet);
 
     /// Get the model space
     DeterminantHashVec get_PQ_space();
 
     /// Get model space coefficients
     psi::SharedMatrix get_PQ_evecs();
-
-    /// Return the integrals
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints();
 
   protected:
     /// The list of active orbitals (absolute ordering)
@@ -342,7 +339,7 @@ class ActiveSpaceMethod {
  * @param options user-provided options
  * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
+std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);

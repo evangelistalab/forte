@@ -15,7 +15,7 @@ def register_forte_options(options):
     register_sci_options(options)
     register_aci_options(options)
     register_asci_options(options)
-    register_tdaci_options(options)
+    register_tdci_options(options)
     register_detci_options(options)
     register_fci_mo_options(options)
     register_active_space_solver_options(options)
@@ -33,7 +33,7 @@ def register_forte_options(options):
 def register_driver_options(options):
     options.set_group("")
     options.add_str(
-        'JOB_TYPE', 'NEWDRIVER', ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP', 'TDACI'],
+        'JOB_TYPE', 'NEWDRIVER', ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP', 'TDCI'],
         'Specify the job type'
     )
 
@@ -537,33 +537,33 @@ def register_asci_options(options):
 
     options.add_double("ASCI_PRESCREEN_THRESHOLD", 1e-12, "ASCI prescreening threshold")
 
-def register_tdaci_options(options):
+def register_tdci_options(options):
 
-    options.add_int("TDACI_HOLE", 0,
+    options.add_int("TDCI_HOLE", 0,
             "Orbital used to ionize intial state. Number is indexed by the same ordering of orbitals in the determinants.")
 
-    options.add_str("TDACI_PROPAGATOR", "EXACT", ['EXACT','CN','QCN','LINEAR','QUADRATIC',
+    options.add_str("TDCI_PROPAGATOR", "EXACT", ['EXACT','CN','QCN','LINEAR','QUADRATIC',
                           'RK4', 'LANCZOS', 'EXACT_SELECT', 'RK4_SELECT', 'RK4_SELECT_LIST','ALL'],"Type of propagator")
 
-    options.add_int("TDACI_NSTEP", 20, "Number of time-steps")
+    options.add_int("TDCI_NSTEP", 20, "Number of time-steps")
 
-    options.add_double("TDACI_TIMESTEP", 1.0, "Timestep length in attosecond")
+    options.add_double("TDCI_TIMESTEP", 1.0, "Timestep length in attosecond")
 
-    options.add_double("TDACI_CN_CONVERGENCE", 1e-12, "Convergence threshold for CN iterations")
+    options.add_double("TDCI_CN_CONVERGENCE", 1e-12, "Convergence threshold for CN iterations")
 
-    options.add_bool("TDACI_PRINT_WFN", False, "Print coefficients to files")
+    options.add_bool("TDCI_PRINT_WFN", False, "Print coefficients to files")
 
-    options.add_int_list("TDACI_OCC_ORB", "Print the occupation at integral time itervals for these orbitals")
+    options.add_int_list("TDCI_OCC_ORB", "Print the occupation at integral time itervals for these orbitals")
 
-    options.add_int("TDACI_KRYLOV_DIM", 5, "Dimension of Krylov subspace for Lanczos method")
+    options.add_int("TDCI_KRYLOV_DIM", 5, "Dimension of Krylov subspace for Lanczos method")
 
-    options.add_double("TDACI_ETA_P", 1e-12, "Path filtering threshold for P space")
+    options.add_double("TDCI_ETA_P", 1e-12, "Path filtering threshold for P space")
 
-    options.add_double("TDACI_ETA_PQ", 1e-12, "Path filtering threshold for Q space")
+    options.add_double("TDCI_ETA_PQ", 1e-12, "Path filtering threshold for Q space")
 
-    options.add_double("TDACI_PRESCREEN_THRESH", 1e-12, "Prescreening threshold")
+    options.add_double("TDCI_PRESCREEN_THRESH", 1e-12, "Prescreening threshold")
 
-    options.add_bool("TDACI_TEST_OCC", False, "Test the occupation vectors")
+    options.add_bool("TDCI_TEST_OCC", False, "Test the occupation vectors")
 
 def register_fci_mo_options(options):
     options.set_group("FCIMO")

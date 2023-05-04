@@ -202,7 +202,7 @@ sci/detci.cc
 sci/fci_mo.cc
 sci/mrpt2.cc
 sci/sci.cc
-sci/tdaci.cc
+sci/tdci.cc
 sparse_ci/ci_reference.cc
 sparse_ci/determinant_functions.cc
 sparse_ci/determinant_hashvector.cc

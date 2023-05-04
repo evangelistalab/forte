@@ -79,9 +79,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Set core excitation
     void set_core_excitation(bool core_ex);
 
-    /// Set the printing level
-    void set_quiet(bool quiet);
-
     /// Dump temporary wave function to disk
     void dump_wave_function(const std::string& filename) override;
 
@@ -99,8 +96,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     std::string ex_alg_;
     /// Type of excited state to compute
     bool core_ex_;
-    /// Control amount of printing
-    bool quiet_mode_;
     /// Storage of past roots
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
     /// The PT2 energy correction
