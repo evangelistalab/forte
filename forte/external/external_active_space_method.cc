@@ -88,17 +88,19 @@ double ExternalActiveSpaceMethod::compute_energy() {
     g1a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", std::vector<size_t>(2, nactv_));
     g1b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", std::vector<size_t>(2, nactv_));
 
-    for (auto it1 = std::begin(gamma1); it1 != std::end(gamma1); ++it1) {
-        size_t spin_case = std::get<0>(*it1) % 2;
-        if (spin_case == 0) {
-            size_t e1 = std::get<0>(*it1) / 2;
-            size_t e2 = std::get<1>(*it1) / 2;
-            g1a_.data()[e1 * nactv_ + e2] = std::get<2>(*it1);
-        }
-        if (spin_case == 1) {
-            size_t e1 = (std::get<0>(*it1) - 1) / 2;
-            size_t e2 = (std::get<1>(*it1) - 1) / 2;
-            g1b_.data()[e1 * nactv_ + e2] = std::get<2>(*it1);
+    // loop over all elements in gamma1 and extract the data for the alpha and beta 1-RDMs
+    for (const auto& [i, j, val] : gamma1) {
+        const size_t spin_case_i = i % 2 == 0;
+        const size_t spin_case_j = j % 2 == 0;
+        size_t mo_i = i / 2;
+        size_t mo_j = j / 2;
+        size_t add = mo_i * nactv_ + mo_j;
+        if (spin_case_i and spin_case_j) {
+            g1a_.data()[add] = val;
+        } else if (!spin_case_i and !spin_case_j) {
+            g1b_.data()[add] = val;
+        } else {
+            throw std::runtime_error("Invalid spin case in the 1-RDM");
         }
     }
 
@@ -111,29 +113,26 @@ double ExternalActiveSpaceMethod::compute_energy() {
     if (j.contains("gamma2")) {
         std::vector<std::tuple<int, int, int, int, double>> gamma2 = j["gamma2"]["data"];
 
-        for (auto it2 = std::begin(gamma2); it2 != std::end(gamma2); ++it2) {
-            size_t e1 = std::get<0>(*it2) / 2;
-            size_t e2 = std::get<1>(*it2) / 2;
-            size_t e3 = std::get<2>(*it2) / 2;
-            size_t e4 = std::get<3>(*it2) / 2;
+        // loop over all elements in gamma2 and extract the data for the alpha and beta 2-RDMs
+        for (const auto& [i, j, k, l, val] : gamma2) {
+            const size_t spin_case_i = i % 2 == 0;
+            const size_t spin_case_j = j % 2 == 0;
+            const size_t spin_case_k = k % 2 == 0;
+            const size_t spin_case_l = l % 2 == 0;
+            size_t mo_i = i / 2;
+            size_t mo_j = j / 2;
+            size_t mo_k = k / 2;
+            size_t mo_l = l / 2;
 
-            bool spin1 = (std::get<0>(*it2) % 2 == 0);
-            bool spin2 = (std::get<1>(*it2) % 2 == 0);
-            bool spin3 = (std::get<2>(*it2) % 2 == 0);
-            bool spin4 = (std::get<3>(*it2) % 2 == 0);
+            size_t add =
+                mo_i * nactv_ * nactv_ * nactv_ + mo_j * nactv_ * nactv_ + mo_k * nactv_ + mo_l;
 
-            if (spin1 && spin2 && spin3 && spin4) {
-                // Read form aaaa
-                g2aa_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
-                             e4] = std::get<4>(*it2);
-            } else if (!spin1 && !spin2 && !spin3 && !spin4) {
-                // Read from bbbb
-                g2bb_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
-                             e4] = std::get<4>(*it2);
-            } else if (spin1 && !spin2 && spin3 && !spin4) {
-                // Read from abab (should be enough)
-                g2ab_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
-                             e4] = std::get<4>(*it2);
+            if (spin_case_i and spin_case_j and spin_case_k and spin_case_l) {
+                g2aa_.data()[add] = val;
+            } else if (!spin_case_i and !spin_case_j and !spin_case_k and !spin_case_l) {
+                g2bb_.data()[add] = val;
+            } else if (spin_case_i and !spin_case_j and spin_case_k and !spin_case_l) {
+                g2ab_.data()[add] = val;
             }
         }
     } else {
@@ -148,47 +147,41 @@ double ExternalActiveSpaceMethod::compute_energy() {
 
     // Read 3-DM
     if (j.contains("gamma3")) {
+        // the data is stored as a vector of tuples
         std::vector<std::tuple<int, int, int, int, int, int, double>> gamma3 = j["gamma3"]["data"];
 
-        for (auto it3 = std::begin(gamma3); it3 != std::end(gamma3); ++it3) {
-            size_t e1 = std::get<0>(*it3) / 2;
-            size_t e2 = std::get<1>(*it3) / 2;
-            size_t e3 = std::get<2>(*it3) / 2;
-            size_t e4 = std::get<3>(*it3) / 2;
-            size_t e5 = std::get<4>(*it3) / 2;
-            size_t e6 = std::get<5>(*it3) / 2;
+        // loop over all elements in gamma3 and extract the data for the alpha and beta 3-RDMs
+        for (const auto& [i, j, k, l, m, n, val] : gamma3) {
+            const size_t spin_case_i = i % 2 == 0;
+            const size_t spin_case_j = j % 2 == 0;
+            const size_t spin_case_k = k % 2 == 0;
+            const size_t spin_case_l = l % 2 == 0;
+            const size_t spin_case_m = m % 2 == 0;
+            const size_t spin_case_n = n % 2 == 0;
+            size_t mo_i = i / 2;
+            size_t mo_j = j / 2;
+            size_t mo_k = k / 2;
+            size_t mo_l = l / 2;
+            size_t mo_m = m / 2;
+            size_t mo_n = n / 2;
 
-            bool spin1 = (std::get<0>(*it3) % 2 == 0);
-            bool spin2 = (std::get<1>(*it3) % 2 == 0);
-            bool spin3 = (std::get<2>(*it3) % 2 == 0);
-            bool spin4 = (std::get<3>(*it3) % 2 == 0);
-            bool spin5 = (std::get<4>(*it3) % 2 == 0);
-            bool spin6 = (std::get<5>(*it3) % 2 == 0);
+            size_t add = mo_i * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
+                         mo_j * nactv_ * nactv_ * nactv_ * nactv_ +
+                         mo_k * nactv_ * nactv_ * nactv_ + mo_l * nactv_ * nactv_ + mo_m * nactv_ +
+                         mo_n;
 
-            if (spin1 && spin2 && spin3 && spin4 && spin5 && spin6) {
-                // Read from aaaaaa
-                g3aaa_
-                    .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
-                            e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
-                            e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
-            } else if (spin1 && spin2 && !spin3 && spin4 && spin5 && !spin6) {
-                // Read from aabaab
-                g3aab_
-                    .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
-                            e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
-                            e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
-            } else if (spin1 && !spin2 && !spin3 && spin4 && !spin5 && !spin6) {
-                // Read from abbabb
-                g3abb_
-                    .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
-                            e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
-                            e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
-            } else if (!spin1 && !spin2 && !spin3 && !spin4 && !spin5 && !spin6) {
-                // Read from bbbbbb
-                g3bbb_
-                    .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
-                            e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
-                            e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
+            if (spin_case_i and spin_case_j and spin_case_k and spin_case_l and spin_case_m and
+                spin_case_n) {
+                g3aaa_.data()[add] = val;
+            } else if (spin_case_i and spin_case_j and !spin_case_k and spin_case_l and
+                       spin_case_m and !spin_case_n) {
+                g3aab_.data()[add] = val;
+            } else if (!spin_case_i and !spin_case_j and !spin_case_k and !spin_case_l and
+                       !spin_case_m and !spin_case_n) {
+                g3bbb_.data()[add] = val;
+            } else if (spin_case_i and !spin_case_j and !spin_case_k and spin_case_l and
+                       !spin_case_m and !spin_case_n) {
+                g3abb_.data()[add] = val;
             }
         }
     } else {
