@@ -64,7 +64,7 @@ namespace forte {
 class Reference;
 class ActiveSpaceMethod;
 
-/// Set the ACI options
+/// Set the TDCI options
 void set_TDCI_options(ForteOptions& foptions);
 
 /**

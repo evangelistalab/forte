@@ -43,12 +43,6 @@
 
 using namespace psi;
 
-/* Complex datatype */
-// struct _dcomplex {
-//     double re, im;
-// };
-// typedef struct _dcomplex dcomplex;
-
 /* CHEEV prototype */
 extern "C" {
 extern void zheev(char* jobz, char* uplo, int* n, std::complex<double>* a, int* lda, double* w,
@@ -900,7 +894,8 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
         Kn_r->zero();
         Kn_i->zero();
 
-        std::complex<double>* Hs = new std::complex<double>[krylov_dim * krylov_dim];
+        // Form the first vector
+        std::vector<std::complex<double>> Hs(krylov_dim * krylov_dim);
         Kn_r->set_column(0, 0, ct_r);
         Kn_i->set_column(0, 0, ct_i);
         for (int k = 0; k < krylov_dim; ++k) {
@@ -958,40 +953,15 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
                 Kn_i->set_column(0, k + 1, wk_i);
             }
         }
-        //  outfile->Printf("\n");
-        //  for( int i = 0; i < krylov_dim; ++i){
-        //      auto vecr = Kn_r->get_column(0,i);
-        //      auto veci = Kn_i->get_column(0,i);
-        //      for( int j = 0; j < krylov_dim; ++j){
-        //          auto vec2r = Kn_r->get_column(0,j);
-        //          auto vec2i = Kn_i->get_column(0,j);
-        //
-        //          double dot = vecr->vector_dot(*vec2r) + veci->vector_dot(*vec2i);
-        //          double doti= vecr->vector_dot(*vec2i) - vecr->vector_dot(*vec2i);
-        //          outfile->Printf(" %8.4f + %8.4fi \t", dot, doti);
-
-        //      }
-        //      outfile->Printf("\n");
-        //  }
-
-        //  outfile->Printf("\n");
-        //  for( int i = 0; i < krylov_dim; ++i){
-        //      for( int j = 0; j < krylov_dim; ++j){
-        //          outfile->Printf("%12.9f + %12.9fi \t",Hs[krylov_dim*i + j].re , Hs[krylov_dim*i
-        //          + j].im);
-        //      }
-        //      outfile->Printf("\n");
-        //  }
 
         // Diagonalize matrix in Krylov subspace
         int n = krylov_dim, lda = krylov_dim, info, lwork;
-        std::complex<double>* work;
         /* Local arrays */
         /* rwork dimension should be at least max(1,3*n-2) */
         double w[n], rwork[3 * n - 2];
         lwork = 2 * n - 1;
-        work = (std::complex<double>*)malloc(lwork * sizeof(std::complex<double>));
-        zheev("V", "L", &n, Hs, &lda, w, work, &lwork, rwork, &info);
+        std::vector<std::complex<double>> work(lwork);
+        zheev("V", "L", &n, Hs.data(), &lda, w, work.data(), &lwork, rwork, &info);
         // Evecs are stored in Hs, let's unpack it and the energy
 
         SharedMatrix evecs_r = std::make_shared<Matrix>("er", n, n);
@@ -1004,34 +974,8 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
                 evecs_i->set(i, j, Hs[krylov_dim * i + j].imag());
             }
         }
-        //  outfile->Printf("\n");
-        //  for( int i = 0; i < krylov_dim; ++i){
-        //      auto vecr = evecs_r->get_column(0,i);
-        //      auto veci = evecs_i->get_column(0,i);
-        //      for( int j = 0; j < krylov_dim; ++j){
-        //          auto vec2r = evecs_r->get_column(0,j);
-        //          auto vec2i = evecs_i->get_column(0,j);
-        //
-        //          double dot = vecr->vector_dot(*vec2r) + veci->vector_dot(*vec2i);
-        //          double doti= vecr->vector_dot(*vec2i) - vecr->vector_dot(*vec2i);
-        //          outfile->Printf(" %8.4f + %8.4fi \t", dot, doti);
 
-        //      }
-        //      outfile->Printf("\n");
-        //  }
-        //  outfile->Printf("\n");
-        //  for( int i = 0; i < krylov_dim; ++i){
-        //      for( int j = 0; j < krylov_dim; ++j){
-        //          outfile->Printf("%12.9f + %12.9fi \t",Hs[krylov_dim*i + j].re , Hs[krylov_dim*i
-        //          + j].im);
-        //      }
-        //      outfile->Printf("\n");
-        //  }
-
-        delete[] Hs;
-        delete[] work;
         // Do the propagation
-
         SharedVector ct_int_r = std::make_shared<Vector>("ct_R", krylov_dim);
         SharedVector ct_int_i = std::make_shared<Vector>("ct_I", krylov_dim);
 
