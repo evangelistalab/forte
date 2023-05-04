@@ -36,22 +36,26 @@
 
 namespace forte {
 
-/// @brief A class to perform spin adaptation on a CI wavefunction
+/// @brief A class to perform spin adaptation of a CI wavefunction
 class SpinAdapter {
   public:
     /// Class constructor
     /// @param dets A vector of determinants to be spin adapted
     SpinAdapter(int na, int nb, int twoS, int twoMs, int norb);
 
+    /// @brief A function to prepare the determinant to CSF mapping
+    /// @param dets a vector of determinants sorted according to their address
     void prepare_couplings(const std::vector<Determinant>& dets);
 
+    /// @brief Convert a coefficient vector from the CSF basis to the determinant basis
+    /// @param csf_C csf coefficients
+    /// @param det_C determinant coefficients
     void csf_C_to_det_C(const std::vector<double>& csf_C, std::vector<double>& det_C);
 
+    /// @brief Convert a coefficient vector from the determinant basis to the CSF basis
+    /// @param det_C determinant coefficients
+    /// @param csf_C csf coefficients
     void det_C_to_csf_C(const std::vector<double>& det_C, std::vector<double>& csf_C);
-
-    /// @brief A function to generate all the CSFs from a configuration
-    auto conf_to_csfs(const Configuration& conf, int twoS, int twoMs)
-        -> std::vector<std::vector<double>>;
 
   private:
     /// @brief The number of alpha electrons
@@ -69,11 +73,15 @@ class SpinAdapter {
     /// @brief A vector with the number of determinants that contribute to a CSF
     std::vector<size_t> csf_to_det_size_;
     /// @brief A vector used to store information on how to map the determinants to CSFs
-    std::vector<std::tuple<size_t, double>> det_to_csf_coeff_;
+    std::vector<std::tuple<size_t, size_t, double>> det_to_csf_coeff_;
     /// @brief A vector used to store information on how to map the CSFs to determinants
-    std::vector<std::tuple<size_t, double>> csf_to_det_coeff_;
+    std::vector<std::tuple<size_t, size_t, double>> csf_to_det_coeff_;
     /// @brief A vector used to store the configurations
     std::vector<Configuration> confs_;
+
+    /// @brief A function to generate all the CSFs from a configuration
+    auto conf_to_csfs(const Configuration& conf, int twoS, int twoMs)
+        -> std::vector<std::pair<String, std::vector<std::pair<Determinant, double>>>>;
 
     /// A function to generate all possible spin couplings
     /// @param N The number of unpaired electrons
