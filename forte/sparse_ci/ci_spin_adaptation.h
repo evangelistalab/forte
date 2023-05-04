@@ -32,7 +32,6 @@
 #include <vector>
 
 #include "sparse_ci/determinant.h"
-#define DEBUG_SPIN_ADAPTATION 1
 
 namespace forte {
 
@@ -57,6 +56,9 @@ class SpinAdapter {
     /// @param csf_C csf coefficients
     void det_C_to_csf_C(const std::vector<double>& det_C, std::vector<double>& csf_C);
 
+    /// @brief Return the number of CSFs
+    size_t ncsf() const;
+
   private:
     /// @brief The number of alpha electrons
     int na_;
@@ -68,6 +70,8 @@ class SpinAdapter {
     int twoMs_;
     /// @brief The number of orbitals
     int norb_;
+    /// @brief The number of CSFs
+    size_t ncsf_;
     /// @brief A vector with the number of CSFs that contribute to a determinant
     std::vector<size_t> det_to_csf_size_;
     /// @brief A vector with the number of determinants that contribute to a CSF
