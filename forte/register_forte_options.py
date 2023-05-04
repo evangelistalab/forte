@@ -47,8 +47,8 @@ def register_driver_options(options):
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
-    )  # TODO: why is PCI running even if it is not in this list (Francesco)
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG', 'EXTERNAL'], 'Active space solver type'
+    )
     options.add_str(
         'CORRELATION_SOLVER', 'NONE',
         ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG', 'DSRG_MRPT', 'MRDSRG_SO', 'SOMRDSRG'],
@@ -80,6 +80,21 @@ def register_driver_options(options):
     options.add_str(
         "ACTIVE_REF_TYPE", "CAS", ["HF", "CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD", "DOCI"],
         "Initial guess for active space wave functions"
+    )
+
+    options.add_bool("WRITE_RDM", False, "Save RDMs to ref_rdms.json for external computations")
+
+    # TODO: Remove these in the future since they are redundant with READ/DUMP_ORBITALS (although they use different formats json vs. numpy)
+    options.add_bool("WRITE_WFN", False, "Save ref_wfn.Ca() to coeff.json for external computations")
+
+    options.add_bool("READ_WFN", False, "Read ref_wfn.Ca()/ref_wfn.Cb() from coeff.json for `external` active space solver")
+
+    options.add_bool(
+        "EXTERNAL_PARTIAL_RELAX", False,
+        "Perform one relaxation step after building the DSRG effective Hamiltonian when using `external` active space solver")
+
+    options.add_str(
+        'EXT_RELAX_SOLVER', 'FCI', ['FCI', 'DETCI', 'CAS'], 'Active space solver used in the relaxation when using `external` active space solver'
     )
 
     options.add_int("PRINT", 1, "Set the print level.")
@@ -797,6 +812,8 @@ def register_dsrg_options(options):
     )
 
     options.add_bool("DSRG_RDM_MS_AVG", False, "Form Ms-averaged density if true")
+
+    options.add_bool("SAVE_SA_DSRG_INTS", False, "Save SA-DSRG dressed integrals to dsrg_ints.json")
 
 
 def register_dwms_options(options):

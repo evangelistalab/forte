@@ -106,6 +106,8 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Solve the contracted CI eigenvalue problem using given integrals")
         .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
              "Compute the weighted average reference")
+        .def("state_energies_map", &ActiveSpaceSolver::state_energies_map,
+             "Return a map of StateInfo to the computed nroots of energies")
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
              "Set the active space integrals manually")
         .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
@@ -209,6 +211,7 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
+
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
     m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
@@ -317,6 +320,8 @@ PYBIND11_MODULE(_forte, m) {
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
              "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
         .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
+        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry,
+             "Return the symmetry of the active MOs")
         .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
         .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")

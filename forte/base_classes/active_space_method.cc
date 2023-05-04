@@ -47,6 +47,7 @@
 #include "sci/detci.h"
 #include "pci/pci.h"
 #include "ci_ex_states/excited_state_solver.h"
+#include "external/external_active_space_method.h"
 #ifdef HAVE_CHEMPS2
 #include "dmrg/dmrgsolver.h"
 #endif
@@ -424,6 +425,8 @@ std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
         method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
+    } else if (type == "EXTERNAL") {
+        method = std::make_unique<ExternalActiveSpaceMethod>(state, nroot, mo_space_info, as_ints);
     } else if (type == "DMRG") {
 #ifdef HAVE_CHEMPS2
         method =
