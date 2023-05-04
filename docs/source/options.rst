@@ -1447,10 +1447,10 @@ Allowed values: ['NONE', 'SINGLES_DOUBLES', 'SINGLES', 'DOUBLES']
 **INTERNAL_AMP_SELECT**
 
 Excitation types considered when internal amplitudes are included
-- Select only part of the asked internal amplitudes (IAs) in V-CIS/CISD
-  - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV, OV->VV)
-  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV, OO->OV, OV->VV)
-  - OOVV: pure external (O->V; OO->VV)
+Select only part of the asked internal amplitudes (IAs) in V-CIS/CISD
+- AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV, OV->VV)
+- ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV, OO->OV, OV->VV)
+- OOVV: pure external (O->V; OO->VV)
 
 Type: str
 
