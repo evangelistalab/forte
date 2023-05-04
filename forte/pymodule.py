@@ -552,6 +552,19 @@ def run_forte(name, **kwargs):
     if (job_type == "MCSCF_TWO_STEP"):
         casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
+    
+    if (job_type == "TDCI"):
+        state = forte.make_state_info_from_psi(options)
+        as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+        state_map = forte.to_state_nroots_map(state_weights_map)
+        active_space_method = forte.make_active_space_method(
+            "ACI", state, options.get_int("NROOT"), scf_info, mo_space_info, as_ints, options
+        )
+        active_space_method.set_quiet_mode(True)
+        active_space_method.compute_energy()
+
+        tdci = forte.TDCI(active_space_method, scf_info, options, mo_space_info, as_ints)
+        energy = tdci.compute_energy()
 
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)
@@ -573,7 +586,6 @@ def run_forte(name, **kwargs):
         if options.get_bool('DUMP_ORBITALS'):
             dump_orbitals(ref_wfn)
         return ref_wfn
-
 
 def mr_dsrg_pt2(job_type, forte_objects, ints, options):
     """

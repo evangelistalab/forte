@@ -62,6 +62,7 @@
 #include "mrdsrg-spin-adapted/sadsrg.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
+#include "sci/tdci.h"
 
 #include "post_process/spin_corr.h"
 
@@ -89,8 +90,9 @@ double get_master_screen_threshold();
 
 /// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {
-    py::class_<ActiveSpaceMethod>(m, "ActiveSpaceMethod")
+    py::class_<ActiveSpaceMethod, std::shared_ptr<ActiveSpaceMethod>>(m, "ActiveSpaceMethod")
         .def("compute_energy", &ActiveSpaceMethod::compute_energy)
+        .def("set_quiet_mode", &ActiveSpaceMethod::set_quiet_mode)
         .def("dump_wave_function", &ActiveSpaceMethod::dump_wave_function)
         .def("read_wave_function", &ActiveSpaceMethod::read_wave_function);
 }
@@ -257,6 +259,8 @@ PYBIND11_MODULE(_forte, m) {
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
 
+    //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
+
     export_ForteOptions(m);
 
     export_ActiveSpaceMethod(m);
@@ -385,6 +389,13 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &DSRG_MRPT::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
+
+    // export the time-dependent ACI code
+    py::class_<TDCI>(m, "TDCI", "Time-dependent ACI")
+        .def(py::init<std::shared_ptr<ActiveSpaceMethod>, std::shared_ptr<SCFInfo>,
+                      std::shared_ptr<ForteOptions>, std::shared_ptr<MOSpaceInfo>,
+                      std::shared_ptr<ActiveSpaceIntegrals>>())
+        .def("compute_energy", &TDCI::compute_energy, "Compute TD-ACI");
 
     py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
         .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>,

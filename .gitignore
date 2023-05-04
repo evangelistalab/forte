@@ -36,6 +36,8 @@ doc/doxygen/html
 doc/doxygen/latex
 docs/sphinx/_*
 
+forte.egg-info/*
+
 *.html
 */*/*.html
 
