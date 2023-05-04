@@ -5,8 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
- * AUTHORS).
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -45,15 +44,15 @@
 using namespace psi;
 
 /* Complex datatype */
-struct _dcomplex {
-    double re, im;
-};
-typedef struct _dcomplex dcomplex;
+// struct _dcomplex {
+//     double re, im;
+// };
+// typedef struct _dcomplex dcomplex;
 
 /* CHEEV prototype */
 extern "C" {
-extern void zheev(char* jobz, char* uplo, int* n, dcomplex* a, int* lda, double* w, dcomplex* work,
-                  int* lwork, double* rwork, int* info);
+extern void zheev(char* jobz, char* uplo, int* n, std::complex<double>* a, int* lda, double* w,
+                  std::complex<double>* work, int* lwork, double* rwork, int* info);
 }
 
 namespace forte {
@@ -119,7 +118,6 @@ double TDCI::compute_energy() {
     if (build_full_H) {
         for (size_t I = 0; I < nann; ++I) {
             Determinant detI = ann_dets_.get_det(I);
-            /// det_str[I] = detI.str(nact).c_str();
             det_str[I] = str(detI, nact).c_str();
             for (size_t J = I; J < nann; ++J) {
                 Determinant detJ = ann_dets_.get_det(J);
@@ -902,7 +900,7 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
         Kn_r->zero();
         Kn_i->zero();
 
-        dcomplex* Hs = new dcomplex[krylov_dim * krylov_dim];
+        std::complex<double>* Hs = new std::complex<double>[krylov_dim * krylov_dim];
         Kn_r->set_column(0, 0, ct_r);
         Kn_i->set_column(0, 0, ct_i);
         for (int k = 0; k < krylov_dim; ++k) {
@@ -987,12 +985,12 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
 
         // Diagonalize matrix in Krylov subspace
         int n = krylov_dim, lda = krylov_dim, info, lwork;
-        dcomplex* work;
+        std::complex<double>* work;
         /* Local arrays */
         /* rwork dimension should be at least max(1,3*n-2) */
         double w[n], rwork[3 * n - 2];
         lwork = 2 * n - 1;
-        work = (dcomplex*)malloc(lwork * sizeof(dcomplex));
+        work = (std::complex<double>*)malloc(lwork * sizeof(std::complex<double>));
         zheev("V", "L", &n, Hs, &lda, w, work, &lwork, rwork, &info);
         // Evecs are stored in Hs, let's unpack it and the energy
 
@@ -1002,8 +1000,8 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
         for (int i = 0; i < krylov_dim; ++i) {
             evals->set(i, w[i]);
             for (int j = 0; j < krylov_dim; ++j) {
-                evecs_r->set(i, j, Hs[krylov_dim * i + j].re);
-                evecs_i->set(i, j, Hs[krylov_dim * i + j].im);
+                evecs_r->set(i, j, Hs[krylov_dim * i + j].real());
+                evecs_i->set(i, j, Hs[krylov_dim * i + j].imag());
             }
         }
         //  outfile->Printf("\n");
