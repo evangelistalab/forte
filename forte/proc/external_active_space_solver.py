@@ -44,10 +44,13 @@ def read_wavefunction(ref_wfn):
 def write_external_active_space_file(as_ints, state_map, mo_space_info, json_file="forte_ints.json"):
     ndocc = mo_space_info.size("INACTIVE_DOCC")
 
+    # `state_map` only contains one state.
     for state, nroots in state_map.items():
         file = {}
 
         nmo = as_ints.nmo()
+
+        file['point_group'] = {"data": mo_space_info.point_group_label(), "description": "Point group of the system"}
 
         file['state_symmetry'] = {"data": state.irrep(), "description": "Symmetry of the state"}
 
@@ -140,7 +143,7 @@ def make_hamiltonian(as_ints, state_map):
                 H[I][J] = as_ints.slater_rules(detI,detJ)
                 # if I == J:
                 #     H[I][J] += scalar_e
-                          
+
         print(f'\n==> Active Space Hamiltonian <==\n')
         print(f'\n{H}')
 

@@ -2,7 +2,7 @@
 
 import forte
 
-refe = -1.155656745568920
+refe = -1.153758380556
 
 molecule {
 0 1
@@ -11,7 +11,7 @@ H 1 0.7
 }
 
 set {
-  basis                cc-pvdz
+  basis                cc-pVDZ
   scf_type             pk
   e_convergence        12
 }
@@ -28,4 +28,4 @@ set forte {
 }
 
 energy('forte')
-compare_values(refe, variable("CURRENT ENERGY"),10, "DSRG-MRPT2 unrelaxed energy (external RDM)")
+compare_values(refe, variable("CURRENT ENERGY"), 10, "DSRG-MRPT2 unrelaxed energy (external RDM)")
