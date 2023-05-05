@@ -82,7 +82,7 @@ class STD_SOURCE : public DSRG_SOURCE {
         if (std::fabs(Z) < small_) {
             return Taylor_Exp(Z, taylor_order_) * S;
         } else {
-            return (1.0 - std::exp(-Z * Z)) / Z * S;
+            return (1.0 - std::exp(-Z * Z)) / D;
         }
     }
 
@@ -92,7 +92,7 @@ class STD_SOURCE : public DSRG_SOURCE {
         if (std::fabs(Z) < small_) {
             return Taylor_Exp(Z, taylor_order_, 2) * s_;
         } else {
-            return (1.0 - std::exp(-Z * Z)) / (Z * Z) * s_;
+            return (1.0 - std::exp(-Z * Z)) / (D * D);
         }
     }
 

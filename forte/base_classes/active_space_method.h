@@ -31,7 +31,7 @@
 
 #include <vector>
 #include <unordered_set>
-#include <ambit/tensor.h>
+#include "ambit/tensor.h"
 
 namespace ambit {
 class BlockedTensor;

@@ -84,7 +84,7 @@ void DSRG_MRPT2::startup() {
     F_["PQ"] = Fock_["PQ"];
     Fa_ = Fdiag_a_;
     Fb_ = Fdiag_b_;
-  
+
     // Prepare Hbar
     if (relax_ref_ != "NONE" || multi_state_) {
         Hbar1_ = BTF_->build(tensor_type_, "1-body Hbar", spin_cases({"aa"}));
