@@ -26,12 +26,14 @@
 # @END LICENSE
 #
 
-import psi4
-import forte
-import json
+import numpy as np
 import warnings
 import math
-import numpy as np
+import json
+import psi4
+
+import forte
+from forte.proc.external_active_space_solver import write_external_active_space_file
 
 
 class ProcedureDSRG:
@@ -217,6 +219,28 @@ class ProcedureDSRG:
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
             if self.Meff_implemented and (self.max_dipole_level > 0 or self.max_quadrupole_level > 0):
                 asmpints = self.dsrg_solver.compute_mp_eff_actv()
+
+            if self.options.get_str('ACTIVE_SPACE_SOLVER') == 'EXTERNAL':
+                state_map = forte.to_state_nroots_map(self.state_weights_map)
+                write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
+                msg = 'External solver: save DSRG dressed integrals to dsrg_ints.json'
+                print(msg)
+                psi4.core.print_out(msg)
+
+                if self.options.get_bool("EXTERNAL_PARTIAL_RELAX"):
+                    active_space_solver_2 = forte.make_active_space_solver(
+                        self.options.get_str('EXT_RELAX_SOLVER'), state_map, self.scf_info, self.mo_space_info, ints_dressed, self.options)
+                    active_space_solver_2.set_Uactv(self.Ua, self.Ub)
+                    e_relax = list(active_space_solver_2.compute_energy().values())[0][0]
+                self.energies.append((e_dsrg, e_relax))
+                break
+            
+            if self.do_multi_state and self.options.get_bool("SAVE_SA_DSRG_INTS"):
+                state_map = forte.to_state_nroots_map(self.state_weights_map)
+                write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
+                msg = '\n\nSave SA-DSRG dressed integrals to dsrg_ints.json\n\n'
+                print(msg)
+                psi4.core.print_out(msg)
 
             # Spit out contracted SA-DSRG energy
             if self.do_multi_state and self.multi_state_type == "SA_SUB":

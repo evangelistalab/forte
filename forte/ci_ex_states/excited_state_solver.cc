@@ -78,7 +78,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
-    quiet_mode_ = options->get_bool("SCI_QUIET_MODE");
+    quiet_ = options->get_bool("SCI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
@@ -126,7 +126,7 @@ double ExcitedStateSolver::compute_energy() {
         {"Selected Configuration Interaction Excited States",
          "written by Jeffrey B. Schriber, Tianyuan Zhang, and Francesco A. Evangelista"});
     print_info();
-    if (!quiet_mode_) {
+    if (!quiet_) {
         psi::outfile->Printf("\n  Using %d thread(s)", omp_get_max_threads());
     }
 
@@ -157,7 +157,7 @@ double ExcitedStateSolver::compute_energy() {
     psi::SharedVector PQ_evals;
 
     for (int i = 0; i < nrun; ++i) {
-        if (!quiet_mode_)
+        if (!quiet_)
             psi::outfile->Printf("\n  Computing wavefunction for root %d", i);
 
         if (multi_state) {
@@ -186,7 +186,7 @@ double ExcitedStateSolver::compute_energy() {
 
         if (ex_alg_ == "ROOT_COMBINE") {
             sizes[i] = PQ_space.size();
-            if (!quiet_mode_)
+            if (!quiet_)
                 psi::outfile->Printf("\n  Combining determinant spaces");
             // Combine selected determinants into total space
             full_space.merge(PQ_space);
@@ -826,7 +826,7 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatr
                                        int root, int ref_root) {
     std::vector<std::pair<Determinant, double>> vec;
 
-    if (!quiet_mode_ and nroot_ > 0) {
+    if (!quiet_ and nroot_ > 0) {
         psi::outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root);
     }
     const det_hashvec& detmap = dets.wfn_hash();
@@ -834,7 +834,7 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatr
         vec.push_back(std::make_pair(detmap[i], PQ_evecs->get(i, ref_root)));
     }
     old_roots_.push_back(vec);
-    if (!quiet_mode_ and nroot_ > 0) {
+    if (!quiet_ and nroot_ > 0) {
         psi::outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
     }
 }
@@ -852,6 +852,4 @@ ExcitedStateSolver::~ExcitedStateSolver() {
 void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ = ex_alg; }
 
 void ExcitedStateSolver::set_core_excitation(bool core_ex) { core_ex_ = core_ex; }
-
-void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
 } // namespace forte

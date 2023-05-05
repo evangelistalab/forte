@@ -32,6 +32,8 @@ import math
 import warnings
 import pathlib
 
+from sys import exit
+import os
 import numpy as np
 import psi4
 import forte
@@ -42,6 +44,7 @@ import forte.proc.fcidump
 from forte.proc.dsrg import ProcedureDSRG
 from forte.proc.orbital_helpers import ortho_orbs_forte, orbital_projection
 from forte.proc.orbital_helpers import read_orbitals, dump_orbitals
+from forte.proc.external_active_space_solver import write_external_active_space_file, write_external_rdm_file, write_wavefunction, read_wavefunction, make_hamiltonian
 
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
@@ -211,7 +214,11 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     # set DF and MINAO basis
     if 'DF' in options.get_str('INT_TYPE'):
         aux_basis = psi4.core.BasisSet.build(
-            molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS'),
+            molecule,
+            'DF_BASIS_MP2',
+            options.get_str('DF_BASIS_MP2'),
+            'RIFIT',
+            options.get_str('BASIS'),
             puream=wfn_new.basisset().has_puream()
         )
         wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
@@ -465,7 +472,25 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver = forte.make_active_space_solver(
         active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
     )
+
+    if active_space_solver_type == 'EXTERNAL':
+        write_external_active_space_file(as_ints, state_map, mo_space_info, "as_ints.json")
+        msg = 'External solver: save active space integrals to as_ints.json'
+        print(msg)
+        psi4.core.print_out(msg)
+
+        if not os.path.isfile('rdms.json'):
+            msg = 'External solver: rdms.json file not present, exit.'
+            print(msg)
+            psi4.core.print_out(msg)
+            # finish the computation
+            exit()
+    # if rdms.json exists, then run "external" as_solver to compute energy
     state_energies_list = active_space_solver.compute_energy()
+
+    if options.get_bool("WRITE_RDM"):
+        max_rdm_level = 3  # TODO allow the user to change this variable
+        write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level)
 
     if options.get_bool('SPIN_ANALYSIS'):
         rdms = active_space_solver.compute_average_rdms(state_weights_map, 2, forte.RDMsType.spin_dependent)
@@ -512,6 +537,16 @@ def run_forte(name, **kwargs):
         psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
         return ref_wfn
 
+    # these two functions are used by the external solver to read and write MO coefficients
+    if options.get_bool('WRITE_WFN'):
+        write_wavefunction(ref_wfn)
+
+    if options.get_bool('READ_WFN'):
+        if not os.path.isfile('coeff.json'):
+            print('No coefficient files in input folder, run a SCF first!')
+            exit()
+        read_wavefunction(ref_wfn)
+
     start_pre_ints = time.time()
 
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
@@ -552,6 +587,19 @@ def run_forte(name, **kwargs):
     if (job_type == "MCSCF_TWO_STEP"):
         casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
+    
+    if (job_type == "TDCI"):
+        state = forte.make_state_info_from_psi(options)
+        as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+        state_map = forte.to_state_nroots_map(state_weights_map)
+        active_space_method = forte.make_active_space_method(
+            "ACI", state, options.get_int("NROOT"), scf_info, mo_space_info, as_ints, options
+        )
+        active_space_method.set_quiet_mode(True)
+        active_space_method.compute_energy()
+
+        tdci = forte.TDCI(active_space_method, scf_info, options, mo_space_info, as_ints)
+        energy = tdci.compute_energy()
 
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)
@@ -573,7 +621,6 @@ def run_forte(name, **kwargs):
         if options.get_bool('DUMP_ORBITALS'):
             dump_orbitals(ref_wfn)
         return ref_wfn
-
 
 def mr_dsrg_pt2(job_type, forte_objects, ints, options):
     """

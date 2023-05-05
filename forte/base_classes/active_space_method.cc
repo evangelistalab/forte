@@ -47,6 +47,7 @@
 #include "sci/detci.h"
 #include "pci/pci.h"
 #include "ci_ex_states/excited_state_solver.h"
+#include "external/external_active_space_method.h"
 #ifdef HAVE_CHEMPS2
 #include "dmrg/dmrgsolver.h"
 #endif
@@ -87,7 +88,11 @@ void ActiveSpaceMethod::set_root(int value) { root_ = value; }
 
 void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
-void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
+void ActiveSpaceMethod::set_quiet_mode(bool quiet) { quiet_ = quiet; }
+
+DeterminantHashVec ActiveSpaceMethod::get_PQ_space() { return final_wfn_; }
+
+psi::SharedMatrix ActiveSpaceMethod::get_PQ_evecs() { return evecs_; }
 
 void ActiveSpaceMethod::save_transition_rdms(
     const std::vector<std::shared_ptr<RDMs>>& rdms,
@@ -396,12 +401,12 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     return trans_dipoles;
 }
 
-std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
+std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options) {
 
-    std::unique_ptr<ActiveSpaceMethod> method;
+    std::shared_ptr<ActiveSpaceMethod> method;
     if (type == "FCI") {
         method = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {
@@ -420,6 +425,8 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
         method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
+    } else if (type == "EXTERNAL") {
+        method = std::make_unique<ExternalActiveSpaceMethod>(state, nroot, mo_space_info, as_ints);
     } else if (type == "DMRG") {
 #ifdef HAVE_CHEMPS2
         method =

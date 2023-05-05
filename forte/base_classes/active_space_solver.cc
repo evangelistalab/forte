@@ -115,7 +115,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     }
     print_energies();
 
-    if (as_ints_->ints()->integral_type() != Custom) {
+    if (as_ints_->ints()->integral_type() != Custom and
+        options_->get_str("ACTIVE_SPACE_SOLVER") != "EXTERNAL") {
         compute_dipole_moment(as_mp_ints_);
         compute_quadrupole_moment(as_mp_ints_);
         if (options_->get_bool("TRANSITION_DIPOLES")) {

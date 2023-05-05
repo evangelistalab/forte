@@ -212,6 +212,13 @@ embedding:
       - embedding-5
    medium:
       - embedding-2
+
+external_solver:
+   short:
+      - external_solver-1
+   medium:
+      - external_solver-2
+
 fci:
    short:
       - fci-1 # moved to pytest
@@ -369,6 +376,10 @@ read-orbitals:
    short:
       - read-orbitals-1
       - read-orbitals-2
+tdci:
+   short:
+      - tdci-1
+
 x2c:
    short:
       - x2c-1

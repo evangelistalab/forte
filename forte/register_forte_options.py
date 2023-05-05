@@ -15,6 +15,7 @@ def register_forte_options(options):
     register_sci_options(options)
     register_aci_options(options)
     register_asci_options(options)
+    register_tdci_options(options)
     register_detci_options(options)
     register_fci_mo_options(options)
     register_active_space_solver_options(options)
@@ -32,7 +33,7 @@ def register_forte_options(options):
 def register_driver_options(options):
     options.set_group("")
     options.add_str(
-        'JOB_TYPE', 'NEWDRIVER', ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP'],
+        'JOB_TYPE', 'NEWDRIVER', ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP', 'TDCI'],
         'Specify the job type'
     )
 
@@ -46,8 +47,8 @@ def register_driver_options(options):
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
-    )  # TODO: why is PCI running even if it is not in this list (Francesco)
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG', 'EXTERNAL'], 'Active space solver type'
+    )
     options.add_str(
         'CORRELATION_SOLVER', 'NONE',
         ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG', 'DSRG_MRPT', 'MRDSRG_SO', 'SOMRDSRG'],
@@ -79,6 +80,21 @@ def register_driver_options(options):
     options.add_str(
         "ACTIVE_REF_TYPE", "CAS", ["HF", "CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD", "DOCI"],
         "Initial guess for active space wave functions"
+    )
+
+    options.add_bool("WRITE_RDM", False, "Save RDMs to ref_rdms.json for external computations")
+
+    # TODO: Remove these in the future since they are redundant with READ/DUMP_ORBITALS (although they use different formats json vs. numpy)
+    options.add_bool("WRITE_WFN", False, "Save ref_wfn.Ca() to coeff.json for external computations")
+
+    options.add_bool("READ_WFN", False, "Read ref_wfn.Ca()/ref_wfn.Cb() from coeff.json for `external` active space solver")
+
+    options.add_bool(
+        "EXTERNAL_PARTIAL_RELAX", False,
+        "Perform one relaxation step after building the DSRG effective Hamiltonian when using `external` active space solver")
+
+    options.add_str(
+        'EXT_RELAX_SOLVER', 'FCI', ['FCI', 'DETCI', 'CAS'], 'Active space solver used in the relaxation when using `external` active space solver'
     )
 
     options.add_int("PRINT", 1, "Set the print level.")
@@ -537,6 +553,33 @@ def register_asci_options(options):
 
     options.add_double("ASCI_PRESCREEN_THRESHOLD", 1e-12, "ASCI prescreening threshold")
 
+def register_tdci_options(options):
+
+    options.add_int("TDCI_HOLE", 0,
+            "Orbital used to ionize intial state. Number is indexed by the same ordering of orbitals in the determinants.")
+
+    options.add_str("TDCI_PROPAGATOR", "EXACT", ['EXACT','CN','QCN','LINEAR','QUADRATIC',
+                          'RK4', 'LANCZOS', 'EXACT_SELECT', 'RK4_SELECT', 'RK4_SELECT_LIST','ALL'],"Type of propagator")
+
+    options.add_int("TDCI_NSTEP", 20, "Number of time-steps")
+
+    options.add_double("TDCI_TIMESTEP", 1.0, "Timestep length in attosecond")
+
+    options.add_double("TDCI_CN_CONVERGENCE", 1e-12, "Convergence threshold for CN iterations")
+
+    options.add_bool("TDCI_PRINT_WFN", False, "Print coefficients to files")
+
+    options.add_int_list("TDCI_OCC_ORB", "Print the occupation at integral time itervals for these orbitals")
+
+    options.add_int("TDCI_KRYLOV_DIM", 5, "Dimension of Krylov subspace for Lanczos method")
+
+    options.add_double("TDCI_ETA_P", 1e-12, "Path filtering threshold for P space")
+
+    options.add_double("TDCI_ETA_PQ", 1e-12, "Path filtering threshold for Q space")
+
+    options.add_double("TDCI_PRESCREEN_THRESH", 1e-12, "Prescreening threshold")
+
+    options.add_bool("TDCI_TEST_OCC", False, "Test the occupation vectors")
 
 def register_fci_mo_options(options):
     options.set_group("FCIMO")
@@ -770,6 +813,8 @@ def register_dsrg_options(options):
     )
 
     options.add_bool("DSRG_RDM_MS_AVG", False, "Form Ms-averaged density if true")
+
+    options.add_bool("SAVE_SA_DSRG_INTS", False, "Save SA-DSRG dressed integrals to dsrg_ints.json")
 
 
 def register_dwms_options(options):
