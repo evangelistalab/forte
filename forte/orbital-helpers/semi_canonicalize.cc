@@ -209,6 +209,7 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
 
     if (print_) {
         outfile->Printf("\n    %s", dash.c_str());
+        outfile->Printf("\n\n    Canonicalization test %s\n", semi ? "passed" : "failed");
     }
 
     return semi;
