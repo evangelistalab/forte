@@ -88,11 +88,9 @@ void StringLists::startup() {
 
     nas_ = 0;
     nbs_ = 0;
-    ndets_ = 0;
     for (int h = 0; h < nirrep_; ++h) {
         nas_ += alfa_graph_->strpi(h);
         nbs_ += beta_graph_->strpi(h);
-        ndets_ += alfa_graph_->strpi(h) * beta_graph_->strpi(h);
     }
 
     // local_timers
@@ -268,7 +266,12 @@ StringList StringLists::make_strings(const int norb, const int ne, GraphPtr addr
 }
 
 std::vector<Determinant> StringLists::make_determinants(int symmetry) const {
-    std::vector<Determinant> dets(ndets_);
+    size_t ndets = 0;
+    for (int ha = 0; ha < nirrep_; ha++) {
+        const int hb = symmetry ^ ha;
+        ndets += alfa_strings()[ha].size() * beta_strings()[hb].size();
+    }
+    std::vector<Determinant> dets(ndets);
     size_t addI = 0;
     // Loop over irreps of alpha
     for (int ha = 0; ha < nirrep_; ha++) {

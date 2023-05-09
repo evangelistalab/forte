@@ -30,6 +30,7 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/vector.h"
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "ci_spin_adaptation.h"
@@ -54,14 +55,20 @@ SpinAdapter::SpinAdapter(int na, int nb, int twoS, int twoMs, int norb)
 
 size_t SpinAdapter::ncsf() const { return ncsf_; }
 
+size_t SpinAdapter::ndet() const { return ndet_; }
 void SpinAdapter::det_C_to_csf_C(const std::vector<double>& det_C, std::vector<double>& csf_C) {
 
     // zero the vector csf_C
     std::fill(csf_C.begin(), csf_C.end(), 0.0);
 
-    // loop over all the elements of csf_to_det_coeff_ and add the contribution to csf_C
-    for (const auto& [csf_idx, det_idx, coeff] : csf_to_det_coeff_) {
-        csf_C[csf_idx] += coeff * det_C[det_idx];
+    // // loop over all the elements of csf_to_det_coeff_ and add the contribution to csf_C
+    for (size_t i = 0, maxi = csf_to_det_start_.size(); i < maxi; i++) {
+        const auto& start = csf_to_det_start_[i];
+        const auto& end = csf_to_det_end_[i];
+        for (size_t j = start; j < end; j++) {
+            const auto& [det_idx, coeff] = csf_to_det_coeff_[j];
+            csf_C[i] += coeff * det_C[det_idx];
+        }
     }
 }
 
@@ -71,18 +78,57 @@ void SpinAdapter::csf_C_to_det_C(const std::vector<double>& csf_C, std::vector<d
     std::fill(det_C.begin(), det_C.end(), 0.0);
 
     // loop over all the elements of csf_to_det_coeff_ and add the contribution to det_C
-    for (const auto& [csf_idx, det_idx, coeff] : csf_to_det_coeff_) {
-        det_C[det_idx] += coeff * csf_C[csf_idx];
+    for (size_t i = 0, maxi = csf_to_det_start_.size(); i < maxi; i++) {
+        const auto& start = csf_to_det_start_[i];
+        const auto& end = csf_to_det_end_[i];
+        for (size_t j = start; j < end; j++) {
+            const auto& [det_idx, coeff] = csf_to_det_coeff_[j];
+            det_C[det_idx] += coeff * csf_C[i];
+        }
+    }
+}
+
+void SpinAdapter::det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C,
+                                 std::shared_ptr<psi::Vector>& csf_C) {
+
+    // zero the vector csf_C
+    csf_C->zero();
+
+    // // loop over all the elements of csf_to_det_coeff_ and add the contribution to csf_C
+    for (size_t i = 0, maxi = csf_to_det_start_.size(); i < maxi; i++) {
+        const auto& start = csf_to_det_start_[i];
+        const auto& end = csf_to_det_end_[i];
+        for (size_t j = start; j < end; j++) {
+            const auto& [det_idx, coeff] = csf_to_det_coeff_[j];
+            csf_C->add(i, coeff * det_C->get(det_idx));
+        }
+    }
+}
+
+void SpinAdapter::csf_C_to_det_C(std::shared_ptr<psi::Vector>& csf_C,
+                                 std::shared_ptr<psi::Vector>& det_C) {
+
+    // zero the vector det_C
+    det_C->zero();
+
+    // loop over all the elements of csf_to_det_coeff_ and add the contribution to det_C
+    for (size_t i = 0, maxi = csf_to_det_start_.size(); i < maxi; i++) {
+        const auto& start = csf_to_det_start_[i];
+        const auto& end = csf_to_det_end_[i];
+        for (size_t j = start; j < end; j++) {
+            const auto& [det_idx, coeff] = csf_to_det_coeff_[j];
+            det_C->add(det_idx, coeff * csf_C->get(i));
+        }
     }
 }
 
 void SpinAdapter::prepare_couplings(const std::vector<Determinant>& dets) {
     psi::outfile->Printf("  ==> Spin Adapter <==\n\n");
     debug("    Determinants:\n");
-    size_t ndets = 0;
+    ndet_ = 0;
     for (const auto& d : dets) {
-        debug("    %6zu %s\n", ndets, str(d, norb_).c_str());
-        ndets++;
+        debug("    %6zu %s\n", ndet_, str(d, norb_).c_str());
+        ndet_++;
     }
 
     DeterminantHashVec det_hashes(dets);
@@ -95,33 +141,43 @@ void SpinAdapter::prepare_couplings(const std::vector<Determinant>& dets) {
     confs_ = std::vector<Configuration>(confs.begin(), confs.end());
 
     debug("    Configurations:\n");
-    size_t ncsf_ = 0;
+    ncsf_ = 0;
+    size_t ncoupling = 0;
     for (size_t i = 0, maxi = confs_.size(); i < maxi; i++) {
         const auto& c = confs_[i];
+        if (c.count_socc() < twoS_) {
+            continue;
+        }
         auto csfs = conf_to_csfs(c, twoS_, twoMs_);
+        // closed shell case
         if (c.count_socc() == 0) {
             // if the configuration is a closed shell, then it is a CSF
             const auto s = c.get_docc_str();
             const auto det = Determinant(s, s);
             const auto det_add = det_hashes.get_idx(det);
-            csf_to_det_coeff_.push_back(std::make_tuple(ncsf_, det_add, 1.0));
+            csf_to_det_start_.push_back(ncoupling);
+            csf_to_det_end_.push_back(ncoupling + 1);
+            csf_to_det_coeff_.push_back(std::pair(det_add, 1.0));
 
             debug("      CSF(%3zu) <- %+e %s (%zu)\n", ncsf_, 1.0, str(det, norb_).c_str(),
                   det_add);
-
+            ncoupling += 1;
             ncsf_ += 1;
         } else {
             for (const auto& csf : csfs) {
-                const auto& csf_couplng = csf.first;
+                csf_to_det_start_.push_back(ncoupling);
+                // const auto& csf_couplng = csf.first;
                 const auto& csf_dets = csf.second;
                 for (const auto& csf_det : csf_dets) {
                     const auto& det = csf_det.first;
                     const auto& det_coeff = csf_det.second;
                     size_t det_add = det_hashes.get_idx(det);
-                    csf_to_det_coeff_.push_back(std::tuple(ncsf_, det_add, det_coeff));
+                    csf_to_det_coeff_.push_back(std::pair(det_add, det_coeff));
                     debug("      CSF(%3zu) <- %+e %s (%zu)\n", ncsf_, det_coeff,
                           str(det, norb_).c_str(), det_add);
                 }
+                ncoupling += csf_dets.size();
+                csf_to_det_end_.push_back(ncoupling);
                 ncsf_ += 1;
             }
         }
@@ -170,7 +226,7 @@ auto SpinAdapter::conf_to_csfs(const Configuration& conf, int twoS, int twoMs)
 
     // make the spin couplings for the CSFs
     const auto spin_couplings = make_spin_couplings(N, twoS);
-    const auto determinant_occ = make_determinant_occupations(N, twoS);
+    const auto determinant_occ = make_determinant_occupations(N, twoMs);
 
     // loop over the spin couplings
     for (const auto& spin_coupling : spin_couplings) {
@@ -285,12 +341,12 @@ auto generate_spin_couplings(int N, int twoS) -> std::vector<String> {
 //         paths.append(list(path))
 //     return paths
 
-auto SpinAdapter::make_determinant_occupations(int N, int twoS) -> std::vector<String> {
+auto SpinAdapter::make_determinant_occupations(int N, int twoMs) -> std::vector<String> {
     std::vector<String> det_occs;
     if (N == 0)
         return det_occs;
-    auto nup = (N + twoS) / 2;
-    auto ndown = (N - twoS) / 2;
+    auto nup = (N + twoMs) / 2;
+    auto ndown = (N - twoMs) / 2;
     String det_occ;
     // true = 1 = up, false = 0 = down
     // The det_occ should always start with up

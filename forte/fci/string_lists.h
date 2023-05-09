@@ -219,8 +219,6 @@ class StringLists {
     size_t nas_;
     /// The number of beta strings
     size_t nbs_;
-    /// The number of determinants
-    size_t ndets_;
     /// The total number of orbital pairs per irrep
     std::vector<int> pairpi_;
     /// The offset array for pairpi

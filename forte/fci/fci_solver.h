@@ -124,6 +124,9 @@ class FCISolver : public ActiveSpaceMethod {
     /// The FCI wave function
     std::shared_ptr<FCIVector> C_;
 
+    /// The FCI determinant list
+    std::vector<Determinant> dets_;
+
     /// Eigen vectors
     psi::SharedMatrix eigen_vecs_;
 
@@ -158,9 +161,17 @@ class FCISolver : public ActiveSpaceMethod {
     /// All that happens before we compute the energy
     void startup();
 
-    /// Initial CI wave function guess
+    /// @brief Compute initial guess vectors
+    /// @param diag The diagonal of the Hamiltonian
+    /// @param n The number of guess vectors to generate
+    /// @param fci_ints The integrals object
+    /// @return A vector of pairs, where the first element is the state multiplicity and the second
+    /// the information about the guess (irrep, alpha string, beta string, coefficient)
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
     initial_guess(FCIVector& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+
+    psi::SharedVector form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                     std::shared_ptr<SpinAdapter> spin_adapter);
 };
 } // namespace forte
 

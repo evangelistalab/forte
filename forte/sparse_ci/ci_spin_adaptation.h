@@ -33,6 +33,10 @@
 
 #include "sparse_ci/determinant.h"
 
+namespace psi {
+class Vector;
+}
+
 namespace forte {
 
 /// @brief A class to perform spin adaptation of a CI wavefunction
@@ -56,8 +60,76 @@ class SpinAdapter {
     /// @param csf_C csf coefficients
     void det_C_to_csf_C(const std::vector<double>& det_C, std::vector<double>& csf_C);
 
+    void det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C, std::shared_ptr<psi::Vector>& csf_C);
+
+    void csf_C_to_det_C(std::shared_ptr<psi::Vector>& csf_C, std::shared_ptr<psi::Vector>& det_C);
+
     /// @brief Return the number of CSFs
     size_t ncsf() const;
+
+    /// @brief Return the number of determinants
+    size_t ndet() const;
+
+    class iterator {
+      public:
+        using iterator_category = std::input_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = std::pair<size_t, double>;
+        using pointer = value_type*;
+        using reference = value_type&;
+
+        iterator(pointer p) : p_(p) {}
+
+        reference operator*() const { return *p_; }
+        pointer operator->() { return p_; }
+
+        iterator& operator++() {
+            p_++;
+            return *this;
+        }
+
+        iterator operator++(int) {
+            iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+
+        friend bool operator==(const iterator& a, const iterator& b) { return a.p_ == b.p_; }
+        friend bool operator!=(const iterator& a, const iterator& b) { return a.p_ != b.p_; }
+
+      private:
+        pointer p_;
+    };
+
+    iterator begin(size_t n) {
+        if (n < csf_to_det_start_.size()) {
+            return iterator(&(csf_to_det_coeff_[csf_to_det_start_[n]]));
+        }
+        return end(n);
+    }
+
+    iterator end(size_t n) {
+        if (n < csf_to_det_end_.size()) {
+            return iterator(&csf_to_det_coeff_[csf_to_det_end_[n]]);
+        }
+        return iterator(csf_to_det_coeff_.data() + csf_to_det_coeff_.size());
+    }
+
+    // Custom iterable wrapper class for SA
+    class CSFIterable {
+      public:
+        CSFIterable(SpinAdapter& sa, size_t n) : sa_(sa), n_(n) {}
+
+        iterator begin() { return sa_.begin(n_); }
+        iterator end() { return sa_.end(n_); }
+
+      private:
+        SpinAdapter& sa_;
+        size_t n_;
+    };
+
+    size_t ncsf(size_t n) { return csf_to_det_end_[n] - csf_to_det_start_[n]; }
+    CSFIterable csf(size_t n) { return CSFIterable(*this, n); }
 
   private:
     /// @brief The number of alpha electrons
@@ -72,14 +144,14 @@ class SpinAdapter {
     int norb_;
     /// @brief The number of CSFs
     size_t ncsf_;
-    /// @brief A vector with the number of CSFs that contribute to a determinant
-    std::vector<size_t> det_to_csf_size_;
-    /// @brief A vector with the number of determinants that contribute to a CSF
-    std::vector<size_t> csf_to_det_size_;
-    /// @brief A vector used to store information on how to map the determinants to CSFs
-    std::vector<std::tuple<size_t, size_t, double>> det_to_csf_coeff_;
+    /// @brief The number of determinants
+    size_t ndet_;
+    /// @brief A vector with the starting index of each CSF in the determinant basis
+    std::vector<size_t> csf_to_det_start_;
+    /// @brief A vector with the ending index of each CSF in the determinant basis
+    std::vector<size_t> csf_to_det_end_;
     /// @brief A vector used to store information on how to map the CSFs to determinants
-    std::vector<std::tuple<size_t, size_t, double>> csf_to_det_coeff_;
+    std::vector<std::pair<size_t, double>> csf_to_det_coeff_;
     /// @brief A vector used to store the configurations
     std::vector<Configuration> confs_;
 

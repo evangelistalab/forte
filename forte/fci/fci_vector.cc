@@ -188,10 +188,7 @@ void FCIVector::copy_to(psi::SharedVector vec) {
 
 void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
     zero();
-    double C;
-    size_t h, Ia, Ib;
-    for (auto& el : sparse_vec) {
-        std::tie(h, Ia, Ib, C) = el;
+    for (const auto& [h, Ia, Ib, C] : sparse_vec) {
         C_[h]->set(Ia, Ib, C);
     }
 }
