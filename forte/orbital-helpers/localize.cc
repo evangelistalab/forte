@@ -81,8 +81,8 @@ void Localize::compute_transformation() {
 
     psi::SharedMatrix Ca = ints_->Ca();
 
-    Ua_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
-    Ub_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
+    Ua_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());
+    Ub_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());
 
     Ua_->identity();
     Ub_->identity();
