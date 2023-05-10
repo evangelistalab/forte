@@ -220,10 +220,6 @@ void SpinAdapter::prepare_couplings(const std::vector<Determinant>& dets) {
     }
 
     psi::outfile->Printf("    Timings: find CSFs :                 %10.4f\n", t2.get());
-    // psi::outfile->Printf("      + Timings: spin coupling:          %10.4f\n", t_spin_couplings);
-    // psi::outfile->Printf("      + Timings: determinant occupation: %10.4f\n", t_det_occ);
-    // psi::outfile->Printf("      + Timings: conf2csfs loop          %10.4f\n",
-    // t_conf_to_csfs_loop);
     psi::outfile->Printf("\n    Number of CSFs (predicted):          %10zu\n", predicted_ncsf);
     psi::outfile->Printf("    Number of couplings (predicted):     %10zu\n", predicted_ncouplng);
 }
@@ -252,8 +248,8 @@ void SpinAdapter::conf_to_csfs(const Configuration& conf, int twoS, int twoMs,
         for (const auto& det_occ : determinant_occ) {
             auto o = overlap(N, spin_coupling, det_occ);
             if (std::fabs(o) > 0.0) {
-                local_timer t5;
                 det.set_str(docc, docc);
+                // keep track of the sign of the singly occupied orbitals
                 for (int i = N - 1; i >= 0; i--) {
                     if (det_occ.get_bit(i)) {
                         o *= det.create_beta_bit(socc_vec[i]);

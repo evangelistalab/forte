@@ -37,6 +37,7 @@ namespace forte {
 class FCIVector;
 class StringLists;
 class SpinAdapter;
+class DavidsonLiuSolver;
 
 /**
  * @brief The FCISolver class
@@ -167,8 +168,14 @@ class FCISolver : public ActiveSpaceMethod {
     /// @param fci_ints The integrals object
     /// @return A vector of pairs, where the first element is the state multiplicity and the second
     /// the information about the guess (irrep, alpha string, beta string, coefficient)
-    std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-    initial_guess(FCIVector& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    void initial_guess_det(FCIVector& diag, size_t n,
+                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DavidsonLiuSolver& dls,
+                           std::shared_ptr<psi::Vector> temp);
+
+    std::vector<size_t> initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
+                                          std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                          DavidsonLiuSolver& dls,
+                                          std::shared_ptr<psi::Vector> temp);
 
     psi::SharedVector form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      std::shared_ptr<SpinAdapter> spin_adapter);

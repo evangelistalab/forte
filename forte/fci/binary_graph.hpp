@@ -133,6 +133,30 @@ class BinaryGraph {
   private:
     void startup() {
         if ((nbits_ != 0) and (nones_ > 0)) {
+            // std::vector<size_t> weight0, weight1;
+
+            // // Calculate the size of the weight tensors
+            // size_t tensorSize = nbits_ * nirrep_ * (nones_ + 1);
+
+            // // Allocate the weight tensors
+            // weight0.resize(tensorSize, 0);
+            // weight1.resize(tensorSize, 0);
+
+            // // Helper function to convert 3D index to 1D index
+            // auto index = [&](int n, int h, int k) {
+            //     return n * nirrep_ * (nones_ + 1) + h * (nones_ + 1) + k;
+            // };
+
+            // // Assign values to the weight tensors
+            // for (int n = 0; n < nbits_; ++n) {
+            //     for (int h = 0; h < nirrep_; ++h) {
+            //         for (int k = 0; k < nones_ + 1; ++k) {
+            //             weight0[index(n, h, k)] = 0;
+            //             weight1[index(n, h, k)] = 0;
+            //         }
+            //     }
+            // }
+
             // Allocate the weight tensors
             weight0 = new size_t**[nbits_];
             weight1 = new size_t**[nbits_];

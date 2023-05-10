@@ -63,6 +63,11 @@ namespace forte {
 
 class MOSpaceInfo;
 
+std::vector<std::string>
+    s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet", "septet", "octet",
+               "nonet",   "decet",   "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+               "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"});
+
 FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
@@ -186,75 +191,17 @@ double FCISolver::compute_energy() {
     dls.set_subspace_per_root(subspace_per_root_);
 
     // Form the diagonal of the Hamiltonian
+    size_t guess_size = 0;
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
         dls.startup(Hdiag_vec);
+        guess_size = dls.collapse_size();
+        initial_guess_csf(Hdiag_vec, guess_size, as_ints_, dls, sigma_basis);
     } else {
         Hdiag.copy_to(sigma);
         dls.startup(sigma);
-    }
-
-    size_t guess_size = dls.collapse_size();
-    auto guess = initial_guess(Hdiag, guess_size, as_ints_);
-
-    std::vector<int> guess_list;
-    for (size_t g = 0; g < guess.size(); ++g) {
-        if (guess[g].first == state().multiplicity())
-            guess_list.push_back(g);
-    }
-
-    // number of guess to be used
-    size_t nguess = std::min(guess_list.size(), guess_size);
-
-    if (nguess == 0) {
-        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
-                                "multiplicity.\n\n");
-    }
-
-    for (size_t n = 0; n < nguess; ++n) {
-        HC.set(guess[guess_list[n]].second);
-        HC.copy_to(sigma);
-        if (spin_adapt_) {
-            spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
-            dls.add_guess(sigma_basis);
-        } else {
-            dls.add_guess(sigma);
-        }
-    }
-
-    // Prepare a list of bad roots to project out and pass them to the solver
-    std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
-    int gr = 0;
-    std::vector<std::string> bad_roots_vec;
-    for (auto& g : guess) {
-        if (g.first != state().multiplicity()) {
-            bad_roots_vec.push_back(std::to_string(gr));
-            std::vector<std::pair<size_t, double>> bad_root;
-
-            HC.set(g.second);
-            HC.copy_to(sigma);
-            if (spin_adapt_) {
-                spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
-                for (size_t I = 0; I < basis_size; ++I) {
-                    if (std::fabs(sigma->get(I)) > 1.0e-12) {
-                        bad_root.push_back(std::make_pair(I, sigma_basis->get(I)));
-                    }
-                }
-            } else {
-                for (size_t I = 0; I < det_size; ++I) {
-                    if (std::fabs(sigma->get(I)) > 1.0e-12) {
-                        bad_root.push_back(std::make_pair(I, sigma->get(I)));
-                    }
-                }
-            }
-            bad_roots.push_back(bad_root);
-        }
-        gr += 1;
-    }
-    dls.set_project_out(bad_roots);
-
-    if (print_ > 0) {
-        outfile->Printf("\n  Projecting out guess roots: [%s]", join(bad_roots_vec).c_str());
+        guess_size = dls.collapse_size();
+        initial_guess_det(Hdiag, guess_size, as_ints_, dls, sigma);
     }
 
     SolverStatus converged = SolverStatus::NotConverged;
@@ -516,9 +463,9 @@ psi::SharedVector FCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals
     return Hdiag_csf;
 }
 
-std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-FCISolver::initial_guess(FCIVector& diag, size_t n,
-                         std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
+                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                  DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp) {
     local_timer t;
 
     double nuclear_repulsion_energy =
@@ -586,10 +533,6 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
 
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>> guess;
 
-    std::vector<std::string> s2_labels(
-        {"singlet", "doublet", "triplet", "quartet", "quintet", "sextet", "septet", "octet",
-         "nonet",   "decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
-         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"});
     std::vector<std::string> table;
 
     for (size_t r = 0; r < num_dets; ++r) {
@@ -627,6 +570,119 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
         outfile->Printf("\n    Root            Energy     <S^2>   Spin");
         outfile->Printf("\n  ---------------------------------------------");
         outfile->Printf("\n%s", join(table, "\n").c_str());
+        outfile->Printf("\n  ---------------------------------------------");
+        outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.get());
+    }
+
+    // Find the guess with the correct multiplicity
+    std::vector<int> guess_list;
+    for (size_t g = 0; g < guess.size(); ++g) {
+        if (guess[g].first == state().multiplicity())
+            guess_list.push_back(g);
+    }
+
+    // number of guess to be used
+    size_t nguess = std::min(guess_list.size(), n);
+
+    if (nguess == 0) {
+        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
+                                "multiplicity.\n\n");
+    }
+
+    for (size_t n = 0; n < nguess; ++n) {
+        C_->set(guess[guess_list[n]].second);
+        C_->copy_to(temp);
+        dls.add_guess(temp);
+    }
+
+    // Prepare a list of bad roots to project out and pass them to the solver
+    std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
+    int gr = 0;
+    std::vector<std::string> bad_roots_vec;
+    for (auto& g : guess) {
+        if (g.first != state().multiplicity()) {
+            bad_roots_vec.push_back(std::to_string(gr));
+            std::vector<std::pair<size_t, double>> bad_root;
+            C_->set(g.second);
+            C_->copy_to(temp);
+            for (size_t I = 0, maxI = C_->size(); I < maxI; ++I) {
+                if (std::fabs(temp->get(I)) > 1.0e-12) {
+                    bad_root.push_back(std::make_pair(I, temp->get(I)));
+                }
+            }
+            // if (spin_adapt_) {
+            //     spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
+            //     for (size_t I = 0; I < basis_size; ++I) {
+            //         if (std::fabs(sigma->get(I)) > 1.0e-12) {
+            //             bad_root.push_back(std::make_pair(I, sigma_basis->get(I)));
+            //         }
+            //     }
+            // } else {
+            // }
+            bad_roots.push_back(bad_root);
+        }
+        gr += 1;
+    }
+    dls.set_project_out(bad_roots);
+
+    if (print_ > 0) {
+        outfile->Printf("\n  Projecting out guess roots: [%s]", join(bad_roots_vec).c_str());
+    }
+}
+
+std::vector<size_t> FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
+                                                 std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                                 DavidsonLiuSolver& dls,
+                                                 std::shared_ptr<psi::Vector> temp) {
+    local_timer t;
+
+    // Get the list of most important CSFs
+    std::vector<std::pair<double, size_t>> lowest_energy(n, std::make_pair(1e100, 0));
+    size_t nfound = 0;
+    const size_t ncsf = spin_adapter_->ncsf();
+    for (size_t i = 0; i < ncsf; ++i) {
+        double e = diag->get(i);
+        if (e < lowest_energy.back().first) {
+            nfound += 1;
+            lowest_energy.back() = std::make_pair(e, i);
+            std::sort(lowest_energy.begin(), lowest_energy.end());
+        }
+    }
+    // number of guess to be used
+    size_t nguess = std::min(nfound, n);
+
+    if (nguess == 0) {
+        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
+                                "multiplicity.\n\n");
+    }
+
+    std::vector<size_t> guess;
+    for (const auto& [e, i] : lowest_energy) {
+        guess.push_back(i);
+    }
+
+    // Set the initial guess
+    for (size_t g = 0; g < nguess; ++g) {
+        const auto& [e, i] = lowest_energy[g];
+        temp->zero();
+        temp->set(i, 1.0);
+        dls.add_guess(temp);
+    }
+
+    if (print_) {
+        print_h2("FCI Initial Guess");
+        psi::outfile->Printf("\n  Selected %zu CSF", n);
+        outfile->Printf("\n  ---------------------------------------------");
+        outfile->Printf("\n    CSF             Energy     <S^2>   Spin");
+        outfile->Printf("\n  ---------------------------------------------");
+        double S2_target = 0.25 * (state().multiplicity() - 1) * (state().multiplicity() + 1);
+        auto label = s2_labels[state().multiplicity() - 1];
+        for (size_t g = 0; g < nguess; ++g) {
+            const auto& [e, i] = lowest_energy[g];
+            auto str =
+                boost::str(boost::format("    %3d  %20.12f  %.3f  %s") % i % e % S2_target % label);
+            outfile->Printf("\n%s", str.c_str());
+        }
         outfile->Printf("\n  ---------------------------------------------");
         outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.get());
     }
