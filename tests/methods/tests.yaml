@@ -238,6 +238,15 @@ fci:
       - fci-ex-1 # moved to pytest
       - fci-rdms-1 # moved to pytest
       - fci-one-electron # moved to pytest
+sa-fci:
+   short:
+      - sa-fci-1
+      - sa-fci-2
+   medium:
+      - sa-fci-rdms-2
+   long:
+      - sa-fci-6
+      - sa-fci-7
 gasci:
    short:
       - gasci-1
