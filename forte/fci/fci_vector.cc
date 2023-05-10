@@ -116,8 +116,8 @@ void FCIVector::startup() {
         int beta_sym = alfa_sym ^ symmetry_;
         //    outfile->Printf("\n\n  Block %d: allocate %d *
         //    %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
-        C_.push_back(psi::SharedMatrix(
-            new psi::Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
+        C_.push_back(std::make_shared<psi::Matrix>("C", alfa_graph_->strpi(alfa_sym),
+                                                   beta_graph_->strpi(beta_sym)));
     }
 }
 
@@ -335,7 +335,7 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    auto opdm = std::make_shared<psi::Matrix>(new psi::Matrix("OPDM", active_dim, active_dim));
+    auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {

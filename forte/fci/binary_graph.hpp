@@ -58,7 +58,8 @@ class BinaryGraph {
      * @param nirr number of irreps
      */
     BinaryGraph(int n, int k, std::vector<int>& irrep_size)
-        : nbits_(n), nones_(k), nirrep_(irrep_size.size()) {
+        : nbits_(n), nones_(k), nirrep_(irrep_size.size()), strpi_(nirrep_, 0),
+          offset_(nirrep_, 0) {
         for (int h = 0; h < static_cast<int>(irrep_size.size()); ++h) {
             for (int i = 0; i < irrep_size[h]; ++i) {
                 symmetry.push_back(h);
@@ -148,12 +149,6 @@ class BinaryGraph {
                 }
             }
         }
-        strpi_ = new size_t[nirrep_];
-        offset = new size_t[nirrep_];
-        for (int h = 0; h < nirrep_; ++h) {
-            strpi_[h] = 0;
-            offset[h] = 0;
-        }
     }
 
     void cleanup() {
@@ -172,8 +167,6 @@ class BinaryGraph {
             delete[] weight0;
             delete[] weight1;
         }
-        delete[] offset;
-        delete[] strpi_;
     }
 
     void generate_weights() {
@@ -209,10 +202,10 @@ class BinaryGraph {
             }
 
             // Generate the offset
-            offset[0] = 0;
+            offset_[0] = 0;
             for (int h = 1; h < nirrep_; ++h) {
-                offset[h] = offset[h - 1] + weight0[nbits_ - 1][h - 1][nones_] +
-                            weight1[nbits_ - 1][h - 1][nones_];
+                offset_[h] = offset_[h - 1] + weight0[nbits_ - 1][h - 1][nones_] +
+                             weight1[nbits_ - 1][h - 1][nones_];
             }
         } else {
             for (int h = 0; h < nirrep_; ++h) {
@@ -222,7 +215,7 @@ class BinaryGraph {
 
             // Generate the offset
             for (int h = 0; h < nirrep_; ++h) {
-                offset[h] = 0;
+                offset_[h] = 0;
             }
         }
     }
@@ -231,11 +224,11 @@ class BinaryGraph {
     int nones_;  // number of 1s
     int nirrep_; // number of irreps
 
-    std::vector<int> symmetry; // symmetry of each bit  // TODO convert to short*?
-    size_t* strpi_;            // strings per irrep
-    size_t* offset;            // irrep offset
-    size_t*** weight0;         // weights of 1 vertices
-    size_t*** weight1;         // weights of 0 vertices
+    std::vector<int> symmetry;   // symmetry of each bit  // TODO convert to short*?
+    std::vector<size_t> strpi_;  // strings per irrep
+    std::vector<size_t> offset_; // irrep offset
+    size_t*** weight0;           // weights of 1 vertices
+    size_t*** weight1;           // weights of 0 vertices
 };
 
 } // namespace forte

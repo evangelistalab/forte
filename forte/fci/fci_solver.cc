@@ -105,11 +105,15 @@ void FCISolver::startup() {
         ndfci += nastr * nbstr;
     }
 
+    // Create the spin adapter
+    local_timer t;
     if (spin_adapt_) {
         spin_adapter_ = std::make_shared<SpinAdapter>(na_, nb_, state().multiplicity() - 1,
                                                       state().twice_ms(), lists_->ncmo());
         dets_ = lists_->make_determinants(symmetry_);
         spin_adapter_->prepare_couplings(dets_);
+        if (print_)
+            outfile->Printf("\n  Timing for spin adapter  = %10.3f s\n", t.get());
     }
 
     if (print_) {
@@ -180,6 +184,8 @@ double FCISolver::compute_energy() {
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
+
+    // Form the diagonal of the Hamiltonian
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
         dls.startup(Hdiag_vec);
@@ -467,30 +473,32 @@ void FCISolver::compute_rdms_root(size_t root1, size_t /*root2*/, int max_rdm_le
 
 psi::SharedVector FCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                             std::shared_ptr<SpinAdapter> spin_adapter) {
-    local_timer t;
     psi::SharedVector Hdiag_csf = std::make_shared<psi::Vector>(spin_adapter->ncsf());
-    std::vector<double> C_csf(spin_adapter->ncsf());
-    std::vector<double> C_det(dets_.size());
 
+    // these store the CSF coefficients and det_adds
     std::vector<double> c_vec;
     std::vector<size_t> det_add_vec;
+
     size_t size = 0;
     // Compute the diagonal elements of the Hamiltonian in the CSF basis
     for (size_t i = 0, imax = spin_adapter->ncsf(); i < imax; ++i) {
-        // psi::outfile->Printf("\n\n    Configuration %zu", i);
-        int n = 0;
-        double energy = 0.0;
+        // make sure c_vec and det_add_vec are large enough
         if (spin_adapter_->ncsf(i) > size) {
             size = spin_adapter_->ncsf(i);
             c_vec.resize(size);
             det_add_vec.resize(size);
         }
+
+        // copy the CSF coefficients and det_adds into c_vec and det_add_vec
+        int n = 0;
         for (const auto& [det_add, c] : spin_adapter_->csf(i)) {
             c_vec[n] = c;
             det_add_vec[n] = det_add;
             n++;
-            // psi::outfile->Printf("\n    %d %20.12f", det_add, c);
         }
+
+        // compute the contribution of the determinants to the energy
+        double energy = 0.0;
         for (int J = 0; J < n; ++J) {
             const auto& detJ = dets_[det_add_vec[J]];
             energy += c_vec[J] * c_vec[J] * fci_ints->energy(detJ);
@@ -499,30 +507,12 @@ psi::SharedVector FCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals
                 energy += 2.0 * c_vec[J] * c_vec[K] * fci_ints->slater_rules(detJ, detK);
             }
         }
-        energy += fci_ints->nuclear_repulsion_energy() + fci_ints->frozen_core_energy() +
-                  fci_ints->scalar_energy();
+
+        // here we add the nuclear repulsion and scalar energy
+        // the frozen core energy is not included
+        energy += fci_ints->nuclear_repulsion_energy() + fci_ints->scalar_energy();
         Hdiag_csf->set(i, energy);
-
-        // psi::outfile->Printf("\n    Energy: %20.12f", energy);
-
-        // psi::outfile->Printf("\n\n    Configuration %zu", i);
-        // std::fill(C_csf.begin(), C_csf.end(), 0.0);
-        // C_csf[i] = 1.0;
-        // spin_adapter_->csf_C_to_det_C(C_csf, C_det);
-        // for (size_t j = 0, jmax = dets_.size(); j < jmax; ++j) {
-        //     if (std::fabs(C_det[j]) > 1.e-12) {
-        //         psi::outfile->Printf("\n    %d %20.12f", j, C_det[j]);
-        //     }
-        // }
-        // psi::outfile->Printf("\n    Configuration %zu transformed back", i);
-        // spin_adapter_->det_C_to_csf_C(C_det, C_csf);
-        // for (size_t j = 0, jmax = C_csf.size(); j < jmax; ++j) {
-        //     if (std::fabs(C_csf[j]) > 1.e-12) {
-        //         psi::outfile->Printf("\n    %d %20.12f", j, C_csf[j]);
-        //     }
-        // }
     }
-
     return Hdiag_csf;
 }
 

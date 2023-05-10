@@ -39,6 +39,8 @@ class Vector;
 
 namespace forte {
 
+class DeterminantHashVec;
+
 /// @brief A class to perform spin adaptation of a CI wavefunction
 class SpinAdapter {
   public:
@@ -102,15 +104,15 @@ class SpinAdapter {
     };
 
     iterator begin(size_t n) {
-        if (n < csf_to_det_start_.size()) {
-            return iterator(&(csf_to_det_coeff_[csf_to_det_start_[n]]));
+        if (n < csf_to_det_bounds_.size() - 1) {
+            return iterator(&(csf_to_det_coeff_[csf_to_det_bounds_[n]]));
         }
         return end(n);
     }
 
     iterator end(size_t n) {
-        if (n < csf_to_det_end_.size()) {
-            return iterator(&csf_to_det_coeff_[csf_to_det_end_[n]]);
+        if (n < csf_to_det_bounds_.size() - 1) {
+            return iterator(&csf_to_det_coeff_[csf_to_det_bounds_[n + 1]]);
         }
         return iterator(csf_to_det_coeff_.data() + csf_to_det_coeff_.size());
     }
@@ -128,36 +130,33 @@ class SpinAdapter {
         size_t n_;
     };
 
-    size_t ncsf(size_t n) { return csf_to_det_end_[n] - csf_to_det_start_[n]; }
+    /// @brief Return the number of determinants in a CSF
+    size_t ncsf(size_t n) { return csf_to_det_bounds_[n + 1] - csf_to_det_bounds_[n]; }
+    /// @brief Return an iterable object for the CSFs
     CSFIterable csf(size_t n) { return CSFIterable(*this, n); }
 
   private:
-    /// @brief The number of alpha electrons
-    int na_;
-    /// @brief The number of beta electrons
-    int nb_;
     /// @brief Twice the spin quantum number (2S)
-    int twoS_;
+    int twoS_ = 0;
     /// @brief Twice the spin projection quantum number (2Ms)
-    int twoMs_;
+    int twoMs_ = 0;
     /// @brief The number of orbitals
-    int norb_;
+    int norb_ = 0;
     /// @brief The number of CSFs
-    size_t ncsf_;
+    size_t ncsf_ = 0;
     /// @brief The number of determinants
-    size_t ndet_;
+    size_t ndet_ = 0;
+    /// @brief The number of spin couplings
+    size_t ncoupling_ = 0;
     /// @brief A vector with the starting index of each CSF in the determinant basis
-    std::vector<size_t> csf_to_det_start_;
-    /// @brief A vector with the ending index of each CSF in the determinant basis
-    std::vector<size_t> csf_to_det_end_;
+    std::vector<size_t> csf_to_det_bounds_;
     /// @brief A vector used to store information on how to map the CSFs to determinants
     std::vector<std::pair<size_t, double>> csf_to_det_coeff_;
     /// @brief A vector used to store the configurations
     std::vector<Configuration> confs_;
 
     /// @brief A function to generate all the CSFs from a configuration
-    auto conf_to_csfs(const Configuration& conf, int twoS, int twoMs)
-        -> std::vector<std::pair<String, std::vector<std::pair<Determinant, double>>>>;
+    void conf_to_csfs(const Configuration& conf, int twoS, int twoMs, DeterminantHashVec& det_hash);
 
     /// A function to generate all possible spin couplings
     /// @param N The number of unpaired electrons

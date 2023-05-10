@@ -200,12 +200,8 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
     // nuclear contributions
     auto dipole_nuc = ampints->nuclear_dipole();
 
-    psi::outfile->Printf("\n    ampints->nuclear_dipole()");
-
     // prepare RDMs
     auto rdms_vec = rdms(root_list, ampints->dp_many_body_level(), RDMsType::spin_free);
-
-    psi::outfile->Printf("\n    ampints->rdms");
 
     // print table header
     psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
