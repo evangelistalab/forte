@@ -51,8 +51,13 @@ template <typename... Args> void debug(const std::string& format, Args... args) 
 template <typename... Args> void debug(const std::string& format, Args... args) {}
 #endif
 
-auto generate_spin_couplings(int N, int twoS) -> std::vector<String>;
+// Utility functions
 
+/// @brief A function to compute the Clebsch-Gordan coefficient
+/// @param twoS Twice the value of S
+/// @param twoM Twice the value of M
+/// @param dtwoS Twice the change in S
+/// @param dtwoM Twice the change in M
 double ClebschGordan(double twoS, double twoM, int dtwoS, double dtwoM) {
     if (dtwoS == 1)
         return std::sqrt(0.5 * (twoS + dtwoM * twoM) / twoS);
@@ -61,10 +66,12 @@ double ClebschGordan(double twoS, double twoM, int dtwoS, double dtwoM) {
     return 0.0;
 }
 
+/// @brief A function to compute the overlap between a determinant and a CSF
+/// @param N The number of unpaired electrons
+/// @param spin_coupling The spin coupling of the CSF (up = 0, down = 1)
+/// @param det_occ The spin occupation of the determinant (up = alpha = 0, down = beta = 1)
 double overlap(int N, const String& spin_coupling, const String& det_occ) {
     double overlap = 1.0;
-
-    // compute the overlap between the determinant and the CSF
     int pi = 0;
     int qi = 0;
     for (int i = 0; i < N; i++) {
@@ -81,51 +88,21 @@ double overlap(int N, const String& spin_coupling, const String& det_occ) {
     return overlap;
 }
 
-SpinAdapter::SpinAdapter(int na, int nb, int twoS, int twoMs, int norb)
-    : twoS_(twoS), twoMs_(twoMs), norb_(norb) {}
+// SpinAdapter class
+
+SpinAdapter::SpinAdapter(int twoS, int twoMs, int norb)
+    : twoS_(twoS), twoMs_(twoMs), norb_(norb), ncsf_N_(norb, 0), N_to_det_occupations_(norb),
+      N_to_overlaps_(norb), N_to_noverlaps_(norb) {}
 
 size_t SpinAdapter::ncsf() const { return ncsf_; }
 
 size_t SpinAdapter::ndet() const { return ndet_; }
-void SpinAdapter::det_C_to_csf_C(const std::vector<double>& det_C, std::vector<double>& csf_C) {
-
-    // zero the vector csf_C
-    std::fill(csf_C.begin(), csf_C.end(), 0.0);
-
-    // // loop over all the elements of csf_to_det_coeff_ and add the contribution to csf_C
-    for (size_t i = 0; i < ncsf_; i++) {
-        const auto& start = csf_to_det_bounds_[i];
-        const auto& end = csf_to_det_bounds_[i + 1];
-        for (size_t j = start; j < end; j++) {
-            const auto& [det_idx, coeff] = csf_to_det_coeff_[j];
-            csf_C[i] += coeff * det_C[det_idx];
-        }
-    }
-}
-
-void SpinAdapter::csf_C_to_det_C(const std::vector<double>& csf_C, std::vector<double>& det_C) {
-
-    // zero the vector det_C
-    std::fill(det_C.begin(), det_C.end(), 0.0);
-
-    // loop over all the elements of csf_to_det_coeff_ and add the contribution to det_C
-    for (size_t i = 0; i < ncsf_; i++) {
-        const auto& start = csf_to_det_bounds_[i];
-        const auto& end = csf_to_det_bounds_[i + 1];
-        for (size_t j = start; j < end; j++) {
-            const auto& [det_idx, coeff] = csf_to_det_coeff_[j];
-            det_C[det_idx] += coeff * csf_C[i];
-        }
-    }
-}
 
 void SpinAdapter::det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C,
                                  std::shared_ptr<psi::Vector>& csf_C) {
+    csf_C->zero(); // zero the vector csf_C
 
-    // zero the vector csf_C
-    csf_C->zero();
-
-    // // loop over all the elements of csf_to_det_coeff_ and add the contribution to csf_C
+    // loop over all the elements of csf_to_det_coeff_ and add the contribution to csf_C
     for (size_t i = 0; i < ncsf_; i++) {
         const auto& start = csf_to_det_bounds_[i];
         const auto& end = csf_to_det_bounds_[i + 1];
@@ -138,9 +115,7 @@ void SpinAdapter::det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C,
 
 void SpinAdapter::csf_C_to_det_C(std::shared_ptr<psi::Vector>& csf_C,
                                  std::shared_ptr<psi::Vector>& det_C) {
-
-    // zero the vector det_C
-    det_C->zero();
+    det_C->zero(); // zero the vector det_C
 
     // loop over all the elements of csf_to_det_coeff_ and add the contribution to det_C
     for (size_t i = 0; i < ncsf_; i++) {
@@ -153,75 +128,94 @@ void SpinAdapter::csf_C_to_det_C(std::shared_ptr<psi::Vector>& csf_C,
     }
 }
 
+auto SpinAdapter::compute_unique_couplings() {
+    // compute the number of couplings and CSFs for each allowed value of N
+    size_t ncoupling = 0;
+    size_t ncsf = 0;
+    for (size_t N = 0; N < ncsf_N_.size(); N++) {
+        if (ncsf_N_[N] > 0) {
+            const auto spin_couplings = make_spin_couplings(N, twoS_);
+            const auto determinant_occ = make_determinant_occupations(N, twoMs_);
+
+            std::vector<std::tuple<size_t, size_t, double>> overlaps;
+            std::vector<size_t> noverlaps_;
+
+            size_t ncoupling_N = 0;
+            size_t ncsf_N = 0;
+            for (const auto& spin_coupling : spin_couplings) {
+                size_t ndet_N = 0;
+                size_t nonzero_overlap = 0;
+                for (const auto& det_occ : determinant_occ) {
+                    auto o = overlap(N, spin_coupling, det_occ);
+                    if (std::fabs(o) > 0.0) {
+                        overlaps.push_back(std::make_tuple(ncsf_N, ndet_N, o));
+                        nonzero_overlap++;
+                    }
+                    ndet_N++;
+                }
+                ncoupling_N += nonzero_overlap;
+                noverlaps_.push_back(nonzero_overlap);
+                ncsf_N++;
+            }
+            // save the spin couplings and the determinant occupations
+            N_to_det_occupations_[N] = determinant_occ;
+            N_to_overlaps_[N] = overlaps;
+            N_to_noverlaps_[N] = noverlaps_;
+            ncoupling += ncoupling_N * ncsf_N_[N];
+            ncsf += ncsf_N * ncsf_N_[N];
+        }
+    }
+    return std::pair(ncoupling, ncsf);
+}
+
 void SpinAdapter::prepare_couplings(const std::vector<Determinant>& dets) {
     psi::outfile->Printf("\n\n  ==> Spin Adapter <==\n\n");
-    // debug("    Determinants:\n");
-    ndet_ = 0;
-    for (const auto& d : dets) {
-        // debug("    %6zu %s\n", ndet_, str(d, norb_).c_str());
-        ndet_++;
-    }
 
+    ndet_ = dets.size();
+    // build the address of each determinant
     DeterminantHashVec det_hash(dets);
 
     // find all the configurations
     local_timer t1;
     std::set<Configuration> confs;
-    std::vector<size_t> count_N(2 * norb_ + 1, 0);
     for (const auto& d : dets) {
         confs.insert(Configuration(d));
     }
 
-    // loop over all the configurations and count the number of determinants with the same N
+    // count the configurations with the same number of unpaired electrons (N)
     for (const auto& conf : confs) {
-        // psi::outfile->Printf("    %s -> %d\n", str(conf).c_str(), conf.count_socc());
-        if (conf.count_socc() >= twoS_) {
-            count_N[conf.count_socc()]++;
-        }
+        // exclude configurations with more unpaired electrons than twoS
+        if (const auto N = conf.count_socc(); N >= twoS_)
+            ncsf_N_[N]++;
     }
 
-    // here we compute the number of couplings and the number of CSFs
-    size_t predicted_ncouplng = 0;
-    size_t predicted_ncsf = 0;
-    for (size_t N = 0; N < count_N.size(); N++) {
-        if (count_N[N] > 0) {
-            // debug("    N = %zu: %zu\n", N, count_N[N]);
-            size_t ncoupling_N = 0;
-            size_t ncsf_N = 0;
-            const auto spin_couplings = make_spin_couplings(N, twoS_);
-            const auto determinant_occ = make_determinant_occupations(N, twoMs_);
-            for (const auto& spin_coupling : spin_couplings) {
-                for (const auto& det_occ : determinant_occ) {
-                    auto o = overlap(N, spin_coupling, det_occ);
-                    if (std::fabs(o) > 0.0) {
-                        ncoupling_N++;
-                    }
-                }
-                ncsf_N++;
-            }
-            predicted_ncouplng += ncoupling_N * count_N[N];
-            predicted_ncsf += ncsf_N * count_N[N];
-        }
-    }
+    // compute the number of couplings and CSFs for each allowed value of N
+    const auto [ncoupling, ncsf] = compute_unique_couplings();
 
-    csf_to_det_coeff_.resize(predicted_ncouplng);
-    csf_to_det_bounds_.resize(predicted_ncsf + 1);
+    // allocate memory for the couplings and the starting index of each CSF
+    csf_to_det_coeff_.resize(ncoupling);
+    csf_to_det_bounds_.resize(ncsf + 1);
+
+    psi::outfile->Printf("    Number of CSFs:                        %10zu\n", ncsf);
+    psi::outfile->Printf("    Number of couplings:                   %10zu\n\n", ncoupling);
 
     confs_ = std::vector<Configuration>(confs.begin(), confs.end());
-    psi::outfile->Printf("    Timings: find configurations:        %10.4f\n", t1.get());
-    // debug("    Configurations:\n");
+    psi::outfile->Printf("    Timing for identifying configurations: %10.4f\n", t1.get());
+
+    // loop over all the configurations and find the CSFs
+    local_timer t2;
     ncsf_ = 0;
     ncoupling_ = 0;
-    local_timer t2;
     for (const auto& conf : confs_) {
         if (conf.count_socc() >= twoS_) {
             conf_to_csfs(conf, twoS_, twoMs_, det_hash);
         }
     }
+    psi::outfile->Printf("    Timing for finding the CSFs:           %10.4f\n", t2.get());
 
-    psi::outfile->Printf("    Timings: find CSFs :                 %10.4f\n", t2.get());
-    psi::outfile->Printf("\n    Number of CSFs (predicted):          %10zu\n", predicted_ncsf);
-    psi::outfile->Printf("    Number of couplings (predicted):     %10zu\n", predicted_ncouplng);
+    // check that the number of couplings and CSFs is correct
+    assert(ncsf_ == ncsf);
+    assert(ncoupling_ == ncoupling);
 }
 
 void SpinAdapter::conf_to_csfs(const Configuration& conf, int twoS, int twoMs,
@@ -232,42 +226,32 @@ void SpinAdapter::conf_to_csfs(const Configuration& conf, int twoS, int twoMs,
     std::vector<int> socc_vec(norb_);
     conf.get_socc_vec(norb_, socc_vec);
 
-    // debug("    conf: %s\n", str(conf, norb_).c_str());
-    // debug("    N: %d\n", N);
-
-    // make the spin couplings for the CSFs
-    const auto spin_couplings = make_spin_couplings(N, twoS);
-    const auto determinant_occ = make_determinant_occupations(N, twoMs);
+    const auto& determinant_occ = N_to_det_occupations_[N];
+    const auto& noverlaps = N_to_noverlaps_[N];
 
     csf_to_det_bounds_[0] = 0;
     Determinant det;
-    // loop over the spin couplings
-    for (const auto& spin_coupling : spin_couplings) {
-        // debug("    spin_coupling: %s\n", str(spin_coupling, N).c_str());
-        // loop over the determinants
-        for (const auto& det_occ : determinant_occ) {
-            auto o = overlap(N, spin_coupling, det_occ);
-            if (std::fabs(o) > 0.0) {
-                det.set_str(docc, docc);
-                // keep track of the sign of the singly occupied orbitals
-                for (int i = N - 1; i >= 0; i--) {
-                    if (det_occ.get_bit(i)) {
-                        o *= det.create_beta_bit(socc_vec[i]);
-                    } else {
-                        o *= det.create_alfa_bit(socc_vec[i]);
-                    }
-                }
-                csf_to_det_coeff_[ncoupling_].first = det_hash.get_idx(det);
-                csf_to_det_coeff_[ncoupling_].second = o;
-                ncoupling_ += 1;
-                // debug("      CSF(%3zu) <- %+e %s (%zu)\n", ncsf_, o, str(det, norb_).c_str(),
-                //       det_hash.get_idx(det));
+
+    size_t temp = ncoupling_;
+    for (auto [i, j, o] : N_to_overlaps_[N]) {
+        const auto& det_occ = determinant_occ[j];
+        det.set_str(docc, docc);
+        // keep track of the sign of the singly occupied orbitals
+        for (int i = N - 1; i >= 0; i--) {
+            if (det_occ.get_bit(i)) {
+                o *= det.create_beta_bit(socc_vec[i]);
+            } else {
+                o *= det.create_alfa_bit(socc_vec[i]);
             }
-            // debug("      determinant: %s = %s: %e\n", str(det_occ, N).c_str(),
-            //       str(det, norb_).c_str(), o);
         }
+        csf_to_det_coeff_[ncoupling_].first = det_hash.get_idx(det);
+        csf_to_det_coeff_[ncoupling_].second = o;
+        ncoupling_ += 1;
+    }
+    for (const auto& n : noverlaps) {
+        temp += n;
         ncsf_ += 1;
-        csf_to_det_bounds_[ncsf_] = ncoupling_;
+        csf_to_det_bounds_[ncsf_] = temp;
     }
 }
 
@@ -277,7 +261,7 @@ auto SpinAdapter::make_spin_couplings(int N, int twoS) -> std::vector<String> {
     std::vector<String> couplings;
     auto nup = (N + twoS) / 2;
     String coupling;
-    // false = 0 = up, true = 1 = down
+    // up = false = 0, down = true = 1
     // The coupling should always start with up
     for (int i = 0; i < nup; i++)
         coupling[i] = false;
@@ -285,6 +269,7 @@ auto SpinAdapter::make_spin_couplings(int N, int twoS) -> std::vector<String> {
         coupling[i] = true;
     /// Generate all permutations of the path
     do {
+        // check if the path is valid (no negative spin)
         bool valid = true;
         for (int i = 0, p = 0; i < N; i++) {
             p += 1 - 2 * coupling[i];
@@ -293,67 +278,11 @@ auto SpinAdapter::make_spin_couplings(int N, int twoS) -> std::vector<String> {
         }
         if (valid)
             couplings.push_back(coupling);
+        // to keep the first coupling as up we only permute starting from the second element
     } while (std::next_permutation(coupling.begin() + 1, coupling.begin() + N));
+
     return couplings;
 }
-
-void backtrack_spin_couplings(int nu, int nd, int sum2S, String& coupling,
-                              std::vector<String>& couplings, int depth) {
-    // debug("backtrack_spin_couplings: %d %d %d %s\n", nu, nd, sum2S, str(coupling,
-    // depth).c_str());
-    if (nu == 0 and nd == 0) {
-        couplings.push_back(coupling);
-    }
-    if (nu > 0) {
-        coupling[depth] = true;
-        backtrack_spin_couplings(nu - 1, nd, sum2S + 1, coupling, couplings, depth + 1);
-    }
-    if (nd > 0 and sum2S > 0) {
-        coupling[depth] = false;
-        backtrack_spin_couplings(nu, nd - 1, sum2S - 1, coupling, couplings, depth + 1);
-    }
-}
-
-auto generate_spin_couplings(int N, int twoS) -> std::vector<String> {
-    std::vector<String> couplings;
-    if (N == 0)
-        return couplings;
-    int nup = (N + twoS) / 2;
-    int ndown = (N - twoS) / 2;
-    // debug("nup: %d, ndown: %d\n", nup, ndown);
-    String coupling;
-    int sum2S = 1;
-    backtrack_spin_couplings(nup - 1, ndown, sum2S, coupling, couplings, 1);
-    return couplings;
-}
-
-// def enumerate_paths(nu, nd):
-//     path = []
-//     cum2S = 0
-//     first = True
-//     yield from backtrack(nu, nd, path, cum2S, first)
-
-// def backtrack(nu, nd, path, cum2S, first):
-//     if nu == 0 and nd == 0:
-//         yield path
-//     if nu > 0:
-//         path.append(cum2S + 1)
-//         yield from backtrack(nu-1, nd, path, cum2S + 1, False)
-//         path.pop()
-//     if nd > 0 and cum2S > 0 and first == False:
-//         path.append(cum2S - 1)
-//         yield from backtrack(nu, nd-1, path, cum2S - 1, False)
-//         path.pop()
-
-// def generate_paths(N,twoS):
-//     paths = []
-//     nup = (N + twoS) // 2
-//     ndown = (N - twoS) // 2
-//     print(f'{nup=} {ndown=}')
-//     for path in enumerate_paths(nup,ndown):
-//         print(path)
-//         paths.append(list(path))
-//     return paths
 
 auto SpinAdapter::make_determinant_occupations(int N, int twoMs) -> std::vector<String> {
     std::vector<String> det_occs;

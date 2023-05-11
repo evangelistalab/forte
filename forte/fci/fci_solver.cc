@@ -113,12 +113,10 @@ void FCISolver::startup() {
     // Create the spin adapter
     local_timer t;
     if (spin_adapt_) {
-        spin_adapter_ = std::make_shared<SpinAdapter>(na_, nb_, state().multiplicity() - 1,
+        spin_adapter_ = std::make_shared<SpinAdapter>(state().multiplicity() - 1,
                                                       state().twice_ms(), lists_->ncmo());
         dets_ = lists_->make_determinants(symmetry_);
         spin_adapter_->prepare_couplings(dets_);
-        if (print_)
-            outfile->Printf("\n  Timing for spin adapter  = %10.3f s\n", t.get());
     }
 
     if (print_) {
