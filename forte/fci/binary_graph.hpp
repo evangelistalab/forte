@@ -198,35 +198,3 @@ class BinaryGraph {
 } // namespace forte
 
 #endif // _binary_graph_hpp_
-
-// void print() {
-//     // Print the weights
-//     std::cout << std::endl << "Printing graph weights with symmetry" << std::endl;
-//     for (int h = 0; h < nirrep_; ++h) {
-//         for (int n = 0; n < nbits_; ++n) {
-//             std::cout << "[";
-//             for (int k = 0; k < nones_ + 1; ++k)
-//                 std::cout << " " << weight1[index(n, h, k)];
-//             std::cout << "]";
-//         }
-//         std::cout << std::endl;
-//     }
-//     std::cout << std::endl;
-//     for (int h = 0; h < nirrep_; ++h) {
-//         for (int n = 0; n < nbits_; ++n) {
-//             std::cout << "[";
-//             for (int k = 0; k < nones_ + 1; ++k)
-//                 std::cout << " " << weight0[index(n, h, k)];
-//             std::cout << "]";
-//         }
-//         std::cout << std::endl;
-//     }
-//     std::cout << std::endl;
-//     for (int h = 0; h < nirrep_; ++h) {
-//         std::cout << "[";
-//         for (int k = 0; k < nones_ + 1; ++k)
-//             std::cout << " "
-//                       << weight0[index(nbits_ - 1, h, k)] + weight1[index(nbits_ - 1, h, k)];
-//         std::cout << "]" << std::endl;
-//     }
-// }

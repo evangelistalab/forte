@@ -40,6 +40,44 @@ namespace forte {
 class DeterminantHashVec;
 
 /// @brief A class to perform spin adaptation of a CI wavefunction
+///
+/// This class is used to convert a CI wavefunction from the determinant basis to the CSF basis
+/// and vice versa.  The CSF basis is defined by the spin quantum number (S) and the spin
+/// projection quantum number (Ms) of the target state.  The determinant basis is defined by the
+/// number of electrons (N) and the number of orbitals (norbs).  The conversion is performed by
+/// using the mapping between the CSF basis and the determinant basis.
+///
+/// To use this class, first create an object of this class by specifying the spin quantum number
+/// (S) and the spin projection quantum number (Ms) of the target state.  Then, call the
+/// prepare_couplings() function to prepare the mapping between the CSF basis and the determinant
+/// basis.  Finally, call the csf_C_to_det_C() function to convert the CI coefficients from the
+/// CSF basis to the determinant basis, or call the det_C_to_csf_C() function to convert the CI
+/// coefficients from the determinant basis to the CSF basis.
+/// For example:
+/// @code
+/// int twoS = 0; // singlet
+/// int twoMs = 0; // Ms = 0
+/// int norbs = 10; // 10 orbitals
+////
+/// SpinAdapter sa(twoS, twoMs, norbs);
+/// std::vector<Determinant> dets;
+///
+/// // fill dets with determinants
+///
+/// sa.prepare_couplings(dets);
+/// size_t ndet = sa.ndet();
+/// size_t ncsf = sa.ncsf();
+/// std::shared_ptr<psi::Vector> det_C = std::make_shared<psi::Vector>(dets.size());
+/// std::shared_ptr<psi::Vector> csf_C = std::make_shared<psi::Vector>(ncsf);
+///
+/// // fill det_C with coefficients in the determinant basis
+///
+/// sa.det_C_to_csf_C(det_C, csf_C); // convert det_C to csf_C
+///
+/// // do something with csf_C
+///
+/// sa.csf_C_to_det_C(csf_C, det_C); // convert csf_C back to det_C
+
 class SpinAdapter {
   public:
     /// Class constructor
