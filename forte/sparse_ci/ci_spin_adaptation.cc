@@ -91,8 +91,8 @@ double overlap(int N, const String& spin_coupling, const String& det_occ) {
 // SpinAdapter class
 
 SpinAdapter::SpinAdapter(int twoS, int twoMs, int norb)
-    : twoS_(twoS), twoMs_(twoMs), norb_(norb), ncsf_N_(norb, 0), N_to_det_occupations_(norb),
-      N_to_overlaps_(norb), N_to_noverlaps_(norb) {}
+    : twoS_(twoS), twoMs_(twoMs), norb_(norb), N_ncsf_(norb, 0), N_to_det_occupations_(norb),
+      N_to_overlaps_(norb), N_to_noverlaps_(norb), N_to_matrix_elements_(norb) {}
 
 size_t SpinAdapter::ncsf() const { return ncsf_; }
 
@@ -100,6 +100,7 @@ size_t SpinAdapter::ndet() const { return ndet_; }
 
 void SpinAdapter::det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C,
                                  std::shared_ptr<psi::Vector>& csf_C) {
+    local_timer timer;
     csf_C->zero(); // zero the vector csf_C
 
     // loop over all the elements of csf_to_det_coeff_ and add the contribution to csf_C
@@ -111,10 +112,12 @@ void SpinAdapter::det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C,
             csf_C->add(i, coeff * det_C->get(det_idx));
         }
     }
+    det_to_csf_time += timer.get();
 }
 
 void SpinAdapter::csf_C_to_det_C(std::shared_ptr<psi::Vector>& csf_C,
                                  std::shared_ptr<psi::Vector>& det_C) {
+    local_timer timer;
     det_C->zero(); // zero the vector det_C
 
     // loop over all the elements of csf_to_det_coeff_ and add the contribution to det_C
@@ -126,14 +129,15 @@ void SpinAdapter::csf_C_to_det_C(std::shared_ptr<psi::Vector>& csf_C,
             det_C->add(det_idx, coeff * csf_C->get(i));
         }
     }
+    csf_to_det_time += timer.get();
 }
 
 auto SpinAdapter::compute_unique_couplings() {
     // compute the number of couplings and CSFs for each allowed value of N
     size_t ncoupling = 0;
     size_t ncsf = 0;
-    for (size_t N = 0; N < ncsf_N_.size(); N++) {
-        if (ncsf_N_[N] > 0) {
+    for (size_t N = 0; N < N_ncsf_.size(); N++) {
+        if (N_ncsf_[N] > 0) {
             const auto spin_couplings = make_spin_couplings(N, twoS_);
             const auto determinant_occ = make_determinant_occupations(N, twoMs_);
 
@@ -161,8 +165,27 @@ auto SpinAdapter::compute_unique_couplings() {
             N_to_det_occupations_[N] = determinant_occ;
             N_to_overlaps_[N] = overlaps;
             N_to_noverlaps_[N] = noverlaps_;
-            ncoupling += ncoupling_N * ncsf_N_[N];
-            ncsf += ncsf_N * ncsf_N_[N];
+            ncoupling += ncoupling_N * N_ncsf_[N];
+            ncsf += ncsf_N * N_ncsf_[N];
+
+            // identify the pair of deteminants with non-zero Hamiltonian matrix element
+            std::vector<std::pair<int, int>> matrix_elements;
+
+            int I = 0;
+            for (const auto& detI : determinant_occ) {
+                int J = 0;
+                for (const auto& detJ : determinant_occ) {
+                    // if ((I < J) and detI.fast_a_xor_b_count(detJ) <= 4) {
+                    if (I < J) {
+                        matrix_elements.push_back(std::make_pair(I, J));
+                    }
+                    // }
+                    J++;
+                }
+                I++;
+            }
+
+            N_to_matrix_elements_[N] = matrix_elements;
         }
     }
     return std::pair(ncoupling, ncsf);
@@ -186,7 +209,7 @@ void SpinAdapter::prepare_couplings(const std::vector<Determinant>& dets) {
     for (const auto& conf : confs) {
         // exclude configurations with more unpaired electrons than twoS
         if (const auto N = conf.count_socc(); N >= twoS_)
-            ncsf_N_[N]++;
+            N_ncsf_[N]++;
     }
 
     // compute the number of couplings and CSFs for each allowed value of N
@@ -249,6 +272,7 @@ void SpinAdapter::conf_to_csfs(const Configuration& conf, int twoS, int twoMs,
         ncoupling_ += 1;
     }
     for (const auto& n : noverlaps) {
+        csf_N_.push_back(N);
         temp += n;
         ncsf_ += 1;
         csf_to_det_bounds_[ncsf_] = temp;

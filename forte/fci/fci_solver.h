@@ -33,27 +33,30 @@
 #include "psi4/libmints/dimension.h"
 
 namespace forte {
-
 class FCIVector;
 class StringLists;
 class SpinAdapter;
 class DavidsonLiuSolver;
 
-/**
- * @brief The FCISolver class
- * This class performs Full CI calculations.
- */
+/// @brief The FCISolver class
+/// This class performs Full CI calculations in the active space.
+/// The active space is defined by a set of orbitals and a number of electrons.
+/// The class uses the Davidson-Liu algorithm to compute the FCI energy and the RDMs.
+/// The class also provides the possibility to compute the transition RDMs between roots of
+/// different symmetry.
+///
+/// This class uses a determinant-based approach to compute the sigma vectors.
+/// It can also run spin-adapted computations using a basis of configuration state functions (CSFs)
+/// instead of determinants.
 class FCISolver : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
-    /**
-     * @brief FCISolver A class that performs a FCI computation in an active space
-     * @param state the electronic state to compute
-     * @param nroot the number of roots
-     * @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
-     * @param as_ints molecular integrals defined only for the active space orbitals
-     */
+    /// @brief Construct a FCISolver object
+    /// @param state the electronic state to compute
+    /// @param nroot the number of roots
+    /// @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
+    /// @param as_ints molecular integrals defined only for the active space orbitals
     FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
@@ -139,9 +142,6 @@ class FCISolver : public ActiveSpaceMethod {
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
-    // /// The multiplicity (2S + 1) of the state to target.
-    // /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
-    // int multiplicity_;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_ = 1;
     /// The number of collapse vectors for each root
@@ -162,23 +162,37 @@ class FCISolver : public ActiveSpaceMethod {
     /// All that happens before we compute the energy
     void startup();
 
-    /// @brief Compute initial guess vectors
-    /// @param diag The diagonal of the Hamiltonian
+    /// @brief Compute initial guess vectors in the determinant basis
+    /// @param diag The diagonal of the Hamiltonian in the determinant basis
     /// @param n The number of guess vectors to generate
     /// @param fci_ints The integrals object
-    /// @return A vector of pairs, where the first element is the state multiplicity and the second
-    /// the information about the guess (irrep, alpha string, beta string, coefficient)
+    /// @param dls The Davidson-Liu-Solver object
+    /// @param temp A temporary vector of dimension ndets to store the guess vectors
     void initial_guess_det(FCIVector& diag, size_t n,
                            std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DavidsonLiuSolver& dls,
                            std::shared_ptr<psi::Vector> temp);
 
-    std::vector<size_t> initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
-                                          std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                          DavidsonLiuSolver& dls,
-                                          std::shared_ptr<psi::Vector> temp);
+    /// @brief Compute initial guess vectors in the CSF basis
+    /// @param diag The diagonal of the Hamiltonian in the CSF basis
+    /// @param n The number of guess vectors to generate
+    /// @param dls The Davidson-Liu-Solver object
+    /// @param temp A temporary vector of dimension ncfs to store the guess vectors
+    void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n, DavidsonLiuSolver& dls,
+                           std::shared_ptr<psi::Vector> temp);
 
+    /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
+    /// @param fci_ints The integrals object
+    /// @param spin_adapter The spin adapter object
     psi::SharedVector form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      std::shared_ptr<SpinAdapter> spin_adapter);
+
+    /// @brief Print a summary of the FCI calculation
+    void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
+                         std::shared_ptr<psi::Vector> b_basis, DavidsonLiuSolver& dls);
+
+    /// @brief Test the RDMs
+    void test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
+                   DavidsonLiuSolver& dls);
 };
 } // namespace forte
 

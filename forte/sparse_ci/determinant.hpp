@@ -502,6 +502,15 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         for (size_t n = nwords_half; n < nwords_; n++)
             words_[n] = u_int64_t(0);
     }
+
+    std::pair<int, int> count_alfa_beta_diff(const DeterminantImpl<N>& d) const {
+        int counta = 0, countb = 0;
+        for (size_t n = 0; n < nwords_half; n++) {
+            counta += ui64_bit_count(words_[n] ^ d.words_[n]);
+            countb += ui64_bit_count(words_[n + nwords_half] ^ d.words_[n + nwords_half]);
+        }
+        return std::pair(counta, countb);
+    }
 };
 
 // Functions

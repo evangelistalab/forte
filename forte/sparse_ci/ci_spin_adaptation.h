@@ -68,7 +68,12 @@ class SpinAdapter {
     /// @brief Return the number of determinants
     size_t ndet() const;
 
-    /// @brief An const interator for the expansion coefficients of a CSF in the determinant basis
+    auto matrix_elements(size_t N) const { return N_to_matrix_elements_[N]; }
+
+    auto csf_N(size_t i) const { return csf_N_[i]; }
+
+    /// @brief An const interator for the expansion coefficients of a CSF in the determinant
+    /// basis
     class const_iterator {
       public:
         using iterator_category = std::input_iterator_tag;
@@ -156,21 +161,25 @@ class SpinAdapter {
     size_t ndet_ = 0;
     /// @brief The number of spin couplings
     size_t ncoupling_ = 0;
-    /// @bried A vector with the number of CSFs with a given number of unpaired electrons (N)
-    std::vector<size_t> ncsf_N_;
     /// @brief A vector with the starting index of each CSF in the determinant basis
     std::vector<size_t> csf_to_det_bounds_;
     /// @brief A vector used to store information on how to map the CSFs to determinants
     std::vector<std::pair<size_t, double>> csf_to_det_coeff_;
     /// @brief A vector used to store the configurations
     std::vector<Configuration> confs_;
+    /// @brief A vector used to store the number unpaired electrons for each configuration
+    std::vector<size_t> csf_N_;
 
+    /// @bried A vector with the number of CSFs with a given number of unpaired electrons (N)
+    std::vector<size_t> N_ncsf_;
     /// @brief A vector used to store the determinant occupations for N unpaired electrons
     std::vector<std::vector<String>> N_to_det_occupations_;
     /// @brief A vector used to store the overlap between CSFs and determinants
     std::vector<std::vector<std::tuple<size_t, size_t, double>>> N_to_overlaps_;
     /// @brief Stores the number of non-zero overlaps there are for each N and spin coupling
     std::vector<std::vector<size_t>> N_to_noverlaps_;
+    /// @brief Store the non-zero non-diagonal matrix elements for each N and spin coupling
+    std::vector<std::vector<std::pair<int, int>>> N_to_matrix_elements_;
 
     /// @brief Compute the unique spin couplings
     /// @returns the number of couplings and CSFs
