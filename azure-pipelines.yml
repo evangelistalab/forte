@@ -88,21 +88,22 @@ jobs:
       conda create -q \
         -n p4env \
         python=$PYTHON_VER \
-        psi4/label/dev::gau2grid=2 \
-        psi4/label/dev::libint2 \
-        psi4/label/dev::libxc \
-        psi4/label/dev::chemps2 \
-        psi4/label/dev::dkh \
-        blas=*=mkl \
-        mkl-include \
-        networkx \
         eigen \
         pytest \
-        pytest-xdist \
         libgcc=5.2.0 \
-        conda-forge::qcelemental \
-        conda-forge::qcengine
+        blas=*=mkl \
+        mkl-include \
+        # psi4/label/dev::gau2grid=2 \
+        # psi4/label/dev::libint2 \
+        # psi4/label/dev::libxc \
+        # psi4/label/dev::chemps2 \
+        # psi4/label/dev::dkh \
+        # networkx \
+        # pytest-xdist \
+        # conda-forge::qcelemental \
+        # conda-forge::qcengine
       source activate p4env
+      conda install psi4 -c conda-forge -c conda-forge/label/libint_dev -c conda-forge/label/psi4_dev      
       conda install -c conda-forge \
         hdf5 \
         boost \
