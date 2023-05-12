@@ -179,14 +179,17 @@ class DavidsonLiuSolver {
     /// The maximum subspace size
     size_t subspace_size_;
 
-    /// @brief The number of iterations performed
+    /// The number of iterations performed
     int iter_ = 0;
     /// The number of basis vectors
     size_t basis_size_;
-    /// The size
+    /// The number of sigma vectors
     size_t sigma_size_;
+    /// The number of converged roots
     size_t converged_ = 0;
+    /// Timing information
     double timing_ = 0.0;
+    /// Did we collapse the subspace in the last update?
     bool last_update_collapsed_ = false;
 
     /// Current set of basis vectors stored by row

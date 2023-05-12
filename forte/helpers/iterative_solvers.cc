@@ -337,8 +337,6 @@ bool DavidsonLiuSolver::subspace_collapse() {
             double norm_bnew_k = std::fabs(bnew->get_row(0, k)->norm());
             if (norm_bnew_k > schmidt_threshold_) {
                 if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
-                    outfile->Printf("\nSchmidt orthonormalization spot 1.\n");
-                    check_orthogonality();
                     basis_size_++; // <- Increase L if we add one more basis vector
                 }
             }
@@ -369,8 +367,6 @@ bool DavidsonLiuSolver::subspace_collapse() {
         sigma_size_ = 0;
         for (size_t k = 0; k < collapse_size_; k++) {
             if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
-                outfile->Printf("\nSchmidt orthonormalization spot 2.\n");
-                check_orthogonality();
                 basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
@@ -403,20 +399,16 @@ bool DavidsonLiuSolver::schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t 
 
     for (size_t i = 0; i < rows; i++) {
         const auto dotval = C_DDOT(cols, A[i], 1, v, 1);
-        outfile->Printf("Dot product of new vector with vector %zu: %20.16f\n", i, dotval);
         for (size_t I = 0; I < cols; I++)
             v[I] -= dotval * A[i][I];
     }
 
     const auto normval = std::sqrt(C_DDOT(cols, v, 1, v, 1));
-    outfile->Printf("Norm of new vector: %20.16f\n", normval);
     if (normval < schmidt_threshold_)
         return false;
     for (size_t I = 0; I < cols; I++)
         A[rows][I] = v[I] / normval;
 
-    const auto dotval2 = std::sqrt(C_DDOT(cols, A[rows], 1, A[rows], 1));
-    outfile->Printf("Norm of new vector after normalization: %20.16f\n", dotval2);
     return true;
 }
 
