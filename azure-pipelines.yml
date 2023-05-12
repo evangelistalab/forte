@@ -131,44 +131,6 @@ jobs:
     displayName: 'Clone Psi4 Source'
 
   - bash: |
-      source activate p4env
-      cd build
-      mkdir psi4bin
-      PSI4BIN_DIR=$(Build.SourcesDirectory)/build/psi4bin
-      echo "##vso[task.setvariable variable=PSI4BIN_DIR]${PSI4BIN_DIR}"
-      echo "Psi4 bin directory: $PSI4BIN_DIR"
-      mkdir psi4obj
-      cd psi4obj
-      cmake -H. -B$(Build.SourcesDirectory)/build/psi4obj \
-        -DCMAKE_INSTALL_PREFIX=${PSI4BIN_DIR} \
-        -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
-        -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
-        -DCMAKE_C_COMPILER=${C_COMPILER} \
-        -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
-        -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
-        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DCMAKE_BUILD_TYPE=${PSI_BUILD_TYPE} \
-        -Dpsi4_CXX_STANDARD=17 \
-        -DCMAKE_CXX_STANDARD=17 \
-        -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
-        -DENABLE_ecpint=ON \
-        $(Build.SourcesDirectory)/build/psi4
-    displayName: 'Configure Psi4 Build'
-
-  - bash: |
-      source activate p4env
-      cd build/psi4obj
-      echo "Now at directory (Psi4 objdir): $PWD"
-      make -j2 VERBOSE=1
-      echo "Now install Psi4 at: $(PSI4BIN_DIR)"
-      make install
-      cd $(PSI4BIN_DIR)
-      file lib/psi4/core*.so
-      ldd lib/psi4/core*.so
-      readelf -d lib/psi4/core*.so
-    displayName: 'Build Psi4'
-
-  - bash: |
       STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
       echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
       echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build/forte:$(Build.SourcesDirectory)/build/ambit-bin/lib:${PYTHONPATH}"
