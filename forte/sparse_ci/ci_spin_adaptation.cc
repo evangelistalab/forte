@@ -92,7 +92,7 @@ double overlap(int N, const String& spin_coupling, const String& det_occ) {
 
 SpinAdapter::SpinAdapter(int twoS, int twoMs, int norb)
     : twoS_(twoS), twoMs_(twoMs), norb_(norb), N_ncsf_(norb, 0), N_to_det_occupations_(norb),
-      N_to_overlaps_(norb), N_to_noverlaps_(norb), N_to_matrix_elements_(norb) {}
+      N_to_overlaps_(norb), N_to_noverlaps_(norb) {}
 
 size_t SpinAdapter::ncsf() const { return ncsf_; }
 
@@ -112,7 +112,6 @@ void SpinAdapter::det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C,
             csf_C->add(i, coeff * det_C->get(det_idx));
         }
     }
-    det_to_csf_time += timer.get();
 }
 
 void SpinAdapter::csf_C_to_det_C(std::shared_ptr<psi::Vector>& csf_C,
@@ -129,7 +128,6 @@ void SpinAdapter::csf_C_to_det_C(std::shared_ptr<psi::Vector>& csf_C,
             det_C->add(det_idx, coeff * csf_C->get(i));
         }
     }
-    csf_to_det_time += timer.get();
 }
 
 auto SpinAdapter::compute_unique_couplings() {
@@ -167,25 +165,6 @@ auto SpinAdapter::compute_unique_couplings() {
             N_to_noverlaps_[N] = noverlaps_;
             ncoupling += ncoupling_N * N_ncsf_[N];
             ncsf += ncsf_N * N_ncsf_[N];
-
-            // identify the pair of deteminants with non-zero Hamiltonian matrix element
-            std::vector<std::pair<int, int>> matrix_elements;
-
-            int I = 0;
-            for (const auto& detI : determinant_occ) {
-                int J = 0;
-                for (const auto& detJ : determinant_occ) {
-                    // if ((I < J) and detI.fast_a_xor_b_count(detJ) <= 4) {
-                    if (I < J) {
-                        matrix_elements.push_back(std::make_pair(I, J));
-                    }
-                    // }
-                    J++;
-                }
-                I++;
-            }
-
-            N_to_matrix_elements_[N] = matrix_elements;
         }
     }
     return std::pair(ncoupling, ncsf);
@@ -231,7 +210,7 @@ void SpinAdapter::prepare_couplings(const std::vector<Determinant>& dets) {
     ncoupling_ = 0;
     for (const auto& conf : confs_) {
         if (conf.count_socc() >= twoS_) {
-            conf_to_csfs(conf, twoS_, twoMs_, det_hash);
+            conf_to_csfs(conf, det_hash);
         }
     }
     psi::outfile->Printf("    Timing for finding the CSFs:           %10.4f\n", t2.get());
@@ -241,8 +220,7 @@ void SpinAdapter::prepare_couplings(const std::vector<Determinant>& dets) {
     assert(ncoupling_ == ncoupling);
 }
 
-void SpinAdapter::conf_to_csfs(const Configuration& conf, int twoS, int twoMs,
-                               DeterminantHashVec& det_hash) {
+void SpinAdapter::conf_to_csfs(const Configuration& conf, DeterminantHashVec& det_hash) {
     // number of unpaired electrons
     const auto N = conf.count_socc();
     String docc = conf.get_docc_str();
@@ -272,7 +250,6 @@ void SpinAdapter::conf_to_csfs(const Configuration& conf, int twoS, int twoMs,
         ncoupling_ += 1;
     }
     for (const auto& n : noverlaps) {
-        csf_N_.push_back(N);
         temp += n;
         ncsf_ += 1;
         csf_to_det_bounds_[ncsf_] = temp;

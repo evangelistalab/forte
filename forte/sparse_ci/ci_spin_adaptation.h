@@ -106,10 +106,6 @@ class SpinAdapter {
     /// @brief Return the number of determinants
     size_t ndet() const;
 
-    auto matrix_elements(size_t N) const { return N_to_matrix_elements_[N]; }
-
-    auto csf_N(size_t i) const { return csf_N_[i]; }
-
     /// @brief An const interator for the expansion coefficients of a CSF in the determinant
     /// basis
     class const_iterator {
@@ -205,8 +201,6 @@ class SpinAdapter {
     std::vector<std::pair<size_t, double>> csf_to_det_coeff_;
     /// @brief A vector used to store the configurations
     std::vector<Configuration> confs_;
-    /// @brief A vector used to store the number unpaired electrons for each configuration
-    std::vector<size_t> csf_N_;
 
     /// @bried A vector with the number of CSFs with a given number of unpaired electrons (N)
     std::vector<size_t> N_ncsf_;
@@ -216,15 +210,13 @@ class SpinAdapter {
     std::vector<std::vector<std::tuple<size_t, size_t, double>>> N_to_overlaps_;
     /// @brief Stores the number of non-zero overlaps there are for each N and spin coupling
     std::vector<std::vector<size_t>> N_to_noverlaps_;
-    /// @brief Store the non-zero non-diagonal matrix elements for each N and spin coupling
-    std::vector<std::vector<std::pair<int, int>>> N_to_matrix_elements_;
 
     /// @brief Compute the unique spin couplings
     /// @returns the number of couplings and CSFs
     auto compute_unique_couplings();
 
     /// @brief A function to generate all the CSFs from a configuration
-    void conf_to_csfs(const Configuration& conf, int twoS, int twoMs, DeterminantHashVec& det_hash);
+    void conf_to_csfs(const Configuration& conf, DeterminantHashVec& det_hash);
 
     /// @brief A function to generate all possible spin couplings stored as strings. The spin
     /// couplings are stored in String objects with the following format:
