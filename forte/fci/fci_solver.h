@@ -94,6 +94,8 @@ class FCISolver : public ActiveSpaceMethod {
     void set_subspace_per_root(int value);
     /// Spin adapt the FCI wave function
     void set_spin_adapt(bool value);
+    /// Spin adapt the FCI wave function using a full preconditioner?
+    void set_spin_adapt_full_preconditioner(bool value);
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
     void set_test_rdms(bool value) { test_rdms_ = value; }
@@ -156,6 +158,9 @@ class FCISolver : public ActiveSpaceMethod {
     bool print_no_ = false;
     /// Spin adapt the FCI wave function?
     bool spin_adapt_ = false;
+    /// Use the full preconditioner for spin adaptation?
+    /// When set to false, it uses an approximate diagonal preconditioner
+    bool spin_adapt_full_preconditioner_ = false;
 
     // ==> Class functions <==
 

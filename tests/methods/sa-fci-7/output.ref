@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wednesday, 10 May 2023 10:04AM
+    Psi4 started on: Saturday, 13 May 2023 05:35PM
 
-    Process ID: 65135
+    Process ID: 17617
     Host:       CHE-FEVANGE-01i
     PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
@@ -146,7 +146,7 @@ compare_values(reffci_triplet, variable("CURRENT ENERGY"), 11, "FCI energy (M_S 
 Scratch directory: /tmp/
 
 *** tstart() called on CHE-FEVANGE-01i
-*** at Wed May 10 10:04:44 2023
+*** at Sat May 13 17:35:53 2023
 
    => Loading Basis Set <=
 
@@ -331,15 +331,15 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on CHE-FEVANGE-01i at Wed May 10 10:04:45 2023
+*** tstop() called on CHE-FEVANGE-01i at Sat May 13 17:35:53 2023
 Module time:
-	user time   =       0.07 seconds =       0.00 minutes
+	user time   =       0.06 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.07 seconds =       0.00 minutes
+	user time   =       0.06 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
     SCF energy on doublet Pi of CH........................................................PASSED
 
 Scratch directory: /tmp/
@@ -348,7 +348,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: saci - git commit: 91fcfc0b
+    git branch: saci - git commit: 3419a366
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -356,7 +356,7 @@ Scratch directory: /tmp/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
+  Size of Determinant class: 256 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
 
@@ -456,7 +456,7 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00330971 s
+  Integral transformation done. 0.00393621 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
   Timing for conventional integral transformation:            0.008 s.
@@ -483,23 +483,21 @@ Scratch directory: /tmp/
   Number of beta strings        = 165
   Timing for strings        =      0.000 s
   Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.044 s
-  Timing for OO strings     =      0.009 s
-  Timing for VVOO strings   =      0.082 s
-  Timing for 1-hole strings =      0.002 s
-  Timing for 2-hole strings =      0.004 s
-  Timing for 3-hole strings =      0.005 s
-  Total timing              =      0.135 s
+  Timing for VO strings     =      0.003 s
+  Timing for OO strings     =      0.001 s
+  Timing for VVOO strings   =      0.007 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.011 s
 
   ==> Spin Adapter <==
 
-    Timings: find configurations:            0.0042
-    Timings: find CSFs :                     0.0427
+    Number of CSFs:                              7240
+    Number of couplings:                        54616
 
-    Number of CSFs (predicted):                7240
-    Number of couplings (predicted):          54616
-
-  Timing for spin adapter  =      0.049 s
+    Timing for identifying configurations:     0.0007
+    Timing for finding the CSFs:               0.0022
 
 
   ==> FCI Solver <==
@@ -534,16 +532,16 @@ Scratch directory: /tmp/
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
       1      -37.449347256288  -3.745e+01  +3.457e-01
-      2      -37.489279595891  -3.993e-02  +7.120e-02
-      3      -37.490728389232  -1.449e-03  +1.648e-02
-      4      -37.490808520338  -8.013e-05  +4.135e-03
-      5      -37.490813021140  -4.501e-06  +9.246e-04
-      6      -37.490813263201  -2.421e-07  +2.481e-04
-      7      -37.490813280248  -1.705e-08  +5.857e-05
-      8      -37.490813281111  -8.634e-10  +1.319e-05
-      9      -37.490813281155  -4.354e-11  +2.930e-06
-     10      -37.490813281157  -2.075e-12  +7.326e-07
-     11      -37.490813281157  -1.990e-13  +2.122e-07
+      2      -37.489208774584  -3.986e-02  +7.290e-02
+      3      -37.490729259131  -1.520e-03  +1.655e-02
+      4      -37.490808274060  -7.901e-05  +4.208e-03
+      5      -37.490812990448  -4.716e-06  +9.796e-04
+      6      -37.490813262608  -2.722e-07  +2.556e-04
+      7      -37.490813280286  -1.768e-08  +5.826e-05
+      8      -37.490813281119  -8.330e-10  +1.236e-05
+      9      -37.490813281156  -3.655e-11  +2.496e-06
+     10      -37.490813281157  -1.528e-12  +6.241e-07
+     11      -37.490813281158  -1.421e-13  +1.633e-07
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 12 iterations.
 
@@ -552,13 +550,13 @@ Scratch directory: /tmp/
     2220000 a0 00     -0.97523941
     2200000 a0 20     -0.16235259
 
-    Total Energy:     -37.490813281157, <S^2>: 0.750000
+    Total Energy:     -37.490813281158, <S^2>: 0.750000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       2  (  1)    B1     0      -37.490813281157   0.750000
+       2  (  1)    B1     0      -37.490813281158   0.750000
     --------------------------------------------------------
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Doublet (Ms = 1/2) B1 <==
@@ -566,7 +564,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.002 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -577,7 +575,7 @@ Scratch directory: /tmp/
 
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-         0B1     0.00000000     0.00000000     0.78832413     0.78832413
+         0B1     0.00000000     0.00000000     0.78832415     0.78832415
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.45765144     0.45765144
     --------------------------------------------------------------------
@@ -587,7 +585,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.002 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -598,14 +596,14 @@ Scratch directory: /tmp/
 
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0B1    -4.85527954     0.00000000     0.00000000    -3.56865863     0.00000000    -5.08729974
+         0B1    -4.85527956     0.00000000     0.00000000    -3.56865865     0.00000000    -5.08729975
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000     0.88706355
     --------------------------------------------------------------------------------------------------
 
   Time to prepare integrals:        0.012 seconds
-  Time to run job          :        0.731 seconds
-  Total                    :        0.743 seconds
+  Time to run job          :        0.120 seconds
+  Total                    :        0.132 seconds
     FCI energy (M_S =  1/2)...............................................................PASSED
 
 Scratch directory: /tmp/
@@ -614,7 +612,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: saci - git commit: 91fcfc0b
+    git branch: saci - git commit: 3419a366
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -622,7 +620,7 @@ Scratch directory: /tmp/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
+  Size of Determinant class: 256 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
 
@@ -722,12 +720,12 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00322504 s
+  Integral transformation done. 0.00341858 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
-  Timing for conventional integral transformation:            0.009 s.
+  Timing for conventional integral transformation:            0.008 s.
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing conventional integrals:                0.009 s.
+  Timing for computing conventional integrals:                0.008 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -749,23 +747,21 @@ Scratch directory: /tmp/
   Number of beta strings        = 330
   Timing for strings        =      0.000 s
   Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.044 s
-  Timing for OO strings     =      0.009 s
-  Timing for VVOO strings   =      0.081 s
-  Timing for 1-hole strings =      0.002 s
-  Timing for 2-hole strings =      0.004 s
-  Timing for 3-hole strings =      0.005 s
-  Total timing              =      0.134 s
+  Timing for VO strings     =      0.003 s
+  Timing for OO strings     =      0.001 s
+  Timing for VVOO strings   =      0.007 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.011 s
 
   ==> Spin Adapter <==
 
-    Timings: find configurations:            0.0041
-    Timings: find CSFs :                     0.0428
+    Number of CSFs:                              7240
+    Number of couplings:                        54616
 
-    Number of CSFs (predicted):                7240
-    Number of couplings (predicted):          54616
-
-  Timing for spin adapter  =      0.049 s
+    Timing for identifying configurations:     0.0007
+    Timing for finding the CSFs:               0.0024
 
 
   ==> FCI Solver <==
@@ -800,16 +796,16 @@ Scratch directory: /tmp/
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
       1      -37.449347256288  -3.745e+01  +3.457e-01
-      2      -37.489279595891  -3.993e-02  +7.120e-02
-      3      -37.490728389232  -1.449e-03  +1.648e-02
-      4      -37.490808520338  -8.013e-05  +4.135e-03
-      5      -37.490813021140  -4.501e-06  +9.246e-04
-      6      -37.490813263201  -2.421e-07  +2.481e-04
-      7      -37.490813280248  -1.705e-08  +5.857e-05
-      8      -37.490813281111  -8.635e-10  +1.319e-05
-      9      -37.490813281155  -4.353e-11  +2.930e-06
-     10      -37.490813281157  -2.082e-12  +7.326e-07
-     11      -37.490813281157  -1.990e-13  +2.122e-07
+      2      -37.489208774584  -3.986e-02  +7.290e-02
+      3      -37.490729259131  -1.520e-03  +1.655e-02
+      4      -37.490808274060  -7.901e-05  +4.208e-03
+      5      -37.490812990448  -4.716e-06  +9.796e-04
+      6      -37.490813262608  -2.722e-07  +2.556e-04
+      7      -37.490813280286  -1.768e-08  +5.826e-05
+      8      -37.490813281119  -8.330e-10  +1.236e-05
+      9      -37.490813281156  -3.661e-11  +2.496e-06
+     10      -37.490813281157  -1.528e-12  +6.241e-07
+     11      -37.490813281158  -1.350e-13  +1.633e-07
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 12 iterations.
 
@@ -818,13 +814,13 @@ Scratch directory: /tmp/
     2220000 b0 00      0.97523941
     2200000 b0 20      0.16235259
 
-    Total Energy:     -37.490813281157, <S^2>: 0.750000
+    Total Energy:     -37.490813281158, <S^2>: 0.750000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       2  ( -1)    B1     0      -37.490813281157   0.750000
+       2  ( -1)    B1     0      -37.490813281158   0.750000
     --------------------------------------------------------
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Doublet (Ms = -1/2) B1 <==
@@ -832,7 +828,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.002 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -843,7 +839,7 @@ Scratch directory: /tmp/
 
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-         0B1     0.00000000     0.00000000     0.78832413     0.78832413
+         0B1     0.00000000     0.00000000     0.78832415     0.78832415
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.45765144     0.45765144
     --------------------------------------------------------------------
@@ -853,7 +849,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.002 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -864,20 +860,20 @@ Scratch directory: /tmp/
 
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0B1    -4.85527954     0.00000000     0.00000000    -3.56865863     0.00000000    -5.08729974
+         0B1    -4.85527956     0.00000000     0.00000000    -3.56865865     0.00000000    -5.08729975
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000     0.88706355
     --------------------------------------------------------------------------------------------------
 
-  Time to prepare integrals:        0.013 seconds
-  Time to run job          :        0.688 seconds
-  Total                    :        0.701 seconds
+  Time to prepare integrals:        0.012 seconds
+  Time to run job          :        0.096 seconds
+  Total                    :        0.108 seconds
     FCI energy (M_S = -1/2)...............................................................PASSED
 
 Scratch directory: /tmp/
 
 *** tstart() called on CHE-FEVANGE-01i
-*** at Wed May 10 10:04:46 2023
+*** at Sat May 13 17:35:53 2023
 
    => Loading Basis Set <=
 
@@ -1061,21 +1057,21 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on CHE-FEVANGE-01i at Wed May 10 10:04:46 2023
+*** tstop() called on CHE-FEVANGE-01i at Sat May 13 17:35:53 2023
 Module time:
 	user time   =       0.06 seconds =       0.00 minutes
-	system time =       0.00 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       1.64 seconds =       0.03 minutes
+	user time   =       0.42 seconds =       0.01 minutes
 	system time =       0.03 seconds =       0.00 minutes
-	total time  =          2 seconds =       0.03 minutes
+	total time  =          0 seconds =       0.00 minutes
     SCF energy............................................................................PASSED
 
 Scratch directory: /tmp/
 
 *** tstart() called on CHE-FEVANGE-01i
-*** at Wed May 10 10:04:46 2023
+*** at Sat May 13 17:35:53 2023
 
    => Loading Basis Set <=
 
@@ -1259,15 +1255,15 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on CHE-FEVANGE-01i at Wed May 10 10:04:46 2023
+*** tstop() called on CHE-FEVANGE-01i at Sat May 13 17:35:53 2023
 Module time:
 	user time   =       0.05 seconds =       0.00 minutes
-	system time =       0.01 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       1.71 seconds =       0.03 minutes
-	system time =       0.04 seconds =       0.00 minutes
-	total time  =          2 seconds =       0.03 minutes
+	user time   =       0.49 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
     SCF energy on triplet Pi of CH+.......................................................PASSED
 
 Scratch directory: /tmp/
@@ -1276,7 +1272,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: saci - git commit: 91fcfc0b
+    git branch: saci - git commit: 3419a366
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -1284,7 +1280,7 @@ Scratch directory: /tmp/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
+  Size of Determinant class: 256 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
 
@@ -1384,7 +1380,7 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00333250 s
+  Integral transformation done. 0.00332421 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
   Timing for conventional integral transformation:            0.008 s.
@@ -1411,23 +1407,21 @@ Scratch directory: /tmp/
   Number of beta strings        = 55
   Timing for strings        =      0.000 s
   Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.035 s
-  Timing for OO strings     =      0.008 s
-  Timing for VVOO strings   =      0.064 s
-  Timing for 1-hole strings =      0.002 s
-  Timing for 2-hole strings =      0.003 s
-  Timing for 3-hole strings =      0.005 s
-  Total timing              =      0.107 s
+  Timing for VO strings     =      0.002 s
+  Timing for OO strings     =      0.001 s
+  Timing for VVOO strings   =      0.006 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.009 s
 
   ==> Spin Adapter <==
 
-    Timings: find configurations:            0.0014
-    Timings: find CSFs :                     0.0126
+    Number of CSFs:                              3276
+    Number of couplings:                        15204
 
-    Number of CSFs (predicted):                3276
-    Number of couplings (predicted):          15204
-
-  Timing for spin adapter  =      0.015 s
+    Timing for identifying configurations:     0.0003
+    Timing for finding the CSFs:               0.0005
 
 
   ==> FCI Solver <==
@@ -1462,15 +1456,15 @@ Scratch directory: /tmp/
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
       1      -37.033609519779  -3.703e+01  +3.321e-01
-      2      -37.086846351812  -5.324e-02  +8.222e-02
-      3      -37.088809263398  -1.963e-03  +1.521e-02
-      4      -37.088874227112  -6.496e-05  +3.068e-03
-      5      -37.088876403468  -2.176e-06  +4.570e-04
-      6      -37.088876450739  -4.727e-08  +7.420e-05
-      7      -37.088876452153  -1.414e-09  +1.404e-05
-      8      -37.088876452203  -4.997e-11  +2.601e-06
-      9      -37.088876452204  -1.499e-12  +4.491e-07
-     10      -37.088876452204  -4.263e-14  +8.681e-08
+      2      -37.086840916694  -5.323e-02  +8.229e-02
+      3      -37.088809066436  -1.968e-03  +1.526e-02
+      4      -37.088874273534  -6.521e-05  +3.040e-03
+      5      -37.088876405072  -2.132e-06  +4.496e-04
+      6      -37.088876450766  -4.569e-08  +7.332e-05
+      7      -37.088876452155  -1.389e-09  +1.375e-05
+      8      -37.088876452203  -4.810e-11  +2.504e-06
+      9      -37.088876452204  -1.357e-12  +4.202e-07
+     10      -37.088876452204  -3.553e-14  +7.792e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 11 iterations.
 
@@ -1493,7 +1487,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.001 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -1514,7 +1508,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.001 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -1525,14 +1519,14 @@ Scratch directory: /tmp/
 
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0B2    -2.21833646     0.00000000     0.00000000    -3.26101944     0.00000000    -2.90409661
+         0B2    -2.21833646     0.00000000     0.00000000    -3.26101944     0.00000000    -2.90409660
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000     0.88706355
     --------------------------------------------------------------------------------------------------
 
-  Time to prepare integrals:        0.012 seconds
-  Time to run job          :        0.442 seconds
-  Total                    :        0.454 seconds
+  Time to prepare integrals:        0.011 seconds
+  Time to run job          :        0.077 seconds
+  Total                    :        0.088 seconds
     FCI energy (M_S =  1).................................................................PASSED
 
 Scratch directory: /tmp/
@@ -1541,7 +1535,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: saci - git commit: 91fcfc0b
+    git branch: saci - git commit: 3419a366
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -1549,7 +1543,7 @@ Scratch directory: /tmp/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
+  Size of Determinant class: 256 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
 
@@ -1649,7 +1643,7 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00323833 s
+  Integral transformation done. 0.00322912 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
   Timing for conventional integral transformation:            0.008 s.
@@ -1676,23 +1670,21 @@ Scratch directory: /tmp/
   Number of beta strings        = 165
   Timing for strings        =      0.000 s
   Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.026 s
-  Timing for OO strings     =      0.004 s
-  Timing for VVOO strings   =      0.039 s
-  Timing for 1-hole strings =      0.001 s
-  Timing for 2-hole strings =      0.002 s
-  Timing for 3-hole strings =      0.002 s
-  Total timing              =      0.070 s
+  Timing for VO strings     =      0.002 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.003 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.006 s
 
   ==> Spin Adapter <==
 
-    Timings: find configurations:            0.0019
-    Timings: find CSFs :                     0.0185
+    Number of CSFs:                              3276
+    Number of couplings:                        26096
 
-    Number of CSFs (predicted):                3276
-    Number of couplings (predicted):          26096
-
-  Timing for spin adapter  =      0.021 s
+    Timing for identifying configurations:     0.0003
+    Timing for finding the CSFs:               0.0010
 
 
   ==> FCI Solver <==
@@ -1713,8 +1705,8 @@ Scratch directory: /tmp/
   ---------------------------------------------
     CSF             Energy     <S^2>   Spin
   ---------------------------------------------
-     72      -37.033605740333  2.000  triplet
-     36      -36.411856348138  2.000  triplet
+     72      -36.966532561752  2.000  triplet
+     36      -36.343336400725  2.000  triplet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -1727,15 +1719,15 @@ Scratch directory: /tmp/
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
       1      -37.033609519779  -3.703e+01  +3.321e-01
-      2      -37.086846351812  -5.324e-02  +8.222e-02
-      3      -37.088809263398  -1.963e-03  +1.521e-02
-      4      -37.088874227112  -6.496e-05  +3.068e-03
-      5      -37.088876403468  -2.176e-06  +4.570e-04
-      6      -37.088876450739  -4.727e-08  +7.420e-05
-      7      -37.088876452153  -1.414e-09  +1.404e-05
-      8      -37.088876452203  -5.000e-11  +2.601e-06
-      9      -37.088876452204  -1.521e-12  +4.491e-07
-     10      -37.088876452204  -4.974e-14  +8.681e-08
+      2      -37.086829821655  -5.322e-02  +8.193e-02
+      3      -37.088806615207  -1.977e-03  +1.546e-02
+      4      -37.088874076431  -6.746e-05  +3.132e-03
+      5      -37.088876397918  -2.321e-06  +4.757e-04
+      6      -37.088876450403  -5.249e-08  +7.971e-05
+      7      -37.088876452143  -1.740e-09  +1.575e-05
+      8      -37.088876452203  -5.958e-11  +2.789e-06
+      9      -37.088876452205  -1.933e-12  +4.699e-07
+     10      -37.088876452205  -4.263e-14  +8.809e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 11 iterations.
 
@@ -1746,13 +1738,13 @@ Scratch directory: /tmp/
     22a0000 00 0b      0.13629690
     22b0000 00 0a     -0.13629690
 
-    Total Energy:     -37.088876452204, <S^2>: 2.000000
+    Total Energy:     -37.088876452205, <S^2>: 2.000000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       3  (  0)    B2     0      -37.088876452204   2.000000
+       3  (  0)    B2     0      -37.088876452205   2.000000
     --------------------------------------------------------
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Triplet (Ms = 0) B2 <==
@@ -1760,7 +1752,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.001 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -1781,7 +1773,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.001 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -1792,14 +1784,14 @@ Scratch directory: /tmp/
 
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0B2    -2.21833646     0.00000000     0.00000000    -3.26101944     0.00000000    -2.90409661
+         0B2    -2.21833646     0.00000000     0.00000000    -3.26101945     0.00000000    -2.90409661
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000     0.88706355
     --------------------------------------------------------------------------------------------------
 
-  Time to prepare integrals:        0.013 seconds
-  Time to run job          :        0.420 seconds
-  Total                    :        0.432 seconds
+  Time to prepare integrals:        0.011 seconds
+  Time to run job          :        0.060 seconds
+  Total                    :        0.072 seconds
     FCI energy (M_S =  0).................................................................PASSED
 
 Scratch directory: /tmp/
@@ -1808,7 +1800,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: saci - git commit: 91fcfc0b
+    git branch: saci - git commit: 3419a366
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -1816,7 +1808,7 @@ Scratch directory: /tmp/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
+  Size of Determinant class: 256 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
 
@@ -1916,12 +1908,12 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00319558 s
+  Integral transformation done. 0.00370179 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
-  Timing for conventional integral transformation:            0.008 s.
+  Timing for conventional integral transformation:            0.009 s.
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing conventional integrals:                0.008 s.
+  Timing for computing conventional integrals:                0.009 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1943,23 +1935,21 @@ Scratch directory: /tmp/
   Number of beta strings        = 330
   Timing for strings        =      0.000 s
   Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.034 s
-  Timing for OO strings     =      0.008 s
-  Timing for VVOO strings   =      0.065 s
-  Timing for 1-hole strings =      0.002 s
-  Timing for 2-hole strings =      0.003 s
-  Timing for 3-hole strings =      0.005 s
-  Total timing              =      0.106 s
+  Timing for VO strings     =      0.002 s
+  Timing for OO strings     =      0.001 s
+  Timing for VVOO strings   =      0.006 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.009 s
 
   ==> Spin Adapter <==
 
-    Timings: find configurations:            0.0014
-    Timings: find CSFs :                     0.0127
+    Number of CSFs:                              3276
+    Number of couplings:                        15204
 
-    Number of CSFs (predicted):                3276
-    Number of couplings (predicted):          15204
-
-  Timing for spin adapter  =      0.015 s
+    Timing for identifying configurations:     0.0002
+    Timing for finding the CSFs:               0.0006
 
 
   ==> FCI Solver <==
@@ -1994,15 +1984,15 @@ Scratch directory: /tmp/
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
       1      -37.033609519779  -3.703e+01  +3.321e-01
-      2      -37.086846351812  -5.324e-02  +8.222e-02
-      3      -37.088809263398  -1.963e-03  +1.521e-02
-      4      -37.088874227112  -6.496e-05  +3.068e-03
-      5      -37.088876403468  -2.176e-06  +4.570e-04
-      6      -37.088876450739  -4.727e-08  +7.420e-05
-      7      -37.088876452153  -1.414e-09  +1.404e-05
-      8      -37.088876452203  -4.995e-11  +2.601e-06
-      9      -37.088876452204  -1.556e-12  +4.491e-07
-     10      -37.088876452204  -4.263e-14  +8.681e-08
+      2      -37.086840916694  -5.323e-02  +8.229e-02
+      3      -37.088809066436  -1.968e-03  +1.526e-02
+      4      -37.088874273534  -6.521e-05  +3.040e-03
+      5      -37.088876405072  -2.132e-06  +4.496e-04
+      6      -37.088876450766  -4.569e-08  +7.332e-05
+      7      -37.088876452155  -1.389e-09  +1.375e-05
+      8      -37.088876452203  -4.808e-11  +2.504e-06
+      9      -37.088876452204  -1.421e-12  +4.202e-07
+     10      -37.088876452204  -3.553e-14  +7.792e-08
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 11 iterations.
 
@@ -2025,7 +2015,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.001 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -2046,7 +2036,7 @@ Scratch directory: /tmp/
 
   ==> Computing RDMs for Root No. 0 <==
 
-    Timing for 1-RDM: 0.001 s
+    Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
 
@@ -2057,17 +2047,17 @@ Scratch directory: /tmp/
 
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0B2    -2.21833646     0.00000000     0.00000000    -3.26101944     0.00000000    -2.90409661
+         0B2    -2.21833646     0.00000000     0.00000000    -3.26101944     0.00000000    -2.90409660
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000     0.88706355
     --------------------------------------------------------------------------------------------------
 
   Time to prepare integrals:        0.012 seconds
-  Time to run job          :        0.383 seconds
-  Total                    :        0.395 seconds
+  Time to run job          :        0.043 seconds
+  Total                    :        0.056 seconds
     FCI energy (M_S = -1).................................................................PASSED
 
-    Psi4 stopped on: Wednesday, 10 May 2023 10:04AM
-    Psi4 wall time for execution: 0:00:03.17
+    Psi4 stopped on: Saturday, 13 May 2023 05:35PM
+    Psi4 wall time for execution: 0:00:00.87
 
 *** Psi4 exiting successfully. Buy a developer a beer!

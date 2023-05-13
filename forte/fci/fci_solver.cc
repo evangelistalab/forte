@@ -72,6 +72,10 @@ void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 void FCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
 
+void FCISolver::set_spin_adapt_full_preconditioner(bool value) {
+    spin_adapt_full_preconditioner_ = value;
+}
+
 void FCISolver::startup() {
     // Create the string lists
     lists_ = std::make_shared<StringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
@@ -127,6 +131,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_e_convergence(options->get_double("E_CONVERGENCE"));
     set_r_convergence(options->get_double("R_CONVERGENCE"));
     set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
+    set_spin_adapt_full_preconditioner(options->get_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER"));
 }
 
 /*
@@ -167,12 +172,10 @@ double FCISolver::compute_energy() {
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
-
     // Form the diagonal of the Hamiltonian and the initial guess
     size_t guess_size = 0;
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
-
         dls.startup(Hdiag_vec);
         guess_size = dls.collapse_size();
         initial_guess_csf(Hdiag_vec, guess_size, dls, sigma_basis);

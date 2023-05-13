@@ -21,6 +21,7 @@ set forte {
   multiplicity 5
   ms 0.0
   ci_spin_adapt true
+  ci_spin_adapt_full_preconditioner true
   root_sym 4
 }
 

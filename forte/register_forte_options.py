@@ -378,6 +378,7 @@ def register_fci_options(options):
     options.add_bool('PRINT_NO', False, 'Print the NO from the rdm of FCI')
     options.add_int('NTRIAL_PER_ROOT', 10, 'The number of trial guess vectors to generate per root')
     options.add_bool('CI_SPIN_ADAPT', False, 'Spin-adapt the CI wavefunction?')
+    options.add_bool('CI_SPIN_ADAPT_FULL_PRECONDITIONER', False, 'Use full preconditioner for spin-adapted CI?')
 
 
 def register_sci_options(options):
