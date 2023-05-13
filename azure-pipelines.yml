@@ -90,7 +90,7 @@ jobs:
         python=$PYTHON_VER \
         eigen \
         pytest \
-        libgcc=5.2.0 \
+        libgcc \
         blas=*=mkl \
         mkl-include \
         # psi4/label/dev::gau2grid=2 \
