@@ -1,16 +1,10 @@
-.. _`sec:methods:fci`:
+## Spin-adapted FCI
 
-Full configuration interaction
-==============================
+In certain cases, convergence to a state with target multiplicity fails due to either variational collapse to a root of lower energy and different multiplicity or because no guess state can be found.
 
-.. sectionauthor:: Francesco A. Evangelista
+Forte implements within the determinant-based FCI code a procedure to perform the Davidson–Liu procedure in a basis of configuration state funcions (CSFs). CSFs are spin-adapted linear combinations of Slater determinants with a given orbital occupation pattern (electron configuration).
 
-Running the test cases
-----------------------
+When expressed in the CSF basis a FCI state is given by:
+$$
 
-Forte provides test cases for most of all methods implemented.
-This is a good place to start if you are new to Forte.
-After compiling and setting up ``PYTHONPATH``, you can run the test cases::
-
-    cd tests/methods
-    python run_forte_tests_travis.py
+$$

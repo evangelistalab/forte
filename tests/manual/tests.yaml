@@ -1,0 +1,9 @@
+# This file collects the examples reported in the Forte manual
+#
+# Tests are structured into groups (aci, actv-dsrg, ...). Each group contains
+# different types of tests (short, long, unused). This is done so that the
+# test script can run certain subsets of all tests.
+#
+fci:
+   short:
+      - fci-1

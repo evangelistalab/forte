@@ -251,7 +251,7 @@ void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
         for (size_t g = 0; g < nguess; ++g) {
             const auto& [e, i] = lowest_energy[g];
             auto str =
-                boost::str(boost::format("    %3d  %20.12f  %.3f  %s") % i % e % S2_target % label);
+                boost::str(boost::format("  %6d %20.12f  %.3f  %s") % i % e % S2_target % label);
             psi::outfile->Printf("\n%s", str.c_str());
         }
         psi::outfile->Printf("\n  ---------------------------------------------");
