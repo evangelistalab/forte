@@ -1,14 +1,3 @@
-.. \_\ ``sec:methods:fci``:
-
-Full configuration interaction
-==============================
-
-Running the test cases
-----------------------
-
-Forte provides test cases for most of all methods implemented. This is a
-good place to start if you are new to Forte.
-
 FCI: Full Configuration Interaction
 ===================================
 
