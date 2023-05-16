@@ -123,7 +123,8 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("state_filename_map", &ActiveSpaceSolver::state_filename_map,
              "Return a map from StateInfo to wave function file names")
         .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function,
-             "Dump wave functions to disk");
+             "Dump wave functions to disk")
+        .def("eigenvectors", &ActiveSpaceSolver::eigenvectors, "Return the CI wave functions");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
@@ -306,7 +307,9 @@ PYBIND11_MODULE(_forte, m) {
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
         m, "DynamicCorrelationSolver")
-        .def("compute_energy", &DynamicCorrelationSolver::compute_energy);
+        .def("compute_energy", &DynamicCorrelationSolver::compute_energy)
+        .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
+             "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
 
     // export ActiveSpaceIntegrals
     py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
@@ -343,6 +346,7 @@ PYBIND11_MODULE(_forte, m) {
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
+        .def("compute_gradient", &MASTER_DSRG::compute_gradient, "Compute the DSRG gradient")
         .def("compute_Heff_actv", &MASTER_DSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
@@ -358,7 +362,11 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
-             "Delete amplitudes checkpoint files");
+             "Delete amplitudes checkpoint files")
+        .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
+             "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
+        .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
+             "Set the shared pointer for ActiveSpaceSolver");
 
     // export SADSRG
     py::class_<SADSRG>(m, "SADSRG")

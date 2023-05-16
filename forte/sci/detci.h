@@ -67,6 +67,11 @@ class DETCI : public ActiveSpaceMethod {
     std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
     read_wave_function(const std::string& filename) override;
 
+    /// Return the number of determinants
+    size_t space_size() override {
+        return p_space_.size();
+    }
+
   private:
     /// SCFInfo object
     std::shared_ptr<SCFInfo> scf_info_;

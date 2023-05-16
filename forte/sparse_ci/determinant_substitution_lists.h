@@ -60,8 +60,34 @@ class DeterminantSubstitutionLists {
     /// Build the coupling lists for three-particle operators
     void three_s_lists(const DeterminantHashVec& wfn);
 
+    /// Build the coupling lists for a 1-body operators
+    void lists_1a(const DeterminantHashVec& wfn);
+    /// Build the coupling lists for b 1-body operators
+    void lists_1b(const DeterminantHashVec& wfn);
+
+    /// Build the coupling lists for aa 2-body operators
+    void lists_2aa(const DeterminantHashVec& wfn);
+    /// Build the coupling lists for ab 2-body operators
+    void lists_2ab(const DeterminantHashVec& wfn);
+    /// Build the coupling lists for bb 2-body operators
+    void lists_2bb(const DeterminantHashVec& wfn);
+
+    /// Build the coupling lists for aaa 3-body operators
+    void lists_3aaa(const DeterminantHashVec& wfn);
+    /// Build the coupling lists for aab 3-body operators
+    void lists_3aab(const DeterminantHashVec& wfn);
+    /// Build the coupling lists for abb 3-body operators
+    void lists_3abb(const DeterminantHashVec& wfn);
+    /// Build the coupling lists for bbb 3-body operators
+    void lists_3bbb(const DeterminantHashVec& wfn);
+
+    // Clear coupling lists for 1-body operators
     void clear_op_s_lists();
+    // Clear coupling lists for 2-body operators
     void clear_tp_s_lists();
+    // Clear coupling lists for 3-body operators
+    void clear_3p_s_lists();
+
     /*- Operators -*/
 
     void build_strings(const DeterminantHashVec& wfn);

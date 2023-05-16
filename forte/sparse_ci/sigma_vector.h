@@ -73,6 +73,35 @@ class SigmaVector {
     add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& /*bad_states*/) {}
     virtual double compute_spin(const std::vector<double>& c) = 0;
 
+    /// Compute the contribution to sigma due to 1-body operator
+    /// sigma_{I} <- factor * sum_{pq} h_{pq} sum_{J} b_{J} <I|p^+ q|J>
+    /// h_{pq} = h1a[p * nactv + q]
+    virtual void add_generalized_sigma_1(const std::vector<double>& h1, psi::SharedVector b,
+                                         double factor, std::vector<double>& sigma,
+                                         const std::string& spin) {
+        _throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to 2-body operator
+    /// sigma_{I} <- (1/4) * factor * sum_{pqrs} h_{pqrs} sum_{J} b_{J} <I|p^+ q^+ s r|J>
+    /// sigma_{I} <- factor * sum_{pqrs} h_{pQrS} sum_{J} b_{J} <I|p^+ Q^+ S r|J>
+    /// h_{pqrs} = h2[p * nactv^3 + q * nactv^2 + r * nactv + s]
+    /// Integrals must be antisymmetric wrt index permutations!
+    virtual void add_generalized_sigma_2(const std::vector<double>& h2, psi::SharedVector b,
+                                         double factor, std::vector<double>& sigma,
+                                         const std::string& spin) {
+        _throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to 3-body operator
+    /// sigma_{I} <- (1/36) * factor * sum_{pqrstu} h_{pqrstu} sum_{J} b_{J} <I|p^+ q^+ r^+ u t s|J>
+    /// sigma_{I} <- (1/4) * factor * sum_{pqRstU} h_{pqRstU} sum_{J} b_{J} <I|p^+ q^+ R^+ U t s|J>
+    /// h_{pqrstu} = h3[p * nactv^5 + q * nactv^4 + r * nactv^3 + s * nactv^2 + t * nactv + u]
+    /// Integrals must be antisymmetric wrt index permutations!
+    virtual void add_generalized_sigma_3(const std::vector<double>& h3, psi::SharedVector b,
+                                         double factor, std::vector<double>& sigma,
+                                         const std::string& spin) {
+        _throw_not_implemented_error();
+    }
+
   protected:
     const DeterminantHashVec& space_;
     /// the active space integrals
@@ -84,6 +113,10 @@ class SigmaVector {
     const SigmaVectorType sigma_vector_type_;
     /// the type of sigma vector algorithm
     const std::string label_;
+    /// throw NotImplemented error
+    void _throw_not_implemented_error() {
+        throw std::runtime_error("Not implemented for this SigmaVector type!");
+    }
 };
 
 class SigmaVectorFull : public SigmaVector {

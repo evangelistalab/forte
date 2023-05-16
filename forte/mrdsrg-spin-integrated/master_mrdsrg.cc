@@ -179,14 +179,18 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     bvirt_label_ = "V";
 
     // add Ambit index labels
-    BTF_->add_mo_space(acore_label_, "m,n,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "M,N,C0,C1,C2,C3,C4,C5,C6,C7,C8,C9", core_mos_, BetaSpin);
-    BTF_->add_mo_space(aactv_label_, "u,v,w,x,y,z,1,2,3,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9", actv_mos_,
+    BTF_->add_mo_space(acore_label_, "m,n,m1,n1,m2,n2,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9", core_mos_,
                        AlphaSpin);
-    BTF_->add_mo_space(bactv_label_, "U,V,W,X,Y,Z,!,@,#,A0,A1,A2,A3,A4,A5,A6,A7,A8,A9", actv_mos_,
+    BTF_->add_mo_space(bcore_label_, "M,N,M1,N1,M2,N2,C0,C1,C2,C3,C4,C5,C6,C7,C8,C9", core_mos_,
                        BetaSpin);
-    BTF_->add_mo_space(avirt_label_, "e,f,v0,v1,v2,v3,v4,v5,v6,v7,v8,v9", virt_mos_, AlphaSpin);
-    BTF_->add_mo_space(bvirt_label_, "E,F,V0,V1,V2,V3,V4,V5,V6,V7,V8,V9", virt_mos_, BetaSpin);
+    BTF_->add_mo_space(aactv_label_,
+                       "u,v,w,x,y,z,u1,w1,z1,x1,y1,1,2,3,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9", actv_mos_,
+                       AlphaSpin);
+    BTF_->add_mo_space(bactv_label_,
+                       "U,V,W,X,Y,Z,U1,W1,Z1,X1,Y1,!,@,#,A0,A1,A2,A3,A4,A5,A6,A7,A8,A9", actv_mos_,
+                       BetaSpin);
+    BTF_->add_mo_space(avirt_label_, "e,f,e1,f1,v0,v2,v3,v4,v5,v6,v7,v8,v9", virt_mos_, AlphaSpin);
+    BTF_->add_mo_space(bvirt_label_, "E,F,E1,F1,V0,V2,V3,V4,V5,V6,V7,V8,V9", virt_mos_, BetaSpin);
 
     // map space labels to mo spaces
     label_to_spacemo_[acore_label_[0]] = core_mos_;
@@ -213,7 +217,7 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     // if DF/CD
     if (eri_df_) {
         aux_label_ = "L";
-        BTF_->add_mo_space(aux_label_, "g", aux_mos_, NoSpin);
+        BTF_->add_mo_space(aux_label_, "g,g!,g@,P!,Q!,A!,B!,R!,S!", aux_mos_, NoSpin);
         label_to_spacemo_[aux_label_[0]] = aux_mos_;
     }
 

@@ -32,9 +32,13 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <ambit/tensor.h>
+
+namespace ambit {
+class BlockedTensor;
+}
 
 #include "psi4/libmints/matrix.h"
-
 #include "base_classes/state_info.h"
 #include "base_classes/rdms.h"
 #include "integrals/one_body_integrals.h"
@@ -107,6 +111,35 @@ class ActiveSpaceSolver {
         std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
         int max_rdm_level, RDMsType rdm_type);
 
+    /// Compute a generalized RDM for a given state
+    /// This will compute the quantity
+    ///    R^{p1 p2 ..}_{q1 q2 ..} = X_I <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J (c_right =
+    ///    true)
+    /// or
+    ///    R^{p1 p2 ..}_{q1 q2 ..} = C_I <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> X_J (c_right
+    ///    = false)
+    void generalized_rdms(const StateInfo& state, size_t root, const std::vector<double>& X,
+                          ambit::BlockedTensor& result, bool c_right, int rdm_level,
+                          std::vector<std::string> spin = {});
+
+    /// Add k-body contributions to the sigma vector
+    ///    σ_I += h_{p1,p2,...}^{q1,q2,...} <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J
+    /// @param state: StateInfo (symmetry, multiplicity, etc.)
+    /// @param root: the root number of the state
+    /// @param h: the antisymmetrized k-body integrals
+    /// @param block_label_to_factor: map from the block labels of integrals to its factors
+    /// @param sigma: the sigma vector to be added
+    void add_sigma_kbody(const StateInfo& state, size_t root, ambit::BlockedTensor& h,
+                         const std::map<std::string, double>& block_label_to_factor,
+                         std::vector<double>& sigma);
+
+    /// Compute generalized sigma vector
+    ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param state: StateInfo (symmetry, multiplicity, etc.)
+    /// @param x: the X vector to be contracted with H_IJ
+    /// @param sigma: the sigma vector (will be zeroed first)
+    void generalized_sigma(const StateInfo& state, psi::SharedVector x, psi::SharedVector sigma);
+
     /// Compute the state-averaged reference
     std::shared_ptr<RDMs>
     compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
@@ -123,6 +156,9 @@ class ActiveSpaceSolver {
 
     /// Print a summary of the computation information
     void print_options();
+
+    /// Return a map StateInfo -> size of the determinant space
+    std::map<StateInfo, size_t> state_space_size_map() const;
 
     /// Return a map of StateInfo to the computed nroots of energies
     const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
@@ -158,6 +194,8 @@ class ActiveSpaceSolver {
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
+    /// Return the eigen vectors for a given state
+    std::vector<ambit::Tensor> eigenvectors(const StateInfo& state) const;
     /// Set unitary matrices for changing orbital basis in RDMs when computing dipole moments
     void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
         Ua_actv_ = Ua;
