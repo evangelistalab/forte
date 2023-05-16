@@ -4,7 +4,7 @@ HOWTOs
 .. toctree::
    :maxdepth: 2
 
-   methods/fci
+   methods/nb_01_fci
    methods/aci
    methods/mcscf
    methods/dsrg

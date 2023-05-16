@@ -260,11 +260,10 @@ double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determin
     if ((lhs.count_alfa() != rhs.count_alfa()) or (lhs.count_beta() != rhs.count_beta()))
         return 0.0;
 
-    int nadiff = 0;
-    int nbdiff = 0;
-
 #if FAST_SLATER_RULES
 #else
+    int nadiff = 0;
+    int nbdiff = 0;
     // Count how many differences in mos are there
     for (size_t n = 0; n < nmo_; ++n) {
         if (lhs.get_alfa_bit(n) != rhs.get_alfa_bit(n))
@@ -368,7 +367,6 @@ double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determin
                 }
             }
         }
-        // double sign = SlaterSign(I, i, j, k, l);
         double sign = lhs.slater_sign_aaaa(i, j, k, l);
         matrix_element = sign * tei_aa_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }
@@ -397,7 +395,6 @@ double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determin
                 }
             }
         }
-        // double sign = SlaterSign(I, nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
         double sign = lhs.slater_sign_bbbb(i, j, k, l);
         matrix_element = sign * tei_bb_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }
@@ -417,8 +414,6 @@ double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determin
             if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p))
                 l = p;
         }
-        //  double sign = SlaterSign(I, i, nmo_ + j, k, nmo_ + l);
-        // double sign = lhs.slater_sign(i, nmo_ + j, k, nmo_ + l);
         double sign = lhs.slater_sign_aa(i, k) * lhs.slater_sign_bb(j, l);
         matrix_element = sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }

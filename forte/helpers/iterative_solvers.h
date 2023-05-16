@@ -165,7 +165,7 @@ class DavidsonLiuSolver {
     /// The threshold used to detect a nonhermitian Hamiltonian
     double nonhermitian_G_threshold_ = 1.0e-12;
     /// The threshold used to detect nonorthogonality among the roots
-    double orthogonality_threshold_ = 1.0e-12;
+    double orthogonality_threshold_ = 1.0e-10;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested
@@ -179,12 +179,17 @@ class DavidsonLiuSolver {
     /// The maximum subspace size
     size_t subspace_size_;
 
+    /// The number of iterations performed
     int iter_ = 0;
+    /// The number of basis vectors
     size_t basis_size_;
-    /// The size
+    /// The number of sigma vectors
     size_t sigma_size_;
+    /// The number of converged roots
     size_t converged_ = 0;
+    /// Timing information
     double timing_ = 0.0;
+    /// Did we collapse the subspace in the last update?
     bool last_update_collapsed_ = false;
 
     /// Current set of basis vectors stored by row

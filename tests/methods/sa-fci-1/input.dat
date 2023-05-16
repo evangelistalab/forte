@@ -1,0 +1,25 @@
+import forte
+
+reffci = -14.595808852754054
+
+molecule {
+0 1
+Li
+Li 1 R
+R = 3.0
+units bohr
+}
+
+set {
+  basis sto-3g
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  active_space_solver fci
+  ci_spin_adapt      true
+}
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST

@@ -1,0 +1,24 @@
+# forte/tests/manual/fci-1/input.dat
+
+import forte
+
+molecule li2 {
+0 1
+Li
+Li 1 1.6
+}
+
+set {
+    basis cc-pVDZ
+    reference rhf
+}
+
+set forte {
+    active_space_solver fci
+}
+
+# run a RHF computation
+E_scf, scf_wfn = energy('scf', return_wfn=True)
+
+# pass the RHF orbitals to Forte and run a FCI computation
+energy('forte', ref_wfn=scf_wfn)

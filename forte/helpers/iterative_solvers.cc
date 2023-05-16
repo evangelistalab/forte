@@ -219,6 +219,8 @@ SolverStatus DavidsonLiuSolver::update() {
         }
     }
 
+    check_orthogonality();
+
     // if we do not add any new vector then we are in trouble and we better finish the computation
     if ((num_added == 0) and is_energy_converged) {
         return SolverStatus::Converged;
@@ -300,17 +302,17 @@ void DavidsonLiuSolver::project_out_roots(psi::SharedMatrix v) {
 std::vector<double> DavidsonLiuSolver::normalize_vectors(psi::SharedMatrix v, size_t n) {
     // normalize each residual
     std::vector<double> v_norm;
-    double** v_p = v->pointer();
     for (size_t k = 0; k < n; k++) {
-        double norm = 0.0;
-        for (size_t I = 0; I < size_; I++) {
-            norm += v_p[k][I] * v_p[k][I];
-        }
+        double* v_k = v->pointer()[k];
+        double norm = C_DDOT(size_, v_k, 1, v_k, 1);
+        // for (size_t I = 0; I < size_; I++) {
+        //     norm += v_p[k][I] * v_p[k][I];
+        // }
         norm = std::sqrt(norm);
-        v_norm.push_back(norm);
         for (size_t I = 0; I < size_; I++) {
-            v_p[k][I] /= norm;
+            v_k[I] /= norm;
         }
+        v_norm.push_back(norm);
     }
     return v_norm;
 }
@@ -334,7 +336,7 @@ bool DavidsonLiuSolver::subspace_collapse() {
         for (size_t k = 0; k < collapse_size_; k++) {
             double norm_bnew_k = std::fabs(bnew->get_row(0, k)->norm());
             if (norm_bnew_k > schmidt_threshold_) {
-                if (schmidt_add(b_, k, size_, bnew, k)) {
+                if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
                     basis_size_++; // <- Increase L if we add one more basis vector
                 }
             }
@@ -364,7 +366,7 @@ bool DavidsonLiuSolver::subspace_collapse() {
         basis_size_ = 0;
         sigma_size_ = 0;
         for (size_t k = 0; k < collapse_size_; k++) {
-            if (schmidt_add(b_, k, size_, bnew, k)) {
+            if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
                 basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
@@ -406,6 +408,7 @@ bool DavidsonLiuSolver::schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t 
         return false;
     for (size_t I = 0; I < cols; I++)
         A[rows][I] = v[I] / normval;
+
     return true;
 }
 

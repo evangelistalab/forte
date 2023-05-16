@@ -100,6 +100,7 @@ dmrg/dmrgsolver.cc
 external/external_active_space_method.cc
 fci/string_address.cc
 fci/fci_solver.cc
+fci/fci_solver_initial_guess.cc
 fci/fci_vector.cc
 fci/fci_vector_h_diag.cc
 fci/fci_vector_hamiltonian.cc
@@ -205,6 +206,7 @@ sci/mrpt2.cc
 sci/sci.cc
 sci/tdci.cc
 sparse_ci/ci_reference.cc
+sparse_ci/ci_spin_adaptation.cc
 sparse_ci/determinant_functions.cc
 sparse_ci/determinant_hashvector.cc
 sparse_ci/determinant_substitution_lists.cc
