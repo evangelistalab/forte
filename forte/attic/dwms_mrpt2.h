@@ -30,7 +30,6 @@
 #define _dwms_mrpt2_h_
 
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
-#include "sci/fci_mo.h"
 
 namespace forte {
 
@@ -117,18 +116,18 @@ class DWMS_DSRGPT2 {
     /// nuclear repulsion energy
     double Enuc_;
 
-    /// precompute energy -- CASCI or SA-DSRG-PT2/3
-    std::shared_ptr<FCI_MO> precompute_energy();
+    // /// precompute energy -- CASCI or SA-DSRG-PT2/3
+    // std::shared_ptr<FCI_MO> precompute_energy();
 
     /// perform DSRG-PT2/3 computation and return the dressed integrals within active space
     std::shared_ptr<ActiveSpaceIntegrals> compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                           std::shared_ptr<RDMs> reference,
                                                           std::string level = "PT2");
 
-    /// perform a macro DSRG-PT2/3 computation
-    std::shared_ptr<ActiveSpaceIntegrals>
-    compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, std::shared_ptr<FCI_MO> fci_mo,
-                          int entry, int root);
+    // /// perform a macro DSRG-PT2/3 computation
+    // std::shared_ptr<ActiveSpaceIntegrals>
+    // compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, std::shared_ptr<FCI_MO> fci_mo,
+    //                       int entry, int root);
 
     /// compute DWSA energies
     void compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo);

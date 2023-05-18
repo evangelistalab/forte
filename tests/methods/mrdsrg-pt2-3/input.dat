@@ -58,7 +58,7 @@ set {
 }
 
 set forte {
-  active_space_solver   cas
+  active_space_solver   detci
   correlation_solver    mrdsrg
   frozen_docc           [1,0,0,0]
   restricted_docc       [1,0,0,0]

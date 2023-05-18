@@ -35,7 +35,7 @@ set forte {
   nroot                       1
   dsrg_s                      1.0
   ntrial_per_root             100
-  active_space_solver         cas
+  active_space_solver         detci
   relax_ref                   once
   semi_canonical_mix_inactive true
 }

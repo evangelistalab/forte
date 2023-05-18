@@ -32,7 +32,7 @@ set forte {
   #                Ag B1g B2g B3g Au B1u B2u B3u
   restricted_docc [ 2,  0,  0,  0, 0, 2,  0, 0]
   active          [ 1,  0,  1,  1, 0, 1,  1, 1]
-  active_space_solver  cas
+  active_space_solver  detci
   correlation_solver   dsrg-mrpt2
   dsrg_s               1.0
 }

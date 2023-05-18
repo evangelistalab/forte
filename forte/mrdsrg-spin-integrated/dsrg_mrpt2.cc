@@ -42,7 +42,6 @@
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "boost/format.hpp"
-#include "sci/fci_mo.h"
 #include "fci/fci_solver.h"
 #include "helpers/printing.h"
 #include "dsrg_mrpt2.h"

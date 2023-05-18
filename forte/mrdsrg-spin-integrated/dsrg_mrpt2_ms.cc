@@ -34,7 +34,6 @@
 #include "helpers/printing.h"
 #include "ci_rdm/ci_rdms.h"
 #include "fci/fci_solver.h"
-#include "sci/fci_mo.h"
 #include "dsrg_mrpt2.h"
 
 using namespace psi;

@@ -22,7 +22,7 @@ set {
 }
 
 set forte {
-  active_space_solver    cas
+  active_space_solver    detci
   correlation_solver     mrdsrg
   int_type               cholesky
   cholesky_tolerance     1e-12
