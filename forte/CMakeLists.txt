@@ -110,7 +110,6 @@ fci/string_lists.cc
 fci/string_oo_list.cc
 fci/string_vo_list.cc
 fci/string_vvoo_list.cc
-finite_temperature/finite_temperature.cc
 forte.cc
 gradient_tpdm/backtransform_tpdm.cc
 gradient_tpdm/integraltransform_tpdm_unrestricted.cc
