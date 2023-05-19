@@ -2,7 +2,7 @@
 
 import forte
 
-refe = -1.156171120024
+refe = -1.153762971093
 
 molecule {
 0 1
@@ -11,7 +11,7 @@ H 1 0.7
 }
 
 set {
-  basis                cc-pvdz
+  basis                cc-pVDZ
   scf_type             pk
   e_convergence        12
 }

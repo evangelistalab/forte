@@ -12,3 +12,4 @@ HOWTOs
    methods/avas
    utils/plotting
    nb_api_intro
+   methods/external_solver
