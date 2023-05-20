@@ -71,7 +71,7 @@ set forte{
    restricted_docc      [1,0,0,0]
    active               [1,0,0,1]
    dsrg_s               1.0e10
-   active_space_solver  cas
+   active_space_solver  detci
 }
 
 energy('forte', ref_wfn=wfn)

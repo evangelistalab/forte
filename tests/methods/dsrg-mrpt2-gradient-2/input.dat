@@ -31,9 +31,10 @@ set forte {
   ref_type             casscf
   restricted_docc      [2,0,1,1]
   active               [2,0,0,0]
-  active_space_solver  cas
+  active_space_solver  detci
   correlation_solver   dsrg-mrpt2
   dsrg_s               1.0
+  force_diag_method    true
 }
 
 grad = gradient('forte')

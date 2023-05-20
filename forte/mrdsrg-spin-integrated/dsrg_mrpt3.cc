@@ -42,10 +42,10 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
+#include "helpers/helpers.h"
 #include "helpers/timer.h"
 #include "helpers/blockedtensorfactory.h"
 #include "fci/fci_solver.h"
-#include "sci/fci_mo.h"
 #include "boost/format.hpp"
 #include "helpers/printing.h"
 #include "dsrg_mrpt3.h"

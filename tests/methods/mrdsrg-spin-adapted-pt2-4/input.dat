@@ -51,7 +51,7 @@ compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ (FORTE) energy")
 
 set forte{
   job_type               newdriver
-  active_space_solver    cas
+  active_space_solver    detci
   correlation_solver     sa-mrdsrg
   corr_level             pt2
   frozen_docc            [1,0,0,0,0,1,0,0]

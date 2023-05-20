@@ -172,7 +172,6 @@ mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_tensors.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_setb.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 mrdsrg-spin-integrated/dsrg_mrpt3.cc
-mrdsrg-spin-integrated/dwms_mrpt2.cc
 mrdsrg-spin-integrated/master_mrdsrg.cc
 mrdsrg-spin-integrated/mcsrgpt2_mo.cc
 mrdsrg-spin-integrated/mrdsrg.cc
@@ -206,7 +205,6 @@ sci/aci_build_F.cc
 sci/gasaci_build_F.cc
 sci/asci.cc
 sci/detci.cc
-sci/fci_mo.cc
 sci/mrpt2.cc
 sci/sci.cc
 sci/tdci.cc
@@ -217,6 +215,7 @@ sparse_ci/determinant_hashvector.cc
 sparse_ci/determinant_substitution_lists.cc
 sparse_ci/sigma_vector.cc
 sparse_ci/sigma_vector_dynamic.cc
+sparse_ci/sigma_vector_full.cc
 sparse_ci/sigma_vector_sparse_list.cc
 sparse_ci/sorted_string_list.cc
 sparse_ci/sparse_ci_solver.cc

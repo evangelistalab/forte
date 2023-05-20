@@ -842,7 +842,7 @@ void AdaptiveCI::print_nos() {
     print_h2("ACI Natural Orbitals");
 
     // Compute a 1-rdm
-    CI_RDMS ci_rdm(PQ_space_, as_ints_, PQ_evecs_, 0, 0);
+    CI_RDMS ci_rdm(as_ints_->active_mo_symmetry(), PQ_space_, PQ_evecs_, 0, 0);
     ci_rdm.set_max_rdm(1);
     std::vector<double> ordm_a_v;
     std::vector<double> ordm_b_v;

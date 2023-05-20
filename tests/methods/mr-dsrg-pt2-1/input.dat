@@ -29,7 +29,7 @@ set globals{
 
 set forte{
    job_type              mr-dsrg-pt2
-   active_space_solver   cas
+   active_space_solver   detci
    restricted_docc       [2,0,0,0]
    active                [1,0,0,1]
    root_sym              0

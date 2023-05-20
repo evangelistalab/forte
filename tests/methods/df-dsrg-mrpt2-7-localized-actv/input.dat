@@ -60,7 +60,7 @@ compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
 
 set forte{
   job_type            newdriver
-  active_space_solver cas
+  active_space_solver detci
   correlation_solver  dsrg-mrpt2
   calc_type           sa
   int_type            df
