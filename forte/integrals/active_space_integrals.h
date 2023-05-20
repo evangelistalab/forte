@@ -204,7 +204,7 @@ class ActiveSpaceIntegrals {
     std::vector<double> diag_tei_bb_;
     /// A vector of indices for the active molecular orbitals
     std::vector<size_t> active_mo_;
-    /// A vector of the symmetry ofthe active molecular orbitals
+    /// A vector of the symmetry of the active molecular orbitals
     std::vector<int> active_mo_symmetry_;
     /// A Vector of indices for the restricted_docc molecular orbitals
     std::vector<size_t> restricted_docc_mo_;

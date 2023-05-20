@@ -77,8 +77,8 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
                                        std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                        size_t max_memory)
     : SigmaVector(space, fci_ints, SigmaVectorType::Dynamic, "SigmaVectorDynamic"),
-      a_sorted_string_list_(space, fci_ints, DetSpinType::Alpha),
-      b_sorted_string_list_(space, fci_ints, DetSpinType::Beta) {
+      a_sorted_string_list_(fci_ints_->nmo(), space, DetSpinType::Alpha),
+      b_sorted_string_list_(fci_ints_->nmo(), space, DetSpinType::Beta) {
 
     timer this_timer("creator");
 

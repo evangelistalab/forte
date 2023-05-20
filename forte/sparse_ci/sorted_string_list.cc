@@ -36,10 +36,9 @@ namespace forte {
 
 SortedStringList::SortedStringList() {}
 
-SortedStringList::SortedStringList(const DeterminantHashVec& space,
-                                   std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                   DetSpinType sorted_string_spin) {
-    nmo_ = fci_ints->nmo();
+SortedStringList::SortedStringList(size_t nmo, const DeterminantHashVec& space,
+                                   DetSpinType sorted_string_spin)
+    : nmo_(nmo) {
     // Copy and sort the determinants
     auto dets = space.determinants();
     num_dets_ = dets.size();

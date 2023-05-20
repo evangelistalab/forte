@@ -46,7 +46,7 @@ using wfn_hash = det_hash<double>;
 class DeterminantSubstitutionLists {
   public:
     /// Default constructor
-    DeterminantSubstitutionLists(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    DeterminantSubstitutionLists(const std::vector<int>& mo_symmetry);
 
     /// Set print level
     void set_quiet_mode(bool mode);
@@ -121,9 +121,6 @@ class DeterminantSubstitutionLists {
 
     /// Print level
     bool quiet_ = false;
-
-    /// The integrals
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 };
 } // namespace forte
 

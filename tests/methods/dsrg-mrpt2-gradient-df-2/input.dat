@@ -34,9 +34,10 @@ set forte {
   active_space_solver  detci
   correlation_solver   dsrg-mrpt2
   dsrg_s               1.0
-  int_type              df
-  df_basis_scf          cc-pvdz-jkfit
-  df_basis_mp2          cc-pvdz-jkfit
+  int_type             df
+  df_basis_scf         cc-pvdz-jkfit
+  df_basis_mp2         cc-pvdz-jkfit
+  force_diag_method    true 
 }
 
 set df_basis_scf cc-pvdz-jkfit

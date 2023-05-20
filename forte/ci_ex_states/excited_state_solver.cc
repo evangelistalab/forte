@@ -220,7 +220,7 @@ double ExcitedStateSolver::compute_energy() {
     }
 
     std::shared_ptr<DeterminantSubstitutionLists> op_c =
-        std::make_shared<DeterminantSubstitutionLists>(as_ints_);
+        std::make_shared<DeterminantSubstitutionLists>(as_ints_->active_mo_symmetry());
 
     if (ex_alg_ == "ROOT_COMBINE") {
         psi::outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
@@ -610,7 +610,7 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
         size_t root1 = roots_pair.first;
         size_t root2 = roots_pair.second + nroot_;
 
-        CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
+        CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), dets, evecs, root1, root2);
         ci_rdms.set_print(false);
 
         ambit::Tensor a, b, aa, ab, bb, aaa, aab, abb, bbb;
@@ -684,7 +684,7 @@ ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
 
     // TODO: this code might be OBSOLETE (Francesco)
     if (!direct_rdms_) {
-        auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints);
+        auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints->active_mo_symmetry());
         if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
             op->build_strings(dets);
         }
@@ -702,7 +702,7 @@ ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         }
     }
 
-    CI_RDMS ci_rdms(dets, fci_ints, PQ_evecs, root1, root2);
+    CI_RDMS ci_rdms(fci_ints->active_mo_symmetry(), dets, PQ_evecs, root1, root2);
 
     ci_rdms.set_max_rdm(max_rdm_level);
 
