@@ -35,6 +35,7 @@ set forte {
   active_space_solver  detci
   correlation_solver   dsrg-mrpt2
   dsrg_s               1.0
+  force_diag_method    true
 }
 
 grad = gradient('forte')
