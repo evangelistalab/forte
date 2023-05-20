@@ -48,7 +48,7 @@ using namespace psi;
 
 namespace forte {
 
-std::pair<psi::SharedMatrix, int> make_fragment_projector(SharedWavefunction wfn) {
+std::pair<std::shared_ptr<psi::Matrix>, int> make_fragment_projector(SharedWavefunction wfn) {
     // Run this code only if user specified fragments
     std::shared_ptr<Molecule> molecule = wfn->molecule();
     int nfrag = molecule->nfragments();
@@ -69,9 +69,9 @@ std::pair<psi::SharedMatrix, int> make_fragment_projector(SharedWavefunction wfn
     // IAO procedure FragmentProjector FP(molecule, prime_basis, minao_basis);
 
     // Compute and return the projector matrix
-    psi::SharedMatrix Pf = FP.build_f_projector(prime_basis);
+    std::shared_ptr<psi::Matrix> Pf = FP.build_f_projector(prime_basis);
     int nbfA = FP.get_nbf_A();
-    std::pair<psi::SharedMatrix, int> Projector = std::make_pair(Pf, nbfA);
+    std::pair<std::shared_ptr<psi::Matrix>, int> Projector = std::make_pair(Pf, nbfA);
 
     return Projector;
 }

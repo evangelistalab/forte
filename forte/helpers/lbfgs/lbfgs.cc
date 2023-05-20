@@ -47,7 +47,7 @@ LBFGS::LBFGS(std::shared_ptr<LBFGS_PARAM> param) : param_(param), p_(psi::Vector
     param_->check_param();
 }
 
-template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
+template <class Foo> double LBFGS::minimize(Foo& func, psi::std::shared_ptr<psi::Vector> x) {
     nirrep_ = x->nirrep();
     dimpi_ = x->dimpi();
 
@@ -65,7 +65,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
     }
 
     // routine of diagonal Hessian
-    auto compute_h0 = [&](psi::SharedVector x) {
+    auto compute_h0 = [&](psi::std::shared_ptr<psi::Vector> x) {
         func.hess_diag(x, h0_);
         if (param_->print > 2) {
             print_h2("Diagonal Hessian at Iter. " + std::to_string(iter_));
@@ -188,7 +188,7 @@ void LBFGS::update() {
 }
 
 template <class Foo>
-void LBFGS::next_step(Foo& foo, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::next_step(Foo& foo, psi::std::shared_ptr<psi::Vector> x, double& fx, double& step) {
     if (param_->step_length_method == LBFGS_PARAM::STEP_LENGTH_METHOD::MAX_CORRECTION) {
         scale_direction_vector(foo, x, fx, step);
     } else if (param_->step_length_method == LBFGS_PARAM::STEP_LENGTH_METHOD::LINE_BACKTRACKING) {
@@ -205,7 +205,8 @@ void LBFGS::next_step(Foo& foo, psi::SharedVector x, double& fx, double& step) {
 }
 
 template <class Foo>
-void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::scale_direction_vector(Foo& func, psi::std::shared_ptr<psi::Vector> x, double& fx,
+                                   double& step) {
     double p_max = 0.0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < dimpi_[h]; ++i) {
@@ -223,7 +224,8 @@ void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, d
 }
 
 template <class Foo>
-void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::line_search_backtracking(Foo& func, psi::std::shared_ptr<psi::Vector> x, double& fx,
+                                     double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
     psi::Vector x0(*x);
@@ -284,7 +286,8 @@ void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx,
 }
 
 template <class Foo>
-void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::line_search_bracketing_zoom(Foo& func, psi::std::shared_ptr<psi::Vector> x, double& fx,
+                                        double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
     psi::Vector x0(*x);
@@ -423,8 +426,8 @@ double LBFGS::compute_gamma() {
 }
 
 void LBFGS::resize(int m) {
-    y_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>(0));
-    s_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>(0));
+    y_ = std::vector<psi::std::shared_ptr<psi::Vector>>(m, std::make_shared<psi::Vector>(0));
+    s_ = std::vector<psi::std::shared_ptr<psi::Vector>>(m, std::make_shared<psi::Vector>(0));
     alpha_.resize(m);
     rho_.resize(m);
 }
@@ -435,8 +438,8 @@ void LBFGS::reset() {
     iter_shift_ = 0;
 }
 
-template double LBFGS::minimize(ROSENBROCK& func, psi::SharedVector x);
-template double LBFGS::minimize(CASSCF_ORB_GRAD& func, psi::SharedVector x);
-template double LBFGS::minimize(CPSCF& func, psi::SharedVector x);
+template double LBFGS::minimize(ROSENBROCK& func, psi::std::shared_ptr<psi::Vector> x);
+template double LBFGS::minimize(CASSCF_ORB_GRAD& func, psi::std::shared_ptr<psi::Vector> x);
+template double LBFGS::minimize(CPSCF& func, psi::std::shared_ptr<psi::Vector> x);
 
 } // namespace forte

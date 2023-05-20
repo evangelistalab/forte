@@ -56,10 +56,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     virtual ~DSRG_MRPT2();
 
     /// Compute the DSRG-MRPT2 energy
-    virtual double compute_energy();
+    virtual double compute_energy() override;
 
     /// Compute the DSRG-MRPT2 gradient
-    virtual psi::SharedMatrix compute_gradient() override;
+    virtual std::shared_ptr<psi::Matrix> compute_gradient() override;
 
     /// Compute second-order effective Hamiltonian couplings
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
@@ -67,20 +67,20 @@ class DSRG_MRPT2 : public MASTER_DSRG {
                                            ambit::Tensor& H2aa, ambit::Tensor& H2ab,
                                            ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
                                            ambit::Tensor& H3aab, ambit::Tensor& H3abb,
-                                           ambit::Tensor& H3bbb);
+                                           ambit::Tensor& H3bbb) override;
 
     /// Return de-normal-ordered T1 amplitudes
-    virtual ambit::BlockedTensor get_T1deGNO(double& T0deGNO);
+    virtual ambit::BlockedTensor get_T1deGNO(double& T0deGNO) override;
 
     /// Return T2 amplitudes
-    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
-    virtual ambit::BlockedTensor get_T2() { return T2_; }
+    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks) override;
+    virtual ambit::BlockedTensor get_T2() override { return T2_; }
 
     /// Return de-normal-ordered 1-body renormalized 1st-order Hamiltonian
-    virtual ambit::BlockedTensor get_RH1deGNO();
+    virtual ambit::BlockedTensor get_RH1deGNO() override;
 
     /// Return 2-body renormalized 1st-order Hamiltonian
-    virtual ambit::BlockedTensor get_RH2() { return V_; }
+    virtual ambit::BlockedTensor get_RH2() override { return V_; }
 
     /// Compute one-electron density of DSRG
     /// Important: T1 and T2 are de-normal-ordered!
@@ -95,7 +95,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     double compute_energy_multi_state();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
+    void
+    set_eigens(const std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>>&
+                   eigens) {
         eigens_ = eigens;
     }
 
@@ -119,8 +121,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
-    void rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose = false,
-                    const bool& t1eff = false);
+    void rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                    const bool& transpose = false, const bool& t1eff = false);
 
   protected:
     // => Class initialization and termination <= //
@@ -133,7 +135,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void print_options_summary();
 
     /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>> eigens_;
     /// Determinants with different symmetries in the model space
     std::vector<std::vector<forte::Determinant>> p_spaces_;
 
@@ -289,7 +291,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      */
     void write_2rdm_spin_dependent();
     /**
-     * Write the density terms contracted with (P|Q)^x and (pq|Q)^x, where P and Q are auxiliary basis functions.
+     * Write the density terms contracted with (P|Q)^x and (pq|Q)^x, where P and Q are auxiliary
+     * basis functions.
      */
     void write_df_rdm();
     /**
@@ -313,7 +316,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_preconditioner(std::vector<double>& D);
     void gmres_solver(std::vector<double>& x_new);
     void solve_linear_iter();
-    void z_vector_contraction(std::vector<double> &, std::vector<double> &);
+    void z_vector_contraction(std::vector<double>&, std::vector<double>&);
     void pre_contract();
     /**
      * Solve the Linear System Ax=b and yield Z using direct methods.
@@ -355,7 +358,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      */
     void set_b(int dim, const std::map<string, int>& block_dim);
     /**
-     * The diagonal core-core, virtual-virtual blocks 
+     * The diagonal core-core, virtual-virtual blocks
      * and the diagonal entries of the active-active block of the OPDM Z.
      */
     void set_z_diag();
@@ -378,21 +381,17 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// List of virtual MOs (including frozen orbitals)
     std::vector<size_t> virt_all_;
 
-    
     // MO orbital partition info for solving the z-vector equation
     int dim;
     std::map<string, int> preidx;
     std::map<string, int> block_dim;
 
     /// List of relative core MOs
-    std::vector<std::pair<unsigned long, unsigned long>>
-        core_mos_relative;
+    std::vector<std::pair<unsigned long, unsigned long>> core_mos_relative;
     /// List of relative active MOs
-    std::vector<std::pair<unsigned long, unsigned long>>
-        actv_mos_relative;
+    std::vector<std::pair<unsigned long, unsigned long>> actv_mos_relative;
     /// List of relative virtual MOs
-    std::vector<std::pair<unsigned long, unsigned long>>
-        virt_mos_relative;
+    std::vector<std::pair<unsigned long, unsigned long>> virt_mos_relative;
 
     /// Dimension of different irreps
     psi::Dimension irrep_vec;
@@ -448,7 +447,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     double Alpha;
     /// multiplier related to CI response
     ambit::Tensor x_ci;
-
 
     /// Linear system Ax=b
     std::vector<double> b;
@@ -572,20 +570,21 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute multi-state energy in the MS/XMS way
     std::vector<std::vector<double>> compute_energy_xms();
     /// XMS rotation for the reference states
-    psi::SharedMatrix xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                   std::vector<Determinant>& p_space, psi::SharedMatrix civecs);
+    std::shared_ptr<psi::Matrix> xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                              std::vector<Determinant>& p_space,
+                                              std::shared_ptr<psi::Matrix> civecs);
 
     /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
     void build_T1eff_deGNO();
 
     /// Compute density cumulants
     void compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                           std::vector<forte::Determinant>& p_space, psi::SharedMatrix evecs,
-                           const int& root1, const int& root2);
+                           std::vector<forte::Determinant>& p_space,
+                           std::shared_ptr<psi::Matrix> evecs, const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                      std::vector<Determinant>& p_space, psi::SharedMatrix evecs, const int& root1,
-                      const int& root2);
+                      std::vector<Determinant>& p_space, std::shared_ptr<psi::Matrix> evecs,
+                      const int& root1, const int& root2);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);

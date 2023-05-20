@@ -159,7 +159,7 @@ void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
         if (detpi_[alfa_sym] > 0) {
-            psi::SharedMatrix C = alfa ? C_[alfa_sym] : C1;
+            std::shared_ptr<psi::Matrix> C = alfa ? C_[alfa_sym] : C1;
             double** Ch = C->pointer();
 
             if (!alfa) {
@@ -224,7 +224,7 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
     for (int ha = 0; ha < nirrep_; ++ha) {
         int hb = ha ^ symmetry_;
         if (detpi_[ha] > 0) {
-            psi::SharedMatrix C = alfa ? C_[ha] : C1;
+            std::shared_ptr<psi::Matrix> C = alfa ? C_[ha] : C1;
             double** Ch = C->pointer();
 
             if (!alfa) {
@@ -413,7 +413,7 @@ void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
             int h_Ib = h_I ^ symmetry_;
             int h_J = h_I;
-            psi::SharedMatrix C = alfa ? C_[h_J] : C1;
+            std::shared_ptr<psi::Matrix> C = alfa ? C_[h_J] : C1;
             double** Ch = C->pointer();
 
             if (!alfa) {

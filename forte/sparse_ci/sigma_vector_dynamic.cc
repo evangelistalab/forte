@@ -121,7 +121,8 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
 
 SigmaVectorDynamic::~SigmaVectorDynamic() { print_SigmaVectorDynamic_stats(); }
 
-void SigmaVectorDynamic::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma(psi::std::shared_ptr<psi::Vector> sigma,
+                                       psi::std::shared_ptr<psi::Vector> b) {
     sigma->zero();
 
     compute_sigma_scalar(sigma, b);
@@ -204,7 +205,8 @@ void SigmaVectorDynamic::get_diagonal(psi::Vector& diag) {
     }
 }
 
-void SigmaVectorDynamic::compute_sigma_scalar(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma_scalar(psi::std::shared_ptr<psi::Vector> sigma,
+                                              psi::std::shared_ptr<psi::Vector> b) {
     timer energy_timer("scalar");
 
     double* sigma_p = sigma->pointer();
@@ -216,7 +218,8 @@ void SigmaVectorDynamic::compute_sigma_scalar(psi::SharedVector sigma, psi::Shar
     }
 }
 
-void SigmaVectorDynamic::compute_sigma_aa(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma_aa(psi::std::shared_ptr<psi::Vector> sigma,
+                                          psi::std::shared_ptr<psi::Vector> b) {
     timer energy_timer("sigma_aa");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {
@@ -294,7 +297,8 @@ void SigmaVectorDynamic::sigma_aa_dynamic_task(size_t task_id, size_t num_tasks)
     }
 }
 
-void SigmaVectorDynamic::compute_sigma_bb(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma_bb(psi::std::shared_ptr<psi::Vector> sigma,
+                                          psi::std::shared_ptr<psi::Vector> b) {
     timer energy_timer("sigma_bb");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {
@@ -371,7 +375,8 @@ void SigmaVectorDynamic::sigma_bb_dynamic_task(size_t task_id, size_t num_tasks)
     }
 }
 
-void SigmaVectorDynamic::compute_sigma_abab(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma_abab(psi::std::shared_ptr<psi::Vector> sigma,
+                                            psi::std::shared_ptr<psi::Vector> b) {
     timer energy_timer("sigma_abab");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {

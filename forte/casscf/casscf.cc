@@ -179,8 +179,9 @@ double CASSCF::compute_energy() {
 
     psi::Dimension nhole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
     psi::Dimension npart_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
-    psi::SharedMatrix S(new psi::Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
-    psi::SharedMatrix Sstep;
+    std::shared_ptr<psi::Matrix> S(
+        new psi::Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
+    std::shared_ptr<psi::Matrix> Sstep;
 
     // Setup the DIIS manager
     auto diis_manager = std::make_shared<DIISManager>(diis_max_vec, "MCSCF DIIS",
@@ -197,7 +198,7 @@ double CASSCF::compute_energy() {
     double econv = options_->get_double("CASSCF_E_CONVERGENCE");
     double gconv = options_->get_double("CASSCF_G_CONVERGENCE");
 
-    psi::SharedMatrix Ca = ints_->Ca();
+    std::shared_ptr<psi::Matrix> Ca = ints_->Ca();
 
     print_h2("CASSCF Iteration");
     outfile->Printf("\n  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
@@ -276,7 +277,7 @@ double CASSCF::compute_energy() {
         if (do_diis and iter > diis_start and (diis_count % diis_freq == 0)) {
             diis_manager->extrapolate(S.get());
         }
-        psi::SharedMatrix Cp = orbital_optimizer.rotate_orbitals(C_start, S);
+        std::shared_ptr<psi::Matrix> Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 
         // update MO coefficients
         Ca->copy(Cp);
@@ -382,8 +383,8 @@ std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
 
     JK_->compute();
 
-    psi::SharedMatrix F_core = JK_->J()[0];
-    psi::SharedMatrix K_core = JK_->K()[0];
+    std::shared_ptr<psi::Matrix> F_core = JK_->J()[0];
+    std::shared_ptr<psi::Matrix> K_core = JK_->K()[0];
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
@@ -398,7 +399,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
 
     // Transform C matrix to C1 symmetry
     size_t nso = ints_->nso();
-    psi::SharedMatrix aotoso = ints_->wfn()->aotoso();
+    std::shared_ptr<psi::Matrix> aotoso = ints_->wfn()->aotoso();
     auto Ca_nosym = std::make_shared<psi::Matrix>(nso, nmo_);
 
     // Transform from the SO to the AO basis for the C matrix.
@@ -426,7 +427,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
     auto Cact = std::make_shared<psi::Matrix>("Cact", nso, nactv_);
     std::vector<std::shared_ptr<psi::Matrix>> Cact_vec(nactv_);
     for (size_t x = 0; x < nactv_; x++) {
-        psi::SharedVector Ca_nosym_vec = Ca_nosym->get_column(0, actv_mos_abs_[x]);
+        psi::std::shared_ptr<psi::Vector> Ca_nosym_vec = Ca_nosym->get_column(0, actv_mos_abs_[x]);
         Cact->set_column(0, x, Ca_nosym_vec);
 
         std::string name = "Cact slice " + std::to_string(x);
@@ -443,8 +444,8 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
     // set memory in number of doubles
     JK_->set_memory(psi::Process::environment.get_memory() * 0.85 / sizeof(double));
     JK_->set_do_K(false);
-    std::vector<psi::SharedMatrix>& Cl = JK_->C_left();
-    std::vector<psi::SharedMatrix>& Cr = JK_->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
     Cl.clear();
     Cr.clear();
 
@@ -766,9 +767,10 @@ std::shared_ptr<psi::Matrix> CASSCF::build_fock_active(std::shared_ptr<psi::Matr
     return Factv;
 }
 
-void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new) {
-    psi::SharedMatrix S_orbitals(new psi::Matrix("Overlap", nsopi_, nsopi_));
-    psi::SharedMatrix S_basis = ints_->wfn()->S();
+void CASSCF::overlap_orbitals(const std::shared_ptr<psi::Matrix>& C_old,
+                              const std::shared_ptr<psi::Matrix>& C_new) {
+    std::shared_ptr<psi::Matrix> S_orbitals(new psi::Matrix("Overlap", nsopi_, nsopi_));
+    std::shared_ptr<psi::Matrix> S_basis = ints_->wfn()->S();
     S_orbitals = psi::linalg::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
     for (size_t h = 0; h < nirrep_; h++) {
@@ -788,7 +790,7 @@ make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
 }
 
 // void CASSCF::write_orbitals_molden() {
-//    psi::SharedVector occ_vector(new psi::Vector(nirrep_, corr_dim_));
+//    psi::std::shared_ptr<psi::Vector> occ_vector(new psi::Vector(nirrep_, corr_dim_));
 //    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
 //}
 

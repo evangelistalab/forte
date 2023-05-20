@@ -41,8 +41,10 @@ using namespace psi;
 
 namespace forte {
 
-AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
-                                         psi::SharedVector eps_vir, double laplace_tolerance)
+AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
+                                         psi::std::shared_ptr<psi::Vector> eps_occ,
+                                         psi::std::shared_ptr<psi::Vector> eps_vir,
+                                         double laplace_tolerance)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
     psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
@@ -53,9 +55,10 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
     nbf_ = CMO_->rowspi()[0];
     shift_ = 0;
 }
-AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
-                                         psi::SharedVector eps_vir, double laplace_tolerance,
-                                         int shift)
+AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
+                                         psi::std::shared_ptr<psi::Vector> eps_occ,
+                                         psi::std::shared_ptr<psi::Vector> eps_vir,
+                                         double laplace_tolerance, int shift)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
       shift_(shift) {
     psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);

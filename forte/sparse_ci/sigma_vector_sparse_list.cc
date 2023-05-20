@@ -80,7 +80,8 @@ void SigmaVectorSparseList::get_diagonal(psi::Vector& diag) {
     }
 }
 
-void SigmaVectorSparseList::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorSparseList::compute_sigma(psi::std::shared_ptr<psi::Vector> sigma,
+                                          psi::std::shared_ptr<psi::Vector> b) {
     timer timer_sigma("Build sigma");
 
     auto a_list_ = op_->a_list_;
@@ -343,8 +344,8 @@ double SigmaVectorSparseList::compute_spin(const std::vector<double>& c) {
 }
 
 void SigmaVectorSparseList::add_generalized_sigma_1(const std::vector<double>& h1,
-                                                    psi::SharedVector b, double factor,
-                                                    std::vector<double>& sigma,
+                                                    psi::std::shared_ptr<psi::Vector> b,
+                                                    double factor, std::vector<double>& sigma,
                                                     const std::string& spin) {
     timer timer_sigma("Build generalized sigma 1" + spin);
 
@@ -370,7 +371,8 @@ void SigmaVectorSparseList::add_generalized_sigma_1(const std::vector<double>& h
 }
 
 void SigmaVectorSparseList::add_generalized_sigma1_impl(
-    const std::vector<double>& h1, psi::SharedVector b, double factor, std::vector<double>& sigma,
+    const std::vector<double>& h1, psi::std::shared_ptr<psi::Vector> b, double factor,
+    std::vector<double>& sigma,
     const std::vector<std::vector<std::pair<size_t, short>>>& sub_lists) {
     auto nactv = fci_ints_->nmo();
     auto b_ptr = b->pointer();
@@ -421,8 +423,8 @@ void SigmaVectorSparseList::add_generalized_sigma1_impl(
 }
 
 void SigmaVectorSparseList::add_generalized_sigma_2(const std::vector<double>& h2,
-                                                    psi::SharedVector b, double factor,
-                                                    std::vector<double>& sigma,
+                                                    psi::std::shared_ptr<psi::Vector> b,
+                                                    double factor, std::vector<double>& sigma,
                                                     const std::string& spin) {
     timer timer_sigma("Build generalized sigma 2" + spin);
 
@@ -494,7 +496,8 @@ bool SigmaVectorSparseList::is_h2hs_antisymmetric(const std::vector<double>& h2)
 }
 
 void SigmaVectorSparseList::add_generalized_sigma2_impl(
-    const std::vector<double>& h2, psi::SharedVector b, double factor, std::vector<double>& sigma,
+    const std::vector<double>& h2, psi::std::shared_ptr<psi::Vector> b, double factor,
+    std::vector<double>& sigma,
     const std::vector<std::vector<std::tuple<size_t, short, short>>>& sub_lists) {
     auto b_ptr = b->pointer();
     auto na = fci_ints_->nmo();
@@ -549,8 +552,8 @@ void SigmaVectorSparseList::add_generalized_sigma2_impl(
 }
 
 void SigmaVectorSparseList::add_generalized_sigma_3(const std::vector<double>& h3,
-                                                    psi::SharedVector b, double factor,
-                                                    std::vector<double>& sigma,
+                                                    psi::std::shared_ptr<psi::Vector> b,
+                                                    double factor, std::vector<double>& sigma,
                                                     const std::string& spin) {
     timer timer_sigma("Build generalized sigma 3" + spin);
 
@@ -761,7 +764,8 @@ bool SigmaVectorSparseList::is_h3ls_antisymmetric(const std::vector<double>& h3,
 }
 
 void SigmaVectorSparseList::add_generalized_sigma3_impl(
-    const std::vector<double>& h3, psi::SharedVector b, double factor, std::vector<double>& sigma,
+    const std::vector<double>& h3, psi::std::shared_ptr<psi::Vector> b, double factor,
+    std::vector<double>& sigma,
     const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& sub_lists) {
     auto b_ptr = b->pointer();
     auto na = fci_ints_->nmo();

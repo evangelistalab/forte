@@ -31,9 +31,14 @@
 #include <numeric>
 #include <vector>
 
-#include "psi4/libpsi4util/process.h"
 #include "boost/format.hpp"
+
+#include "psi4/libpsi4util/process.h"
+
+#include "integrals/active_space_integrals.h"
+#include "base_classes/state_info.h"
 #include "helpers/printing.h"
+
 #include "dsrg_mrpt.h"
 
 using namespace psi;

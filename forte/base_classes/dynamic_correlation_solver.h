@@ -30,18 +30,25 @@
 #ifndef _dynamic_correlation_solver_h_
 #define _dynamic_correlation_solver_h_
 
+#include <map>
 #include <memory>
+#include <vector>
 
-#include "base_classes/active_space_solver.h"
-#include "base_classes/forte_options.h"
-#include "base_classes/rdms.h"
-#include "integrals/integrals.h"
-#include "integrals/active_space_integrals.h"
-#include "integrals/one_body_integrals.h"
+namespace ambit {
+class Tensor;
+}
 
 namespace forte {
 
+class ActiveSpaceIntegrals;
+class ActiveMultipoleIntegrals;
+class ActiveSpaceSolver;
+class RDMs;
 class SCFInfo;
+class StateInfo;
+class ForteIntegrals;
+class ForteOptions;
+class MOSpaceInfo;
 
 class DynamicCorrelationSolver {
   public:
@@ -87,9 +94,7 @@ class DynamicCorrelationSolver {
     }
 
     /// Set state to weights
-    void set_state_weights_map(const std::map<StateInfo, std::vector<double>>& state_to_weights) {
-        state_to_weights_ = state_to_weights;
-    }
+    void set_state_weights_map(const std::map<StateInfo, std::vector<double>>& state_to_weights);
 
   protected:
     /// The molecular integrals
@@ -175,4 +180,4 @@ make_dynamic_correlation_solver(const std::string& type, std::shared_ptr<ForteOp
 
 } // namespace forte
 
-#endif // DYNAMIC_CORRELATION_SOLVER_H
+#endif // _dynamic_correlation_solver_h_

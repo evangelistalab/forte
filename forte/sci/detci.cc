@@ -10,6 +10,8 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "ambit/tensor.h"
+
 #include "base_classes/rdms.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
@@ -340,7 +342,7 @@ void DETCI::dump_wave_function(const std::string& filename) {
     file.close();
 }
 
-std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
 DETCI::read_wave_function(const std::string& filename) {
     timer t_read("Read DETCI WFN");
     std::string line;
@@ -810,7 +812,8 @@ void DETCI::generalized_rdms(size_t root, const std::vector<double>& X, ambit::B
     }
 }
 
-void DETCI::generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) {
+void DETCI::generalized_sigma(psi::std::shared_ptr<psi::Vector> x,
+                              psi::std::shared_ptr<psi::Vector> sigma) {
     sigma_vector_->compute_sigma(sigma, x);
 }
 

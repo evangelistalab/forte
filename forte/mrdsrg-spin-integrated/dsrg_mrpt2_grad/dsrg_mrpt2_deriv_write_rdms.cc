@@ -26,8 +26,8 @@ void DSRG_MRPT2::write_lagrangian() {
 
     SharedMatrix L(new Matrix("Lagrangian", nirrep, irrep_vec, irrep_vec));
 
-    auto blocklabel = {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC", "vv", "VV",
-                       "av", "cv", "va", "vc", "AV", "CV", "VA", "VC"};
+    auto blocklabel = {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC", "vv",
+                       "VV", "av", "cv", "va", "vc", "AV", "CV", "VA", "VC"};
 
     for (const std::string& block : blocklabel) {
         std::vector<std::vector<std::pair<unsigned long, unsigned long>,
@@ -55,7 +55,7 @@ void DSRG_MRPT2::write_lagrangian() {
     L->back_transform(ints_->Ca());
     ints_->wfn()->set_lagrangian(
         SharedMatrix(new Matrix("Lagrangian", nirrep, irrep_vec, irrep_vec)));
-    ints_->wfn()->Lagrangian()->copy(L);
+    ints_->wfn()->lagrangian()->copy(L);
 
     outfile->Printf("Done");
 }
@@ -66,10 +66,9 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
 
     auto blocklabel = {"cc", "aa", "vv", "ca", "ac", "av", "va", "vc", "cv"};
     std::map<char, std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>> idxmap_re;
-    idxmap_re = {{'c', core_mos_relative},
-              {'a', actv_mos_relative},
-              {'v', virt_mos_relative}};
+                               std::allocator<std::pair<unsigned long, unsigned long>>>>
+        idxmap_re;
+    idxmap_re = {{'c', core_mos_relative}, {'a', actv_mos_relative}, {'v', virt_mos_relative}};
     SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep, irrep_vec, irrep_vec));
     BlockedTensor D1_temp = BTF_->build(CoreTensor, "D1_temp", {"gg"}, true);
 
@@ -111,9 +110,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // DSRG-MRPT2 dipole moment
     auto mo_dipole_ints = ints_->mo_dipole_ints(); // just take alpha spin
     std::map<char, std::vector<size_t>> idxmap_abs;
-    idxmap_abs = {{'c', core_all_},
-                  {'a', actv_all_},
-                  {'v', virt_all_}};
+    idxmap_abs = {{'c', core_all_}, {'a', actv_all_}, {'v', virt_all_}};
     std::vector<double> dipole(4, 0.0);
     Vector3 dm_nuc =
         psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
@@ -138,7 +135,8 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     } else {
         outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     }
-    outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", dipole[0], dipole[1], dipole[2], dipole[3]);
+    outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", dipole[0],
+                    dipole[1], dipole[2], dipole[3]);
 }
 
 void DSRG_MRPT2::write_2rdm_spin_dependent() {
@@ -152,7 +150,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"vc", "VC"}, true);
     // <[F, T2]> and <[V, T1]>
     temp["em"] += 0.5 * sigma3_xi3["me"];
-    temp["EM"] += 0.5 * sigma3_xi3["ME"];   
+    temp["EM"] += 0.5 * sigma3_xi3["ME"];
 
     for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
         auto m = core_all_[i];
@@ -364,19 +362,23 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
     if (CORRELATION_TERM) {
         {
-            BlockedTensor Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hhpp", "hHpP"}, true);
-            Eeps2_m1.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            BlockedTensor Eeps2_m1 =
+                BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hhpp", "hHpP"}, true);
+            Eeps2_m1.iterate([&](const std::vector<size_t>& i,
+                                 const std::vector<SpinType>& /*spin*/, double& value) {
+                value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
+                                                                       Fa_[i[2]] - Fa_[i[3]]);
             });
             temp["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
             temp["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
         }
         {
-            BlockedTensor Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp", "hHpP"}, true);
-            Eeps2_p.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            BlockedTensor Eeps2_p =
+                BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp", "hHpP"}, true);
+            Eeps2_p.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& /*spin*/,
+                                double& value) {
+                value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
+                                                                 Fa_[i[3]]);
             });
             temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
             temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
@@ -468,38 +470,47 @@ void DSRG_MRPT2::write_df_rdm() {
     BlockedTensor df_3rdm_temp = BTF_->build(tensor_type_, "df_3rdm_temp", {"Lgg"}, true);
     {
         // density terms contracted with V["abij"]
-        BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"}, true);
+        BlockedTensor dvabij =
+            BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"}, true);
 
         if (CORRELATION_TERM) {
             {
-                BlockedTensor Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hhpp"}, true);
-                Eeps2_m1.iterate(
-                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                    value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                BlockedTensor Eeps2_m1 =
+                    BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hhpp"}, true);
+                Eeps2_m1.iterate([&](const std::vector<size_t>& i,
+                                     const std::vector<SpinType>& /*spin*/, double& value) {
+                    value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
+                                                                           Fa_[i[2]] - Fa_[i[3]]);
                 });
                 dvabij["abij"] += Tau2["ijab"] * Eeps2_m1["ijab"];
             }
             {
-                BlockedTensor Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hHpP"}, true);
-                Eeps2_m1.iterate(
-                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                    value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                BlockedTensor Eeps2_m1 =
+                    BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", {"hHpP"}, true);
+                Eeps2_m1.iterate([&](const std::vector<size_t>& i,
+                                     const std::vector<SpinType>& /*spin*/, double& value) {
+                    value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
+                                                                           Fa_[i[2]] - Fa_[i[3]]);
                 });
                 dvabij["aBiJ"] += Tau2["iJaB"] * Eeps2_m1["iJaB"];
             }
             {
-                BlockedTensor Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp"}, true);
-                Eeps2_p.iterate(
-                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                    value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                BlockedTensor Eeps2_p =
+                    BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp"}, true);
+                Eeps2_p.iterate([&](const std::vector<size_t>& i,
+                                    const std::vector<SpinType>& /*spin*/, double& value) {
+                    value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
+                                                                     Fa_[i[2]] - Fa_[i[3]]);
                 });
                 dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
             }
             {
-                BlockedTensor Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hHpP"}, true);
-                Eeps2_p.iterate(
-                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                    value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                BlockedTensor Eeps2_p =
+                    BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hHpP"}, true);
+                Eeps2_p.iterate([&](const std::vector<size_t>& i,
+                                    const std::vector<SpinType>& /*spin*/, double& value) {
+                    value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
+                                                                     Fa_[i[2]] - Fa_[i[3]]);
                 });
                 dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
             }
@@ -628,9 +639,9 @@ void DSRG_MRPT2::write_df_rdm() {
     // Coulomb part
     df_3rdm_temp["Q!,m1,n1"] += 2.0 * Jm12["Q!,P!"] * B["P!,m,n"] * I["mn"] * I["m1,n1"];
     // Exchange part
-    df_3rdm_temp["Q!,m,n"]   -= Jm12["Q!,P!"] * B["P!,n,m"];
+    df_3rdm_temp["Q!,m,n"] -= Jm12["Q!,P!"] * B["P!,n,m"];
 
-    // residue terms 
+    // residue terms
     df_3rdm_temp["Q!,m,n"] += 2.0 * Jm12["Q!,R!"] * B["R!,u,v"] * Z["mn"] * Gamma1_["uv"];
     df_3rdm_temp["Q!,m,v"] -= Jm12["Q!,R!"] * B["R!,u,n"] * Z["mn"] * Gamma1_["uv"];
 
@@ -643,50 +654,44 @@ void DSRG_MRPT2::write_df_rdm() {
     df_3rdm_temp["R!,u,v"] += 2.0 * Jm12["Q!,R!"] * B["Q!,e,f"] * Z["ef"] * Gamma1_["uv"];
     df_3rdm_temp["R!,u,f"] -= Jm12["Q!,R!"] * B["Q!,e,v"] * Z["ef"] * Gamma1_["uv"];
 
-
     BlockedTensor df_3rdm = BTF_->build(tensor_type_, "df_3rdm", {"Lgg"}, true);
     df_3rdm["Q!,p,q"] += 0.5 * df_3rdm_temp["Q!,p,q"];
     df_3rdm["Q!,q,p"] += 0.5 * df_3rdm_temp["Q!,p,q"];
 
-    /******************************* Backtransform (P|pq) to (P|\mu \nu) *******************************/
+    /********************** Backtransform (P|pq) to (P|\mu \nu) **********************/
 
     int nso = ints_->wfn()->nso();
-    int nmo_matsize = nmo * nmo;
-    int ao_matsize  = nso * nso;
+    int ao_matsize = nso * nso;
     std::map<char, std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>> idxmap;
+                               std::allocator<std::pair<unsigned long, unsigned long>>>>
+        idxmap;
     std::map<string, std::pair<SharedMatrix, SharedMatrix>> slicemap;
     std::map<string, int> stride_size;
     std::map<char, int> orbital_size;
     SharedMatrix M(new Matrix("backtransformed df_3rdm", naux, ao_matsize));
-    idxmap = {{'c', core_mos_relative},
-              {'a', actv_mos_relative},
-              {'v', virt_mos_relative}};
+    idxmap = {{'c', core_mos_relative}, {'a', actv_mos_relative}, {'v', virt_mos_relative}};
 
-    stride_size = {{"ca", ncore * na},    {"ac", na * ncore},
-                   {"cv", ncore * nvirt}, {"vc", nvirt * ncore},
-                   {"av", na * nvirt},    {"va", nvirt * na},
+    stride_size = {{"ca", ncore * na},    {"ac", na * ncore},    {"cv", ncore * nvirt},
+                   {"vc", nvirt * ncore}, {"av", na * nvirt},    {"va", nvirt * na},
                    {"cc", ncore * ncore}, {"vv", nvirt * nvirt}, {"aa", na * na}};
 
     orbital_size = {{'c', ncore}, {'a', na}, {'v', nvirt}};
     auto blocklabels = {"cc", "aa", "ca", "ac", "vv", "av", "cv", "va", "vc"};
 
     std::map<char, int> pre_idx;
-    pre_idx = {{'c', 0},
-               {'a', ncore},
-               {'v', ncore + na}};
+    pre_idx = {{'c', 0}, {'a', ncore}, {'v', ncore + na}};
 
     auto temp_mat_MO = std::make_shared<Matrix>("MO temp matrix", nmo, nmo);
 
     auto aotoso = std::make_shared<Matrix>("aotoso", nso, nso);
 
-    int offset_col = 0;
-    for(int irp = 0; irp < nirrep; ++irp) {
+    size_t offset_col = 0;
+    for (size_t irp = 0; irp < nirrep; ++irp) {
         auto nmopi = ints_->wfn()->nmopi()[irp];
-        for(int i = 0; i < nso; ++i) {
-            for(int j = 0; j < nmopi; ++j) {
-                aotoso->set(i, offset_col+j, ints_->wfn()->aotoso()->get(irp, i, j));
-            }   
+        for (int i = 0; i < nso; ++i) {
+            for (int j = 0; j < nmopi; ++j) {
+                aotoso->set(i, offset_col + j, ints_->wfn()->aotoso()->get(irp, i, j));
+            }
         }
         offset_col += nmopi;
     }
@@ -696,19 +701,18 @@ void DSRG_MRPT2::write_df_rdm() {
     auto Cat = std::make_shared<Matrix>("Ca temp matrix", nso, nmo);
 
     std::vector<int> sum_nsopi(nirrep, 0);
-    for (int irp = 1; irp < nirrep; ++irp) {
-        sum_nsopi[irp] = sum_nsopi[irp-1] + ints_->wfn()->nsopi()[irp-1];
+    for (size_t irp = 1; irp < nirrep; ++irp) {
+        sum_nsopi[irp] = sum_nsopi[irp - 1] + ints_->wfn()->nsopi()[irp - 1];
     }
 
-    int offset = 0;
+    size_t offset = 0;
     for (const char& label : {'c', 'a', 'v'}) {
         auto space = idxmap[label];
         for (auto irp_i : space) {
             auto irp = irp_i.first;
             auto index = irp_i.second;
             auto nsopi = ints_->wfn()->nsopi()[irp];
-            auto nmopi = ints_->wfn()->nmopi()[irp];
-            for (int i = 0; i < nsopi; ++i) { 
+            for (int i = 0; i < nsopi; ++i) {
                 auto val = Ca->get(irp, i, index);
                 Cat->set(sum_nsopi[irp] + i, offset, val);
             }
@@ -716,7 +720,7 @@ void DSRG_MRPT2::write_df_rdm() {
         }
     }
 
-    for(int aux_idx = 0; aux_idx < naux; ++aux_idx) {
+    for (size_t aux_idx = 0; aux_idx < naux; ++aux_idx) {
         temp_mat_MO->zero();
 
         for (const std::string& block : blocklabels) {
@@ -730,9 +734,9 @@ void DSRG_MRPT2::write_df_rdm() {
 
             for (int i = 0; i < rowsize; ++i) {
                 for (int j = 0; j < colsize; ++j) {
-                    auto val  = block_data[aux_idx * stride + i * colsize + j];   
+                    auto val = block_data[aux_idx * stride + i * colsize + j];
                     auto idx1 = pre_idx[label1] + i;
-                    auto idx2 = pre_idx[label2] + j;     
+                    auto idx2 = pre_idx[label2] + j;
                     temp_mat_MO->set(idx1, idx2, val);
                 }
             }
@@ -741,7 +745,7 @@ void DSRG_MRPT2::write_df_rdm() {
         temp_mat_MO->back_transform(Cat);
         temp_mat_MO->transform(aotoso->transpose());
 
-        for(int i = 0; i < nso; ++i) {
+        for (int i = 0; i < nso; ++i) {
             for (int j = 0; j < nso; ++j) {
                 auto val = temp_mat_MO->get(i, j);
                 M->set(aux_idx, i * nso + j, val);

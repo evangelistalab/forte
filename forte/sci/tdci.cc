@@ -125,7 +125,7 @@ double TDCI::compute_energy() {
 
     // 4. Prepare initial state by removing an electron from aci wfn
     // DeterminantHashVec core_dets;
-    SharedVector core_coeffs = std::make_shared<Vector>("init", nann);
+    std::shared_ptr<psi::Vector> core_coeffs = std::make_shared<Vector>("init", nann);
     core_coeffs->zero();
 
     const det_hashvec& dets = aci_dets.wfn_hash();
@@ -182,13 +182,13 @@ double TDCI::compute_energy() {
     }
 
     if (options_->get_bool("TDCI_TEST_OCC")) {
-        double tval = test_occ();
+        test_occ();
     }
 
     return en;
 }
 
-void TDCI::propagate_list(SharedVector C0) {
+void TDCI::propagate_list(std::shared_ptr<psi::Vector> C0) {
 
     Timer t1;
 
@@ -255,7 +255,7 @@ void TDCI::propagate_list(SharedVector C0) {
     outfile->Printf("\n Time spent propagating: %1.6f s", t1.get());
 }
 
-void TDCI::propagate_exact(SharedVector C0, SharedMatrix H) {
+void TDCI::propagate_exact(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
 
     std::vector<int> orbs = options_->get_int_list("TDCI_OCC_ORB");
 
@@ -264,7 +264,7 @@ void TDCI::propagate_exact(SharedVector C0, SharedMatrix H) {
 
     // Diagonalize the full Hamiltonian
     SharedMatrix evecs = std::make_shared<Matrix>("evecs", ndet, ndet);
-    SharedVector evals = std::make_shared<Vector>("evals", ndet);
+    std::shared_ptr<psi::Vector> evals = std::make_shared<Vector>("evals", ndet);
 
     outfile->Printf("\n  Diagonalizing Hamiltonian");
     H->diagonalize(evecs, evals);
@@ -272,8 +272,8 @@ void TDCI::propagate_exact(SharedVector C0, SharedMatrix H) {
     int nstep = options_->get_int("TDCI_NSTEP");
     double dt = options_->get_double("TDCI_TIMESTEP");
 
-    SharedVector ct_r = std::make_shared<Vector>("ct_R", ndet);
-    SharedVector ct_i = std::make_shared<Vector>("ct_I", ndet);
+    std::shared_ptr<psi::Vector> ct_r = std::make_shared<Vector>("ct_R", ndet);
+    std::shared_ptr<psi::Vector> ct_i = std::make_shared<Vector>("ct_I", ndet);
     ct_r->zero();
     ct_i->zero();
 
@@ -282,9 +282,9 @@ void TDCI::propagate_exact(SharedVector C0, SharedMatrix H) {
     double time = dt;
 
     occupations_.resize(orbs.size());
-    SharedVector int1 = std::make_shared<Vector>("int1", ndet);
-    SharedVector int1r = std::make_shared<Vector>("int2r", ndet);
-    SharedVector int1i = std::make_shared<Vector>("int2i", ndet);
+    std::shared_ptr<psi::Vector> int1 = std::make_shared<Vector>("int1", ndet);
+    std::shared_ptr<psi::Vector> int1r = std::make_shared<Vector>("int2r", ndet);
+    std::shared_ptr<psi::Vector> int1i = std::make_shared<Vector>("int2i", ndet);
     // First multiply the evecs by the initial vector
     int1->gemv(true, 1.0, *evecs, *C0, 0.0);
 
@@ -320,7 +320,7 @@ void TDCI::propagate_exact(SharedVector C0, SharedMatrix H) {
     outfile->Printf("\n Time spent propagating (exact): %1.6f s", t1.get());
 }
 
-void TDCI::propagate_cn(SharedVector C0, SharedMatrix H) {
+void TDCI::propagate_cn(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
 
     outfile->Printf("\n  Propogating with Crank-Nicholson algorithm");
 
@@ -334,8 +334,8 @@ void TDCI::propagate_cn(SharedVector C0, SharedMatrix H) {
     double time = dt;
 
     // Copy initial state into iteratively updated vectors
-    SharedVector ct_r = std::make_shared<Vector>("ct_R", ndet);
-    SharedVector ct_i = std::make_shared<Vector>("ct_I", ndet);
+    std::shared_ptr<psi::Vector> ct_r = std::make_shared<Vector>("ct_R", ndet);
+    std::shared_ptr<psi::Vector> ct_i = std::make_shared<Vector>("ct_I", ndet);
 
     ct_r->copy(C0->clone());
     ct_i->zero();
@@ -347,8 +347,8 @@ void TDCI::propagate_cn(SharedVector C0, SharedMatrix H) {
         //        outfile->Printf("\n  Propogating at t = %1.6f", time/conv);
         // Form b vector
         Timer b;
-        SharedVector b_r = std::make_shared<Vector>("br", ndet);
-        SharedVector b_i = std::make_shared<Vector>("bi", ndet);
+        std::shared_ptr<psi::Vector> b_r = std::make_shared<Vector>("br", ndet);
+        std::shared_ptr<psi::Vector> b_i = std::make_shared<Vector>("bi", ndet);
 
         // -iHdt|Psi>
         b_r->gemv(false, 0.5 * dt, *H, *ct_i, 0.0);
@@ -359,8 +359,8 @@ void TDCI::propagate_cn(SharedVector C0, SharedMatrix H) {
 
         // Converge C(t+dt)
         bool converged = false;
-        SharedVector ct_r_new = std::make_shared<Vector>("ct_R", ndet);
-        SharedVector ct_i_new = std::make_shared<Vector>("ct_I", ndet);
+        std::shared_ptr<psi::Vector> ct_r_new = std::make_shared<Vector>("ct_R", ndet);
+        std::shared_ptr<psi::Vector> ct_i_new = std::make_shared<Vector>("ct_I", ndet);
 
         while (!converged) {
 
@@ -371,7 +371,7 @@ void TDCI::propagate_cn(SharedVector C0, SharedMatrix H) {
             ct_i_new->add(*b_i);
 
             // Test convergence
-            SharedVector err = std::make_shared<Vector>("err", ndet);
+            std::shared_ptr<psi::Vector> err = std::make_shared<Vector>("err", ndet);
             double norm = 0.0;
             for (size_t I = 0; I < ndet; ++I) {
                 double rn = ct_r_new->get(I);
@@ -398,7 +398,7 @@ void TDCI::propagate_cn(SharedVector C0, SharedMatrix H) {
         }
 
         double norm = 0.0;
-        SharedVector mag = std::make_shared<Vector>("mag", ndet);
+        std::shared_ptr<psi::Vector> mag = std::make_shared<Vector>("mag", ndet);
         for (size_t I = 0; I < ndet; ++I) {
             double re = ct_r->get(I);
             double im = ct_i->get(I);
@@ -434,7 +434,7 @@ void TDCI::propagate_cn(SharedVector C0, SharedMatrix H) {
     outfile->Printf("\n  Time spent propagating (CN): %1.6f", total.get());
 }
 
-void TDCI::propagate_taylor1(SharedVector C0, SharedMatrix H) {
+void TDCI::propagate_taylor1(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
     outfile->Printf("\n  Propogating with linear Taylor algorithm");
 
     Timer t1;
@@ -447,10 +447,10 @@ void TDCI::propagate_taylor1(SharedVector C0, SharedMatrix H) {
 
     size_t ndet = C0->dim();
     // The imaginary part
-    SharedVector C0_r = std::make_shared<Vector>("C0r", ndet);
-    SharedVector C0_i = std::make_shared<Vector>("C0i", ndet);
-    SharedVector Ct_r = std::make_shared<Vector>("Ctr", ndet);
-    SharedVector Ct_i = std::make_shared<Vector>("Cti", ndet);
+    std::shared_ptr<psi::Vector> C0_r = std::make_shared<Vector>("C0r", ndet);
+    std::shared_ptr<psi::Vector> C0_i = std::make_shared<Vector>("C0i", ndet);
+    std::shared_ptr<psi::Vector> Ct_r = std::make_shared<Vector>("Ctr", ndet);
+    std::shared_ptr<psi::Vector> Ct_i = std::make_shared<Vector>("Cti", ndet);
 
     C0_r->copy(C0->clone());
     C0_i->zero();
@@ -461,8 +461,8 @@ void TDCI::propagate_taylor1(SharedVector C0, SharedMatrix H) {
         std::vector<size_t> counter(ndet, 0);
         tau += d_tau;
 
-        SharedVector sigma_r = std::make_shared<Vector>("Sr", ndet);
-        SharedVector sigma_i = std::make_shared<Vector>("Si", ndet);
+        std::shared_ptr<psi::Vector> sigma_r = std::make_shared<Vector>("Sr", ndet);
+        std::shared_ptr<psi::Vector> sigma_i = std::make_shared<Vector>("Si", ndet);
 
         Ct_r->zero();
         Ct_i->zero();
@@ -516,7 +516,7 @@ void TDCI::propagate_taylor1(SharedVector C0, SharedMatrix H) {
     outfile->Printf("\n  Time spent propagating (linear): %1.6f", t1.get());
 }
 
-void TDCI::propagate_taylor2(SharedVector C0, SharedMatrix H) {
+void TDCI::propagate_taylor2(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
 
     outfile->Printf("\n  Propogating with quadratic Taylor algorithm");
     Timer t2;
@@ -531,10 +531,10 @@ void TDCI::propagate_taylor2(SharedVector C0, SharedMatrix H) {
     size_t ndet = C0->dim();
     occupations_.resize(orbs.size());
     // The imaginary part
-    SharedVector C0_r = std::make_shared<Vector>("C0r", ndet);
-    SharedVector C0_i = std::make_shared<Vector>("C0i", ndet);
-    SharedVector Ct_r = std::make_shared<Vector>("Ctr", ndet);
-    SharedVector Ct_i = std::make_shared<Vector>("Cti", ndet);
+    std::shared_ptr<psi::Vector> C0_r = std::make_shared<Vector>("C0r", ndet);
+    std::shared_ptr<psi::Vector> C0_i = std::make_shared<Vector>("C0i", ndet);
+    std::shared_ptr<psi::Vector> Ct_r = std::make_shared<Vector>("Ctr", ndet);
+    std::shared_ptr<psi::Vector> Ct_i = std::make_shared<Vector>("Cti", ndet);
 
     C0_r->copy(C0->clone());
     C0_i->zero();
@@ -542,8 +542,8 @@ void TDCI::propagate_taylor2(SharedVector C0, SharedMatrix H) {
     for (int N = 0; N < nstep; ++N) {
         std::vector<size_t> counter(ndet, 0);
         //  outfile->Printf("\n  Propogating at t = %1.6f", time/conv);
-        SharedVector sigma_r = std::make_shared<Vector>("Sr", ndet);
-        SharedVector sigma_i = std::make_shared<Vector>("Si", ndet);
+        std::shared_ptr<psi::Vector> sigma_r = std::make_shared<Vector>("Sr", ndet);
+        std::shared_ptr<psi::Vector> sigma_i = std::make_shared<Vector>("Si", ndet);
 
         Ct_r->zero();
         Ct_i->zero();
@@ -563,8 +563,8 @@ void TDCI::propagate_taylor2(SharedVector C0, SharedMatrix H) {
         Ct_r->add(*sigma_i);
         Ct_i->subtract(*sigma_r);
         // Quadratic correction
-        SharedVector sigmaq_r = std::make_shared<Vector>("Sr", ndet);
-        SharedVector sigmaq_i = std::make_shared<Vector>("Si", ndet);
+        std::shared_ptr<psi::Vector> sigmaq_r = std::make_shared<Vector>("Sr", ndet);
+        std::shared_ptr<psi::Vector> sigmaq_i = std::make_shared<Vector>("Si", ndet);
         sigma_r->scale(1.0 / dt);
         sigma_i->scale(1.0 / dt);
         sigmaq_r->gemv(false, 1.0, *H, *sigma_r, 0.0);
@@ -611,7 +611,7 @@ void TDCI::propagate_taylor2(SharedVector C0, SharedMatrix H) {
     outfile->Printf("\n  Time spent propagating (quadratic): %1.6f", t2.get());
 }
 
-void TDCI::propagate_RK4(SharedVector C0, SharedMatrix H) {
+void TDCI::propagate_RK4(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
 
     outfile->Printf("\n  Propogating with 4th order Runge-Kutta algorithm");
 
@@ -627,8 +627,8 @@ void TDCI::propagate_RK4(SharedVector C0, SharedMatrix H) {
     std::vector<int> orbs = options_->get_int_list("TDCI_OCC_ORB");
     occupations_.resize(orbs.size());
     // Copy initial state into iteratively updated vectors
-    SharedVector ct_r = std::make_shared<Vector>("ct_R", ndet);
-    SharedVector ct_i = std::make_shared<Vector>("ct_I", ndet);
+    std::shared_ptr<psi::Vector> ct_r = std::make_shared<Vector>("ct_R", ndet);
+    std::shared_ptr<psi::Vector> ct_i = std::make_shared<Vector>("ct_I", ndet);
 
     ct_r->copy(C0->clone());
     ct_i->zero();
@@ -636,8 +636,8 @@ void TDCI::propagate_RK4(SharedVector C0, SharedMatrix H) {
     for (int n = 1; n <= nstep; ++n) {
 
         // k1
-        SharedVector k1r = std::make_shared<Vector>("k1r", ndet);
-        SharedVector k1i = std::make_shared<Vector>("k1i", ndet);
+        std::shared_ptr<psi::Vector> k1r = std::make_shared<Vector>("k1r", ndet);
+        std::shared_ptr<psi::Vector> k1i = std::make_shared<Vector>("k1i", ndet);
 
         k1r->gemv(false, 1.0, *H, *ct_i, 0.0);
         k1i->gemv(false, -1.0, *H, *ct_r, 0.0);
@@ -646,8 +646,8 @@ void TDCI::propagate_RK4(SharedVector C0, SharedMatrix H) {
         k1i->scale(dt);
 
         // k2
-        SharedVector intr = std::make_shared<Vector>("intr", ndet);
-        SharedVector inti = std::make_shared<Vector>("inti", ndet);
+        std::shared_ptr<psi::Vector> intr = std::make_shared<Vector>("intr", ndet);
+        std::shared_ptr<psi::Vector> inti = std::make_shared<Vector>("inti", ndet);
 
         intr->copy(ct_r->clone());
         inti->copy(ct_i->clone());
@@ -659,8 +659,8 @@ void TDCI::propagate_RK4(SharedVector C0, SharedMatrix H) {
         k1r->scale(2.0);
         k1i->scale(2.0);
 
-        SharedVector k2r = std::make_shared<Vector>("k2r", ndet);
-        SharedVector k2i = std::make_shared<Vector>("k2i", ndet);
+        std::shared_ptr<psi::Vector> k2r = std::make_shared<Vector>("k2r", ndet);
+        std::shared_ptr<psi::Vector> k2i = std::make_shared<Vector>("k2i", ndet);
 
         k2r->gemv(false, 1.0, *H, *inti, 0.0);
         k2i->gemv(false, -1.0, *H, *intr, 0.0);
@@ -678,8 +678,8 @@ void TDCI::propagate_RK4(SharedVector C0, SharedMatrix H) {
         k2r->scale(2.0);
         k2i->scale(2.0);
 
-        SharedVector k3r = std::make_shared<Vector>("k3r", ndet);
-        SharedVector k3i = std::make_shared<Vector>("k3i", ndet);
+        std::shared_ptr<psi::Vector> k3r = std::make_shared<Vector>("k3r", ndet);
+        std::shared_ptr<psi::Vector> k3i = std::make_shared<Vector>("k3i", ndet);
 
         k3r->gemv(false, 1.0, *H, *inti, 0.0);
         k3i->gemv(false, -1.0, *H, *intr, 0.0);
@@ -693,8 +693,8 @@ void TDCI::propagate_RK4(SharedVector C0, SharedMatrix H) {
         intr->add(*k3r);
         inti->add(*k3i);
 
-        SharedVector k4r = std::make_shared<Vector>("k4r", ndet);
-        SharedVector k4i = std::make_shared<Vector>("k4i", ndet);
+        std::shared_ptr<psi::Vector> k4r = std::make_shared<Vector>("k4r", ndet);
+        std::shared_ptr<psi::Vector> k4i = std::make_shared<Vector>("k4i", ndet);
 
         k4r->gemv(false, 1.0, *H, *inti, 0.0);
         k4i->gemv(false, -1.0, *H, *intr, 0.0);
@@ -753,7 +753,7 @@ void TDCI::propagate_RK4(SharedVector C0, SharedMatrix H) {
     outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
 
-void TDCI::propagate_QCN(SharedVector C0, SharedMatrix H) {
+void TDCI::propagate_QCN(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
 
     Timer total;
     size_t ndet = C0->dim();
@@ -768,24 +768,24 @@ void TDCI::propagate_QCN(SharedVector C0, SharedMatrix H) {
     occupations_.resize(orbs.size());
 
     // Copy initial state into iteratively updated vectors
-    SharedVector ct_r = std::make_shared<Vector>("ct_R", ndet);
-    SharedVector ct_i = std::make_shared<Vector>("ct_I", ndet);
+    std::shared_ptr<psi::Vector> ct_r = std::make_shared<Vector>("ct_R", ndet);
+    std::shared_ptr<psi::Vector> ct_i = std::make_shared<Vector>("ct_I", ndet);
 
     ct_r->copy(C0->clone());
     ct_i->zero();
 
     for (size_t n = 1; n <= nstep; ++n) {
 
-        SharedVector b_r = std::make_shared<Vector>("br", ndet);
-        SharedVector b_i = std::make_shared<Vector>("bi", ndet);
+        std::shared_ptr<psi::Vector> b_r = std::make_shared<Vector>("br", ndet);
+        std::shared_ptr<psi::Vector> b_i = std::make_shared<Vector>("bi", ndet);
 
         // Quadratic propagator for b
 
         b_r->copy(ct_r->clone());
         b_i->copy(ct_i->clone());
 
-        SharedVector sigma_r = std::make_shared<Vector>("sr", ndet);
-        SharedVector sigma_i = std::make_shared<Vector>("si", ndet);
+        std::shared_ptr<psi::Vector> sigma_r = std::make_shared<Vector>("sr", ndet);
+        std::shared_ptr<psi::Vector> sigma_i = std::make_shared<Vector>("si", ndet);
         sigma_r->gemv(false, 0.5 * dt, *H, *ct_r, 0.0);
         sigma_i->gemv(false, 0.5 * dt, *H, *ct_i, 0.0);
 
@@ -796,15 +796,15 @@ void TDCI::propagate_QCN(SharedVector C0, SharedMatrix H) {
         b_i->gemv(false, -0.5 * dt, *H, *sigma_i, 1.0);
 
         bool converged = false;
-        SharedVector ct_r_new = std::make_shared<Vector>("ct_R", ndet);
-        SharedVector ct_i_new = std::make_shared<Vector>("ct_I", ndet);
+        std::shared_ptr<psi::Vector> ct_r_new = std::make_shared<Vector>("ct_R", ndet);
+        std::shared_ptr<psi::Vector> ct_i_new = std::make_shared<Vector>("ct_I", ndet);
 
         while (!converged) {
             ct_r_new->copy(b_r->clone());
             ct_i_new->copy(b_i->clone());
 
-            SharedVector tmp_r = std::make_shared<Vector>("t_r", ndet);
-            SharedVector tmp_i = std::make_shared<Vector>("t_i", ndet);
+            std::shared_ptr<psi::Vector> tmp_r = std::make_shared<Vector>("t_r", ndet);
+            std::shared_ptr<psi::Vector> tmp_i = std::make_shared<Vector>("t_i", ndet);
 
             tmp_r->gemv(false, 0.5 * dt, *H, *ct_r, 0.0);
             tmp_i->gemv(false, 0.5 * dt, *H, *ct_i, 0.0);
@@ -816,7 +816,7 @@ void TDCI::propagate_QCN(SharedVector C0, SharedMatrix H) {
             ct_i_new->gemv(false, 0.5 * dt, *H, *tmp_i, 1.0);
 
             // Test convergence
-            SharedVector err = std::make_shared<Vector>("err", ndet);
+            std::shared_ptr<psi::Vector> err = std::make_shared<Vector>("err", ndet);
             double norm = 0.0;
             for (size_t I = 0; I < ndet; ++I) {
                 double rn = ct_r_new->get(I);
@@ -861,7 +861,7 @@ void TDCI::propagate_QCN(SharedVector C0, SharedMatrix H) {
     }
 }
 
-void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
+void TDCI::propagate_lanczos(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
 
     std::vector<int> orbs = options_->get_int_list("TDCI_OCC_ORB");
 
@@ -876,8 +876,8 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
     double time = dt;
 
     // Copy initial state into iteratively updated vectors
-    SharedVector ct_r = std::make_shared<Vector>("ct_R", ndet);
-    SharedVector ct_i = std::make_shared<Vector>("ct_I", ndet);
+    std::shared_ptr<psi::Vector> ct_r = std::make_shared<Vector>("ct_R", ndet);
+    std::shared_ptr<psi::Vector> ct_i = std::make_shared<Vector>("ct_I", ndet);
 
     ct_r->copy(C0->clone());
     ct_i->zero();
@@ -890,7 +890,8 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
     for (int N = 0; N < nstep; ++N) {
 
         // 1. Form the Krylov subspace vectors and subspace hamiltonian simultaneously
-        // std::vector<std::pair<SharedVector,SharedVector>> Kn(krylov_dim);
+        // std::vector<std::pair<std::shared_ptr<psi::Vector>,std::shared_ptr<psi::Vector>>>
+        // Kn(krylov_dim);
         Kn_r->zero();
         Kn_i->zero();
 
@@ -901,13 +902,13 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
         for (int k = 0; k < krylov_dim; ++k) {
 
             // Need to get last diagonal
-            SharedVector wk_r = std::make_shared<Vector>("r", ndet);
-            SharedVector wk_i = std::make_shared<Vector>("i", ndet);
+            std::shared_ptr<psi::Vector> wk_r = std::make_shared<Vector>("r", ndet);
+            std::shared_ptr<psi::Vector> wk_i = std::make_shared<Vector>("i", ndet);
             wk_r->zero();
             wk_i->zero();
 
-            SharedVector qk_r = std::make_shared<Vector>("r", ndet);
-            SharedVector qk_i = std::make_shared<Vector>("i", ndet);
+            std::shared_ptr<psi::Vector> qk_r = std::make_shared<Vector>("r", ndet);
+            std::shared_ptr<psi::Vector> qk_i = std::make_shared<Vector>("i", ndet);
             qk_r->zero();
             qk_i->zero();
 
@@ -918,8 +919,8 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
             wk_i->gemv(false, 1.0, *H, *qk_i, 0.0);
             // Modified Gram-Schmidt
             for (int i = 0; i <= k; ++i) {
-                SharedVector qi_r = std::make_shared<Vector>("r", ndet);
-                SharedVector qi_i = std::make_shared<Vector>("i", ndet);
+                std::shared_ptr<psi::Vector> qi_r = std::make_shared<Vector>("r", ndet);
+                std::shared_ptr<psi::Vector> qi_i = std::make_shared<Vector>("i", ndet);
                 qi_r->zero();
                 qi_i->zero();
                 qi_r->add(*Kn_r->get_column(0, i));
@@ -958,15 +959,17 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
         int n = krylov_dim, lda = krylov_dim, info, lwork;
         /* Local arrays */
         /* rwork dimension should be at least max(1,3*n-2) */
-        double w[n], rwork[3 * n - 2];
+        // double w[n], rwork[3 * n - 2];
+        std::vector<double> w(n);
+        std::vector<double> rwork(3 * n - 2);
         lwork = 2 * n - 1;
         std::vector<std::complex<double>> work(lwork);
-        zheev("V", "L", &n, Hs.data(), &lda, w, work.data(), &lwork, rwork, &info);
+        zheev("V", "L", &n, Hs.data(), &lda, w.data(), work.data(), &lwork, rwork.data(), &info);
         // Evecs are stored in Hs, let's unpack it and the energy
 
         SharedMatrix evecs_r = std::make_shared<Matrix>("er", n, n);
         SharedMatrix evecs_i = std::make_shared<Matrix>("ei", n, n);
-        SharedVector evals = std::make_shared<Vector>("evals", n);
+        std::shared_ptr<psi::Vector> evals = std::make_shared<Vector>("evals", n);
         for (int i = 0; i < krylov_dim; ++i) {
             evals->set(i, w[i]);
             for (int j = 0; j < krylov_dim; ++j) {
@@ -976,11 +979,11 @@ void TDCI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
         }
 
         // Do the propagation
-        SharedVector ct_int_r = std::make_shared<Vector>("ct_R", krylov_dim);
-        SharedVector ct_int_i = std::make_shared<Vector>("ct_I", krylov_dim);
+        std::shared_ptr<psi::Vector> ct_int_r = std::make_shared<Vector>("ct_R", krylov_dim);
+        std::shared_ptr<psi::Vector> ct_int_i = std::make_shared<Vector>("ct_I", krylov_dim);
 
-        SharedVector kd_r = std::make_shared<Vector>("ct_R", krylov_dim);
-        SharedVector kd_i = std::make_shared<Vector>("ct_I", krylov_dim);
+        std::shared_ptr<psi::Vector> kd_r = std::make_shared<Vector>("ct_R", krylov_dim);
+        std::shared_ptr<psi::Vector> kd_i = std::make_shared<Vector>("ct_I", krylov_dim);
         for (int i = 0; i < krylov_dim; ++i) {
             kd_r->set(i, Kn_r->get_column(0, i)->vector_dot(*ct_r));
             kd_r->add(i, Kn_i->get_column(0, i)->vector_dot(*ct_i));
@@ -1064,7 +1067,7 @@ void TDCI::save_matrix(SharedMatrix mat, std::string name) {
         file << "\n";
     }
 }
-void TDCI::save_vector(SharedVector vec, std::string name) {
+void TDCI::save_vector(std::shared_ptr<psi::Vector> vec, std::string name) {
 
     size_t dim = vec->dim();
     std::ofstream file;
@@ -1143,7 +1146,8 @@ std::vector<double> TDCI::compute_occupation(DeterminantHashVec& dets, std::vect
     return occ_vec;
 }
 
-std::vector<double> TDCI::compute_occupation(SharedVector Cr, SharedVector Ci,
+std::vector<double> TDCI::compute_occupation(std::shared_ptr<psi::Vector> Cr,
+                                             std::shared_ptr<psi::Vector> Ci,
                                              std::vector<int>& orbs) {
 
     size_t nact = Cr->dim();
@@ -1167,7 +1171,7 @@ std::vector<double> TDCI::compute_occupation(SharedVector Cr, SharedVector Ci,
     return occ_vec;
 }
 
-void TDCI::compute_tdci_select(SharedVector C0) {
+void TDCI::compute_tdci_select(std::shared_ptr<psi::Vector> C0) {
 
     Timer t1;
     double eta = options_->get_double("TDCI_ETA_P");
@@ -1688,7 +1692,7 @@ void TDCI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,
 
     // Diagonalize the Hamiltonian
     SharedMatrix evecs = std::make_shared<Matrix>("evecs", npq, npq);
-    SharedVector evals = std::make_shared<Vector>("evals", npq);
+    std::shared_ptr<psi::Vector> evals = std::make_shared<Vector>("evals", npq);
     H->diagonalize(evecs, evals);
 
     std::vector<double> int_r(npq, 0.0);
@@ -1788,8 +1792,8 @@ void TDCI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<do
     SharedMatrix H = std::make_shared<Matrix>("H", npq, npq);
 
     // dumb implementation for now:
-    SharedVector ct_r = std::make_shared<Vector>("ctr", npq);
-    SharedVector ct_i = std::make_shared<Vector>("ctr", npq);
+    std::shared_ptr<psi::Vector> ct_r = std::make_shared<Vector>("ctr", npq);
+    std::shared_ptr<psi::Vector> ct_i = std::make_shared<Vector>("ctr", npq);
 
     const det_hashvec& PQ_dets = PQ_space.wfn_hash();
     for (size_t I = 0; I < npq; ++I) {
@@ -1809,15 +1813,15 @@ void TDCI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<do
     //   outfile->Printf("\n    Build H: %1.6f", total.get());
 
     // k1
-    SharedVector k1r = std::make_shared<Vector>("k1r", npq);
-    SharedVector k1i = std::make_shared<Vector>("k1i", npq);
+    std::shared_ptr<psi::Vector> k1r = std::make_shared<Vector>("k1r", npq);
+    std::shared_ptr<psi::Vector> k1i = std::make_shared<Vector>("k1i", npq);
 
     k1r->gemv(false, 1.0, *H, *ct_i, 0.0);
     k1i->gemv(false, -1.0, *H, *ct_r, 0.0);
 
     // k2
-    SharedVector intr = std::make_shared<Vector>("intr", npq);
-    SharedVector inti = std::make_shared<Vector>("inti", npq);
+    std::shared_ptr<psi::Vector> intr = std::make_shared<Vector>("intr", npq);
+    std::shared_ptr<psi::Vector> inti = std::make_shared<Vector>("inti", npq);
 
     intr->copy(ct_r->clone());
     inti->copy(ct_i->clone());
@@ -1829,8 +1833,8 @@ void TDCI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<do
     k1r->scale(2.0 / dt);
     k1i->scale(2.0 / dt);
 
-    SharedVector k2r = std::make_shared<Vector>("k2r", npq);
-    SharedVector k2i = std::make_shared<Vector>("k2i", npq);
+    std::shared_ptr<psi::Vector> k2r = std::make_shared<Vector>("k2r", npq);
+    std::shared_ptr<psi::Vector> k2i = std::make_shared<Vector>("k2i", npq);
 
     k2r->gemv(false, 1.0, *H, *inti, 0.0);
     k2i->gemv(false, -1.0, *H, *intr, 0.0);
@@ -1846,8 +1850,8 @@ void TDCI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<do
     k2r->scale(2.0 * 1.0 / dt);
     k2i->scale(2.0 * 1.0 / dt);
 
-    SharedVector k3r = std::make_shared<Vector>("k3r", npq);
-    SharedVector k3i = std::make_shared<Vector>("k3i", npq);
+    std::shared_ptr<psi::Vector> k3r = std::make_shared<Vector>("k3r", npq);
+    std::shared_ptr<psi::Vector> k3i = std::make_shared<Vector>("k3i", npq);
 
     k3r->gemv(false, 1.0, *H, *inti, 0.0);
     k3i->gemv(false, -1.0, *H, *intr, 0.0);
@@ -1863,8 +1867,8 @@ void TDCI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<do
     k3r->scale(1.0 / dt);
     k3i->scale(1.0 / dt);
 
-    SharedVector k4r = std::make_shared<Vector>("k4r", npq);
-    SharedVector k4i = std::make_shared<Vector>("k4i", npq);
+    std::shared_ptr<psi::Vector> k4r = std::make_shared<Vector>("k4r", npq);
+    std::shared_ptr<psi::Vector> k4i = std::make_shared<Vector>("k4i", npq);
 
     k4r->gemv(false, 1.0, *H, *inti, 0.0);
     k4i->gemv(false, -1.0, *H, *intr, 0.0);

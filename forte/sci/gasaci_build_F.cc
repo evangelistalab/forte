@@ -43,7 +43,7 @@ using namespace psi;
 namespace forte {
 
 void AdaptiveCI::get_gas_excited_determinants_sr(
-    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     local_timer build;
     size_t max_P = P_space.size();
@@ -319,7 +319,7 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
 }
 
 void AdaptiveCI::get_gas_excited_determinants_avg(
-    int nroot, SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    int nroot, SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -615,7 +615,7 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
 }
 
 void AdaptiveCI::get_gas_excited_determinants_core(
-    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();

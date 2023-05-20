@@ -38,11 +38,11 @@
 namespace forte {
 
 void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
-               psi::SharedMatrix Ps);
+               std::shared_ptr<psi::Matrix> Ps);
 
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
                                             std::shared_ptr<ForteOptions> options,
-                                            psi::SharedMatrix Pf, int nbf_A,
+                                            std::shared_ptr<psi::Matrix> Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte

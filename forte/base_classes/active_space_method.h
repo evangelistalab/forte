@@ -160,9 +160,11 @@ class ActiveSpaceMethod {
     /// Compute generalized RDM
     ///     Gamma' = C_I <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
     /// @param x: the X vector to be contracted with H_IJ
-    virtual void generalized_rdms(size_t root, const std::vector<double>& X,
-                                  ambit::BlockedTensor& result, bool c_right, int rdm_level,
-                                  std::vector<std::string> spin) {
+    virtual void generalized_rdms([[maybe_unused]] size_t root,
+                                  [[maybe_unused]] const std::vector<double>& X,
+                                  [[maybe_unused]] ambit::BlockedTensor& result,
+                                  [[maybe_unused]] bool c_right, [[maybe_unused]] int rdm_level,
+                                  [[maybe_unused]] std::vector<std::string> spin) {
         throw std::runtime_error(
             "The function generalized_rdms is not implemented for this ActiveSpaceMethod type!");
     }
@@ -173,9 +175,10 @@ class ActiveSpaceMethod {
     /// @param h: the antisymmetrized k-body integrals
     /// @param block_label_to_factor: map from the block labels of integrals to its factors
     /// @param sigma: the sigma vector to be added
-    virtual void add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
-                                 const std::map<std::string, double>& block_label_to_factor,
-                                 std::vector<double>& sigma) {
+    virtual void
+    add_sigma_kbody([[maybe_unused]] size_t root, [[maybe_unused]] ambit::BlockedTensor& h,
+                    [[maybe_unused]] const std::map<std::string, double>& block_label_to_factor,
+                    [[maybe_unused]] std::vector<double>& sigma) {
         throw std::runtime_error(
             "The function add_sigma_kbody is not implemented for this ActiveSpaceMethod type!");
     }
@@ -184,7 +187,8 @@ class ActiveSpaceMethod {
     ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
     /// @param x: the X vector to be contracted with H_IJ
     /// @param sigma: the sigma vector (will be zeroed first)
-    virtual void generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) {
+    virtual void generalized_sigma([[maybe_unused]] psi::std::shared_ptr<psi::Vector> x,
+                                   [[maybe_unused]] psi::std::shared_ptr<psi::Vector> sigma) {
         throw std::runtime_error(
             "The function generalized_sigma is not implemented for this ActiveSpaceMethod type!");
     }
@@ -210,17 +214,17 @@ class ActiveSpaceMethod {
                              const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Compute permanent dipole moments (electronic + nuclear)
-    std::vector<psi::SharedVector>
+    std::vector<psi::std::shared_ptr<psi::Vector>>
     compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                              std::vector<std::pair<size_t, size_t>>& root_list);
 
     /// Compute permanent quadrupole moments (electronic + nuclear)
-    std::vector<psi::SharedVector>
+    std::vector<psi::std::shared_ptr<psi::Vector>>
     compute_permanent_quadrupole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                  const std::vector<std::pair<size_t, size_t>>& root_list);
 
     /// Compute transition dipole moments assuming same orbitals
-    std::vector<psi::SharedVector>
+    std::vector<psi::std::shared_ptr<psi::Vector>>
     compute_transition_dipole_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                         const std::vector<std::pair<size_t, size_t>>& root_list,
                                         std::shared_ptr<ActiveSpaceMethod> method2);
@@ -240,13 +244,13 @@ class ActiveSpaceMethod {
     /// Read the wave function from file
     /// @param file name
     /// @return the number of active orbitals, the set of determinants, CI coefficients
-    virtual std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    virtual std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
     read_wave_function(const std::string&) {
         throw std::runtime_error("ActiveSpaceMethod::read_wave_function: Not yet implemented!");
     }
 
     /// @return the CI wave functions for the current StateInfo (deterministic determinant space)
-    virtual psi::SharedMatrix ci_wave_functions() {
+    virtual std::shared_ptr<psi::Matrix> ci_wave_functions() {
         throw std::runtime_error("ActiveSpaceMethod::ci_wave_functions: Not yet implemented!");
     }
 
@@ -257,7 +261,7 @@ class ActiveSpaceMethod {
     void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Return the eigenvalues
-    psi::SharedVector evals();
+    psi::std::shared_ptr<psi::Vector> evals();
 
     /// Return a vector with the energies of all the states
     const std::vector<double>& energies() const;
@@ -318,7 +322,7 @@ class ActiveSpaceMethod {
     DeterminantHashVec get_PQ_space();
 
     /// Get model space coefficients
-    psi::SharedMatrix get_PQ_evecs();
+    std::shared_ptr<psi::Matrix> get_PQ_evecs();
 
   protected:
     /// The list of active orbitals (absolute ordering)
@@ -364,7 +368,7 @@ class ActiveSpaceMethod {
     bool quiet_ = false;
 
     /// Eigenvalues
-    psi::SharedVector evals_;
+    psi::std::shared_ptr<psi::Vector> evals_;
 
     /// The energies (including nuclear repulsion) of all the states
     std::vector<double> energies_;

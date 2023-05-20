@@ -136,7 +136,8 @@ class FCI_MO : public ActiveSpaceMethod {
     ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
     /// @param x: the X vector to be contracted with H_IJ
     /// @param sigma: the sigma vector (will be zeroed first)
-    void generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) override;
+    void generalized_sigma(psi::std::shared_ptr<psi::Vector> x,
+                           psi::std::shared_ptr<psi::Vector> sigma) override;
 
     /// Return the number of determinants
     size_t space_size() override { return determinant_.size(); }
@@ -176,7 +177,7 @@ class FCI_MO : public ActiveSpaceMethod {
     void set_options(std::shared_ptr<ForteOptions>) override {} // TODO implement
 
     /// Return the CI wave functions for current state symmetry
-    psi::SharedMatrix ci_wave_functions() override;
+    std::shared_ptr<psi::Matrix> ci_wave_functions() override;
 
     /// Compute densities or transition densities
     /// root1, root2 -- the ket and bra roots of p_space and eigen
@@ -262,7 +263,9 @@ class FCI_MO : public ActiveSpaceMethod {
     void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
 
     /// Set state-averaged eigen values and vectors
-    void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens);
+    void
+    set_eigens(const std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>>&
+                   eigens);
 
     /// Return fci_int_ pointer
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return fci_ints_; }
@@ -279,10 +282,12 @@ class FCI_MO : public ActiveSpaceMethod {
     }
 
     /// Return the vector of eigen vectors and eigen values
-    std::vector<std::pair<psi::SharedVector, double>> const eigen() { return eigen_; }
+    std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>> const eigen() {
+        return eigen_;
+    }
 
     /// Return the vector of eigen vectors and eigen values (used in state-average computation)
-    std::vector<std::vector<std::pair<psi::SharedVector, double>>> const eigens() {
+    std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>> const eigens() {
         return eigens_;
     }
 
@@ -440,22 +445,23 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<std::vector<std::pair<size_t, double>>> initial_guess_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
-    std::vector<std::pair<psi::SharedVector, double>> eigen_;
+    std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>> eigen_;
     /// A List of Eigen Values and Vectors for State Average
-    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>> eigens_;
     /// The algorithm for diagonalization
     std::string diag_algorithm_;
 
     /// Diagonalize the Hamiltonian
     void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,
-                       std::vector<std::pair<psi::SharedVector, double>>& eigen);
+                       std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen);
     /// Diagonalize the Hamiltonian without the HF determinant
-    void Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
-                            std::vector<std::pair<psi::SharedVector, double>>& eigen);
+    void
+    Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
+                       std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen);
 
     /// Print the CI Vectors and Configurations (figure out the dominant determinants)
     void print_CI(const int& nroot, const double& CI_threshold,
-                  const std::vector<std::pair<psi::SharedVector, double>>& eigen,
+                  const std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen,
                   const vecdet& det);
 
     /// Density Matrix
@@ -479,28 +485,30 @@ class FCI_MO : public ActiveSpaceMethod {
     void clean_all_density_files();
 
     /// Prepare eigen vectors for RDM or TRDM (within current symmetry) computations
-    psi::SharedMatrix prepare_for_rdm();
+    std::shared_ptr<psi::Matrix> prepare_for_rdm();
 
     /// Prepare determinant space and eigen vectors for TRDM computations between different
     /// symmetries
-    std::pair<std::shared_ptr<vecdet>, psi::SharedMatrix>
+    std::pair<std::shared_ptr<vecdet>, std::shared_ptr<psi::Matrix>>
     prepare_for_trans_rdm(std::shared_ptr<FCI_MO> method2);
 
     /// Compute reduced density matricies for given determinant space and eigen vectors
     [[deprecated("Soon will be using StateInfo based rdm function")]] std::vector<ambit::Tensor>
-    compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs, int rdm_level, int root1,
-                  int root2, int irrep, int multi, bool disk);
+    compute_n_rdm(const vecdet& p_space, std::shared_ptr<psi::Matrix> evecs, int rdm_level,
+                  int root1, int root2, int irrep, int multi, bool disk);
 
-    std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
-                                             int rdm_level, int root1, int root2,
-                                             const StateInfo& state2, bool disk);
+    std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space,
+                                             std::shared_ptr<psi::Matrix> evecs, int rdm_level,
+                                             int root1, int root2, const StateInfo& state2,
+                                             bool disk);
 
-    ambit::Tensor compute_n_rdm_sf(const vecdet& p_space, psi::SharedMatrix evecs, int rdm_level,
-                                   int root1, int root2, const StateInfo& state2);
+    ambit::Tensor compute_n_rdm_sf(const vecdet& p_space, std::shared_ptr<psi::Matrix> evecs,
+                                   int rdm_level, int root1, int root2, const StateInfo& state2);
 
     /// Rotate the given CI vectors by XMS
-    psi::SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
-                                             ambit::Tensor Fa, ambit::Tensor Fb);
+    std::shared_ptr<psi::Matrix> xms_rotate_this_civecs(const det_vec& p_space,
+                                                        std::shared_ptr<psi::Matrix> civecs,
+                                                        ambit::Tensor Fa, ambit::Tensor Fb);
 
     /// Reference Energy
     double Eref_;
@@ -546,9 +554,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute permanent dipole moments
     void compute_permanent_dipole();
 
-    /// Reformat 1RDM from nactv x nactv vector to N x N psi::SharedMatrix
-    psi::SharedMatrix reformat_1rdm(const std::string& name, const std::vector<double>& data,
-                                    bool TrD);
+    /// Reformat 1RDM from nactv x nactv vector to N x N std::shared_ptr<psi::Matrix>
+    std::shared_ptr<psi::Matrix> reformat_1rdm(const std::string& name,
+                                               const std::vector<double>& data, bool TrD);
 
     /// Transition dipoles
     std::map<std::string, std::vector<double>> trans_dipole_;

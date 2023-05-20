@@ -35,6 +35,10 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
+#include "integrals/active_space_integrals.h"
+
+#include "base_classes/state_info.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"

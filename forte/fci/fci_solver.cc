@@ -308,8 +308,8 @@ void FCISolver::compute_rdms_root(size_t root1, size_t /*root2*/, int max_rdm_le
             throw psi::PSIEXCEPTION(error);
         }
 
-        psi::SharedVector evec(eigen_vecs_->get_row(0, root1));
-        psi::SharedVector b;
+        psi::std::shared_ptr<psi::Vector> evec(eigen_vecs_->get_row(0, root1));
+        psi::std::shared_ptr<psi::Vector> b;
         if (spin_adapt_) {
             b = std::make_shared<psi::Vector>(spin_adapter_->ndet());
             spin_adapter_->csf_C_to_det_C(evec, b);
@@ -406,7 +406,7 @@ void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::V
     C_->rdm_test();
 }
 
-psi::SharedMatrix FCISolver::ci_wave_functions() {
+std::shared_ptr<psi::Matrix> FCISolver::ci_wave_functions() {
     if (eigen_vecs_ == nullptr)
         return std::make_shared<psi::Matrix>();
 

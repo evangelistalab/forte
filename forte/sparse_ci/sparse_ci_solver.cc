@@ -197,7 +197,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         }
 
         // Select sub eigen vectors of S^2 with correct multiplicity
-        psi::SharedMatrix S2vecs_sub(
+        std::shared_ptr<psi::Matrix> S2vecs_sub(
             new psi::Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
         for (int i = 0; i < nfound; ++i) {
             auto vec = S2vecs->get_column(0, multi_list[multiplicity][i]);
@@ -205,17 +205,18 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         }
 
         // Build spin selected Hamiltonian
-        psi::SharedMatrix H = build_full_hamiltonian(space, as_ints);
-        psi::SharedMatrix Hss = psi::linalg::triplet(S2vecs_sub, H, S2vecs_sub, true, false, false);
+        std::shared_ptr<psi::Matrix> H = build_full_hamiltonian(space, as_ints);
+        std::shared_ptr<psi::Matrix> Hss =
+            psi::linalg::triplet(S2vecs_sub, H, S2vecs_sub, true, false, false);
         Hss->set_name("Hss");
 
         // Obtain spin selected eigen values and vectors
-        psi::SharedVector Hss_vals(new Vector("Hss Eigen Values", nfound));
-        psi::SharedMatrix Hss_vecs(new psi::Matrix("Hss Eigen Vectors", nfound, nfound));
+        psi::std::shared_ptr<psi::Vector> Hss_vals(new Vector("Hss Eigen Values", nfound));
+        std::shared_ptr<psi::Matrix> Hss_vecs(new psi::Matrix("Hss Eigen Vectors", nfound, nfound));
         Hss->diagonalize(Hss_vecs, Hss_vals);
 
         // Project Hss_vecs back to original manifold
-        psi::SharedMatrix H_vecs = psi::linalg::doublet(S2vecs_sub, Hss_vecs);
+        std::shared_ptr<psi::Matrix> H_vecs = psi::linalg::doublet(S2vecs_sub, Hss_vecs);
         H_vecs->set_name("H Eigen Vectors");
 
         // Fill in results
@@ -236,7 +237,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         H->diagonalize(full_evecs, full_evals);
 
         // Compute (C)^+ S^2 C
-        psi::SharedMatrix CtSC =
+        std::shared_ptr<psi::Matrix> CtSC =
             psi::linalg::triplet(full_evecs, S2, full_evecs, true, false, false);
 
         // Find how each solution deviates from the target multiplicity
@@ -308,12 +309,12 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
     return std::make_pair(evals, evecs);
 }
 
-psi::SharedMatrix
+std::shared_ptr<psi::Matrix>
 SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
                                        std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     // Build the H matrix
     size_t dim_space = space.size();
-    psi::SharedMatrix H(new psi::Matrix("H", dim_space, dim_space));
+    std::shared_ptr<psi::Matrix> H(new psi::Matrix("H", dim_space, dim_space));
     // If we are running DiskDF then we need to revert to a single thread loop
     int threads = 0;
     if (as_ints->get_integral_type() == DiskDF) {
@@ -335,7 +336,7 @@ SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
     if (root_project_) {
         // Form the projection matrix
         for (int n = 0, max_n = bad_states_.size(); n < max_n; ++n) {
-            psi::SharedMatrix P(new psi::Matrix("P", dim_space, dim_space));
+            std::shared_ptr<psi::Matrix> P(new psi::Matrix("P", dim_space, dim_space));
             P->identity();
             std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
             for (size_t det1 = 0, ndet = bad_state.size(); det1 < ndet; ++det1) {
@@ -503,8 +504,8 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
 
 bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
                                          std::shared_ptr<SigmaVector> sigma_vector,
-                                         psi::SharedVector Eigenvalues,
-                                         psi::SharedMatrix Eigenvectors, int nroot,
+                                         psi::std::shared_ptr<psi::Vector> Eigenvalues,
+                                         std::shared_ptr<psi::Matrix> Eigenvectors, int nroot,
                                          int multiplicity) {
     local_timer dl;
     size_t fci_size = sigma_vector->size();
@@ -514,8 +515,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     dls.set_print_level(0);
 
     // allocate vectors
-    psi::SharedVector b(new Vector("b", fci_size));
-    psi::SharedVector sigma(new Vector("sigma", fci_size));
+    psi::std::shared_ptr<psi::Vector> b(new Vector("b", fci_size));
+    psi::std::shared_ptr<psi::Vector> sigma(new Vector("sigma", fci_size));
 
     // get and pass diagonal
     sigma_vector->get_diagonal(*sigma);
@@ -665,8 +666,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     //    dls.get_results();
     spin_.clear();
-    psi::SharedVector evals = dls.eigenvalues();
-    psi::SharedMatrix evecs = dls.eigenvectors();
+    psi::std::shared_ptr<psi::Vector> evals = dls.eigenvalues();
+    std::shared_ptr<psi::Matrix> evecs = dls.eigenvectors();
     for (int r = 0; r < nroot; ++r) {
         Eigenvalues->set(r, evals->get(r));
         for (size_t I = 0; I < fci_size; ++I) {

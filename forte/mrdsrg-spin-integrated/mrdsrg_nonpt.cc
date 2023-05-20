@@ -428,8 +428,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
     size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
 
-    psi::SharedMatrix aA1_m(new psi::Matrix("A1 alpha", ncmo, ncmo));
-    psi::SharedMatrix bA1_m(new psi::Matrix("A1 beta", ncmo, ncmo));
+    std::shared_ptr<psi::Matrix> aA1_m(new psi::Matrix("A1 alpha", ncmo, ncmo));
+    std::shared_ptr<psi::Matrix> bA1_m(new psi::Matrix("A1 beta", ncmo, ncmo));
     A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             aA1_m->set(i[0], i[1], value);

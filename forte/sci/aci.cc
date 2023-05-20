@@ -330,7 +330,7 @@ double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
 }
 
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
-                                   psi::SharedVector evals) {
+                                   psi::std::shared_ptr<psi::Vector> evals) {
     int nroot = evals->dim();
     int ref = 0;
 
@@ -371,7 +371,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
 }
 
 void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                               psi::SharedMatrix evecs) {
+                               std::shared_ptr<psi::Matrix> evecs) {
     // Select the new reference space using the sorted CI coefficients
     P_space.clear();
 
@@ -443,7 +443,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 }
 
 bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_history,
-                             psi::SharedVector evals) {
+                             psi::std::shared_ptr<psi::Vector> evals) {
     bool stuck = false;
     int nroot = evals->dim();
     if (cycle_ < 4) {
@@ -472,7 +472,7 @@ bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_hist
 }
 
 int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                            DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
+                            DeterminantHashVec& P_space, std::shared_ptr<psi::Matrix> P_evecs,
                             int num_ref_roots) {
     int ndets = P_space.size();
     int max_dim = std::min(ndets, 1000);
@@ -910,9 +910,9 @@ void AdaptiveCI::full_mrpt2() {
 
 DeterminantHashVec AdaptiveCI::get_PQ_space() { return PQ_space_; }
 
-psi::SharedMatrix AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
+std::shared_ptr<psi::Matrix> AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 
-psi::SharedVector AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
+psi::std::shared_ptr<psi::Vector> AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
 
 std::vector<double> AdaptiveCI::get_PQ_spin2() { return PQ_spin2_; }
 
@@ -926,7 +926,7 @@ void AdaptiveCI::zero_multistate_pt2_energy_correction() {
     multistate_pt2_energy_correction_.assign(nroot_, 0.0);
 }
 
-void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs) {
+void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs) {
     std::vector<std::string> gas_electron_name = {"GAS1_A", "GAS1_B", "GAS2_A", "GAS2_B",
                                                   "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",
                                                   "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
@@ -1048,7 +1048,7 @@ void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evec
     }
 }
 
-void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix evecs) {
+void AdaptiveCI::print_occ_number(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs) {
     std::vector<size_t> act_orb;
     for (size_t i = 0; i < nact_; i++) {
         act_orb.push_back(i);

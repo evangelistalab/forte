@@ -37,6 +37,8 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "base_classes/scf_info.h"
+
 #include "helpers/disk_io.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/helpers.h"

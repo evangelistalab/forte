@@ -65,7 +65,7 @@ void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIn
     as_ints_ = as_ints;
 }
 
-psi::SharedVector ActiveSpaceMethod::evals() { return evals_; }
+psi::std::shared_ptr<psi::Vector> ActiveSpaceMethod::evals() { return evals_; }
 
 const std::vector<double>& ActiveSpaceMethod::energies() const { return energies_; }
 
@@ -91,7 +91,7 @@ void ActiveSpaceMethod::set_quiet_mode(bool quiet) { quiet_ = quiet; }
 
 DeterminantHashVec ActiveSpaceMethod::get_PQ_space() { return final_wfn_; }
 
-psi::SharedMatrix ActiveSpaceMethod::get_PQ_evecs() { return evecs_; }
+std::shared_ptr<psi::Matrix> ActiveSpaceMethod::get_PQ_evecs() { return evecs_; }
 
 void ActiveSpaceMethod::save_transition_rdms(
     const std::vector<std::shared_ptr<RDMs>>& rdms,
@@ -118,7 +118,7 @@ void ActiveSpaceMethod::save_transition_rdms(
     }
 }
 
-std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
+std::vector<psi::std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_permanent_quadrupole(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list) {
     // print title
@@ -144,7 +144,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute quadrupole
-    std::vector<psi::SharedVector> out(root_list.size());
+    std::vector<psi::std::shared_ptr<psi::Vector>> out(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         const auto& [root1, root2] = root_list[i];
         if (root1 != root2)
@@ -183,7 +183,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     return out;
 }
 
-std::vector<psi::SharedVector>
+std::vector<psi::std::shared_ptr<psi::Vector>>
 ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                             std::vector<std::pair<size_t, size_t>>& root_list) {
     // print title
@@ -208,7 +208,7 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute dipole
-    std::vector<psi::SharedVector> dipoles_out(root_list.size());
+    std::vector<psi::std::shared_ptr<psi::Vector>> dipoles_out(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         const auto& [root1, root2] = root_list[i];
         if (root1 != root2)
@@ -283,7 +283,8 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
     return out;
 }
 
-std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same_orbs(
+std::vector<psi::std::shared_ptr<psi::Vector>>
+ActiveSpaceMethod::compute_transition_dipole_same_orbs(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list,
     std::shared_ptr<ActiveSpaceMethod> method2) {
@@ -304,7 +305,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute transition dipole
-    std::vector<psi::SharedVector> trans_dipoles(root_list.size());
+    std::vector<psi::std::shared_ptr<psi::Vector>> trans_dipoles(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         auto td = ampints->compute_electronic_dipole(rdms[i], true);
         trans_dipoles[i] = td;
@@ -365,7 +366,6 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
         double maxS = S->get(0);
 
         // push to Psi4 environment
-        auto& globals = psi::Process::environment.globals;
         std::string prefix = "TRANS " + upper_string(state_.multiplicity_label());
         std::string key = " S_MAX " + name1 + " -> " + name2;
         push_to_psi4_env_globals(maxS, prefix + key);

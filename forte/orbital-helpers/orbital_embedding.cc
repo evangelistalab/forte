@@ -50,12 +50,13 @@ using namespace psi;
 
 namespace forte {
 
-psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
-                                         std::vector<int>& mos, int offset,
-                                         bool prevent_rotate = false);
+std::shared_ptr<psi::Matrix> semicanonicalize_block(psi::SharedWavefunction ref_wfn,
+                                                    std::shared_ptr<psi::Matrix> C_tilde,
+                                                    std::vector<int>& mos, int offset,
+                                                    bool prevent_rotate = false);
 
 void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
-               psi::SharedMatrix Ps) {
+               std::shared_ptr<psi::Matrix> Ps) {
     print_method_banner({"Atomic Valence Active Space (AVAS)", "Chenxi Cai and Chenyang Li"});
 
     if (Ps == nullptr) {
@@ -445,7 +446,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
 
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
                                             std::shared_ptr<ForteOptions> options,
-                                            psi::SharedMatrix Pf, int nbf_A,
+                                            std::shared_ptr<psi::Matrix> Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info) {
 
     // 1. Get necessary information, print method initialization information and exceptions
@@ -878,8 +879,10 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     return mo_space_info_emb;
 } // namespace forte
 
-psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
-                                         std::vector<int>& mos, int offset, bool prevent_rotate) {
+std::shared_ptr<psi::Matrix> semicanonicalize_block(psi::SharedWavefunction ref_wfn,
+                                                    std::shared_ptr<psi::Matrix> C_tilde,
+                                                    std::vector<int>& mos, int offset,
+                                                    bool prevent_rotate) {
     int nso = ref_wfn->nso();
     int nmo_block = mos.size();
     auto C_block = std::make_shared<psi::Matrix>("C block", nso, nmo_block);

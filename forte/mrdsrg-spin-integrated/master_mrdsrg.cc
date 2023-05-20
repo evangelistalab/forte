@@ -8,12 +8,13 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
+#include "base_classes/mo_space_info.h"
+#include "integrals/active_space_integrals.h"
+
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
 #include "master_mrdsrg.h"
-
-#include "base_classes/mo_space_info.h"
 
 using namespace psi;
 
@@ -454,7 +455,7 @@ void MASTER_DSRG::init_dm_ints() {
         dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
-    std::vector<psi::SharedMatrix> dm_a = ints_->mo_dipole_ints();
+    std::vector<std::shared_ptr<psi::Matrix>> dm_a = ints_->mo_dipole_ints();
     fill_MOdm(dm_a, dm_a); // beta-spin integrals are equivalent to those of alpha-spin
     compute_dm_ref();
 
@@ -474,8 +475,8 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("Done");
 }
 
-void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
-                            std::vector<psi::SharedMatrix>& dm_b) {
+void MASTER_DSRG::fill_MOdm(std::vector<std::shared_ptr<psi::Matrix>>& dm_a,
+                            std::vector<std::shared_ptr<psi::Matrix>>& dm_b) {
     // consider frozen-core part
     std::vector<size_t> frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
     for (int z = 0; z < 3; ++z) {

@@ -396,8 +396,8 @@ void ASCI::print_nos() {
     outfile->Printf("\n\n");
 }
 
-void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
-                                       det_hash<double>& V_hash) {
+void ASCI::get_excited_determinants_sr(std::shared_ptr<psi::Matrix> evecs,
+                                       DeterminantHashVec& P_space, det_hash<double>& V_hash) {
     local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -548,8 +548,8 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
 
 DeterminantHashVec ASCI::get_PQ_space() { return PQ_space_; }
 
-psi::SharedMatrix ASCI::get_PQ_evecs() { return PQ_evecs_; }
-psi::SharedVector ASCI::get_PQ_evals() { return PQ_evals_; }
+std::shared_ptr<psi::Matrix> ASCI::get_PQ_evecs() { return PQ_evecs_; }
+psi::std::shared_ptr<psi::Vector> ASCI::get_PQ_evals() { return PQ_evals_; }
 
 // std::shared_ptr<WFNOperator> ASCI::get_op() { return op_; }
 
@@ -571,7 +571,8 @@ std::vector<double> ASCI::get_multistate_pt2_energy_correction() {
 }
 
 int ASCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                      DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots) {
+                      DeterminantHashVec& P_space, std::shared_ptr<psi::Matrix> P_evecs,
+                      int num_ref_roots) {
     int ndets = P_space.size();
     int max_dim = std::min(ndets, 1000);
     //    int max_dim = ndets;

@@ -51,7 +51,7 @@ bool pair_compd(const std::pair<Determinant, double> E1, const std::pair<Determi
     return E1.first < E2.first;
 }
 
-void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector evals,
+void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, std::shared_ptr<psi::Vector> evals,
                                              DeterminantHashVec& P_space,
                                              std::vector<std::pair<double, Determinant>>& F_space) {
     local_timer build;
@@ -234,7 +234,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
 }
 
 void AdaptiveCI::get_excited_determinants_avg(
-    int nroot, SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    int nroot, SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -477,7 +477,7 @@ void AdaptiveCI::get_excited_determinants_avg(
 }
 
 void AdaptiveCI::get_excited_determinants_core(
-    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -729,7 +729,7 @@ void AdaptiveCI::get_excited_determinants_core(
 
 // New threading strategy
 double AdaptiveCI::get_excited_determinants_batch_vecsort(
-    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
 
@@ -865,7 +865,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
 
 // New threading strategy
 double
-AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals,
+AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, std::shared_ptr<psi::Vector> evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
@@ -1662,7 +1662,7 @@ gas_num_; i++) { outfile->Printf("   %d    ", gas_configuration.at(i)); } dimens
 
 }
 void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs,
-                                          SharedVector evals,
+                                          std::shared_ptr<psi::Vector> evals,
                                           DeterminantHashVec& P_space,
                                           std::vector<std::pair<double,Determinant>>&
 F_space) { size_t max_P = P_space.size(); const det_hashvec& P_dets =

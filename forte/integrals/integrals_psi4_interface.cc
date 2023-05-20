@@ -369,7 +369,7 @@ void Psi4Integrals::rotate_mos() {
     wfn_->epsilon_b()->copy(eps_a_new);
 }
 
-psi::SharedMatrix Psi4Integrals::Ca_AO() const {
+std::shared_ptr<psi::Matrix> Psi4Integrals::Ca_AO() const {
     auto aotoso = wfn_->aotoso();
     auto nao = nso_;
 
@@ -412,12 +412,12 @@ void Psi4Integrals::build_multipole_ints_ao() {
     aoqOBI->compute(quadrupole_ints_ao_);
 }
 
-std::vector<psi::SharedMatrix> Psi4Integrals::mo_dipole_ints() const {
+std::vector<std::shared_ptr<psi::Matrix>> Psi4Integrals::mo_dipole_ints() const {
     auto Cao = Ca_AO();
-    std::vector<psi::SharedMatrix> dipole_ints;
+    std::vector<std::shared_ptr<psi::Matrix>> dipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
-        psi::SharedMatrix dipole(dipole_ints_ao_[i]->clone());
+        std::shared_ptr<psi::Matrix> dipole(dipole_ints_ao_[i]->clone());
         dipole->set_name("MO Dipole " + names[i]);
         dipole->transform(Cao);
         dipole_ints.push_back(dipole);
@@ -425,12 +425,12 @@ std::vector<psi::SharedMatrix> Psi4Integrals::mo_dipole_ints() const {
     return dipole_ints;
 }
 
-std::vector<psi::SharedMatrix> Psi4Integrals::mo_quadrupole_ints() const {
+std::vector<std::shared_ptr<psi::Matrix>> Psi4Integrals::mo_quadrupole_ints() const {
     auto Cao = Ca_AO();
-    std::vector<psi::SharedMatrix> quadrupole_ints;
+    std::vector<std::shared_ptr<psi::Matrix>> quadrupole_ints;
     std::vector<std::string> names{"XX", "XY", "XZ", "YY", "YZ", "ZZ"};
     for (int i = 0; i < 6; ++i) {
-        psi::SharedMatrix Qpole(quadrupole_ints_ao_[i]->clone());
+        std::shared_ptr<psi::Matrix> Qpole(quadrupole_ints_ao_[i]->clone());
         Qpole->set_name("MO Quadrupole " + names[i]);
         Qpole->transform(Cao);
         quadrupole_ints.push_back(Qpole);
@@ -464,7 +464,7 @@ void Psi4Integrals::make_fock_matrix(ambit::Tensor gamma_a, ambit::Tensor gamma_
     }
 }
 
-std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, double>
 Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) {
     /* F_closed = Hcore + Vclosed in AO basis
      *
@@ -585,8 +585,8 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
     }
 }
 
-std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active(ambit::Tensor Da,
-                                                                                 ambit::Tensor Db) {
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+Psi4Integrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
     // Implementation Notes (in AO basis)
     // F_active = D_{uv}^{active} * ( (uv|rs) - 0.5 * (us|rv) )
     // D_{uv}^{active} = \sum_{xy}^{active} C_{ux} * C_{vy} * Gamma1_{xy}
@@ -656,7 +656,8 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
     }
 }
 
-psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g1) {
+std::shared_ptr<psi::Matrix>
+Psi4Integrals::make_fock_active_restricted(std::shared_ptr<psi::Matrix> g1) {
     if (JK_status_ == JKStatus::finalized) {
         outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
         jk_initialize(0.7);
@@ -706,8 +707,9 @@ psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g
     return F_active;
 }
 
-std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+Psi4Integrals::make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> g1a,
+                                             std::shared_ptr<psi::Matrix> g1b) {
     if (JK_status_ == JKStatus::finalized) {
         outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
         jk_initialize(0.8);

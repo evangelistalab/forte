@@ -431,7 +431,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
             batches.push_back(vec_small.size() % max_nslice);
 
         for (size_t n = 0, offset = 0, nbatch = batches.size(); n < nbatch; ++n) {
-            std::vector<psi::SharedMatrix> Am_vec;
+            std::vector<std::shared_ptr<psi::Matrix>> Am_vec;
 
             for (size_t i = 0; i < batches[n]; ++i) {
                 auto ni = cmotomo[vec_small[i + offset]];

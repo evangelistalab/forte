@@ -68,9 +68,8 @@ void DSRG_MRPT2::set_tensor() {
     I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = (i[0] == i[1]) ? 1.0 : 0.0;
     });
-    one_vec.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = 1.0;
-    });
+    one_vec.iterate([&](const std::vector<size_t>& /*i*/, const std::vector<SpinType>&,
+                        double& value) { value = 1.0; });
     I_ci.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 

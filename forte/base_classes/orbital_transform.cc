@@ -31,6 +31,8 @@
 #include "base_classes/orbital_transform.h"
 #include "base_classes/rdms.h"
 
+#include "integrals/integrals.h"
+
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/mrpt2_nos.h"
@@ -57,7 +59,7 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
     } else if (type == "MP2NO") {
         orb_t = std::make_unique<MP2_NOS>(scf_info, options, ints, mo_space_info);
     } else if (type == "CINO") {
-        orb_t = std::make_unique<CINO>(scf_info, options, ints, mo_space_info);
+        orb_t = std::make_unique<CINO>(options, ints, mo_space_info);
     } else if (type == "MRCINO") {
         orb_t = std::make_unique<MRCINO>(scf_info, options, ints, mo_space_info);
     } else if (type == "MRPT2NO") {
