@@ -197,9 +197,9 @@ double ExternalActiveSpaceMethod::compute_energy() {
     return energy;
 }
 
-std::vector<std::shared_ptr<RDMs>>
-ExternalActiveSpaceMethod::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                int max_rdm_level, RDMsType type) {
+std::vector<std::shared_ptr<RDMs>> ExternalActiveSpaceMethod::rdms(
+    [[maybe_unused]] const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+    RDMsType type) {
     std::vector<std::shared_ptr<RDMs>> refs;
 
     if (type == RDMsType::spin_dependent) {

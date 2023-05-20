@@ -302,7 +302,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
     double w1 = param_->c1 * dg0;
     double w2 = -param_->c2 * dg0;
 
-    double fx_low = fx0, fx_high = fx0;
+    double fx_low = fx0; // fx_high = fx0;
     double step_low = 0.0, step_high = 0.0;
 
     // braketing stage
@@ -312,7 +312,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
         fx = func.evaluate(x, g_);
 
         if (fx - fx0 > w1 * step or (fx >= fx_low and i > 0)) {
-            fx_high = fx;
+            // fx_high = fx;
             step_high = step;
             break;
         }
@@ -326,7 +326,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
             return;
         }
 
-        fx_high = fx_low;
+        // fx_high = fx_low;
         step_high = step_low;
 
         fx_low = fx;
@@ -355,7 +355,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
 
         if (fx - fx0 > w1 * step or fx >= fx_low) {
             step_high = step;
-            fx_high = fx;
+            // fx_high = fx;
         } else {
             double dg = g_->vector_dot(p_);
 
@@ -368,7 +368,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
 
             if (dg * (step_high - step_low) >= 0) {
                 step_high = step_low;
-                fx_high = fx_low;
+                // fx_high = fx_low;
             }
 
             step_low = step;

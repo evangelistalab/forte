@@ -565,7 +565,7 @@ void DSRG_MRPT2::set_z_diag() {
             });
             BlockedTensor Delta2 = BTF_->build(CoreTensor, "Delta2", {"hhpp"}, true);
             Delta2.iterate(
-                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                [&](const std::vector<size_t>& i, const std::vector<SpinType>& /*spin*/,
                     double& value) { value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]; });
             BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"}, true);
             {
@@ -593,7 +593,7 @@ void DSRG_MRPT2::set_z_diag() {
             });
             BlockedTensor Delta2 = BTF_->build(CoreTensor, "Delta2", {"hHpP"}, true);
             Delta2.iterate(
-                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                [&](const std::vector<size_t>& i, const std::vector<SpinType>& /*spin*/,
                     double& value) { value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]; });
             BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hHpP"}, true);
             {
@@ -621,9 +621,8 @@ void DSRG_MRPT2::set_z_diag() {
         });
         BlockedTensor Delta2 = BTF_->build(CoreTensor, "Delta2", {"hhpp", "hHpP"}, true);
         Delta2.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];
-            });
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& /*spin*/,
+                double& value) { value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]; });
         BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"}, true);
         BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", {"hhpp", "hHpP"}, true);
         temp["ijab"] += V["abij"] * Eeps2["ijab"];
@@ -1228,12 +1227,12 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double>& qk_vec, std::vector<d
         std::shared_ptr<psi::Vector> svq(new psi::Vector(ndets));
         std::shared_ptr<psi::Vector> svy(new psi::Vector(ndets));
 
-        for (int i = 0; i < ndets; ++i) {
+        for (size_t i = 0; i < ndets; ++i) {
             svq->set(i, qk_ci.data()[i]);
             svy->set(i, y_ci.data()[i]);
         }
         as_solver_->generalized_sigma(state, svq, svy);
-        for (int i = 0; i < ndets; ++i) {
+        for (size_t i = 0; i < ndets; ++i) {
             y_ci.data()[i] += svy->get(i);
         }
     }
@@ -1379,7 +1378,7 @@ void DSRG_MRPT2::set_preconditioner(std::vector<double>& D) {
     if (std::fabs(d_ci) > err) {
         double value = 1.0 / d_ci;
         int idx = preidx["ci"];
-        for (int i = 0; i < ndets; ++i) {
+        for (size_t i = 0; i < ndets; ++i) {
             D.at(idx + i) = value;
         }
     }

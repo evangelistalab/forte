@@ -853,8 +853,8 @@ void AdaptiveCI::print_nos() {
     psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", nirrep_, nactpi_, nactpi_);
+    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", nirrep_, nactpi_, nactpi_);
 
     int offset = 0;
     for (size_t h = 0; h < nirrep_; h++) {

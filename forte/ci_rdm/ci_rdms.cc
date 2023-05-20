@@ -2029,8 +2029,6 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     }
     outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f", error_2rdm_ab);
     // aaa aaa
-    // std::shared_ptr<psi::Matrix> three_rdm(new psi::Matrix("three", dim_space_, dim_space_));
-    // three_rdm->zero();
     double error_3rdm_aaa = 0.0;
     for (size_t p = 0; p < norb_; ++p) {
         // for (size_t p = 0; p < 1; ++p){
@@ -2053,7 +2051,6 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                     if (I == det_space[j]) {
                                         rdm +=
                                             sign * evecs_->get(i, root1_) * evecs_->get(j, root2_);
-                                        // three_rdm->set(i, j, three_rdm->get(i,j) + 1);
                                     }
                                 }
                             }

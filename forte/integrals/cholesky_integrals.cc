@@ -174,15 +174,16 @@ void CholeskyIntegrals::gather_integrals() {
     size_t nbf = primary->nbf();
 
     /// Needed to generate sieve information
-    std::shared_ptr<IntegralFactory> integral(
-        new IntegralFactory(primary, primary, primary, primary));
+    auto integral = std::make_shared<IntegralFactory>(primary, primary, primary, primary);
+
     double tol_cd = options_->get_double("CHOLESKY_TOLERANCE");
 
     // This is creates the cholesky decomposed AO integrals
     local_timer timer;
-    std::shared_ptr<CholeskyERI> Ch(new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
-                                                    options_->get_double("INTS_TOLERANCE"), tol_cd,
-                                                    psi::Process::environment.get_memory()));
+    auto Ch = std::make_shared<CholeskyERI>(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
+                                            options_->get_double("INTS_TOLERANCE"), tol_cd,
+                                            psi::Process::environment.get_memory());
+
     if (options_->get_str("DF_INTS_IO") == "LOAD") {
         std::shared_ptr<ERISieve> sieve(
             new ERISieve(primary, options_->get_double("INTS_TOLERANCE")));
@@ -194,7 +195,7 @@ void CholeskyIntegrals::gather_integrals() {
             outfile->Printf("\n    %-36s ...", str.c_str());
         }
 
-        std::shared_ptr<PSIO> psio(new PSIO());
+        auto psio = std::make_shared<PSIO>();
         int file_unit = PSIF_DFSCF_BJ;
 
         if (psio->exists(file_unit)) {

@@ -58,7 +58,7 @@ SOMRDSRG::SOMRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info
                    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
-      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
+      tensor_type_(CoreTensor), BTF(std::make_shared<BlockedTensorFactory>()) {
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 

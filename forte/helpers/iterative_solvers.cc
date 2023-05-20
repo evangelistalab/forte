@@ -138,8 +138,7 @@ std::shared_ptr<psi::Matrix> DavidsonLiuSolver::eigenvectors() const { return bn
 
 std::shared_ptr<psi::Vector> DavidsonLiuSolver::eigenvector(size_t n) const {
     double** v = bnew->pointer();
-
-    std::shared_ptr<psi::Vector> evec(new psi::Vector("V", size_));
+    auto evec = std::make_shared<psi::Vector>("V", size_);
     for (size_t I = 0; I < size_; I++) {
         evec->set(I, v[n][I]);
     }

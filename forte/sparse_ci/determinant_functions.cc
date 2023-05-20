@@ -137,7 +137,6 @@ void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo) {
         det_map[I] = true;
     }
     // Loop over determinants
-    size_t ndet_added = 0;
     std::vector<size_t> closed(nmo, 0);
     std::vector<size_t> open(nmo, 0);
     std::vector<size_t> open_bits(nmo, 0);
@@ -189,8 +188,6 @@ void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo) {
             if (det_map.count(new_det) == 0) {
                 det_space.push_back(new_det);
                 det_map[new_det] = true;
-                // outfile->Printf("\n  added determinant:    %s", new_det.str().c_str());
-                ndet_added++;
             }
         } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
     }

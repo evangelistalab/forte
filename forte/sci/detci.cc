@@ -779,7 +779,7 @@ void DETCI::generalized_rdms(size_t root, const std::vector<double>& X, ambit::B
 
     // test consistency between grdms and rdm_level
     auto blabels = grdms.block_labels();
-    if (blabels.size() != rdm_level + 1) {
+    if (blabels.size() != static_cast<size_t>(rdm_level) + 1) {
         throw std::runtime_error("Incorrect number of tensors in the result BlockedTensor.");
     }
 

@@ -769,8 +769,8 @@ std::shared_ptr<psi::Matrix> CASSCF::build_fock_active(std::shared_ptr<psi::Matr
 
 void CASSCF::overlap_orbitals(const std::shared_ptr<psi::Matrix>& C_old,
                               const std::shared_ptr<psi::Matrix>& C_new) {
-    std::shared_ptr<psi::Matrix> S_orbitals(new psi::Matrix("Overlap", nsopi_, nsopi_));
-    std::shared_ptr<psi::Matrix> S_basis = ints_->wfn()->S();
+    auto S_orbitals = std::make_shared<psi::Matrix>("Overlap", nsopi_, nsopi_);
+    auto S_basis = ints_->wfn()->S();
     S_orbitals = psi::linalg::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
     for (size_t h = 0; h < nirrep_; h++) {
@@ -788,41 +788,5 @@ make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
             std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints) {
     return std::make_unique<CASSCF>(state_weight_map, scf_info, options, mo_space_info, ints);
 }
-
-// void CASSCF::write_orbitals_molden() {
-//    std::shared_ptr<psi::Vector> occ_vector(new psi::Vector(nirrep_, corr_dim_));
-//    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
-//}
-
-// void CASSCF::overlap_coefficients() {
-//    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
-//    for (size_t iter = 1; iter < CISolutions_.size(); ++iter) {
-//        for (size_t cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++) {
-//            for (size_t j = 0; j < CISolutions_[iter].size(); j++) {
-//                if (std::fabs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90) {
-//                    outfile->Printf("\n %d:%d %d:%d %8.8f", 0, cisoln, iter, j,
-//                                    CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
-//                }
-//            }
-//        }
-//        outfile->Printf("\n");
-//    }
-//}
-
-// std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-//                               int /*max_rdm_level*/) {
-//    // TODO (York): this does not seem the correct thing to do.
-//    std::vector<RDMs> refs;
-//    refs.push_back(cas_ref_);
-//    return refs;
-//}
-
-// std::vector<RDMs>
-// CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-//                        std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
-//    std::vector<RDMs> refs;
-//    throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
-//    return refs;
-//}
 
 } // namespace forte

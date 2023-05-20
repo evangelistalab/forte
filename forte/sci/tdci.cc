@@ -55,7 +55,7 @@ TDCI::TDCI(std::shared_ptr<ActiveSpaceMethod> active_space_method,
            std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
            std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : active_space_method_(active_space_method), scf_info_(scf_info), as_ints_(as_ints),
+    : scf_info_(scf_info), active_space_method_(active_space_method), as_ints_(as_ints),
       options_(options), mo_space_info_(mo_space_info) {}
 
 TDCI::~TDCI() {}
@@ -964,7 +964,11 @@ void TDCI::propagate_lanczos(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
         std::vector<double> rwork(3 * n - 2);
         lwork = 2 * n - 1;
         std::vector<std::complex<double>> work(lwork);
-        zheev("V", "L", &n, Hs.data(), &lda, w.data(), work.data(), &lwork, rwork.data(), &info);
+
+        char jobz = 'V';
+        char uplo = 'L';
+        zheev(&jobz, &uplo, &n, Hs.data(), &lda, w.data(), work.data(), &lwork, rwork.data(),
+              &info);
         // Evecs are stored in Hs, let's unpack it and the energy
 
         SharedMatrix evecs_r = std::make_shared<Matrix>("er", n, n);
