@@ -549,7 +549,7 @@ void ASCI::get_excited_determinants_sr(std::shared_ptr<psi::Matrix> evecs,
 DeterminantHashVec ASCI::get_PQ_space() { return PQ_space_; }
 
 std::shared_ptr<psi::Matrix> ASCI::get_PQ_evecs() { return PQ_evecs_; }
-psi::std::shared_ptr<psi::Vector> ASCI::get_PQ_evals() { return PQ_evals_; }
+std::shared_ptr<psi::Vector> ASCI::get_PQ_evals() { return PQ_evals_; }
 
 // std::shared_ptr<WFNOperator> ASCI::get_op() { return op_; }
 

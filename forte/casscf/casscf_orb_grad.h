@@ -64,12 +64,11 @@ class CASSCF_ORB_GRAD {
                     std::shared_ptr<ForteIntegrals> ints);
 
     /// Evaluate the energy and orbital gradient
-    double evaluate(psi::std::shared_ptr<psi::Vector> x, psi::std::shared_ptr<psi::Vector> g,
+    double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
                     bool do_g = true);
 
     /// Evaluate the diagonal orbital Hessian
-    void hess_diag(psi::std::shared_ptr<psi::Vector> x,
-                   const psi::std::shared_ptr<psi::Vector>& h0);
+    void hess_diag(std::shared_ptr<psi::Vector> x, const std::shared_ptr<psi::Vector>& h0);
 
     /// Set RDMs used for orbital optimization
     void set_rdms(std::shared_ptr<RDMs> rdms);
@@ -237,10 +236,10 @@ class CASSCF_ORB_GRAD {
 
     /// The orbital gradients
     ambit::BlockedTensor g_;
-    psi::std::shared_ptr<psi::Vector> grad_;
+    std::shared_ptr<psi::Vector> grad_;
     /// The orbital diagonal Hessian
     ambit::BlockedTensor h_diag_;
-    psi::std::shared_ptr<psi::Vector> hess_diag_;
+    std::shared_ptr<psi::Vector> hess_diag_;
 
     /// G intermediates when forming internal diagonal Hessian
     ambit::BlockedTensor Guu_;
@@ -284,7 +283,7 @@ class CASSCF_ORB_GRAD {
     void compute_orbital_hess_diag();
 
     /// Update orbitals using the given rotation matrix in vector form
-    bool update_orbitals(psi::std::shared_ptr<psi::Vector> x);
+    bool update_orbitals(std::shared_ptr<psi::Vector> x);
 
     /// Test if new orbitals are significantly different from the beginning orbitals
     /// Return a tuple of <irrep, old active orbital index, new active orbital index>
@@ -320,7 +319,7 @@ class CASSCF_ORB_GRAD {
     std::vector<size_t> hf_uocc_mos_;
 
     /// Hartree-Fock orbital energies
-    psi::std::shared_ptr<psi::Vector> epsilon_;
+    std::shared_ptr<psi::Vector> epsilon_;
 
     /// Compute the frozen part of the A matrix
     void build_Am_frozen();
@@ -355,7 +354,7 @@ class CASSCF_ORB_GRAD {
     void fill_A_matrix_data(ambit::BlockedTensor A);
 
     /// Reshape the orbital rotation related BlockedTensor to std::shared_ptr<psi::Vector>
-    void reshape_rot_ambit(ambit::BlockedTensor bt, const psi::std::shared_ptr<psi::Vector>& sv);
+    void reshape_rot_ambit(ambit::BlockedTensor bt, const std::shared_ptr<psi::Vector>& sv);
 
     /// Compute the exponential of a skew-symmetric matrix
     std::shared_ptr<psi::Matrix> matrix_exponential(const std::shared_ptr<psi::Matrix>& A, int n);

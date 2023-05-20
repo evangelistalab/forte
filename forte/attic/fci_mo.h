@@ -136,8 +136,8 @@ class FCI_MO : public ActiveSpaceMethod {
     ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
     /// @param x: the X vector to be contracted with H_IJ
     /// @param sigma: the sigma vector (will be zeroed first)
-    void generalized_sigma(psi::std::shared_ptr<psi::Vector> x,
-                           psi::std::shared_ptr<psi::Vector> sigma) override;
+    void generalized_sigma(std::shared_ptr<psi::Vector> x,
+                           std::shared_ptr<psi::Vector> sigma) override;
 
     /// Return the number of determinants
     size_t space_size() override { return determinant_.size(); }
@@ -263,9 +263,8 @@ class FCI_MO : public ActiveSpaceMethod {
     void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
 
     /// Set state-averaged eigen values and vectors
-    void
-    set_eigens(const std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>>&
-                   eigens);
+    void set_eigens(
+        const std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>>& eigens);
 
     /// Return fci_int_ pointer
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return fci_ints_; }
@@ -282,12 +281,10 @@ class FCI_MO : public ActiveSpaceMethod {
     }
 
     /// Return the vector of eigen vectors and eigen values
-    std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>> const eigen() {
-        return eigen_;
-    }
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> const eigen() { return eigen_; }
 
     /// Return the vector of eigen vectors and eigen values (used in state-average computation)
-    std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>> const eigens() {
+    std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>> const eigens() {
         return eigens_;
     }
 
@@ -445,23 +442,22 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<std::vector<std::pair<size_t, double>>> initial_guess_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
-    std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>> eigen_;
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> eigen_;
     /// A List of Eigen Values and Vectors for State Average
-    std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>> eigens_;
+    std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>> eigens_;
     /// The algorithm for diagonalization
     std::string diag_algorithm_;
 
     /// Diagonalize the Hamiltonian
     void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,
-                       std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen);
+                       std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen);
     /// Diagonalize the Hamiltonian without the HF determinant
-    void
-    Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
-                       std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen);
+    void Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
+                            std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen);
 
     /// Print the CI Vectors and Configurations (figure out the dominant determinants)
     void print_CI(const int& nroot, const double& CI_threshold,
-                  const std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen,
+                  const std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen,
                   const vecdet& det);
 
     /// Density Matrix

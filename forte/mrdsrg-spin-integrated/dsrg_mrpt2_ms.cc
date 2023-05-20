@@ -246,7 +246,7 @@ namespace forte {
 
 //                // compute energy and fill in results
 //                fci->compute_energy();
-//                psi::std::shared_ptr<psi::Vector> Ems = fci->evals();
+//                std::shared_ptr<psi::Vector> Ems = fci->evals();
 //                for (int i = 0; i < nstates; ++i) {
 //                    Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
 //                }
@@ -323,7 +323,7 @@ namespace forte {
 //                outfile->Printf("\n");
 //                Heff->print();
 //                std::shared_ptr<psi::Matrix> U(new psi::Matrix("U of Heff", nstates, nstates));
-//                psi::std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
+//                std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
 //                Heff->diagonalize(U, Ems);
 //                U->eivprint(Ems);
 
@@ -502,7 +502,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
 
         std::shared_ptr<psi::Matrix> U(
             new psi::Matrix("U of Heff (Symmetrized)", nstates, nstates));
-        psi::std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
+        std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
 
@@ -591,7 +591,7 @@ DSRG_MRPT2::xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
 
     // diagonalize Fock
     std::shared_ptr<psi::Matrix> Fevec(new psi::Matrix("Fock Evec", nstates, nstates));
-    psi::std::shared_ptr<psi::Vector> Feval(new Vector("Fock Eval", nstates));
+    std::shared_ptr<psi::Vector> Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);
 

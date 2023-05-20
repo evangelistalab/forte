@@ -427,7 +427,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
     auto Cact = std::make_shared<psi::Matrix>("Cact", nso, nactv_);
     std::vector<std::shared_ptr<psi::Matrix>> Cact_vec(nactv_);
     for (size_t x = 0; x < nactv_; x++) {
-        psi::std::shared_ptr<psi::Vector> Ca_nosym_vec = Ca_nosym->get_column(0, actv_mos_abs_[x]);
+        std::shared_ptr<psi::Vector> Ca_nosym_vec = Ca_nosym->get_column(0, actv_mos_abs_[x]);
         Cact->set_column(0, x, Ca_nosym_vec);
 
         std::string name = "Cact slice " + std::to_string(x);
@@ -790,7 +790,7 @@ make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
 }
 
 // void CASSCF::write_orbitals_molden() {
-//    psi::std::shared_ptr<psi::Vector> occ_vector(new psi::Vector(nirrep_, corr_dim_));
+//    std::shared_ptr<psi::Vector> occ_vector(new psi::Vector(nirrep_, corr_dim_));
 //    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
 //}
 

@@ -82,7 +82,7 @@ class ASCI : public SelectedCIMethod {
 
     DeterminantHashVec get_PQ_space() override;
     std::shared_ptr<psi::Matrix> get_PQ_evecs() override;
-    psi::std::shared_ptr<psi::Vector> get_PQ_evals() override;
+    std::shared_ptr<psi::Vector> get_PQ_evals() override;
 
     //    std::shared_ptr<WFNOperator> get_op() override;
 
@@ -102,7 +102,7 @@ class ASCI : public SelectedCIMethod {
     DeterminantHashVec final_wfn_;
     // Temporarily added
     std::shared_ptr<psi::Matrix> P_evecs_;
-    psi::std::shared_ptr<psi::Vector> P_evals_;
+    std::shared_ptr<psi::Vector> P_evals_;
     DeterminantHashVec P_space_;
     DeterminantHashVec P_ref_;
     std::vector<double> P_ref_evecs_;
@@ -117,7 +117,7 @@ class ASCI : public SelectedCIMethod {
 
     // Temporarily added interface to ExcitedStateSolver
     std::shared_ptr<psi::Matrix> PQ_evecs_;
-    psi::std::shared_ptr<psi::Vector> PQ_evals_;
+    std::shared_ptr<psi::Vector> PQ_evals_;
     DeterminantHashVec PQ_space_;
     /// Roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots_;

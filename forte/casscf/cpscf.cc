@@ -39,8 +39,7 @@ namespace forte {
 
 CPSCF_SOLVER::CPSCF_SOLVER(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::JK> JK,
                            std::shared_ptr<psi::Matrix> C, std::shared_ptr<psi::Matrix> b,
-                           psi::std::shared_ptr<psi::Vector> edocc,
-                           psi::std::shared_ptr<psi::Vector> euocc)
+                           std::shared_ptr<psi::Vector> edocc, std::shared_ptr<psi::Vector> euocc)
     : options_(options), cpscf_(JK, C, b, edocc, euocc) {}
 
 bool CPSCF_SOLVER::solve() {
@@ -66,8 +65,8 @@ bool CPSCF_SOLVER::solve() {
 std::shared_ptr<psi::Matrix> CPSCF_SOLVER::x() { return cpscf_.vec_to_mat(x_); }
 
 CPSCF::CPSCF(std::shared_ptr<psi::JK> JK, std::shared_ptr<psi::Matrix> C,
-             std::shared_ptr<psi::Matrix> b, psi::std::shared_ptr<psi::Vector> edocc,
-             psi::std::shared_ptr<psi::Vector> euocc)
+             std::shared_ptr<psi::Matrix> b, std::shared_ptr<psi::Vector> edocc,
+             std::shared_ptr<psi::Vector> euocc)
     : JK_(JK), C_(C), edocc_(edocc), euocc_(euocc) {
 
     // set up basic stuff
@@ -104,8 +103,7 @@ CPSCF::CPSCF(std::shared_ptr<psi::JK> JK, std::shared_ptr<psi::Matrix> C,
     b_ = mat_to_vec(b);
 }
 
-double CPSCF::evaluate(psi::std::shared_ptr<psi::Vector> x, psi::std::shared_ptr<psi::Vector> g,
-                       bool do_g) {
+double CPSCF::evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g, bool do_g) {
     auto X = vec_to_mat(x);
 
     // contract X with Roothaan-Bagus supermatrix
@@ -152,7 +150,7 @@ double CPSCF::evaluate(psi::std::shared_ptr<psi::Vector> x, psi::std::shared_ptr
     return fx;
 }
 
-void CPSCF::hess_diag(psi::std::shared_ptr<psi::Vector>, psi::std::shared_ptr<psi::Vector> h0) {
+void CPSCF::hess_diag(std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector> h0) {
     // just use orbital energy difference
     for (int h = 0; h < nirrep_; ++h) {
         for (int a = 0; a < nuoccpi_[h]; ++a) {
@@ -164,7 +162,7 @@ void CPSCF::hess_diag(psi::std::shared_ptr<psi::Vector>, psi::std::shared_ptr<ps
     }
 }
 
-void CPSCF::test_vec_dim(psi::std::shared_ptr<psi::Vector> v) {
+void CPSCF::test_vec_dim(std::shared_ptr<psi::Vector> v) {
     if (v->dimpi() != vdims_) {
         psi::outfile->Printf("\n  Expected dimension:    ");
         vdims_.print();
@@ -190,7 +188,7 @@ void CPSCF::test_mat_dim(std::shared_ptr<psi::Matrix> M) {
     }
 }
 
-psi::std::shared_ptr<psi::Vector> CPSCF::mat_to_vec(std::shared_ptr<psi::Matrix> M) {
+std::shared_ptr<psi::Vector> CPSCF::mat_to_vec(std::shared_ptr<psi::Matrix> M) {
     test_mat_dim(M);
 
     auto v = std::make_shared<psi::Vector>("V", vdims_);
@@ -206,7 +204,7 @@ psi::std::shared_ptr<psi::Vector> CPSCF::mat_to_vec(std::shared_ptr<psi::Matrix>
     return v;
 }
 
-std::shared_ptr<psi::Matrix> CPSCF::vec_to_mat(psi::std::shared_ptr<psi::Vector> v) {
+std::shared_ptr<psi::Matrix> CPSCF::vec_to_mat(std::shared_ptr<psi::Vector> v) {
     test_vec_dim(v);
 
     auto M = std::make_shared<psi::Matrix>("M", nuoccpi_, ndoccpi_);

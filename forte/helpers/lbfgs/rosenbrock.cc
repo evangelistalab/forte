@@ -42,8 +42,7 @@ ROSENBROCK::ROSENBROCK(int n) : n_(n) {
     }
 }
 
-double ROSENBROCK::evaluate(psi::std::shared_ptr<psi::Vector> x,
-                            psi::std::shared_ptr<psi::Vector> g, bool) {
+double ROSENBROCK::evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g, bool) {
     check_dim(x);
     check_dim(g);
 
@@ -62,8 +61,7 @@ double ROSENBROCK::evaluate(psi::std::shared_ptr<psi::Vector> x,
     return fx;
 }
 
-void ROSENBROCK::hess_diag(psi::std::shared_ptr<psi::Vector> x,
-                           psi::std::shared_ptr<psi::Vector> h0) {
+void ROSENBROCK::hess_diag(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> h0) {
     check_dim(x);
     check_dim(h0);
 
@@ -75,7 +73,7 @@ void ROSENBROCK::hess_diag(psi::std::shared_ptr<psi::Vector> x,
     }
 }
 
-void ROSENBROCK::check_dim(psi::std::shared_ptr<psi::Vector> x) {
+void ROSENBROCK::check_dim(std::shared_ptr<psi::Vector> x) {
     if (x->dimpi().sum() != x->dim(0)) {
         std::runtime_error("Irrep not supported for Rosenbrock tests");
     }

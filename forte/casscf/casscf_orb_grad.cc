@@ -492,7 +492,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     std::vector<std::shared_ptr<psi::Matrix>> Cact_vec(nactv_);
 
     for (size_t x = 0; x < nactv_; ++x) {
-        psi::std::shared_ptr<psi::Vector> Ca_nosym_vec = C_nosym->get_column(0, actv_mos_[x]);
+        std::shared_ptr<psi::Vector> Ca_nosym_vec = C_nosym->get_column(0, actv_mos_[x]);
         Cact->set_column(0, x, Ca_nosym_vec);
 
         std::string name = "Cact slice " + std::to_string(x);
@@ -675,8 +675,8 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
     return Fock;
 }
 
-double CASSCF_ORB_GRAD::evaluate(psi::std::shared_ptr<psi::Vector> x,
-                                 psi::std::shared_ptr<psi::Vector> g, bool do_g) {
+double CASSCF_ORB_GRAD::evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
+                                 bool do_g) {
     // if need to update orbitals and integrals
     if (update_orbitals(x)) {
         build_mo_integrals();
@@ -694,7 +694,7 @@ double CASSCF_ORB_GRAD::evaluate(psi::std::shared_ptr<psi::Vector> x,
     return energy_;
 }
 
-bool CASSCF_ORB_GRAD::update_orbitals(psi::std::shared_ptr<psi::Vector> x) {
+bool CASSCF_ORB_GRAD::update_orbitals(std::shared_ptr<psi::Vector> x) {
     // test if need to update orbitals
     auto dR = std::make_shared<psi::Matrix>("Delta Orbital Rotation", nmopi_, nmopi_);
 
@@ -878,8 +878,8 @@ void CASSCF_ORB_GRAD::compute_orbital_grad() {
     }
 }
 
-void CASSCF_ORB_GRAD::hess_diag(psi::std::shared_ptr<psi::Vector>,
-                                const psi::std::shared_ptr<psi::Vector>& h0) {
+void CASSCF_ORB_GRAD::hess_diag(std::shared_ptr<psi::Vector>,
+                                const std::shared_ptr<psi::Vector>& h0) {
     compute_orbital_hess_diag();
     h0->copy(*hess_diag_);
 }
@@ -985,7 +985,7 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
 }
 
 void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt,
-                                        const psi::std::shared_ptr<psi::Vector>& sv) {
+                                        const std::shared_ptr<psi::Vector>& sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
         throw std::runtime_error(

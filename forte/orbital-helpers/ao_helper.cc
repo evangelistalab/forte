@@ -42,8 +42,8 @@ using namespace psi;
 namespace forte {
 
 AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
-                                         psi::std::shared_ptr<psi::Vector> eps_occ,
-                                         psi::std::shared_ptr<psi::Vector> eps_vir,
+                                         std::shared_ptr<psi::Vector> eps_occ,
+                                         std::shared_ptr<psi::Vector> eps_vir,
                                          double laplace_tolerance)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
     psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
@@ -56,8 +56,8 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
     shift_ = 0;
 }
 AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
-                                         psi::std::shared_ptr<psi::Vector> eps_occ,
-                                         psi::std::shared_ptr<psi::Vector> eps_vir,
+                                         std::shared_ptr<psi::Vector> eps_occ,
+                                         std::shared_ptr<psi::Vector> eps_vir,
                                          double laplace_tolerance, int shift)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
       shift_(shift) {

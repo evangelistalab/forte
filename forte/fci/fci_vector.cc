@@ -154,7 +154,7 @@ void FCIVector::copy(FCIVector& wfn) {
     }
 }
 
-void FCIVector::copy(psi::std::shared_ptr<psi::Vector> vec) {
+void FCIVector::copy(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -170,7 +170,7 @@ void FCIVector::copy(psi::std::shared_ptr<psi::Vector> vec) {
     }
 }
 
-void FCIVector::copy_to(psi::std::shared_ptr<psi::Vector> vec) {
+void FCIVector::copy_to(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;

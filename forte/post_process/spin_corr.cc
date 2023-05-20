@@ -334,7 +334,7 @@ void SpinCorr::spin_analysis() {
         std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
         std::shared_ptr<psi::Matrix> Ca_copy = Ca->clone();
         for( int i = 0; i < nact; ++i ){
-            psi::std::shared_ptr<psi::Vector> vec = std::make_shared<Vector>(nmo_);
+            std::shared_ptr<psi::Vector> vec = std::make_shared<Vector>(nmo_);
             vec->zero();
             for( int j = 0; j < nact; ++j ){
                 auto col = Ca_copy->get_column(0,actpi[j]);

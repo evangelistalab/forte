@@ -1225,8 +1225,8 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double>& qk_vec, std::vector<d
     //  where fa and fb are core Fock matrices
     for (const auto& pair : as_solver_->state_space_size_map()) {
         const auto& state = pair.first;
-        psi::std::shared_ptr<psi::Vector> svq(new psi::Vector(ndets));
-        psi::std::shared_ptr<psi::Vector> svy(new psi::Vector(ndets));
+        std::shared_ptr<psi::Vector> svq(new psi::Vector(ndets));
+        std::shared_ptr<psi::Vector> svy(new psi::Vector(ndets));
 
         for (int i = 0; i < ndets; ++i) {
             svq->set(i, qk_ci.data()[i]);

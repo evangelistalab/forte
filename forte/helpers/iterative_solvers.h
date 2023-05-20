@@ -98,23 +98,23 @@ class DavidsonLiuSolver {
     size_t collapse_size() const;
 
     /// Add a guess basis vector
-    void add_guess(psi::std::shared_ptr<psi::Vector> vec);
+    void add_guess(std::shared_ptr<psi::Vector> vec);
     /// Get a basis vector
-    void get_b(psi::std::shared_ptr<psi::Vector> vec);
+    void get_b(std::shared_ptr<psi::Vector> vec);
     /// Add a sigma vector
-    bool add_sigma(psi::std::shared_ptr<psi::Vector> vec);
+    bool add_sigma(std::shared_ptr<psi::Vector> vec);
 
     void set_project_out(std::vector<sparse_vec> project_out);
 
     /// Return the eigenvalues
-    psi::std::shared_ptr<psi::Vector> eigenvalues() const;
+    std::shared_ptr<psi::Vector> eigenvalues() const;
     /// Return the eigenvectors
     std::shared_ptr<psi::Matrix> eigenvectors() const;
     /// Return the n-th eigenvector
-    psi::std::shared_ptr<psi::Vector> eigenvector(size_t n) const;
+    std::shared_ptr<psi::Vector> eigenvector(size_t n) const;
 
     /// Initialize the object
-    void startup(psi::std::shared_ptr<psi::Vector> diagonal);
+    void startup(std::shared_ptr<psi::Vector> diagonal);
 
     /// Perform an update step
     SolverStatus update();
@@ -208,11 +208,11 @@ class DavidsonLiuSolver {
     std::shared_ptr<psi::Matrix> alpha;
 
     /// Eigenvalues of the Davidson mini-Hamitonian
-    psi::std::shared_ptr<psi::Vector> lambda;
+    std::shared_ptr<psi::Vector> lambda;
     /// Old eigenvalues of the Davidson mini-Hamitonian
-    psi::std::shared_ptr<psi::Vector> lambda_old;
+    std::shared_ptr<psi::Vector> lambda_old;
     /// Diagonal elements of the Hamiltonian
-    psi::std::shared_ptr<psi::Vector> h_diag;
+    std::shared_ptr<psi::Vector> h_diag;
     /// 2-Norm of the residuals
     std::vector<double> residual_;
 

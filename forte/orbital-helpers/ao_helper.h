@@ -40,8 +40,8 @@ class AtomicOrbitalHelper {
     std::shared_ptr<psi::Matrix> TransAO_Screen_;
 
     std::shared_ptr<psi::Matrix> CMO_;
-    psi::std::shared_ptr<psi::Vector> eps_rdocc_;
-    psi::std::shared_ptr<psi::Vector> eps_virtual_;
+    std::shared_ptr<psi::Vector> eps_rdocc_;
+    std::shared_ptr<psi::Vector> eps_virtual_;
 
     std::shared_ptr<psi::Matrix> POcc_;
     std::shared_ptr<psi::Matrix> PVir_;
@@ -69,11 +69,10 @@ class AtomicOrbitalHelper {
     std::shared_ptr<psi::Matrix> PVir() { return PVir_; }
     int Weights() { return weights_; }
 
-    AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO, psi::std::shared_ptr<psi::Vector> eps_occ,
-                        psi::std::shared_ptr<psi::Vector> eps_vir, double laplace_tolerance);
-    AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO, psi::std::shared_ptr<psi::Vector> eps_occ,
-                        psi::std::shared_ptr<psi::Vector> eps_vir, double laplace_tolerance,
-                        int shift);
+    AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO, std::shared_ptr<psi::Vector> eps_occ,
+                        std::shared_ptr<psi::Vector> eps_vir, double laplace_tolerance);
+    AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO, std::shared_ptr<psi::Vector> eps_occ,
+                        std::shared_ptr<psi::Vector> eps_vir, double laplace_tolerance, int shift);
     /// Compute (mu nu | mu nu)^{(1/2)}
     void Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary);
     void Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,

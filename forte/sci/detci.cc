@@ -812,8 +812,7 @@ void DETCI::generalized_rdms(size_t root, const std::vector<double>& X, ambit::B
     }
 }
 
-void DETCI::generalized_sigma(psi::std::shared_ptr<psi::Vector> x,
-                              psi::std::shared_ptr<psi::Vector> sigma) {
+void DETCI::generalized_sigma(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> sigma) {
     sigma_vector_->compute_sigma(sigma, x);
 }
 

@@ -624,7 +624,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::AugmentedHessianSolve() {
     // AugmentedHessian->print();
     std::shared_ptr<psi::Matrix> HessianEvec(
         new psi::Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
-    psi::std::shared_ptr<psi::Vector> HessianEval(new Vector("HessianEval", nhole + npart + 1));
+    std::shared_ptr<psi::Vector> HessianEval(new Vector("HessianEval", nhole + npart + 1));
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
     HessianEvec->print();
     // std::shared_ptr<psi::Matrix> S_AH(new psi::Matrix("AugmentedHessianLowestEigenvalue", nhole,

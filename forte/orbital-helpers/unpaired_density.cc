@@ -82,8 +82,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    //    opdm_b->transform(Ubs_);
     //
     //    // Diagonalize the 1-RDMs
-    //    psi::std::shared_ptr<psi::Vector> OCC_A(new psi::Vector("ALPHA NOCC", nirrep, nactpi));
-    //    psi::std::shared_ptr<psi::Vector> OCC_B(new psi::Vector("BETA NOCC", nirrep, nactpi));
+    //    std::shared_ptr<psi::Vector> OCC_A(new psi::Vector("ALPHA NOCC", nirrep, nactpi));
+    //    std::shared_ptr<psi::Vector> OCC_B(new psi::Vector("BETA NOCC", nirrep, nactpi));
     //    std::shared_ptr<psi::Matrix> NO_A(new psi::Matrix(nirrep, nactpi, nactpi));
     //    std::shared_ptr<psi::Matrix> NO_B(new psi::Matrix(nirrep, nactpi, nactpi));
     //

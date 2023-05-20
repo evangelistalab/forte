@@ -330,7 +330,7 @@ double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
 }
 
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
-                                   psi::std::shared_ptr<psi::Vector> evals) {
+                                   std::shared_ptr<psi::Vector> evals) {
     int nroot = evals->dim();
     int ref = 0;
 
@@ -443,7 +443,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 }
 
 bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_history,
-                             psi::std::shared_ptr<psi::Vector> evals) {
+                             std::shared_ptr<psi::Vector> evals) {
     bool stuck = false;
     int nroot = evals->dim();
     if (cycle_ < 4) {
@@ -912,7 +912,7 @@ DeterminantHashVec AdaptiveCI::get_PQ_space() { return PQ_space_; }
 
 std::shared_ptr<psi::Matrix> AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 
-psi::std::shared_ptr<psi::Vector> AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
+std::shared_ptr<psi::Vector> AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
 
 std::vector<double> AdaptiveCI::get_PQ_spin2() { return PQ_spin2_; }
 

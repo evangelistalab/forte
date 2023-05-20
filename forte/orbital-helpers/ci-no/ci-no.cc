@@ -106,7 +106,7 @@ void CINO::compute_transformation() {
             std::vector<Determinant> dets = build_dets(h);
 
             // 2. Diagonalize the Hamiltonian in this basis
-            std::pair<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>> evals_evecs =
+            std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>> evals_evecs =
                 diagonalize_hamiltonian(dets, nsolutions);
 
             // 3. Build the density matrix
@@ -128,8 +128,8 @@ void CINO::compute_transformation() {
         std::make_pair(Density_a, Density_b);
 
     // 4. Diagonalize the density matrix
-    std::tuple<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
-               psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
+               std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
         no_U = diagonalize_density_matrix(avg_gamma);
 
     // 5. Find optimal active space and transform the orbitals
@@ -293,7 +293,7 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
     return dets;
 }
 /// Diagonalize the Hamiltonian in this basis
-std::pair<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
 
     SparseCISolver sparse_solver;
@@ -380,11 +380,11 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, std::shared_ptr
 }
 
 /// Diagonalize the density matrix
-std::tuple<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
-           psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Vector>,
+           std::shared_ptr<psi::Matrix>>
 CINO::diagonalize_density_matrix(
     std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> gamma) {
-    std::pair<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>> no_U;
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>> no_U;
 
     auto NO_A = std::make_shared<psi::Matrix>(actvpi_, actvpi_);
     auto NO_B = std::make_shared<psi::Matrix>(actvpi_, actvpi_);
@@ -485,8 +485,8 @@ CINO::diagonalize_density_matrix(
 
 // Find optimal active space and transform the orbitals
 void CINO::find_active_space_and_transform(
-    std::tuple<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
-               psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
+               std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
         no_U) {
 
     auto nmopi = mo_space_info_->dimension("ALL");
@@ -506,8 +506,8 @@ void CINO::find_active_space_and_transform(
     // Ca_->copy(Ca_new);
     // Cb_ = Ca_; // Fix this for unrestricted case
 
-    psi::std::shared_ptr<psi::Vector> OCC_A = std::get<0>(no_U);
-    psi::std::shared_ptr<psi::Vector> OCC_B = std::get<2>(no_U);
+    std::shared_ptr<psi::Vector> OCC_A = std::get<0>(no_U);
+    std::shared_ptr<psi::Vector> OCC_B = std::get<2>(no_U);
 
     std::vector<std::tuple<double, int, int>> sorted_aocc; // (non,irrep,index)
     double sum_o = 0.0;

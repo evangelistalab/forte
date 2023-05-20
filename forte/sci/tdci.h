@@ -108,22 +108,22 @@ class TDCI {
     void renormalize_wfn(std::vector<double>& acoeffs);
 
     void save_matrix(std::shared_ptr<psi::Matrix> mat, std::string str);
-    void save_vector(psi::std::shared_ptr<psi::Vector> vec, std::string str);
+    void save_vector(std::shared_ptr<psi::Vector> vec, std::string str);
     void save_vector(std::vector<double>& vec, std::string str);
     void save_vector(std::vector<size_t>& vec, std::string str);
     void save_vector(std::vector<std::string>& vec, std::string str);
 
-    void propagate_exact(psi::std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
-    void propagate_cn(psi::std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
-    void propagate_taylor1(psi::std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
-    void propagate_taylor2(psi::std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
-    void propagate_RK4(psi::std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
-    void propagate_QCN(psi::std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
-    void propagate_lanczos(psi::std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
+    void propagate_exact(std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
+    void propagate_cn(std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
+    void propagate_taylor1(std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
+    void propagate_taylor2(std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
+    void propagate_RK4(std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
+    void propagate_QCN(std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
+    void propagate_lanczos(std::shared_ptr<psi::Vector> C0, std::shared_ptr<psi::Matrix> H);
 
-    void compute_tdci_select(psi::std::shared_ptr<psi::Vector> C0);
+    void compute_tdci_select(std::shared_ptr<psi::Vector> C0);
 
-    void propagate_list(psi::std::shared_ptr<psi::Vector> C0);
+    void propagate_list(std::shared_ptr<psi::Vector> C0);
 
     void propagate_exact_select(std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i,
                                 DeterminantHashVec& PQ_space, double dt);
@@ -137,9 +137,8 @@ class TDCI {
     // The core state determinant space
     DeterminantHashVec core_dets_;
     DeterminantHashVec ann_dets_;
-    std::vector<double> compute_occupation(psi::std::shared_ptr<psi::Vector> Cr,
-                                           psi::std::shared_ptr<psi::Vector> Ci,
-                                           std::vector<int>& orb);
+    std::vector<double> compute_occupation(std::shared_ptr<psi::Vector> Cr,
+                                           std::shared_ptr<psi::Vector> Ci, std::vector<int>& orb);
     std::vector<double> compute_occupation(DeterminantHashVec& dets, std::vector<double>& Cr,
                                            std::vector<double>& Ci, std::vector<int>& orb);
 

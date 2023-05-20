@@ -211,7 +211,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         Hss->set_name("Hss");
 
         // Obtain spin selected eigen values and vectors
-        psi::std::shared_ptr<psi::Vector> Hss_vals(new Vector("Hss Eigen Values", nfound));
+        std::shared_ptr<psi::Vector> Hss_vals(new Vector("Hss Eigen Values", nfound));
         std::shared_ptr<psi::Matrix> Hss_vecs(new psi::Matrix("Hss Eigen Vectors", nfound, nfound));
         Hss->diagonalize(Hss_vecs, Hss_vals);
 
@@ -504,7 +504,7 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
 
 bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
                                          std::shared_ptr<SigmaVector> sigma_vector,
-                                         psi::std::shared_ptr<psi::Vector> Eigenvalues,
+                                         std::shared_ptr<psi::Vector> Eigenvalues,
                                          std::shared_ptr<psi::Matrix> Eigenvectors, int nroot,
                                          int multiplicity) {
     local_timer dl;
@@ -515,8 +515,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     dls.set_print_level(0);
 
     // allocate vectors
-    psi::std::shared_ptr<psi::Vector> b(new Vector("b", fci_size));
-    psi::std::shared_ptr<psi::Vector> sigma(new Vector("sigma", fci_size));
+    std::shared_ptr<psi::Vector> b(new Vector("b", fci_size));
+    std::shared_ptr<psi::Vector> sigma(new Vector("sigma", fci_size));
 
     // get and pass diagonal
     sigma_vector->get_diagonal(*sigma);
@@ -666,7 +666,7 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     //    dls.get_results();
     spin_.clear();
-    psi::std::shared_ptr<psi::Vector> evals = dls.eigenvalues();
+    std::shared_ptr<psi::Vector> evals = dls.eigenvalues();
     std::shared_ptr<psi::Matrix> evecs = dls.eigenvectors();
     for (int r = 0; r < nroot; ++r) {
         Eigenvalues->set(r, evals->get(r));

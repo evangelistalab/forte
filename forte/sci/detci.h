@@ -184,8 +184,8 @@ class DETCI : public ActiveSpaceMethod {
     ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
     /// @param x: the X vector to be contracted with H_IJ
     /// @param sigma: the sigma vector (will be zeroed first)
-    void generalized_sigma(psi::std::shared_ptr<psi::Vector> x,
-                           psi::std::shared_ptr<psi::Vector> sigma) override;
+    void generalized_sigma(std::shared_ptr<psi::Vector> x,
+                           std::shared_ptr<psi::Vector> sigma) override;
 };
 } // namespace forte
 

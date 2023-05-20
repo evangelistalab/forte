@@ -137,9 +137,9 @@ class DWMS_DSRGPT2 {
     /// old_eigen - original states
     /// new_vals - new energy
     /// new_vecs - linear combinations of original states
-    std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>> compute_new_eigen(
-        const std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& old_eigen,
-        psi::std::shared_ptr<psi::Vector> new_vals, std::shared_ptr<psi::Matrix> new_vecs);
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>
+    compute_new_eigen(const std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& old_eigen,
+                      std::shared_ptr<psi::Vector> new_vals, std::shared_ptr<psi::Matrix> new_vecs);
 
     /// compute MS or XMS energies
     void compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
@@ -162,7 +162,7 @@ class DWMS_DSRGPT2 {
     void compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
 
     /// initial guesses if separate diagonalizations and require orthogonalized final CI vectors
-    std::vector<std::vector<psi::std::shared_ptr<psi::Vector>>> initial_guesses_;
+    std::vector<std::vector<std::shared_ptr<psi::Vector>>> initial_guesses_;
 
     /// compute DWMS weights and return a new sa_info
     std::vector<std::tuple<int, int, int, std::vector<double>>>
@@ -212,7 +212,7 @@ class DWMS_DSRGPT2 {
                        const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info);
 
     /// print overlap matrix between DWMS roots
-    void print_overlap(const std::vector<psi::std::shared_ptr<psi::Vector>>& evecs,
+    void print_overlap(const std::vector<std::shared_ptr<psi::Vector>>& evecs,
                        const std::string& Sname);
 
     /// print energy list summary

@@ -65,8 +65,7 @@ double MultipoleIntegrals::qp_ints(int direction, size_t p, size_t q) const {
     return qp_ints_[direction]->get(p, q);
 }
 
-psi::std::shared_ptr<psi::Vector>
-MultipoleIntegrals::nuclear_dipole(const psi::Vector3& origin) const {
+std::shared_ptr<psi::Vector> MultipoleIntegrals::nuclear_dipole(const psi::Vector3& origin) const {
     auto nuc = molecule_->nuclear_dipole(origin);
     auto out = std::make_shared<psi::Vector>(3);
     for (int i = 0; i < 3; ++i) {
@@ -75,7 +74,7 @@ MultipoleIntegrals::nuclear_dipole(const psi::Vector3& origin) const {
     return out;
 }
 
-psi::std::shared_ptr<psi::Vector>
+std::shared_ptr<psi::Vector>
 MultipoleIntegrals::nuclear_quadrupole(const psi::Vector3& origin) const {
     auto nuc = std::make_shared<psi::Vector>(6);
     for (int ii = 0, address = 0; ii <= 2; ii++) {
@@ -93,7 +92,7 @@ MultipoleIntegrals::nuclear_quadrupole(const psi::Vector3& origin) const {
     return nuc;
 }
 
-psi::std::shared_ptr<psi::Vector> MultipoleIntegrals::dp_frozen_core() const {
+std::shared_ptr<psi::Vector> MultipoleIntegrals::dp_frozen_core() const {
     auto frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
     auto dp_frzc = std::make_shared<psi::Vector>(3);
     for (int z = 0; z < 3; ++z) {
@@ -104,7 +103,7 @@ psi::std::shared_ptr<psi::Vector> MultipoleIntegrals::dp_frozen_core() const {
     return dp_frzc;
 }
 
-psi::std::shared_ptr<psi::Vector> MultipoleIntegrals::qp_frozen_core() const {
+std::shared_ptr<psi::Vector> MultipoleIntegrals::qp_frozen_core() const {
     auto frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
     auto qp_frzc = std::make_shared<psi::Vector>(6);
     for (int z = 0; z < 6; ++z) {
@@ -173,7 +172,7 @@ int ActiveMultipoleIntegrals::dp_many_body_level() const { return dp_many_body_l
 
 int ActiveMultipoleIntegrals::qp_many_body_level() const { return qp_many_body_level_; }
 
-psi::std::shared_ptr<psi::Vector>
+std::shared_ptr<psi::Vector>
 ActiveMultipoleIntegrals::compute_electronic_dipole(std::shared_ptr<RDMs> rdms, bool transition) {
     auto ndirs = 3;
     auto out = std::make_shared<psi::Vector>(ndirs);
@@ -211,7 +210,7 @@ ActiveMultipoleIntegrals::compute_electronic_dipole(std::shared_ptr<RDMs> rdms, 
     return out;
 }
 
-psi::std::shared_ptr<psi::Vector>
+std::shared_ptr<psi::Vector>
 ActiveMultipoleIntegrals::compute_electronic_quadrupole(std::shared_ptr<RDMs> rdms,
                                                         bool transition) {
     if (rdms->dim() != nmo_) {
@@ -254,39 +253,39 @@ ActiveMultipoleIntegrals::compute_electronic_quadrupole(std::shared_ptr<RDMs> rd
     return out;
 }
 
-psi::std::shared_ptr<psi::Vector>
+std::shared_ptr<psi::Vector>
 ActiveMultipoleIntegrals::nuclear_dipole(const psi::Vector3& origin) const {
     return mpints_->nuclear_dipole(origin);
 }
 
-psi::std::shared_ptr<psi::Vector>
+std::shared_ptr<psi::Vector>
 ActiveMultipoleIntegrals::nuclear_quadrupole(const psi::Vector3& origin) const {
     return mpints_->nuclear_quadrupole(origin);
 }
 
-psi::std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::dp_scalars_fdocc() const {
+std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::dp_scalars_fdocc() const {
     return mpints_->dp_frozen_core();
 }
 
-psi::std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::qp_scalars_fdocc() const {
+std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::qp_scalars_fdocc() const {
     return mpints_->qp_frozen_core();
 }
 
-psi::std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::dp_scalars_rdocc() const {
+std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::dp_scalars_rdocc() const {
     return dp0_rdocc_;
 }
 
-psi::std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::qp_scalars_rdocc() const {
+std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::qp_scalars_rdocc() const {
     return qp0_rdocc_;
 }
 
-psi::std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::dp_scalars() const {
+std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::dp_scalars() const {
     auto out = std::make_shared<psi::Vector>(*dp_scalars_fdocc());
     out->add(*dp0_rdocc_);
     return out;
 }
 
-psi::std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::qp_scalars() const {
+std::shared_ptr<psi::Vector> ActiveMultipoleIntegrals::qp_scalars() const {
     auto out = std::make_shared<psi::Vector>(*qp_scalars_fdocc());
     out->add(*qp0_rdocc_);
     return out;

@@ -138,8 +138,8 @@ class ActiveSpaceSolver {
     /// @param state: StateInfo (symmetry, multiplicity, etc.)
     /// @param x: the X vector to be contracted with H_IJ
     /// @param sigma: the sigma vector (will be zeroed first)
-    void generalized_sigma(const StateInfo& state, psi::std::shared_ptr<psi::Vector> x,
-                           psi::std::shared_ptr<psi::Vector> sigma);
+    void generalized_sigma(const StateInfo& state, std::shared_ptr<psi::Vector> x,
+                           std::shared_ptr<psi::Vector> sigma);
 
     /// Compute the state-averaged reference
     std::shared_ptr<RDMs>

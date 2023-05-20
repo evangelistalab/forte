@@ -2287,8 +2287,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
         throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
     /// Create the AtomicOrbitalHelper Class
-    psi::std::shared_ptr<psi::Vector> epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
-    psi::std::shared_ptr<psi::Vector> epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
+    std::shared_ptr<psi::Vector> epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
+    std::shared_ptr<psi::Vector> epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
     int core_count = 0;
     for (auto m : core_mos_) {
         epsilon_rdocc->set(core_count, Fa_[m]);
@@ -3036,7 +3036,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 
         std::shared_ptr<psi::Matrix> evecs =
             std::make_shared<psi::Matrix>("evecs", nactive_, nactive_);
-        psi::std::shared_ptr<psi::Vector> evals =
+        std::shared_ptr<psi::Vector> evals =
             std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
         Hb1->diagonalize(evecs, evals);
 
@@ -3404,10 +3404,10 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 //        if (!multi_state_) {
 //            Erelax.push_back(Eci);
 //        } else {
-//            std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>> eigens
+//            std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>> eigens
 //            = fci_mo.eigens(); size_t nentry = eigens.size(); for (size_t n = 0; n < nentry; ++n)
 //            {
-//                std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>> eigen =
+//                std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> eigen =
 //                eigens[n]; size_t ni = eigen.size(); for (size_t i = 0; i < ni; ++i) {
 //                    Erelax.push_back(eigen[i].second);
 //                }
@@ -3510,7 +3510,7 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 
 //                // compute energy and fill in results
 //                fci->compute_energy();
-//                psi::std::shared_ptr<psi::Vector> Ems = fci->evals();
+//                std::shared_ptr<psi::Vector> Ems = fci->evals();
 //                for (int i = 0; i < nstates; ++i) {
 //                    Erelax.push_back(Ems->get(i) + Enuc);
 //                }

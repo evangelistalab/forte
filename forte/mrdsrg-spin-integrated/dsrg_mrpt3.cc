@@ -1423,7 +1423,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 
 //                // compute energy and fill in results
 //                fci->compute_energy();
-//                psi::std::shared_ptr<psi::Vector> Ems = fci->evals();
+//                std::shared_ptr<psi::Vector> Ems = fci->evals();
 //                for (int i = 0; i < nstates; ++i) {
 //                    Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
 //                }
@@ -1488,7 +1488,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //                outfile->Printf("\n");
 //                Heff->print();
 //                std::shared_ptr<psi::Matrix> U(new psi::Matrix("U of Heff", nstates, nstates));
-//                psi::std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
+//                std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
 //                Heff->diagonalize(U, Ems);
 //                U->eivprint(Ems);
 

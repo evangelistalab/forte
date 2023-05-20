@@ -306,9 +306,8 @@ void ActiveSpaceSolver::add_sigma_kbody(const StateInfo& state, size_t root,
     state_method_map_[state]->add_sigma_kbody(root, h, block_label_to_factor, sigma);
 }
 
-void ActiveSpaceSolver::generalized_sigma(const StateInfo& state,
-                                          psi::std::shared_ptr<psi::Vector> x,
-                                          psi::std::shared_ptr<psi::Vector> sigma) {
+void ActiveSpaceSolver::generalized_sigma(const StateInfo& state, std::shared_ptr<psi::Vector> x,
+                                          std::shared_ptr<psi::Vector> sigma) {
     state_method_map_[state]->generalized_sigma(x, sigma);
 }
 

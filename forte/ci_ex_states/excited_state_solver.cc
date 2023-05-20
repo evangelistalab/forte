@@ -148,13 +148,13 @@ double ExcitedStateSolver::compute_energy() {
 
     DeterminantHashVec full_space;
     std::vector<size_t> sizes(nroot_);
-    psi::std::shared_ptr<psi::Vector> energies(new psi::Vector(nroot_));
+    std::shared_ptr<psi::Vector> energies(new psi::Vector(nroot_));
     std::vector<double> pt2_energies(nroot_);
 
     // The eigenvalues and eigenvectors
     DeterminantHashVec PQ_space;
     std::shared_ptr<psi::Matrix> PQ_evecs;
-    psi::std::shared_ptr<psi::Vector> PQ_evals;
+    std::shared_ptr<psi::Vector> PQ_evals;
 
     for (int i = 0; i < nrun; ++i) {
         if (!quiet_)
@@ -290,7 +290,7 @@ double ExcitedStateSolver::compute_energy() {
            as_ints_->scalar_energy();
 }
 
-void ExcitedStateSolver::compute_multistate(psi::std::shared_ptr<psi::Vector>& PQ_evals) {
+void ExcitedStateSolver::compute_multistate(std::shared_ptr<psi::Vector>& PQ_evals) {
     psi::outfile->Printf("\n  Computing multistate solution");
     int nroot = old_roots_.size();
 
@@ -322,7 +322,7 @@ void ExcitedStateSolver::compute_multistate(psi::std::shared_ptr<psi::Vector>& P
     }
     // Diagonalize the overlap
     std::shared_ptr<psi::Matrix> Sevecs(new psi::Matrix(nroot, nroot));
-    psi::std::shared_ptr<psi::Vector> Sevals(new psi::Vector(nroot));
+    std::shared_ptr<psi::Vector> Sevals(new psi::Vector(nroot));
     S->diagonalize(Sevecs, Sevals);
 
     // Form symmetric orthogonalization matrix
@@ -365,7 +365,7 @@ void ExcitedStateSolver::compute_multistate(psi::std::shared_ptr<psi::Vector>& P
     H->transform(Strans);
 
     std::shared_ptr<psi::Matrix> Hevecs(new psi::Matrix(nroot, nroot));
-    psi::std::shared_ptr<psi::Vector> Hevals(new psi::Vector(nroot));
+    std::shared_ptr<psi::Vector> Hevals(new psi::Vector(nroot));
 
     H->diagonalize(Hevecs, Hevals);
 
@@ -459,7 +459,7 @@ ExcitedStateSolver::read_wave_function(const std::string& filename) {
 
 void ExcitedStateSolver::print_final(DeterminantHashVec& dets,
                                      std::shared_ptr<psi::Matrix>& PQ_evecs,
-                                     psi::std::shared_ptr<psi::Vector>& PQ_evals, size_t cycle) {
+                                     std::shared_ptr<psi::Vector>& PQ_evals, size_t cycle) {
     size_t dim = dets.size();
     // Print a summary
     psi::outfile->Printf("\n\n  ==> Excited state solver summary <==\n");

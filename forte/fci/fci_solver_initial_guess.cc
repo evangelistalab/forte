@@ -259,11 +259,10 @@ void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
     }
 }
 
-psi::std::shared_ptr<psi::Vector>
+std::shared_ptr<psi::Vector>
 FCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                           std::shared_ptr<SpinAdapter> spin_adapter) {
-    psi::std::shared_ptr<psi::Vector> Hdiag_csf =
-        std::make_shared<psi::Vector>(spin_adapter->ncsf());
+    std::shared_ptr<psi::Vector> Hdiag_csf = std::make_shared<psi::Vector>(spin_adapter->ncsf());
     // Compute the diagonal elements of the Hamiltonian in the CSF basis
     double E0 = fci_ints->nuclear_repulsion_energy() + fci_ints->scalar_energy();
     // Compute the diagonal elements of the Hamiltonian in the CSF basis

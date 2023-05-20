@@ -121,7 +121,7 @@ class MRCINO : public OrbitalTransform {
     std::vector<Determinant> build_dets(int irrep,
                                         const std::vector<std::vector<Determinant>>& dets_cas);
 
-    std::pair<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
     std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
@@ -129,15 +129,15 @@ class MRCINO : public OrbitalTransform {
                          int nroot_);
 
     /// Diagonalize the density matrix
-    std::tuple<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
-               psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
+               std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
     diagonalize_density_matrix(
         std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> gamma);
 
     /// Find optimal active space and transform the orbitals
     void find_active_space_and_transform(
-        std::tuple<psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
-                   psi::std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+        std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
+                   std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
             no_U);
 };
 } // namespace forte

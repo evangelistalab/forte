@@ -116,7 +116,7 @@ void Localize::compute_transformation() {
             std::make_shared<psi::Matrix>("Caact", Ca->rowdim(), orb_dim);
 
         for (size_t i = 0; i < orb_dim; ++i) {
-            psi::std::shared_ptr<psi::Vector> col = Ca->get_column(0, first + i);
+            std::shared_ptr<psi::Vector> col = Ca->get_column(0, first + i);
             Ca_loc->set_column(0, i, col);
         }
 

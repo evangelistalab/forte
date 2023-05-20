@@ -65,7 +65,7 @@ void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIn
     as_ints_ = as_ints;
 }
 
-psi::std::shared_ptr<psi::Vector> ActiveSpaceMethod::evals() { return evals_; }
+std::shared_ptr<psi::Vector> ActiveSpaceMethod::evals() { return evals_; }
 
 const std::vector<double>& ActiveSpaceMethod::energies() const { return energies_; }
 
@@ -118,7 +118,7 @@ void ActiveSpaceMethod::save_transition_rdms(
     }
 }
 
-std::vector<psi::std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_permanent_quadrupole(
+std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_permanent_quadrupole(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list) {
     // print title
@@ -144,7 +144,7 @@ std::vector<psi::std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_perman
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute quadrupole
-    std::vector<psi::std::shared_ptr<psi::Vector>> out(root_list.size());
+    std::vector<std::shared_ptr<psi::Vector>> out(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         const auto& [root1, root2] = root_list[i];
         if (root1 != root2)
@@ -183,7 +183,7 @@ std::vector<psi::std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_perman
     return out;
 }
 
-std::vector<psi::std::shared_ptr<psi::Vector>>
+std::vector<std::shared_ptr<psi::Vector>>
 ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                             std::vector<std::pair<size_t, size_t>>& root_list) {
     // print title
@@ -208,7 +208,7 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute dipole
-    std::vector<psi::std::shared_ptr<psi::Vector>> dipoles_out(root_list.size());
+    std::vector<std::shared_ptr<psi::Vector>> dipoles_out(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         const auto& [root1, root2] = root_list[i];
         if (root1 != root2)
@@ -283,8 +283,7 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
     return out;
 }
 
-std::vector<psi::std::shared_ptr<psi::Vector>>
-ActiveSpaceMethod::compute_transition_dipole_same_orbs(
+std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_transition_dipole_same_orbs(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list,
     std::shared_ptr<ActiveSpaceMethod> method2) {
@@ -305,7 +304,7 @@ ActiveSpaceMethod::compute_transition_dipole_same_orbs(
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute transition dipole
-    std::vector<psi::std::shared_ptr<psi::Vector>> trans_dipoles(root_list.size());
+    std::vector<std::shared_ptr<psi::Vector>> trans_dipoles(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         auto td = ampints->compute_electronic_dipole(rdms[i], true);
         trans_dipoles[i] = td;

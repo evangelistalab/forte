@@ -3,18 +3,14 @@
 
 namespace psi {
 class Matrix;
-}
+} // namespace psi
 
 namespace forte {
+
 class ForteIntegrals;
 class MOSpaceInfo;
 class SCFInfo;
 class ForteOptions;
-
-// #include "base_classes/scf_info.h"
-// #include "base_classes/state_info.h"
-// #include "base_classes/forte_options.h"
-// #include "integrals/integrals.h"
 
 class OrbitalTransform {
 

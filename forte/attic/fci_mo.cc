@@ -833,7 +833,7 @@ std::vector<double> FCI_MO::compute_T1_percentage() {
         // the first singles_size_ determinants in determinant_ are singles
         for (size_t n = 0, eigen_size = eigen_.size(); n < eigen_size; ++n) {
             double t1 = 0;
-            psi::std::shared_ptr<psi::Vector> evec = eigen_[n].first;
+            std::shared_ptr<psi::Vector> evec = eigen_[n].first;
             for (size_t i = 0; i < singles_size_; ++i) {
                 double v = evec->get(i);
                 t1 += v * v;
@@ -847,7 +847,7 @@ std::vector<double> FCI_MO::compute_T1_percentage() {
 
 void FCI_MO::Diagonalize_H_noHF(
     const vecdet& p_space, const int& multi, const int& nroot,
-    std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen) {
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen) {
     // recompute RHF determinant
     std::vector<bool> string_ref = Form_String_Ref();
     Determinant rhf(string_ref, string_ref);
@@ -862,7 +862,7 @@ void FCI_MO::Diagonalize_H_noHF(
         outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
         outfile->Printf("\n  Recompute RHF energy ... ");
         double Erhf = fci_ints_->energy(rhf) + fci_ints_->scalar_energy() + e_nuc_;
-        psi::std::shared_ptr<psi::Vector> rhf_vec(new psi::Vector("RHF Eigen Vector", det_size));
+        std::shared_ptr<psi::Vector> rhf_vec(new psi::Vector("RHF Eigen Vector", det_size));
         rhf_vec->set(det_size - 1, 1.0);
         eigen.push_back(std::make_pair(rhf_vec, Erhf));
         outfile->Printf("Done.");
@@ -874,15 +874,15 @@ void FCI_MO::Diagonalize_H_noHF(
             int nroot_noHF = nroot - 1;
             vecdet p_space_noHF(p_space);
             p_space_noHF.pop_back();
-            std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>> eigen_noHF;
+            std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> eigen_noHF;
             Diagonalize_H(p_space_noHF, multi, nroot_noHF, eigen_noHF);
 
             for (int i = 0; i < nroot_noHF; ++i) {
-                psi::std::shared_ptr<psi::Vector> vec_noHF = eigen_noHF[i].first;
+                std::shared_ptr<psi::Vector> vec_noHF = eigen_noHF[i].first;
                 double Ethis = eigen_noHF[i].second;
 
                 std::string name = "Root " + std::to_string(i) + " Eigen Vector";
-                psi::std::shared_ptr<psi::Vector> vec(new psi::Vector(name, det_size));
+                std::shared_ptr<psi::Vector> vec(new psi::Vector(name, det_size));
                 for (size_t n = 0; n < det_size - 1; ++n) {
                     vec->set(n, vec_noHF->get(n));
                 }
@@ -899,9 +899,8 @@ void FCI_MO::Diagonalize_H_noHF(
     }
 }
 
-void FCI_MO::Diagonalize_H(
-    const vecdet& p_space, const int& multi, const int& nroot,
-    std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen) {
+void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& nroot,
+                           std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen) {
     timer_on("Diagonalize H");
     local_timer tdiagH;
     if (!quiet_) {
@@ -929,7 +928,7 @@ void FCI_MO::Diagonalize_H(
 
     // setup eigen values and vectors
     std::shared_ptr<psi::Matrix> evecs;
-    psi::std::shared_ptr<psi::Vector> evals;
+    std::shared_ptr<psi::Vector> evals;
 
     // always store a copy in DeterminantHashVec format
     det_hash_vec_ = DeterminantHashVec(p_space);
@@ -956,10 +955,9 @@ void FCI_MO::Diagonalize_H(
     timer_off("Diagonalize H");
 }
 
-void FCI_MO::print_CI(
-    const int& nroot, const double& CI_threshold,
-    const std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen,
-    const vecdet& det) {
+void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
+                      const std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen,
+                      const vecdet& det) {
     timer_on("Print CI Vectors");
     if (!quiet_) {
         outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
@@ -1521,8 +1519,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             std::shared_ptr<psi::Matrix> evecs(new psi::Matrix("evecs", ndets, nroots));
 
             for (int n = 0; n < nroots0; ++n) {
-                psi::std::shared_ptr<psi::Vector> evec0 = evecs0->get_column(0, n);
-                psi::std::shared_ptr<psi::Vector> evec(
+                std::shared_ptr<psi::Vector> evec0 = evecs0->get_column(0, n);
+                std::shared_ptr<psi::Vector> evec(
                     new psi::Vector("combined evec0 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
@@ -1531,8 +1529,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             }
 
             for (int n = 0; n < nroots1; ++n) {
-                psi::std::shared_ptr<psi::Vector> evec1 = eigens_[B][n].first;
-                psi::std::shared_ptr<psi::Vector> evec(
+                std::shared_ptr<psi::Vector> evec1 = eigens_[B][n].first;
+                std::shared_ptr<psi::Vector> evec(
                     new psi::Vector("combined evec1 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
@@ -1642,8 +1640,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             std::shared_ptr<psi::Matrix> evecs(new psi::Matrix("evecs", ndets, nroots));
 
             for (int n = 0; n < nroots0; ++n) {
-                psi::std::shared_ptr<psi::Vector> evec0 = evecs0->get_column(0, n);
-                psi::std::shared_ptr<psi::Vector> evec(
+                std::shared_ptr<psi::Vector> evec0 = evecs0->get_column(0, n);
+                std::shared_ptr<psi::Vector> evec(
                     new psi::Vector("combined evec0 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
@@ -1652,8 +1650,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             }
 
             for (int n = 0; n < nroots1; ++n) {
-                psi::std::shared_ptr<psi::Vector> evec1 = eigens_[B][n].first;
-                psi::std::shared_ptr<psi::Vector> evec(
+                std::shared_ptr<psi::Vector> evec1 = eigens_[B][n].first;
+                std::shared_ptr<psi::Vector> evec(
                     new psi::Vector("combined evec1 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
@@ -1835,13 +1833,13 @@ d3 FCI_MO::compute_orbital_extents() {
     int nao = Ca_ao->nrow();
     int nmo = Ca_ao->ncol();
 
-    std::vector<psi::std::shared_ptr<psi::Vector>> quadrupole;
+    std::vector<std::shared_ptr<psi::Vector>> quadrupole;
     quadrupole.push_back(
-        psi::std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole XX", nmo)));
+        std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole XX", nmo)));
     quadrupole.push_back(
-        psi::std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole YY", nmo)));
+        std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole YY", nmo)));
     quadrupole.push_back(
-        psi::std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole ZZ", nmo)));
+        std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole ZZ", nmo)));
 
     for (int i = 0; i < nmo; ++i) {
         double sumx = 0.0, sumy = 0.0, sumz = 0.0;
@@ -1859,7 +1857,7 @@ d3 FCI_MO::compute_orbital_extents() {
         quadrupole[2]->set(0, i, std::fabs(sumz));
     }
 
-    psi::std::shared_ptr<psi::Vector> epsilon_a = scf_info_->epsilon_a();
+    std::shared_ptr<psi::Vector> epsilon_a = scf_info_->epsilon_a();
     std::vector<std::tuple<double, int, int>> metric;
     for (int h = 0; h < epsilon_a->nirrep(); ++h) {
         for (int i = 0; i < epsilon_a->dimpi()[h]; ++i) {
@@ -2127,8 +2125,7 @@ void FCI_MO::add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
     }
 }
 
-void FCI_MO::generalized_sigma(psi::std::shared_ptr<psi::Vector> x,
-                               psi::std::shared_ptr<psi::Vector> sigma) {
+void FCI_MO::generalized_sigma(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> sigma) {
     sigma_vector_->compute_sigma(sigma, x);
 }
 
@@ -2815,7 +2812,7 @@ void FCI_MO::xms_rotate_civecs() {
 
         // put in eigens_
         for (int i = 0; i < nroots; ++i) {
-            eigens_[n][i] = std::make_pair<psi::std::shared_ptr<psi::Vector>, double>(
+            eigens_[n][i] = std::make_pair<std::shared_ptr<psi::Vector>, double>(
                 rcivecs->get_column(0, i), 0.0);
         }
     }
@@ -2851,7 +2848,7 @@ std::shared_ptr<psi::Matrix> FCI_MO::xms_rotate_this_civecs(const det_vec& p_spa
 
     // diagonalize Fock
     std::shared_ptr<psi::Matrix> Fevec(new psi::Matrix("Fock Evec", nroots, nroots));
-    psi::std::shared_ptr<psi::Vector> Feval(new psi::Vector("Fock Eval", nroots));
+    std::shared_ptr<psi::Vector> Feval(new psi::Vector("Fock Eval", nroots));
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);
 
@@ -2965,7 +2962,7 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
 }
 
 void FCI_MO::set_eigens(
-    const std::vector<std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>>& eigens) {
+    const std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>>& eigens) {
     size_t nentry = sa_info_.size();
     if (eigens.size() == nentry) {
         for (size_t n = 0; n < nentry; ++n) {
@@ -3238,7 +3235,7 @@ std::shared_ptr<RDMs> FCI_MO::transition_reference(int root1, int root2, bool mu
     }
 
     vecdet& p_space = multi_state ? p_spaces_[entry] : determinant_;
-    std::vector<std::pair<psi::std::shared_ptr<psi::Vector>, double>>& eigen =
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen =
         multi_state ? eigens_[entry] : eigen_;
 
     // prepare eigenvectors

@@ -188,8 +188,8 @@ class FCISolver : public ActiveSpaceMethod {
     /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
     /// @param fci_ints The integrals object
     /// @param spin_adapter The spin adapter object
-    psi::std::shared_ptr<psi::Vector> form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                                     std::shared_ptr<SpinAdapter> spin_adapter);
+    std::shared_ptr<psi::Vector> form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                                std::shared_ptr<SpinAdapter> spin_adapter);
 
     /// @brief Print a summary of the FCI calculation
     void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
