@@ -35,6 +35,7 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 
+#include "helpers/threading.h"
 #include "forte-def.h"
 #include "sci/aci.h"
 
@@ -55,19 +56,12 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
     {
         size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
-        size_t bin_size = max_P / num_thread;
-        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
-        size_t start_idx =
-            (tid < (max_P % num_thread))
-                ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        const auto [start_idx, end_idx] = thread_range(max_P, num_thread, tid);
+
         det_hash<double> V_hash_t;
         for (size_t P = start_idx; P < end_idx; ++P) {
             const Determinant& det(P_dets[P]);
             double Cp = evecs->get(P, ref_root_);
-
-            //            outfile->Printf("\n  %s", str(det, nact_).c_str());
 
             // Generate the occupied/virtual alpha/beta orbitals for different GAS
             std::vector<std::vector<int>> gas_occ_a;
@@ -330,13 +324,7 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
     {
         size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
-        size_t bin_size = max_P / num_thread;
-        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
-        size_t start_idx =
-            (tid < (max_P % num_thread))
-                ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        const auto [start_idx, end_idx] = thread_range(max_P, num_thread, tid);
 
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
             outfile->Printf("\n  Using %d threads.", num_thread);
@@ -626,13 +614,7 @@ void AdaptiveCI::get_gas_excited_determinants_core(
     {
         size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
-        size_t bin_size = max_P / num_thread;
-        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
-        size_t start_idx =
-            (tid < (max_P % num_thread))
-                ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        const auto [start_idx, end_idx] = thread_range(max_P, num_thread, tid);
 
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
             outfile->Printf("\n  Using %d threads.", num_thread);

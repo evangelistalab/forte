@@ -107,7 +107,7 @@ void AdaptiveCI::startup() {
     // simple checks
     if (naverage_ == 0)
         naverage_ = nroot_;
-    if ((average_offset_ + naverage_) > nroot_) {
+    if ((average_offset_ + naverage_) > static_cast<int>(nroot_)) {
         std::string except = "The sum of ACI_N_AVERAGE and ACI_AVERAGE_OFFSET is larger than the "
                              "number of roots requested!";
         throw std::runtime_error(except);
@@ -295,7 +295,7 @@ void AdaptiveCI::find_q_space() {
     multistate_pt2_energy_correction_[ref_root_] = ept2;
 
     if (screen_alg == "AVERAGE") {
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             multistate_pt2_energy_correction_[n] = ept2;
         }
     }

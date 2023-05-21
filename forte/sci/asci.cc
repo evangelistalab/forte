@@ -35,8 +35,11 @@
 
 #include "base_classes/forte_options.h"
 #include "base_classes/scf_info.h"
+
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
+#include "helpers/threading.h"
+
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
 
@@ -408,13 +411,7 @@ void ASCI::get_excited_determinants_sr(std::shared_ptr<psi::Matrix> evecs,
     {
         size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
-        size_t bin_size = max_P / num_thread;
-        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
-        size_t start_idx =
-            (tid < (max_P % num_thread))
-                ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        const auto [start_idx, end_idx] = thread_range(max_P, num_thread, tid);
 
         det_hash<double> V_hash_t;
         for (size_t P = start_idx; P < end_idx; ++P) {

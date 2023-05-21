@@ -114,7 +114,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
 
     // Truncate A_virtual and build s_-1/2
     int num_pao_A = 0;
-    int num_pao_B = 0;
 
     outfile->Printf("\n PAO truncation: %8.6f", pao_threshold);
 
@@ -124,8 +123,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
             ++num_pao_A;
             lambda->set(0, i, 1.0 / sqrt(leig));
             outfile->Printf("\n PAO %d: %8.8f", i, leig);
-        } else {
-            ++num_pao_B;
         }
     }
 

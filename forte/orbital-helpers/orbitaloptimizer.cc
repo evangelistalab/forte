@@ -647,8 +647,6 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::rotate_orbitals(std::shared_ptr<p
     std::shared_ptr<psi::Matrix> S_sym(new psi::Matrix("K", mo_space_info_->nirrep(),
                                                        mo_space_info_->dimension("ALL"),
                                                        mo_space_info_->dimension("ALL")));
-    int offset_hole = 0;
-    int offset_part = 0;
     for (size_t h = 0; h < nirrep_; h++) {
         for (int i = 0; i < frozen_docc_dim_[h]; i++) {
             S_sym->set(h, i, i, 0.0);
@@ -661,8 +659,6 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::rotate_orbitals(std::shared_ptr<p
                 S_sym->set(h, aoff, ioff, -1.0 * S_mat->get(h, i, a - restricted_docc_dim_[h]));
             }
         }
-        offset_hole += nhole_dim[h];
-        offset_part += nvirt_dim[h];
     }
     std::shared_ptr<psi::Matrix> S_exp = matrix_exp(S_sym);
     for (size_t h = 0; h < nirrep_; h++) {
@@ -906,7 +902,6 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         offset += nmopi_[h];
     }
     std::shared_ptr<psi::Matrix> F_active_c1(new psi::Matrix("F_act", nmo_, nmo_));
-    int offset_nofroze = 0;
     int offset_froze = 0;
     psi::Dimension no_frozen_dim = mo_space_info_->dimension("ALL");
 
@@ -919,7 +914,6 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
             }
         }
         offset_froze += nmopi_[h];
-        offset_nofroze += no_frozen_dim[h];
     }
     if (casscf_debug_print_) {
         F_active_c1->print();

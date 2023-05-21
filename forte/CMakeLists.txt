@@ -127,6 +127,7 @@ helpers/lbfgs/rosenbrock.cc
 helpers/printing.cc
 helpers/spinorbital_helpers.cc
 helpers/string_algorithms.cc
+helpers/threading.cc
 integrals/active_space_integrals.cc
 integrals/cholesky_integrals.cc
 integrals/conventional_integrals.cc

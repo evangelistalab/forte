@@ -39,6 +39,7 @@
 
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
+#include "helpers/threading.h"
 #include "tdci.h"
 
 using namespace psi;
@@ -55,8 +56,8 @@ TDCI::TDCI(std::shared_ptr<ActiveSpaceMethod> active_space_method,
            std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
            std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : scf_info_(scf_info), active_space_method_(active_space_method), as_ints_(as_ints),
-      options_(options), mo_space_info_(mo_space_info) {}
+    : scf_info_(scf_info), as_ints_(as_ints), options_(options), mo_space_info_(mo_space_info),
+      active_space_method_(active_space_method) {}
 
 TDCI::~TDCI() {}
 
@@ -1216,15 +1217,13 @@ void TDCI::compute_tdci_select(std::shared_ptr<psi::Vector> C0) {
     std::vector<double> PQ_coeffs_r;
     std::vector<double> PQ_coeffs_i;
     double sum = 0.0;
-    size_t n_excluded = 0;
     for (size_t I = (n_ann_dets - n_core_dets); I < n_ann_dets; ++I) {
         auto d_pair = sorted_dets[I];
         double cI = d_pair.first;
         Determinant det = dets[d_pair.second];
         if (sum + cI < eta) {
             sum += cI;
-            n_excluded++;
-            //            outfile->Printf("\n (%6.4f) %10.6f: %s", sum, cI, det.str(nact).c_str());
+            // n_excluded++;
         } else {
             //            break; // I think this is faster
             P_space.add(det);
@@ -2006,13 +2005,7 @@ void TDCI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double>
     {
         size_t num_thread = omp_get_max_threads();
         size_t tid = omp_get_thread_num();
-
-        size_t bin_size = size / num_thread;
-        bin_size += (tid < (size % num_thread)) ? 1 : 0;
-        size_t start_idx = (tid < (size % num_thread)) ? tid * bin_size
-                                                       : (size % num_thread) * (bin_size + 1) +
-                                                             (tid - (size % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        const auto [start_idx, end_idx] = thread_range(size, num_thread, tid);
 
         for (size_t J = start_idx; J < end_idx; ++J) {
             double diag_J = as_ints_->energy(dets[J]);
