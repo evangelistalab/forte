@@ -28,8 +28,8 @@
  */
 
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/sieve.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libmints/integral.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 
@@ -96,12 +96,17 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density() {
     PVir_ = Yvir->clone();
 }
 void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary) {
-    ERISieve sieve(primary, 1e-10);
-    auto my_function_pair_values = sieve.function_pair_values();
+    auto integral = std::make_shared<IntegralFactory>(primary, primary, primary, primary);
+    auto twobodyaoints = std::shared_ptr<TwoBodyAOInt>(integral->eri());
+    // ERISieve sieve(primary, 1e-10);
+    // auto my_function_pair_values = twobodyaoints->function_pair_values();
     auto AO_Screen = std::make_shared<Matrix>("Z", nbf_, nbf_);
     for (int mu = 0; mu < nbf_; mu++)
-        for (int nu = 0; nu < nbf_; nu++)
-            AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
+        for (int nu = 0; nu < nbf_; nu++) {
+            // AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
+            double value = std::sqrt(twobodyaoints->function_ceiling2(mu, nu, mu, nu));
+            AO_Screen->set(mu, nu, value);
+        }
 
     AO_Screen_ = AO_Screen;
     AO_Screen_->set_name("ScwartzAOInts");
