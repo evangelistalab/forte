@@ -87,8 +87,8 @@ CINO::~CINO() {}
 void CINO::compute_transformation() {
     outfile->Printf("\n\n  Computing CIS natural orbitals\n");
 
-    std::shared_ptr<psi::Matrix> Density_a(new psi::Matrix(actvpi_, actvpi_));
-    std::shared_ptr<psi::Matrix> Density_b(new psi::Matrix(actvpi_, actvpi_));
+    auto Density_a = std::make_shared<psi::Matrix>(actvpi_, actvpi_);
+    auto Density_b = std::make_shared<psi::Matrix>(actvpi_, actvpi_);
     int sum = 0;
 
     // Build CAS determinants
@@ -362,8 +362,8 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, std::shared_ptr
     //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
     //    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", actvpi_, actvpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", actvpi_, actvpi_));
+    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", actvpi_, actvpi_);
+    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", actvpi_, actvpi_);
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {

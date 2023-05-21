@@ -98,8 +98,8 @@ MRCINO::~MRCINO() {}
 void MRCINO::compute_transformation() {
     outfile->Printf("\n\n  Computing CIS natural orbitals\n");
 
-    std::shared_ptr<psi::Matrix> Density_a(new psi::Matrix(corrpi_, corrpi_));
-    std::shared_ptr<psi::Matrix> Density_b(new psi::Matrix(corrpi_, corrpi_));
+    auto Density_a = std::make_shared<psi::Matrix>(corrpi_, corrpi_);
+    auto Density_b = std::make_shared<psi::Matrix>(corrpi_, corrpi_);
     int sum = 0;
 
     // Build CAS determinants
@@ -521,8 +521,8 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets,
     //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
     //    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", corrpi_, corrpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", corrpi_, corrpi_));
+    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", corrpi_, corrpi_);
+    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", corrpi_, corrpi_);
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -547,8 +547,8 @@ MRCINO::diagonalize_density_matrix(
 
     std::shared_ptr<psi::Vector> OCC_A(new Vector("ALPHA OCCUPATION", corrpi_));
     std::shared_ptr<psi::Vector> OCC_B(new Vector("BETA OCCUPATION", corrpi_));
-    std::shared_ptr<psi::Matrix> NO_A(new psi::Matrix(corrpi_, corrpi_));
-    std::shared_ptr<psi::Matrix> NO_B(new psi::Matrix(corrpi_, corrpi_));
+    auto NO_A = std::make_shared<psi::Matrix>(corrpi_, corrpi_);
+    auto NO_B = std::make_shared<psi::Matrix>(corrpi_, corrpi_);
 
     psi::Dimension zero_dim(nirrep_);
     psi::Dimension aoccpi = ints_->wfn()->nalphapi() - fdoccpi_;

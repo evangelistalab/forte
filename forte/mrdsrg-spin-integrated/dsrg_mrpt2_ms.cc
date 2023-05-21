@@ -257,7 +257,7 @@ namespace forte {
 
 //                int dim = (eigens_[n][0].first)->dim();
 //                size_t eigen_size = eigens_[n].size();
-//                std::shared_ptr<psi::Matrix> evecs(new psi::Matrix("evecs", dim, eigen_size));
+//                auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
 //                for (size_t i = 0; i < eigen_size; ++i) {
 //                    evecs->set_column(0, i, (eigens_[n][i]).first);
 //                }
@@ -322,7 +322,7 @@ namespace forte {
 //                print_h2("Effective Hamiltonian Summary");
 //                outfile->Printf("\n");
 //                Heff->print();
-//                std::shared_ptr<psi::Matrix> U(new psi::Matrix("U of Heff", nstates, nstates));
+//                auto U = std::make_shared<psi::Matrix>("U of Heff", nstates, nstates);
 //                std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
 //                Heff->diagonalize(U, Ems);
 //                U->eivprint(Ems);
@@ -384,7 +384,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
 
         // fill in ci vectors
         int dim = (eigens_[n][0].first)->dim();
-        std::shared_ptr<psi::Matrix> civecs(new psi::Matrix("ci vecs", dim, nstates));
+        auto civecs = std::make_shared<psi::Matrix>("ci vecs", dim, nstates);
         for (int i = 0; i < nstates; ++i) {
             civecs->set_column(0, i, (eigens_[n][i]).first);
         }
@@ -564,7 +564,7 @@ DSRG_MRPT2::xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
 
     // build Fock matrix
     int nstates = civecs->ncol();
-    std::shared_ptr<psi::Matrix> Fock(new psi::Matrix("Fock", nstates, nstates));
+    auto Fock = std::make_shared<psi::Matrix>("Fock", nstates, nstates);
 
     for (int M = 0; M < nstates; ++M) {
         for (int N = M; N < nstates; ++N) {
@@ -590,7 +590,7 @@ DSRG_MRPT2::xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
     Fock->print();
 
     // diagonalize Fock
-    std::shared_ptr<psi::Matrix> Fevec(new psi::Matrix("Fock Evec", nstates, nstates));
+    auto Fevec = std::make_shared<psi::Matrix>("Fock Evec", nstates, nstates);
     std::shared_ptr<psi::Vector> Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);

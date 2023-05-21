@@ -64,8 +64,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    size_t nact = nactpi.sum();
     //
     //    // First compute natural orbitals
-    //    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep, nactpi, nactpi));
-    //    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep, nactpi, nactpi));
+    //    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", nirrep, nactpi, nactpi);
+    //    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", nirrep, nactpi, nactpi);
     //
     //    // Put 1-RDM into Shared matrix
     //    int offset = 0;
@@ -82,18 +82,18 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    //    opdm_b->transform(Ubs_);
     //
     //    // Diagonalize the 1-RDMs
-    //    std::shared_ptr<psi::Vector> OCC_A(new psi::Vector("ALPHA NOCC", nirrep, nactpi));
-    //    std::shared_ptr<psi::Vector> OCC_B(new psi::Vector("BETA NOCC", nirrep, nactpi));
-    //    std::shared_ptr<psi::Matrix> NO_A(new psi::Matrix(nirrep, nactpi, nactpi));
-    //    std::shared_ptr<psi::Matrix> NO_B(new psi::Matrix(nirrep, nactpi, nactpi));
+    //    auto OCC_A = std::make_shared<psi::Vector>("ALPHA NOCC", nirrep, nactpi)
+    //    auto OCC_B = std::make_shared<psi::Vector>("BETA NOCC", nirrep, nactpi);
+    //    auto NO_A = std::make_shared<psi::Matrix>(nirrep, nactpi, nactpi);
+    //    auto NO_B = std::make_shared<psi::Matrix>(nirrep, nactpi, nactpi);
     //
     //    opdm_a->diagonalize(NO_A, OCC_A, descending);
     //    opdm_b->diagonalize(NO_B, OCC_B, descending);
     //
     //    // Build the transformation matrix
     //    // Only build density for active orbitals
-    //    std::shared_ptr<psi::Matrix> Ua(new psi::Matrix("Ua", nmopi, nmopi));
-    //    std::shared_ptr<psi::Matrix> Ub(new psi::Matrix("Ub", nmopi, nmopi));
+    //    auto Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+    //    auto Ub = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
     //
     //    Ua->zero();
     //    Ub->zero();
@@ -115,7 +115,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    // ** This will be done in a completely localized basis
     //    // ** This code has only been tested for pz (pi) orbitals, beware!
     //
-    //    std::shared_ptr<psi::Matrix> Ua_act(new psi::Matrix(nact, nact));
+    //    auto Ua_act = std::make_shared<psi::Matrix>(nact, nact);
     //
     //    // relocalize to atoms
     //
@@ -178,8 +178,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     size_t nact = nactpi.sum();
 
     // First compute natural orbitals
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep, nactpi, nactpi));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep, nactpi, nactpi));
+    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", nirrep, nactpi, nactpi);
+    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", nirrep, nactpi, nactpi);
 
     // Put 1-RDM into Shared matrix
     int offset = 0;
@@ -229,7 +229,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // ** This will be done in a completely localized basis
     // ** This code has only been tested for pz (pi) orbitals, beware!
 
-    std::shared_ptr<psi::Matrix> Ua_act(new psi::Matrix(nact, nact));
+    auto Ua_act = std::make_shared<psi::Matrix>(nact, nact);
 
     // relocalize to atoms
 
@@ -292,8 +292,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     std::shared_ptr<psi::Matrix> Da = ints_->wfn()->Da();
     std::shared_ptr<psi::Matrix> Db = ints_->wfn()->Db();
 
-    // std::shared_ptr<psi::Matrix> Da_new(new psi::Matrix("Da_new", nmopi, nmopi));
-    // std::shared_ptr<psi::Matrix> Db_new(new psi::Matrix("Db_new", nmopi, nmopi));
+    // auto Da_new = std::make_shared<psi::Matrix>("Da_new", nmopi, nmopi);
+    // auto Db_new = std::make_shared<psi::Matrix>("Db_new", nmopi, nmopi);
 
     // Da_new->gemm(false, true, 1.0, Ca_new, Ca_new, 0.0);
     // Db_new->gemm(false, true, 1.0, Cb_new, Cb_new, 0.0);

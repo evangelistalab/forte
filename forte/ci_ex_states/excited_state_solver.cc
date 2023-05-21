@@ -148,7 +148,7 @@ double ExcitedStateSolver::compute_energy() {
 
     DeterminantHashVec full_space;
     std::vector<size_t> sizes(nroot_);
-    std::shared_ptr<psi::Vector> energies(new psi::Vector(nroot_));
+    auto energies = std::make_shared<psi::Vector>(nroot_);
     std::vector<double> pt2_energies(nroot_);
 
     // The eigenvalues and eigenvectors
@@ -296,7 +296,7 @@ void ExcitedStateSolver::compute_multistate(std::shared_ptr<psi::Vector>& PQ_eva
 
     // Form the overlap matrix
 
-    std::shared_ptr<psi::Matrix> S(new psi::Matrix(nroot, nroot));
+    auto S = std::make_shared<psi::Matrix>(nroot, nroot);
     S->identity();
     for (int A = 0; A < nroot; ++A) {
         std::vector<std::pair<Determinant, double>>& stateA = old_roots_[A];
@@ -321,15 +321,15 @@ void ExcitedStateSolver::compute_multistate(std::shared_ptr<psi::Vector>& PQ_eva
         }
     }
     // Diagonalize the overlap
-    std::shared_ptr<psi::Matrix> Sevecs(new psi::Matrix(nroot, nroot));
-    std::shared_ptr<psi::Vector> Sevals(new psi::Vector(nroot));
+    auto Sevecs = std::make_shared<psi::Matrix>(nroot, nroot);
+    auto Sevals = std::make_shared<psi::Vector>(nroot);
     S->diagonalize(Sevecs, Sevals);
 
     // Form symmetric orthogonalization matrix
 
-    std::shared_ptr<psi::Matrix> Strans(new psi::Matrix(nroot, nroot));
-    std::shared_ptr<psi::Matrix> Sint(new psi::Matrix(nroot, nroot));
-    std::shared_ptr<psi::Matrix> Diag(new psi::Matrix(nroot, nroot));
+    auto Strans = std::make_shared<psi::Matrix>(nroot, nroot);
+    auto Sint = std::make_shared<psi::Matrix>(nroot, nroot);
+    auto Diag = std::make_shared<psi::Matrix>(nroot, nroot);
     Diag->identity();
     for (int n = 0; n < nroot; ++n) {
         Diag->set(n, n, 1.0 / sqrt(Sevals->get(n)));
@@ -340,7 +340,7 @@ void ExcitedStateSolver::compute_multistate(std::shared_ptr<psi::Vector>& PQ_eva
 
     // Form the Hamiltonian
 
-    std::shared_ptr<psi::Matrix> H(new psi::Matrix(nroot, nroot));
+    auto H = std::make_shared<psi::Matrix>(nroot, nroot);
 
 #pragma omp parallel for
     for (int A = 0; A < nroot; ++A) {
@@ -364,8 +364,8 @@ void ExcitedStateSolver::compute_multistate(std::shared_ptr<psi::Vector>& PQ_eva
     //    H->print();
     H->transform(Strans);
 
-    std::shared_ptr<psi::Matrix> Hevecs(new psi::Matrix(nroot, nroot));
-    std::shared_ptr<psi::Vector> Hevals(new psi::Vector(nroot));
+    auto Hevecs = std::make_shared<psi::Matrix>(nroot, nroot);
+    auto Hevals = std::make_shared<psi::Vector>(nroot);
 
     H->diagonalize(Hevecs, Hevals);
 

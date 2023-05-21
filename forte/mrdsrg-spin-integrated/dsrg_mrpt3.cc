@@ -1436,7 +1436,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 
 //                int dim = (eigens_[n][0].first)->dim();
 //                size_t eigen_size = eigens_[n].size();
-//                std::shared_ptr<psi::Matrix> evecs(new psi::Matrix("evecs", dim, eigen_size));
+//                auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
 //                for (size_t i = 0; i < eigen_size; ++i) {
 //                    evecs->set_column(0, i, (eigens_[n][i]).first);
 //                }
@@ -1487,7 +1487,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //                print_h2("Effective Hamiltonian Summary");
 //                outfile->Printf("\n");
 //                Heff->print();
-//                std::shared_ptr<psi::Matrix> U(new psi::Matrix("U of Heff", nstates, nstates));
+//                auto U = std::make_shared<psi::Matrix>("U of Heff", nstates, nstates);
 //                std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
 //                Heff->diagonalize(U, Ems);
 //                U->eivprint(Ems);

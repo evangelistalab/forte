@@ -3548,7 +3548,7 @@ void MCSRGPT2_MO::print_density(const std::string& spin, const d2& density) {
     std::string name = "Density " + spin;
     outfile->Printf("  ==> %s <==\n\n", name.c_str());
 
-    std::shared_ptr<psi::Matrix> dens(new psi::Matrix("A-A", nactv_, nactv_));
+    auto dens = std::make_shared<psi::Matrix>("A-A", nactv_, nactv_);
     for (size_t u = 0; u < nactv_; ++u) {
         size_t nu = actv_mos_[u];
         for (size_t v = 0; v < nactv_; ++v) {

@@ -1289,8 +1289,8 @@ double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& de
     auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
     size_t sub_size = sigma_vector->size();
     // allocate vectors
-    std::shared_ptr<psi::Vector> b(new psi::Vector("b", sub_size));
-    std::shared_ptr<psi::Vector> sigma(new psi::Vector("sigma", sub_size));
+    auto b = std::make_shared<psi::Vector>("b", sub_size);
+    auto sigma = std::make_shared<psi::Vector>("sigma", sub_size);
     for (size_t i = 0; i < sub_size; ++i) {
         b->set(i, C[i]);
     }

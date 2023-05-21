@@ -556,7 +556,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         print_title(entry_title);
 
         // prepare Heff
-        std::shared_ptr<psi::Matrix> Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
+        auto Heff = std::make_shared<psi::Matrix>("Heff " + entry_name, nroots, nroots);
 
         // vector of T1, T2, and summed 1st-order Hbar
         std::vector<ambit::BlockedTensor> T1s, T2s, RH1s, RH2s;
@@ -627,7 +627,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         Heff->print();
 
         // diagonalize Heff and print eigen vectors
-        std::shared_ptr<psi::Matrix> U(new psi::Matrix("U of Heff", nroots, nroots));
+        auto U = std::make_shared<psi::Matrix>("U of Heff", nroots, nroots);
         std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nroots));
         Heff->diagonalize(U, Ems);
         U->eivprint(Ems);
@@ -744,7 +744,7 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         print_title(entry_title);
 
         // prepare Heff
-        std::shared_ptr<psi::Matrix> Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
+        auto Heff = std::make_shared<psi::Matrix>("Heff " + entry_name, nroots, nroots);
         std::shared_ptr<psi::Matrix> Heff_sym(
             new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
 
@@ -841,7 +841,7 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         Heff_sym->print();
 
         // diagonalize Heff and print eigen vectors
-        std::shared_ptr<psi::Matrix> U(new psi::Matrix("U of Heff (Symmetrized)", nroots, nroots));
+        auto U = std::make_shared<psi::Matrix>("U of Heff (Symmetrized)", nroots, nroots);
         std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nroots));
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);

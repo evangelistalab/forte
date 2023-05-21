@@ -1473,7 +1473,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
 
     //    // transform D1 with a irrep std::shared_ptr<psi::Matrix>
-    //    std::shared_ptr<psi::Matrix> SOdens(new psi::Matrix("SO density ", this->nmopi(),
+    //    auto SOdens = std::make_shared<psi::Matrix>("SO density ", this->nmopi(,
     //    this->nmopi()));
 
     //    for (const auto& pair: mo_space_info_->relative_mo("FROZEN_DOCC")) {
@@ -1509,7 +1509,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 
     //    std::shared_ptr<psi::Matrix> sotoao(this->aotoso()->transpose());
     //    size_t nao = sotoao->coldim(0);
-    //    std::shared_ptr<psi::Matrix> AOdens(new psi::Matrix("AO density ", nao, nao));
+    //    auto AOdens = std::make_shared<psi::Matrix>("AO density ", nao, nao);
     //    AOdens->remove_symmetry(SOdens, sotoao);
 
     //    std::vector<std::shared_ptr<psi::Matrix>> aodipole_ints = ints_->ao_dipole_ints();

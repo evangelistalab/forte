@@ -141,9 +141,9 @@ std::map<std::string, std::shared_ptr<psi::Matrix>> IAOBuilder::build_iaos() {
     std::shared_ptr<OneBodyAOInt> ints12(fact12->ao_overlap());
     std::shared_ptr<OneBodyAOInt> ints22(fact22->ao_overlap());
 
-    std::shared_ptr<psi::Matrix> S11(new psi::Matrix("S11", primary_->nbf(), primary_->nbf()));
-    std::shared_ptr<psi::Matrix> S12f(new psi::Matrix("S12f", primary_->nbf(), minao_->nbf()));
-    std::shared_ptr<psi::Matrix> S22f(new psi::Matrix("S22f", minao_->nbf(), minao_->nbf()));
+    auto S11 = std::make_shared<psi::Matrix>("S11", primary_->nbf(), primary_->nbf());
+    auto S12f = std::make_shared<psi::Matrix>("S12f", primary_->nbf(), minao_->nbf());
+    auto S22f = std::make_shared<psi::Matrix>("S22f", minao_->nbf(), minao_->nbf());
 
     ints11->compute(S11);
     ints12->compute(S12f);
@@ -159,8 +159,8 @@ std::map<std::string, std::shared_ptr<psi::Matrix>> IAOBuilder::build_iaos() {
 
     // => Ghosted Overlap Integrals <= //
 
-    std::shared_ptr<psi::Matrix> S12(new psi::Matrix("S12", primary_->nbf(), true_iaos_.size()));
-    std::shared_ptr<psi::Matrix> S22(new psi::Matrix("S22", true_iaos_.size(), true_iaos_.size()));
+    auto S12 = std::make_shared<psi::Matrix>("S12", primary_->nbf(), true_iaos_.size());
+    auto S22 = std::make_shared<psi::Matrix>("S22", true_iaos_.size(), true_iaos_.size());
 
     double** S12p = S12->pointer();
     double** S12fp = S12f->pointer();
@@ -474,7 +474,7 @@ std::map<std::string, std::shared_ptr<psi::Matrix>> IAOBuilder::ibo_localizer(
     L2->copy(L);
     double** Lp = L2->pointer();
 
-    std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nocc, nocc));
+    auto U = std::make_shared<psi::Matrix>("U", nocc, nocc);
     U->identity();
     double** Up = U->pointer();
 
@@ -751,7 +751,7 @@ std::shared_ptr<psi::Matrix> IAOBuilder::reorder_orbitals(std::shared_ptr<psi::M
     int nmo = F->rowspi()[0];
     double** Fp = F->pointer();
 
-    std::shared_ptr<psi::Matrix> U(new psi::Matrix("U", nmo, nmo));
+    auto U = std::make_shared<psi::Matrix>("U", nmo, nmo);
     double** Up = U->pointer();
 
     for (size_t ind = 0; ind < ranges.size() - 1; ind++) {
@@ -776,7 +776,7 @@ std::shared_ptr<psi::Matrix> IAOBuilder::orbital_charges(std::shared_ptr<psi::Ma
     int nmin = L->colspi()[0];
     int natom = true_atoms_.size();
 
-    std::shared_ptr<psi::Matrix> Q(new psi::Matrix("Q", natom, nocc));
+    auto Q = std::make_shared<psi::Matrix>("Q", natom, nocc);
     double** Qp = Q->pointer();
 
     for (int i = 0; i < nocc; i++) {
