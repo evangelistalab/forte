@@ -624,7 +624,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::AugmentedHessianSolve() {
     // AugmentedHessian->print();
     std::shared_ptr<psi::Matrix> HessianEvec(
         new psi::Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
-    std::shared_ptr<psi::Vector> HessianEval(new Vector("HessianEval", nhole + npart + 1));
+    auto HessianEval = std::make_shared<psi::Vector>("HessianEval", nhole + npart + 1);
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
     HessianEvec->print();
     // std::shared_ptr<psi::Matrix> S_AH(new psi::Matrix("AugmentedHessianLowestEigenvalue", nhole,
@@ -642,8 +642,8 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::rotate_orbitals(std::shared_ptr<p
     psi::Dimension nhole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
     psi::Dimension nvirt_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
     /// Clone the C matrix
-    std::shared_ptr<psi::Matrix> C_rot(C->clone());
-    std::shared_ptr<psi::Matrix> S_mat(S->clone());
+    auto C_rot(C->clone());
+    auto S_mat(S->clone());
 
     auto S_sym = std::make_shared<psi::Matrix>("K", mo_space_info_->nirrep(),
                                                mo_space_info_->dimension("ALL"),

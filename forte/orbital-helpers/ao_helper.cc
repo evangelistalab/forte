@@ -100,7 +100,7 @@ void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& prim
     auto twobodyaoints = std::shared_ptr<TwoBodyAOInt>(integral->eri());
     // ERISieve sieve(primary, 1e-10);
     // auto my_function_pair_values = twobodyaoints->function_pair_values();
-    auto AO_Screen = std::make_shared<Matrix>("Z", nbf_, nbf_);
+    auto AO_Screen = std::make_shared<psi::Matrix>("Z", nbf_, nbf_);
     for (int mu = 0; mu < nbf_; mu++)
         for (int nu = 0; nu < nbf_; nu++) {
             // AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
@@ -117,11 +117,11 @@ void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>
     MemDFJK jk(primary, auxiliary, psi::Process::environment.options);
     jk.initialize();
     jk.compute();
-    auto AO_Trans_Screen = std::make_shared<Matrix>("AOTrans", weights_, nbf_ * nbf_);
+    auto AO_Trans_Screen = std::make_shared<psi::Matrix>("AOTrans", weights_, nbf_ * nbf_);
 
     for (int w = 0; w < weights_; w++) {
-        auto COcc = std::make_shared<Matrix>("COcc", nbf_, nbf_);
-        auto CVir = std::make_shared<Matrix>("COcc", nbf_, nbf_);
+        auto COcc = std::make_shared<psi::Matrix>("COcc", nbf_, nbf_);
+        auto CVir = std::make_shared<psi::Matrix>("COcc", nbf_, nbf_);
         for (int mu = 0; mu < nbf_; mu++)
             for (int nu = 0; nu < nbf_; nu++) {
                 COcc->set(mu, nu, POcc_->get(w, mu * nbf_ + nu));

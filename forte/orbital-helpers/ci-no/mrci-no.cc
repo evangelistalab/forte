@@ -545,8 +545,8 @@ MRCINO::diagonalize_density_matrix(
     std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> gamma) {
     std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>> no_U;
 
-    std::shared_ptr<psi::Vector> OCC_A(new Vector("ALPHA OCCUPATION", corrpi_));
-    std::shared_ptr<psi::Vector> OCC_B(new Vector("BETA OCCUPATION", corrpi_));
+    auto OCC_A = std::make_shared<psi::Vector>("ALPHA OCCUPATION", corrpi_);
+    auto OCC_B = std::make_shared<psi::Vector>("BETA OCCUPATION", corrpi_);
     auto NO_A = std::make_shared<psi::Matrix>(corrpi_, corrpi_);
     auto NO_B = std::make_shared<psi::Matrix>(corrpi_, corrpi_);
 

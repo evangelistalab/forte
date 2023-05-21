@@ -446,8 +446,8 @@ CINO::diagonalize_density_matrix(
     //    }
 
     // Diagonalize beta density matrix
-    auto NO_B_occ = std::make_shared<Matrix>(boccpi_, boccpi_);
-    auto NO_B_vir = std::make_shared<Matrix>(bvirpi, bvirpi);
+    auto NO_B_occ = std::make_shared<psi::Matrix>(boccpi_, boccpi_);
+    auto NO_B_vir = std::make_shared<psi::Matrix>(bvirpi, bvirpi);
     auto OCC_B_occ = std::make_shared<Vector>("Occupied BETA OCCUPATION", boccpi_);
     auto OCC_B_vir = std::make_shared<Vector>("Virtual BETA OCCUPATION", bvirpi);
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);

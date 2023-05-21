@@ -513,8 +513,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     dls.set_print_level(0);
 
     // allocate vectors
-    std::shared_ptr<psi::Vector> b(new Vector("b", fci_size));
-    std::shared_ptr<psi::Vector> sigma(new Vector("sigma", fci_size));
+    auto b = std::make_shared<psi::Vector>("b", fci_size);
+    auto sigma = std::make_shared<psi::Vector>("sigma", fci_size);
 
     // get and pass diagonal
     sigma_vector->get_diagonal(*sigma);

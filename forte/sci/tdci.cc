@@ -109,7 +109,7 @@ double TDCI::compute_energy() {
 
     // 3. Build the full n-1 Hamiltonian if not screening
     std::vector<std::string> det_str(nann);
-    SharedMatrix full_aH = std::make_shared<Matrix>("aH", nann, nann);
+    SharedMatrix full_aH = std::make_shared<psi::Matrix>("aH", nann, nann);
     if (build_full_H) {
         for (size_t I = 0; I < nann; ++I) {
             Determinant detI = ann_dets_.get_det(I);
@@ -264,7 +264,7 @@ void TDCI::propagate_exact(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
     size_t ndet = C0->dim();
 
     // Diagonalize the full Hamiltonian
-    SharedMatrix evecs = std::make_shared<Matrix>("evecs", ndet, ndet);
+    SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", ndet, ndet);
     std::shared_ptr<psi::Vector> evals = std::make_shared<Vector>("evals", ndet);
 
     outfile->Printf("\n  Diagonalizing Hamiltonian");
@@ -886,8 +886,8 @@ void TDCI::propagate_lanczos(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
     int krylov_dim = options_->get_int("TDCI_KRYLOV_DIM");
 
     occupations_.resize(orbs.size());
-    SharedMatrix Kn_r = std::make_shared<Matrix>("knr", ndet, krylov_dim);
-    SharedMatrix Kn_i = std::make_shared<Matrix>("kni", ndet, krylov_dim);
+    SharedMatrix Kn_r = std::make_shared<psi::Matrix>("knr", ndet, krylov_dim);
+    SharedMatrix Kn_i = std::make_shared<psi::Matrix>("kni", ndet, krylov_dim);
     for (int N = 0; N < nstep; ++N) {
 
         // 1. Form the Krylov subspace vectors and subspace hamiltonian simultaneously
@@ -972,8 +972,8 @@ void TDCI::propagate_lanczos(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
               &info);
         // Evecs are stored in Hs, let's unpack it and the energy
 
-        SharedMatrix evecs_r = std::make_shared<Matrix>("er", n, n);
-        SharedMatrix evecs_i = std::make_shared<Matrix>("ei", n, n);
+        SharedMatrix evecs_r = std::make_shared<psi::Matrix>("er", n, n);
+        SharedMatrix evecs_i = std::make_shared<psi::Matrix>("ei", n, n);
         std::shared_ptr<psi::Vector> evals = std::make_shared<Vector>("evals", n);
         for (int i = 0; i < krylov_dim; ++i) {
             evals->set(i, w[i]);
@@ -1680,7 +1680,7 @@ void TDCI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,
 
     // Build a full Hamiltonian in the PQ space
     size_t npq = PQ_space.size();
-    SharedMatrix H = std::make_shared<Matrix>("H", npq, npq);
+    SharedMatrix H = std::make_shared<psi::Matrix>("H", npq, npq);
 
     const det_hashvec& PQ_dets = PQ_space.wfn_hash();
     for (size_t I = 0; I < npq; ++I) {
@@ -1694,7 +1694,7 @@ void TDCI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,
     }
 
     // Diagonalize the Hamiltonian
-    SharedMatrix evecs = std::make_shared<Matrix>("evecs", npq, npq);
+    SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", npq, npq);
     std::shared_ptr<psi::Vector> evals = std::make_shared<Vector>("evals", npq);
     H->diagonalize(evecs, evals);
 
@@ -1792,7 +1792,7 @@ void TDCI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<do
     Timer total;
     size_t npq = PQ_space.size();
 
-    SharedMatrix H = std::make_shared<Matrix>("H", npq, npq);
+    SharedMatrix H = std::make_shared<psi::Matrix>("H", npq, npq);
 
     // dumb implementation for now:
     std::shared_ptr<psi::Vector> ct_r = std::make_shared<Vector>("ctr", npq);

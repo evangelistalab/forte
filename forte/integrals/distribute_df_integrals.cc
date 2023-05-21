@@ -118,7 +118,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 
     psi::Dimension nsopi_ = wfn_->nsopi();
-    std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
+    auto aotoso = wfn_->aotoso();
     std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
     auto Ca_ao = std::make_shared<psi::Matrix>("Ca_ao", nso_, nmopi_.sum());
 

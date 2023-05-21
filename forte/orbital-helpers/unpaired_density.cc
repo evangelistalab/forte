@@ -198,16 +198,16 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // Diagonalize the 1-RDMs
     auto OCC_A = std::make_shared<Vector>("ALPHA NOCC", nactpi);
     auto OCC_B = std::make_shared<Vector>("BETA NOCC", nactpi);
-    auto NO_A = std::make_shared<Matrix>(nirrep, nactpi, nactpi);
-    auto NO_B = std::make_shared<Matrix>(nirrep, nactpi, nactpi);
+    auto NO_A = std::make_shared<psi::Matrix>(nirrep, nactpi, nactpi);
+    auto NO_B = std::make_shared<psi::Matrix>(nirrep, nactpi, nactpi);
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
 
     // Build the transformation matrix
     // Only build density for active orbitals
-    auto Ua = std::make_shared<Matrix>("Ua", nmopi, nmopi);
-    auto Ub = std::make_shared<Matrix>("Ub", nmopi, nmopi);
+    auto Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+    auto Ub = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
 
     Ua->zero();
     Ub->zero();

@@ -129,7 +129,7 @@ SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<psi::BasisSet>
 
     // Construct S_A^-1 and store it in a matrix of size nbf x nbf
     S_A->general_invert();
-    SharedMatrix S_A_nn(new Matrix("S system in fullsize", nbf_, nbf_));
+    auto S_A_nn = std::make_shared<psi::Matrix>("S system in fullsize", nbf_, nbf_);
     S_A_nn->set_block(fragA, fragA, S_A);
 
     // Evaluate AO basis projector  P = S^T (S_A)^{-1} S

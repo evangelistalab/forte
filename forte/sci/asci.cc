@@ -365,8 +365,8 @@ void ASCI::print_nos() {
     }
     auto OCC_A = std::make_shared<Vector>("ALPHA OCCUPATION", nactpi_);
     auto OCC_B = std::make_shared<Vector>("BETA OCCUPATION", nactpi_);
-    auto NO_A = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
-    auto NO_B = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_A = std::make_shared<psi::Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_B = std::make_shared<psi::Matrix>(nirrep_, nactpi_, nactpi_);
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);

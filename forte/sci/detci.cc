@@ -789,7 +789,7 @@ void DETCI::generalized_rdms(size_t root, const std::vector<double>& X, ambit::B
     }
 
     // prepare the expansion vectors to SharedMatrix format for CI_RDMs
-    auto evecs = std::make_shared<Matrix>("CI and Multiplier Vectors", ndets, 2);
+    auto evecs = std::make_shared<psi::Matrix>("CI and Multiplier Vectors", ndets, 2);
     int col_c = c_right ? 1 : 0;
     int col_x = c_right ? 0 : 1;
 

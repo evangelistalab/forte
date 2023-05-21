@@ -1488,7 +1488,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //                outfile->Printf("\n");
 //                Heff->print();
 //                auto U = std::make_shared<psi::Matrix>("U of Heff", nstates, nstates);
-//                std::shared_ptr<psi::Vector> Ems(new Vector("MS Energies", nstates));
+//                auto Ems = std::make_shared<psi::Vector>("MS Energies", nstates);
 //                Heff->diagonalize(U, Ems);
 //                U->eivprint(Ems);
 
@@ -1650,7 +1650,7 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     print_vector4("DSRG-MRPT3", Mbar0_);
 
-    auto dipole_array = std::make_shared<Matrix>(1, 3);
+    auto dipole_array = std::make_shared<psi::Matrix>(1, 3);
     dipole_array->set(0, 0, Mbar0_[0] + dm_nuc_[0]);
     dipole_array->set(0, 1, Mbar0_[1] + dm_nuc_[1]);
     dipole_array->set(0, 2, Mbar0_[2] + dm_nuc_[2]);

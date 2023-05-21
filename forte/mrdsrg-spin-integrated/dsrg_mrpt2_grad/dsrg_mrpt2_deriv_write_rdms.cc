@@ -24,7 +24,7 @@ void DSRG_MRPT2::write_lagrangian() {
     // NOTICE: write the Lagrangian
     outfile->Printf("\n    Writing EWDM (Lagrangian) ....................... ");
 
-    SharedMatrix L(new Matrix("Lagrangian", nirrep, irrep_vec, irrep_vec));
+    auto L = std::make_shared<psi::Matrix>("Lagrangian", nirrep, irrep_vec, irrep_vec);
 
     auto blocklabel = {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC", "vv",
                        "VV", "av", "cv", "va", "vc", "AV", "CV", "VA", "VC"};
@@ -69,7 +69,8 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
                                std::allocator<std::pair<unsigned long, unsigned long>>>>
         idxmap_re;
     idxmap_re = {{'c', core_mos_relative}, {'a', actv_mos_relative}, {'v', virt_mos_relative}};
-    SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep, irrep_vec, irrep_vec));
+    auto D1 = std::make_shared<psi::Matrix>("1rdm coefficients contribution", nirrep, irrep_vec,
+                                            irrep_vec);
     BlockedTensor D1_temp = BTF_->build(CoreTensor, "D1_temp", {"gg"}, true);
 
     D1_temp["em"] += Z["em"];
@@ -668,7 +669,7 @@ void DSRG_MRPT2::write_df_rdm() {
     std::map<string, std::pair<SharedMatrix, SharedMatrix>> slicemap;
     std::map<string, int> stride_size;
     std::map<char, int> orbital_size;
-    SharedMatrix M(new Matrix("backtransformed df_3rdm", naux, ao_matsize));
+    auto M = std::make_shared<psi::Matrix>("backtransformed df_3rdm", naux, ao_matsize);
     idxmap = {{'c', core_mos_relative}, {'a', actv_mos_relative}, {'v', virt_mos_relative}};
 
     stride_size = {{"ca", ncore * na},    {"ac", na * ncore},    {"cv", ncore * nvirt},
@@ -681,9 +682,9 @@ void DSRG_MRPT2::write_df_rdm() {
     std::map<char, int> pre_idx;
     pre_idx = {{'c', 0}, {'a', ncore}, {'v', ncore + na}};
 
-    auto temp_mat_MO = std::make_shared<Matrix>("MO temp matrix", nmo, nmo);
+    auto temp_mat_MO = std::make_shared<psi::Matrix>("MO temp matrix", nmo, nmo);
 
-    auto aotoso = std::make_shared<Matrix>("aotoso", nso, nso);
+    auto aotoso = std::make_shared<psi::Matrix>("aotoso", nso, nso);
 
     size_t offset_col = 0;
     for (size_t irp = 0; irp < nirrep; ++irp) {
@@ -698,7 +699,7 @@ void DSRG_MRPT2::write_df_rdm() {
 
     auto Ca = ints_->Ca();
     // Copy Ca to a matrix without symmetry blocking
-    auto Cat = std::make_shared<Matrix>("Ca temp matrix", nso, nmo);
+    auto Cat = std::make_shared<psi::Matrix>("Ca temp matrix", nso, nmo);
 
     std::vector<int> sum_nsopi(nirrep, 0);
     for (size_t irp = 1; irp < nirrep; ++irp) {
@@ -764,7 +765,7 @@ void DSRG_MRPT2::write_df_rdm() {
     M->set_name("3-Center Correlation Density");
     M->save(psio_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
 
-    SharedMatrix N(new Matrix("metric derivative density", naux, naux));
+    auto N = std::make_shared<psi::Matrix>("metric derivative density", naux, naux);
 
     // Using restricted orbitals, thus B["A!,P,Q"] * Jm12["A!,R!"] * df_3rdm["S!,P,Q"]
     // equals B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"], yielding a factor 2

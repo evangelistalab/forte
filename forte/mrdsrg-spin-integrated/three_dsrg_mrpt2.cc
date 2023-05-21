@@ -2287,8 +2287,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
         throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
     /// Create the AtomicOrbitalHelper Class
-    std::shared_ptr<psi::Vector> epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
-    std::shared_ptr<psi::Vector> epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
+    auto epsilon_rdocc = std::make_shared<psi::Vector>("EPS_RDOCC", ncore_);
+    auto epsilon_virtual = std::make_shared<psi::Vector>("EPS_VIRTUAL", nvirtual_);
     int core_count = 0;
     for (auto m : core_mos_) {
         epsilon_rdocc->set(core_count, Fa_[m]);

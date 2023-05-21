@@ -468,7 +468,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
 
     // Transform C matrix to C1 symmetry
     // JK does not support mixed symmetry needed for 4-index integrals (York 09/09/2020)
-    std::shared_ptr<psi::Matrix> aotoso = ints_->wfn()->aotoso();
+    auto aotoso = ints_->wfn()->aotoso();
     auto C_nosym = std::make_shared<psi::Matrix>(nso_, nmo_);
 
     // Transform from the SO to the AO basis for the C matrix
