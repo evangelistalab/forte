@@ -590,8 +590,8 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::AugmentedHessianSolve() {
     size_t nhole = mo_space_info_->size("GENERALIZED HOLE");
     size_t npart = mo_space_info_->size("GENERALIZED PARTICLE");
 
-    std::shared_ptr<psi::Matrix> AugmentedHessian(
-        new psi::Matrix("Augmented Hessian", nhole + npart + 1, nhole + npart + 1));
+    auto AugmentedHessian =
+        std::make_shared<psi::Matrix>("Augmented Hessian", nhole + npart + 1, nhole + npart + 1);
     for (size_t hol = 0; hol < nhole; hol++) {
         for (size_t part = 0; part < npart; part++) {
             AugmentedHessian->set(hol, part, d_->get(hol, part));
@@ -622,13 +622,12 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::AugmentedHessianSolve() {
 
     // AugmentedHessian->set(nhole * npart, nhole * npart, 0.0);
     // AugmentedHessian->print();
-    std::shared_ptr<psi::Matrix> HessianEvec(
-        new psi::Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
+    auto HessianEvec =
+        std::make_shared<psi::Matrix>("HessianEvec", nhole + npart + 1, nhole + npart + 1);
     auto HessianEval = std::make_shared<psi::Vector>("HessianEval", nhole + npart + 1);
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
     HessianEvec->print();
-    // std::shared_ptr<psi::Matrix> S_AH(new psi::Matrix("AugmentedHessianLowestEigenvalue", nhole,
-    // npart));
+    // auto S_AH = std::make_shared<psi::Matrix>("AugmentedHessianLowestEigenvalue", nhole, npart);
     // if(casscf_debug_print_)
     //{
     //    AugmentedHessian->print();
@@ -794,10 +793,8 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     }
 
     /// Creating a C_core and C_active matrices
-    std::shared_ptr<psi::Matrix> C_active(
-        new psi::Matrix("C_active", nirrep_, nsopi_, active_dim_));
-    std::shared_ptr<psi::Matrix> C_core(
-        new psi::Matrix("C_core", nirrep_, nsopi_, restricted_docc_dim_));
+    auto C_active = std::make_shared<psi::Matrix>("C_active", nirrep_, nsopi_, active_dim_);
+    auto C_core = std::make_shared<psi::Matrix>("C_core", nirrep_, nsopi_, restricted_docc_dim_);
 
     // Need to get the inactive block of the C matrix
     auto F_core_c1 = std::make_shared<psi::Matrix>("F_core_no_sym", nmo_, nmo_);
@@ -811,8 +808,8 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         }
     }
     auto C_active_ao = std::make_shared<psi::Matrix>("C_active", nirrep_, nsopi_, nsopi_);
-    std::shared_ptr<psi::Matrix> gamma1_sym(
-        new psi::Matrix("gamma1_sym", nirrep_, active_dim_, active_dim_));
+    auto gamma1_sym =
+        std::make_shared<psi::Matrix>("gamma1_sym", nirrep_, active_dim_, active_dim_);
     size_t offset_active = 0;
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim_[h]; u++) {

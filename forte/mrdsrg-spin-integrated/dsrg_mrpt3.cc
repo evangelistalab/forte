@@ -1441,9 +1441,10 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //                    evecs->set_column(0, i, (eigens_[n][i]).first);
 //                }
 
-//                std::shared_ptr<psi::Matrix> Heff(
-//                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-//                                    nstates, nstates));
+//                auto Heff =
+//                    std::make_shared<psi::Matrix>("Heff " + multi_label[multi - 1] + " " +
+//                    irrep_symbol[irrep],
+//                                    nstates, nstates);
 //                for (int A = 0; A < nstates; ++A) {
 //                    for (int B = A; B < nstates; ++B) {
 

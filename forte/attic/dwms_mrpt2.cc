@@ -745,8 +745,8 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
         // prepare Heff
         auto Heff = std::make_shared<psi::Matrix>("Heff " + entry_name, nroots, nroots);
-        std::shared_ptr<psi::Matrix> Heff_sym(
-            new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
+        auto Heff_sym =
+            std::make_shared<psi::Matrix>("Symmetrized Heff " + entry_name, nroots, nroots);
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {

@@ -54,7 +54,7 @@ void DSRG_MRPT2::write_lagrangian() {
 
     L->back_transform(ints_->Ca());
     ints_->wfn()->set_lagrangian(
-        SharedMatrix(new Matrix("Lagrangian", nirrep, irrep_vec, irrep_vec)));
+        std::make_shared<psi::Matrix>("Lagrangian", nirrep, irrep_vec, irrep_vec));
     ints_->wfn()->lagrangian()->copy(L);
 
     outfile->Printf("Done");

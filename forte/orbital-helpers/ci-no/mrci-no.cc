@@ -620,8 +620,8 @@ void MRCINO::find_active_space_and_transform(
         no_U) {
 
     auto nmopi = mo_space_info_->dimension("ALL");
-    Ua_.reset(new psi::Matrix("U", nmopi, nmopi));
-    Ub_.reset(new psi::Matrix("U", nmopi, nmopi));
+    Ua_ = std::make_shared<psi::Matrix>("U", nmopi, nmopi);
+    Ub_ = std::make_shared<psi::Matrix>("U", nmopi, nmopi);
     auto NO_A = std::get<1>(no_U);
     for (int h = 0; h < nirrep_; h++) {
         for (int p = 0; p < nmopi[h]; p++) {

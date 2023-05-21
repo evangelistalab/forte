@@ -1200,8 +1200,8 @@ void FCI_MO::compute_transition_dipole() {
     //        std::vector<double> opdm_b (na_ * na_, 0.0);
     //        ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-    //        std::shared_ptr<psi::Matrix> transD (new psi::Matrix("MO transition density 0 -> " +
-    //        std::to_string(A), nmopi_, nmopi_));
+    //        auto transD = std::make_shared<psi::Matrix>("MO transition density 0 -> " +
+    //        std::to_string(A), nmopi_, nmopi_);
     //        symmetrize_density(opdm_a, transD);
     //        transD->back_transform(ints_->Ca());
 
@@ -1518,9 +1518,9 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             auto evecs = std::make_shared<psi::Matrix>("evecs", ndets, nroots);
 
             for (int n = 0; n < nroots0; ++n) {
-                std::shared_ptr<psi::Vector> evec0 = evecs0->get_column(0, n);
-                std::shared_ptr<psi::Vector> evec(
-                    new psi::Vector("combined evec0 " + std::to_string(n), ndets));
+                auto evec0 = evecs0->get_column(0, n);
+                auto evec =
+                    std::make_shared<psi::Vector>("combined evec0 " + std::to_string(n), ndets);
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
                 }
@@ -1528,9 +1528,9 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             }
 
             for (int n = 0; n < nroots1; ++n) {
-                std::shared_ptr<psi::Vector> evec1 = eigens_[B][n].first;
-                std::shared_ptr<psi::Vector> evec(
-                    new psi::Vector("combined evec1 " + std::to_string(n), ndets));
+                auto evec1 = eigens_[B][n].first;
+                auto evec =
+                    std::make_shared<psi::Vector>("combined evec1 " + std::to_string(n), ndets);
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
                 }
@@ -1639,9 +1639,9 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             auto evecs = std::make_shared<psi::Matrix>("evecs", ndets, nroots);
 
             for (int n = 0; n < nroots0; ++n) {
-                std::shared_ptr<psi::Vector> evec0 = evecs0->get_column(0, n);
-                std::shared_ptr<psi::Vector> evec(
-                    new psi::Vector("combined evec0 " + std::to_string(n), ndets));
+                auto evec0 = evecs0->get_column(0, n);
+                auto evec =
+                    std::make_shared<psi::Vector>("combined evec0 " + std::to_string(n), ndets);
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
                 }
@@ -1649,9 +1649,9 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             }
 
             for (int n = 0; n < nroots1; ++n) {
-                std::shared_ptr<psi::Vector> evec1 = eigens_[B][n].first;
-                std::shared_ptr<psi::Vector> evec(
-                    new psi::Vector("combined evec1 " + std::to_string(n), ndets));
+                auto evec1 = eigens_[B][n].first;
+                auto evec =
+                    std::make_shared<psi::Vector>("combined evec1 " + std::to_string(n), ndets);
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
                 }
@@ -1833,12 +1833,9 @@ d3 FCI_MO::compute_orbital_extents() {
     int nmo = Ca_ao->ncol();
 
     std::vector<std::shared_ptr<psi::Vector>> quadrupole;
-    quadrupole.push_back(
-        std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole XX", nmo)));
-    quadrupole.push_back(
-        std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole YY", nmo)));
-    quadrupole.push_back(
-        std::shared_ptr<psi::Vector>(new psi::Vector("Orbital Quadrupole ZZ", nmo)));
+    quadrupole.push_back(std::make_shared<psi::Vector>("Orbital Quadrupole XX", nmo));
+    quadrupole.push_back(std::make_shared<psi::Vector>("Orbital Quadrupole YY", nmo));
+    quadrupole.push_back(std::make_shared<psi::Vector>("Orbital Quadrupole ZZ", nmo));
 
     for (int i = 0; i < nmo; ++i) {
         double sumx = 0.0, sumy = 0.0, sumz = 0.0;

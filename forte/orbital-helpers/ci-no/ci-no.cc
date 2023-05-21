@@ -491,7 +491,7 @@ void CINO::find_active_space_and_transform(
 
     auto nmopi = mo_space_info_->dimension("ALL");
 
-    Ua_.reset(new psi::Matrix("U", nmopi, nmopi));
+    Ua_ = std::make_shared<psi::Matrix>("U", nmopi, nmopi);
     std::shared_ptr<psi::Matrix> NO_A = std::get<1>(no_U);
     for (int h = 0; h < nirrep_; h++) {
         for (int p = 0; p < nmopi[h]; p++) {

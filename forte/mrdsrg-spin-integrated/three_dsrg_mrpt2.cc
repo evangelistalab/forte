@@ -3123,8 +3123,8 @@ void THREE_DSRG_MRPT2::set_Ufull(std::shared_ptr<psi::Matrix>& Ua,
 
     psi::Dimension nmopi = mo_space_info_->dimension("ALL");
 
-    Ua_full_.reset(new psi::Matrix("Ua", nmopi, nmopi));
-    Ub_full_.reset(new psi::Matrix("Ub", nmopi, nmopi));
+    Ua_full_ = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+    Ub_full_ = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
 
     Ua_full_->copy(Ua);
     Ub_full_->copy(Ub);

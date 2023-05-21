@@ -440,7 +440,7 @@ void DistDFIntegrals::gather_integrals() {
     // "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
     std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
     auto Ca = wfn_->Ca();
-    auto Ca_ao(new psi::Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
+    auto Ca_ao = std::make_shared<psi::Matrix>("CA_AO", wfn_->nso(), wfn_->nmo());
     for (size_t h = 0, index = 0; h < wfn_->nirrep(); ++h) {
         for (size_t i = 0; i < wfn_->nmopi()[h]; ++i) {
             size_t nao = wfn_->nso();

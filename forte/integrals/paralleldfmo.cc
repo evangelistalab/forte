@@ -201,10 +201,8 @@ void ParallelDFMO::transform_integrals() {
     // => Temporary Tensors <= //
 
     // > Three-index buffers < //
-    std::shared_ptr<psi::Matrix> Amn(
-        new psi::Matrix("(A|mn)", max_rows, nso * (unsigned long int)nso));
-    std::shared_ptr<psi::Matrix> Ami(
-        new psi::Matrix("(A|mi)", max_rows, nso * (unsigned long int)max1));
+    auto Amn = std::make_shared<psi::Matrix>("(A|mn)", max_rows, nso * (unsigned long int)nso);
+    auto Ami = std::make_shared<psi::Matrix>("(A|mi)", max_rows, nso * (unsigned long int)max1);
     auto Aia = std::make_shared<psi::Matrix>("(A|ia)", naux, max12);
     double** Amnp = Amn->pointer();
     double** Amip = Ami->pointer();

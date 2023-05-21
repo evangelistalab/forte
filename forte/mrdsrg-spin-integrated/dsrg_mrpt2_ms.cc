@@ -262,9 +262,8 @@ namespace forte {
 //                    evecs->set_column(0, i, (eigens_[n][i]).first);
 //                }
 
-//                std::shared_ptr<psi::Matrix> Heff(
-//                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-//                                    nstates, nstates));
+//                auto Heff = std::make_shared<psi::Matrix>("Heff " + multi_label[multi - 1] + " " +
+//                irrep_symbol[irrep], nstates, nstates);
 //                for (int A = 0; A < nstates; ++A) {
 //                    for (int B = A; B < nstates; ++B) {
 
@@ -423,11 +422,11 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         }
 
         // prepare Heff
-        std::shared_ptr<psi::Matrix> Heff(new psi::Matrix(
-            "Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep], nstates, nstates));
-        std::shared_ptr<psi::Matrix> Heff_sym(new psi::Matrix(
+        auto Heff = std::make_shared<psi::Matrix>(
+            "Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep], nstates, nstates);
+        auto Heff_sym = std::make_shared<psi::Matrix>(
             "Heff (Symmetrized) " + multi_label[multi - 1] + " " + irrep_symbol[irrep], nstates,
-            nstates));
+            nstates);
 
         // loop over states
         for (int M = 0; M < nstates; ++M) {
@@ -500,8 +499,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         Heff->print();
         Heff_sym->print();
 
-        std::shared_ptr<psi::Matrix> U(
-            new psi::Matrix("U of Heff (Symmetrized)", nstates, nstates));
+        auto U = std::make_shared<psi::Matrix>("U of Heff (Symmetrized)", nstates, nstates);
         auto Ems = std::make_shared<psi::Vector>("MS Energies", nstates);
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
