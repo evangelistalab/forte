@@ -1166,13 +1166,12 @@ void FCI_MO::compute_transition_dipole() {
             std::vector<double> opdm_a, opdm_b;
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-            std::shared_ptr<psi::Matrix> SOtransD =
-                reformat_1rdm("SO transition density " + trans_name, opdm_a, true);
+            auto SOtransD = reformat_1rdm("SO transition density " + trans_name, opdm_a, true);
             SOtransD->back_transform(integral_->Ca());
 
             size_t nao = sotoao->coldim(0);
-            std::shared_ptr<psi::Matrix> AOtransD(
-                new psi::Matrix("AO transition density " + trans_name, nao, nao));
+            auto AOtransD =
+                std::make_shared<psi::Matrix>("AO transition density " + trans_name, nao, nao);
             AOtransD->remove_symmetry(SOtransD, sotoao);
 
             std::vector<double> de(4, 0.0);

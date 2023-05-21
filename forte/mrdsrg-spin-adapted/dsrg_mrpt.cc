@@ -327,7 +327,7 @@ bool DSRG_MRPT::check_semicanonical() {
     });
 
     // compute norm and max values
-    for (auto& block : {"cc", "aa", "vv"}) {
+    for (auto block : {"cc", "aa", "vv"}) {
         ambit::Tensor diff_block = diff.block(block);
         Fd_od_norm.emplace_back(diff_block.norm(1));
         Fd_od_max.emplace_back(diff_block.norm(0));

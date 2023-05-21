@@ -858,9 +858,8 @@ void ProjectorCI::post_iter_process() {
     if (post_diagonalization_) {
         psi::outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         psi::timer_on("PCI:Post_Diag");
-        std::shared_ptr<psi::Matrix> apfci_evecs(
-            new psi::Matrix("Eigenvectors", C_.size(), nroot_));
-        std::shared_ptr<psi::Vector> apfci_evals(new psi::Vector("Eigenvalues", nroot_));
+        auto apfci_evecs = std::make_shared<psi::Matrix>("Eigenvectors", C_.size(), nroot_);
+        auto apfci_evals = std::make_shared<psi::Vector>("Eigenvalues", nroot_);
 
         DeterminantHashVec det_map(std::move(dets_hashvec_));
 
@@ -981,8 +980,8 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
 
     psi::outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
 
-    std::shared_ptr<psi::Matrix> evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
-    std::shared_ptr<psi::Vector> evals(new psi::Vector("Eigenvalues", nroot_));
+    auto evecs = std::make_shared<psi::Matrix>("Eigenvectors", guess_size, nroot_);
+    auto evals = std::make_shared<psi::Vector>("Eigenvalues", nroot_);
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
@@ -2228,7 +2227,7 @@ DeterminantHashVec ProjectorCI::get_PQ_space() { return solutions_[solutions_.si
 std::shared_ptr<psi::Matrix> ProjectorCI::get_PQ_evecs() {
     const auto& C = solutions_[solutions_.size() - 1].second;
     size_t nDet = C.size();
-    std::shared_ptr<psi::Matrix> evecs = std::make_shared<psi::Matrix>("U", nDet, nroot_);
+    auto evecs = std::make_shared<psi::Matrix>("U", nDet, nroot_);
     for (size_t i = 0; i < nDet; ++i) {
         evecs->set(i, 0, C[i]);
     }

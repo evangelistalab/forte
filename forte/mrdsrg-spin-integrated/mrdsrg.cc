@@ -375,7 +375,7 @@ void MRDSRG::print_cumulant_summary() {
     // 2-body
     std::vector<double> maxes, norms;
 
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         maxes.push_back(Lambda2_.block(block).norm(0));
         norms.push_back(Lambda2_.block(block).norm(2));
     }

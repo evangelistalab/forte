@@ -108,8 +108,8 @@ void Psi4Integrals::setup_psi4_ints() {
 
 void Psi4Integrals::transform_one_electron_integrals() {
     // Grab the one-electron integrals from psi4's wave function object
-    std::shared_ptr<psi::Matrix> Ha = wfn_->H()->clone();
-    std::shared_ptr<psi::Matrix> Hb = wfn_->H()->clone();
+    auto Ha = wfn_->H()->clone();
+    auto Hb = wfn_->H()->clone();
 
     Ha->transform(Ca_);
     Hb->transform(Cb_);
@@ -342,8 +342,8 @@ void Psi4Integrals::rotate_mos() {
                         rotate_mo_group[2]);
     }
 
-    std::shared_ptr<psi::Matrix> C_old = Ca_;
-    std::shared_ptr<psi::Matrix> C_new(C_old->clone());
+    auto C_old = Ca_;
+    auto C_new(C_old->clone());
 
     const auto& eps_a_old = *wfn_->epsilon_a();
     auto eps_a_new = eps_a_old.clone();
@@ -417,7 +417,7 @@ std::vector<std::shared_ptr<psi::Matrix>> Psi4Integrals::mo_dipole_ints() const 
     std::vector<std::shared_ptr<psi::Matrix>> dipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
-        std::shared_ptr<psi::Matrix> dipole(dipole_ints_ao_[i]->clone());
+        auto dipole = dipole_ints_ao_[i]->clone();
         dipole->set_name("MO Dipole " + names[i]);
         dipole->transform(Cao);
         dipole_ints.push_back(dipole);

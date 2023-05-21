@@ -179,8 +179,7 @@ double CASSCF::compute_energy() {
 
     psi::Dimension nhole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
     psi::Dimension npart_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
-    std::shared_ptr<psi::Matrix> S(
-        new psi::Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
+    auto S = std::make_shared<psi::Matrix>("Orbital Rotation", nirrep_, nhole_dim, npart_dim);
     std::shared_ptr<psi::Matrix> Sstep;
 
     // Setup the DIIS manager
@@ -194,11 +193,11 @@ double CASSCF::compute_energy() {
 
     E_casscf_ = 0.0;
     double E_casscf_old = 0.0, Ediff = 0.0;
-    std::shared_ptr<psi::Matrix> C_start = ints_->Ca()->clone();
+    auto C_start = ints_->Ca()->clone();
     double econv = options_->get_double("CASSCF_E_CONVERGENCE");
     double gconv = options_->get_double("CASSCF_G_CONVERGENCE");
 
-    std::shared_ptr<psi::Matrix> Ca = ints_->Ca();
+    auto Ca = ints_->Ca();
 
     print_h2("CASSCF Iteration");
     outfile->Printf("\n  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
@@ -277,7 +276,7 @@ double CASSCF::compute_energy() {
         if (do_diis and iter > diis_start and (diis_count % diis_freq == 0)) {
             diis_manager->extrapolate(S.get());
         }
-        std::shared_ptr<psi::Matrix> Cp = orbital_optimizer.rotate_orbitals(C_start, S);
+        auto Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 
         // update MO coefficients
         Ca->copy(Cp);
@@ -383,8 +382,8 @@ std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
 
     JK_->compute();
 
-    std::shared_ptr<psi::Matrix> F_core = JK_->J()[0];
-    std::shared_ptr<psi::Matrix> K_core = JK_->K()[0];
+    auto F_core = JK_->J()[0];
+    auto K_core = JK_->K()[0];
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
@@ -399,7 +398,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
 
     // Transform C matrix to C1 symmetry
     size_t nso = ints_->nso();
-    std::shared_ptr<psi::Matrix> aotoso = ints_->wfn()->aotoso();
+    auto aotoso = ints_->wfn()->aotoso();
     auto Ca_nosym = std::make_shared<psi::Matrix>(nso, nmo_);
 
     // Transform from the SO to the AO basis for the C matrix.
@@ -470,7 +469,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
     for (size_t x = 0, shift = 0; x < nactv_; ++x) {
         shift += x;
         for (size_t y = x; y < nactv_; ++y) {
-            std::shared_ptr<psi::Matrix> J = JK_->J()[x * nactv_ + y - shift];
+            auto J = JK_->J()[x * nactv_ + y - shift];
             half_trans = psi::linalg::triplet(Ca_nosym, J, Cact, true, false, false);
 
             for (size_t p = 0; p < ncmo_; ++p) {
@@ -531,13 +530,13 @@ std::vector<double> CASSCF::compute_restricted_docc_operator() {
     scalar_energy_ = ints_->scalar();           // scalar energy from the Integral class
 
     // bare one-electron integrals
-    std::shared_ptr<psi::Matrix> Hcore = Hcore_->clone();
+    auto Hcore = Hcore_->clone();
     Hcore->transform(Ca);
 
     // one-electron integrals dressed by inactive orbitals
     std::vector<double> oei(nactv_ * nactv_, 0.0);
     // one-electron integrals in SharedMatrix format, set to MO Hcore by default
-    std::shared_ptr<psi::Matrix> oei_shared_matrix = Hcore;
+    auto oei_shared_matrix = Hcore;
 
     // special case when there is no inactive docc
     if (nrdocc_ + nfdocc_ != 0) {
@@ -694,7 +693,7 @@ std::shared_ptr<psi::Matrix> CASSCF::build_fock_inactive(std::shared_ptr<psi::Ma
     Cl.push_back(Cdocc); // Cr is the same as Cl
     JK_->compute();
 
-    std::shared_ptr<psi::Matrix> Fdocc = (JK_->J()[0])->clone();
+    auto Fdocc = (JK_->J()[0])->clone();
     Fdocc->scale(2.0);
     Fdocc->subtract(JK_->K()[0]);
 
@@ -752,7 +751,7 @@ std::shared_ptr<psi::Matrix> CASSCF::build_fock_active(std::shared_ptr<psi::Matr
     Cr.push_back(Cactv_dressed);
     JK_->compute();
 
-    std::shared_ptr<psi::Matrix> Factv = (JK_->K()[0])->clone();
+    auto Factv = (JK_->K()[0])->clone();
     Factv->scale(-0.5);
     Factv->add(JK_->J()[0]);
 

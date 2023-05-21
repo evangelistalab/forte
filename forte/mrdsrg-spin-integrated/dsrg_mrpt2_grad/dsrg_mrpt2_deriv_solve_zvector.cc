@@ -1495,7 +1495,7 @@ void DSRG_MRPT2::solve_linear_iter() {
     }
 
     // Write the solution of z-vector equations (stored in solution) into the Z matrix
-    for (const std::string& block : {"vc", "ca", "va", "aa"}) {
+    for (const std::string block : {"vc", "ca", "va", "aa"}) {
         int pre = preidx[block], idx = block_dim[block];
         if (block != "aa") {
             (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -1512,7 +1512,7 @@ void DSRG_MRPT2::solve_linear_iter() {
             });
         }
     }
-    for (const std::string& block : {"ci"}) {
+    for (const auto block : {"ci"}) {
         int pre = preidx[block];
         (x_ci).iterate([&](const std::vector<size_t>& i, double& value) {
             int index = pre + i[0];
@@ -1526,22 +1526,26 @@ void DSRG_MRPT2::solve_linear_iter() {
     // Beta part
     // Caution: This is only valid when restricted orbitals are assumed
     //          i.e. MO coefficients (alpha) equal MO coefficients (beta)
-    for (const std::string& block : {"VC"}) {
+    {
+        std::string block("VC");
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("vc").data()[i[0] * ncore + i[1]];
         });
     }
-    for (const std::string& block : {"CA"}) {
+    {
+        std::string block("CA");
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("ca").data()[i[0] * na + i[1]];
         });
     }
-    for (const std::string& block : {"VA"}) {
+    {
+        std::string block("VA");
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("va").data()[i[0] * na + i[1]];
         });
     }
-    for (const std::string& block : {"AA"}) {
+    {
+        std::string block("AA");
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("aa").data()[i[0] * na + i[1]];
         });

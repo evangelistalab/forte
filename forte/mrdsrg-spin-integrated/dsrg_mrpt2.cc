@@ -585,7 +585,7 @@ void DSRG_MRPT2::compute_t2() {
                 }
             }
         } else if (internal_amp_select_ == "OOVV") {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
 
@@ -603,7 +603,7 @@ void DSRG_MRPT2::compute_t2() {
                 }
             }
         } else {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
                 T2_.block(block).zero();
@@ -2830,7 +2830,7 @@ void DSRG_MRPT2::rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi
     space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     // alpha
-    for (const std::string& block : {"cc", "aa", "vv"}) {
+    for (const std::string block : {"cc", "aa", "vv"}) {
         char space = block[0];
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -2850,7 +2850,7 @@ void DSRG_MRPT2::rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi
     }
 
     // beta
-    for (const std::string& block : {"CC", "AA", "VV"}) {
+    for (const std::string block : {"CC", "AA", "VV"}) {
         char space = tolower(block[0]);
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {

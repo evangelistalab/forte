@@ -81,7 +81,7 @@ void Localize::compute_transformation() {
         exit(1);
     }
 
-    std::shared_ptr<psi::Matrix> Ca = ints_->Ca();
+    auto Ca = ints_->Ca();
 
     Ua_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());
     Ub_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());
@@ -112,8 +112,7 @@ void Localize::compute_transformation() {
         size_t orb_dim = last - first + 1;
 
         // Build C matrix to localize
-        std::shared_ptr<psi::Matrix> Ca_loc =
-            std::make_shared<psi::Matrix>("Caact", Ca->rowdim(), orb_dim);
+        auto Ca_loc = std::make_shared<psi::Matrix>("Caact", Ca->rowdim(), orb_dim);
 
         for (size_t i = 0; i < orb_dim; ++i) {
             std::shared_ptr<psi::Vector> col = Ca->get_column(0, first + i);
@@ -127,7 +126,7 @@ void Localize::compute_transformation() {
         loc_a->localize();
 
         // Grab the transformation and localized matrices
-        std::shared_ptr<psi::Matrix> Ua_loc = loc_a->U();
+        auto Ua_loc = loc_a->U();
 
         // Set Ua, Ub
         for (size_t i = 0; i < orb_dim; ++i) {

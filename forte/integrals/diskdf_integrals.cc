@@ -102,8 +102,8 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    std::shared_ptr<psi::Matrix> B1(new psi::Matrix(1, nthree_));
-    std::shared_ptr<psi::Matrix> B2(new psi::Matrix(1, nthree_));
+    auto B1 = std::make_shared<psi::Matrix>(1, nthree_);
+    auto B2 = std::make_shared<psi::Matrix>(1, nthree_);
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);

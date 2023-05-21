@@ -279,7 +279,7 @@ void CASSCF::write_lagrangian() {
     set_lagrangian();
     auto L = std::make_shared<Matrix>("Lagrangian", nirrep_, nmo_dim_, nmo_dim_);
 
-    for (const std::string& block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC"}) {
+    for (const std::string block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC"}) {
         std::vector<std::vector<std::pair<unsigned long, unsigned long>,
                                 std::allocator<std::pair<unsigned long, unsigned long>>>>
             spin_pair;

@@ -43,8 +43,6 @@ namespace forte {
 std::shared_ptr<psi::Matrix> FCIVector::C1;
 std::shared_ptr<psi::Matrix> FCIVector::Y1;
 size_t FCIVector::sizeC1 = 0;
-// FCIVector* FCIVector::tmp_wfn1 = nullptr;
-// FCIVector* FCIVector::tmp_wfn2 = nullptr;
 
 double FCIVector::hdiag_timer = 0.0;
 double FCIVector::h1_aa_timer = 0.0;
@@ -323,7 +321,7 @@ void FCIVector::normalize() {
  * Zero the wave function
  */
 void FCIVector::zero() {
-    for (std::shared_ptr<psi::Matrix> C_h : C_) {
+    for (auto C_h : C_) {
         C_h->zero();
     }
 }

@@ -815,7 +815,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
         V_["aBiJ"] += O2_["iJaB"];
         V_["ABIJ"] += O2_["IJAB"];
     } else {
-        for (const std::string& block : {"gggg", "gGgG", "GGGG"}) {
+        for (const std::string block : {"gggg", "gGgG", "GGGG"}) {
             BlockedTensor C2 = BTF_->build(tensor_type_, "C2 pt3 2/3", {block});
             C2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
                            double& value) {

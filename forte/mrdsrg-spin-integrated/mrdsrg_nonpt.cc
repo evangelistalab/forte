@@ -882,7 +882,7 @@ void MRDSRG::compute_hbar_qc() {
         Hbar1_["ia"] += temp["ai"];
         Hbar1_["IA"] += temp["AI"];
 
-        for (const std::string& block : {"pphh", "pPhH", "PPHH"}) {
+        for (const auto block : {"pphh", "pPhH", "PPHH"}) {
             // spin cases
             std::string ijab{"ijab"};
             std::string abij{"abij"};
@@ -903,7 +903,7 @@ void MRDSRG::compute_hbar_qc() {
 
     // compute Hbar = [S2, A]
     // compute S2 = H + 0.5 * [H, A] in batches of spin
-    for (const std::string& block : {"gggg", "gGgG", "GGGG"}) {
+    for (const auto block : {"gggg", "gGgG", "GGGG"}) {
         // spin cases for S2
         int spin = 0;
         std::string pqrs{"pqrs"};
@@ -953,7 +953,7 @@ void MRDSRG::compute_hbar_qc() {
             Hbar1_["ia"] += temp["ai"];
             Hbar1_["IA"] += temp["AI"];
 
-            for (const std::string& block : {"pphh", "pPhH", "PPHH"}) {
+            for (const auto block : {"pphh", "pPhH", "PPHH"}) {
                 // spin cases
                 std::string ijab{"ijab"};
                 std::string abij{"abij"};

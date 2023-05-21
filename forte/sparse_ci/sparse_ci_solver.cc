@@ -210,7 +210,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         Hss->set_name("Hss");
 
         // Obtain spin selected eigen values and vectors
-        auto Hss_vals = std::make_shared<psi::Vector>(new Vector("Hss Eigen Values", nfound);
+        auto Hss_vals = std::make_shared<psi::Vector>("Hss Eigen Values", nfound);
         auto Hss_vecs = std::make_shared<psi::Matrix>("Hss Eigen Vectors", nfound, nfound);
         Hss->diagonalize(Hss_vecs, Hss_vals);
 

@@ -240,7 +240,7 @@ void MASTER_DSRG::fill_density() {
     Gamma1_.block("AA")("pq") = rdms_->g1b()("pq");
 
     // 1-hole density
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const std::string block : {"aa", "AA"}) {
         (Eta1_.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = (i[0] == i[1]) ? 1.0 : 0.0;
         });
@@ -517,7 +517,7 @@ void MASTER_DSRG::fill_MOdm(std::vector<std::shared_ptr<psi::Matrix>>& dm_a,
 void MASTER_DSRG::compute_dm_ref() {
     for (int z = 0; z < 3; ++z) {
         double dipole = dm_frzc_[z];
-        for (const std::string& block : {"cc", "CC"}) {
+        for (const std::string block : {"cc", "CC"}) {
             dm_[z].block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
                 if (i[0] == i[1]) {
                     dipole += value;
@@ -1951,7 +1951,7 @@ bool MASTER_DSRG::check_semi_orbs() {
 
     // space, spin, Fmax, Fmean
     std::vector<std::tuple<std::string, std::string, double, double>> Fcheck;
-    for (const auto& block : {"cc", "CC", "vv", "VV"}) {
+    for (const auto block : {"cc", "CC", "vv", "VV"}) {
         double fmax = Fd.block(block).norm(0);
         double fmean = Fd.block(block).norm(1);
         fmean /= Fd.block(block).numel() > 2 ? Fd.block(block).numel() : 1.0;

@@ -556,11 +556,11 @@ MRCINO::diagonalize_density_matrix(
 
     // Grab the alpha occupied/virtual block of the density matrix
     Slice aocc_slice(zero_dim, aoccpi);
-    std::shared_ptr<psi::Matrix> gamma_a_occ = gamma.first->get_block(aocc_slice, aocc_slice);
+    auto gamma_a_occ = gamma.first->get_block(aocc_slice, aocc_slice);
     gamma_a_occ->set_name("Gamma alpha occupied");
 
     Slice avir_slice(aoccpi, corrpi_);
-    std::shared_ptr<psi::Matrix> gamma_a_vir = gamma.first->get_block(avir_slice, avir_slice);
+    auto gamma_a_vir = gamma.first->get_block(avir_slice, avir_slice);
     gamma_a_vir->set_name("Gamma alpha virtual");
 
     // Diagonalize alpha density matrix
@@ -622,7 +622,7 @@ void MRCINO::find_active_space_and_transform(
     auto nmopi = mo_space_info_->dimension("ALL");
     Ua_.reset(new psi::Matrix("U", nmopi, nmopi));
     Ub_.reset(new psi::Matrix("U", nmopi, nmopi));
-    std::shared_ptr<psi::Matrix> NO_A = std::get<1>(no_U);
+    auto NO_A = std::get<1>(no_U);
     for (int h = 0; h < nirrep_; h++) {
         for (int p = 0; p < nmopi[h]; p++) {
             Ua_->set(h, p, p, 1.0);

@@ -559,7 +559,7 @@ void THREE_DSRG_MRPT2::compute_t2() {
                 }
             }
         } else if (internal_amp_select_ == "OOVV") {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
 
@@ -577,7 +577,7 @@ void THREE_DSRG_MRPT2::compute_t2() {
                 }
             }
         } else {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
                 T2_.block(block).zero();
@@ -679,7 +679,7 @@ THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces) 
     // internal amplitudes (AA->AA)
     std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
 
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         if (std::find(t2_spaces.begin(), t2_spaces.end(), block) != t2_spaces.end()) {
 
             if (internal_amp.find("DOUBLES") != string::npos) {
@@ -3592,7 +3592,7 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
     I = ambit::Tensor::build(tensor_type_, "I", std::vector<size_t>{1, 1});
     I.data()[0] = 1.0;
     for (const size_t& m : core_mos_) {
-        for (const std::string& block : {"ac", "va", "vc"}) {
+        for (const std::string block : {"ac", "va", "vc"}) {
             std::string block_beta =
                 std::string(1, toupper(block[0])) + std::string(1, toupper(block[1]));
             std::vector<size_t>& mos1 = label_to_spacemo_[block[0]];
@@ -3918,7 +3918,7 @@ void THREE_DSRG_MRPT2::rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_p
     space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     // alpha
-    for (const std::string& block : {"cc", "aa", "vv"}) {
+    for (const std::string block : {"cc", "aa", "vv"}) {
         char space = block[0];
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3938,7 +3938,7 @@ void THREE_DSRG_MRPT2::rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_p
     }
 
     // beta
-    for (const std::string& block : {"CC", "AA", "VV"}) {
+    for (const std::string block : {"CC", "AA", "VV"}) {
         char space = tolower(block[0]);
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {

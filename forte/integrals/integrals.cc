@@ -386,7 +386,7 @@ bool ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
 
 bool ForteIntegrals::test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
                                                    std::shared_ptr<psi::Matrix> B) const {
-    std::shared_ptr<psi::Matrix> A_minus_B = A->clone();
+    auto A_minus_B = A->clone();
     A_minus_B->subtract(B);
     return A_minus_B->absmax() < 1.0e-7;
 }

@@ -63,8 +63,8 @@ std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> SpinCorr::
     psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
     psi::Dimension rdocc = mo_space_info_->dimension("RESTRICTED_DOCC");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", nirrep_, nactpi_, nactpi_);
+    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", nirrep_, nactpi_, nactpi_);
 
     int offset = 0;
     for (size_t h = 0; h < nirrep_; h++) {
@@ -113,8 +113,8 @@ void SpinCorr::spin_analysis() {
     size_t nact2 = nact * nact;
     size_t nact3 = nact * nact2;
 
-    std::shared_ptr<psi::Matrix> UA(new psi::Matrix(nact, nact));
-    std::shared_ptr<psi::Matrix> UB(new psi::Matrix(nact, nact));
+    auto UA = std::make_shared<psi::Matrix>(nact, nact);
+    auto UB = std::make_shared<psi::Matrix>(nact, nact);
 
     // if (options_->get_str("SPIN_BASIS") == "IAO") {
     // outfile->Printf("\n  Computing spin correlation in IAO basis \n");
@@ -173,8 +173,9 @@ void SpinCorr::spin_analysis() {
         UB = pair.second;
 
         int nmo = mo_space_info_->size("ALL");
-        std::shared_ptr<psi::Matrix> Ua_full(new psi::Matrix(nmo, nmo));
-        std::shared_ptr<psi::Matrix> Ub_full(new psi::Matrix(nmo, nmo));
+
+        auto Ua_full = std::make_shared<psi::Matrix>(nmo, nmo);
+        auto Ub_full = std::make_shared<psi::Matrix>(nmo, nmo);
 
         Ua_full->identity();
         Ub_full->identity();
@@ -191,11 +192,11 @@ void SpinCorr::spin_analysis() {
             }
         }
 
-        std::shared_ptr<psi::Matrix> CA = as_ints_->ints()->Ca();
-        std::shared_ptr<psi::Matrix> CB = as_ints_->ints()->Cb();
+        auto CA = as_ints_->ints()->Ca();
+        auto CB = as_ints_->ints()->Cb();
 
-        std::shared_ptr<psi::Matrix> Ca_new = psi::linalg::doublet(CA, Ua_full, false, false);
-        std::shared_ptr<psi::Matrix> Cb_new = psi::linalg::doublet(CB, Ub_full, false, false);
+        auto Ca_new = psi::linalg::doublet(CA, Ua_full, false, false);
+        auto Cb_new = psi::linalg::doublet(CB, Ub_full, false, false);
 
         CA->copy(Ca_new);
         CB->copy(Cb_new);

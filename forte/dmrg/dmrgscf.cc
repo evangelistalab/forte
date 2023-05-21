@@ -746,7 +746,7 @@ double DMRGSCF::compute_energy() {
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
-    std::shared_ptr<psi::Matrix> Coeff_orig = std::make_shared<psi::Matrix>(ints_->Ca());
+    auto Coeff_orig = std::make_shared<psi::Matrix>(ints_->Ca());
     // copyPSIMXtoCHEMPS2MX(this->Ca(), iHandler, );
 
     std::vector<int> OAorbs; // Occupied + active

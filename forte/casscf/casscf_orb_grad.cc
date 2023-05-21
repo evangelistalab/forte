@@ -262,7 +262,7 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
         return false;
     };
 
-    for (const std::string& block : {"vc", "va", "ac"}) {
+    for (const std::string block : {"vc", "va", "ac"}) {
         const auto& mos1 = label_to_mos_[block.substr(0, 1)];
         const auto& mos2 = label_to_mos_[block.substr(1, 1)];
 
