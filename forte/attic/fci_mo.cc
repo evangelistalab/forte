@@ -64,7 +64,6 @@
 #define omp_get_num_threads() 1
 #endif
 
-using namespace psi;
 using namespace ambit;
 
 namespace forte {

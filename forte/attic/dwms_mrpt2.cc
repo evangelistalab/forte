@@ -44,8 +44,6 @@
 #include "helpers/disk_io.h"
 #include "helpers/printing.h"
 
-using namespace psi;
-
 namespace forte {
 
 DWMS_DSRGPT2::DWMS_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
