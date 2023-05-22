@@ -998,7 +998,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
 
     std::vector<std::tuple<double, int, int>> labeled_orb;
 
-    std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
+    auto epsilon_a = scf_info_->epsilon_a();
 
     if (type == "RHF" or type == "ROHF" or type == "ALFA") {
 
@@ -1022,7 +1022,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
     }
     if (type == "BETA") {
         // Create a vector of orbital energies and index pairs
-        std::shared_ptr<Vector> epsilon_b = scf_info_->epsilon_b();
+        auto epsilon_b = scf_info_->epsilon_b();
         std::vector<std::pair<double, int>> orb_e;
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {

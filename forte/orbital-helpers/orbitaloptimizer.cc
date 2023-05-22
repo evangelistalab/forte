@@ -551,7 +551,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::approx_solve() {
         offset_hole += nhole_dim[h];
         offset_part += nvirt_dim[h];
     }
-    std::shared_ptr<psi::Matrix> S_tmp = G_grad->clone();
+    auto S_tmp = G_grad->clone();
     // S_tmp->apply_denominator(D_grad);
     for (size_t h = 0; h < nirrep_; h++) {
         for (int p = 0; p < S_tmp->rowspi(h); p++) {
@@ -568,7 +568,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::approx_solve() {
             }
         }
     }
-    // std::shared_ptr<psi::Matrix> S_tmp_AH = AugmentedHessianSolve();
+    // auto S_tmp_AH = AugmentedHessianSolve();
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim_[h]; u++) {
             for (int v = 0; v < active_dim_[h]; v++) {
@@ -597,7 +597,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::AugmentedHessianSolve() {
             AugmentedHessian->set(hol, part, d_->get(hol, part));
         }
     }
-    std::shared_ptr<psi::Matrix> g_transpose = g_->transpose();
+    auto g_transpose = g_->transpose();
     for (size_t hol = 0; hol < nhole; hol++) {
         for (size_t part = 0; part < npart; part++) {
             AugmentedHessian->set(part, hol + npart, g_transpose->get(part, hol));
@@ -661,7 +661,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::rotate_orbitals(std::shared_ptr<p
             }
         }
     }
-    std::shared_ptr<psi::Matrix> S_exp = matrix_exp(S_sym);
+    auto S_exp = matrix_exp(S_sym);
     for (size_t h = 0; h < nirrep_; h++) {
         for (int f = 0; f < frozen_docc_dim_[h]; f++) {
             S_exp->set(h, f, f, 1.0);
@@ -748,7 +748,7 @@ OrbitalOptimizer::matrix_exp(const std::shared_ptr<psi::Matrix>& unitary) {
         }
         U->gemm(false, false, 0.5, unitary, unitary, 1.0);
 
-        std::shared_ptr<psi::Matrix> tmp_third = psi::linalg::triplet(unitary, unitary, unitary);
+        auto tmp_third = psi::linalg::triplet(unitary, unitary, unitary);
         tmp_third->scale(1.0 / 6.0);
         U->add(tmp_third);
         tmp_third.reset();
@@ -860,16 +860,16 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
 
     JK_->compute();
 
-    std::shared_ptr<psi::Matrix> J_act = JK_->J()[0];
-    std::shared_ptr<psi::Matrix> K_act = JK_->K()[0];
-    std::shared_ptr<psi::Matrix> F_act = J_act->clone();
+    auto J_act = JK_->J()[0];
+    auto K_act = JK_->K()[0];
+    auto F_act = J_act->clone();
     K_act->scale(0.5);
     F_act->subtract(K_act);
     F_act->transform(Ca_sym_);
 
     if (restricted_docc_dim_.sum() > 0) {
-        std::shared_ptr<psi::Matrix> J_core = JK_->J()[1];
-        std::shared_ptr<psi::Matrix> K_core = JK_->K()[1];
+        auto J_core = JK_->J()[1];
+        auto K_core = JK_->K()[1];
         J_core->scale(2.0);
         F_core = J_core->clone();
         F_core->subtract(K_core);
@@ -884,7 +884,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     F_core->transform(Ca_sym_);
     // F_core->set_name("TRANSFORM BUG?");
     // F_core->print();
-    // std::shared_ptr<psi::Matrix> F_core_triplet = psi::linalg::triplet(Ca_sym_, F_core_tmp,
+    // auto F_core_triplet = psi::linalg::triplet(Ca_sym_, F_core_tmp,
     // Ca_sym_, true, false, false);
     // F_core_triplet->set_name("TripletTransform");
     // F_core_triplet->print();

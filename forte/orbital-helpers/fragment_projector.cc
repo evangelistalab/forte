@@ -69,7 +69,7 @@ std::pair<std::shared_ptr<psi::Matrix>, int> make_fragment_projector(SharedWavef
     // IAO procedure FragmentProjector FP(molecule, prime_basis, minao_basis);
 
     // Compute and return the projector matrix
-    std::shared_ptr<psi::Matrix> Pf = FP.build_f_projector(prime_basis);
+    auto Pf = FP.build_f_projector(prime_basis);
     int nbfA = FP.get_nbf_A();
     std::pair<std::shared_ptr<psi::Matrix>, int> Projector = std::make_pair(Pf, nbfA);
 

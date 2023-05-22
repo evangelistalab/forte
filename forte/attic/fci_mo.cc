@@ -832,7 +832,7 @@ std::vector<double> FCI_MO::compute_T1_percentage() {
         // the first singles_size_ determinants in determinant_ are singles
         for (size_t n = 0, eigen_size = eigen_.size(); n < eigen_size; ++n) {
             double t1 = 0;
-            std::shared_ptr<psi::Vector> evec = eigen_[n].first;
+            auto evec = eigen_[n].first;
             for (size_t i = 0; i < singles_size_; ++i) {
                 double v = evec->get(i);
                 t1 += v * v;
@@ -877,7 +877,7 @@ void FCI_MO::Diagonalize_H_noHF(
             Diagonalize_H(p_space_noHF, multi, nroot_noHF, eigen_noHF);
 
             for (int i = 0; i < nroot_noHF; ++i) {
-                std::shared_ptr<psi::Vector> vec_noHF = eigen_noHF[i].first;
+                auto vec_noHF = eigen_noHF[i].first;
                 double Ethis = eigen_noHF[i].second;
 
                 std::string name = "Root " + std::to_string(i) + " Eigen Vector";
@@ -1827,7 +1827,7 @@ d3 FCI_MO::compute_orbital_extents() {
     aoqOBI->compute(ao_Qpole);
 
     // orbital coefficients arranged by orbital energies
-    std::shared_ptr<psi::Matrix> Ca_ao = integral_->wfn()->Ca_subset("AO");
+    auto Ca_ao = integral_->wfn()->Ca_subset("AO");
     int nao = Ca_ao->nrow();
     int nmo = Ca_ao->ncol();
 
@@ -1852,7 +1852,7 @@ d3 FCI_MO::compute_orbital_extents() {
         quadrupole[2]->set(0, i, std::fabs(sumz));
     }
 
-    std::shared_ptr<psi::Vector> epsilon_a = scf_info_->epsilon_a();
+    auto epsilon_a = scf_info_->epsilon_a();
     std::vector<std::tuple<double, int, int>> metric;
     for (int h = 0; h < epsilon_a->nirrep(); ++h) {
         for (int i = 0; i < epsilon_a->dimpi()[h]; ++i) {
@@ -1929,7 +1929,7 @@ FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rd
     bool disk = false;
 
     // TODO: remove this when removing eigen_
-    std::shared_ptr<psi::Matrix> evecs = prepare_for_rdm();
+    auto evecs = prepare_for_rdm();
 
     std::vector<size_t> dim6(6, nactv_);
 
@@ -2670,7 +2670,7 @@ void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
     timer_on("Compute Ref");
 
     // prepare eigen vectors for ci_rdms
-    std::shared_ptr<psi::Matrix> evecs = prepare_for_rdm();
+    auto evecs = prepare_for_rdm();
 
     // compute 1-RDM
     auto D1 = compute_n_rdm(determinant_, evecs, 1, root1, root2, root_sym_, multi_, false);
@@ -2803,7 +2803,7 @@ void FCI_MO::xms_rotate_civecs() {
         }
 
         // compute averaged Fock matrix between states <M|F|N>
-        std::shared_ptr<psi::Matrix> rcivecs = xms_rotate_this_civecs(p_spaces_[n], civecs, Fa, Fb);
+        auto rcivecs = xms_rotate_this_civecs(p_spaces_[n], civecs, Fa, Fb);
 
         // put in eigens_
         for (int i = 0; i < nroots; ++i) {
@@ -2976,7 +2976,7 @@ void FCI_MO::set_eigens(
 
 std::shared_ptr<psi::Matrix> FCI_MO::prepare_for_rdm() {
     size_t n_dets = determinant_.size();
-    std::shared_ptr<psi::Matrix> evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroot_);
+    auto evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroot_);
     for (size_t i = 0; i < nroot_; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
@@ -2995,7 +2995,7 @@ FCI_MO::prepare_for_trans_rdm(std::shared_ptr<FCI_MO> method2) {
     size_t n_dets_1 = determinant_.size();
     size_t n_dets = dets.size();
     size_t nroots = nroot_ + method2->nroot();
-    std::shared_ptr<psi::Matrix> evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroots);
+    auto evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroots);
 
     for (size_t n = 0; n < nroot_; ++n) {
         for (size_t i = 0; i < n_dets_1; ++i) {

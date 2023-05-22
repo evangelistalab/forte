@@ -101,7 +101,7 @@ std::shared_ptr<psi::Matrix> make_aosubspace_projector(psi::SharedWavefunction w
     Ps = aosub.build_projector(wfn->basisset());
 
     // print the overlap of the projector
-    std::shared_ptr<psi::Matrix> CPsC = Ps->clone();
+    auto CPsC = Ps->clone();
     CPsC->transform(wfn->Ca());
     double print_threshold = 1.0e-3;
     auto irrep_labels = molecule->irrep_labels();

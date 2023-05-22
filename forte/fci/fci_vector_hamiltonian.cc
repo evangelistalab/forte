@@ -101,8 +101,8 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
         if (detpi_[alfa_sym] > 0) {
-            std::shared_ptr<psi::Matrix> C = alfa ? C_[alfa_sym] : C1;
-            std::shared_ptr<psi::Matrix> Y = alfa ? result.C_[alfa_sym] : Y1;
+            auto C = alfa ? C_[alfa_sym] : C1;
+            auto Y = alfa ? result.C_[alfa_sym] : Y1;
             double** Ch = C->pointer();
             double** Yh = Y->pointer();
 
@@ -179,8 +179,8 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
     for (int ha = 0; ha < nirrep_; ++ha) {
         int hb = ha ^ symmetry_;
         if (detpi_[ha] > 0) {
-            std::shared_ptr<psi::Matrix> C = alfa ? C_[ha] : C1;
-            std::shared_ptr<psi::Matrix> Y = alfa ? result.C_[ha] : Y1;
+            auto C = alfa ? C_[ha] : C1;
+            auto Y = alfa ? result.C_[ha] : Y1;
             double** Ch = C->pointer();
             double** Yh = Y->pointer();
 

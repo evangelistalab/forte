@@ -492,7 +492,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     std::vector<std::shared_ptr<psi::Matrix>> Cact_vec(nactv_);
 
     for (size_t x = 0; x < nactv_; ++x) {
-        std::shared_ptr<psi::Vector> Ca_nosym_vec = C_nosym->get_column(0, actv_mos_[x]);
+        auto Ca_nosym_vec = C_nosym->get_column(0, actv_mos_[x]);
         Cact->set_column(0, x, Ca_nosym_vec);
 
         std::string name = "Cact slice " + std::to_string(x);

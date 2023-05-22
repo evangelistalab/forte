@@ -3343,7 +3343,7 @@ void MCSRGPT2_MO::print_Fock(const std::string& spin, const d2& Fock) {
                 }
             }
 
-            std::shared_ptr<psi::Matrix> FT = Fr.transpose();
+            auto FT = Fr.transpose();
             for (size_t i = 0; i < dim1; ++i) {
                 for (size_t j = 0; j < dim2; ++j) {
                     double diff = FT->get(i, j) - F.get(i, j);

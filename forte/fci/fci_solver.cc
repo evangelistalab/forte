@@ -157,8 +157,8 @@ double FCISolver::compute_energy() {
     auto sigma = std::make_shared<psi::Vector>("sigma", det_size);
 
     // Optionally create the vectors that stores the b and sigma vectors in the CSF basis
-    std::shared_ptr<psi::Vector> b_basis = b;
-    std::shared_ptr<psi::Vector> sigma_basis = sigma;
+    auto b_basis = b;
+    auto sigma_basis = sigma;
 
     if (spin_adapt_) {
         b_basis = std::make_shared<psi::Vector>("b", basis_size);

@@ -118,7 +118,7 @@ void SpinCorr::spin_analysis() {
 
     // if (options_->get_str("SPIN_BASIS") == "IAO") {
     // outfile->Printf("\n  Computing spin correlation in IAO basis \n");
-    // std::shared_ptr<psi::Matrix> Ca = ints_->Ca();
+    // auto Ca = ints_->Ca();
     // std::shared_ptr<IAOBuilder> IAO =
     //     IAOBuilder::build(reference_wavefunction_->basisset(),
     //                       reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca,
@@ -129,7 +129,7 @@ void SpinCorr::spin_analysis() {
 
     // std::shared_ptr<psi::Matrix> Cainv(Ca->clone());
     // Cainv->invert();
-    // std::shared_ptr<psi::Matrix> iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false,
+    // auto iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false,
     // false);
 
     // size_t new_dim = iao_orbs->colspi()[0];
@@ -330,12 +330,12 @@ void SpinCorr::spin_analysis() {
     }
     /*
         // Build spin-correlation densities
-        std::shared_ptr<psi::Matrix> Ca = reference_wavefunction_->Ca();
+        auto Ca = reference_wavefunction_->Ca();
         psi::Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
         std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
-        std::shared_ptr<psi::Matrix> Ca_copy = Ca->clone();
+        auto Ca_copy = Ca->clone();
         for( int i = 0; i < nact; ++i ){
-            std::shared_ptr<psi::Vector> vec = std::make_shared<Vector>(nmo_);
+            auto vec = std::make_shared<Vector>(nmo_);
             vec->zero();
             for( int j = 0; j < nact; ++j ){
                 auto col = Ca_copy->get_column(0,actpi[j]);

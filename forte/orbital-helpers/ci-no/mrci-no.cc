@@ -632,8 +632,8 @@ void MRCINO::find_active_space_and_transform(
     Ua_->set_block(corr_slice, corr_slice, NO_A);
     Ub_->copy(Ua_->clone());
 
-    std::shared_ptr<psi::Vector> OCC_A = std::get<0>(no_U);
-    std::shared_ptr<psi::Vector> OCC_B = std::get<2>(no_U);
+    auto OCC_A = std::get<0>(no_U);
+    auto OCC_B = std::get<2>(no_U);
 
     std::vector<std::tuple<double, int, int>> sorted_aocc; // (non,irrep,index)
     double sum_o = 0.0;

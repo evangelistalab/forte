@@ -938,8 +938,8 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
                                 dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
 
     //    overlap_size = C.size();
-    std::shared_ptr<psi::Vector> C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
-                                 sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
+    auto C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
+         sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
     set_psi_Vector(C_psi, start_C);
     sigma_vector.compute_sigma(sigma_psi, C_psi);
     C = to_std_vector(sigma_psi);
@@ -1046,8 +1046,8 @@ void ProjectorCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double
                                 dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
 
     overlap_size = ref_C.size();
-    std::shared_ptr<psi::Vector> C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
-                                 sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
+    auto C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
+         sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
     set_psi_Vector(C_psi, ref_C);
     sigma_vector.compute_sigma(sigma_psi, C_psi);
     sigma_psi->scale(-1.0);
@@ -2235,7 +2235,7 @@ std::shared_ptr<psi::Matrix> ProjectorCI::get_PQ_evecs() {
 }
 
 std::shared_ptr<psi::Vector> ProjectorCI::get_PQ_evals() {
-    std::shared_ptr<psi::Vector> evals = std::make_shared<psi::Vector>("e", nroot_);
+    auto evals = std::make_shared<psi::Vector>("e", nroot_);
     evals->set(0, approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_);
     return evals;
 }

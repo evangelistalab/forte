@@ -119,7 +119,7 @@ void DistDFIntegrals::test_distributed_integrals() {
 
     psi::Dimension nsopi_ = wfn_->nsopi();
     auto aotoso = wfn_->aotoso();
-    std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
+    auto Ca = wfn_->Ca();
     auto Ca_ao = std::make_shared<psi::Matrix>("Ca_ao", nso_, nmopi_.sum());
 
     // Transform from the SO to the AO basis

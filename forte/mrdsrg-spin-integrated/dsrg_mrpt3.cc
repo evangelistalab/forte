@@ -1423,7 +1423,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 
 //                // compute energy and fill in results
 //                fci->compute_energy();
-//                std::shared_ptr<psi::Vector> Ems = fci->evals();
+//                auto Ems = fci->evals();
 //                for (int i = 0; i < nstates; ++i) {
 //                    Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
 //                }

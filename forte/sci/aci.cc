@@ -172,7 +172,7 @@ void AdaptiveCI::print_info() {
 
     if (options_->get_bool("PRINT_1BODY_EVALS")) {
         outfile->Printf("\n  Reference orbital energies:");
-        std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
+        auto epsilon_a = scf_info_->epsilon_a();
 
         auto actmo = mo_space_info_->absolute_mo("ACTIVE");
 

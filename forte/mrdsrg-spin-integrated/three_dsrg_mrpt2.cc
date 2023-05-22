@@ -2282,7 +2282,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
-    std::shared_ptr<psi::Matrix> Cwfn = ints_->Ca();
+    auto Cwfn = ints_->Ca();
     if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
@@ -2309,10 +2309,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     ao_helper.Compute_AO_Screen(primary);
     ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
     size_t weights = ao_helper.Weights();
-    std::shared_ptr<psi::Matrix> AO_Screen = ao_helper.AO_Screen();
-    std::shared_ptr<psi::Matrix> TransAO_Screen = ao_helper.TransAO_Screen();
-    std::shared_ptr<psi::Matrix> Occupied_Density = ao_helper.POcc();
-    std::shared_ptr<psi::Matrix> Virtual_Density = ao_helper.PVir();
+    auto AO_Screen = ao_helper.AO_Screen();
+    auto TransAO_Screen = ao_helper.TransAO_Screen();
+    auto Occupied_Density = ao_helper.POcc();
+    auto Virtual_Density = ao_helper.PVir();
     Occupied_Density->print();
     Virtual_Density->print();
     size_t nmo = mo_space_info_->dimension("ALL").sum();
@@ -2329,7 +2329,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     // ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew",
     // {weights});
     DFTensor df_tensor(primary, auxiliary, Cwfn, ncore_, nvirtual_);
-    std::shared_ptr<psi::Matrix> Qso = df_tensor.Qso();
+    auto Qso = df_tensor.Qso();
     DF_AO.iterate([&](const std::vector<size_t>& i, double& value) {
         value = Qso->get(i[0], i[1] * nmo + i[2]);
     });
@@ -3027,7 +3027,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     }
 
     if (foptions_->get_bool("PRINT_1BODY_EVALS")) {
-        std::shared_ptr<psi::Matrix> Hb1 = std::make_shared<psi::Matrix>("HB1", nactive_, nactive_);
+        auto Hb1 = std::make_shared<psi::Matrix>("HB1", nactive_, nactive_);
         for (size_t p = 0; p < nactive_; ++p) {
             for (size_t q = 0; q < nactive_; ++q) {
                 Hb1->set(p, q, Hbar1_.block("aa").data()[p * nactive_ + q]);
@@ -3510,7 +3510,7 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 
 //                // compute energy and fill in results
 //                fci->compute_energy();
-//                std::shared_ptr<psi::Vector> Ems = fci->evals();
+//                auto Ems = fci->evals();
 //                for (int i = 0; i < nstates; ++i) {
 //                    Erelax.push_back(Ems->get(i) + Enuc);
 //                }
