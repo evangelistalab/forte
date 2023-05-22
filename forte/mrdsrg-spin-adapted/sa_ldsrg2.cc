@@ -311,7 +311,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
 
     size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
 
-    psi::SharedMatrix A1_m(new psi::Matrix("A1 alpha", ncmo, ncmo));
+    auto A1_m = std::make_shared<psi::Matrix>("A1 alpha", ncmo, ncmo);
     A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         A1_m->set(i[0], i[1], value);
     });

@@ -63,10 +63,10 @@ class SemiCanonical {
                           const bool& nat_orb = false, const bool& transform = true);
 
     /// Return the alpha rotation matrix
-    psi::SharedMatrix Ua() { return Ua_; }
+    std::shared_ptr<psi::Matrix> Ua() { return Ua_; }
 
     /// Return the beta rotation matrix
-    psi::SharedMatrix Ub() { return Ub_; }
+    std::shared_ptr<psi::Matrix> Ub() { return Ub_; }
 
     /// Return the alpha rotation matrix in the active space
     ambit::Tensor Ua_t() const { return Ua_t_.clone(); }
@@ -114,9 +114,9 @@ class SemiCanonical {
     size_t nirrep_;
 
     /// Unitary matrix for alpha orbital rotation
-    psi::SharedMatrix Ua_;
+    std::shared_ptr<psi::Matrix> Ua_;
     /// Unitary matrix for beta orbital rotation
-    psi::SharedMatrix Ub_;
+    std::shared_ptr<psi::Matrix> Ub_;
     /// Unitary matrix for alpha orbital rotation in the active space
     ambit::Tensor Ua_t_;
     /// Unitary matrix for beta orbital rotation in the active space
@@ -143,8 +143,8 @@ class SemiCanonical {
     /// Builds unitary matrices used to diagonalize diagonal blocks of Fock
     void build_transformation_matrices(const bool& semi);
 
-    /// Fill ambit::Tensor Ua_t_ (Ub_t_) using psi::SharedMatrix Ua_ (Ub_)
-    void fill_Uactv(const psi::SharedMatrix& U, ambit::Tensor& Ut);
+    /// Fill ambit::Tensor Ua_t_ (Ub_t_) using std::shared_ptr<psi::Matrix> Ua_ (Ub_)
+    void fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut);
 
     /// Successfully fix the orbital ordering and phases
     bool fix_orbital_success_;

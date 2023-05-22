@@ -195,7 +195,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         T2.block(block).zero();
     }
 
@@ -253,7 +253,7 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         T2.block(block).zero();
     }
 
@@ -335,7 +335,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const auto block : {"aa", "AA"}) {
         T1.block(block).zero();
     }
 
@@ -430,7 +430,7 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const auto block : {"aaaa", "aAaA", "AAAA"}) {
         T2.block(block).zero();
     }
 
@@ -527,7 +527,7 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const auto block : {"aaaa", "aAaA", "AAAA"}) {
         T2.block(block).zero();
     }
 
@@ -633,7 +633,7 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const auto block : {"aa", "AA"}) {
         T1.block(block).zero();
     }
 
@@ -740,7 +740,7 @@ void MRDSRG::update_t2_std() {
 
     timer t8("zero internal amplitudes");
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const auto block : {"aaaa", "aAaA", "AAAA"}) {
         DT2_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
     }
     t8.stop();
@@ -864,7 +864,7 @@ void MRDSRG::update_t1_std() {
     DT1_["IA"] -= T1_["IA"];
 
     // zero internal amplitudes
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const auto block : {"aa", "AA"}) {
         DT1_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
     }
 

@@ -10,6 +10,8 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "ambit/tensor.h"
+
 #include "base_classes/rdms.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
@@ -340,7 +342,7 @@ void DETCI::dump_wave_function(const std::string& filename) {
     file.close();
 }
 
-std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
 DETCI::read_wave_function(const std::string& filename) {
     timer t_read("Read DETCI WFN");
     std::string line;
@@ -777,7 +779,7 @@ void DETCI::generalized_rdms(size_t root, const std::vector<double>& X, ambit::B
 
     // test consistency between grdms and rdm_level
     auto blabels = grdms.block_labels();
-    if (blabels.size() != rdm_level + 1) {
+    if (blabels.size() != static_cast<size_t>(rdm_level) + 1) {
         throw std::runtime_error("Incorrect number of tensors in the result BlockedTensor.");
     }
 
@@ -787,7 +789,7 @@ void DETCI::generalized_rdms(size_t root, const std::vector<double>& X, ambit::B
     }
 
     // prepare the expansion vectors to SharedMatrix format for CI_RDMs
-    auto evecs = std::make_shared<Matrix>("CI and Multiplier Vectors", ndets, 2);
+    auto evecs = std::make_shared<psi::Matrix>("CI and Multiplier Vectors", ndets, 2);
     int col_c = c_right ? 1 : 0;
     int col_x = c_right ? 0 : 1;
 
@@ -810,7 +812,7 @@ void DETCI::generalized_rdms(size_t root, const std::vector<double>& X, ambit::B
     }
 }
 
-void DETCI::generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) {
+void DETCI::generalized_sigma(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> sigma) {
     sigma_vector_->compute_sigma(sigma, x);
 }
 

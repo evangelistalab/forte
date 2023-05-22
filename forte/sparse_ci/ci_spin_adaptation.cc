@@ -42,16 +42,16 @@
 namespace forte {
 
 /// @brief A flag to enable/disable debug messages
-constexpr bool DEBUG_SPIN_ADAPTATION = false;
+// constexpr bool DEBUG_SPIN_ADAPTATION = false;
 
-#if DEBUG_SPIN_ADAPTATION
-template <typename... Args> void debug(const std::string& format, Args... args) {
-    std::string new_format = "[DEBUG] " + format;
-    psi::outfile->Printf(new_format.c_str(), args...);
-}
-#else
-template <typename... Args> void debug(const std::string& format, Args... args) {}
-#endif
+// // #if DEBUG_SPIN_ADAPTATION
+// // template <typename... Args> void debug(const std::string& format, Args... args) {
+// //     std::string new_format = "[DEBUG] " + format;
+// //     psi::outfile->Printf(new_format.c_str(), args...);
+// // }
+// // #else
+// // template <typename... Args> void debug(const std::string& format, Args... args) {}
+// // #endif
 
 // Utility functions
 

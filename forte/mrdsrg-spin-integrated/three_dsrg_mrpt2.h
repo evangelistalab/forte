@@ -82,10 +82,10 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
-    void rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose = false,
-                    const bool& t1eff = false);
+    void rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                    const bool& transpose = false, const bool& t1eff = false);
 
-    void set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub);
+    void set_Ufull(std::shared_ptr<psi::Matrix>& Ua, std::shared_ptr<psi::Matrix>& Ub);
 
   protected:
     // => Class data <= //
@@ -125,8 +125,8 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<double> Fb_;
 
     /// Semicanonical Transformation matrices
-    psi::SharedMatrix Ua_full_;
-    psi::SharedMatrix Ub_full_;
+    std::shared_ptr<psi::Matrix> Ua_full_;
+    std::shared_ptr<psi::Matrix> Ub_full_;
 
     // => Tensors <= //
     ambit::BlockedTensor H_;

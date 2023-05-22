@@ -76,9 +76,11 @@ class SigmaVector {
     /// Compute the contribution to sigma due to 1-body operator
     /// sigma_{I} <- factor * sum_{pq} h_{pq} sum_{J} b_{J} <I|p^+ q|J>
     /// h_{pq} = h1a[p * nactv + q]
-    virtual void add_generalized_sigma_1(const std::vector<double>& h1,
-                                         std::shared_ptr<psi::Vector> b, double factor,
-                                         std::vector<double>& sigma, const std::string& spin) {
+    virtual void add_generalized_sigma_1([[maybe_unused]] const std::vector<double>& h1,
+                                         [[maybe_unused]] std::shared_ptr<psi::Vector> b,
+                                         [[maybe_unused]] double factor,
+                                         [[maybe_unused]] std::vector<double>& sigma,
+                                         [[maybe_unused]] const std::string& spin) {
         _throw_not_implemented_error("add_generalized_sigma_1");
     }
 
@@ -87,9 +89,11 @@ class SigmaVector {
     /// sigma_{I} <- factor * sum_{pqrs} h_{pQrS} sum_{J} b_{J} <I|p^+ Q^+ S r|J>
     /// h_{pqrs} = h2[p * nactv^3 + q * nactv^2 + r * nactv + s]
     /// Integrals must be antisymmetric wrt index permutations!
-    virtual void add_generalized_sigma_2(const std::vector<double>& h2,
-                                         std::shared_ptr<psi::Vector> b, double factor,
-                                         std::vector<double>& sigma, const std::string& spin) {
+    virtual void add_generalized_sigma_2([[maybe_unused]] const std::vector<double>& h2,
+                                         [[maybe_unused]] std::shared_ptr<psi::Vector> b,
+                                         [[maybe_unused]] double factor,
+                                         [[maybe_unused]] std::vector<double>& sigma,
+                                         [[maybe_unused]] const std::string& spin) {
         _throw_not_implemented_error("add_generalized_sigma_2");
     }
 
@@ -98,9 +102,11 @@ class SigmaVector {
     /// sigma_{I} <- (1/4) * factor * sum_{pqRstU} h_{pqRstU} sum_{J} b_{J} <I|p^+ q^+ R^+ U t s|J>
     /// h_{pqrstu} = h3[p * nactv^5 + q * nactv^4 + r * nactv^3 + s * nactv^2 + t * nactv + u]
     /// Integrals must be antisymmetric wrt index permutations!
-    virtual void add_generalized_sigma_3(const std::vector<double>& h3,
-                                         std::shared_ptr<psi::Vector> b, double factor,
-                                         std::vector<double>& sigma, const std::string& spin) {
+    virtual void add_generalized_sigma_3([[maybe_unused]] const std::vector<double>& h3,
+                                         [[maybe_unused]] std::shared_ptr<psi::Vector> b,
+                                         [[maybe_unused]] double factor,
+                                         [[maybe_unused]] std::vector<double>& sigma,
+                                         [[maybe_unused]] const std::string& spin) {
         _throw_not_implemented_error("add_generalized_sigma_3");
     }
 

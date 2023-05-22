@@ -31,8 +31,15 @@
 
 #include <string>
 #include <vector>
-#include <ambit/tensor.h>
-#include "psi4/libmints/matrix.h"
+
+namespace psi {
+class Dimension;
+class Matrix;
+} // namespace psi
+
+namespace ambit {
+class Tensor;
+}
 
 namespace forte {
 

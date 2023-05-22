@@ -1506,7 +1506,7 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
     print_done(t_cavv.stop());
 }
 
-psi::SharedMatrix SA_MRPT2::build_1rdm_cc() {
+std::shared_ptr<psi::Matrix> SA_MRPT2::build_1rdm_cc() {
     timer tcc("1RDM-CC");
 
     auto D1c = D1_.block("cc");
@@ -1582,7 +1582,7 @@ psi::SharedMatrix SA_MRPT2::build_1rdm_cc() {
     return tensor_to_matrix(D1_.block("cc"), mo_space_info_->dimension("RESTRICTED_DOCC"));
 }
 
-psi::SharedMatrix SA_MRPT2::build_1rdm_vv() {
+std::shared_ptr<psi::Matrix> SA_MRPT2::build_1rdm_vv() {
     timer tvv("1RDM-VV");
 
     auto D1v = D1_.block("vv");
@@ -1657,7 +1657,8 @@ psi::SharedMatrix SA_MRPT2::build_1rdm_vv() {
     return tensor_to_matrix(D1_.block("vv"), mo_space_info_->dimension("RESTRICTED_UOCC"));
 }
 
-void SA_MRPT2::build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D1v) {
+void SA_MRPT2::build_1rdm_unrelaxed(std::shared_ptr<psi::Matrix>& D1c,
+                                    std::shared_ptr<psi::Matrix>& D1v) {
     print_h2("Build Spin-Summed Unrelaxed 1-RDM (CC and VV)");
 
     D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"});

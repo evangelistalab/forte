@@ -8,12 +8,13 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
+#include "base_classes/mo_space_info.h"
+#include "integrals/active_space_integrals.h"
+
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
 #include "master_mrdsrg.h"
-
-#include "base_classes/mo_space_info.h"
 
 using namespace psi;
 
@@ -239,7 +240,7 @@ void MASTER_DSRG::fill_density() {
     Gamma1_.block("AA")("pq") = rdms_->g1b()("pq");
 
     // 1-hole density
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const std::string block : {"aa", "AA"}) {
         (Eta1_.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = (i[0] == i[1]) ? 1.0 : 0.0;
         });
@@ -454,7 +455,7 @@ void MASTER_DSRG::init_dm_ints() {
         dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
-    std::vector<psi::SharedMatrix> dm_a = ints_->mo_dipole_ints();
+    std::vector<std::shared_ptr<psi::Matrix>> dm_a = ints_->mo_dipole_ints();
     fill_MOdm(dm_a, dm_a); // beta-spin integrals are equivalent to those of alpha-spin
     compute_dm_ref();
 
@@ -474,8 +475,8 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("Done");
 }
 
-void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
-                            std::vector<psi::SharedMatrix>& dm_b) {
+void MASTER_DSRG::fill_MOdm(std::vector<std::shared_ptr<psi::Matrix>>& dm_a,
+                            std::vector<std::shared_ptr<psi::Matrix>>& dm_b) {
     // consider frozen-core part
     std::vector<size_t> frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
     for (int z = 0; z < 3; ++z) {
@@ -516,7 +517,7 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
 void MASTER_DSRG::compute_dm_ref() {
     for (int z = 0; z < 3; ++z) {
         double dipole = dm_frzc_[z];
-        for (const std::string& block : {"cc", "CC"}) {
+        for (const std::string block : {"cc", "CC"}) {
             dm_[z].block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
                 if (i[0] == i[1]) {
                     dipole += value;
@@ -1950,7 +1951,7 @@ bool MASTER_DSRG::check_semi_orbs() {
 
     // space, spin, Fmax, Fmean
     std::vector<std::tuple<std::string, std::string, double, double>> Fcheck;
-    for (const auto& block : {"cc", "CC", "vv", "VV"}) {
+    for (const auto block : {"cc", "CC", "vv", "VV"}) {
         double fmax = Fd.block(block).norm(0);
         double fmean = Fd.block(block).norm(1);
         fmean /= Fd.block(block).numel() > 2 ? Fd.block(block).numel() : 1.0;

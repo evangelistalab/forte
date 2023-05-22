@@ -56,22 +56,25 @@ class SigmaVectorSparseList : public SigmaVector {
     /// Compute the contribution to sigma due to 1-body operator
     /// sigma_{I} <- factor * sum_{pq} h_{pq} sum_{J} b_{J} <I|p^+ q|J>
     /// h_{pq} = h1[p * nactv + q]
-    void add_generalized_sigma_1(const std::vector<double>& h1, psi::SharedVector b, double factor,
-                                 std::vector<double>& sigma, const std::string& spin) override;
+    void add_generalized_sigma_1(const std::vector<double>& h1, std::shared_ptr<psi::Vector> b,
+                                 double factor, std::vector<double>& sigma,
+                                 const std::string& spin) override;
     /// Compute the contribution to sigma due to 2-body operator
     /// sigma_{I} <- (1/4) * factor * sum_{pqrs} h_{pqrs} sum_{J} b_{J} <I|p^+ q^+ s r|J>
     /// sigma_{I} <- factor * sum_{pqrs} h_{pQrS} sum_{J} b_{J} <I|p^+ Q^+ S r|J>
     /// h_{pqrs} = h2[p * nactv^3 + q * nactv^2 + r * nactv + s]
     /// Integrals must be antisymmetric wrt index permutations!
-    void add_generalized_sigma_2(const std::vector<double>& h2, psi::SharedVector b, double factor,
-                                 std::vector<double>& sigma, const std::string& spin) override;
+    void add_generalized_sigma_2(const std::vector<double>& h2, std::shared_ptr<psi::Vector> b,
+                                 double factor, std::vector<double>& sigma,
+                                 const std::string& spin) override;
     /// Compute the contribution to sigma due to 3-body operator
     /// sigma_{I} <- (1/36) * factor * sum_{pqrstu} h_{pqrstu} sum_{J} b_{J} <I|p^+ q^+ r^+ u t s|J>
     /// sigma_{I} <- (1/4) * factor * sum_{pqRstU} h_{pqRstU} sum_{J} b_{J} <I|p^+ q^+ R^+ U t s|J>
     /// h_{pqrstu} = h3[p * nactv^5 + q * nactv^4 + r * nactv^3 + s * nactv^2 + t * nactv + u]
     /// Integrals must be antisymmetric wrt index permutations!
-    void add_generalized_sigma_3(const std::vector<double>& h3, psi::SharedVector b, double factor,
-                                 std::vector<double>& sigma, const std::string& spin) override;
+    void add_generalized_sigma_3(const std::vector<double>& h3, std::shared_ptr<psi::Vector> b,
+                                 double factor, std::vector<double>& sigma,
+                                 const std::string& spin) override;
 
   protected:
     bool print_;
@@ -83,7 +86,7 @@ class SigmaVectorSparseList : public SigmaVector {
     /// sigma_{I} <- factor * sum_{pq} h_{pq} sum_{J} b_{J} <I|p^+ q|J>
     /// h_{pq} = h1[p * nactv + q]
     void add_generalized_sigma1_impl(
-        const std::vector<double>& h1, psi::SharedVector b, double factor,
+        const std::vector<double>& h1, std::shared_ptr<psi::Vector> b, double factor,
         std::vector<double>& sigma,
         const std::vector<std::vector<std::pair<size_t, short>>>& sub_lists);
     /// Compute the contribution to sigma due to 2-body operator
@@ -92,7 +95,7 @@ class SigmaVectorSparseList : public SigmaVector {
     /// h_{pqrs} = h2[p * nactv^3 + q * nactv^2 + r * nactv + s]
     /// Integrals must be antisymmetric wrt index permutations!
     void add_generalized_sigma2_impl(
-        const std::vector<double>& h2, psi::SharedVector b, double factor,
+        const std::vector<double>& h2, std::shared_ptr<psi::Vector> b, double factor,
         std::vector<double>& sigma,
         const std::vector<std::vector<std::tuple<size_t, short, short>>>& sub_lists);
     /// Compute the contribution to sigma due to 3-body operator
@@ -101,7 +104,7 @@ class SigmaVectorSparseList : public SigmaVector {
     /// h_{pqrstu} = h3[p * nactv^5 + q * nactv^4 + r * nactv^3 + s * nactv^2 + t * nactv + u]
     /// Integrals must be antisymmetric wrt index permutations!
     void add_generalized_sigma3_impl(
-        const std::vector<double>& h3, psi::SharedVector b, double factor,
+        const std::vector<double>& h3, std::shared_ptr<psi::Vector> b, double factor,
         std::vector<double>& sigma,
         const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& sub_lists);
 

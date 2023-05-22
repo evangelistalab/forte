@@ -26,31 +26,29 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/wavefunction.h"
-#include "scf_info.h"
+#include <algorithm>
+#include <stdexcept>
+#include <utility>
 
 namespace forte {
 
-SCFInfo::SCFInfo(psi::SharedWavefunction wfn)
-    : nmopi_(wfn->nmopi()), doccpi_(wfn->doccpi()), soccpi_(wfn->soccpi()), energy_(wfn->energy()),
-      epsilon_a_(wfn->epsilon_a()), epsilon_b_(wfn->epsilon_b()) {}
+std::pair<size_t, size_t> thread_range(size_t n, size_t num_thread, size_t tid) {
+    if (tid >= num_thread) {
+        throw std::invalid_argument("thread_range: Thread ID cannot exceed number of threads.");
+    }
 
-SCFInfo::SCFInfo(const psi::Dimension& nmopi, const psi::Dimension& doccpi,
-                 const psi::Dimension& soccpi, double reference_energy,
-                 std::shared_ptr<psi::Vector> epsilon_a, std::shared_ptr<psi::Vector> epsilon_b)
-    : nmopi_(nmopi), doccpi_(doccpi), soccpi_(soccpi), energy_(reference_energy),
-      epsilon_a_(epsilon_a), epsilon_b_(epsilon_b) {}
+    if (tid >= n) {
+        // For tid >= n, return the same start and end indices (no work)
+        return {n, n};
+    }
 
-psi::Dimension SCFInfo::nmopi() { return nmopi_; }
+    size_t base_size = n / num_thread;
+    size_t leftover = n % num_thread;
 
-psi::Dimension SCFInfo::doccpi() { return doccpi_; }
+    // threads with tid smaller than leftover will start one unit of work later
+    size_t start_idx = tid * base_size + std::min(tid, leftover);
+    size_t end_idx = start_idx + base_size + (tid < leftover);
 
-psi::Dimension SCFInfo::soccpi() { return soccpi_; }
-
-double SCFInfo::reference_energy() { return energy_; }
-
-std::shared_ptr<psi::Vector> SCFInfo::epsilon_a() { return epsilon_a_; }
-
-std::shared_ptr<psi::Vector> SCFInfo::epsilon_b() { return epsilon_b_; }
-
+    return {start_idx, end_idx};
+}
 } // namespace forte

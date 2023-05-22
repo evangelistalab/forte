@@ -306,8 +306,8 @@ void ActiveSpaceSolver::add_sigma_kbody(const StateInfo& state, size_t root,
     state_method_map_[state]->add_sigma_kbody(root, h, block_label_to_factor, sigma);
 }
 
-void ActiveSpaceSolver::generalized_sigma(const StateInfo& state, psi::SharedVector x,
-                                          psi::SharedVector sigma) {
+void ActiveSpaceSolver::generalized_sigma(const StateInfo& state, std::shared_ptr<psi::Vector> x,
+                                          std::shared_ptr<psi::Vector> sigma) {
     state_method_map_[state]->generalized_sigma(x, sigma);
 }
 
@@ -595,8 +595,8 @@ void ActiveSpaceSolver::dump_wave_function() {
     }
 }
 
-std::map<StateInfo, psi::SharedMatrix> ActiveSpaceSolver::state_ci_wfn_map() const {
-    std::map<StateInfo, psi::SharedMatrix> out;
+std::map<StateInfo, std::shared_ptr<psi::Matrix>> ActiveSpaceSolver::state_ci_wfn_map() const {
+    std::map<StateInfo, std::shared_ptr<psi::Matrix>> out;
     for (const auto& pair : state_method_map_) {
         out[pair.first] = pair.second->ci_wave_functions();
     }

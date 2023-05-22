@@ -60,8 +60,8 @@ bool ProjectorCI::have_omp_ = true;
 bool ProjectorCI::have_omp_ = false;
 #endif
 
-std::vector<double> to_std_vector(psi::SharedVector c);
-void set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec);
+std::vector<double> to_std_vector(std::shared_ptr<psi::Vector> c);
+void set_psi_Vector(std::shared_ptr<psi::Vector> c_psi, const std::vector<double>& c_vec);
 
 double normalize(std::vector<double>& C) {
     size_t size = C.size();
@@ -858,8 +858,8 @@ void ProjectorCI::post_iter_process() {
     if (post_diagonalization_) {
         psi::outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         psi::timer_on("PCI:Post_Diag");
-        psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C_.size(), nroot_));
-        psi::SharedVector apfci_evals(new psi::Vector("Eigenvalues", nroot_));
+        auto apfci_evecs = std::make_shared<psi::Matrix>("Eigenvectors", C_.size(), nroot_);
+        auto apfci_evals = std::make_shared<psi::Vector>("Eigenvalues", nroot_);
 
         DeterminantHashVec det_map(std::move(dets_hashvec_));
 
@@ -938,8 +938,8 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
                                 dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
 
     //    overlap_size = C.size();
-    psi::SharedVector C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
-                      sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
+    auto C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
+         sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
     set_psi_Vector(C_psi, start_C);
     sigma_vector.compute_sigma(sigma_psi, C_psi);
     C = to_std_vector(sigma_psi);
@@ -980,8 +980,8 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
 
     psi::outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
 
-    psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
-    psi::SharedVector evals(new psi::Vector("Eigenvalues", nroot_));
+    auto evecs = std::make_shared<psi::Matrix>("Eigenvectors", guess_size, nroot_);
+    auto evals = std::make_shared<psi::Vector>("Eigenvalues", nroot_);
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
@@ -1046,8 +1046,8 @@ void ProjectorCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double
                                 dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
 
     overlap_size = ref_C.size();
-    psi::SharedVector C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
-                      sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
+    auto C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
+         sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
     set_psi_Vector(C_psi, ref_C);
     sigma_vector.compute_sigma(sigma_psi, C_psi);
     sigma_psi->scale(-1.0);
@@ -1133,8 +1133,8 @@ void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C
     sparse_solver_.set_initial_guess({guess});
     sparse_solver_.set_spin_project(false);
     sparse_solver_.set_force_diag(true);
-    psi::SharedMatrix PQ_evecs_;
-    psi::SharedVector PQ_evals_;
+    std::shared_ptr<psi::Matrix> PQ_evecs_;
+    std::shared_ptr<psi::Vector> PQ_evals_;
 
     DeterminantHashVec det_map(dets_hashvec_);
 
@@ -1289,8 +1289,8 @@ double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& de
     auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
     size_t sub_size = sigma_vector->size();
     // allocate vectors
-    psi::SharedVector b(new psi::Vector("b", sub_size));
-    psi::SharedVector sigma(new psi::Vector("sigma", sub_size));
+    auto b = std::make_shared<psi::Vector>("b", sub_size);
+    auto sigma = std::make_shared<psi::Vector>("sigma", sub_size);
     for (size_t i = 0; i < sub_size; ++i) {
         b->set(i, C[i]);
     }
@@ -2224,18 +2224,18 @@ void ProjectorCI::set_method_variables(
 }
 
 DeterminantHashVec ProjectorCI::get_PQ_space() { return solutions_[solutions_.size() - 1].first; }
-psi::SharedMatrix ProjectorCI::get_PQ_evecs() {
+std::shared_ptr<psi::Matrix> ProjectorCI::get_PQ_evecs() {
     const auto& C = solutions_[solutions_.size() - 1].second;
     size_t nDet = C.size();
-    psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("U", nDet, nroot_);
+    auto evecs = std::make_shared<psi::Matrix>("U", nDet, nroot_);
     for (size_t i = 0; i < nDet; ++i) {
         evecs->set(i, 0, C[i]);
     }
     return evecs;
 }
 
-psi::SharedVector ProjectorCI::get_PQ_evals() {
-    psi::SharedVector evals = std::make_shared<psi::Vector>("e", nroot_);
+std::shared_ptr<psi::Vector> ProjectorCI::get_PQ_evals() {
+    auto evals = std::make_shared<psi::Vector>("e", nroot_);
     evals->set(0, approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_);
     return evals;
 }

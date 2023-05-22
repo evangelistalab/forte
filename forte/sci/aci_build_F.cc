@@ -35,6 +35,8 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 
+#include "helpers/threading.h"
+
 #include "forte-def.h"
 #include "sci/aci.h"
 
@@ -51,7 +53,7 @@ bool pair_compd(const std::pair<Determinant, double> E1, const std::pair<Determi
     return E1.first < E2.first;
 }
 
-void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector evals,
+void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, std::shared_ptr<psi::Vector> evals,
                                              DeterminantHashVec& P_space,
                                              std::vector<std::pair<double, Determinant>>& F_space) {
     local_timer build;
@@ -64,13 +66,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
     {
         size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
-        size_t bin_size = max_P / num_thread;
-        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
-        size_t start_idx =
-            (tid < (max_P % num_thread))
-                ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        const auto [start_idx, end_idx] = thread_range(max_P, num_thread, tid);
 
         det_hash<double> V_hash_t;
         for (size_t P = start_idx; P < end_idx; ++P) {
@@ -234,7 +230,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
 }
 
 void AdaptiveCI::get_excited_determinants_avg(
-    int nroot, SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    int nroot, SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -245,13 +241,7 @@ void AdaptiveCI::get_excited_determinants_avg(
     {
         size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
-        size_t bin_size = max_P / num_thread;
-        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
-        size_t start_idx =
-            (tid < (max_P % num_thread))
-                ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        const auto [start_idx, end_idx] = thread_range(max_P, num_thread, tid);
 
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
             outfile->Printf("\n  Using %d thread(s).", num_thread);
@@ -477,7 +467,7 @@ void AdaptiveCI::get_excited_determinants_avg(
 }
 
 void AdaptiveCI::get_excited_determinants_core(
-    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -486,15 +476,9 @@ void AdaptiveCI::get_excited_determinants_core(
 // Loop over reference determinants
 #pragma omp parallel
     {
-        int num_thread = omp_get_num_threads();
-        int tid = omp_get_thread_num();
-        size_t bin_size = max_P / num_thread;
-        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
-        size_t start_idx =
-            (tid < (max_P % num_thread))
-                ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        size_t num_thread = static_cast<size_t>(omp_get_num_threads());
+        size_t tid = omp_get_thread_num();
+        const auto [start_idx, end_idx] = thread_range(max_P, num_thread, tid);
 
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
             outfile->Printf("\n  Using %d threads.", num_thread);
@@ -729,7 +713,7 @@ void AdaptiveCI::get_excited_determinants_core(
 
 // New threading strategy
 double AdaptiveCI::get_excited_determinants_batch_vecsort(
-    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
 
@@ -756,7 +740,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     int nruns = static_cast<int>(std::ceil(guess_mem / max_mem));
 
     double total_excluded = 0.0;
-    int nbin = nruns;
+    size_t nbin = static_cast<size_t>(nruns);
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
     if (options_->get_int("ACI_NBATCH") > 0) {
@@ -865,7 +849,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
 
 // New threading strategy
 double
-AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals,
+AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, std::shared_ptr<psi::Vector> evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
@@ -961,7 +945,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     return total_excluded;
 }
 
-det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, SharedMatrix evecs,
+det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double /*E0*/, SharedMatrix evecs,
                                              DeterminantHashVec& P_space) {
 
     det_hash<double> bin_f_space;
@@ -976,8 +960,8 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
 
 #pragma omp parallel reduction(+ : value)
     {
-        int n_threads = omp_get_num_threads();
-        int thread_id = omp_get_thread_num();
+        size_t n_threads = static_cast<size_t>(omp_get_num_threads());
+        size_t thread_id = static_cast<size_t>(omp_get_thread_num());
 
 #pragma omp critical
         {
@@ -986,8 +970,6 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
         }
 
         det_hash<double>& A_b = A_b_t[thread_id];
-        // det_hash<double>& E_b = E_b_t[thread_id];
-
         size_t bin_size = n_dets / n_threads;
         bin_size += (thread_id < (n_dets % n_threads)) ? 1 : 0;
         size_t start_idx = (thread_id < (n_dets % n_threads))
@@ -1259,8 +1241,8 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
     std::vector<size_t> dets_t;
 #pragma omp parallel
     {
-        int n_threads = omp_get_num_threads();
-        int thread_id = omp_get_thread_num();
+        size_t n_threads = static_cast<size_t>(omp_get_num_threads());
+        size_t thread_id = static_cast<size_t>(omp_get_thread_num());
 
 #pragma omp critical
         {
@@ -1662,7 +1644,7 @@ gas_num_; i++) { outfile->Printf("   %d    ", gas_configuration.at(i)); } dimens
 
 }
 void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs,
-                                          SharedVector evals,
+                                          std::shared_ptr<psi::Vector> evals,
                                           DeterminantHashVec& P_space,
                                           std::vector<std::pair<double,Determinant>>&
 F_space) { size_t max_P = P_space.size(); const det_hashvec& P_dets =

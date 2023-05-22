@@ -81,7 +81,7 @@ void CustomIntegrals::initialize() {
     print_timing("preparing custom (FCIDUMP) integrals", int_timer.get());
 }
 
-psi::SharedMatrix CustomIntegrals::Ca_AO() const {
+std::shared_ptr<psi::Matrix> CustomIntegrals::Ca_AO() const {
     auto nmo = nmopi_.sum();
     auto Ca_ao = std::make_shared<psi::Matrix>("Ca_AO", nmo, nmo);
     Ca_ao->identity();
@@ -257,7 +257,7 @@ void CustomIntegrals::make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) {
     }
 }
 
-std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, double>
 CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) {
     // Implementation Notes (spin-orbital)
     // F_{pq} = h_{pq} + \sum_{i}^{closed} <pi||qi>
@@ -337,7 +337,7 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
     return {Fock_a, Fock_b, e_closed};
 }
 
-std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
 CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
     // Implementation Notes (spin-orbital)
     // F_{pq} = \sum_{uv}^{active} <pu||qv> * gamma_{uv}
@@ -352,7 +352,7 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
         throw std::runtime_error("Inconsistent number of active orbitals");
     }
 
-    // to have a single maintained code, we translate densities to psi::SharedMatrix
+    // to have a single maintained code, we translate densities to std::shared_ptr<psi::Matrix>
     auto g1a = std::make_shared<psi::Matrix>("1RDM alpha", dim_actv, dim_actv);
     auto g1b = std::make_shared<psi::Matrix>("1RDM beta", dim_actv, dim_actv);
 
@@ -374,15 +374,17 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
     return make_fock_active_unrestricted(g1a, g1b);
 }
 
-psi::SharedMatrix CustomIntegrals::make_fock_active_restricted(psi::SharedMatrix D) {
+std::shared_ptr<psi::Matrix>
+CustomIntegrals::make_fock_active_restricted(std::shared_ptr<psi::Matrix> D) {
     auto g1a = D->clone();
     g1a->scale(0.5);
     auto Ftuple = make_fock_active_unrestricted(g1a, g1a);
     return std::get<0>(Ftuple);
 }
 
-std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-CustomIntegrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+CustomIntegrals::make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> g1a,
+                                               std::shared_ptr<psi::Matrix> g1b) {
     auto Fock_a = std::make_shared<psi::Matrix>("Fock_active alpha", nmopi_, nmopi_);
     auto Fock_b = std::make_shared<psi::Matrix>("Fock_active beta", nmopi_, nmopi_);
 

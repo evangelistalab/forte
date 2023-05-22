@@ -35,7 +35,7 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
         tpdm_backtransform();
     }
     outfile->Printf("\n    Computing Gradient .............................. Done\n");
-    return std::make_shared<Matrix>("nullptr", 0, 0);
+    return std::make_shared<psi::Matrix>("nullptr", 0, 0);
 }
 
 void DSRG_MRPT2::set_global_variables() {
@@ -68,9 +68,8 @@ void DSRG_MRPT2::set_tensor() {
     I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = (i[0] == i[1]) ? 1.0 : 0.0;
     });
-    one_vec.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = 1.0;
-    });
+    one_vec.iterate([&](const std::vector<size_t>& /*i*/, const std::vector<SpinType>&,
+                        double& value) { value = 1.0; });
     I_ci.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 

@@ -107,7 +107,7 @@ void AdaptiveCI::startup() {
     // simple checks
     if (naverage_ == 0)
         naverage_ = nroot_;
-    if ((average_offset_ + naverage_) > nroot_) {
+    if ((average_offset_ + naverage_) > static_cast<int>(nroot_)) {
         std::string except = "The sum of ACI_N_AVERAGE and ACI_AVERAGE_OFFSET is larger than the "
                              "number of roots requested!";
         throw std::runtime_error(except);
@@ -172,7 +172,7 @@ void AdaptiveCI::print_info() {
 
     if (options_->get_bool("PRINT_1BODY_EVALS")) {
         outfile->Printf("\n  Reference orbital energies:");
-        std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
+        auto epsilon_a = scf_info_->epsilon_a();
 
         auto actmo = mo_space_info_->absolute_mo("ACTIVE");
 
@@ -295,7 +295,7 @@ void AdaptiveCI::find_q_space() {
     multistate_pt2_energy_correction_[ref_root_] = ept2;
 
     if (screen_alg == "AVERAGE") {
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             multistate_pt2_energy_correction_[n] = ept2;
         }
     }
@@ -330,7 +330,7 @@ double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
 }
 
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
-                                   psi::SharedVector evals) {
+                                   std::shared_ptr<psi::Vector> evals) {
     int nroot = evals->dim();
     int ref = 0;
 
@@ -371,7 +371,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
 }
 
 void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                               psi::SharedMatrix evecs) {
+                               std::shared_ptr<psi::Matrix> evecs) {
     // Select the new reference space using the sorted CI coefficients
     P_space.clear();
 
@@ -443,7 +443,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 }
 
 bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_history,
-                             psi::SharedVector evals) {
+                             std::shared_ptr<psi::Vector> evals) {
     bool stuck = false;
     int nroot = evals->dim();
     if (cycle_ < 4) {
@@ -472,7 +472,7 @@ bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_hist
 }
 
 int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                            DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
+                            DeterminantHashVec& P_space, std::shared_ptr<psi::Matrix> P_evecs,
                             int num_ref_roots) {
     int ndets = P_space.size();
     int max_dim = std::min(ndets, 1000);
@@ -853,8 +853,8 @@ void AdaptiveCI::print_nos() {
     psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", nirrep_, nactpi_, nactpi_);
+    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", nirrep_, nactpi_, nactpi_);
 
     int offset = 0;
     for (size_t h = 0; h < nirrep_; h++) {
@@ -910,9 +910,9 @@ void AdaptiveCI::full_mrpt2() {
 
 DeterminantHashVec AdaptiveCI::get_PQ_space() { return PQ_space_; }
 
-psi::SharedMatrix AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
+std::shared_ptr<psi::Matrix> AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 
-psi::SharedVector AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
+std::shared_ptr<psi::Vector> AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
 
 std::vector<double> AdaptiveCI::get_PQ_spin2() { return PQ_spin2_; }
 
@@ -926,7 +926,7 @@ void AdaptiveCI::zero_multistate_pt2_energy_correction() {
     multistate_pt2_energy_correction_.assign(nroot_, 0.0);
 }
 
-void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs) {
+void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs) {
     std::vector<std::string> gas_electron_name = {"GAS1_A", "GAS1_B", "GAS2_A", "GAS2_B",
                                                   "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",
                                                   "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
@@ -1048,7 +1048,7 @@ void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evec
     }
 }
 
-void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix evecs) {
+void AdaptiveCI::print_occ_number(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs) {
     std::vector<size_t> act_orb;
     for (size_t i = 0; i < nact_; i++) {
         act_orb.push_back(i);

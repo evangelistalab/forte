@@ -74,7 +74,7 @@ py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector
     return py::array_t<double>(dims, &(v.data()[0]));
 }
 
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
+std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
     auto M = std::make_shared<psi::Matrix>("M", size1, size2);
@@ -82,7 +82,7 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     return M;
 }
 
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
+std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
     if (t.dims().size() != 2) {
         throw std::runtime_error("Unable to convert: Tensor rank is not 2!");
     }

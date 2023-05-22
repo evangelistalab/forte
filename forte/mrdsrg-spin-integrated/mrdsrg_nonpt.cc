@@ -428,8 +428,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
     size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
 
-    psi::SharedMatrix aA1_m(new psi::Matrix("A1 alpha", ncmo, ncmo));
-    psi::SharedMatrix bA1_m(new psi::Matrix("A1 beta", ncmo, ncmo));
+    auto aA1_m = std::make_shared<psi::Matrix>("A1 alpha", ncmo, ncmo);
+    auto bA1_m = std::make_shared<psi::Matrix>("A1 beta", ncmo, ncmo);
     A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             aA1_m->set(i[0], i[1], value);
@@ -882,7 +882,7 @@ void MRDSRG::compute_hbar_qc() {
         Hbar1_["ia"] += temp["ai"];
         Hbar1_["IA"] += temp["AI"];
 
-        for (const std::string& block : {"pphh", "pPhH", "PPHH"}) {
+        for (const auto block : {"pphh", "pPhH", "PPHH"}) {
             // spin cases
             std::string ijab{"ijab"};
             std::string abij{"abij"};
@@ -903,7 +903,7 @@ void MRDSRG::compute_hbar_qc() {
 
     // compute Hbar = [S2, A]
     // compute S2 = H + 0.5 * [H, A] in batches of spin
-    for (const std::string& block : {"gggg", "gGgG", "GGGG"}) {
+    for (const auto block : {"gggg", "gGgG", "GGGG"}) {
         // spin cases for S2
         int spin = 0;
         std::string pqrs{"pqrs"};
@@ -953,7 +953,7 @@ void MRDSRG::compute_hbar_qc() {
             Hbar1_["ia"] += temp["ai"];
             Hbar1_["IA"] += temp["AI"];
 
-            for (const std::string& block : {"pphh", "pPhH", "PPHH"}) {
+            for (const auto block : {"pphh", "pPhH", "PPHH"}) {
                 // spin cases
                 std::string ijab{"ijab"};
                 std::string abij{"abij"};

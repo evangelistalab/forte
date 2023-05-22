@@ -44,8 +44,6 @@
 #include "helpers/disk_io.h"
 #include "helpers/printing.h"
 
-using namespace psi;
-
 namespace forte {
 
 DWMS_DSRGPT2::DWMS_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
@@ -528,7 +526,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     Ept_.resize(nentry);
 
     // eigens for iterative procedure
-    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_new;
+    std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>> eigens_new;
     // old eigens
     auto eigens = fci_mo->eigens();
 
@@ -556,7 +554,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         print_title(entry_title);
 
         // prepare Heff
-        psi::SharedMatrix Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
+        auto Heff = std::make_shared<psi::Matrix>("Heff " + entry_name, nroots, nroots);
 
         // vector of T1, T2, and summed 1st-order Hbar
         std::vector<ambit::BlockedTensor> T1s, T2s, RH1s, RH2s;
@@ -627,8 +625,8 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         Heff->print();
 
         // diagonalize Heff and print eigen vectors
-        psi::SharedMatrix U(new psi::Matrix("U of Heff", nroots, nroots));
-        psi::SharedVector Ems(new Vector("MS Energies", nroots));
+        auto U = std::make_shared<psi::Matrix>("U of Heff", nroots, nroots);
+        auto Ems = std::make_shared<psi::Vector>("MS Energies", nroots);
         Heff->diagonalize(U, Ems);
         U->eivprint(Ems);
 
@@ -692,12 +690,12 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     }
 }
 
-std::vector<std::pair<psi::SharedVector, double>>
-DWMS_DSRGPT2::compute_new_eigen(const std::vector<std::pair<psi::SharedVector, double>>& old_eigen,
-                                psi::SharedVector new_vals, psi::SharedMatrix new_vecs) {
+std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> DWMS_DSRGPT2::compute_new_eigen(
+    const std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& old_eigen,
+    std::shared_ptr<psi::Vector> new_vals, std::shared_ptr<psi::Matrix> new_vecs) {
     int nroots = new_vals->dim();
     int ndets = (old_eigen[0].first)->dim();
-    std::vector<std::pair<psi::SharedVector, double>> out;
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> out;
     out.reserve(nroots);
 
     for (int i = 0; i < nroots; ++i) {
@@ -744,9 +742,9 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         print_title(entry_title);
 
         // prepare Heff
-        psi::SharedMatrix Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
-        psi::SharedMatrix Heff_sym(
-            new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
+        auto Heff = std::make_shared<psi::Matrix>("Heff " + entry_name, nroots, nroots);
+        auto Heff_sym =
+            std::make_shared<psi::Matrix>("Symmetrized Heff " + entry_name, nroots, nroots);
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
@@ -841,8 +839,8 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         Heff_sym->print();
 
         // diagonalize Heff and print eigen vectors
-        psi::SharedMatrix U(new psi::Matrix("U of Heff (Symmetrized)", nroots, nroots));
-        psi::SharedVector Ems(new Vector("MS Energies", nroots));
+        auto U = std::make_shared<psi::Matrix>("U of Heff (Symmetrized)", nroots, nroots);
+        auto Ems = std::make_shared<psi::Vector>("MS Energies", nroots);
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
 
@@ -1019,7 +1017,7 @@ void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_
         Ept_[n].resize(nroots);
 
         // save the re-diagonalized eigen vectors
-        std::vector<psi::SharedVector> evecs_new;
+        std::vector<std::shared_ptr<psi::Vector>> evecs_new;
         evecs_new.resize(nroots);
 
         // save the previous projected roots
@@ -1153,7 +1151,7 @@ void DWMS_DSRGPT2::print_title(const std::string& title) {
     outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
 }
 
-void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs,
+void DWMS_DSRGPT2::print_overlap(const std::vector<std::shared_ptr<psi::Vector>>& evecs,
                                  const std::string& Sname) {
     print_h2(Sname);
     outfile->Printf("\n");

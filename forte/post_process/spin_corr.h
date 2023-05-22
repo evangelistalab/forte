@@ -52,7 +52,7 @@ class SpinCorr {
              std::shared_ptr<MOSpaceInfo> mo_space_info,
              std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    std::pair<psi::SharedMatrix, psi::SharedMatrix> compute_nos();
+    std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> compute_nos();
 
     void spin_analysis();
 

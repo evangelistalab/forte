@@ -46,17 +46,18 @@ class ROSENBROCK {
     ROSENBROCK(int n);
 
     /// Compute the function value and gradients
-    double evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g = true);
+    double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
+                    bool do_g = true);
 
     /// Compute the diagonal Hessian
-    void hess_diag(psi::SharedVector x, psi::SharedVector h0);
+    void hess_diag(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> h0);
 
   private:
     /// Size of the problem
     int n_;
 
     /// Error message printing
-    void check_dim(psi::SharedVector x);
+    void check_dim(std::shared_ptr<psi::Vector> x);
 };
 /// Test L-BFGS on Rosenbrock function
 double test_lbfgs_rosenbrock(int n, int h0_freq = 0);

@@ -183,7 +183,7 @@ void DSRG_MRPT2::set_b(int dim, const std::map<string, int>& block_dim) {
         temp2["zw"] -= temp4["wz"];
     }
 
-    for (const std::string& block : {"vc", "ca", "va", "aa"}) {
+    for (const std::string block : {"vc", "ca", "va", "aa"}) {
         (temp2.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             if (block != "aa") {
                 int index = preidx[block] + i[0] * block_dim.at(block) + i[1];
@@ -1076,7 +1076,7 @@ void DSRG_MRPT2::set_b(int dim, const std::map<string, int>& block_dim) {
         as_solver_->add_sigma_kbody(state, 0, sym_3, block_factor3, b_ck.data());
     }
 
-    for (const std::string& block : {"ci"}) {
+    for (const auto block : {"ci"}) {
         (b_ck).iterate([&](const std::vector<size_t>& i, double& value) {
             int index = preidx[block] + i[0];
             b.at(index) = value;
