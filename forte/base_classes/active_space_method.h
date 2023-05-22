@@ -31,6 +31,11 @@
 
 #include <vector>
 #include <unordered_set>
+#include "ambit/tensor.h"
+
+namespace ambit {
+class BlockedTensor;
+}
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
@@ -152,9 +157,57 @@ class ActiveSpaceMethod {
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }
 
+    /// Compute generalized RDM
+    ///     Gamma' = C_I <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param x: the X vector to be contracted with H_IJ
+    virtual void generalized_rdms(size_t root, const std::vector<double>& X,
+                                  ambit::BlockedTensor& result, bool c_right, int rdm_level,
+                                  std::vector<std::string> spin) {
+        throw std::runtime_error(
+            "The function generalized_rdms is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    /// Add k-body contributions to the sigma vector
+    ///    σ_I += h_{p1,p2,...}^{q1,q2,...} <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J
+    /// @param root: the root number of the state
+    /// @param h: the antisymmetrized k-body integrals
+    /// @param block_label_to_factor: map from the block labels of integrals to its factors
+    /// @param sigma: the sigma vector to be added
+    virtual void add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
+                                 const std::map<std::string, double>& block_label_to_factor,
+                                 std::vector<double>& sigma) {
+        throw std::runtime_error(
+            "The function add_sigma_kbody is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    /// Compute generalized sigma vector
+    ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param x: the X vector to be contracted with H_IJ
+    /// @param sigma: the sigma vector (will be zeroed first)
+    virtual void generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) {
+        throw std::runtime_error(
+            "The function generalized_sigma is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    /// Return the space size
+    virtual size_t space_size() {
+        throw std::runtime_error(
+            "The function space_size is not implemented for this ActiveSpaceMethod type!");
+    }
+
     /// Set options from an option object
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
+
+    /// Return the eigen vectors
+    virtual std::vector<ambit::Tensor> eigenvectors() {
+        throw std::runtime_error(
+            "ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
+    }
+    /// Compute permanent dipole moments
+    std::vector<std::vector<double>>
+    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Compute permanent dipole moments (electronic + nuclear)
     std::vector<psi::SharedVector>

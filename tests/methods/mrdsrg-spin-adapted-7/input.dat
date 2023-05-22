@@ -80,7 +80,7 @@ set forte {
   restricted_docc           [2,0,0,1,0,1,1,0]
   active                    [0,0,2,0,0,0,0,1]
   avg_state                 [[0,1,1],[5,1,2]]
-  active_space_solver       cas
+  active_space_solver       detci
   correlation_solver        sa-mrdsrg
   corr_level                pt2
   dsrg_s                    0.35

@@ -32,7 +32,7 @@ compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 set forte{
    job_type               newdriver
    correlation_solver     mrdsrg
-   active_space_solver    cas
+   active_space_solver    detci
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]
    active                 [2,0,0,0]

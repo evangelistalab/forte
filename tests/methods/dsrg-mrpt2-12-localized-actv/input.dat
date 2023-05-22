@@ -35,7 +35,7 @@ Escf, wfn = energy('scf', return_wfn=True)
 compare_values(r_scf, Escf, 8, "SCF energy")
 
 set forte{
-  active_space_solver cas
+  active_space_solver detci
   correlation_solver  dsrg-mrpt2
   calc_type           sa
   rotate_mos          [1,17,20]

@@ -85,11 +85,12 @@ jobs:
     displayName: 'Add Conda to PATH'
 
   - bash: |
+      conda config --add channels conda-forge/label/libint_dev
       conda create -q \
         -n p4env \
         python=$PYTHON_VER \
         psi4/label/dev::gau2grid=2 \
-        psi4/label/dev::libint2 \
+        libint=2.7.3dev1 \
         psi4/label/dev::libxc \
         psi4/label/dev::chemps2 \
         psi4/label/dev::dkh \

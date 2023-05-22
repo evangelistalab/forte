@@ -42,13 +42,11 @@
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "boost/format.hpp"
-#include "sci/fci_mo.h"
 #include "fci/fci_solver.h"
 #include "helpers/printing.h"
 #include "dsrg_mrpt2.h"
 
 using namespace ambit;
-
 using namespace psi;
 
 namespace forte {
@@ -262,15 +260,15 @@ void DSRG_MRPT2::print_options_summary() {
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {
-        calculation_info_string.push_back({"state_type", "MULTI-STATE"});
-        calculation_info_string.push_back({"multi-state type", multi_state_algorithm_});
+        calculation_info_string.emplace_back("state_type", "MULTI-STATE");
+        calculation_info_string.emplace_back("multi-state type", multi_state_algorithm_);
     } else {
-        calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
+        calculation_info_string.emplace_back("state_type", "STATE-SPECIFIC");
     }
 
     if (internal_amp_) {
-        calculation_info_string.push_back({"internal_amp", foptions_->get_str("INTERNAL_AMP")});
-        calculation_info_string.push_back({"internal_amp_select", internal_amp_select_});
+        calculation_info_string.emplace_back("internal_amp", foptions_->get_str("INTERNAL_AMP"));
+        calculation_info_string.emplace_back("internal_amp_select", internal_amp_select_);
     }
 
     std::vector<std::pair<std::string, bool>> calculation_info_bool{
@@ -360,35 +358,35 @@ double DSRG_MRPT2::compute_energy() {
     double Ecorr = 0.0;
     double Etotal = 0.0;
     std::vector<std::pair<std::string, double>> energy;
-    energy.push_back({"E0 (reference)", Eref_});
+    energy.emplace_back("E0 (reference)", Eref_);
 
     Etemp = E_FT1();
     Ecorr += Etemp;
-    energy.push_back({"<[F, T1]>", Etemp});
+    energy.emplace_back("<[F, T1]>", Etemp);
 
     Etemp = E_FT2();
     Ecorr += Etemp;
-    energy.push_back({"<[F, T2]>", Etemp});
+    energy.emplace_back("<[F, T2]>", Etemp);
 
     Etemp = E_VT1();
     Ecorr += Etemp;
-    energy.push_back({"<[V, T1]>", Etemp});
+    energy.emplace_back("<[V, T1]>", Etemp);
 
     Etemp = E_VT2_2();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> (C_2)^4", Etemp});
+    energy.emplace_back("<[V, T2]> (C_2)^4", Etemp);
 
     Etemp = E_VT2_4HH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 HH", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 HH", Etemp);
 
     Etemp = E_VT2_4PP();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PP", Etemp);
 
     Etemp = E_VT2_4PH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PH", Etemp);
 
     if (do_cu3_) {
         Etemp = E_VT2_6();
@@ -396,13 +394,13 @@ double DSRG_MRPT2::compute_energy() {
         Etemp = 0.0;
     }
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
+    energy.emplace_back("<[V, T2]> C_6 C_2", Etemp);
 
     Ecorr += EVT2;
     Etotal = Ecorr + Eref_;
-    energy.push_back({"<[V, T2]>", EVT2});
-    energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
-    energy.push_back({"DSRG-MRPT2 total energy", Etotal});
+    energy.emplace_back("<[V, T2]>", EVT2);
+    energy.emplace_back("DSRG-MRPT2 correlation energy", Ecorr);
+    energy.emplace_back("DSRG-MRPT2 total energy", Etotal);
     Hbar0_ = Ecorr;
 
     // Analyze T1 and T2
@@ -416,10 +414,10 @@ double DSRG_MRPT2::compute_energy() {
     }
     check_t1();
     check_t2();
-    energy.push_back({"max(T1)", T1max_});
-    energy.push_back({"max(T2)", T2max_});
-    energy.push_back({"||T1||", T1norm_});
-    energy.push_back({"||T2||", T2norm_});
+    energy.emplace_back("max(T1)", T1max_);
+    energy.emplace_back("max(T2)", T2max_);
+    energy.emplace_back("||T1||", T1norm_);
+    energy.emplace_back("||T2||", T2norm_);
 
     print_h2("Possible Intruders");
     print_intruder("A", lt1a_);

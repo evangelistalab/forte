@@ -33,25 +33,30 @@
 #include "psi4/libmints/dimension.h"
 
 namespace forte {
-
 class FCIVector;
 class StringLists;
+class SpinAdapter;
+class DavidsonLiuSolver;
 
-/**
- * @brief The FCISolver class
- * This class performs Full CI calculations.
- */
+/// @brief The FCISolver class
+/// This class performs Full CI calculations in the active space.
+/// The active space is defined by a set of orbitals and a number of electrons.
+/// The class uses the Davidson-Liu algorithm to compute the FCI energy and the RDMs.
+/// The class also provides the possibility to compute the transition RDMs between roots of
+/// different symmetry.
+///
+/// This class uses a determinant-based approach to compute the sigma vectors.
+/// It can also run spin-adapted computations using a basis of configuration state functions (CSFs)
+/// instead of determinants.
 class FCISolver : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
-    /**
-     * @brief FCISolver A class that performs a FCI computation in an active space
-     * @param state the electronic state to compute
-     * @param nroot the number of roots
-     * @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
-     * @param as_ints molecular integrals defined only for the active space orbitals
-     */
+    /// @brief Construct a FCISolver object
+    /// @param state the electronic state to compute
+    /// @param nroot the number of roots
+    /// @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
+    /// @param as_ints molecular integrals defined only for the active space orbitals
     FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
@@ -87,6 +92,10 @@ class FCISolver : public ActiveSpaceMethod {
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
+    /// Spin adapt the FCI wave function
+    void set_spin_adapt(bool value);
+    /// Spin adapt the FCI wave function using a full preconditioner?
+    void set_spin_adapt_full_preconditioner(bool value);
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
     void set_test_rdms(bool value) { test_rdms_ = value; }
@@ -112,11 +121,17 @@ class FCISolver : public ActiveSpaceMethod {
     /// A object that stores string information
     std::shared_ptr<StringLists> lists_;
 
+    /// A object that handles spin adaptation
+    std::shared_ptr<SpinAdapter> spin_adapter_;
+
     /// The FCI energy
     double energy_;
 
     /// The FCI wave function
     std::shared_ptr<FCIVector> C_;
+
+    /// The FCI determinant list
+    std::vector<Determinant> dets_;
 
     /// Eigen vectors
     psi::SharedMatrix eigen_vecs_;
@@ -129,9 +144,6 @@ class FCISolver : public ActiveSpaceMethod {
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
-    /// The multiplicity (2S + 1) of the state to target.
-    /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
-    int multiplicity_;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_ = 1;
     /// The number of collapse vectors for each root
@@ -144,15 +156,48 @@ class FCISolver : public ActiveSpaceMethod {
     bool test_rdms_ = false;
     /// Print the NO from the 1-RDM
     bool print_no_ = false;
+    /// Spin adapt the FCI wave function?
+    bool spin_adapt_ = false;
+    /// Use the full preconditioner for spin adaptation?
+    /// When set to false, it uses an approximate diagonal preconditioner
+    bool spin_adapt_full_preconditioner_ = false;
 
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
     void startup();
 
-    /// Initial CI wave function guess
-    std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-    initial_guess(FCIVector& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    /// @brief Compute initial guess vectors in the determinant basis
+    /// @param diag The diagonal of the Hamiltonian in the determinant basis
+    /// @param n The number of guess vectors to generate
+    /// @param fci_ints The integrals object
+    /// @param dls The Davidson-Liu-Solver object
+    /// @param temp A temporary vector of dimension ndets to store the guess vectors
+    void initial_guess_det(FCIVector& diag, size_t n,
+                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DavidsonLiuSolver& dls,
+                           std::shared_ptr<psi::Vector> temp);
+
+    /// @brief Compute initial guess vectors in the CSF basis
+    /// @param diag The diagonal of the Hamiltonian in the CSF basis
+    /// @param n The number of guess vectors to generate
+    /// @param dls The Davidson-Liu-Solver object
+    /// @param temp A temporary vector of dimension ncfs to store the guess vectors
+    void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n, DavidsonLiuSolver& dls,
+                           std::shared_ptr<psi::Vector> temp);
+
+    /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
+    /// @param fci_ints The integrals object
+    /// @param spin_adapter The spin adapter object
+    psi::SharedVector form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                     std::shared_ptr<SpinAdapter> spin_adapter);
+
+    /// @brief Print a summary of the FCI calculation
+    void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
+                         std::shared_ptr<psi::Vector> b_basis, DavidsonLiuSolver& dls);
+
+    /// @brief Test the RDMs
+    void test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
+                   DavidsonLiuSolver& dls);
 };
 } // namespace forte
 

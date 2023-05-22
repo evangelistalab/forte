@@ -7,6 +7,7 @@ Tutorials
    nb_01_compilation
    nb_02_getting_started
    nb_03_wavefunction
+   symmetry
    nb_04_multistate
    nb_05_examples
    nb_06_integrals

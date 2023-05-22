@@ -932,7 +932,7 @@ This example is modified from the df-dsrg-mrpt2-4 test case.
     }
 
     set forte {
-       active_space_solver     cas
+       active_space_solver     detci
        int_type                df
        restricted_docc         [2,0,0,0,0,2,0,0]
        active                  [1,0,1,1,0,1,1,1]
@@ -998,7 +998,7 @@ For example, a CD equivalence of the above example is ::
     }
 
     set forte {
-       active_space_solver     cas
+       active_space_solver     detci
        int_type                cholesky           # <=
        cholesky_tolerance      1.0e-5             # <=
        restricted_docc         [2,0,0,0,0,2,0,0]
@@ -1235,7 +1235,7 @@ A simple example is to compute the lowest two states of :math:`\text{LiF}` molec
   }
 
   set forte{
-    active_space_solver cas
+    active_space_solver detci
     correlation_solver  dsrg-mrpt2
     frozen_docc        [2,0,0,0]
     restricted_docc    [1,0,0,0]

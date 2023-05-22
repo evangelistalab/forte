@@ -56,7 +56,6 @@ class DynamicCorrelationSolver {
                              std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
-
     /// Compute energy
     virtual double compute_energy() = 0;
 
@@ -77,6 +76,11 @@ class DynamicCorrelationSolver {
     /// Clean up amplitudes checkpoint files
     void clean_checkpoints();
 
+    /// Set CI coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
+    virtual void set_ci_vectors(const std::vector<ambit::Tensor>& ci_vectors) {
+        ci_vectors_ = ci_vectors;
+    }
     /// Set the active space solver
     void set_active_space_solver(std::shared_ptr<ActiveSpaceSolver> as_solver) {
         as_solver_ = as_solver;
@@ -103,6 +107,9 @@ class DynamicCorrelationSolver {
     /// The ForteOptions
     std::shared_ptr<ForteOptions> foptions_;
 
+    /// The CI coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
+    std::vector<ambit::Tensor> ci_vectors_;
     /// Active space solver
     std::shared_ptr<ActiveSpaceSolver> as_solver_ = nullptr;
     /// State to weights map

@@ -47,7 +47,6 @@
 #include "fci/fci_solver.h"
 #include "base_classes/active_space_solver.h"
 
-#include "sci/fci_mo.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/orbitaloptimizer.h"
 #include "orbital-helpers/semi_canonicalize.h"

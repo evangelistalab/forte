@@ -215,7 +215,7 @@ void TDCI::propagate_list(SharedVector C0) {
 
     // Compute couplings for sigma builds
     auto mo_sym = mo_space_info_->symmetry("ACTIVE");
-    DeterminantSubstitutionLists op(as_ints_);
+    DeterminantSubstitutionLists op(as_ints_->active_mo_symmetry());
     op.set_quiet_mode(true);
 
     op.build_strings(ann_dets_);
@@ -1265,7 +1265,7 @@ void TDCI::compute_tdci_select(SharedVector C0) {
         } else if (options_->get_str("TDCI_PROPAGATOR") == "RK4_SELECT_LIST") {
             // build coupling lists
             auto mo_sym = mo_space_info_->symmetry("ACTIVE");
-            DeterminantSubstitutionLists op(as_ints_);
+            DeterminantSubstitutionLists op(as_ints_->active_mo_symmetry());
             op.set_quiet_mode(true);
 
             op.build_strings(PQ_space);
@@ -1738,13 +1738,11 @@ void TDCI::update_P_space(DeterminantHashVec& P_space, std::vector<double>& P_co
     const det_hashvec& PQ_dets = PQ_space.wfn_hash();
 
     double sum = 0.0;
-    size_t last = 0;
     for (size_t I = 0; I < npq; ++I) {
         double mag = sorted_dets[I].first;
 
         if (mag + sum < eta) {
             sum += mag;
-            last = I;
         } else {
             size_t idx = sorted_dets[I].second;
             P_space.add(PQ_dets[idx]);

@@ -30,6 +30,9 @@
 #include <numeric>
 #include <tuple>
 
+#include "ambit/blocked_tensor.h"
+#include "ambit/tensor.h"
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
@@ -287,6 +290,25 @@ std::vector<std::shared_ptr<RDMs>> ActiveSpaceSolver::rdms(
         }
     }
     return refs;
+}
+
+void ActiveSpaceSolver::generalized_rdms(const StateInfo& state, size_t root,
+                                         const std::vector<double>& X, ambit::BlockedTensor& result,
+                                         bool c_right, int rdm_level,
+                                         std::vector<std::string> spin) {
+    state_method_map_[state]->generalized_rdms(root, X, result, c_right, rdm_level, spin);
+}
+
+void ActiveSpaceSolver::add_sigma_kbody(const StateInfo& state, size_t root,
+                                        ambit::BlockedTensor& h,
+                                        const std::map<std::string, double>& block_label_to_factor,
+                                        std::vector<double>& sigma) {
+    state_method_map_[state]->add_sigma_kbody(root, h, block_label_to_factor, sigma);
+}
+
+void ActiveSpaceSolver::generalized_sigma(const StateInfo& state, psi::SharedVector x,
+                                          psi::SharedVector sigma) {
+    state_method_map_[state]->generalized_sigma(x, sigma);
 }
 
 void ActiveSpaceSolver::print_options() {
@@ -673,6 +695,20 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
             std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
     }
     return average_energy;
+}
+
+std::map<StateInfo, size_t> ActiveSpaceSolver::state_space_size_map() const {
+    std::map<StateInfo, size_t> out;
+    for (const auto& state_method : state_method_map_) {
+        const auto& state = state_method.first;
+        const auto& method = state_method.second;
+        out[state] = method->space_size();
+    }
+    return out;
+}
+
+std::vector<ambit::Tensor> ActiveSpaceSolver::eigenvectors(const StateInfo& state) const {
+    return state_method_map_.at(state)->eigenvectors();
 }
 
 } // namespace forte

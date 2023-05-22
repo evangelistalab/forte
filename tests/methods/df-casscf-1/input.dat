@@ -57,7 +57,7 @@ compare_values(psi4_casscf_2, Ecas_2, 6, "FORTE 2-step MCSCF energy @ 1.6")
 set forte {
   job_type                newdriver
   df_basis_mp2            cc-pvdz-jkfit
-  active_space_solver     cas
+  active_space_solver     detci
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
 }

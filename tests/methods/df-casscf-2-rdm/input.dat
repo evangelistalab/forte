@@ -30,7 +30,7 @@ set forte {
   int_type             df
   active               [4,0,2,2]
   restricted_docc      [2,0,0,0]
-  casscf_ci_solver     cas
+  casscf_ci_solver     detci
   casscf_g_convergence 10
   casscf_e_convergence 10
   casscf_diis_start    2

@@ -343,6 +343,7 @@ std::vector<double> FCI_MO::compute_ss_energies() {
     }
     print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
+    // TODO: Unclear what's the purpose of this code (Francesco)
     //    if (integral_->integral_type() != Custom) {
     //        // compute dipole moments
     //        compute_permanent_dipole();
@@ -913,11 +914,11 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     sparse_solver.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    if (projected_roots_.size() != 0) {
+    if (!projected_roots_.empty()) {
         sparse_solver.set_root_project(true);
         sparse_solver.add_bad_states(projected_roots_);
     }
-    if (initial_guess_.size() != 0) {
+    if (!initial_guess_.empty()) {
         sparse_solver.set_initial_guess(initial_guess_);
     }
     if (!quiet_) {
@@ -928,21 +929,22 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     psi::SharedMatrix evecs;
     psi::SharedVector evals;
 
-    // use determinant map
-    DeterminantHashVec detmap(p_space);
+    // always store a copy in DeterminantHashVec format
+    det_hash_vec_ = DeterminantHashVec(p_space);
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
-    auto sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    //    auto sigma_vector_type = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    auto sigma_vector_type = string_to_sigma_vector_type("SPARSE");
     size_t max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
-    auto sigma_vector = make_sigma_vector(detmap, as_ints_, max_memory, sigma_vector_type_);
+    sigma_vector_ = make_sigma_vector(det_hash_vec_, as_ints_, max_memory, sigma_vector_type);
     std::tie(evals, evecs) =
-        sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nroot, multi);
+        sparse_solver.diagonalize_hamiltonian(det_hash_vec_, sigma_vector_, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)
     double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
     for (int i = 0; i != nroot; ++i) {
         double value = evals->get(i);
-        eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
+        eigen.emplace_back(evecs->get_column(0, i), value + energy_offset);
     }
     spin2_ = sparse_solver.spin();
 
@@ -971,7 +973,7 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
         for (size_t j = 0, det_size = det.size(); j < det_size; ++j) {
             double value = (eigen[i].first)->get(j);
             if (std::fabs(value) > CI_threshold)
-                ci_select.push_back(std::make_tuple(value, j));
+                ci_select.emplace_back(value, j);
         }
         std::sort(ci_select.begin(), ci_select.end(),
                   [](const std::tuple<double, int>& lhs, const std::tuple<double, int>& rhs) {
@@ -981,10 +983,10 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
 
         if (!quiet_) {
             outfile->Printf("\n  ==> Root No. %d <==\n", i);
-            for (size_t j = 0, ci_select_size = ci_select.size(); j < ci_select_size; ++j) {
+            for (auto& j : ci_select) {
                 outfile->Printf("\n    ");
-                double ci = std::get<0>(ci_select[j]);
-                size_t index = std::get<1>(ci_select[j]);
+                double ci = std::get<0>(j);
+                size_t index = std::get<1>(j);
                 size_t ncmopi = 0;
                 for (int h = 0; h < nirrep_; ++h) {
                     for (int k = 0; k < actv_dim_[h]; ++k) {
@@ -2035,6 +2037,91 @@ FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
     }
 
     return refs;
+}
+
+void FCI_MO::generalized_rdms(size_t root, const std::vector<double>& X,
+                              ambit::BlockedTensor& grdms, bool c_right, int rdm_level,
+                              std::vector<std::string>) {
+    // test rdm level
+    if (rdm_level > 3) {
+        throw std::runtime_error("RDM level too large!");
+    }
+
+    // test X size
+    auto ndets = determinant_.size();
+    if (X.size() != ndets) {
+        throw std::runtime_error("Incorrect dimension for the input vector X.");
+    }
+
+    // test consistency between grdms and rdm_level
+    auto blabels = grdms.block_labels();
+    if (blabels.size() != rdm_level + 1) {
+        throw std::runtime_error("Incorrect number of tensors in the result BlockedTensor.");
+    }
+
+    // test the dimension of the tensor
+    if (nactv_ != grdms.block(blabels[0]).dim(0)) {
+        throw std::runtime_error("Incorrect dimension for tensors in the result BlockedTensor.");
+    }
+
+    // prepare the expansion vectors to SharedMatrix format for CI_RDMs
+    auto evecs = std::make_shared<Matrix>("CI and Multiplier Vectors", ndets, 2);
+    int col_c = c_right ? 1 : 0;
+    int col_x = c_right ? 0 : 1;
+
+    evecs->set_column(0, col_c, (eigen_[root]).first);
+    for (size_t i = 0; i < ndets; ++i) {
+        evecs->set(0, i, col_x, X.at(i));
+    }
+
+    // use CI_RDMs to compute the "transition" RDMs
+    CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, 0, 1);
+
+    if (rdm_level == 3) {
+        ci_rdms.compute_3rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data(),
+                             grdms.block(blabels[2]).data(), grdms.block(blabels[3]).data());
+    } else if (rdm_level == 2) {
+        ci_rdms.compute_2rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data(),
+                             grdms.block(blabels[2]).data());
+    } else {
+        ci_rdms.compute_1rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data());
+    }
+}
+
+void FCI_MO::add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
+                             const std::map<std::string, double>& block_label_to_factor,
+                             std::vector<double>& sigma) {
+    const auto& evec = eigen_[root].first;
+
+    for (const auto& pair : block_label_to_factor) {
+        const auto factor = pair.second;
+        const auto block_label = pair.first;
+        if (not h.is_block(block_label)) {
+            throw std::runtime_error("Block " + block_label + " not available!");
+        }
+        const auto& data = h.block(block_label).data();
+
+        auto h_rank = block_label.size();
+        if (h_rank == 2) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_1(data, evec, factor, sigma, spin);
+        }
+        if (h_rank == 4) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            spin += islower(block_label[1]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_2(data, evec, factor, sigma, spin);
+        }
+        if (h_rank == 6) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            spin += islower(block_label[1]) ? "a" : "b";
+            spin += islower(block_label[2]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_3(data, evec, factor, sigma, spin);
+        }
+    }
+}
+
+void FCI_MO::generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) {
+    sigma_vector_->compute_sigma(sigma, x);
 }
 
 void FCI_MO::build_dets321() {
@@ -3200,4 +3287,26 @@ void FCI_MO::print_occupation_strings_perirrep(
         }
     }
 }
+
+std::vector<ambit::Tensor> FCI_MO::eigenvectors() {
+    size_t ndets = determinant_.size();
+
+    std::vector<ambit::Tensor> out;
+    out.reserve(nroot_);
+
+    for (size_t root = 0; root < nroot_; ++root) {
+        auto tmp = ambit::Tensor::build(ambit::CoreTensor, "evec_" + std::to_string(root), {ndets});
+
+        for (size_t I = 0; I < ndets; ++I) {
+            tmp.data()[I] = (eigen_[root].first)->get(I);
+        }
+
+        out.push_back(tmp);
+    }
+
+    return out;
+}
+
+size_t FCI_MO::det_size() { return determinant_.size(); }
+
 } // namespace forte

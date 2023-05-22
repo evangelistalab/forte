@@ -492,7 +492,7 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMa
         template_a_.clear();
         template_b_.clear();
 
-        CI_RDMS ci_rdms_(fci_ints_, dets, evecs, i, i);
+        CI_RDMS ci_rdms_(fci_ints_->active_mo_symmetry(), dets, evecs, i, i);
         ci_rdms_.set_max_rdm(rdm_level_);
         if (rdm_level_ >= 1) {
             local_timer one_r;

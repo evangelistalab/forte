@@ -34,7 +34,6 @@
 #include "helpers/printing.h"
 #include "ci_rdm/ci_rdms.h"
 #include "fci/fci_solver.h"
-#include "sci/fci_mo.h"
 #include "dsrg_mrpt2.h"
 
 using namespace psi;
@@ -404,7 +403,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                 ambit::Tensor D1b = L1b.clone();
 
                 for (int M = 0; M < nstates; ++M) {
-                    CI_RDMS ci_rdms(fci_ints, p_space, civecs, M, M);
+                    CI_RDMS ci_rdms(fci_ints->active_mo_symmetry(), p_space, civecs, M, M);
                     ci_rdms.compute_1rdm(D1a.data(), D1b.data());
                     L1a("pq") += D1a("pq");
                     L1b("pq") += D1b("pq");
@@ -569,7 +568,7 @@ psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<ActiveSpaceIntegrals>
         for (int N = M; N < nstates; ++N) {
 
             // compute transition density
-            CI_RDMS ci_rdms(fci_ints, p_space, civecs, M, N);
+            CI_RDMS ci_rdms(fci_ints->active_mo_symmetry(), p_space, civecs, M, N);
 
             ambit::Tensor D1a = Gamma1_.block("aa").clone();
             ambit::Tensor D1b = Gamma1_.block("aa").clone();
@@ -848,7 +847,7 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                    std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                                    const int& root1, const int& root2) {
-    CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
+    CI_RDMS ci_rdms(fci_ints->active_mo_symmetry(), p_space, evecs, root1, root2);
 
     // 1 cumulant
     ambit::Tensor L1a = Gamma1_.block("aa");
@@ -960,7 +959,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_int
 void DSRG_MRPT2::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                               std::vector<forte::Determinant>& p_space, psi::SharedMatrix evecs,
                               const int& root1, const int& root2) {
-    CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
+    CI_RDMS ci_rdms(fci_ints->active_mo_symmetry(), p_space, evecs, root1, root2);
 
     // 1 density
     ambit::Tensor L1a = Gamma1_.block("aa");

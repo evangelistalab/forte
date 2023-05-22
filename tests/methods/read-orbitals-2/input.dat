@@ -23,7 +23,7 @@ set {
 }
 
 set forte{
-  active_space_solver  cas
+  active_space_solver  detci
   correlation_solver   dsrg-mrpt2
   frozen_docc          [1]
   restricted_docc      [3]

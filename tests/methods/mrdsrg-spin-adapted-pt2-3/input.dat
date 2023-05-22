@@ -60,7 +60,7 @@ compare_values(Ecas_forte_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy
 
 set forte{
   job_type               newdriver
-  active_space_solver    cas
+  active_space_solver    detci
   correlation_solver     sa-mrdsrg
   corr_level             pt2
   frozen_docc            [2,1,0,0,0,0,2,1]

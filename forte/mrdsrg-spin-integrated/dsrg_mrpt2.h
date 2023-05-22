@@ -58,6 +58,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
 
+    /// Compute the DSRG-MRPT2 gradient
+    virtual psi::SharedMatrix compute_gradient() override;
+
     /// Compute second-order effective Hamiltonian couplings
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
     virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
@@ -175,6 +178,290 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
+
+    // NOTICE These are essential variables and functions for computing DSRG-MRPT2 gradient.
+    // Some variables may be redundant thus need further elimination
+    /// Set ambit tensor labels
+    void set_ambit_space();
+    /**
+     * Initialize tensors.
+     *
+     * Density tensors, one- and two-electron integrals, Fock matrix, DSRG and CI tensors.
+     */
+    void set_tensor();
+    /**
+     * Initializing the two-body density Gamma2_.
+     *
+     * NOTICE: this function shall be revoked in the future.
+     */
+    void set_density();
+    /**
+     * Initializing the Fock F.
+     *
+     * NOTICE: this function shall be revoked in the future.
+     */
+    void set_active_fock();
+    /**
+     * Initializing the one-electron integral H.
+     *
+     * NOTICE: this function shall be revoked in the future.
+     */
+    void set_h();
+    /**
+     * Initializing the ERIs V.
+     *
+     * NOTICE: this function shall be revoked in the future.
+     */
+    void set_v();
+    /// Set CI-relevant integrals
+    void set_ci_ints();
+    /**
+     * Initialize global variables.
+     *
+     * MO indices list, dimension of different MOs, CI-related variables etc.
+     */
+    void set_global_variables();
+    /// # of MOs
+    size_t nmo;
+    /// # of core MOs
+    size_t ncore;
+    /// # of virtual MOs
+    size_t nvirt;
+    /// # of active MOs
+    size_t na;
+    /// # of auxiliary orbitals
+    size_t naux;
+    /// # of irreps
+    size_t nirrep;
+
+    /// <[V, T2]> (C_2)^4
+    ///     1/4 * V'["klcd"] * T["ijab"] * Gamma["ki"] * Gamma["lj"] * Eta["ac"] * Eta["bd"]
+    const bool PT2_TERM = true;
+    /// <[V, T2]> C_4 (C_2)^2 PP
+    ///     1/8 * V'["cdxy"] * T["uvab"] * Eta["ac"] * Eta["bd"] * Lambda["xyuv"]
+    const bool X1_TERM = true;
+    /// <[V, T2]> C_4 (C_2)^2 HH
+    ///     1/8 * V'["uvkl"] * T["ijxy"] * Gamma["ki"] * Gamma["lj"] * Lambda["xyuv"]
+    const bool X2_TERM = true;
+    /// <[V, T2]> C_4 (C_2)^2 PH
+    ///     V'["vbjx"] * T["ayiu"] * Gamma["ji"] * Eta["ab"] * Lambda["xyuv"]
+    const bool X3_TERM = true;
+    /// <[V, T2]> C_6 C_2
+    ///     1/4 * V'["uviz"] * T["iwxy"] * Lambda["xyzuvw"]
+    ///   + 1/4 * V'["waxy"] * T["uvaz"] * Lambda["xyzuvw"]
+    const bool X4_TERM = do_cu3_;
+    /// <[F, T2]>
+    ///     1/2 * F'["ex"] * T["uvey"] * Lambda["xyuv"]
+    ///   - 1/2 * F'["vm"] * T["umxy"] * Lambda["xyuv"]
+    const bool X5_TERM = true;
+    /// <[V, T1]>
+    ///     1/2 V'["evxy"] * T["ue"] * Lambda["xyuv"]
+    ///   - 1/2 V'["uvmy"] * T["mx"] * Lambda["xyuv"]
+    const bool X6_TERM = true;
+    /// <[F, T1]>
+    ///     F'["bj"] * T["ia"] * Gamma["ji"] * Eta["ab"]
+    const bool X7_TERM = true;
+    /// If the correlation contribution is considered
+    const bool CORRELATION_TERM = true;
+    /**
+     * Initializing the DSRG-related auxiliary tensors.
+     */
+    void set_dsrg_tensor();
+    /**
+     * Write the energy-weighted density matrix into Psi4 Lagrangian_.
+     */
+    void write_lagrangian();
+    /**
+     * Write spin_dependent one-RDMs coefficients into Psi4 Da_ and Db_.
+     *
+     * We assume "Da == Db". This function needs be changed if such constraint is revoked.
+     */
+    void write_1rdm_spin_dependent();
+    /**
+     * Write spin_dependent two-RDMs coefficients using IWL.
+     *
+     * Coefficients in d2aa and d2bb need be multiplied with additional 1/2!
+     * Specifically:
+     * If you have v_aa as coefficients before 2-RDMs_alpha_alpha, v_bb before
+     * 2-RDMs_beta_beta and v_bb before 2-RDMs_alpha_beta, you need to write
+     * 0.5 * v_aa, 0.5 * v_bb and v_ab into the IWL file instead of using
+     * the original coefficients v_aa, v_bb and v_ab.
+     */
+    void write_2rdm_spin_dependent();
+    /**
+     * Write the density terms contracted with (P|Q)^x and (pq|Q)^x, where P and Q are auxiliary basis functions.
+     */
+    void write_df_rdm();
+    /**
+     * Backtransform the TPDM.
+     */
+    void tpdm_backtransform();
+    /**
+     * Initialize and solve Lagrange multipliers.
+     *
+     * Sigma: constraint of the one-body DSRG amplitude (T1) definition.
+     * Xi:    constraint of the renormalized Fock matrix (F1) definition.
+     * Tau:   constraint of the two-body DSRG amplitude (T2) definition.
+     * Kappa: constraint of the renormalized ERIs (\tilde{V}) definition.
+     * Z:     OPDM, constraint of the CASSCF reference.
+     * W:     EWDM, constraint of the orthonormal overlap integral.
+     */
+    void set_multiplier();
+    /**
+     * Solve the Linear System Ax=b and yield Z using iterative methods.
+     */
+    void set_preconditioner(std::vector<double>& D);
+    void gmres_solver(std::vector<double>& x_new);
+    void solve_linear_iter();
+    void z_vector_contraction(std::vector<double> &, std::vector<double> &);
+    void pre_contract();
+    /**
+     * Solve the Linear System Ax=b and yield Z using direct methods.
+     */
+    void solve_z();
+    /**
+     * Initialize and solve the multiplier Sigma and Xi.
+     *
+     * Sigma: constraint of the one-body DSRG amplitude (T1) definition.
+     * Solved directly.
+     */
+    void set_sigma_xi();
+    /**
+     * Initialize and solve the multiplier Tau.
+     *
+     * Tau: constraint of the two-body DSRG amplitude (T2) definition.
+     * Solved directly.
+     */
+    void set_tau();
+    /**
+     * Initialize and solve the multiplier Kappa.
+     *
+     * Kappa: constraint of the renormalized ERIs (\tilde{V}) definition.
+     * Solved directly.
+     */
+    void set_kappa();
+    /**
+     * Initialize and solve the multiplier Z (OPDM).
+     *
+     * Z: OPDM, constraint of the CASSCF reference.
+     * The core-core, virtual-virtual blocks and diagonal entries of the active-active
+     * blocks are solved directly based on other multipliers. The rest need be solved
+     * Through iterative approaches. Currently, we use LAPACK as the solver.
+     */
+    void set_z();
+    /**
+     * Setting the b of the Linear System Ax=b.
+     * Parameters: preidx, block_dim
+     */
+    void set_b(int dim, const std::map<string, int>& block_dim);
+    /**
+     * The diagonal core-core, virtual-virtual blocks 
+     * and the diagonal entries of the active-active block of the OPDM Z.
+     */
+    void set_z_diag();
+    /**
+     * Initialize and solve the multiplier W.
+     *
+     * W: EWDM, constraint of the orthonormal overlap integral.
+     * Solved directly after all other multipliers are solved.
+     */
+    void set_w();
+    // Set MO orbital partition info for solving the z-vector equation
+    void set_zvec_moinfo();
+
+    /// Size of determinants
+    size_t ndets;
+    /// List of core MOs (including frozen orbitals)
+    std::vector<size_t> core_all_;
+    /// List of active MOs (including frozen orbitals)
+    std::vector<size_t> actv_all_;
+    /// List of virtual MOs (including frozen orbitals)
+    std::vector<size_t> virt_all_;
+
+    
+    // MO orbital partition info for solving the z-vector equation
+    int dim;
+    std::map<string, int> preidx;
+    std::map<string, int> block_dim;
+
+    /// List of relative core MOs
+    std::vector<std::pair<unsigned long, unsigned long>>
+        core_mos_relative;
+    /// List of relative active MOs
+    std::vector<std::pair<unsigned long, unsigned long>>
+        actv_mos_relative;
+    /// List of relative virtual MOs
+    std::vector<std::pair<unsigned long, unsigned long>>
+        virt_mos_relative;
+
+    /// Dimension of different irreps
+    psi::Dimension irrep_vec;
+    /// Two-body denisty tensor
+    ambit::BlockedTensor Gamma2_;
+    // core Hamiltonian
+    ambit::BlockedTensor H;
+    // DF integrals
+    ambit::BlockedTensor B;
+    /// Lagrangian tensor
+    ambit::BlockedTensor W;
+    // DF metric J^(-1/2)
+    ambit::BlockedTensor Jm12;
+    // two-electron integrals
+    ambit::BlockedTensor V;
+    // Fock matrix
+    ambit::BlockedTensor F;
+    /// e^[-s*(Delta1)^2]
+    ambit::BlockedTensor Eeps1;
+    /// {1-e^[-s*(Delta1)^2]}/(Delta1)
+    ambit::BlockedTensor Eeps1_m1;
+    /// {1-e^[-s*(Delta1)^2]}/(Delta1)^2
+    ambit::BlockedTensor Eeps1_m2;
+    /// Delta1_a^i = \varepsilon_i - \varepsilon_a
+    ambit::BlockedTensor Delta1;
+    /// Delta1 * Gamma1_
+    ambit::BlockedTensor DelGam1;
+    /// Delta1 * Eeps1
+    ambit::BlockedTensor DelEeps1;
+    /// Identity matrix
+    ambit::BlockedTensor I;
+    /// Identity matrix for the CI part
+    ambit::Tensor I_ci;
+    /// a vector with all entries equal 1
+    ambit::BlockedTensor one_vec;
+
+    /*** Lagrange multipliers ***/
+    /// multiplier related to T2 amplitudes
+    ambit::BlockedTensor Tau2;
+    /// multiplier related to modified ERIs
+    ambit::BlockedTensor Kappa;
+    /// multiplier related to modified one-body quantities
+    /// sigma : one-body amplitudes
+    /// xi : modified one-body integrals
+    ambit::BlockedTensor sigma3_xi3;
+    ambit::BlockedTensor sigma2_xi3;
+    ambit::BlockedTensor sigma1_xi1_xi2;
+    /// multiplier related to orbital response (symmetrized)
+    ambit::BlockedTensor Z;
+    /// unsymmetrized Z components
+    ambit::BlockedTensor temp_z;
+    /// multiplier related to normalized CI coefficients
+    double Alpha;
+    /// multiplier related to CI response
+    ambit::Tensor x_ci;
+
+
+    /// Linear system Ax=b
+    std::vector<double> b;
+    /// orbital contribution to the b
+    ambit::BlockedTensor Z_b;
+    /// V["pmqm"], V["pMqM"], V["PmQm"], V["PMQM"]
+    ambit::BlockedTensor V_pmqm;
+    /// CI coefficients
+    ambit::Tensor ci;
+    /// c_i < \phi_i | p+ q | \phi_j > x_j
+    ambit::BlockedTensor Gamma1_tilde;
+    /// c_i < \phi_i | p+ q+ s r | \phi_j > x_j
+    ambit::BlockedTensor Gamma2_tilde;
 
     // => Amplitude <= //
 
