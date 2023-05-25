@@ -71,19 +71,20 @@ class DMRGSCF : public ActiveSpaceMethod {
     void startup();
 
     /// Form the active fock matrix
-    void buildJK(psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK, psi::SharedMatrix Cmat,
-                 std::shared_ptr<psi::JK> myJK);
+    void buildJK(std::shared_ptr<psi::Matrix> MO_RDM, std::shared_ptr<psi::Matrix> MO_JK,
+                 std::shared_ptr<psi::Matrix> Cmat, std::shared_ptr<psi::JK> myJK);
     /// Form Inactive fock matrix
     void buildQmatOCC(CheMPS2::DMRGSCFmatrix* theQmatOCC, CheMPS2::DMRGSCFindices* iHandler,
-                      psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK, psi::SharedMatrix Cmat,
-                      std::shared_ptr<psi::JK> myJK);
+                      std::shared_ptr<psi::Matrix> MO_RDM, std::shared_ptr<psi::Matrix> MO_JK,
+                      std::shared_ptr<psi::Matrix> Cmat, std::shared_ptr<psi::JK> myJK);
     void buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFindices* iHandler,
-                      std::shared_ptr<psi::PSIO> psio, psi::SharedMatrix Cmat);
+                      std::shared_ptr<psi::PSIO> psio, std::shared_ptr<psi::Matrix> Cmat);
 
     /// Form active fock matrix
     void buildQmatACT(CheMPS2::DMRGSCFmatrix* theQmatACT, CheMPS2::DMRGSCFindices* iHandler,
-                      double* DMRG1DM, psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK,
-                      psi::SharedMatrix Cmat, std::shared_ptr<psi::JK> myJK);
+                      double* DMRG1DM, std::shared_ptr<psi::Matrix> MO_RDM,
+                      std::shared_ptr<psi::Matrix> MO_JK, std::shared_ptr<psi::Matrix> Cmat,
+                      std::shared_ptr<psi::JK> myJK);
 
     void buildHamDMRG(std::shared_ptr<psi::IntegralTransform> ints,
                       std::shared_ptr<psi::MOSpace> Aorbs_ptr, CheMPS2::DMRGSCFmatrix* theTmatrix,
@@ -104,18 +105,18 @@ class DMRGSCF : public ActiveSpaceMethod {
                                  CheMPS2::DMRGSCFindices* iHandler,
                                  std::shared_ptr<psi::PSIO> psio);
     void copyUNITARYtoPSIMX(CheMPS2::DMRGSCFunitary* unitary, CheMPS2::DMRGSCFindices* iHandler,
-                            psi::SharedMatrix target);
-    void update_WFNco(psi::SharedMatrix orig_coeff, CheMPS2::DMRGSCFindices* iHandler,
-                      CheMPS2::DMRGSCFunitary* unitary, psi::SharedMatrix work1,
-                      psi::SharedMatrix work2);
+                            std::shared_ptr<psi::Matrix> target);
+    void update_WFNco(std::shared_ptr<psi::Matrix> orig_coeff, CheMPS2::DMRGSCFindices* iHandler,
+                      CheMPS2::DMRGSCFunitary* unitary, std::shared_ptr<psi::Matrix> work1,
+                      std::shared_ptr<psi::Matrix> work2);
 
     /// Makes sure that CHEMPS2 and PSI4 have same symmetry
     int chemps2_groupnumber(const string SymmLabel);
     /// Copies PSI4Matrices to CHEMPS2 matrices and vice versa
-    void copyPSIMXtoCHEMPS2MX(psi::SharedMatrix source, CheMPS2::DMRGSCFindices* iHandler,
-                              CheMPS2::DMRGSCFmatrix* target);
+    void copyPSIMXtoCHEMPS2MX(std::shared_ptr<psi::Matrix> source,
+                              CheMPS2::DMRGSCFindices* iHandler, CheMPS2::DMRGSCFmatrix* target);
     void copyCHEMPS2MXtoPSIMX(CheMPS2::DMRGSCFmatrix* source, CheMPS2::DMRGSCFindices* iHandler,
-                              psi::SharedMatrix target);
+                              std::shared_ptr<psi::Matrix> target);
 };
 } // namespace forte
 

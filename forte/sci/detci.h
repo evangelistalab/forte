@@ -45,7 +45,7 @@ class DETCI : public ActiveSpaceMethod {
                     RDMsType rdm_type) override;
 
     /// Return the CI wave functions for current state symmetry
-    psi::SharedMatrix ci_wave_functions() override { return evecs_; }
+    std::shared_ptr<psi::Matrix> ci_wave_functions() override { return evecs_; }
 
     /// Set options override
     void set_options(std::shared_ptr<ForteOptions> options) override;
@@ -65,7 +65,7 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Read wave function from disk
     /// Return the number of active orbitals, set of determinants, CI coefficients
-    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
     read_wave_function(const std::string& filename) override;
 
     /// Return the number of determinants
@@ -85,7 +85,7 @@ class DETCI : public ActiveSpaceMethod {
     void startup();
 
     /// Number of active orbitals
-    int nactv_;
+    size_t nactv_;
     /// Number of active orbitals per irrep
     psi::Dimension actv_dim_;
 
@@ -138,7 +138,7 @@ class DETCI : public ActiveSpaceMethod {
     size_t sigma_max_memory_;
 
     /// Eigen vectors
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
     /// Print important CI vectors
     void print_ci_wfn();
     /// Threshold to print CI coefficients
@@ -147,9 +147,9 @@ class DETCI : public ActiveSpaceMethod {
     /// Compute 1RDMs
     void compute_1rdms();
     /// 1RDMs alpha spin
-    std::vector<psi::SharedMatrix> opdm_a_;
+    std::vector<std::shared_ptr<psi::Matrix>> opdm_a_;
     /// 1RDMs beta spin
-    std::vector<psi::SharedMatrix> opdm_b_;
+    std::vector<std::shared_ptr<psi::Matrix>> opdm_b_;
 
     /// Compute the (transition) 1RDMs, same orbital, same set of determinants
     std::vector<ambit::Tensor> compute_trans_1rdms_sosd(int root1, int root2);
@@ -184,7 +184,8 @@ class DETCI : public ActiveSpaceMethod {
     ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
     /// @param x: the X vector to be contracted with H_IJ
     /// @param sigma: the sigma vector (will be zeroed first)
-    void generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) override;
+    void generalized_sigma(std::shared_ptr<psi::Vector> x,
+                           std::shared_ptr<psi::Vector> sigma) override;
 };
 } // namespace forte
 

@@ -585,7 +585,7 @@ void DSRG_MRPT2::compute_t2() {
                 }
             }
         } else if (internal_amp_select_ == "OOVV") {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
 
@@ -603,7 +603,7 @@ void DSRG_MRPT2::compute_t2() {
                 }
             }
         } else {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
                 T2_.block(block).zero();
@@ -1440,7 +1440,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
 
-    auto dipole_array = std::make_shared<Matrix>(1, 3);
+    auto dipole_array = std::make_shared<psi::Matrix>(1, 3);
     dipole_array->set(0, 0, x);
     dipole_array->set(0, 1, y);
     dipole_array->set(0, 2, z);
@@ -1472,8 +1472,9 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    D1["AB"] += 0.5 * T2_["MNBC"] * T2_["MNAC"];
     //    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
 
-    //    // transform D1 with a irrep psi::SharedMatrix
-    //    psi::SharedMatrix SOdens(new psi::Matrix("SO density ", this->nmopi(), this->nmopi()));
+    //    // transform D1 with a irrep std::shared_ptr<psi::Matrix>
+    //    auto SOdens = std::make_shared<psi::Matrix>("SO density ", this->nmopi(,
+    //    this->nmopi()));
 
     //    for (const auto& pair: mo_space_info_->relative_mo("FROZEN_DOCC")) {
     //        size_t h = pair.first;
@@ -1506,12 +1507,12 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 
     //    SOdens->back_transform(this->Ca());
 
-    //    psi::SharedMatrix sotoao(this->aotoso()->transpose());
+    //    std::shared_ptr<psi::Matrix> sotoao(this->aotoso()->transpose());
     //    size_t nao = sotoao->coldim(0);
-    //    psi::SharedMatrix AOdens(new psi::Matrix("AO density ", nao, nao));
+    //    auto AOdens = std::make_shared<psi::Matrix>("AO density ", nao, nao);
     //    AOdens->remove_symmetry(SOdens, sotoao);
 
-    //    std::vector<psi::SharedMatrix> aodipole_ints = ints_->ao_dipole_ints();
+    //    std::vector<std::shared_ptr<psi::Matrix>> aodipole_ints = ints_->ao_dipole_ints();
     //    std::vector<double> de(4, 0.0);
     //    for (int i = 0; i < 3; ++i) {
     //        de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
@@ -2819,8 +2820,8 @@ ambit::BlockedTensor DSRG_MRPT2::get_RH1deGNO() {
     return RH1eff;
 }
 
-void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose,
-                            const bool& t1eff) {
+void DSRG_MRPT2::rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                            const bool& transpose, const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
@@ -2829,7 +2830,7 @@ void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bo
     space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     // alpha
-    for (const std::string& block : {"cc", "aa", "vv"}) {
+    for (const std::string block : {"cc", "aa", "vv"}) {
         char space = block[0];
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -2849,7 +2850,7 @@ void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bo
     }
 
     // beta
-    for (const std::string& block : {"CC", "AA", "VV"}) {
+    for (const std::string block : {"CC", "AA", "VV"}) {
         char space = tolower(block[0]);
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {

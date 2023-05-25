@@ -35,8 +35,11 @@
 
 #include "base_classes/forte_options.h"
 #include "base_classes/scf_info.h"
+
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
+#include "helpers/threading.h"
+
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
 
@@ -347,8 +350,8 @@ void ASCI::print_nos() {
     std::vector<double> ordm_b_v;
     ci_rdm.compute_1rdm_op(ordm_a_v, ordm_b_v);
 
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", nirrep_, nactpi_, nactpi_);
+    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", nirrep_, nactpi_, nactpi_);
 
     int offset = 0;
     for (size_t h = 0; h < nirrep_; h++) {
@@ -362,8 +365,8 @@ void ASCI::print_nos() {
     }
     auto OCC_A = std::make_shared<Vector>("ALPHA OCCUPATION", nactpi_);
     auto OCC_B = std::make_shared<Vector>("BETA OCCUPATION", nactpi_);
-    auto NO_A = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
-    auto NO_B = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_A = std::make_shared<psi::Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_B = std::make_shared<psi::Matrix>(nirrep_, nactpi_, nactpi_);
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
@@ -396,8 +399,8 @@ void ASCI::print_nos() {
     outfile->Printf("\n\n");
 }
 
-void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
-                                       det_hash<double>& V_hash) {
+void ASCI::get_excited_determinants_sr(std::shared_ptr<psi::Matrix> evecs,
+                                       DeterminantHashVec& P_space, det_hash<double>& V_hash) {
     local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -408,13 +411,7 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
     {
         size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
-        size_t bin_size = max_P / num_thread;
-        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
-        size_t start_idx =
-            (tid < (max_P % num_thread))
-                ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+        const auto [start_idx, end_idx] = thread_range(max_P, num_thread, tid);
 
         det_hash<double> V_hash_t;
         for (size_t P = start_idx; P < end_idx; ++P) {
@@ -548,8 +545,8 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
 
 DeterminantHashVec ASCI::get_PQ_space() { return PQ_space_; }
 
-psi::SharedMatrix ASCI::get_PQ_evecs() { return PQ_evecs_; }
-psi::SharedVector ASCI::get_PQ_evals() { return PQ_evals_; }
+std::shared_ptr<psi::Matrix> ASCI::get_PQ_evecs() { return PQ_evecs_; }
+std::shared_ptr<psi::Vector> ASCI::get_PQ_evals() { return PQ_evals_; }
 
 // std::shared_ptr<WFNOperator> ASCI::get_op() { return op_; }
 
@@ -571,7 +568,8 @@ std::vector<double> ASCI::get_multistate_pt2_energy_correction() {
 }
 
 int ASCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                      DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots) {
+                      DeterminantHashVec& P_space, std::shared_ptr<psi::Matrix> P_evecs,
+                      int num_ref_roots) {
     int ndets = P_space.size();
     int max_dim = std::min(ndets, 1000);
     //    int max_dim = ndets;

@@ -50,21 +50,21 @@ SpinCorr::SpinCorr(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> opt
     nact_ = nactpi_.sum();
 }
 
-std::pair<psi::SharedMatrix, psi::SharedMatrix> SpinCorr::compute_nos() {
+std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> SpinCorr::compute_nos() {
 
     print_h2("Natural Orbitals");
 
     auto g1a = rdms_->g1a();
     auto g1b = rdms_->g1b();
 
-    psi::SharedMatrix Ua, Ub;
+    std::shared_ptr<psi::Matrix> Ua, Ub;
 
     psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
     psi::Dimension rdocc = mo_space_info_->dimension("RESTRICTED_DOCC");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    auto opdm_a = std::make_shared<psi::Matrix>("OPDM_A", nirrep_, nactpi_, nactpi_);
+    auto opdm_b = std::make_shared<psi::Matrix>("OPDM_B", nirrep_, nactpi_, nactpi_);
 
     int offset = 0;
     for (size_t h = 0; h < nirrep_; h++) {
@@ -79,8 +79,8 @@ std::pair<psi::SharedMatrix, psi::SharedMatrix> SpinCorr::compute_nos() {
 
     auto OCC_A = std::make_shared<Vector>("ALPHA OCCUPATION", nactpi_);
     auto OCC_B = std::make_shared<Vector>("BETA OCCUPATION", nactpi_);
-    auto NO_A = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
-    auto NO_B = std::make_shared<Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_A = std::make_shared<psi::Matrix>(nirrep_, nactpi_, nactpi_);
+    auto NO_B = std::make_shared<psi::Matrix>(nirrep_, nactpi_, nactpi_);
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
@@ -113,23 +113,24 @@ void SpinCorr::spin_analysis() {
     size_t nact2 = nact * nact;
     size_t nact3 = nact * nact2;
 
-    psi::SharedMatrix UA(new psi::Matrix(nact, nact));
-    psi::SharedMatrix UB(new psi::Matrix(nact, nact));
+    auto UA = std::make_shared<psi::Matrix>(nact, nact);
+    auto UB = std::make_shared<psi::Matrix>(nact, nact);
 
     // if (options_->get_str("SPIN_BASIS") == "IAO") {
     // outfile->Printf("\n  Computing spin correlation in IAO basis \n");
-    // psi::SharedMatrix Ca = ints_->Ca();
+    // auto Ca = ints_->Ca();
     // std::shared_ptr<IAOBuilder> IAO =
     //     IAOBuilder::build(reference_wavefunction_->basisset(),
     //                       reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca,
     //                       options_->;
     // outfile->Printf("\n  Computing IAOs\n");
-    // std::map<std::string, psi::SharedMatrix> iao_info = IAO->build_iaos();
-    // psi::SharedMatrix iao_orbs(iao_info["A"]->clone());
+    // std::map<std::string, std::shared_ptr<psi::Matrix>> iao_info = IAO->build_iaos();
+    // std::shared_ptr<psi::Matrix> iao_orbs(iao_info["A"]->clone());
 
-    // psi::SharedMatrix Cainv(Ca->clone());
+    // std::shared_ptr<psi::Matrix> Cainv(Ca->clone());
     // Cainv->invert();
-    // psi::SharedMatrix iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false, false);
+    // auto iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false,
+    // false);
 
     // size_t new_dim = iao_orbs->colspi()[0];
 
@@ -172,8 +173,9 @@ void SpinCorr::spin_analysis() {
         UB = pair.second;
 
         int nmo = mo_space_info_->size("ALL");
-        psi::SharedMatrix Ua_full(new psi::Matrix(nmo, nmo));
-        psi::SharedMatrix Ub_full(new psi::Matrix(nmo, nmo));
+
+        auto Ua_full = std::make_shared<psi::Matrix>(nmo, nmo);
+        auto Ub_full = std::make_shared<psi::Matrix>(nmo, nmo);
 
         Ua_full->identity();
         Ub_full->identity();
@@ -190,11 +192,11 @@ void SpinCorr::spin_analysis() {
             }
         }
 
-        psi::SharedMatrix CA = as_ints_->ints()->Ca();
-        psi::SharedMatrix CB = as_ints_->ints()->Cb();
+        auto CA = as_ints_->ints()->Ca();
+        auto CB = as_ints_->ints()->Cb();
 
-        psi::SharedMatrix Ca_new = psi::linalg::doublet(CA, Ua_full, false, false);
-        psi::SharedMatrix Cb_new = psi::linalg::doublet(CB, Ub_full, false, false);
+        auto Ca_new = psi::linalg::doublet(CA, Ua_full, false, false);
+        auto Cb_new = psi::linalg::doublet(CB, Ub_full, false, false);
 
         CA->copy(Ca_new);
         CB->copy(Cb_new);
@@ -328,12 +330,12 @@ void SpinCorr::spin_analysis() {
     }
     /*
         // Build spin-correlation densities
-        psi::SharedMatrix Ca = reference_wavefunction_->Ca();
+        auto Ca = reference_wavefunction_->Ca();
         psi::Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
         std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
-        psi::SharedMatrix Ca_copy = Ca->clone();
+        auto Ca_copy = Ca->clone();
         for( int i = 0; i < nact; ++i ){
-            psi::SharedVector vec = std::make_shared<Vector>(nmo_);
+            auto vec = std::make_shared<Vector>(nmo_);
             vec->zero();
             for( int j = 0; j < nact; ++j ){
                 auto col = Ca_copy->get_column(0,actpi[j]);

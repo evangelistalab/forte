@@ -1,19 +1,21 @@
 #ifndef _orbital_transform_h_
 #define _orbital_transform_h_
 
-#include "base_classes/scf_info.h"
-#include "base_classes/state_info.h"
-#include "base_classes/forte_options.h"
-#include "integrals/integrals.h"
+namespace psi {
+class Matrix;
+} // namespace psi
 
 namespace forte {
+
+class ForteIntegrals;
+class MOSpaceInfo;
+class SCFInfo;
+class ForteOptions;
 
 class OrbitalTransform {
 
   public:
-    /**
-
-    **/
+    /// Constructor
     OrbitalTransform(std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -25,9 +27,9 @@ class OrbitalTransform {
 
     virtual void compute_transformation() = 0;
 
-    psi::SharedMatrix get_Ua() { return Ua_; };
+    std::shared_ptr<psi::Matrix> get_Ua() { return Ua_; };
 
-    psi::SharedMatrix get_Ub() { return Ub_; };
+    std::shared_ptr<psi::Matrix> get_Ub() { return Ub_; };
 
   protected:
     // The integrals
@@ -36,9 +38,9 @@ class OrbitalTransform {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// @brief Unitary matrix for alpha orbital rotations
-    psi::SharedMatrix Ua_;
+    std::shared_ptr<psi::Matrix> Ua_;
     /// @brief Unitary matrix for beta orbital rotations
-    psi::SharedMatrix Ub_;
+    std::shared_ptr<psi::Matrix> Ub_;
 };
 
 std::unique_ptr<OrbitalTransform>

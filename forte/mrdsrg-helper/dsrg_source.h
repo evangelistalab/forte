@@ -51,9 +51,10 @@ class DSRG_SOURCE {
     /// Regularize denominator
     virtual double compute_renormalized_denominator(const double& D) = 0;
 
-    /// Partial components of the regularized denominator derivatives w.r.t. Møller-Plesset denominators
+    /// Partial components of the regularized denominator derivatives w.r.t. Møller-Plesset
+    /// denominators
     /// TODO: probably not general and only useful for STD and LABS
-    virtual double compute_regularized_denominator_derivR(const double& D) {
+    virtual double compute_regularized_denominator_derivR(const double& /*D*/) {
         throw std::runtime_error("Not implemented for this class! Please override this function!");
     }
 

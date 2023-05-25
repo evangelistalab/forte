@@ -41,7 +41,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual double compute_energy() = 0;
 
     /// Compute the DSRG gradient
-    virtual psi::SharedMatrix compute_gradient() {
+    virtual std::shared_ptr<psi::Matrix> compute_gradient() {
         throw std::runtime_error("The analytic gradient code is only implemented for DSRG-MRPT2.");
     }
 
@@ -355,7 +355,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::array<ambit::BlockedTensor, 3> dm_;
 
     /// Fill in bare MO dipole integrals
-    void fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b);
+    void fill_MOdm(std::vector<std::shared_ptr<psi::Matrix>>& dm_a,
+                   std::vector<std::shared_ptr<psi::Matrix>>& dm_b);
     /// Compute dipole moment of the reference
     void compute_dm_ref();
     /// Compute dipole for a certain direction or not

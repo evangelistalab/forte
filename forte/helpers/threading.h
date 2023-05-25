@@ -26,31 +26,18 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/wavefunction.h"
-#include "scf_info.h"
+#ifndef _threading_h_
+#define _threading_h_
 
 namespace forte {
 
-SCFInfo::SCFInfo(psi::SharedWavefunction wfn)
-    : nmopi_(wfn->nmopi()), doccpi_(wfn->doccpi()), soccpi_(wfn->soccpi()), energy_(wfn->energy()),
-      epsilon_a_(wfn->epsilon_a()), epsilon_b_(wfn->epsilon_b()) {}
-
-SCFInfo::SCFInfo(const psi::Dimension& nmopi, const psi::Dimension& doccpi,
-                 const psi::Dimension& soccpi, double reference_energy,
-                 std::shared_ptr<psi::Vector> epsilon_a, std::shared_ptr<psi::Vector> epsilon_b)
-    : nmopi_(nmopi), doccpi_(doccpi), soccpi_(soccpi), energy_(reference_energy),
-      epsilon_a_(epsilon_a), epsilon_b_(epsilon_b) {}
-
-psi::Dimension SCFInfo::nmopi() { return nmopi_; }
-
-psi::Dimension SCFInfo::doccpi() { return doccpi_; }
-
-psi::Dimension SCFInfo::soccpi() { return soccpi_; }
-
-double SCFInfo::reference_energy() { return energy_; }
-
-std::shared_ptr<psi::Vector> SCFInfo::epsilon_a() { return epsilon_a_; }
-
-std::shared_ptr<psi::Vector> SCFInfo::epsilon_b() { return epsilon_b_; }
+/// @brief Compute the start and end indices for a workload distributed among multiple threads
+/// @param n the total number of elements
+/// @param num_thread the number of threads
+/// @param tid the thread id
+/// @return a pair of start and end indices
+std::pair<size_t, size_t> thread_range(size_t n, size_t num_thread, size_t tid);
 
 } // namespace forte
+
+#endif

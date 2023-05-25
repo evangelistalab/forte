@@ -33,7 +33,10 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
+#include "integrals/active_space_integrals.h"
 #include "base_classes/mo_space_info.h"
+#include "base_classes/state_info.h"
+
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "mrdsrg_so.h"
@@ -46,7 +49,7 @@ MRDSRG_SO::MRDSRG_SO(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_in
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
-      BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
+      BTF_(std::make_shared<BlockedTensorFactory>()), tensor_type_(ambit::CoreTensor) {
     print_method_banner(
         {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     startup();

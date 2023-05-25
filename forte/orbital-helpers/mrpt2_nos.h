@@ -51,7 +51,7 @@ class MRPT2_NOS : public OrbitalTransform {
     void compute_transformation() override;
 
     /// Transform to frozen-natural orbitals basis
-    psi::SharedMatrix compute_fno();
+    std::shared_ptr<psi::Matrix> compute_fno();
 
   private:
     /// Pointer to ForteOptions
@@ -61,11 +61,11 @@ class MRPT2_NOS : public OrbitalTransform {
     std::shared_ptr<SA_MRPT2> mrpt2_;
 
     /// DSRG-MRPT2 1-RDM CC part
-    psi::SharedMatrix D1c_;
+    std::shared_ptr<psi::Matrix> D1c_;
     /// DSRG-MRPT2 1-RDM VV part
-    psi::SharedMatrix D1v_;
+    std::shared_ptr<psi::Matrix> D1v_;
     /// DSRG-MRPT2 1-RDM AA part
-    psi::SharedMatrix D1a_;
+    std::shared_ptr<psi::Matrix> D1a_;
 
     /// Suggest active space
     std::vector<std::vector<std::pair<int, int>>>

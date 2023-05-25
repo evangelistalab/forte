@@ -63,10 +63,10 @@ std::vector<std::string> mysplit(const std::string& input, const std::string& re
 using namespace psi;
 
 namespace forte {
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
-                                            std::shared_ptr<ForteOptions> options,
-                                            const py::dict& atom_normals) {
-    psi::SharedMatrix Ps;
+std::shared_ptr<psi::Matrix> make_aosubspace_projector(psi::SharedWavefunction wfn,
+                                                       std::shared_ptr<ForteOptions> options,
+                                                       const py::dict& atom_normals) {
+    std::shared_ptr<psi::Matrix> Ps;
 
     py::list subspace_list = options->get_gen_list("SUBSPACE");
 
@@ -101,7 +101,7 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
     Ps = aosub.build_projector(wfn->basisset());
 
     // print the overlap of the projector
-    psi::SharedMatrix CPsC = Ps->clone();
+    auto CPsC = Ps->clone();
     CPsC->transform(wfn->Ca());
     double print_threshold = 1.0e-3;
     auto irrep_labels = molecule->irrep_labels();

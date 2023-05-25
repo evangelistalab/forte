@@ -49,10 +49,10 @@ class CI_RDMS {
     // I (York) think the following is correct, please check.
     // e.g., <root1| p^+ q^+ s r | root2> = 2rdm[p*nmo^(3) + q*nmo^(2) + r*nmo + s]
     CI_RDMS(const std::vector<int>& mo_symmetry, const std::vector<Determinant>& det_space,
-            psi::SharedMatrix evecs, int root1, int root2);
+            std::shared_ptr<psi::Matrix> evecs, int root1, int root2);
 
-    CI_RDMS(const std::vector<int>& mo_symmetry, DeterminantHashVec& wfn, psi::SharedMatrix evecs,
-            int root1, int root2);
+    CI_RDMS(const std::vector<int>& mo_symmetry, DeterminantHashVec& wfn,
+            std::shared_ptr<psi::Matrix> evecs, int root1, int root2);
 
     ~CI_RDMS();
 
@@ -135,7 +135,7 @@ class CI_RDMS {
     std::vector<Determinant> det_space_;
 
     // The CI coefficients
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
 
     // Buffer to access cre_list
     std::vector<std::vector<size_t>> cre_list_buffer_;

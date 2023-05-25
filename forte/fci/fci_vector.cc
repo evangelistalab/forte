@@ -40,11 +40,9 @@ using namespace psi;
 
 namespace forte {
 
-psi::SharedMatrix FCIVector::C1;
-psi::SharedMatrix FCIVector::Y1;
+std::shared_ptr<psi::Matrix> FCIVector::C1;
+std::shared_ptr<psi::Matrix> FCIVector::Y1;
 size_t FCIVector::sizeC1 = 0;
-// FCIVector* FCIVector::tmp_wfn1 = nullptr;
-// FCIVector* FCIVector::tmp_wfn2 = nullptr;
 
 double FCIVector::hdiag_timer = 0.0;
 double FCIVector::h1_aa_timer = 0.0;
@@ -154,7 +152,7 @@ void FCIVector::copy(FCIVector& wfn) {
     }
 }
 
-void FCIVector::copy(psi::SharedVector vec) {
+void FCIVector::copy(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -170,7 +168,7 @@ void FCIVector::copy(psi::SharedVector vec) {
     }
 }
 
-void FCIVector::copy_to(psi::SharedVector vec) {
+void FCIVector::copy_to(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -323,7 +321,7 @@ void FCIVector::normalize() {
  * Zero the wave function
  */
 void FCIVector::zero() {
-    for (psi::SharedMatrix C_h : C_) {
+    for (auto C_h : C_) {
         C_h->zero();
     }
 }

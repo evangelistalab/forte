@@ -102,8 +102,8 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    std::shared_ptr<psi::Matrix> B1(new psi::Matrix(1, nthree_));
-    std::shared_ptr<psi::Matrix> B2(new psi::Matrix(1, nthree_));
+    auto B1 = std::make_shared<psi::Matrix>(1, nthree_);
+    auto B2 = std::make_shared<psi::Matrix>(1, nthree_);
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -141,8 +141,8 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     std::vector<size_t> s_range = {sn, sn + 1};
 
     double vpqrsalphaC = 0.0;
-    std::shared_ptr<psi::Matrix> B1(new psi::Matrix(1, nthree_));
-    std::shared_ptr<psi::Matrix> B2(new psi::Matrix(1, nthree_));
+    auto B1 = std::make_shared<psi::Matrix>(1, nthree_);
+    auto B2 = std::make_shared<psi::Matrix>(1, nthree_);
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -175,8 +175,8 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    std::shared_ptr<psi::Matrix> B1(new psi::Matrix(1, nthree_));
-    std::shared_ptr<psi::Matrix> B2(new psi::Matrix(1, nthree_));
+    auto B1 = std::make_shared<psi::Matrix>(1, nthree_);
+    auto B2 = std::make_shared<psi::Matrix>(1, nthree_);
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -431,7 +431,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
             batches.push_back(vec_small.size() % max_nslice);
 
         for (size_t n = 0, offset = 0, nbatch = batches.size(); n < nbatch; ++n) {
-            std::vector<psi::SharedMatrix> Am_vec;
+            std::vector<std::shared_ptr<psi::Matrix>> Am_vec;
 
             for (size_t i = 0; i < batches[n]; ++i) {
                 auto ni = cmotomo[vec_small[i + offset]];
@@ -603,7 +603,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
         std::vector<size_t> qrange = {0, nmo_};
         std::vector<size_t> prange = {p_min, p_max};
 
-        std::shared_ptr<psi::Matrix> Aq(new psi::Matrix("Aq", nthree_, nmo_));
+        auto Aq = std::make_shared<psi::Matrix>("Aq", nthree_, nmo_);
         df_->fill_tensor("B", Aq, arange, prange, qrange);
 
         if (frozen_core) {

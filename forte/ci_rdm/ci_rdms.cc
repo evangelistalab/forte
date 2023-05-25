@@ -45,14 +45,14 @@ namespace forte {
 // coefficients and computes reduced density matrices.
 
 CI_RDMS::CI_RDMS(const std::vector<int>& mo_symmetry, const std::vector<Determinant>& det_space,
-                 psi::SharedMatrix evecs, int root1, int root2)
+                 std::shared_ptr<psi::Matrix> evecs, int root1, int root2)
     : mo_symmetry_(mo_symmetry), det_space_(det_space), evecs_(evecs), root1_(root1),
       root2_(root2) {
     startup();
 }
 
 CI_RDMS::CI_RDMS(const std::vector<int>& mo_symmetry, DeterminantHashVec& wfn,
-                 psi::SharedMatrix evecs, int root1, int root2)
+                 std::shared_ptr<psi::Matrix> evecs, int root1, int root2)
     : wfn_(wfn), mo_symmetry_(mo_symmetry), evecs_(evecs), root1_(root1), root2_(root2) {
 
     det_space_ = wfn.determinants();
@@ -2029,8 +2029,6 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     }
     outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f", error_2rdm_ab);
     // aaa aaa
-    // psi::SharedMatrix three_rdm(new psi::Matrix("three", dim_space_, dim_space_));
-    // three_rdm->zero();
     double error_3rdm_aaa = 0.0;
     for (size_t p = 0; p < norb_; ++p) {
         // for (size_t p = 0; p < 1; ++p){
@@ -2053,7 +2051,6 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                     if (I == det_space[j]) {
                                         rdm +=
                                             sign * evecs_->get(i, root1_) * evecs_->get(j, root2_);
-                                        // three_rdm->set(i, j, three_rdm->get(i,j) + 1);
                                     }
                                 }
                             }
