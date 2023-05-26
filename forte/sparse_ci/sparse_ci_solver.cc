@@ -516,11 +516,11 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     // Create the spin adapter
     if (spin_adapt_) {
-        /// TODO: spin_adapter_ object is not made yet. Need ms and ncmo.
-        /// ncmo can be obtained via -> mo_space_info_->size("CORRELATED")
-        ///----------------------------------------------------------------
-        /// spin_adapter_ = std::make_shared<SpinAdapter>(multiplicity - 1, state().twice_ms(),
-        /// lists_->ncmo()); dets_ = space.determinants(); spin_adapter_->prepare_couplings(dets_);
+        auto nmo = sigma_vector->as_ints()->nmo();
+        auto twice_ms = space[0].count_alfa() - space[0].count_beta();
+        spin_adapter_ = std::make_shared<SpinAdapter>(multiplicity - 1, twice_ms, nmo);
+        dets_ = space.determinants();
+        spin_adapter_->prepare_couplings(dets_);
     }
 
     // Compute the size of the determinant space and the basis used by the Davidson solver

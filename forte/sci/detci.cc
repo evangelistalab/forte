@@ -176,6 +176,10 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     solver->set_parallel(true);
     solver->set_spin_project(true);
     solver->set_print_details(not quiet_);
+    solver->set_spin_adapt(options_->get_bool("CI_SPIN_ADAPT"));
+    solver->set_spin_adapt_full_preconditioner(
+        options_->get_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER"));
+    solver->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
 
     solver->set_e_convergence(e_convergence_);
     solver->set_r_convergence(r_convergence_);
