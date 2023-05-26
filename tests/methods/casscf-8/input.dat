@@ -40,7 +40,7 @@ set forte {
   frozen_uocc          [0,0,0,0,0,0,0,0]
   restricted_docc      [2,0,0,0,0,2,0,0]
   active               [1,0,1,1,0,1,1,1]
-  active_space_solver  cas
+  active_space_solver  detci
   casscf_max_rotation  0.2
   casscf_g_convergence 1.0e-8
   casscf_e_convergence 1.0e-10
@@ -54,7 +54,7 @@ compare_values(refcasscf, Ecasscf, 9, "FORTE CASSCF energy")
 
 set forte {
   job_type            newdriver
-  active_space_solver cas
+  active_space_solver detci
   correlation_solver  dsrg-mrpt2
   frozen_docc         [1,0,0,0,0,1,0,0]
   frozen_uocc         [0,0,0,0,0,0,0,0]

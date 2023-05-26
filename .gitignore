@@ -11,6 +11,8 @@ timer.dat
 *~
 forte/version.h
 forte.egg-info
+docs/build
+
 
 # Qt Creator project files
 *.config

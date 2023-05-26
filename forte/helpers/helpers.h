@@ -81,7 +81,7 @@ py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector
  * @param t The input tensor
  * @return A copy of the tensor data ignoring symmetry blocks
  */
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
+std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t);
 
 /**
  * @brief tensor_to_matrix
@@ -89,7 +89,7 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
  * @param dims psi::Dimensions of the matrix extracted from the tensor
  * @return A copy of the tensor data in symmetry blocked form
  */
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
+std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
 // /**
 //  * @brief view_modified_orbitals Write orbitals using molden

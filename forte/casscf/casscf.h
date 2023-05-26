@@ -73,7 +73,7 @@ class CASSCF {
     /// Compute the CASSCF energy
     double compute_energy();
     /// Compute the CASSCF energy gradient
-    psi::SharedMatrix compute_gradient();
+    std::shared_ptr<psi::Matrix> compute_gradient();
 
   private:
     /// The list of states to computed. Passed to the ActiveSpaceSolver
@@ -200,9 +200,9 @@ class CASSCF {
     /// Equation 9
 
     /// The Fock matrix due to frozen core orbitals
-    psi::SharedMatrix F_frozen_core_;
+    std::shared_ptr<psi::Matrix> F_frozen_core_;
     /// The one-electron integral matrix in the AO basis (H = T + V)
-    psi::SharedMatrix Hcore_;
+    std::shared_ptr<psi::Matrix> Hcore_;
     /// The JK object.  Built in constructor
     std::shared_ptr<psi::JK> JK_;
     /// Diagonalize the Hamiltonian using the updated MO coefficients (does FCI, sCI, DMRG, etc.)
@@ -210,7 +210,8 @@ class CASSCF {
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c
-    void overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new);
+    void overlap_orbitals(const std::shared_ptr<psi::Matrix>& C_old,
+                          const std::shared_ptr<psi::Matrix>& C_new);
     void overlap_coefficients();
     //    void write_orbitals_molden();
 

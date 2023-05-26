@@ -39,8 +39,6 @@
 
 using namespace pybind11::literals;
 
-using namespace psi;
-
 namespace forte {
 
 py::object process_psi4_array_data(psi::Data& data);

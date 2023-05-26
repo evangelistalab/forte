@@ -138,7 +138,8 @@ class ActiveSpaceSolver {
     /// @param state: StateInfo (symmetry, multiplicity, etc.)
     /// @param x: the X vector to be contracted with H_IJ
     /// @param sigma: the sigma vector (will be zeroed first)
-    void generalized_sigma(const StateInfo& state, psi::SharedVector x, psi::SharedVector sigma);
+    void generalized_sigma(const StateInfo& state, std::shared_ptr<psi::Vector> x,
+                           std::shared_ptr<psi::Vector> sigma);
 
     /// Compute the state-averaged reference
     std::shared_ptr<RDMs>
@@ -166,7 +167,7 @@ class ActiveSpaceSolver {
     }
 
     /// Return a map of StateInfo to the CI wave functions (deterministic determinant space)
-    std::map<StateInfo, psi::SharedMatrix> state_ci_wfn_map() const;
+    std::map<StateInfo, std::shared_ptr<psi::Matrix>> state_ci_wfn_map() const;
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
     /// @param as_ints the pointer to a set of acitve-space integrals

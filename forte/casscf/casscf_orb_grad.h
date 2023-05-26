@@ -64,10 +64,11 @@ class CASSCF_ORB_GRAD {
                     std::shared_ptr<ForteIntegrals> ints);
 
     /// Evaluate the energy and orbital gradient
-    double evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g = true);
+    double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
+                    bool do_g = true);
 
     /// Evaluate the diagonal orbital Hessian
-    void hess_diag(psi::SharedVector x, const psi::SharedVector& h0);
+    void hess_diag(std::shared_ptr<psi::Vector> x, const std::shared_ptr<psi::Vector>& h0);
 
     /// Set RDMs used for orbital optimization
     void set_rdms(std::shared_ptr<RDMs> rdms);
@@ -79,19 +80,19 @@ class CASSCF_ORB_GRAD {
     size_t nrot() const { return nrot_; }
 
     /// Return the initial (not optimized) MO coefficients
-    psi::SharedMatrix Ca_initial() { return C0_; }
+    std::shared_ptr<psi::Matrix> Ca_initial() { return C0_; }
 
     /// Return the optimized MO coefficients
-    psi::SharedMatrix Ca() { return C_; }
+    std::shared_ptr<psi::Matrix> Ca() { return C_; }
 
     /// Return the generalized Fock matrix
-    psi::SharedMatrix fock() { return Fock_; }
+    std::shared_ptr<psi::Matrix> fock() { return Fock_; }
 
     /// Build and return the generalized Fock matrix
-    psi::SharedMatrix fock(std::shared_ptr<RDMs> rdms);
+    std::shared_ptr<psi::Matrix> fock(std::shared_ptr<RDMs> rdms);
 
     /// Canonicalize the final orbitals
-    void canonicalize_final(const psi::SharedMatrix& U);
+    void canonicalize_final(const std::shared_ptr<psi::Matrix>& U);
 
     /// Compute nuclear gradient
     void compute_nuclear_gradient();
@@ -207,11 +208,11 @@ class CASSCF_ORB_GRAD {
     std::shared_ptr<psi::Matrix> C_;
 
     /// The inactive Fock matrix in MO basis
-    psi::SharedMatrix F_closed_; // nmo x nmo
-    ambit::BlockedTensor Fc_;    // ncmo x ncmo
+    std::shared_ptr<psi::Matrix> F_closed_; // nmo x nmo
+    ambit::BlockedTensor Fc_;               // ncmo x ncmo
     /// The generalized Fock matrix in MO basis
-    psi::SharedMatrix Fock_; // nmo x nmo
-    ambit::BlockedTensor F_; // ncmo x ncmo
+    std::shared_ptr<psi::Matrix> Fock_; // nmo x nmo
+    ambit::BlockedTensor F_;            // ncmo x ncmo
     /// Diagonal elements of the generalized Fock matrix (Pitzer ordering)
     std::vector<double> Fd_;
 
@@ -220,25 +221,25 @@ class CASSCF_ORB_GRAD {
 
     /// Spin-summed 1-RDM
     ambit::BlockedTensor D1_;
-    psi::SharedMatrix rdm1_;
+    std::shared_ptr<psi::Matrix> rdm1_;
     /// Spin-summed averaged 2-RDM in 1^+ 1 2^+ 2 ordering
     ambit::BlockedTensor D2_;
 
     /// The orbital response of MCSCF energy
     ambit::BlockedTensor A_;
-    psi::SharedMatrix Am_;
+    std::shared_ptr<psi::Matrix> Am_;
 
     /// The orbital rotation matrix
-    psi::SharedMatrix R_;
+    std::shared_ptr<psi::Matrix> R_;
     /// The orthogonal transformation matrix
-    psi::SharedMatrix U_;
+    std::shared_ptr<psi::Matrix> U_;
 
     /// The orbital gradients
     ambit::BlockedTensor g_;
-    psi::SharedVector grad_;
+    std::shared_ptr<psi::Vector> grad_;
     /// The orbital diagonal Hessian
     ambit::BlockedTensor h_diag_;
-    psi::SharedVector hess_diag_;
+    std::shared_ptr<psi::Vector> hess_diag_;
 
     /// G intermediates when forming internal diagonal Hessian
     ambit::BlockedTensor Guu_;
@@ -260,7 +261,7 @@ class CASSCF_ORB_GRAD {
     void fill_tei_custom(ambit::BlockedTensor V);
 
     /// JK build for Fock-like terms
-    void JK_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr);
+    void JK_build(std::shared_ptr<psi::Matrix> Cl, std::shared_ptr<psi::Matrix> Cr);
 
     /// Build Fock matrix
     void build_fock(bool rebuild_inactive = false);
@@ -282,12 +283,12 @@ class CASSCF_ORB_GRAD {
     void compute_orbital_hess_diag();
 
     /// Update orbitals using the given rotation matrix in vector form
-    bool update_orbitals(psi::SharedVector x);
+    bool update_orbitals(std::shared_ptr<psi::Vector> x);
 
     /// Test if new orbitals are significantly different from the beginning orbitals
     /// Return a tuple of <irrep, old active orbital index, new active orbital index>
-    std::vector<std::tuple<int, int, int>> test_orbital_rotations(const psi::SharedMatrix& U,
-                                                                  const std::string& warning_msg);
+    std::vector<std::tuple<int, int, int>>
+    test_orbital_rotations(const std::shared_ptr<psi::Matrix>& U, const std::string& warning_msg);
 
     // => Nuclear gradient related functions <=
 
@@ -318,13 +319,13 @@ class CASSCF_ORB_GRAD {
     std::vector<size_t> hf_uocc_mos_;
 
     /// Hartree-Fock orbital energies
-    psi::SharedVector epsilon_;
+    std::shared_ptr<psi::Vector> epsilon_;
 
     /// Compute the frozen part of the A matrix
     void build_Am_frozen();
 
     /// Z vector for CPSCF equations
-    psi::SharedMatrix Z_;
+    std::shared_ptr<psi::Matrix> Z_;
     /// Solve Z vector equation if there are frozen orbitals
     void solve_cpscf();
 
@@ -335,14 +336,16 @@ class CASSCF_ORB_GRAD {
      * Express contraction in AO basis:
      * sum_{pq} sum_{PQRS} CZrow_{Pp} Z_{pq} CZcol_{Qq} L_{PQ,RS} Crow_{Rr} Ccol_{Ss}
      */
-    psi::SharedMatrix contract_RB_Z(psi::SharedMatrix Z, psi::SharedMatrix C_Zrow,
-                                    psi::SharedMatrix C_Zcol, psi::SharedMatrix C_row,
-                                    psi::SharedMatrix C_col);
+    std::shared_ptr<psi::Matrix> contract_RB_Z(std::shared_ptr<psi::Matrix> Z,
+                                               std::shared_ptr<psi::Matrix> C_Zrow,
+                                               std::shared_ptr<psi::Matrix> C_Zcol,
+                                               std::shared_ptr<psi::Matrix> C_row,
+                                               std::shared_ptr<psi::Matrix> C_col);
 
     // => Some helper functions <=
 
     /// Format the Fock matrix from SharedMatrix to BlockedTensor
-    void format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F);
+    void format_fock(std::shared_ptr<psi::Matrix> Fock, ambit::BlockedTensor F);
 
     /// Format the 1RDM from BlockedTensor to SharedMatrix
     void format_1rdm();
@@ -350,18 +353,18 @@ class CASSCF_ORB_GRAD {
     /// Fill Am_ matrix from BlockedTensor A
     void fill_A_matrix_data(ambit::BlockedTensor A);
 
-    /// Reshape the orbital rotation related BlockedTensor to SharedVector
-    void reshape_rot_ambit(ambit::BlockedTensor bt, const psi::SharedVector& sv);
+    /// Reshape the orbital rotation related BlockedTensor to std::shared_ptr<psi::Vector>
+    void reshape_rot_ambit(ambit::BlockedTensor bt, const std::shared_ptr<psi::Vector>& sv);
 
     /// Compute the exponential of a skew-symmetric matrix
-    psi::SharedMatrix matrix_exponential(const psi::SharedMatrix& A, int n);
+    std::shared_ptr<psi::Matrix> matrix_exponential(const std::shared_ptr<psi::Matrix>& A, int n);
 
     /// Compute Cayley transformation from skew-symmetric matrix
-    psi::SharedMatrix cayley_trans(const psi::SharedMatrix& A);
+    std::shared_ptr<psi::Matrix> cayley_trans(const std::shared_ptr<psi::Matrix>& A);
 
     /// Grab part of the orbital coefficients
-    psi::SharedMatrix C_subset(const std::string& name, psi::SharedMatrix C,
-                               psi::Dimension dim_start, psi::Dimension dim_end);
+    std::shared_ptr<psi::Matrix> C_subset(const std::string& name, std::shared_ptr<psi::Matrix> C,
+                                          psi::Dimension dim_start, psi::Dimension dim_end);
 
     /// Threshold for numerical zero
     double numerical_zero_ = 1.0e-15;

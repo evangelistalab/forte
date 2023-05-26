@@ -33,7 +33,7 @@ set globals{
 
 set forte{
   ref_type                casscf
-  active_space_solver     cas
+  active_space_solver     detci
   correlation_solver      dsrg-mrpt2
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]

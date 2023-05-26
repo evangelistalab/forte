@@ -104,9 +104,9 @@ class FCISolver : public ActiveSpaceMethod {
     /// Return a FCIVector
     std::shared_ptr<FCIVector> get_FCIWFN() { return C_; }
     /// Return eigen vectors (n_DL_guesses x ndets)
-    psi::SharedMatrix evecs() { return eigen_vecs_; }
+    std::shared_ptr<psi::Matrix> evecs() { return eigen_vecs_; }
     /// Return the CI wave functions for current state symmetry (ndets x nroots)
-    psi::SharedMatrix ci_wave_functions() override;
+    std::shared_ptr<psi::Matrix> ci_wave_functions() override;
     /// Return string lists
     std::shared_ptr<StringLists> lists() { return lists_; }
     /// Return symmetry
@@ -134,7 +134,7 @@ class FCISolver : public ActiveSpaceMethod {
     std::vector<Determinant> dets_;
 
     /// Eigen vectors
-    psi::SharedMatrix eigen_vecs_;
+    std::shared_ptr<psi::Matrix> eigen_vecs_;
 
     /// The number of irreps
     int nirrep_;
@@ -188,8 +188,8 @@ class FCISolver : public ActiveSpaceMethod {
     /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
     /// @param fci_ints The integrals object
     /// @param spin_adapter The spin adapter object
-    psi::SharedVector form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                     std::shared_ptr<SpinAdapter> spin_adapter);
+    std::shared_ptr<psi::Vector> form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                                std::shared_ptr<SpinAdapter> spin_adapter);
 
     /// @brief Print a summary of the FCI calculation
     void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,

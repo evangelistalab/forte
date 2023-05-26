@@ -50,12 +50,13 @@ using namespace psi;
 
 namespace forte {
 
-psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
-                                         std::vector<int>& mos, int offset,
-                                         bool prevent_rotate = false);
+std::shared_ptr<psi::Matrix> semicanonicalize_block(psi::SharedWavefunction ref_wfn,
+                                                    std::shared_ptr<psi::Matrix> C_tilde,
+                                                    std::vector<int>& mos, int offset,
+                                                    bool prevent_rotate = false);
 
 void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
-               psi::SharedMatrix Ps) {
+               std::shared_ptr<psi::Matrix> Ps) {
     print_method_banner({"Atomic Valence Active Space (AVAS)", "Chenxi Cai and Chenyang Li"});
 
     if (Ps == nullptr) {
@@ -445,7 +446,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
 
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
                                             std::shared_ptr<ForteOptions> options,
-                                            psi::SharedMatrix Pf, int nbf_A,
+                                            std::shared_ptr<psi::Matrix> Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info) {
 
     // 1. Get necessary information, print method initialization information and exceptions
@@ -529,16 +530,16 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
 
     // Diagonalize Pf_pq for occ and vir space, respectively.
     SharedMatrix P_oo = Pf->get_block(occ, occ);
-    auto Uo = std::make_shared<Matrix>("Uo", nirrep, nroccpi, nroccpi);
+    auto Uo = std::make_shared<psi::Matrix>("Uo", nirrep, nroccpi, nroccpi);
     auto lo = std::make_shared<Vector>("lo", nroccpi);
     P_oo->diagonalize(Uo, lo, descending);
 
-    auto Uv = std::make_shared<Matrix>("Uv", nirrep, nrvirpi, nrvirpi);
+    auto Uv = std::make_shared<psi::Matrix>("Uv", nirrep, nrvirpi, nrvirpi);
     auto lv = std::make_shared<Vector>("lv", nrvirpi);
     SharedMatrix P_vv = Pf->get_block(vir, vir);
     P_vv->diagonalize(Uv, lv, descending);
 
-    SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
+    auto U_all = std::make_shared<psi::Matrix>("U with Pab", nirrep, nmopi, nmopi);
     U_all->set_block(occ, occ, Uo);
     U_all->set_block(vir, vir, Uv);
 
@@ -797,7 +798,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, !semi_f);
 
     // Copy the active block (if any) from original Ca_save
-    SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
+    auto C_A = std::make_shared<psi::Matrix>("Active_coeff_block", nirrep, nmopi, actv_a);
     if (options->get_str("EMBEDDING_REFERENCE") == "CASSCF") {
         C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, !semi_a));
         if (semi_a) {
@@ -806,14 +807,14 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     }
 
     // Copy the frozen blocks (if any) from original Ca_save without any changes
-    SharedMatrix C_Fo(new Matrix("Fo_coeff_block", nirrep, nmopi, frzopi));
-    SharedMatrix C_Fv(new Matrix("Fv_coeff_block", nirrep, nmopi, frzvpi));
+    auto C_Fo = std::make_shared<psi::Matrix>("Fo_coeff_block", nirrep, nmopi, frzopi);
+    auto C_Fv = std::make_shared<psi::Matrix>("Fv_coeff_block", nirrep, nmopi, frzvpi);
 
     C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, !semi_f));
     C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, !semi_f));
 
     // Form new C matrix: Frozen-core, B_occ, A_occ, Active, A_vir, B_vir, Frozen-virtual
-    SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
+    auto Ca_Rt = std::make_shared<psi::Matrix>("Ca rotated tilde", nirrep, nmopi, nmopi);
 
     int offset = 0;
     for (auto& C_block : {C_Fo, C_bo, C_ao, C_A, C_av, C_bv, C_Fv}) {
@@ -878,8 +879,10 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     return mo_space_info_emb;
 } // namespace forte
 
-psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
-                                         std::vector<int>& mos, int offset, bool prevent_rotate) {
+std::shared_ptr<psi::Matrix> semicanonicalize_block(psi::SharedWavefunction ref_wfn,
+                                                    std::shared_ptr<psi::Matrix> C_tilde,
+                                                    std::vector<int>& mos, int offset,
+                                                    bool prevent_rotate) {
     int nso = ref_wfn->nso();
     int nmo_block = mos.size();
     auto C_block = std::make_shared<psi::Matrix>("C block", nso, nmo_block);

@@ -281,7 +281,7 @@ class ForteIntegrals {
     /// spin orbital equation:
     /// F_{pq} = h_{pq} + \sum_{i}^{closed} <pi||qi>
     /// e_closed = \sum_{i}^{closed} h_{ii} + 0.5 * \sum_{ij}^{closed} <ij||ij>
-    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+    virtual std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) = 0;
 
     /// Make the active Fock matrix in MO basis (include frozen orbitals)
@@ -290,23 +290,25 @@ class ForteIntegrals {
     /// @return alpha Fock, beta Fock
     /// spin orbital equation:
     /// F_{pq} = \sum_{uv}^{active} <pu||qv> * gamma_{uv}
-    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
-                                                                              ambit::Tensor Db) = 0;
+    virtual std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+    make_fock_active(ambit::Tensor Da, ambit::Tensor Db) = 0;
 
     /// Make the active Fock matrix in MO basis (include frozen orbitals)
-    /// @param D The spin-summed 1RDM in psi::SharedMatrix form
+    /// @param D The spin-summed 1RDM in std::shared_ptr<psi::Matrix> form
     /// @return Fock matrix
-    virtual psi::SharedMatrix make_fock_active_restricted(psi::SharedMatrix D) = 0;
+    virtual std::shared_ptr<psi::Matrix>
+    make_fock_active_restricted(std::shared_ptr<psi::Matrix> D) = 0;
 
     /// Make the active Fock matrix in MO basis (include frozen orbitals)
-    /// @param Da The alpha 1RDM in psi::SharedMatrix form
-    /// @param Db The beta 1RDM in psi::SharedMatrix form
+    /// @param Da The alpha 1RDM in std::shared_ptr<psi::Matrix> form
+    /// @param Db The beta 1RDM in std::shared_ptr<psi::Matrix> form
     /// @return alpha Fock matrix, beta Fock matrix
-    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-    make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) = 0;
+    virtual std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+    make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> Da,
+                                  std::shared_ptr<psi::Matrix> Db) = 0;
 
     /// Set Fock matrix
-    void set_fock_matrix(psi::SharedMatrix fa, psi::SharedMatrix fb);
+    void set_fock_matrix(std::shared_ptr<psi::Matrix> fa, std::shared_ptr<psi::Matrix> fb);
 
     /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
@@ -377,24 +379,24 @@ class ForteIntegrals {
     void print_ints();
 
     /// Orbital coefficients in AO x MO basis where MO is Pitzer order
-    virtual psi::SharedMatrix Ca_AO() const = 0;
+    virtual std::shared_ptr<psi::Matrix> Ca_AO() const = 0;
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nao * nao
-    std::vector<psi::SharedMatrix> ao_dipole_ints() const;
+    std::vector<std::shared_ptr<psi::Matrix>> ao_dipole_ints() const;
 
     /// Obtain AO quadrupole integrals [XX, XY, XZ, YY, YZ, ZZ]
-    std::vector<psi::SharedMatrix> ao_quadrupole_ints() const;
+    std::vector<std::shared_ptr<psi::Matrix>> ao_quadrupole_ints() const;
 
     /// Compute MO dipole integrals (frozen orbitals included)
     /// @return a vector of MO dipole ints in X, Y, Z order,
-    ///         each of which is a nmo x nmo psi::SharedMatrix in Pitzer order
-    virtual std::vector<psi::SharedMatrix> mo_dipole_ints() const;
+    ///         each of which is a nmo x nmo std::shared_ptr<psi::Matrix> in Pitzer order
+    virtual std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints() const;
 
     /// Compute MO quadrupole integrals (frozen orbitals included)
     /// @return a vector of MO quadrupole ints in XX, XY, XZ, YY, YZ, ZZ order,
-    ///         each of which is a nmo x nmo psi::SharedMatrix in Pitzer order
-    virtual std::vector<psi::SharedMatrix> mo_quadrupole_ints() const;
+    ///         each of which is a nmo x nmo std::shared_ptr<psi::Matrix> in Pitzer order
+    virtual std::vector<std::shared_ptr<psi::Matrix>> mo_quadrupole_ints() const;
 
   protected:
     // ==> Class data <==
@@ -492,8 +494,8 @@ class ForteIntegrals {
     JKStatus JK_status_ = JKStatus::empty;
 
     /// Fock matrix (including frozen orbitals)
-    psi::SharedMatrix fock_a_;
-    psi::SharedMatrix fock_b_;
+    std::shared_ptr<psi::Matrix> fock_a_;
+    std::shared_ptr<psi::Matrix> fock_b_;
 
     /// Two-electron integrals stored as a vector with redundant elements (no permutational
     /// symmetry). These are addressed with the function aptei_index
@@ -574,28 +576,30 @@ class Psi4Integrals : public ForteIntegrals {
     void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) override;
 
     /// Make the closed-shell Fock matrix using Psi4 JK object
-    std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
 
     /// Make the active Fock matrix using Psi4 JK object
-    std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
-                                                                      ambit::Tensor Db) override;
+    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+    make_fock_active(ambit::Tensor Da, ambit::Tensor Db) override;
 
     /// Make the active Fock matrix using restricted equation
-    psi::SharedMatrix make_fock_active_restricted(psi::SharedMatrix D) override;
+    std::shared_ptr<psi::Matrix>
+    make_fock_active_restricted(std::shared_ptr<psi::Matrix> D) override;
 
     /// Make the active Fock matrix using unrestricted equation
-    std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-    make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) override;
+    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+    make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> Da,
+                                  std::shared_ptr<psi::Matrix> Db) override;
 
     /// Orbital coefficients in AO x MO basis, where MO is in Pitzer order
-    psi::SharedMatrix Ca_AO() const override;
+    std::shared_ptr<psi::Matrix> Ca_AO() const override;
 
     /// Build and return MO dipole integrals (X, Y, Z) in Pitzer order
-    std::vector<psi::SharedMatrix> mo_dipole_ints() const override;
+    std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints() const override;
 
     /// Build and return MO quadrupole integrals (XX, XY, XZ, YY, YZ, ZZ) in Pitzer order
-    std::vector<psi::SharedMatrix> mo_quadrupole_ints() const override;
+    std::vector<std::shared_ptr<psi::Matrix>> mo_quadrupole_ints() const override;
 
   private:
     void base_initialize_psi4();

@@ -31,9 +31,14 @@
 #include <numeric>
 #include <vector>
 
-#include "psi4/libpsi4util/process.h"
 #include "boost/format.hpp"
+
+#include "psi4/libpsi4util/process.h"
+
+#include "integrals/active_space_integrals.h"
+#include "base_classes/state_info.h"
 #include "helpers/printing.h"
+
 #include "dsrg_mrpt.h"
 
 using namespace psi;
@@ -322,7 +327,7 @@ bool DSRG_MRPT::check_semicanonical() {
     });
 
     // compute norm and max values
-    for (auto& block : {"cc", "aa", "vv"}) {
+    for (auto block : {"cc", "aa", "vv"}) {
         ambit::Tensor diff_block = diff.block(block);
         Fd_od_norm.emplace_back(diff_block.norm(1));
         Fd_od_max.emplace_back(diff_block.norm(0));

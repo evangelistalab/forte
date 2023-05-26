@@ -27,6 +27,7 @@
  */
 
 #include <cmath>
+#include <numeric>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
@@ -43,50 +44,40 @@ namespace forte {
 // A class that takes the determinants and expansion
 // coefficients and computes reduced density matrices.
 
-CI_RDMS::CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                 const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
-                 int root2)
-    : fci_ints_(fci_ints), det_space_(det_space), evecs_(evecs), root1_(root1), root2_(root2) {
+CI_RDMS::CI_RDMS(const std::vector<int>& mo_symmetry, const std::vector<Determinant>& det_space,
+                 std::shared_ptr<psi::Matrix> evecs, int root1, int root2)
+    : mo_symmetry_(mo_symmetry), det_space_(det_space), evecs_(evecs), root1_(root1),
+      root2_(root2) {
     startup();
 }
 
-CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                 psi::SharedMatrix evecs, int root1, int root2)
-    : wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1), root2_(root2) {
-    norb_ = fci_ints_->nmo();
-    norb2_ = norb_ * norb_;
-    norb3_ = norb2_ * norb_;
-    norb4_ = norb3_ * norb_;
-    norb5_ = norb4_ * norb_;
-    norb6_ = norb5_ * norb_;
+CI_RDMS::CI_RDMS(const std::vector<int>& mo_symmetry, DeterminantHashVec& wfn,
+                 std::shared_ptr<psi::Matrix> evecs, int root1, int root2)
+    : wfn_(wfn), mo_symmetry_(mo_symmetry), evecs_(evecs), root1_(root1), root2_(root2) {
 
-    print_ = false;
-    dim_space_ = wfn.size();
+    det_space_ = wfn.determinants();
 
-    Determinant det(wfn_.get_det(0));
-    na_ = det.count_alfa();
-    nb_ = det.count_beta();
+    startup();
 }
 
 CI_RDMS::~CI_RDMS() {}
 
 void CI_RDMS::startup() {
-    /* Get all of the required info from MOSpaceInfo to initialize the
-     * StringList*/
-
     // The number of correlated molecular orbitals
-    norb_ = fci_ints_->nmo();
+    norb_ = mo_symmetry_.size();
     norb2_ = norb_ * norb_;
     norb3_ = norb2_ * norb_;
     norb4_ = norb3_ * norb_;
     norb5_ = norb4_ * norb_;
     norb6_ = norb5_ * norb_;
 
+    dim_space_ = det_space_.size();
+
+    if (dim_space_ == 0) {
+        throw std::runtime_error("CI_RDMS: Determinant space is empty.");
+    }
     na_ = det_space_[0].count_alfa();
     nb_ = det_space_[0].count_beta();
-
-    // psi::Dimension of the determinant space
-    dim_space_ = det_space_.size();
 
     print_ = false;
 
@@ -102,18 +93,19 @@ void CI_RDMS::startup() {
 
 void CI_RDMS::set_max_rdm(int rdm) { max_rdm_ = rdm; }
 
-double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
+double CI_RDMS::get_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                           std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                            std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
                            std::vector<double>& tprdm_ab) {
-    double nuc_rep = fci_ints_->ints()->nuclear_repulsion_energy();
-    double scalar_energy = fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
+    double nuc_rep = as_ints->ints()->nuclear_repulsion_energy();
+    double scalar_energy = as_ints->frozen_core_energy() + as_ints->scalar_energy();
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
 
     for (size_t p = 0; p < norb_; ++p) {
         for (size_t q = 0; q < norb_; ++q) {
-            energy_1rdm += oprdm_a[norb_ * p + q] * fci_ints_->oei_a(p, q);
-            energy_1rdm += oprdm_b[norb_ * p + q] * fci_ints_->oei_b(p, q);
+            energy_1rdm += oprdm_a[norb_ * p + q] * as_ints->oei_a(p, q);
+            energy_1rdm += oprdm_b[norb_ * p + q] * as_ints->oei_b(p, q);
         }
     }
 
@@ -123,13 +115,13 @@ double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& op
                 for (size_t s = 0; s < norb_; ++s) {
                     if (na_ >= 2)
                         energy_2rdm += 0.25 * tprdm_aa[p * norb3_ + q * norb2_ + r * norb_ + s] *
-                                       fci_ints_->tei_aa(p, q, r, s);
+                                       as_ints->tei_aa(p, q, r, s);
                     if ((na_ >= 1) and (nb_ >= 1))
                         energy_2rdm += tprdm_ab[p * norb3_ + q * norb2_ + r * norb_ + s] *
-                                       fci_ints_->tei_ab(p, q, r, s);
+                                       as_ints->tei_ab(p, q, r, s);
                     if (nb_ >= 2)
                         energy_2rdm += 0.25 * tprdm_bb[p * norb3_ + q * norb2_ + r * norb_ + s] *
-                                       fci_ints_->tei_bb(p, q, r, s);
+                                       as_ints->tei_bb(p, q, r, s);
                 }
             }
         }
@@ -189,7 +181,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
 
 void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
 
-    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    auto op = std::make_shared<DeterminantSubstitutionLists>(mo_symmetry_);
     op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
@@ -334,7 +326,7 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
 
 void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                               std::vector<double>& tprdm_bb) {
-    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    auto op = std::make_shared<DeterminantSubstitutionLists>(mo_symmetry_);
     op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->tp_s_lists(wfn_);
@@ -736,7 +728,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
 void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                               std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
 
-    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    auto op = std::make_shared<DeterminantSubstitutionLists>(mo_symmetry_);
     op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->three_s_lists(wfn_);
@@ -2037,8 +2029,6 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     }
     outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f", error_2rdm_ab);
     // aaa aaa
-    // psi::SharedMatrix three_rdm(new psi::Matrix("three", dim_space_, dim_space_));
-    // three_rdm->zero();
     double error_3rdm_aaa = 0.0;
     for (size_t p = 0; p < norb_; ++p) {
         // for (size_t p = 0; p < 1; ++p){
@@ -2061,7 +2051,6 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                     if (I == det_space[j]) {
                                         rdm +=
                                             sign * evecs_->get(i, root1_) * evecs_->get(j, root2_);
-                                        // three_rdm->set(i, j, three_rdm->get(i,j) + 1);
                                     }
                                 }
                             }

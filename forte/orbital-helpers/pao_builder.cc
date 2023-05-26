@@ -41,7 +41,7 @@ using namespace psi;
 
 namespace forte {
 
-PAObuilder::PAObuilder(const psi::SharedMatrix C, psi::Dimension noccpi,
+PAObuilder::PAObuilder(const std::shared_ptr<psi::Matrix> C, psi::Dimension noccpi,
                        std::shared_ptr<BasisSet> basis)
     : basis_(basis), C_(C), noccpi_(noccpi) {
     startup();
@@ -57,7 +57,7 @@ void PAObuilder::startup() {
     // Build D
     outfile->Printf("\n ****** Build Density ******");
 
-    SharedMatrix D(new Matrix("Density pq", nirrep_, nmopi_, nmopi_));
+    auto D = std::make_shared<psi::Matrix>("Density pq", nirrep_, nmopi_, nmopi_);
     for (int h = 0; h < nirrep_; ++h) {
         for (int u = 0; u < nmopi_[h]; ++u) {
             for (int v = 0; v < nmopi_[h]; ++v) {
@@ -95,11 +95,11 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     Slice AB(zeropi, nmopi_);
 
     outfile->Printf("\n ****** Compute C_pao ******");
-    SharedMatrix I_aa(new Matrix("Identity with A*A size", nirrep_, nbfA, nbfA));
+    auto I_aa = std::make_shared<psi::Matrix>("Identity with A*A size", nirrep_, nbfA, nbfA);
     I_aa->identity();
 
     SharedMatrix S_na = S_->get_block(AB, A);
-    SharedMatrix C_pao(new Matrix("C_pao, with N*A size", nirrep_, nmopi_, nbfA));
+    auto C_pao = std::make_shared<psi::Matrix>("C_pao, with N*A size", nirrep_, nmopi_, nbfA);
     C_pao->set_block(A, A, I_aa);
 
     // Build C_pao = I - DS
@@ -107,14 +107,13 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
 
     outfile->Printf("\n ****** Orthogonalize C_pao ******");
     // Orthogonalize C_pao
-    auto U = std::make_shared<Matrix>("U", nirrep_, nbfA, nbfA);
+    auto U = std::make_shared<psi::Matrix>("U", nirrep_, nbfA, nbfA);
     auto lambda = std::make_shared<Vector>("lambda", nbfA);
     auto S_pao_A = linalg::triplet(C_pao, S_, C_pao, true, false, false);
     S_pao_A->diagonalize(U, lambda, descending);
 
     // Truncate A_virtual and build s_-1/2
     int num_pao_A = 0;
-    int num_pao_B = 0;
 
     outfile->Printf("\n PAO truncation: %8.6f", pao_threshold);
 
@@ -124,8 +123,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
             ++num_pao_A;
             lambda->set(0, i, 1.0 / sqrt(leig));
             outfile->Printf("\n PAO %d: %8.8f", i, leig);
-        } else {
-            ++num_pao_B;
         }
     }
 
@@ -135,7 +132,8 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
 
     // Compute C_opao
     SharedMatrix CU = linalg::doublet(C_pao, U);
-    SharedMatrix L(new Matrix("Lambda^-1/2, with Ashort*Ashort size", nirrep_, VA_short, VA_short));
+    auto L = std::make_shared<psi::Matrix>("Lambda^-1/2, with Ashort*Ashort size", nirrep_,
+                                           VA_short, VA_short);
     for (int i = 0; i < num_pao_A; ++i) {
         L->set(0, i, i, lambda->get(0, i));
     }
@@ -147,7 +145,7 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
 
 SharedMatrix PAObuilder::build_B_virtual() {
     // Build environment virtual
-    SharedMatrix C_virtual_B(new Matrix("C_vir B", nirrep_, nmopi_, nmopi_));
+    auto C_virtual_B = std::make_shared<psi::Matrix>("C_vir B", nirrep_, nmopi_, nmopi_);
     throw PSIEXCEPTION("Environment PAO generations not available now!");
     return C_virtual_B;
 }

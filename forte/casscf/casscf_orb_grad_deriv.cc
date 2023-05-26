@@ -95,7 +95,7 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     transform->backtransform_density();
 }
 
-void CASSCF_ORB_GRAD::JK_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr) {
+void CASSCF_ORB_GRAD::JK_build(std::shared_ptr<psi::Matrix> Cl, std::shared_ptr<psi::Matrix> Cr) {
     /* JK build for Fock-like term
      * J: sum_{rs} D_{rs} (rs|PQ) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RS|PQ)
      * K: sum_{rs} D_{rs} (rQ|Ps) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RQ|PS)
@@ -115,8 +115,10 @@ void CASSCF_ORB_GRAD::JK_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr) {
     JK_->compute();
 }
 
-psi::SharedMatrix CASSCF_ORB_GRAD::C_subset(const std::string& name, psi::SharedMatrix C,
-                                            psi::Dimension dim_start, psi::Dimension dim_end) {
+std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::C_subset(const std::string& name,
+                                                       std::shared_ptr<psi::Matrix> C,
+                                                       psi::Dimension dim_start,
+                                                       psi::Dimension dim_end) {
     auto dim = dim_end - dim_start;
     auto Csub = std::make_shared<psi::Matrix>(name, nsopi_, dim);
 
@@ -313,9 +315,11 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
         Z_->print();
 }
 
-SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z(psi::SharedMatrix Z, psi::SharedMatrix C_Zrow,
-                                            psi::SharedMatrix C_Zcol, psi::SharedMatrix C_row,
-                                            psi::SharedMatrix C_col) {
+SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z(std::shared_ptr<psi::Matrix> Z,
+                                            std::shared_ptr<psi::Matrix> C_Zrow,
+                                            std::shared_ptr<psi::Matrix> C_Zcol,
+                                            std::shared_ptr<psi::Matrix> C_row,
+                                            std::shared_ptr<psi::Matrix> C_col) {
     // compute sum_{pq} Z_{pq} L_{pq,rs} using Hartree-Fock orbitals
     // Roothaan-Bagus supermatrix L_{pq,rs} = 4 * (pq|rs) - (pr|sq) - (ps|rq)
     // Express contraction in AO basis:

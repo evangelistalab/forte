@@ -27,6 +27,7 @@
  */
 
 #include <cmath>
+#include <numeric>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/dimension.h"
@@ -48,9 +49,8 @@ using namespace psi;
 
 namespace forte {
 
-DeterminantSubstitutionLists::DeterminantSubstitutionLists(
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
-    : ncmo_(fci_ints->nmo()), mo_symmetry_(fci_ints->active_mo_symmetry()), fci_ints_(fci_ints) {}
+DeterminantSubstitutionLists::DeterminantSubstitutionLists(const std::vector<int>& mo_symmetry)
+    : ncmo_(mo_symmetry.size()), mo_symmetry_(mo_symmetry) {}
 
 void DeterminantSubstitutionLists::set_quiet_mode(bool mode) { quiet_ = mode; }
 

@@ -35,7 +35,7 @@ compare_values(refcasscf,variable("CURRENT ENERGY"),10,"CASSCF energy")
 
 set forte {
   correlation_solver   dsrg-mrpt2
-  active_space_solver  cas
+  active_space_solver  detci
   frozen_docc        [0,0,0,0]
   frozen_uocc        [0,0,0,0]
   restricted_docc    [2,0,0,0]

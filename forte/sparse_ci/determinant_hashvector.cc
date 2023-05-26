@@ -78,7 +78,6 @@ const Determinant& DeterminantHashVec::get_det(const size_t value) const {
 size_t DeterminantHashVec::get_idx(const Determinant& det) const { return wfn_.find(det); }
 
 void DeterminantHashVec::make_spin_complete(int nmo) {
-    size_t ndet_added = 0;
     std::vector<size_t> closed(nmo, 0);
     std::vector<size_t> open(nmo, 0);
     std::vector<size_t> open_bits(nmo, 0);
@@ -86,8 +85,6 @@ void DeterminantHashVec::make_spin_complete(int nmo) {
 
     for (det_hashvec::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         const Determinant& det = *it;
-        //        outfile->Printf("\n  Original determinant: %s",
-        //        det.str().c_str());
         for (int i = 0; i < nmo; ++i) {
             closed[i] = open[i] = 0;
             open_bits[i] = false;
@@ -133,18 +130,9 @@ void DeterminantHashVec::make_spin_complete(int nmo) {
             }
             if (!(this->has_det(new_det)) and !(new_dets.has_det(new_det))) {
                 new_dets.add(new_det);
-                //                outfile->Printf("\n  added determinant:
-                //                %s", new_det.str().c_str());
-                ndet_added++;
             }
         } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
     }
-    // if( ndet_added > 0 ){
-    //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
-    //    outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
-    //}else{
-    //    outfile->Printf("\n\n  Determinant space is spin complete.");
-    //}
     this->merge(new_dets);
 }
 
@@ -153,7 +141,7 @@ bool DeterminantHashVec::has_det(const Determinant& det) const {
 }
 
 double DeterminantHashVec::overlap(std::vector<double>& det1_evecs, DeterminantHashVec& det2,
-                                   psi::SharedMatrix det2_evecs, int root) {
+                                   std::shared_ptr<psi::Matrix> det2_evecs, int root) {
 
     double overlap = 0.0;
 
@@ -173,9 +161,9 @@ double DeterminantHashVec::overlap(std::vector<double>& det1_evecs, DeterminantH
     return overlap;
 }
 
-double DeterminantHashVec::overlap(psi::SharedMatrix det1_evecs, int root1,
-                                   DeterminantHashVec& det2, psi::SharedMatrix det2_evecs,
-                                   int root2) {
+double DeterminantHashVec::overlap(std::shared_ptr<psi::Matrix> det1_evecs, int root1,
+                                   DeterminantHashVec& det2,
+                                   std::shared_ptr<psi::Matrix> det2_evecs, int root2) {
     double overlap = 0.0;
     for (size_t i = 0, wfn_size = wfn_.size(); i < wfn_size; ++i) {
         if (det2.has_det(wfn_[i])) {
@@ -192,7 +180,7 @@ double DeterminantHashVec::overlap(psi::SharedMatrix det1_evecs, int root1,
     return overlap;
 }
 
-void DeterminantHashVec::subspace(DeterminantHashVec& dets, psi::SharedMatrix evecs,
+void DeterminantHashVec::subspace(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix> evecs,
                                   std::vector<double>& new_evecs, size_t dim, int root) {
     // Clear current wfn
     this->clear();

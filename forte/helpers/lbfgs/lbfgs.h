@@ -61,13 +61,13 @@ class LBFGS {
      *
      * @return the function value of at optimized x
      */
-    template <class Foo> double minimize(Foo& foo, psi::SharedVector x);
+    template <class Foo> double minimize(Foo& foo, std::shared_ptr<psi::Vector> x);
 
     /// Reset the L-BFGS space
     void reset();
 
     /// Return the current / final gradient vector
-    psi::SharedVector g() { return g_; }
+    std::shared_ptr<psi::Vector> g() { return g_; }
 
     /// Return the final number of iterations
     int iter() const { return iter_; }
@@ -94,13 +94,13 @@ class LBFGS {
     bool converged_;
 
     /// Diagonal elements of Hessian
-    psi::SharedVector h0_;
+    std::shared_ptr<psi::Vector> h0_;
 
     /// Gradient difference vectors
-    std::vector<psi::SharedVector> y_;
+    std::vector<std::shared_ptr<psi::Vector>> y_;
 
     /// Variable difference vectors
-    std::vector<psi::SharedVector> s_;
+    std::vector<std::shared_ptr<psi::Vector>> s_;
 
     /// The rho vectors
     std::vector<double> rho_;
@@ -112,13 +112,13 @@ class LBFGS {
     psi::Vector p_;
 
     /// The current gradient vector
-    psi::SharedVector g_;
+    std::shared_ptr<psi::Vector> g_;
 
     /// The last gradient vector
-    psi::SharedVector g_last_;
+    std::shared_ptr<psi::Vector> g_last_;
 
     /// The last solution vector
-    psi::SharedVector x_last_;
+    std::shared_ptr<psi::Vector> x_last_;
 
     /// Compute gamma that can be used as inverse of diagonal Hessian
     double compute_gamma();
@@ -130,20 +130,23 @@ class LBFGS {
     void update();
 
     /// Determine step length
-    template <class Foo> void next_step(Foo& foo, psi::SharedVector x, double& fx, double& step);
+    template <class Foo>
+    void next_step(Foo& foo, std::shared_ptr<psi::Vector> x, double& fx, double& step);
 
     /// Determine step length using max value of direction vector
     template <class Foo>
-    void scale_direction_vector(Foo& foo, psi::SharedVector x, double& fx, double& step);
+    void scale_direction_vector(Foo& foo, std::shared_ptr<psi::Vector> x, double& fx, double& step);
 
     /// Line search using backtracking to determine step length
     template <class Foo>
-    void line_search_backtracking(Foo& foo, psi::SharedVector x, double& fx, double& step);
+    void line_search_backtracking(Foo& foo, std::shared_ptr<psi::Vector> x, double& fx,
+                                  double& step);
 
     /// Line search using bracketing and zoom  to determine step length
     /// See (Algorithm 3.5) of <Numerical Optimization> 2nd Ed. by Nocedal and Wright
     template <class Foo>
-    void line_search_bracketing_zoom(Foo& foo, psi::SharedVector x, double& fx, double& step);
+    void line_search_bracketing_zoom(Foo& foo, std::shared_ptr<psi::Vector> x, double& fx,
+                                     double& step);
 
     /// Resize all vectors uisng m_
     void resize(int m);

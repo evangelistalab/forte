@@ -30,7 +30,11 @@
 #define _scf_info_h_
 
 #include "psi4/libmints/dimension.h"
-#include "psi4/libmints/wavefunction.h"
+
+namespace psi {
+class Vector;
+class Wavefunction;
+} // namespace psi
 
 namespace forte {
 
@@ -42,7 +46,7 @@ class SCFInfo {
             std::shared_ptr<psi::Vector> epsilon_b);
 
     /// Constructor based on Psi4 Wavefunction
-    SCFInfo(psi::SharedWavefunction wfn);
+    SCFInfo(std::shared_ptr<psi::Wavefunction> wfn);
 
     /// return the number of orbitals per irrep
     psi::Dimension nmopi();

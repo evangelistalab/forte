@@ -30,7 +30,6 @@
 #define _dwms_mrpt2_h_
 
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
-#include "sci/fci_mo.h"
 
 namespace forte {
 
@@ -108,8 +107,8 @@ class DWMS_DSRGPT2 {
     bool do_semi_;
 
     /// save a copy of original orbitals
-    psi::SharedMatrix Ca_copy_;
-    psi::SharedMatrix Cb_copy_;
+    std::shared_ptr<psi::Matrix> Ca_copy_;
+    std::shared_ptr<psi::Matrix> Cb_copy_;
 
     /// transform integrals to original basis
     void transform_ints0();
@@ -117,18 +116,18 @@ class DWMS_DSRGPT2 {
     /// nuclear repulsion energy
     double Enuc_;
 
-    /// precompute energy -- CASCI or SA-DSRG-PT2/3
-    std::shared_ptr<FCI_MO> precompute_energy();
+    // /// precompute energy -- CASCI or SA-DSRG-PT2/3
+    // std::shared_ptr<FCI_MO> precompute_energy();
 
     /// perform DSRG-PT2/3 computation and return the dressed integrals within active space
     std::shared_ptr<ActiveSpaceIntegrals> compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                           std::shared_ptr<RDMs> reference,
                                                           std::string level = "PT2");
 
-    /// perform a macro DSRG-PT2/3 computation
-    std::shared_ptr<ActiveSpaceIntegrals>
-    compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, std::shared_ptr<FCI_MO> fci_mo,
-                          int entry, int root);
+    // /// perform a macro DSRG-PT2/3 computation
+    // std::shared_ptr<ActiveSpaceIntegrals>
+    // compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, std::shared_ptr<FCI_MO> fci_mo,
+    //                       int entry, int root);
 
     /// compute DWSA energies
     void compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo);
@@ -138,9 +137,9 @@ class DWMS_DSRGPT2 {
     /// old_eigen - original states
     /// new_vals - new energy
     /// new_vecs - linear combinations of original states
-    std::vector<std::pair<psi::SharedVector, double>>
-    compute_new_eigen(const std::vector<std::pair<psi::SharedVector, double>>& old_eigen,
-                      psi::SharedVector new_vals, psi::SharedMatrix new_vecs);
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>
+    compute_new_eigen(const std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& old_eigen,
+                      std::shared_ptr<psi::Vector> new_vals, std::shared_ptr<psi::Matrix> new_vecs);
 
     /// compute MS or XMS energies
     void compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
@@ -163,7 +162,7 @@ class DWMS_DSRGPT2 {
     void compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
 
     /// initial guesses if separate diagonalizations and require orthogonalized final CI vectors
-    std::vector<std::vector<psi::SharedVector>> initial_guesses_;
+    std::vector<std::vector<std::shared_ptr<psi::Vector>>> initial_guesses_;
 
     /// compute DWMS weights and return a new sa_info
     std::vector<std::tuple<int, int, int, std::vector<double>>>
@@ -213,7 +212,8 @@ class DWMS_DSRGPT2 {
                        const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info);
 
     /// print overlap matrix between DWMS roots
-    void print_overlap(const std::vector<psi::SharedVector>& evecs, const std::string& Sname);
+    void print_overlap(const std::vector<std::shared_ptr<psi::Vector>>& evecs,
+                       const std::string& Sname);
 
     /// print energy list summary
     void

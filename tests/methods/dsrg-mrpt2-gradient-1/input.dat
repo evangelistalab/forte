@@ -36,12 +36,13 @@ set forte {
   CASSCF_G_CONVERGENCE   1e-10
   CASSCF_E_CONVERGENCE   1e-10
   active          [4]
-  active_space_solver  cas
+  active_space_solver  detci
   correlation_solver   dsrg-mrpt2
   dsrg_s               1.0
-   dsrgpt               true
-   print_denom2         true
-   multiplicity         1 
+  dsrgpt               true
+  print_denom2         true
+  multiplicity         1 
+  force_diag_method    true
 }
 
 grad = gradient('forte')

@@ -102,8 +102,8 @@ class ProjectorCI : public SelectedCIMethod {
         const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) override;
     /// Getters
     DeterminantHashVec get_PQ_space() override;
-    psi::SharedMatrix get_PQ_evecs() override;
-    psi::SharedVector get_PQ_evals() override;
+    std::shared_ptr<psi::Matrix> get_PQ_evecs() override;
+    std::shared_ptr<psi::Vector> get_PQ_evals() override;
     size_t get_ref_root() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
 

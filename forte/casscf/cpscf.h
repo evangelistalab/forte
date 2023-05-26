@@ -47,41 +47,43 @@ class CPSCF {
      * @param edocc: The occupied orbital energies
      * @param euocc: The unoccupied orbital energies
      */
-    CPSCF(std::shared_ptr<psi::JK> JK, psi::SharedMatrix C, psi::SharedMatrix b,
-          psi::SharedVector edocc, psi::SharedVector euocc);
+    CPSCF(std::shared_ptr<psi::JK> JK, std::shared_ptr<psi::Matrix> C,
+          std::shared_ptr<psi::Matrix> b, std::shared_ptr<psi::Vector> edocc,
+          std::shared_ptr<psi::Vector> euocc);
 
     /// Evaluate the scalar and gradient
-    double evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g = true);
+    double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
+                    bool do_g = true);
 
     /// Evaluate the diagonal Hessian
-    void hess_diag(psi::SharedVector x, psi::SharedVector h0);
+    void hess_diag(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> h0);
 
     /// Return the vector dimension
     psi::Dimension vdimpi() { return vdims_; }
 
     /// Reshape matrix to vector
-    psi::SharedVector mat_to_vec(psi::SharedMatrix M);
+    std::shared_ptr<psi::Vector> mat_to_vec(std::shared_ptr<psi::Matrix> M);
     /// Reshape vector to matrix
-    psi::SharedMatrix vec_to_mat(psi::SharedVector v);
+    std::shared_ptr<psi::Matrix> vec_to_mat(std::shared_ptr<psi::Vector> v);
 
   private:
     /// The JK object of Psi4
     std::shared_ptr<psi::JK> JK_;
 
     /// The MO coefficients
-    psi::SharedMatrix C_;
+    std::shared_ptr<psi::Matrix> C_;
     /// The DOCC part of MO coefficients
-    psi::SharedMatrix Cdocc_;
+    std::shared_ptr<psi::Matrix> Cdocc_;
     /// The UOCC part of MO coefficients
-    psi::SharedMatrix Cuocc_;
+    std::shared_ptr<psi::Matrix> Cuocc_;
 
     /// The b vector
-    psi::SharedVector b_;
+    std::shared_ptr<psi::Vector> b_;
 
     /// Canonial orbital energies for occupied orbitals
-    psi::SharedVector edocc_;
+    std::shared_ptr<psi::Vector> edocc_;
     /// Canonial orbital energies for unoccupied orbitals
-    psi::SharedVector euocc_;
+    std::shared_ptr<psi::Vector> euocc_;
 
     /// The number of irrep
     int nirrep_;
@@ -93,9 +95,9 @@ class CPSCF {
     /// The dimension of vector
     psi::Dimension vdims_;
     /// Test Matrix dimension
-    void test_mat_dim(psi::SharedMatrix M);
+    void test_mat_dim(std::shared_ptr<psi::Matrix> M);
     /// Test Vector dimension
-    void test_vec_dim(psi::SharedVector v);
+    void test_vec_dim(std::shared_ptr<psi::Vector> v);
 };
 
 class CPSCF_SOLVER {
@@ -110,18 +112,18 @@ class CPSCF_SOLVER {
      * @param euocc: The unoccupied orbital energies
      */
     CPSCF_SOLVER(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::JK> JK,
-                 psi::SharedMatrix C, psi::SharedMatrix b, psi::SharedVector edocc,
-                 psi::SharedVector euocc);
+                 std::shared_ptr<psi::Matrix> C, std::shared_ptr<psi::Matrix> b,
+                 std::shared_ptr<psi::Vector> edocc, std::shared_ptr<psi::Vector> euocc);
 
     /// Solve CPSCF equation and return if the equations are converged or not
     bool solve();
 
     /// Return the unknown in matrix form
-    psi::SharedMatrix x();
+    std::shared_ptr<psi::Matrix> x();
 
   private:
     /// The unknown in vector form
-    psi::SharedVector x_;
+    std::shared_ptr<psi::Vector> x_;
 
     /// The Forte options
     std::shared_ptr<ForteOptions> options_;

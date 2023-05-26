@@ -40,7 +40,6 @@
 
 #include "base_classes/active_space_solver.h"
 #include "fci/fci_solver.h"
-#include "sci/fci_mo.h"
 #include "helpers/printing.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/mp2_nos.h"
@@ -376,7 +375,7 @@ void MRDSRG::print_cumulant_summary() {
     // 2-body
     std::vector<double> maxes, norms;
 
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         maxes.push_back(Lambda2_.block(block).norm(0));
         norms.push_back(Lambda2_.block(block).norm(2));
     }
