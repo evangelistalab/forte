@@ -37,6 +37,7 @@
 #include "helpers/iterative_solvers.h"
 #include "helpers/timer.h"
 #include "sparse_ci_solver.h"
+#include "ci_spin_adaptation.h"
 #include "sigma_vector_dynamic.h"
 #include "determinant_functions.hpp"
 
@@ -67,6 +68,12 @@ void SparseCISolver::set_ncollapse_per_root(int value) { ncollapse_per_root_ = v
 void SparseCISolver::set_nsubspace_per_root(int value) { nsubspace_per_root_ = value; }
 
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
+
+void SparseCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
+
+void SparseCISolver::set_spin_adapt_full_preconditioner(bool value) {
+    spin_adapt_full_preconditioner_ = value;
+}
 
 void SparseCISolver::set_force_diag(bool value) { force_diag_ = value; }
 
@@ -507,15 +514,37 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
                                          psi::SharedMatrix Eigenvectors, int nroot,
                                          int multiplicity) {
     local_timer dl;
+
+    // Create the spin adapter
+    if (spin_adapt_) {
+        /// TODO: spin_adapter_ object is not made yet. Need ms and ncmo.
+        /// ncmo can be obtained via -> mo_space_info_->size("CORRELATED")
+        ///----------------------------------------------------------------
+        /// spin_adapter_ = std::make_shared<SpinAdapter>(multiplicity - 1, state().twice_ms(),
+        /// lists_->ncmo()); dets_ = space.determinants(); spin_adapter_->prepare_couplings(dets_);
+    }
+
+    // Compute the size of the determinant space and the basis used by the Davidson solver
     size_t fci_size = sigma_vector->size();
-    DavidsonLiuSolver dls(fci_size, nroot);
+    size_t basis_size = spin_adapt_ ? spin_adapter_->ncsf() : fci_size;
+
+    DavidsonLiuSolver dls(basis_size, nroot);
     dls.set_e_convergence(e_convergence_);
     dls.set_r_convergence(r_convergence_);
     dls.set_print_level(0);
 
     // allocate vectors
-    psi::SharedVector b(new Vector("b", fci_size));
-    psi::SharedVector sigma(new Vector("sigma", fci_size));
+    psi::SharedVector b(new Vector("b", basis_size));
+    psi::SharedVector sigma(new Vector("sigma", basis_size));
+
+    // Optionally create the vectors that stores the b and sigma vectors in the CSF basis
+    std::shared_ptr<psi::Vector> b_basis = b;
+    std::shared_ptr<psi::Vector> sigma_basis = sigma;
+
+    if (spin_adapt_) {
+        b_basis = std::make_shared<psi::Vector>("b", basis_size);
+        sigma_basis = std::make_shared<psi::Vector>("sigma", basis_size);
+    }
 
     // get and pass diagonal
     sigma_vector->get_diagonal(*sigma);
@@ -669,11 +698,13 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     psi::SharedMatrix evecs = dls.eigenvectors();
     for (int r = 0; r < nroot; ++r) {
         Eigenvalues->set(r, evals->get(r));
+        /// TODO: probably change fci_size to basis_size
         for (size_t I = 0; I < fci_size; ++I) {
             Eigenvectors->set(I, r, evecs->get(r, I));
         }
         energies_.push_back(evals->get(r));
         std::vector<double> c(sigma_vector->size());
+        /// TODO: probably change fci_size to basis_size
         for (size_t I = 0; I < fci_size; ++I) {
             c[I] = evecs->get(r, I);
         }

@@ -43,6 +43,7 @@ namespace forte {
 
 class SigmaVector;
 class ActiveSpaceIntegrals;
+class SpinAdapter;
 
 /**
  * @brief The SparseCISolver class
@@ -96,6 +97,11 @@ class SparseCISolver {
     /// Enable/disable spin projection in full algorithm
     void set_spin_project_full(bool value);
 
+    /// Spin adapt the wave function
+    void set_spin_adapt(bool value);
+    /// Spin adapt the wave function using a full preconditioner?
+    void set_spin_adapt_full_preconditioner(bool value);
+
     /// Enable/disable root projection
     void set_root_project(bool value);
 
@@ -143,8 +149,12 @@ class SparseCISolver {
 
     /// The energy of each state
     std::vector<double> energies_;
+    /// The FCI determinant list
+    std::vector<Determinant> dets_;
     /// The expectation value of S^2 for each state
     std::vector<double> spin_;
+    /// A object that handles spin adaptation
+    std::shared_ptr<SpinAdapter> spin_adapter_;
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?
@@ -153,6 +163,11 @@ class SparseCISolver {
     bool spin_project_ = false;
     /// Project solutions onto given multiplicity in full algorithm?
     bool spin_project_full_ = true;
+    /// Spin adapt the wave function?
+    bool spin_adapt_ = false;
+    /// Use the full preconditioner for spin adaptation?
+    /// When set to false, it uses an approximate diagonal preconditioner
+    bool spin_adapt_full_preconditioner_ = false;
     /// Project solutions onto given root?
     bool root_project_ = false;
     /// The energy convergence threshold
