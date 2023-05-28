@@ -88,7 +88,7 @@ struct H3StringSubstitution {
         : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
 };
 
-using GraphPtr = std::shared_ptr<BinaryGraph>;
+// using GraphPtr = std::shared_ptr<BinaryGraph>;
 using StringList = std::vector<std::vector<String>>;
 using VOList = std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>>;
 using VVOOList =
@@ -158,12 +158,12 @@ class StringLists {
 
     auto alfa_address() { return alfa_address_; }
     auto beta_address() { return beta_address_; }
-    GraphPtr alfa_graph_1h() { return alfa_graph_1h_; }
-    GraphPtr beta_graph_1h() { return beta_graph_1h_; }
-    GraphPtr alfa_graph_2h() { return alfa_graph_2h_; }
-    GraphPtr beta_graph_2h() { return beta_graph_2h_; }
-    GraphPtr alfa_graph_3h() { return alfa_graph_3h_; }
-    GraphPtr beta_graph_3h() { return beta_graph_3h_; }
+    auto alfa_address_1h() { return alfa_address_1h_; }
+    auto beta_address_1h() { return beta_address_1h_; }
+    auto alfa_address_2h() { return alfa_address_2h_; }
+    auto beta_address_2h() { return beta_address_2h_; }
+    auto alfa_address_3h() { return alfa_address_3h_; }
+    auto beta_address_3h() { return beta_address_3h_; }
 
     /// @return the alpha string list
     const auto& alfa_strings() const { return alfa_strings_; }
@@ -261,25 +261,18 @@ class StringLists {
     std::shared_ptr<StringAddress> alfa_address_;
     /// The beta string address
     std::shared_ptr<StringAddress> beta_address_;
-    // Graphs
-    // /// The alpha string graph
-    // GraphPtr alfa_graph_;
-    // /// The beta string graph
-    // GraphPtr beta_graph_;
-    /// The orbital pair graph
-    GraphPtr pair_graph_;
     /// The alpha string graph for N - 1 electrons
-    GraphPtr alfa_graph_1h_;
+    std::shared_ptr<StringAddress> alfa_address_1h_;
     /// The beta string graph for N - 1 electrons
-    GraphPtr beta_graph_1h_;
+    std::shared_ptr<StringAddress> beta_address_1h_;
     /// The alpha string graph for N - 2 electrons
-    GraphPtr alfa_graph_2h_;
+    std::shared_ptr<StringAddress> alfa_address_2h_;
     /// The beta string graph for N - 2 electrons
-    GraphPtr beta_graph_2h_;
+    std::shared_ptr<StringAddress> beta_address_2h_;
     /// The alpha string graph for N - 3 electrons
-    GraphPtr alfa_graph_3h_;
+    std::shared_ptr<StringAddress> alfa_address_3h_;
     /// The beta string graph for N - 3 electrons
-    GraphPtr beta_graph_3h_;
+    std::shared_ptr<StringAddress> beta_address_3h_;
 
     // ==> Class Functions <==
 
@@ -291,7 +284,7 @@ class StringLists {
     StringList make_fci_strings(const int norb, const int ne);
 
     /// Make the string list
-    void make_strings(GraphPtr graph, StringList& list);
+    void make_strings(std::shared_ptr<StringAddress> graph, StringList& list);
 
     /// Make the pair list
     void make_pair_list(NNList& list);
@@ -305,11 +298,14 @@ class StringLists {
     void make_oo(std::shared_ptr<StringAddress> graph, OOList& list, int pq_sym, size_t pq);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
-    void make_1h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_1h, H1List& list);
+    void make_1h_list(std::shared_ptr<StringAddress> graph, std::shared_ptr<StringAddress> graph_1h,
+                      H1List& list);
     /// Make 2-hole lists (I -> a_p a_q I = sgn J)
-    void make_2h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_2h, H2List& list);
+    void make_2h_list(std::shared_ptr<StringAddress> graph, std::shared_ptr<StringAddress> graph_2h,
+                      H2List& list);
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
-    void make_3h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_3h, H3List& list);
+    void make_3h_list(std::shared_ptr<StringAddress> graph, std::shared_ptr<StringAddress> graph_3h,
+                      H3List& list);
 
     /// Make the VVOO list
     void make_vvoo_list(std::shared_ptr<StringAddress> graph, VVOOList& list);

@@ -54,8 +54,8 @@ std::vector<H1StringSubstitution>& StringLists::get_beta_1h_list(int h_I, size_t
     return beta_1h_list[I_tuple];
 }
 
-void StringLists::make_1h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_1h,
-                               H1List& list) {
+void StringLists::make_1h_list(std::shared_ptr<StringAddress> graph,
+                               std::shared_ptr<StringAddress> graph_1h, H1List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     String I, J;
@@ -77,7 +77,7 @@ void StringLists::make_1h_list(std::shared_ptr<StringAddress> graph, GraphPtr gr
                             short sign = J.slater_sign(p);
 
                             int h_J = graph_1h->sym(J);
-                            size_t add_J = graph_1h->rel_add(J);
+                            size_t add_J = graph_1h->add(J);
 
                             std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
                             list[I_tuple].push_back(H1StringSubstitution(sign, p, add_I));
@@ -99,8 +99,8 @@ std::vector<H2StringSubstitution>& StringLists::get_beta_2h_list(int h_I, size_t
     return beta_2h_list[I_tuple];
 }
 
-void StringLists::make_2h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_2h,
-                               H2List& list) {
+void StringLists::make_2h_list(std::shared_ptr<StringAddress> graph,
+                               std::shared_ptr<StringAddress> graph_2h, H2List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     String I, J;
@@ -128,7 +128,7 @@ void StringLists::make_2h_list(std::shared_ptr<StringAddress> graph, GraphPtr gr
                                 short sign = p_sign * q_sign;
 
                                 int h_J = graph_2h->sym(J);
-                                size_t add_J = graph_2h->rel_add(J);
+                                size_t add_J = graph_2h->add(J);
 
                                 std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
                                 list[I_tuple].push_back(H2StringSubstitution(sign, p, q, add_I));
@@ -158,8 +158,8 @@ std::vector<H3StringSubstitution>& StringLists::get_beta_3h_list(int h_I, size_t
  * that is: J = ± a^{+}_p a_q I. p and q are
  * absolute indices and I belongs to the irrep h.
  */
-void StringLists::make_3h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_3h,
-                               H3List& list) {
+void StringLists::make_3h_list(std::shared_ptr<StringAddress> graph,
+                               std::shared_ptr<StringAddress> graph_3h, H3List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     String I, J;
@@ -191,7 +191,7 @@ void StringLists::make_3h_list(std::shared_ptr<StringAddress> graph, GraphPtr gr
                                     short sign = p_sign * q_sign * r_sign;
 
                                     int h_J = graph_3h->sym(J);
-                                    size_t add_J = graph_3h->rel_add(J);
+                                    size_t add_J = graph_3h->add(J);
 
                                     std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
                                     list[I_tuple].push_back(

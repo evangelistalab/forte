@@ -410,7 +410,7 @@ void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
         size_t maxK =
-            alfa ? lists_->alfa_graph_3h()->strpi(h_K) : lists_->beta_graph_3h()->strpi(h_K);
+            alfa ? lists_->alfa_address_3h()->strpi(h_K) : lists_->beta_address_3h()->strpi(h_K);
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
             int h_Ib = h_I ^ symmetry_;
             int h_J = h_I;
@@ -466,9 +466,9 @@ void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
-        size_t maxK = lists_->alfa_graph_2h()->strpi(h_K);
+        size_t maxK = lists_->alfa_address_2h()->strpi(h_K);
         for (int h_L = 0; h_L < nirrep_; ++h_L) {
-            size_t maxL = lists_->beta_graph_1h()->strpi(h_L);
+            size_t maxL = lists_->beta_address_1h()->strpi(h_L);
             // I and J refer to the 2h part of the operator
             for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
                 int h_Mb = h_Ia ^ symmetry_;
@@ -519,9 +519,9 @@ void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
-        size_t maxK = lists_->alfa_graph_1h()->strpi(h_K);
+        size_t maxK = lists_->alfa_address_1h()->strpi(h_K);
         for (int h_L = 0; h_L < nirrep_; ++h_L) {
-            size_t maxL = lists_->beta_graph_2h()->strpi(h_L);
+            size_t maxL = lists_->beta_address_2h()->strpi(h_L);
             // I and J refer to the 1h part of the operator
             for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
                 int h_Mb = h_Ia ^ symmetry_;
