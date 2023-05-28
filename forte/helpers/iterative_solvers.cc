@@ -575,9 +575,8 @@ bool DavidsonLiuSolver::load_state() {
 
     read_psi_matrix("dl.b", *b_);
 
-    S->gemm(false, true, 1.0, b_, b_, 0.0);
-
-    int nnonzero = 0;
+    // Determine the number of non-zero vectors
+    size_t nnonzero = 0;
     for (size_t i = 0; i < subspace_size_; i++) {
         if (std::fabs(S->get(i, i) - 1.0) < orthogonality_threshold_ * 2.0) {
             nnonzero++;
@@ -585,6 +584,18 @@ bool DavidsonLiuSolver::load_state() {
     }
     basis_size_ += nnonzero;
 
+    // Check for orthogonality
+    try {
+        check_orthogonality();
+    } catch (const std::exception& e) {
+        psi::outfile->Printf("\n  Orthogonality check failed: %s", e.what());
+        return false;
+    }
+
+    if (nnonzero < nroot_) {
+        outfile->Printf("\n  Not enought valid initial guess vectors. Using initial guess.");
+        return false;
+    }
     outfile->Printf("\n  Restored %d vectors from file.", nnonzero);
 
     return true;

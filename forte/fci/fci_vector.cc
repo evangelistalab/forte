@@ -321,6 +321,7 @@ void FCIVector::zero() {
 void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     print_h2("NATURAL ORBITALS");
     psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
+    auto nfdocc = mo_space_info->size("FROZEN_DOCC");
 
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
@@ -361,7 +362,7 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     size_t count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
                         mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf("\n    ");
