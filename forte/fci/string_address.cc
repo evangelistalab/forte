@@ -73,6 +73,8 @@ size_t StringClass::nclasses() const {
     if (type_ == StringClassType::FCI) {
         return nirrep_;
     }
+    throw std::runtime_error("StringClass::nclasses() not implemented for types other than FCI");
+    return 0;
 }
 
 } // namespace forte

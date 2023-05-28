@@ -57,6 +57,8 @@ class StringAddress {
     size_t add(const String& s) const;
     /// @brief Return the irrep of a string
     int sym(const String& s) const;
+    /// @brief Return the address and irrep of a string
+    std::pair<size_t, int> add_sym(const String& s) const { return address_.at(s); }
     /// @brief Return the number of strings in an irrep
     size_t strpi(int h) const;
     /// @brief Return the number of bits in the string
@@ -73,7 +75,7 @@ class StringAddress {
     /// number of strings in each irrep
     std::vector<size_t> strpi_;
     /// Map from string to address and irrep
-    std::unordered_map<String, std::pair<int32_t, int32_t>, String::Hash> address_;
+    std::unordered_map<String, std::pair<uint32_t, uint32_t>, String::Hash> address_;
     int nbits_; // number of digits
     int nones_; // number of 1s
 };

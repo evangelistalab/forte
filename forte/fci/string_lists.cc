@@ -47,7 +47,6 @@ StringLists::StringLists(psi::Dimension cmopi, std::vector<size_t> core_mo,
 }
 
 void StringLists::startup() {
-
     cmopi_offset_.push_back(0);
     for (int h = 1; h < nirrep_; ++h) {
         cmopi_offset_.push_back(cmopi_offset_[h - 1] + cmopi_[h - 1]);
@@ -123,7 +122,7 @@ void StringLists::startup() {
 
     {
         local_timer t;
-        make_pair_list(nn_list);
+        make_pair_list(pair_list_);
         nn_list_timer += t.get();
     }
     {
@@ -195,7 +194,7 @@ void StringLists::startup() {
  * Generate all the pairs p > q with pq in pq_sym
  * these are stored as pair<int,int> in pair_list[pq_sym][pairpi]
  */
-void StringLists::make_pair_list(NNList& list) {
+void StringLists::make_pair_list(PairList& list) {
     // Loop over irreps of the pair pq
     for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         list.push_back(std::vector<std::pair<int, int>>(0));
@@ -215,13 +214,13 @@ void StringLists::make_pair_list(NNList& list) {
     }
 }
 
-void StringLists::make_strings(std::shared_ptr<StringAddress> graph, StringList& list) {
+void StringLists::make_strings(std::shared_ptr<StringAddress> addresser, StringList& list) {
     for (int h = 0; h < nirrep_; ++h) {
-        list.push_back(std::vector<String>(graph->strpi(h)));
+        list.push_back(std::vector<String>(addresser->strpi(h)));
     }
 
-    int n = graph->nbits();
-    int k = graph->nones();
+    int n = addresser->nbits();
+    int k = addresser->nones();
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         String I;
@@ -235,8 +234,8 @@ void StringLists::make_strings(std::shared_ptr<StringAddress> graph, StringList&
         for (int i = std::max(0, n - k); i < n; ++i)
             I[i] = true; // 1
         do {
-            size_t sym_I = graph->sym(I);
-            size_t add_I = graph->add(I);
+            size_t sym_I = string_class_->symmetry(I);
+            size_t add_I = addresser->add(I);
             list[sym_I][add_I] = I;
         } while (std::next_permutation(I_begin, I_end));
     }

@@ -228,10 +228,3 @@ class FCIVector {
 } // namespace forte
 
 #endif // _fci_vector_
-
-////    DetAddress get_det_address(Determinant& det) {
-////        int sym = alfa_address_->sym(det.get_alfa_bits());
-////        size_t alfa_string = alfa_address_->rel_add(det.get_alfa_bits());
-////        size_t beta_string = beta_address_->rel_add(det.get_beta_bits());
-////        return DetAddress(sym,alfa_string,beta_string);
-////    };

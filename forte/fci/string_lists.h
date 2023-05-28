@@ -41,21 +41,14 @@
 
 namespace forte {
 
-/// A structure to store the address of a determinant
-struct DetAddress {
-    const int alfa_sym;
-    const size_t alfa_string;
-    const size_t beta_string;
-    DetAddress(const int& alfa_sym_, const size_t& alfa_string_, const size_t& beta_string_)
-        : alfa_sym(alfa_sym_), alfa_string(alfa_string_), beta_string(beta_string_) {}
-};
-
-/// A structure to store how tow strings are connected
+/// A structure to store how the string J is connected to the string I and the corresponding sign
+/// I -> sign J
+/// The uint32_t will hold up to 4,294,967,296 elements (that should be enough)
 struct StringSubstitution {
-    const int16_t sign;
-    const size_t I;
-    const size_t J;
-    StringSubstitution(const int& sign_, const size_t& I_, const size_t& J_)
+    const double sign;
+    const uint32_t I;
+    const uint32_t J;
+    StringSubstitution(const double& sign_, const uint32_t& I_, const uint32_t& J_)
         : sign(sign_), I(I_), J(J_) {}
 };
 
@@ -88,20 +81,35 @@ struct H3StringSubstitution {
         : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
 };
 
-// using GraphPtr = std::shared_ptr<BinaryGraph>;
 using StringList = std::vector<std::vector<String>>;
+
+/// Maps the integers (p,q,h) to list of strings connected by a^{+}_p a_q, where the string
+/// I belongs to the irrep h
 using VOList = std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>>;
+
+/// Maps the integers (p,q,r,s,h) to list of strings connected by a^{+}_p a^{+}_q a_s a_r, where the
+/// string I belongs to the irrep h
 using VVOOList =
     std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>;
+
+/// Maps the integers (pq_sym, pq, h) to list of strings connected by a^{+}_p a^{+}_q a_q a_p where
+/// the string I belongs to the irrep h
 using OOList = std::map<std::tuple<int, size_t, int>, std::vector<StringSubstitution>>;
 
+/// Maps the integers (h_J, add_J, h_I) to list of strings connected by a_p, where the string
+/// I belongs to the irrep h_I and J belongs to the irrep h_J and add_J is the address of J
 using H1List = std::map<std::tuple<int, size_t, int>, std::vector<H1StringSubstitution>>;
+
+/// Maps the integers (h_J, add_J, h_I) to list of strings connected by a_p a_q, where the string
+/// I belongs to the irrep h_I and J belongs to the irrep h_J and add_J is the address of J
 using H2List = std::map<std::tuple<int, size_t, int>, std::vector<H2StringSubstitution>>;
+
+/// Maps the integers (h_J, add_J, h_I) to list of strings connected by a_p a_q a_r, where the
+/// string I belongs to the irrep h_I and J belongs to the irrep h_J and add_J is the address of J
 using H3List = std::map<std::tuple<int, size_t, int>, std::vector<H3StringSubstitution>>;
 
 using Pair = std::pair<int, int>;
-using PairList = std::vector<Pair>;
-using NNList = std::vector<PairList>;
+using PairList = std::vector<std::vector<std::pair<int, int>>>;
 
 class StringAddress;
 class StringClass;
@@ -173,6 +181,7 @@ class StringLists {
     String alfa_str(size_t h, size_t I) const { return alfa_strings_[h][I]; }
     /// @return the beta string in irrep h and index I
     String beta_str(size_t h, size_t I) const { return beta_strings_[h][I]; }
+
     std::vector<Determinant> make_determinants(int symmetry) const;
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);
@@ -195,7 +204,7 @@ class StringLists {
     std::vector<StringSubstitution>& get_beta_vvoo_list(size_t p, size_t q, size_t r, size_t s,
                                                         int h);
 
-    Pair get_nn_list_pair(int h, int n) const { return nn_list[h][n]; }
+    Pair get_pair_list(int h, int n) const { return pair_list_[h][n]; }
 
   private:
     // ==> Class Data <==
@@ -236,7 +245,7 @@ class StringLists {
     /// The beta strings stored by irrep and address
     StringList beta_strings_;
     /// The pair string list
-    NNList nn_list;
+    PairList pair_list_;
     /// The VO string lists
     VOList alfa_vo_list;
     VOList beta_vo_list;
@@ -287,15 +296,19 @@ class StringLists {
     void make_strings(std::shared_ptr<StringAddress> graph, StringList& list);
 
     /// Make the pair list
-    void make_pair_list(NNList& list);
+    void make_pair_list(PairList& list);
 
     /// Make the VO list
     void make_vo_list(std::shared_ptr<StringAddress> graph, VOList& list);
     void make_vo(std::shared_ptr<StringAddress> graph, VOList& list, int p, int q);
 
-    /// Make the OO list
+    /// @brief Make the list of strings connected by a^{+}_p a^{+}_q a_q a_p
     void make_oo_list(std::shared_ptr<StringAddress> graph, OOList& list);
-    void make_oo(std::shared_ptr<StringAddress> graph, OOList& list, int pq_sym, size_t pq);
+
+    /// @brief Make the list of strings connected by a^{+}_p a^{+}_q a_q a_p
+    /// @param pq_sym symmetry of the pq pair
+    /// @param pq relative pair index of the pq pair
+    void make_oo(std::shared_ptr<StringAddress> address, OOList& list, int pq_sym, size_t pq);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
     void make_1h_list(std::shared_ptr<StringAddress> graph, std::shared_ptr<StringAddress> graph_1h,

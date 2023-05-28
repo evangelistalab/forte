@@ -125,25 +125,6 @@ void FCIVector::startup() {
  */
 void FCIVector::cleanup() {}
 
-///**
-// * Set the wave function to a single Slater determinant
-// */
-// void FCIVector::set_to(Determinant& det)
-//{
-//  zero();
-//  DetAddress add = get_det_address(det);
-//  coefficients[add.alfa_sym][add.alfa_string][add.beta_string] = 1.0;
-//}
-
-///**
-// * Get the coefficient of a single Slater determinant
-// */
-// double FCIVector::get_coefficient(Determinant& det)
-//{
-//  DetAddress add = get_det_address(det);
-//  return coefficients[add.alfa_sym][add.alfa_string][add.beta_string];
-//}
-
 /**
  * Set the wave function to another wave function
  */
@@ -654,7 +635,7 @@ void FCIVector::print() {
 //      for(int pq_sym = 0; pq_sym < nirreps; ++pq_sym){
 //        size_t max_pq = lists->get_pairpi(pq_sym);
 //        for(size_t pq = 0; pq < max_pq; ++pq){
-//          const Pair& pq_pair = lists->get_nn_list_pair(pq_sym,pq);
+//          const Pair& pq_pair = lists->get_pair_list(pq_sym,pq);
 //          int p_abs = pq_pair.first;
 //          int q_abs = pq_pair.second;
 //          double integral = alfa ? tei_aaaa(p_abs,p_abs,q_abs,q_abs)
@@ -679,11 +660,11 @@ void FCIVector::print() {
 //      for(int pq_sym = 0; pq_sym < nirreps; ++pq_sym){
 //        size_t max_pq = lists->get_pairpi(pq_sym);
 //        for(size_t pq = 0; pq < max_pq; ++pq){
-//          const Pair& pq_pair = lists->get_nn_list_pair(pq_sym,pq);
+//          const Pair& pq_pair = lists->get_pair_list(pq_sym,pq);
 //          int p_abs = pq_pair.first;
 //          int q_abs = pq_pair.second;
 //          for(size_t rs = 0; rs < pq; ++rs){
-//              const Pair& rs_pair = lists->get_nn_list_pair(pq_sym,rs);
+//              const Pair& rs_pair = lists->get_pair_list(pq_sym,rs);
 //              int r_abs = rs_pair.first;
 //              int s_abs = rs_pair.second;
 //              double integral = alfa ? tei_aaaa(p_abs,r_abs,q_abs,s_abs)

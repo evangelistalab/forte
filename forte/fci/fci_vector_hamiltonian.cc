@@ -204,7 +204,7 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_nn_list_pair(pq_sym, pq);
+                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
 
@@ -225,11 +225,11 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_nn_list_pair(pq_sym, pq);
+                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
                     for (size_t rs = 0; rs < pq; ++rs) {
-                        const Pair& rs_pair = lists_->get_nn_list_pair(pq_sym, rs);
+                        const Pair& rs_pair = lists_->get_pair_list(pq_sym, rs);
                         int r_abs = rs_pair.first;
                         int s_abs = rs_pair.second;
                         double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, r_abs, s_abs)
