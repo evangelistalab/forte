@@ -28,10 +28,12 @@
 
 #include "string_address.h"
 
+#include "base_classes/mo_space_info.h"
+
 namespace forte {
 
-StringAddress::StringAddress(const std::vector<std::vector<String>>& strings)
-    : nirrep_(strings.size()), nstr_(0), strpi_(strings.size(), 0) {
+StringAddress::StringAddress(int nmo, int ne, const std::vector<std::vector<String>>& strings)
+    : nirrep_(strings.size()), nstr_(0), strpi_(strings.size(), 0), nbits_(nmo), nones_(ne) {
     for (int h = 0; h < nirrep_; h++) {
         const auto& strings_h = strings[h];
         for (const auto& s : strings_h) {
@@ -52,5 +54,27 @@ size_t StringAddress::add(const String& s) const { return address_.at(s).first; 
 int StringAddress::sym(const String& s) const { return address_.at(s).second; }
 
 size_t StringAddress::strpi(int h) const { return strpi_[h]; }
+
+StringClass::StringClass(std::vector<int> mopi, StringClassType type)
+    : type_(type), nirrep_(mopi.size()) {
+    for (size_t h = 0; h < nirrep_; h++) {
+        fill_n(back_inserter(mo_sym_), mopi[h], h); // insert h for mopi[h] times
+    }
+}
+
+size_t StringClass::symmetry(const String& s) const {
+    if (type_ == StringClassType::FCI) {
+        return s.symmetry(mo_sym_);
+    }
+    return 0;
+}
+
+size_t StringClass::nclasses() const {
+    if (type_ == StringClassType::FCI) {
+        return nirrep_;
+    }
+    throw std::runtime_error("StringClass::nclasses() not implemented for types other than FCI");
+    return 0;
+}
 
 } // namespace forte

@@ -38,6 +38,7 @@
 #include "fci_vector.h"
 #include "string_lists.h"
 #include "helpers/printing.h"
+#include "fci/string_address.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -82,8 +83,8 @@ void FCISolver::startup() {
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h) {
-        size_t nastr = lists_->alfa_graph()->strpi(h);
-        size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
+        size_t nastr = lists_->alfa_address()->strpi(h);
+        size_t nbstr = lists_->beta_address()->strpi(h ^ symmetry_);
         ndfci += nastr * nbstr;
     }
 

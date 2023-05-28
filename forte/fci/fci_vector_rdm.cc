@@ -43,6 +43,7 @@
 #include "fci_solver.h"
 #include "binary_graph.hpp"
 #include "string_lists.h"
+#include "string_address.h"
 
 extern int fci_debug_level;
 
@@ -57,8 +58,8 @@ namespace forte {
 void FCIVector::compute_rdms(int max_order) {
     std::vector<double> rdm_timing;
 
-    size_t na = alfa_graph_->nones();
-    size_t nb = beta_graph_->nones();
+    size_t na = alfa_address_->nones();
+    size_t nb = beta_address_->nones();
 
     if (max_order >= 1) {
         local_timer t;
@@ -106,8 +107,8 @@ void FCIVector::compute_rdms(int max_order) {
 
 double FCIVector::energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Compute the energy from the 1-RDM and 2-RDM
-    size_t na = alfa_graph_->nones();
-    size_t nb = beta_graph_->nones();
+    size_t na = alfa_address_->nones();
+    size_t nb = beta_address_->nones();
 
     double nuclear_repulsion_energy =
         psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
@@ -164,8 +165,8 @@ void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
 
             if (!alfa) {
                 C->zero();
-                size_t maxIa = alfa_graph_->strpi(alfa_sym);
-                size_t maxIb = beta_graph_->strpi(beta_sym);
+                size_t maxIa = alfa_address_->strpi(alfa_sym);
+                size_t maxIb = beta_address_->strpi(beta_sym);
 
                 double** C0h = C_[alfa_sym]->pointer();
 
@@ -175,7 +176,7 @@ void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL = alfa ? beta_graph_->strpi(beta_sym) : alfa_graph_->strpi(alfa_sym);
+            size_t maxL = alfa ? beta_address_->strpi(beta_sym) : alfa_address_->strpi(alfa_sym);
 
             for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
@@ -229,8 +230,8 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
 
             if (!alfa) {
                 C->zero();
-                size_t maxIa = alfa_graph_->strpi(ha);
-                size_t maxIb = beta_graph_->strpi(hb);
+                size_t maxIa = alfa_address_->strpi(ha);
+                size_t maxIb = beta_address_->strpi(hb);
 
                 double** C0h = C_[ha]->pointer();
 
@@ -240,12 +241,12 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL = alfa ? beta_graph_->strpi(hb) : alfa_graph_->strpi(ha);
+            size_t maxL = alfa ? beta_address_->strpi(hb) : alfa_address_->strpi(ha);
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_nn_list_pair(pq_sym, pq);
+                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
 
@@ -273,11 +274,11 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_nn_list_pair(pq_sym, pq);
+                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
                     for (size_t rs = 0; rs < pq; ++rs) {
-                        const Pair& rs_pair = lists_->get_nn_list_pair(pq_sym, rs);
+                        const Pair& rs_pair = lists_->get_pair_list(pq_sym, rs);
                         int r_abs = rs_pair.first;
                         int s_abs = rs_pair.second;
 
@@ -409,7 +410,7 @@ void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
         size_t maxK =
-            alfa ? lists_->alfa_graph_3h()->strpi(h_K) : lists_->beta_graph_3h()->strpi(h_K);
+            alfa ? lists_->alfa_address_3h()->strpi(h_K) : lists_->beta_address_3h()->strpi(h_K);
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
             int h_Ib = h_I ^ symmetry_;
             int h_J = h_I;
@@ -418,8 +419,8 @@ void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
 
             if (!alfa) {
                 C->zero();
-                size_t maxIa = alfa_graph_->strpi(h_I);
-                size_t maxIb = beta_graph_->strpi(h_Ib);
+                size_t maxIa = alfa_address_->strpi(h_I);
+                size_t maxIb = beta_address_->strpi(h_Ib);
 
                 double** C0h = C_[h_I]->pointer();
 
@@ -429,7 +430,7 @@ void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL = alfa ? beta_graph_->strpi(h_Ib) : alfa_graph_->strpi(h_I);
+            size_t maxL = alfa ? beta_address_->strpi(h_Ib) : alfa_address_->strpi(h_I);
             if (maxL > 0) {
                 for (size_t K = 0; K < maxK; ++K) {
                     std::vector<H3StringSubstitution>& Klist =
@@ -465,9 +466,9 @@ void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
-        size_t maxK = lists_->alfa_graph_2h()->strpi(h_K);
+        size_t maxK = lists_->alfa_address_2h()->strpi(h_K);
         for (int h_L = 0; h_L < nirrep_; ++h_L) {
-            size_t maxL = lists_->beta_graph_1h()->strpi(h_L);
+            size_t maxL = lists_->beta_address_1h()->strpi(h_L);
             // I and J refer to the 2h part of the operator
             for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
                 int h_Mb = h_Ia ^ symmetry_;
@@ -518,9 +519,9 @@ void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
-        size_t maxK = lists_->alfa_graph_1h()->strpi(h_K);
+        size_t maxK = lists_->alfa_address_1h()->strpi(h_K);
         for (int h_L = 0; h_L < nirrep_; ++h_L) {
-            size_t maxL = lists_->beta_graph_2h()->strpi(h_L);
+            size_t maxL = lists_->beta_address_2h()->strpi(h_L);
             // I and J refer to the 1h part of the operator
             for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
                 int h_Mb = h_Ia ^ symmetry_;
@@ -596,11 +597,11 @@ void FCIVector::rdm_test() {
     size_t num_det = 0;
     do {
         do {
-            if ((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == static_cast<int>(symmetry_)) {
+            if ((alfa_address_->sym(Ia) ^ beta_address_->sym(Ib)) == static_cast<int>(symmetry_)) {
                 Determinant d(Ia, Ib);
                 dets.push_back(d);
-                double c = C_[alfa_graph_->sym(Ia)]->get(alfa_graph_->rel_add(Ia),
-                                                         beta_graph_->rel_add(Ib));
+                double c =
+                    C_[alfa_address_->sym(Ia)]->get(alfa_address_->add(Ia), beta_address_->add(Ib));
                 C.push_back(c);
                 dets_map[d] = num_det;
                 num_det++;
@@ -955,8 +956,8 @@ double FCIVector::compute_spin2() {
             }
         }
     }
-    double na = alfa_graph_->nones();
-    double nb = beta_graph_->nones();
+    double na = alfa_address_->nones();
+    double nb = beta_address_->nones();
     return -spin2 + 0.25 * std::pow(na - nb, 2.0) + 0.5 * (na + nb);
 }
 
