@@ -38,7 +38,7 @@ Escf, wfn = energy('scf', return_wfn=True)
 compare_values(r_scf, Escf, 8, "SCF energy")
 
 set forte{
-  job_type             casscf
+  job_type             mcscf_two_step
   int_type             df
   e_convergence        12
   dsrg_s               0.5
@@ -54,13 +54,14 @@ set forte{
   casscf_diis_start    20
   casscf_diis_freq     4
   fci_maxiter          1000
+  ci_spin_adapt        true
 }
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
 
 set forte{
   job_type            newdriver
-  active_space_solver detci
+  active_space_solver fci
   correlation_solver  dsrg-mrpt2
   calc_type           sa
   int_type            df

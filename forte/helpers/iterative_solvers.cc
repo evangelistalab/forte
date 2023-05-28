@@ -40,15 +40,15 @@
 #include "helpers/iterative_solvers.h"
 
 #define PRINT_VARS(msg)                                                                            \
-    //    std::vector<std::pair<size_t, std::string>> v = {{collapse_size_, "collapse_size_"},           \
-//                                                     {subspace_size_, "subspace_size_"},           \
-//                                                     {basis_size_, "basis_size_"},                 \
-//                                                     {sigma_size_, "sigma_size_"},                 \
-//                                                     {nroot_, "nroot_"}};                          \
-//    outfile->Printf("\n\n => %s <=", msg);                                                         \
-//    for (auto vk : v) {                                                                            \
-//        outfile->Printf("\n    %-30s  %zu", vk.second.c_str(), vk.first);                          \
-//    }
+    // std::vector<std::pair<size_t, std::string>> v = {{collapse_size_, "collapse_size_"},           \
+    //                                                  {subspace_size_, "subspace_size_"},           \
+    //                                                  {basis_size_, "basis_size_"},                 \
+    //                                                  {sigma_size_, "sigma_size_"},                 \
+    //                                                  {nroot_, "nroot_"}};                          \
+    // outfile->Printf("\n\n => %s <=", msg);                                                         \
+    // for (auto vk : v) {                                                                            \
+    //     outfile->Printf("\n    %-30s  %zu", vk.second.c_str(), vk.first);                          \
+    // }
 
 using namespace psi;
 
@@ -547,14 +547,14 @@ void DavidsonLiuSolver::check_G_hermiticity() {
             "DavidsonLiuSolver::check_G_hermiticity(): the Hamiltonian in not Hermitian";
         throw std::runtime_error(msg);
     } else {
-        // symmetrize G just in case
-        for (size_t i = 0; i < basis_size_; ++i) {
-            for (size_t j = i + 1; j < basis_size_; ++j) {
-                auto od = 0.5 * (G->get(i, j) + G->get(j, i));
-                G->set(i, j, od);
-                G->set(j, i, od);
-            }
-        }
+        // // symmetrize G just in case
+        // for (size_t i = 0; i < basis_size_; ++i) {
+        //     for (size_t j = i + 1; j < basis_size_; ++j) {
+        //         auto od = 0.5 * (G->get(i, j) + G->get(j, i));
+        //         G->set(i, j, od);
+        //         G->set(j, i, od);
+        //     }
+        // }
     }
 }
 
@@ -565,7 +565,6 @@ void DavidsonLiuSolver::save_state() const {
 
 bool DavidsonLiuSolver::load_state() {
     // restore the state of the solver
-    bool loaded = false;
     std::filesystem::path filepath = "./dl.b";
 
     if (not std::filesystem::exists(filepath)) {

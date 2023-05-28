@@ -179,14 +179,14 @@ double FCISolver::compute_energy() {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
         bool loaded_state = dls.startup(Hdiag_vec);
         if (not loaded_state) {
-            initial_guess_csf(Hdiag_vec, collapse_per_root_, dls, sigma_basis);
+            initial_guess_csf(Hdiag_vec, dls.collapse_size(), dls, sigma_basis);
         }
     } else {
         Hdiag.form_H_diagonal(as_ints_);
         Hdiag.copy_to(sigma);
         bool loaded_state = dls.startup(sigma);
         if (not loaded_state) {
-            initial_guess_det(Hdiag, collapse_per_root_, as_ints_, dls, sigma);
+            initial_guess_det(Hdiag, dls.collapse_size(), as_ints_, dls, sigma);
         }
     }
 
