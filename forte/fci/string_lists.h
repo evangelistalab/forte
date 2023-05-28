@@ -210,7 +210,7 @@ class StringLists {
     // ==> Class Data <==
 
     /// The number of irreps
-    const int nirrep_;
+    const size_t nirrep_;
     /// The total number of correlated molecular orbitals
     const size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep

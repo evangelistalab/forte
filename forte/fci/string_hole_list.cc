@@ -60,7 +60,7 @@ void StringLists::make_1h_list(std::shared_ptr<StringAddress> addresser,
     int k = addresser->nones();
     String I, J;
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (int h_I = 0; h_I < nirrep_; ++h_I) {
+        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
             // Generate the strings 1111100000
             //                      { k }{n-k}
             for (int i = 0; i < n - k; ++i)
@@ -106,7 +106,7 @@ void StringLists::make_2h_list(std::shared_ptr<StringAddress> addresser,
     String I, J;
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (int h_I = 0; h_I < nirrep_; ++h_I) {
+        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
             // Generate the strings 1111100000
             //                      { k }{n-k}
             for (int i = 0; i < n - k; ++i)
@@ -165,7 +165,7 @@ void StringLists::make_3h_list(std::shared_ptr<StringAddress> addresser,
     String I, J;
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (int h_I = 0; h_I < nirrep_; ++h_I) {
+        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
             // Generate the strings 1111100000
             //                      { k }{n-k}
             for (int i = 0; i < n - k; ++i)

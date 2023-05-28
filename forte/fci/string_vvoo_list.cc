@@ -124,7 +124,7 @@ void StringLists::make_vvoo(std::shared_ptr<StringAddress> addresser, VVOOList& 
         std::vector<int8_t> b(n);
         String I, J;
 
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
             // Create the key to the map
             std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
 

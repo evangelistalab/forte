@@ -77,7 +77,7 @@ void StringLists::make_oo(std::shared_ptr<StringAddress> addresser, OOList& list
         String b, I, J;
         auto b_begin = b.begin();
         auto b_end = b.begin() + n;
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
             // Create the key to the map
             std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
 

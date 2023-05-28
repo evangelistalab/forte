@@ -48,16 +48,16 @@ StringLists::StringLists(psi::Dimension cmopi, std::vector<size_t> core_mo,
 
 void StringLists::startup() {
     cmopi_offset_.push_back(0);
-    for (int h = 1; h < nirrep_; ++h) {
+    for (size_t h = 1; h < nirrep_; ++h) {
         cmopi_offset_.push_back(cmopi_offset_[h - 1] + cmopi_[h - 1]);
     }
 
     std::vector<int> cmopi_int;
-    for (int h = 0; h < nirrep_; ++h) {
+    for (size_t h = 0; h < nirrep_; ++h) {
         cmopi_int.push_back(cmopi_[h]);
     }
 
-    for (int h = 0; h < nirrep_; h++) {
+    for (size_t h = 0; h < nirrep_; h++) {
         fill_n(back_inserter(cmo_sym_), cmopi_int[h], h); // insert h irrep_size[h] times
     }
 
@@ -115,7 +115,7 @@ void StringLists::startup() {
 
     nas_ = 0;
     nbs_ = 0;
-    for (int h = 0; h < nirrep_; ++h) {
+    for (size_t h = 0; h < nirrep_; ++h) {
         nas_ += alfa_address_->strpi(h);
         nbs_ += beta_address_->strpi(h);
     }
@@ -196,10 +196,10 @@ void StringLists::startup() {
  */
 void StringLists::make_pair_list(PairList& list) {
     // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         list.push_back(std::vector<std::pair<int, int>>(0));
         // Loop over irreps of p
-        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
             int q_sym = pq_sym ^ p_sym;
             for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                 for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
@@ -215,7 +215,7 @@ void StringLists::make_pair_list(PairList& list) {
 }
 
 void StringLists::make_strings(std::shared_ptr<StringAddress> addresser, StringList& list) {
-    for (int h = 0; h < nirrep_; ++h) {
+    for (size_t h = 0; h < nirrep_; ++h) {
         list.push_back(std::vector<String>(addresser->strpi(h)));
     }
 
@@ -281,14 +281,14 @@ StringList StringLists::make_fci_strings(const int norb, const int ne) {
 
 std::vector<Determinant> StringLists::make_determinants(int symmetry) const {
     size_t ndets = 0;
-    for (int ha = 0; ha < nirrep_; ha++) {
+    for (size_t ha = 0; ha < nirrep_; ha++) {
         const int hb = symmetry ^ ha;
         ndets += alfa_strings()[ha].size() * beta_strings()[hb].size();
     }
     std::vector<Determinant> dets(ndets);
     size_t addI = 0;
     // Loop over irreps of alpha
-    for (int ha = 0; ha < nirrep_; ha++) {
+    for (size_t ha = 0; ha < nirrep_; ha++) {
         const int hb = symmetry ^ ha;
         // Loop over alpha strings in this irrep
         for (const auto& Ia : alfa_strings()[ha]) {
