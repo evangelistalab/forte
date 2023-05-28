@@ -287,15 +287,7 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
 void FCIVector::normalize() {
     double factor = norm(2.0);
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-        size_t maxIb = beta_graph_->strpi(beta_sym);
-        double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-            for (size_t Ib = 0; Ib < maxIb; ++Ib) {
-                C_ha[Ia][Ib] /= factor;
-            }
-        }
+        C_[alfa_sym]->scale(1.0 / factor);
     }
 }
 
@@ -411,9 +403,6 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
 //  }
 //}
 
-/**
- * Compute the 2-norm of the wave function
- */
 double FCIVector::norm(double power) {
     double norm = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {

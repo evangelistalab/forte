@@ -162,23 +162,17 @@ class ActiveSpaceSolver {
     std::map<StateInfo, size_t> state_space_size_map() const;
 
     /// Return a map of StateInfo to the computed nroots of energies
-    const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
-        return state_energies_map_;
-    }
-
+    const std::map<StateInfo, std::vector<double>>& state_energies_map() const;
     /// Return a map of StateInfo to the CI wave functions (deterministic determinant space)
     std::map<StateInfo, std::shared_ptr<psi::Matrix>> state_ci_wfn_map() const;
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
-    /// @param as_ints the pointer to a set of acitve-space integrals
-    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-        as_ints_ = as_ints;
-    }
+    /// @param as_ints the pointer to a set of active-space integrals
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
-    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
-        as_mp_ints_ = as_mp_ints;
-    }
+    /// @param as_mp_ints the pointer to a set of multipole integrals
+    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints);
 
     /// Return the map of StateInfo to the wave function file name
     std::map<StateInfo, std::string> state_filename_map() const { return state_filename_map_; }
@@ -194,6 +188,9 @@ class ActiveSpaceSolver {
 
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
+
+    /// Set if we want to save the information to restart the iterative solver
+    void set_restart_dl(bool restart_dl);
 
     /// Return the eigen vectors for a given state
     std::vector<ambit::Tensor> eigenvectors(const StateInfo& state) const;
@@ -263,6 +260,9 @@ class ActiveSpaceSolver {
 
     /// Only print the transitions between states with different gas
     bool gas_diff_only_;
+
+    /// Save information to restart the iterative solver?
+    bool restart_dl_ = false;
 
     /// Unitary matrices for orbital rotations used to compute dipole moments
     /// The issue is dipole integrals are transformed to semi-canonical orbital basis,

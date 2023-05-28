@@ -324,6 +324,9 @@ class ActiveSpaceMethod {
     /// Get model space coefficients
     std::shared_ptr<psi::Matrix> get_PQ_evecs();
 
+    /// Set if we want to save the information to restart the iterative solver
+    void set_restart_dl(bool restart_dl);
+
   protected:
     /// The list of active orbitals (absolute ordering)
     std::vector<size_t> active_mo_;
@@ -366,6 +369,9 @@ class ActiveSpaceMethod {
 
     /// Quiet printing
     bool quiet_ = false;
+
+    /// Save information to restart the iterative solver?
+    bool restart_dl_ = false;
 
     /// Eigenvalues
     std::shared_ptr<psi::Vector> evals_;

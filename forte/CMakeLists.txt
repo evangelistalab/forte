@@ -233,6 +233,7 @@ target_link_libraries(_forte PRIVATE psi4::core)
 target_link_libraries(_forte PRIVATE tgt::MathOpenMP)
 #set_target_properties(forte PROPERTIES PREFIX "")
 target_link_libraries(_forte PRIVATE ambit::ambit)
+
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(_forte PRIVATE CheMPS2::chemps2)
     add_definitions(-DHAVE_CHEMPS2)

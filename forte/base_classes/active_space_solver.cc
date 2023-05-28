@@ -89,6 +89,24 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
 
+void ActiveSpaceSolver::set_restart_dl(bool restart_dl) { restart_dl_ = restart_dl; }
+
+void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    as_ints_ = as_ints;
+    for (auto& [state, nroot] : state_nroots_map_) {
+        state_method_map_[state]->set_active_space_integrals(as_ints);
+    }
+}
+
+void ActiveSpaceSolver::set_active_multipole_integrals(
+    std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
+    as_mp_ints_ = as_mp_ints;
+}
+
+const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::state_energies_map() const {
+    return state_energies_map_;
+}
+
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
     state_energies_map_.clear();
     for (const auto& state_nroot : state_nroots_map_) {
@@ -100,6 +118,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
+        method->set_restart_dl(restart_dl_);
         state_method_map_[state] = method;
 
         if (read_initial_guess_) {

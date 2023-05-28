@@ -172,19 +172,22 @@ double FCISolver::compute_energy() {
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
+    dls.set_save_state_at_destruction(restart_dl_);
+
     // Form the diagonal of the Hamiltonian and the initial guess
-    size_t guess_size = 0;
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
-        dls.startup(Hdiag_vec);
-        guess_size = dls.collapse_size();
-        initial_guess_csf(Hdiag_vec, guess_size, dls, sigma_basis);
+        bool loaded_state = dls.startup(Hdiag_vec);
+        if (not loaded_state) {
+            initial_guess_csf(Hdiag_vec, collapse_per_root_, dls, sigma_basis);
+        }
     } else {
         Hdiag.form_H_diagonal(as_ints_);
         Hdiag.copy_to(sigma);
-        dls.startup(sigma);
-        guess_size = dls.collapse_size();
-        initial_guess_det(Hdiag, guess_size, as_ints_, dls, sigma);
+        bool loaded_state = dls.startup(sigma);
+        if (not loaded_state) {
+            initial_guess_det(Hdiag, collapse_per_root_, as_ints_, dls, sigma);
+        }
     }
 
     // Set a variable to track the convergence of the solver
@@ -284,7 +287,7 @@ double FCISolver::compute_energy() {
 
     // Print determinants
     if (print_) {
-        print_solutions(guess_size, b, b_basis, dls);
+        print_solutions(collapse_per_root_, b, b_basis, dls);
     }
 
     // Optionally, test the RDMs

@@ -89,6 +89,8 @@ void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 void ActiveSpaceMethod::set_quiet_mode(bool quiet) { quiet_ = quiet; }
 
+void ActiveSpaceMethod::set_restart_dl(bool restart_dl) { restart_dl_ = restart_dl; }
+
 DeterminantHashVec ActiveSpaceMethod::get_PQ_space() { return final_wfn_; }
 
 std::shared_ptr<psi::Matrix> ActiveSpaceMethod::get_PQ_evecs() { return evecs_; }

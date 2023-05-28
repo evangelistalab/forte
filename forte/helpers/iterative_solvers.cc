@@ -27,11 +27,16 @@
  */
 
 #include <cmath>
+#include <filesystem>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsio/psio.hpp"
+
+#include "base_classes/mo_space_info.h"
 
 #include "helpers/timer.h"
-#include "base_classes/mo_space_info.h"
+#include "helpers/disk_io.h"
+
 #include "helpers/iterative_solvers.h"
 
 #define PRINT_VARS(msg)                                                                            \
@@ -55,7 +60,7 @@ DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), n
     residual_.resize(nroot, 0.0);
 }
 
-void DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
+bool DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     // set space size
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
@@ -82,9 +87,15 @@ void DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     h_diag = std::make_shared<psi::Vector>("h_diag", size_);
 
     h_diag->copy(*diagonal);
+
+    return load_state();
 }
 
-DavidsonLiuSolver::~DavidsonLiuSolver() {}
+DavidsonLiuSolver::~DavidsonLiuSolver() {
+    if (save_state_at_destruction_) {
+        save_state();
+    }
+}
 
 void DavidsonLiuSolver::set_print_level(size_t n) { print_level_ = n; }
 
@@ -99,6 +110,10 @@ double DavidsonLiuSolver::get_r_convergence() const { return r_convergence_; }
 void DavidsonLiuSolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
+
+void DavidsonLiuSolver::set_save_state_at_destruction(bool value) {
+    save_state_at_destruction_ = value;
+}
 
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
@@ -521,9 +536,7 @@ void DavidsonLiuSolver::check_G_hermiticity() {
     double maxnonherm = 0.0;
     for (size_t i = 0; i < basis_size_; ++i) {
         for (size_t j = i + 1; j < basis_size_; ++j) {
-            if (i != j) {
-                maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
-            }
+            maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
         }
     }
     if (maxnonherm > nonhermitian_G_threshold_) {
@@ -533,7 +546,49 @@ void DavidsonLiuSolver::check_G_hermiticity() {
         std::string msg =
             "DavidsonLiuSolver::check_G_hermiticity(): the Hamiltonian in not Hermitian";
         throw std::runtime_error(msg);
+    } else {
+        // symmetrize G just in case
+        for (size_t i = 0; i < basis_size_; ++i) {
+            for (size_t j = i + 1; j < basis_size_; ++j) {
+                auto od = 0.5 * (G->get(i, j) + G->get(j, i));
+                G->set(i, j, od);
+                G->set(j, i, od);
+            }
+        }
     }
+}
+
+void DavidsonLiuSolver::save_state() const {
+    // save the current state of the solver
+    write_psi_matrix("dl.b", *b_, true);
+}
+
+bool DavidsonLiuSolver::load_state() {
+    // restore the state of the solver
+    bool loaded = false;
+    std::filesystem::path filepath = "./dl.b";
+
+    if (not std::filesystem::exists(filepath)) {
+        return false;
+    }
+
+    psi::outfile->Printf("\n  Restoring DL solver from file: %s", filepath.c_str());
+
+    read_psi_matrix("dl.b", *b_);
+
+    S->gemm(false, true, 1.0, b_, b_, 0.0);
+
+    int nnonzero = 0;
+    for (size_t i = 0; i < subspace_size_; i++) {
+        if (std::fabs(S->get(i, i) - 1.0) < orthogonality_threshold_ * 2.0) {
+            nnonzero++;
+        }
+    }
+    basis_size_ += nnonzero;
+
+    outfile->Printf("\n  Restored %d vectors from file.", nnonzero);
+
+    return true;
 }
 
 } // namespace forte

@@ -78,9 +78,17 @@ class FCIVector {
     //    double get(int n);
     //    void plus_equal(double factor,FCIVector& wfn);
     //    void scale(double factor);
+
+    /// @brief Compute the norm of the wave function
+    /// @param power The power of the norm (default 2 = Frobenius norm)
     double norm(double power = 2.0);
-    ////    void normalize_wrt(Determinant& det);
+
+    /// @brief Normalize the wave function
     void normalize();
+
+    /// @brief Compute the dot product of this wave functions with another
+    /// @param wfn The wave function to dot with
+    /// @return The dot product
     double dot(FCIVector& wfn);
     double dot(std::shared_ptr<FCIVector>& wfn);
 
