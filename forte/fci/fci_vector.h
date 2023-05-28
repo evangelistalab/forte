@@ -46,6 +46,7 @@ class ActiveSpaceIntegrals;
 class BinaryGraph;
 class MOSpaceInfo;
 class StringLists;
+class StringAddress;
 
 class FCIVector {
   public:
@@ -146,9 +147,9 @@ class FCIVector {
     std::shared_ptr<StringLists> lists_;
     // Graphs
     /// The alpha string graph
-    std::shared_ptr<BinaryGraph> alfa_graph_;
+    std::shared_ptr<StringAddress> alfa_address_;
     /// The beta string graph
-    std::shared_ptr<BinaryGraph> beta_graph_;
+    std::shared_ptr<StringAddress> beta_address_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
     std::vector<double> opdm_a_;
@@ -229,8 +230,8 @@ class FCIVector {
 #endif // _fci_vector_
 
 ////    DetAddress get_det_address(Determinant& det) {
-////        int sym = alfa_graph_->sym(det.get_alfa_bits());
-////        size_t alfa_string = alfa_graph_->rel_add(det.get_alfa_bits());
-////        size_t beta_string = beta_graph_->rel_add(det.get_beta_bits());
+////        int sym = alfa_address_->sym(det.get_alfa_bits());
+////        size_t alfa_string = alfa_address_->rel_add(det.get_alfa_bits());
+////        size_t beta_string = beta_address_->rel_add(det.get_beta_bits());
 ////        return DetAddress(sym,alfa_string,beta_string);
 ////    };

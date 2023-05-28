@@ -31,6 +31,8 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "fci/string_address.h"
+
 #include "string_lists.h"
 
 namespace forte {
@@ -51,7 +53,7 @@ std::vector<StringSubstitution>& StringLists::get_beta_vvoo_list(size_t p, size_
     return beta_vvoo_list[pqrs_pair];
 }
 
-void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
+void StringLists::make_vvoo_list(std::shared_ptr<StringAddress> graph, VVOOList& list) {
     // Loop over irreps of the pair pq
     for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         int rs_sym = pq_sym;
@@ -83,7 +85,8 @@ void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
     }
 }
 
-void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s) {
+void StringLists::make_vvoo(std::shared_ptr<StringAddress> graph, VVOOList& list, int p, int q,
+                            int r, int s) {
     // Sort pqrs
     int a[4];
     a[0] = s;
@@ -174,7 +177,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                             J[p] = true;
                             sign *= J.slater_sign(p);
                             list[pqrs_pair].push_back(
-                                StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
+                                StringSubstitution(sign, graph->add(I), graph->add(J)));
                         }
                     }
                 }

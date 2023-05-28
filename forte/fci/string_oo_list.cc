@@ -28,6 +28,8 @@
 
 #include <algorithm>
 
+#include "fci/string_address.h"
+
 #include "string_lists.h"
 
 namespace forte {
@@ -59,7 +61,7 @@ std::vector<StringSubstitution>& StringLists::get_beta_oo_list(int pq_sym, size_
  * @param graph graph for numbering the strings generated
  * @param list  the OO list
  */
-void StringLists::make_oo_list(GraphPtr graph, OOList& list) {
+void StringLists::make_oo_list(std::shared_ptr<StringAddress> graph, OOList& list) {
     // Loop over irreps of the pair pq
     for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         size_t max_pq = pairpi_[pq_sym];
@@ -75,7 +77,8 @@ void StringLists::make_oo_list(GraphPtr graph, OOList& list) {
  * @param pq_sym symmetry of the pq pair
  * @param pq     relative PAIRINDEX of the pq pair
  */
-void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
+void StringLists::make_oo(std::shared_ptr<StringAddress> graph, OOList& list, int pq_sym,
+                          size_t pq) {
     int k = graph->nones() - 2;
     if (k >= 0) {
         int p = nn_list[pq_sym][pq].first;
@@ -115,8 +118,7 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
                 J[q] = true;
                 // Add the sting only of irrep(I) is h
                 if (graph->sym(I) == h)
-                    list[pq_pair].push_back(
-                        StringSubstitution(1, graph->rel_add(I), graph->rel_add(J)));
+                    list[pq_pair].push_back(StringSubstitution(1, graph->add(I), graph->add(J)));
             } while (std::next_permutation(b_begin, b_end));
         } // End loop over h
     }

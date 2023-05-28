@@ -103,6 +103,9 @@ using Pair = std::pair<int, int>;
 using PairList = std::vector<Pair>;
 using NNList = std::vector<PairList>;
 
+class StringAddress;
+class StringClass;
+
 /**
  * @brief The StringLists class
  *
@@ -153,8 +156,8 @@ class StringLists {
     /// @return the number of pairs per irrep
     size_t pairpi(int h) const { return pairpi_[h]; }
 
-    GraphPtr alfa_graph() { return alfa_graph_; }
-    GraphPtr beta_graph() { return beta_graph_; }
+    auto alfa_address() { return alfa_address_; }
+    auto beta_address() { return beta_address_; }
     GraphPtr alfa_graph_1h() { return alfa_graph_1h_; }
     GraphPtr beta_graph_1h() { return beta_graph_1h_; }
     GraphPtr alfa_graph_2h() { return alfa_graph_2h_; }
@@ -165,11 +168,11 @@ class StringLists {
     /// @return the alpha string list
     const auto& alfa_strings() const { return alfa_strings_; }
     /// @return the beta string list
-    const auto& beta_strings() const { return beta_string_; }
+    const auto& beta_strings() const { return beta_strings_; }
     /// @return the alpha string in irrep h and index I
     String alfa_str(size_t h, size_t I) const { return alfa_strings_[h][I]; }
     /// @return the beta string in irrep h and index I
-    String beta_str(size_t h, size_t I) const { return beta_string_[h][I]; }
+    String beta_str(size_t h, size_t I) const { return beta_strings_[h][I]; }
     std::vector<Determinant> make_determinants(int symmetry) const;
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);
@@ -227,10 +230,11 @@ class StringLists {
     int print_ = 0;
 
     // String lists
+    std::shared_ptr<StringClass> string_class_;
     /// The alpha strings stored by irrep and address
     StringList alfa_strings_;
     /// The beta strings stored by irrep and address
-    StringList beta_string_;
+    StringList beta_strings_;
     /// The pair string list
     NNList nn_list;
     /// The VO string lists
@@ -252,11 +256,16 @@ class StringLists {
     H3List alfa_3h_list;
     H3List beta_3h_list;
 
+    /// Addressers
+    /// The alpha string address
+    std::shared_ptr<StringAddress> alfa_address_;
+    /// The beta string address
+    std::shared_ptr<StringAddress> beta_address_;
     // Graphs
-    /// The alpha string graph
-    GraphPtr alfa_graph_;
-    /// The beta string graph
-    GraphPtr beta_graph_;
+    // /// The alpha string graph
+    // GraphPtr alfa_graph_;
+    // /// The beta string graph
+    // GraphPtr beta_graph_;
     /// The orbital pair graph
     GraphPtr pair_graph_;
     /// The alpha string graph for N - 1 electrons
@@ -279,7 +288,7 @@ class StringLists {
 
     /// Make strings of for norb bits with ne of these set to 1 and (norb - ne) set to 0
     /// @return strings sorted according to their irrep
-    StringList make_strings(const int norb, const int ne, GraphPtr address);
+    StringList make_fci_strings(const int norb, const int ne);
 
     /// Make the string list
     void make_strings(GraphPtr graph, StringList& list);
@@ -288,23 +297,24 @@ class StringLists {
     void make_pair_list(NNList& list);
 
     /// Make the VO list
-    void make_vo_list(GraphPtr graph, VOList& list);
-    void make_vo(GraphPtr graph, VOList& list, int p, int q);
+    void make_vo_list(std::shared_ptr<StringAddress> graph, VOList& list);
+    void make_vo(std::shared_ptr<StringAddress> graph, VOList& list, int p, int q);
 
     /// Make the OO list
-    void make_oo_list(GraphPtr graph, OOList& list);
-    void make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq);
+    void make_oo_list(std::shared_ptr<StringAddress> graph, OOList& list);
+    void make_oo(std::shared_ptr<StringAddress> graph, OOList& list, int pq_sym, size_t pq);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
-    void make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list);
+    void make_1h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_1h, H1List& list);
     /// Make 2-hole lists (I -> a_p a_q I = sgn J)
-    void make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list);
+    void make_2h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_2h, H2List& list);
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
-    void make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list);
+    void make_3h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_3h, H3List& list);
 
     /// Make the VVOO list
-    void make_vvoo_list(GraphPtr graph, VVOOList& list);
-    void make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s);
+    void make_vvoo_list(std::shared_ptr<StringAddress> graph, VVOOList& list);
+    void make_vvoo(std::shared_ptr<StringAddress> graph, VVOOList& list, int p, int q, int r,
+                   int s);
 };
 } // namespace forte
 

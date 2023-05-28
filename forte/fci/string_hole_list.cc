@@ -38,6 +38,7 @@
 #include <algorithm>
 
 #include "psi4/psi4-dec.h"
+#include "fci/string_address.h"
 
 #include "string_lists.h"
 
@@ -53,7 +54,8 @@ std::vector<H1StringSubstitution>& StringLists::get_beta_1h_list(int h_I, size_t
     return beta_1h_list[I_tuple];
 }
 
-void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) {
+void StringLists::make_1h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_1h,
+                               H1List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     String I, J;
@@ -67,7 +69,7 @@ void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) 
                 I[i] = true; // 1
             do {
                 if (graph->sym(I) == h_I) {
-                    size_t add_I = graph->rel_add(I);
+                    size_t add_I = graph->add(I);
                     for (size_t p = 0; p < ncmo_; ++p) {
                         if (I[p]) {
                             J = I;
@@ -97,7 +99,8 @@ std::vector<H2StringSubstitution>& StringLists::get_beta_2h_list(int h_I, size_t
     return beta_2h_list[I_tuple];
 }
 
-void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) {
+void StringLists::make_2h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_2h,
+                               H2List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     String I, J;
@@ -112,7 +115,7 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) 
                 I[i] = true; // 1
             do {
                 if (graph->sym(I) == h_I) {
-                    size_t add_I = graph->rel_add(I);
+                    size_t add_I = graph->add(I);
                     for (size_t q = 0; q < ncmo_; ++q) {
                         for (size_t p = q + 1; p < ncmo_; ++p) {
                             if (I[q] and I[p]) {
@@ -155,7 +158,8 @@ std::vector<H3StringSubstitution>& StringLists::get_beta_3h_list(int h_I, size_t
  * that is: J = ± a^{+}_p a_q I. p and q are
  * absolute indices and I belongs to the irrep h.
  */
-void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) {
+void StringLists::make_3h_list(std::shared_ptr<StringAddress> graph, GraphPtr graph_3h,
+                               H3List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     String I, J;
@@ -170,7 +174,7 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
                 I[i] = true; // 1
             do {
                 if (graph->sym(I) == h_I) {
-                    size_t add_I = graph->rel_add(I);
+                    size_t add_I = graph->add(I);
 
                     // apply a_r I
                     for (size_t r = 0; r < ncmo_; ++r) {

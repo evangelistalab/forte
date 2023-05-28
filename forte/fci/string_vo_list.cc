@@ -40,6 +40,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "fci/string_address.h"
 #include "string_lists.h"
 
 namespace forte {
@@ -66,7 +67,7 @@ std::vector<StringSubstitution>& StringLists::get_beta_vo_list(size_t p, size_t 
     return beta_vo_list[pq_pair];
 }
 
-void StringLists::make_vo_list(GraphPtr graph, VOList& list) {
+void StringLists::make_vo_list(std::shared_ptr<StringAddress> graph, VOList& list) {
     // Loop over irreps of the pair pq
     for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         // Loop over irreps of p
@@ -88,7 +89,7 @@ void StringLists::make_vo_list(GraphPtr graph, VOList& list) {
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
+void StringLists::make_vo(std::shared_ptr<StringAddress> graph, VOList& list, int p, int q) {
     int n = graph->nbits() - 1 - (p == q ? 0 : 1);
     int k = graph->nones() - 1;
     std::vector<int8_t> b(n); // vector<int8_t> is fast to generate the permutations
@@ -131,8 +132,7 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 
                 // Add the sting only of irrep(I) is h
                 if (graph->sym(I) == h)
-                    list[pq_pair].push_back(
-                        StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
+                    list[pq_pair].push_back(StringSubstitution(sign, graph->add(I), graph->add(J)));
             } while (std::next_permutation(b_begin, b_end));
 
         } // End loop over h

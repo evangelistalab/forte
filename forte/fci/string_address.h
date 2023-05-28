@@ -35,7 +35,6 @@
 #include "sparse_ci/determinant.h"
 
 namespace forte {
-
 /**
  * @brief The StringAddress class
  * This class computes the address of a string
@@ -44,7 +43,10 @@ class StringAddress {
   public:
     // ==> Class Constructor and Destructor <==
     /// @brief Default constructor
-    StringAddress(const std::vector<std::vector<String>>& strings);
+    /// @param strings a vector of vectors of strings.
+    /// Each vector collects the strings of a given symmetry
+    StringAddress(int nmo, int ne, const std::vector<std::vector<String>>& strings);
+
     /// @brief Default destructor
     ~StringAddress() = default;
 
@@ -57,6 +59,10 @@ class StringAddress {
     int sym(const String& s) const;
     /// @brief Return the number of strings in an irrep
     size_t strpi(int h) const;
+    /// @brief Return the number of bits in the string
+    int nbits() const { return nbits_; }
+    /// @brief Return the number of 1s in the string
+    int nones() const { return nones_; }
 
   private:
     // ==> Class Data <==
@@ -68,7 +74,26 @@ class StringAddress {
     std::vector<size_t> strpi_;
     /// Map from string to address and irrep
     std::unordered_map<String, std::pair<int32_t, int32_t>, String::Hash> address_;
+    int nbits_; // number of digits
+    int nones_; // number of 1s
 };
+
+enum class StringClassType { FCI, GASCI };
+
+class StringClass {
+  public:
+    StringClass(std::vector<int> mopi, StringClassType type);
+
+    size_t symmetry(const String& s) const;
+
+    size_t nclasses() const;
+
+  private:
+    StringClassType type_;
+    size_t nirrep_;
+    std::vector<int> mo_sym_;
+};
+
 } // namespace forte
 
 #endif // _string_address_h_
