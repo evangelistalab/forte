@@ -79,6 +79,12 @@ void FCISolver::set_spin_adapt_full_preconditioner(bool value) {
 void FCISolver::startup() {
     // Create the string lists
     lists_ = std::make_shared<StringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
+    outfile->Printf("\n  @KM-TEST: active_dim_.sum(): %zu", active_dim_.sum());
+    outfile->Printf("\n  @KM-TEST: lists_->ncmo(): %zu", lists_->ncmo());
+    outfile->Printf("\n  @KM-TEST: mo_space_info_-> ACTIVE, RESTRICTED_DOCC, CORRELATED \n");
+    mo_space_info_->dimension("ACTIVE").print();
+    mo_space_info_->dimension("RESTRICTED_DOCC").print();
+    mo_space_info_->dimension("CORRELATED").print();
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h) {

@@ -19,6 +19,8 @@ set {
 set forte {
   active_space_solver fci
   ci_spin_adapt      true
+  restricted_docc    [1,0,0,0,0,0,0,0]
+  active	     [2,0,1,1,0,2,1,1]
 }
 
 energy('forte')
