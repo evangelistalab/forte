@@ -139,9 +139,11 @@ class SparseCISolver {
     void set_num_vecs(size_t value);
 
   private:
-    std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
-    initial_guess(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
-                  int nroot, int multiplicity);
+    /// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
+    void initial_guess_det(const DeterminantHashVec& space,
+                           std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
+                           DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> b, int nroot,
+                           int multiplicity);
 
     bool davidson_liu_solver(const DeterminantHashVec& space,
                              std::shared_ptr<SigmaVector> sigma_vector,

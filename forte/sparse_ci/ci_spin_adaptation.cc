@@ -93,12 +93,17 @@ double overlap(int N, const String& spin_coupling, const String& det_occ) {
 // SpinAdapter class
 
 SpinAdapter::SpinAdapter(int twoS, int twoMs, int norb)
-    : twoS_(twoS), twoMs_(twoMs), norb_(norb), N_ncsf_(norb, 0), N_to_det_occupations_(norb),
-      N_to_overlaps_(norb), N_to_noverlaps_(norb) {}
+    : twoS_(twoS), twoMs_(twoMs), norb_(norb++), N_ncsf_(norb++, 0), N_to_det_occupations_(norb++),
+      N_to_overlaps_(norb++), N_to_noverlaps_(norb++) {}
 
 size_t SpinAdapter::ncsf() const { return ncsf_; }
 
 size_t SpinAdapter::ndet() const { return ndet_; }
+
+const std::vector<std::string> SpinAdapter::s2_labels(
+    {"singlet", "doublet", "triplet", "quartet", "quintet", "sextet", "septet", "octet",
+     "nonet",   "decet",   "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+     "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"});
 
 void SpinAdapter::det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C,
                                  std::shared_ptr<psi::Vector>& csf_C) {
@@ -211,14 +216,10 @@ void SpinAdapter::prepare_couplings(const std::vector<Determinant>& dets) {
     ncsf_ = 0;
     ncoupling_ = 0;
     for (const auto& conf : confs_) {
-        psi::outfile->Printf("\n  @KM-LOOP confs_.size(): %zu", confs_.size());
         if (conf.count_socc() >= twoS_) {
-            psi::outfile->Printf("\n  @KM-LOOP BEFORE");
             conf_to_csfs(conf, det_hash);
-            psi::outfile->Printf("\n  @KM-LOOP AFTER");
         }
     }
-    psi::outfile->Printf("\n  @KM-LOOP FINISHED LOOP \n");
     psi::outfile->Printf("    Timing for finding the CSFs:           %10.4f\n", t2.get());
 
     // check that the number of couplings and CSFs is correct
@@ -240,39 +241,26 @@ void SpinAdapter::conf_to_csfs(const Configuration& conf, DeterminantHashVec& de
     Determinant det;
 
     size_t temp = ncoupling_;
-    psi::outfile->Printf("\n  @KM-1");
-    psi::outfile->Printf("\n  @KM-------->>>>: N : %d", N);
-    psi::outfile->Printf("\n  @KM-------->>>>: N_to_overlaps_.size() : %d", N_to_overlaps_.size());
-    psi::outfile->Printf("\n  @KM>>>>: N_to_overlaps_[0].size() : %d", N_to_overlaps_[0].size());
-    psi::outfile->Printf("\n  @KM>>>>: N_to_overlaps_[1].size() : %d", N_to_overlaps_[1].size());
-    psi::outfile->Printf("\n  @KM>>>>: N_to_overlaps_[2].size() : %d", N_to_overlaps_[2].size());
-    psi::outfile->Printf("\n  @KM>>>>: N_to_overlaps_[3].size() : %d", N_to_overlaps_[3].size());
-    psi::outfile->Printf("\n  @KM>>>>: N_to_overlaps_[4].size() : %d", N_to_overlaps_[4].size());
     for (auto [i, j, o] : N_to_overlaps_[N]) {
         const auto& det_occ = determinant_occ[j];
         det.set_str(docc, docc);
         // keep track of the sign of the singly occupied orbitals
-        psi::outfile->Printf("\n  @KM-----1.BEF");
         for (int i = N - 1; i >= 0; i--) {
-            psi::outfile->Printf("\n  @KM j: %zu", j);
             if (det_occ.get_bit(i)) {
                 o *= det.create_beta_bit(socc_vec[i]);
             } else {
                 o *= det.create_alfa_bit(socc_vec[i]);
             }
         }
-        psi::outfile->Printf("\n  @KM-----1.AFT");
         csf_to_det_coeff_[ncoupling_].first = det_hash.get_idx(det);
         csf_to_det_coeff_[ncoupling_].second = o;
         ncoupling_ += 1;
     }
-    psi::outfile->Printf("\n  @KM-2");
     for (const auto& n : noverlaps) {
         temp += n;
         ncsf_ += 1;
         csf_to_det_bounds_[ncsf_] = temp;
     }
-    psi::outfile->Printf("\n  @KM-3");
 }
 
 auto SpinAdapter::make_spin_couplings(int N, int twoS) -> std::vector<String> {

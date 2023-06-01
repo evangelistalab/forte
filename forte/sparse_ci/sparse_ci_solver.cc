@@ -361,10 +361,11 @@ SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
     return H;
 }
 
-std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
-SparseCISolver::initial_guess(const DeterminantHashVec& space,
-                              std::shared_ptr<SigmaVector> sigma_vector, int nroot,
-                              int multiplicity) {
+/// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
+void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
+                                       std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
+                                       DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> b,
+                                       int nroot, int multiplicity) {
     size_t ndets = space.size();
     size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_, ndets);
     std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>> guess;
@@ -506,14 +507,79 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
         }
     }
     outfile->Printf("\n  ========================");
-    return guess;
-}
 
-/// TODO: make s2_labels_4_SparseCI global, and remove it from sparse_ci_solver.cc and fci_solver.cc
-std::vector<std::string> s2_labels_4_SparseCI(
-    {"singlet", "doublet", "triplet", "quartet", "quintet", "sextet", "septet", "octet",
-     "nonet",   "decet",   "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
-     "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"});
+    double guess_max_energy = -1.0e10;
+
+    if (set_guess_) {
+        // Use previous solution as guess
+        if (print_details_)
+            outfile->Printf("\n  Adding %zu guess vectors by user", guess_.size());
+        for (const auto& guess_root : guess_) {
+            b->zero();
+            for (size_t I = 0, max_I = guess_root.size(); I < max_I; ++I) {
+                b->set(guess_root[I].first, guess_root[I].second);
+            }
+            double norm = sqrt(1.0 / b->norm());
+            b->scale(norm);
+            dls.add_guess(b);
+        }
+    } else {
+        // Use the initial guess. Here we sort out the roots of correct multiplicity
+        std::vector<int> guess_list;
+        for (size_t g = 0; g < guess.size(); ++g) {
+            if (std::get<0>(guess[g]) == multiplicity)
+                guess_list.push_back(g);
+        }
+
+        // number of guess to be used
+        size_t nguess = std::min(guess_list.size(), guess_size);
+
+        if (nguess == 0) {
+            throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
+                                    "requested multiplicity.\n\n");
+        }
+
+        for (size_t n = 0; n < nguess; ++n) {
+            b->zero();
+            for (auto& guess_vec_info : std::get<2>(guess[guess_list[n]])) {
+                b->set(guess_vec_info.first, guess_vec_info.second);
+            }
+            int guess_multiplicity = std::get<0>(guess[guess_list[n]]);
+            double guess_energy = std::get<1>(guess[guess_list[n]]);
+
+            if (print_details_)
+                outfile->Printf("\n  Adding guess %-3d      2S+1 = %-3d  E = %.6f", n,
+                                guess_multiplicity, guess_energy);
+            dls.add_guess(b);
+            guess_max_energy = std::max(guess_max_energy, guess_energy);
+        }
+    }
+
+    std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
+
+    if (spin_project_) {
+        // Prepare a list of bad roots to project out and pass them to the solver
+        bad_roots.clear();
+        size_t rejected = 0;
+        for (auto& g : guess) {
+            int guess_multiplicity = std::get<0>(g);
+            double guess_energy = std::get<1>(g);
+            // project out the guess with differnt multiplicity and energy lower than the good
+            // guesses
+            if ((guess_multiplicity != multiplicity) and (guess_energy <= guess_max_energy)) {
+                outfile->Printf("\n  Projecting out guess  2S+1 = %-3d  E = %.6f",
+                                guess_multiplicity, guess_energy);
+
+                bad_roots.push_back(std::get<2>(g));
+                rejected += 1;
+            }
+        }
+        outfile->Printf("\n\n  Projecting out %zu solutions", rejected);
+        dls.set_project_out(bad_roots);
+    } else {
+        outfile->Printf("\n\n  Projecting out no solutions");
+    }
+}
 
 void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
                                        DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp,
@@ -560,7 +626,7 @@ void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t
         psi::outfile->Printf("\n    CSF             Energy     <S^2>   Spin");
         psi::outfile->Printf("\n  ---------------------------------------------");
         double S2_target = 0.25 * (multiplicity - 1) * (multiplicity + 1);
-        auto label = s2_labels_4_SparseCI[multiplicity - 1];
+        auto label = spin_adapter_->s2_labels[multiplicity - 1];
         for (size_t g = 0; g < nguess; ++g) {
             const auto& [e, i] = lowest_energy[g];
             auto str =
@@ -621,7 +687,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     // Create the spin adapter
     if (spin_adapt_) {
-        /// TODO: mo_space_info_->size("CORRELATED"); //  sigma_vector->as_ints()->nmo();
         auto nmo = sigma_vector->as_ints()->nmo();
         outfile->Printf("\n  @KM-TEST: nmo: %zu", nmo);
         auto twice_ms = space[0].count_alfa() - space[0].count_beta();
@@ -653,7 +718,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     }
 
     // Form the diagonal of the Hamiltonian and the initial guess
-    std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
     size_t guess_size = 0;
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(sigma_vector->as_ints(), spin_adapter_);
@@ -666,80 +730,9 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         sigma_vector->get_diagonal(*sigma);
         dls.startup(sigma);
         guess_size = std::min(nvec_, dls.collapse_size());
-        // generate a set of initial guesses
-        auto guess = initial_guess(space, sigma_vector, nroot, multiplicity);
-
-        double guess_max_energy = -1.0e10;
-
+        // generate a set of initial guesses removed: auto guess =
+        initial_guess_det(space, sigma_vector, guess_size, dls, b, nroot, multiplicity);
         outfile->Printf("\n\n  Setting initial guess and roots to project");
-        /// TODO: Move the rest of the code in this 'else' condition scope to initial_guess method
-        if (set_guess_) {
-            // Use previous solution as guess
-            if (print_details_)
-                outfile->Printf("\n  Adding %zu guess vectors by user", guess_.size());
-            for (const auto& guess_root : guess_) {
-                b->zero();
-                for (size_t I = 0, max_I = guess_root.size(); I < max_I; ++I) {
-                    b->set(guess_root[I].first, guess_root[I].second);
-                }
-                double norm = sqrt(1.0 / b->norm());
-                b->scale(norm);
-                dls.add_guess(b);
-            }
-        } else {
-            // Use the initial guess. Here we sort out the roots of correct multiplicity
-            std::vector<int> guess_list;
-            for (size_t g = 0; g < guess.size(); ++g) {
-                if (std::get<0>(guess[g]) == multiplicity)
-                    guess_list.push_back(g);
-            }
-
-            // number of guess to be used
-            size_t nguess = std::min(guess_list.size(), guess_size);
-
-            if (nguess == 0) {
-                throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
-                                        "requested multiplicity.\n\n");
-            }
-
-            for (size_t n = 0; n < nguess; ++n) {
-                b->zero();
-                for (auto& guess_vec_info : std::get<2>(guess[guess_list[n]])) {
-                    b->set(guess_vec_info.first, guess_vec_info.second);
-                }
-                int guess_multiplicity = std::get<0>(guess[guess_list[n]]);
-                double guess_energy = std::get<1>(guess[guess_list[n]]);
-
-                if (print_details_)
-                    outfile->Printf("\n  Adding guess %-3d      2S+1 = %-3d  E = %.6f", n,
-                                    guess_multiplicity, guess_energy);
-                dls.add_guess(b);
-                guess_max_energy = std::max(guess_max_energy, guess_energy);
-            }
-        }
-
-        if (spin_project_) {
-            // Prepare a list of bad roots to project out and pass them to the solver
-            bad_roots.clear();
-            size_t rejected = 0;
-            for (auto& g : guess) {
-                int guess_multiplicity = std::get<0>(g);
-                double guess_energy = std::get<1>(g);
-                // project out the guess with differnt multiplicity and energy lower than the good
-                // guesses
-                if ((guess_multiplicity != multiplicity) and (guess_energy <= guess_max_energy)) {
-                    outfile->Printf("\n  Projecting out guess  2S+1 = %-3d  E = %.6f",
-                                    guess_multiplicity, guess_energy);
-
-                    bad_roots.push_back(std::get<2>(g));
-                    rejected += 1;
-                }
-            }
-            outfile->Printf("\n\n  Projecting out %zu solutions", rejected);
-            dls.set_project_out(bad_roots);
-        } else {
-            outfile->Printf("\n\n  Projecting out no solutions");
-        }
     }
 
     // Set a variable to track the convergence of the solver

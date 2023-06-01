@@ -106,6 +106,8 @@ class SpinAdapter {
     /// @brief Return the number of determinants
     size_t ndet() const;
 
+    static const std::vector<std::string> s2_labels;
+
     /// @brief An const interator for the expansion coefficients of a CSF in the determinant
     /// basis
     class const_iterator {
