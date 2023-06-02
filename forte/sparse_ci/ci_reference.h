@@ -100,9 +100,6 @@ class CI_Reference {
     /// The number of used GAS
     size_t gas_num_;
 
-    /// The configuration index for the aufbau determinant under GAS
-    size_t gas_aufbau_config_;
-
     /// All the possible alpha and beta electron occupations of each GAS
     /// GAS1_A, GAS1_B, GAS2_A, .... GAS6_B (12 elements)
     std::vector<std::vector<int>> gas_electrons_;
@@ -158,7 +155,7 @@ class CI_Reference {
     void build_gas_reference(std::vector<Determinant>& ref_space);
 
     /// Build GAS-CIS/CID/CISD reference
-    void build_gas_ci_reference(std::vector<Determinant>& ref_space, bool include_rhf = true);
+    void build_gas_ci_reference(std::vector<Determinant>& ref_space);
 
     /// Build single lowest energy state
     void build_gas_single(std::vector<Determinant>& ref_space);

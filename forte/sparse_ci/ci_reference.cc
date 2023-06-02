@@ -106,6 +106,9 @@ void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
     } else if (ref_type_ == "GAS_SINGLE") {
         // Low(est) energy one in GAS
         build_gas_single(ref_space);
+    } else if (ref_type_ == "GAS_CIS" or ref_type_ == "GAS_CISD" or ref_type_ == "GAS_CID") {
+        build_gas_single(ref_space);
+        build_gas_ci_reference(ref_space);
     } else {
         build_ci_reference(ref_space);
     }
@@ -789,11 +792,9 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     print_h2("Building GAS Determinants");
     for (size_t config = 0, size = gas_electrons_.size(); config < size; ++config) {
         size_t max_sub_orb = 0;
-        gas_aufbau_config_ = 0;
 
         // Make sure only one ref is selected.
         if (!ref_space.empty()) {
-            gas_aufbau_config_ = config;
             break;
         }
 
@@ -858,7 +859,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                 double e = std::get<0>(a) + std::get<0>(b);
                 double e_check = std::get<0>(a) * std::get<0>(b);
                 Determinant det(std::get<1>(a), std::get<1>(b));
-                if (e < e_min and (nalpha_ + nbeta_ - 2 * det.npair() + 1) >= multipli city_ and
+                if (e < e_min and (nalpha_ + nbeta_ - 2 * det.npair() + 1) >= multiplicity_ and
                     e_check != 0) {
                     det_min = det;
                     e_min = e;
@@ -867,11 +868,10 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
             if (e_min != 0.0) {
                 ref_space.push_back(det_min);
                 outfile->Printf("\n    Reference determinant: %s", str(det_min, nact_).c_str());
-                gas_aufbau_config_ = config;
                 break;
             }
             sub_orb++;
-        } while ((sub_orb < max_sub_orb) && (ref_space.size() != 0));
+        } while ((sub_orb < max_sub_orb) && (ref_space.empty()));
     }
 }
 
@@ -1002,7 +1002,7 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
             "The generation of the aufbau determinant under GAS is problematic!");
     }
 
-    const Determinant& det(ref_space[0]);
+    const Determinant det(ref_space[0]);
 
     // relative indices within active
     std::vector<std::vector<size_t>> rel_gas_mos;
@@ -1042,12 +1042,22 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
         gas_vir_b.push_back(vir_b);
     }
 
+    std::vector<int> gas_configuration;
+    for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+        if (gas_count < gas_num_) {
+            gas_configuration.push_back(gas_occ_a[gas_count].size());
+            gas_configuration.push_back(gas_occ_b[gas_count].size());
+        } else {
+            gas_configuration.push_back(0);
+            gas_configuration.push_back(0);
+        }
+    }
+
     if ((ref_type_ == "GAS_CIS") or (ref_type_ == "GAS_CISD")) {
         auto gas_single_criterion_ = gas_single_criterion();
-        for (auto& gas_count : gas_single_criterion_.first[gas_aufbau_config_]) {
+        for (auto& gas_count : gas_single_criterion_.first[gas_configuration]) {
             size_t gas_count_1 = gas_count.first;
             size_t gas_count_2 = gas_count.second;
-            //                outfile->Printf("\n Allowed a %d %d", gas_count_1, gas_count_2);
             auto& occ = gas_occ_a[gas_count_1];
             auto& vir = gas_vir_a[gas_count_2];
             for (size_t ii : occ) {
@@ -1062,10 +1072,9 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
             }
         }
 
-        for (auto& gas_count : gas_single_criterion_.second[gas_aufbau_config_]) {
+        for (auto& gas_count : gas_single_criterion_.second[gas_configuration]) {
             size_t gas_count_1 = gas_count.first;
             size_t gas_count_2 = gas_count.second;
-            //                outfile->Printf("\n Allowed b %d %d", gas_count_1, gas_count_2);
             auto& occ = gas_occ_b[gas_count_1];
             auto& vir = gas_vir_b[gas_count_2];
             for (size_t ii : occ) {
@@ -1084,7 +1093,7 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
     if ((ref_type_ == "GAS_CID") or (ref_type_ == "GAS_CISD")) {
         auto gas_double_criterion_ = gas_double_criterion();
         // Generate aa excitations
-        for (auto& gas_count : std::get<0>(gas_double_criterion_)[gas_aufbau_config_]) {
+        for (auto& gas_count : std::get<0>(gas_double_criterion_)[gas_configuration]) {
 
             size_t gas_count_1 = std::get<0>(gas_count);
             size_t gas_count_2 = std::get<1>(gas_count);
@@ -1094,9 +1103,6 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
             auto& occ2 = gas_occ_a[gas_count_2];
             auto& vir1 = gas_vir_a[gas_count_3];
             auto& vir2 = gas_vir_a[gas_count_4];
-            //                outfile->Printf("\n Allowed aa %d %d %d %d", gas_count_1,
-            //                gas_count_2, gas_count_3,
-            //                                gas_count_4);
             for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                 size_t ii = occ1[i];
                 size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
@@ -1133,9 +1139,6 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
             auto& occ2 = gas_occ_b[gas_count_2];
             auto& vir1 = gas_vir_a[gas_count_3];
             auto& vir2 = gas_vir_b[gas_count_4];
-            //                outfile->Printf("\n Allowed ab %d %d %d %d", gas_count_1,
-            //                gas_count_2, gas_count_3,
-            //                                gas_count_4);
             for (size_t ii : occ1) {
                 for (size_t jj : occ2) {
                     for (size_t aa : vir1) {
@@ -1144,9 +1147,9 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
                                  mo_symmetry_[bb]) == 0) {
                                 Determinant new_det(det);
                                 new_det.set_alfa_bit(ii, false);
-                                new_det.set_alfa_bit(jj, false);
+                                new_det.set_beta_bit(jj, false);
                                 new_det.set_alfa_bit(aa, true);
-                                new_det.set_alfa_bit(bb, true);
+                                new_det.set_beta_bit(bb, true);
                                 ref_space.push_back(new_det);
                             }
                         }
@@ -1166,9 +1169,6 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
             auto& occ2 = gas_occ_b[gas_count_2];
             auto& vir1 = gas_vir_b[gas_count_3];
             auto& vir2 = gas_vir_b[gas_count_4];
-            //                outfile->Printf("\n Allowed bb %d %d %d %d", gas_count_1,
-            //                gas_count_2, gas_count_3,
-            //                                gas_count_4);
             for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                 size_t ii = occ1[i];
                 size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
@@ -1182,10 +1182,10 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
                                 Determinant new_det(det);
-                                new_det.set_alfa_bit(ii, false);
-                                new_det.set_alfa_bit(jj, false);
-                                new_det.set_alfa_bit(aa, true);
-                                new_det.set_alfa_bit(bb, true);
+                                new_det.set_beta_bit(ii, false);
+                                new_det.set_beta_bit(jj, false);
+                                new_det.set_beta_bit(aa, true);
+                                new_det.set_beta_bit(bb, true);
                                 ref_space.push_back(new_det);
                             }
                         }
@@ -1194,9 +1194,10 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
             }
         }
     }
-    for (auto& gas_det : ref_space) {
-        outfile->Printf("\n    Added GAS determinant: %s", str(gas_det, nact_).c_str());
-    }
+    // print_h2("GAS Determinants");
+    // for (const auto& det : ref_space) {
+    //     outfile->Printf("\n    %s", str(det, nact_).c_str());
+    // }
 }
 
 std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std::string type) {

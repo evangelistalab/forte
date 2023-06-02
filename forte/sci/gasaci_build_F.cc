@@ -73,7 +73,7 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                 std::vector<int> occ_b;
                 std::vector<int> vir_a;
                 std::vector<int> vir_b;
-                for (const auto& p : relative_gas_mo_[gas_count]) {
+                for (const auto& p : rel_gas_mos[gas_count]) {
                     if (det.get_alfa_bit(p)) {
                         occ_a.push_back(p);
                     } else {
@@ -347,7 +347,7 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
                 std::vector<int> occ_b;
                 std::vector<int> vir_a;
                 std::vector<int> vir_b;
-                for (const auto& p : relative_gas_mo_[gas_count]) {
+                for (const auto& p : rel_gas_mos[gas_count]) {
                     if (det.get_alfa_bit(p)) {
                         occ_a.push_back(p);
                     } else {
@@ -637,7 +637,7 @@ void AdaptiveCI::get_gas_excited_determinants_core(
                 std::vector<int> occ_b;
                 std::vector<int> vir_a;
                 std::vector<int> vir_b;
-                for (const auto& p : relative_gas_mo_[gas_count]) {
+                for (const auto& p : rel_gas_mos[gas_count]) {
                     if (det.get_alfa_bit(p)) {
                         occ_a.push_back(p);
                     } else {
