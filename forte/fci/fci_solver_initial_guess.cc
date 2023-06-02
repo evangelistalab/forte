@@ -38,6 +38,7 @@
 #include "string_lists.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
+#include "string_address.h"
 
 namespace forte {
 
@@ -83,9 +84,9 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
                 Ia[j] = bsdets[num_dets + i].get_alfa_bit(j);
                 Ib[j] = bsdets[num_dets + i].get_beta_bit(j);
             }
-            h = lists_->alfa_graph()->sym(Ia);
-            add_Ia = lists_->alfa_graph()->rel_add(Ia);
-            add_Ib = lists_->beta_graph()->rel_add(Ib);
+            h = lists_->alfa_address()->sym(Ia);
+            add_Ia = lists_->alfa_address()->add(Ia);
+            add_Ib = lists_->beta_address()->add(Ib);
             std::tuple<double, size_t, size_t, size_t> d(0.0, h, add_Ia, add_Ib);
             dets.push_back(d);
         }
