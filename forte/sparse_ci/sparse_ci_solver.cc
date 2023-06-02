@@ -688,7 +688,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     // Create the spin adapter
     if (spin_adapt_) {
         auto nmo = sigma_vector->as_ints()->nmo();
-        outfile->Printf("\n  @KM-TEST: nmo: %zu", nmo);
         auto twice_ms = space[0].count_alfa() - space[0].count_beta();
         spin_adapter_ = std::make_shared<SpinAdapter>(multiplicity - 1, twice_ms, nmo);
         dets_ = space.determinants();
@@ -825,14 +824,9 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         std::vector<double> c(sigma_vector->size());
         if (spin_adapt_) {
             spin_adapter_->csf_C_to_det_C(b_basis, b);
-            outfile->Printf("\n  @KM-TEST: r-------: %zu", r);
-            outfile->Printf("\n  @KM-TEST: b");
-            b->print();
             for (size_t I = 0; I < fci_size; ++I) {
                 Eigenvectors->set(I, r, b->get(I));
-                outfile->Printf("\n  @KM-TEST: I: %zu", I);
                 c[I] = b->get(I);
-                outfile->Printf("\n  @KM-TEST: C[I] = evecs->get(r, I): %zu", c[I]);
             }
         } else {
             b = b_basis;
