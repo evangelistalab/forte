@@ -502,8 +502,6 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets,
 void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs,
                                    int nroot) {
     std::string state_label;
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
-                                        "sextet", "septet", "octet", "nonet", "decatet"});
 
     //    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
 
@@ -523,7 +521,7 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<ps
                                  tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
                                  str(tmp.get_det(I), nact_).c_str());
         }
-        //        state_label = s2_labels[std::round(spins[n].first * 2.0)];
+        //        state_label = s2_label(std::round(spins[n].first * 2.0));
         //        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f,
         //        %s", n,
         //                             spins[n].first, spins[n].second, state_label.c_str());

@@ -93,17 +93,12 @@ double overlap(int N, const String& spin_coupling, const String& det_occ) {
 // SpinAdapter class
 
 SpinAdapter::SpinAdapter(int twoS, int twoMs, int norb)
-    : twoS_(twoS), twoMs_(twoMs), norb_(norb++), N_ncsf_(norb++, 0), N_to_det_occupations_(norb++),
-      N_to_overlaps_(norb++), N_to_noverlaps_(norb++) {}
+    : twoS_(twoS), twoMs_(twoMs), norb_(norb), N_ncsf_(norb + 1, 0),
+      N_to_det_occupations_(norb + 1), N_to_overlaps_(norb + 1), N_to_noverlaps_(norb + 1) {}
 
 size_t SpinAdapter::ncsf() const { return ncsf_; }
 
 size_t SpinAdapter::ndet() const { return ndet_; }
-
-const std::vector<std::string> SpinAdapter::s2_labels(
-    {"singlet", "doublet", "triplet", "quartet", "quintet", "sextet", "septet", "octet",
-     "nonet",   "decet",   "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
-     "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"});
 
 void SpinAdapter::det_C_to_csf_C(std::shared_ptr<psi::Vector>& det_C,
                                  std::shared_ptr<psi::Vector>& csf_C) {

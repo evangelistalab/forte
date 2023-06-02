@@ -81,6 +81,11 @@ void print_selected_options(const std::string& title,
                             const std::vector<std::pair<std::string, bool>>& info_bool,
                             const std::vector<std::pair<std::string, double>>& info_double,
                             const std::vector<std::pair<std::string, int>>& info_int);
+
+/// @brief Return the label for a spin state
+/// @param twiceS Twice the spin quantum number S (multiplicity - 1)
+const std::string& s2_label(int twiceS);
+
 } // namespace forte
 
 #endif // _helpers_h_

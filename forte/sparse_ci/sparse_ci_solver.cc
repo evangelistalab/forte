@@ -361,7 +361,6 @@ SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
     return H;
 }
 
-/// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
 void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
                                        std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
                                        DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> b,
@@ -626,7 +625,7 @@ void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t
         psi::outfile->Printf("\n    CSF             Energy     <S^2>   Spin");
         psi::outfile->Printf("\n  ---------------------------------------------");
         double S2_target = 0.25 * (multiplicity - 1) * (multiplicity + 1);
-        auto label = spin_adapter_->s2_labels[multiplicity - 1];
+        auto label = s2_label(multiplicity - 1);
         for (size_t g = 0; g < nguess; ++g) {
             const auto& [e, i] = lowest_energy[g];
             auto str =

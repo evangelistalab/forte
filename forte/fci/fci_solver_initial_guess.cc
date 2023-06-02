@@ -127,7 +127,7 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         int SS = std::round(S * 2.0);
         int state_multp = SS + 1;
-        std::string state_label = spin_adapter_->s2_labels[SS];
+        std::string state_label = s2_label(SS);
         table.push_back(boost::str(boost::format("    %3d  %20.12f  %.3f  %s") % r % energy %
                                    std::fabs(S2) % state_label.c_str()));
         // Save states of the desired multiplicity
@@ -242,7 +242,7 @@ void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
         psi::outfile->Printf("\n    CSF             Energy     <S^2>   Spin");
         psi::outfile->Printf("\n  ---------------------------------------------");
         double S2_target = 0.25 * (state().multiplicity() - 1) * (state().multiplicity() + 1);
-        auto label = spin_adapter_->s2_labels[state().multiplicity() - 1];
+        auto label = s2_label(state().multiplicity() - 1);
         for (size_t g = 0; g < nguess; ++g) {
             const auto& [e, i] = lowest_energy[g];
             auto str =
