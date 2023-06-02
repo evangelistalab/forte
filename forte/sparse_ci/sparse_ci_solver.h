@@ -30,6 +30,7 @@
 #define _sparse_ci_h_
 
 #include "sparse_ci/determinant_hashvector.h"
+#include "psi4/libmints/dimension.h"
 
 #define BIGNUM 1E100
 #define MAXIT 100
@@ -44,6 +45,7 @@ namespace forte {
 class SigmaVector;
 class ActiveSpaceIntegrals;
 class SpinAdapter;
+class DavidsonLiuSolver;
 
 /**
  * @brief The SparseCISolver class
@@ -137,9 +139,11 @@ class SparseCISolver {
     void set_num_vecs(size_t value);
 
   private:
-    std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
-    initial_guess(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
-                  int nroot, int multiplicity);
+    /// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
+    void initial_guess_det(const DeterminantHashVec& space,
+                           std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
+                           DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> b, int nroot,
+                           int multiplicity);
 
     bool davidson_liu_solver(const DeterminantHashVec& space,
                              std::shared_ptr<SigmaVector> sigma_vector,
@@ -147,10 +151,27 @@ class SparseCISolver {
                              std::shared_ptr<psi::Matrix> Eigenvectors, int nroot,
                              int multiplicity);
 
+    /// @brief Compute initial guess vectors in the CSF basis
+    /// @param diag The diagonal of the Hamiltonian in the CSF basis
+    /// @param n The number of guess vectors to generate
+    /// @param dls The Davidson-Liu-Solver object
+    /// @param temp A temporary vector of dimension ncfs to store the guess vectors
+    /// @param multiplicity The multiplicity
+    void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n, DavidsonLiuSolver& dls,
+                           std::shared_ptr<psi::Vector> temp, int multiplicity);
+
+    /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
+    /// @param ci_ints The integrals object
+    /// @param spin_adapter The spin adapter object
+    std::shared_ptr<psi::Vector> form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> ci_ints,
+                                                std::shared_ptr<SpinAdapter> spin_adapter);
+
     /// The energy of each state
     std::vector<double> energies_;
     /// The FCI determinant list
     std::vector<Determinant> dets_;
+    /// The number of correlated molecular orbitals per irrep
+    psi::Dimension cmopi_;
     /// The expectation value of S^2 for each state
     std::vector<double> spin_;
     /// A object that handles spin adaptation

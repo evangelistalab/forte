@@ -29,6 +29,7 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+#include "boost/format.hpp"
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -36,6 +37,7 @@
 #include "forte-def.h"
 #include "helpers/iterative_solvers.h"
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 #include "sparse_ci_solver.h"
 #include "ci_spin_adaptation.h"
 #include "sigma_vector_dynamic.h"
@@ -359,10 +361,11 @@ SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
     return H;
 }
 
-std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
-SparseCISolver::initial_guess(const DeterminantHashVec& space,
-                              std::shared_ptr<SigmaVector> sigma_vector, int nroot,
-                              int multiplicity) {
+/// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
+void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
+                                       std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
+                                       DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> b,
+                                       int nroot, int multiplicity) {
     size_t ndets = space.size();
     size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_, ndets);
     std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>> guess;
@@ -504,60 +507,8 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
         }
     }
     outfile->Printf("\n  ========================");
-    return guess;
-}
-
-bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
-                                         std::shared_ptr<SigmaVector> sigma_vector,
-                                         std::shared_ptr<psi::Vector> Eigenvalues,
-                                         std::shared_ptr<psi::Matrix> Eigenvectors, int nroot,
-                                         int multiplicity) {
-    local_timer dl;
-
-    // Create the spin adapter
-    if (spin_adapt_) {
-        auto nmo = sigma_vector->as_ints()->nmo();
-        auto twice_ms = space[0].count_alfa() - space[0].count_beta();
-        spin_adapter_ = std::make_shared<SpinAdapter>(multiplicity - 1, twice_ms, nmo);
-        dets_ = space.determinants();
-        spin_adapter_->prepare_couplings(dets_);
-    }
-
-    // Compute the size of the determinant space and the basis used by the Davidson solver
-    size_t fci_size = sigma_vector->size();
-    size_t basis_size = spin_adapt_ ? spin_adapter_->ncsf() : fci_size;
-
-    DavidsonLiuSolver dls(basis_size, nroot);
-    dls.set_e_convergence(e_convergence_);
-    dls.set_r_convergence(r_convergence_);
-    dls.set_print_level(0);
-
-    // allocate vectors
-    auto b = std::make_shared<psi::Vector>("b", fci_size);
-    auto sigma = std::make_shared<psi::Vector>("sigma", fci_size);
-
-    // Optionally create the vectors that stores the b and sigma vectors in the CSF basis
-    std::shared_ptr<psi::Vector> b_basis = b;
-    std::shared_ptr<psi::Vector> sigma_basis = sigma;
-
-    if (spin_adapt_) {
-        b_basis = std::make_shared<psi::Vector>("b", basis_size);
-        sigma_basis = std::make_shared<psi::Vector>("sigma", basis_size);
-    }
-
-    // get and pass diagonal
-    sigma_vector->get_diagonal(*sigma);
-    dls.startup(sigma);
-
-    std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
-    size_t guess_size = std::min(nvec_, dls.collapse_size());
-
-    // generate a set of initial guesses
-    auto guess = initial_guess(space, sigma_vector, nroot, multiplicity);
 
     double guess_max_energy = -1.0e10;
-
-    outfile->Printf("\n\n  Setting initial guess and roots to project");
 
     if (set_guess_) {
         // Use previous solution as guess
@@ -604,6 +555,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         }
     }
 
+    std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
+
     if (spin_project_) {
         // Prepare a list of bad roots to project out and pass them to the solver
         bad_roots.clear();
@@ -626,7 +579,163 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     } else {
         outfile->Printf("\n\n  Projecting out no solutions");
     }
+}
 
+void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
+                                       DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp,
+                                       int multiplicity) {
+    local_timer t;
+
+    // Get the list of most important CSFs
+    std::vector<std::pair<double, size_t>> lowest_energy(n, std::make_pair(1e100, 0));
+    size_t nfound = 0;
+    const size_t ncsf = spin_adapter_->ncsf();
+    for (size_t i = 0; i < ncsf; ++i) {
+        double e = diag->get(i);
+        if (e < lowest_energy.back().first) {
+            nfound += 1;
+            lowest_energy.back() = std::make_pair(e, i);
+            std::sort(lowest_energy.begin(), lowest_energy.end());
+        }
+    }
+    // number of guess to be used
+    size_t nguess = std::min(nfound, n);
+
+    if (nguess == 0) {
+        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
+                                "multiplicity.\n\n");
+    }
+
+    std::vector<size_t> guess;
+    for (const auto& [e, i] : lowest_energy) {
+        guess.push_back(i);
+    }
+
+    // Set the initial guess
+    for (size_t g = 0; g < nguess; ++g) {
+        const auto& [e, i] = lowest_energy[g];
+        temp->zero();
+        temp->set(i, 1.0);
+        dls.add_guess(temp);
+    }
+
+    if (print_details_) {
+        print_h2("FCI Initial Guess");
+        psi::outfile->Printf("\n  Selected %zu CSF", n);
+        psi::outfile->Printf("\n  ---------------------------------------------");
+        psi::outfile->Printf("\n    CSF             Energy     <S^2>   Spin");
+        psi::outfile->Printf("\n  ---------------------------------------------");
+        double S2_target = 0.25 * (multiplicity - 1) * (multiplicity + 1);
+        auto label = spin_adapter_->s2_labels[multiplicity - 1];
+        for (size_t g = 0; g < nguess; ++g) {
+            const auto& [e, i] = lowest_energy[g];
+            auto str =
+                boost::str(boost::format("  %6d %20.12f  %.3f  %s") % i % e % S2_target % label);
+            psi::outfile->Printf("\n%s", str.c_str());
+        }
+        psi::outfile->Printf("\n  ---------------------------------------------");
+        psi::outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.get());
+    }
+}
+
+std::shared_ptr<psi::Vector>
+SparseCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                               std::shared_ptr<SpinAdapter> spin_adapter) {
+    auto Hdiag_csf = std::make_shared<psi::Vector>(spin_adapter->ncsf());
+    // Compute the diagonal elements of the Hamiltonian in the CSF basis
+    double E0 = fci_ints->nuclear_repulsion_energy() + fci_ints->scalar_energy();
+    // Compute the diagonal elements of the Hamiltonian in the CSF basis
+    if (spin_adapt_full_preconditioner_) {
+        for (size_t i = 0, imax = spin_adapter->ncsf(); i < imax; ++i) {
+            double energy = E0;
+            int I = 0;
+            for (const auto& [det_add_I, c_I] : spin_adapter_->csf(i)) {
+                int J = 0;
+                for (const auto& [det_add_J, c_J] : spin_adapter_->csf(i)) {
+                    if (I == J) {
+                        energy += c_I * c_J * fci_ints->energy(dets_[det_add_I]);
+                    } else if (I < J) {
+                        if (c_I * c_J != 0.0) {
+                            energy += 2.0 * c_I * c_J *
+                                      fci_ints->slater_rules(dets_[det_add_I], dets_[det_add_J]);
+                        }
+                    }
+                    J++;
+                }
+                I++;
+            }
+            Hdiag_csf->set(i, energy);
+        }
+    } else {
+        for (size_t i = 0, imax = spin_adapter->ncsf(); i < imax; ++i) {
+            double energy = E0;
+            for (const auto& [det_add_I, c_I] : spin_adapter_->csf(i)) {
+                energy += c_I * c_I * fci_ints->energy(dets_[det_add_I]);
+            }
+            Hdiag_csf->set(i, energy);
+        }
+    }
+    return Hdiag_csf;
+}
+
+bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
+                                         std::shared_ptr<SigmaVector> sigma_vector,
+                                         std::shared_ptr<psi::Vector> Eigenvalues,
+                                         std::shared_ptr<psi::Matrix> Eigenvectors, int nroot,
+                                         int multiplicity) {
+    local_timer dl;
+
+    // Create the spin adapter
+    if (spin_adapt_) {
+        auto nmo = sigma_vector->as_ints()->nmo();
+        outfile->Printf("\n  @KM-TEST: nmo: %zu", nmo);
+        auto twice_ms = space[0].count_alfa() - space[0].count_beta();
+        spin_adapter_ = std::make_shared<SpinAdapter>(multiplicity - 1, twice_ms, nmo);
+        dets_ = space.determinants();
+        spin_adapter_->prepare_couplings(dets_);
+    }
+
+    // Compute the size of the determinant space and the basis used by the Davidson solver
+    size_t fci_size = sigma_vector->size();
+    size_t basis_size = spin_adapt_ ? spin_adapter_->ncsf() : fci_size;
+
+    DavidsonLiuSolver dls(basis_size, nroot);
+    dls.set_e_convergence(e_convergence_);
+    dls.set_r_convergence(r_convergence_);
+    dls.set_print_level(0);
+
+    // allocate vectors
+    auto b = std::make_shared<psi::Vector>("b", fci_size);
+    auto sigma = std::make_shared<psi::Vector>("sigma", fci_size);
+
+    // Optionally create the vectors that stores the b and sigma vectors in the CSF basis
+    std::shared_ptr<psi::Vector> b_basis = b;
+    std::shared_ptr<psi::Vector> sigma_basis = sigma;
+
+    if (spin_adapt_) {
+        b_basis = std::make_shared<psi::Vector>("b", basis_size);
+        sigma_basis = std::make_shared<psi::Vector>("sigma", basis_size);
+    }
+
+    // Form the diagonal of the Hamiltonian and the initial guess
+    size_t guess_size = 0;
+    if (spin_adapt_) {
+        auto Hdiag_vec = form_Hdiag_csf(sigma_vector->as_ints(), spin_adapter_);
+        dls.startup(Hdiag_vec);
+        guess_size = dls.collapse_size();
+        /// TODO: store multiplicity in a private variable multiplicity_
+        initial_guess_csf(Hdiag_vec, guess_size, dls, sigma_basis, multiplicity);
+    } else {
+        // get and pass diagonal
+        sigma_vector->get_diagonal(*sigma);
+        dls.startup(sigma);
+        guess_size = std::min(nvec_, dls.collapse_size());
+        // generate a set of initial guesses removed: auto guess =
+        initial_guess_det(space, sigma_vector, guess_size, dls, b, nroot, multiplicity);
+        outfile->Printf("\n\n  Setting initial guess and roots to project");
+    }
+
+    // Set a variable to track the convergence of the solver
     SolverStatus converged = SolverStatus::NotConverged;
 
     if (print_details_) {
@@ -644,10 +753,19 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
         bool add_sigma = true;
         do {
-            dls.get_b(b);
-            sigma_vector->compute_sigma(sigma, b);
+            // get the next b vector and compute the sigma vector
+            dls.get_b(b_basis);
+            if (spin_adapt_) {
+                // Compute sigma in the CSF basis and convert it to the determinant basis
+                spin_adapter_->csf_C_to_det_C(b_basis, b);
+                sigma_vector->compute_sigma(sigma, b);
+                spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
+            } else {
+                // Compute sigma in the determinant basis
+                sigma_vector->compute_sigma(sigma_basis, b_basis);
+            }
 
-            add_sigma = dls.add_sigma(sigma);
+            add_sigma = dls.add_sigma(sigma_basis);
         } while (add_sigma);
 
         converged = dls.update();
@@ -691,25 +809,42 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         throw std::runtime_error(msg);
     }
 
+    // Compute final eigenvectors
+
     //    dls.get_results();
+
+    // Copy eigenvalues and eigenvectors from the Davidson-Liu solver
     spin_.clear();
     auto evals = dls.eigenvalues();
     auto evecs = dls.eigenvectors();
+
     for (int r = 0; r < nroot; ++r) {
         Eigenvalues->set(r, evals->get(r));
-        /// TODO: probably change fci_size to basis_size
-        for (size_t I = 0; I < fci_size; ++I) {
-            Eigenvectors->set(I, r, evecs->get(r, I));
-        }
         energies_.push_back(evals->get(r));
+        b_basis = dls.eigenvector(r);
         std::vector<double> c(sigma_vector->size());
-        /// TODO: probably change fci_size to basis_size
-        for (size_t I = 0; I < fci_size; ++I) {
-            c[I] = evecs->get(r, I);
+        if (spin_adapt_) {
+            spin_adapter_->csf_C_to_det_C(b_basis, b);
+            outfile->Printf("\n  @KM-TEST: r-------: %zu", r);
+            outfile->Printf("\n  @KM-TEST: b");
+            b->print();
+            for (size_t I = 0; I < fci_size; ++I) {
+                Eigenvectors->set(I, r, b->get(I));
+                outfile->Printf("\n  @KM-TEST: I: %zu", I);
+                c[I] = b->get(I);
+                outfile->Printf("\n  @KM-TEST: C[I] = evecs->get(r, I): %zu", c[I]);
+            }
+        } else {
+            b = b_basis;
+            for (size_t I = 0; I < fci_size; ++I) {
+                Eigenvectors->set(I, r, evecs->get(r, I));
+                c[I] = evecs->get(r, I);
+            }
         }
         double s2 = sigma_vector->compute_spin(c);
         spin_.push_back(s2);
     }
+
     if (print_details_) {
         outfile->Printf("\n  Davidson-Liu procedure took  %1.6f s", dl.get());
     }
