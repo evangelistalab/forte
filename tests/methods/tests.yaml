@@ -266,6 +266,7 @@ gasci:
       - gasaci-3
    long:
       - gasaci-5
+      - gasaci-6
 gasscf:
    short:
       - gasscf-1
