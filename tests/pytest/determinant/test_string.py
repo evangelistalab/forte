@@ -19,7 +19,7 @@ def test_str_address():
     print("Testing string address")
     strings = [["1100","0011","1111"],[],[],["1010","0101","0001","0010"]]
     strings = [[make_str(s) for s in strings_irrep] for strings_irrep in strings]
-    str_add = forte.StringAddress(strings)
+    str_add = forte.StringAddress(4,2,strings)
     test_strings = [make_str(s) for s in ["1100","0011","1111","1010","0101","0001","0010"]]
     address = [0, 1, 2, 0, 1, 2, 3]
     symmetry = [0, 0, 0, 3, 3, 3, 3]

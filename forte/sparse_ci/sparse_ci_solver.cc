@@ -378,7 +378,7 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     size_t nmo = as_ints->nmo();
 
     for (const Determinant& det : detmap) {
-        smallest.push_back(std::make_pair(as_ints->energy(det), det));
+        smallest.emplace_back(as_ints->energy(det), det);
     }
     std::sort(smallest.begin(), smallest.end());
 

@@ -249,7 +249,7 @@ void export_Determinant(py::module& m) {
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
     py::class_<StringAddress>(m, "StringAddress", "A class to compute the address of a string")
-        .def(py::init<const std::vector<std::vector<String>>&>(),
+        .def(py::init<int, int, const std::vector<std::vector<String>>&>(),
              "Construct a StringAddress object from a list of lists of strings")
         .def("add", &StringAddress::add, "Return the address of a string")
         .def("sym", &StringAddress::sym, "Return the symmetry of a string")
