@@ -60,6 +60,11 @@ void DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
 
+    if (collapse_size_ >= subspace_size_) {
+        throw std::runtime_error(
+            "DavidsonLiuSolver: collapse space size must be smaller than the subspace size.");
+    }
+
     basis_size_ = 0; // start with no vectors
     sigma_size_ = 0; // start with no sigma vectors
     iter_ = 0;
@@ -161,7 +166,7 @@ SolverStatus DavidsonLiuSolver::update() {
     // form and diagonalize mini-matrix
     G->zero();
     G->gemm(false, false, 1.0, b_, sigma_, 0.0);
-    check_G_hermiticity();
+    G->hermitivitize();
     G->diagonalize(alpha, lambda);
 
     bool is_energy_converged = false;
@@ -513,25 +518,6 @@ void DavidsonLiuSolver::check_orthogonality() {
         outfile->Printf("\n  Maximum absolute off-diagonal element of the overlap: %e", maxoffdiag);
         std::string msg =
             "DavidsonLiuSolver::check_orthogonality(): eigenvectors are not orthogonal!";
-        throw std::runtime_error(msg);
-    }
-}
-
-void DavidsonLiuSolver::check_G_hermiticity() {
-    double maxnonherm = 0.0;
-    for (size_t i = 0; i < basis_size_; ++i) {
-        for (size_t j = i + 1; j < basis_size_; ++j) {
-            if (i != j) {
-                maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
-            }
-        }
-    }
-    if (maxnonherm > nonhermitian_G_threshold_) {
-        G->print();
-        outfile->Printf("\n  Maximum absolute off-diagonal element of the Hamiltonian: %e",
-                        maxnonherm);
-        std::string msg =
-            "DavidsonLiuSolver::check_G_hermiticity(): the Hamiltonian in not Hermitian";
         throw std::runtime_error(msg);
     }
 }
