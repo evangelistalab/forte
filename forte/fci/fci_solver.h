@@ -144,8 +144,6 @@ class FCISolver : public ActiveSpaceMethod {
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
-    /// The number of trial guess vectors to generate per root
-    size_t ntrial_per_root_ = 1;
     /// The number of collapse vectors for each root
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
