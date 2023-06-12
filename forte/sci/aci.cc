@@ -568,6 +568,7 @@ void AdaptiveCI::pre_iter_preparation() {
         gas_single_criterion_ = ref.gas_single_criterion();
         gas_double_criterion_ = ref.gas_double_criterion();
         gas_electrons_ = ref.gas_electrons();
+        rel_gas_mos.clear();
         for (size_t gas_count = 0; gas_count < 6; gas_count++) {
             std::string space = "GAS" + std::to_string(gas_count + 1);
             auto abs_mos = mo_space_info_->absolute_mo(space);
