@@ -144,10 +144,13 @@ class FCISolver : public ActiveSpaceMethod {
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
-    /// The number of collapse vectors for each root
+    /// The number of collapse vectors for each root.
+    /// This variable also defines the number of guess vectors (collapse_per_root_ * nroot_)
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
     size_t subspace_per_root_ = 4;
+    /// The number of determinants selected for each guess vector
+    size_t ndets_per_guess_ = 10;
     /// Iterations for FCI
     int fci_iterations_ = 30;
     /// Test the RDMs?
