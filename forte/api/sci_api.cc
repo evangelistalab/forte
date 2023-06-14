@@ -250,7 +250,8 @@ void export_Determinant(py::module& m) {
 
     py::class_<StringAddress>(m, "StringAddress", "A class to compute the address of a string")
         .def(py::init<int, int, const std::vector<std::vector<String>>&>(),
-             "Construct a StringAddress object from a list of lists of strings")
+             "Construct a StringAddress object from a list of lists of strings", "nmo"_a, "ne"_a,
+             "strings"_a)
         .def("add", &StringAddress::add, "Return the address of a string")
         .def("sym", &StringAddress::sym, "Return the symmetry of a string")
         .def("strpi", &StringAddress::strpi, "Return the number of strings per irrep");
