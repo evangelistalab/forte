@@ -55,7 +55,9 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
     double nuclear_repulsion_energy = fci_ints->nuclear_repulsion_energy();
     double scalar_energy = fci_ints->scalar_energy();
 
-    size_t ntrial = n;
+    size_t ndets = diag.size();
+    // number of guess to be used must be at most as large as the number of determinants
+    size_t ntrial = std::min(n * ndets_per_guess_, ndets);
 
     // Get the list of most important determinants
     std::vector<std::tuple<double, size_t, size_t, size_t>> dets = diag.min_elements(ntrial);

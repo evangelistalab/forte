@@ -60,9 +60,11 @@ void DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
 
-    if (collapse_size_ >= subspace_size_) {
-        throw std::runtime_error(
-            "DavidsonLiuSolver: collapse space size must be smaller than the subspace size.");
+    if (collapse_size_ > subspace_size_) {
+        std::string msg =
+            "DavidsonLiuSolver: collapse space size (" + std::to_string(collapse_size_) +
+            ") must be less or equal to subspace size (" + std::to_string(subspace_size_) + ")";
+        throw std::runtime_error(msg);
     }
 
     basis_size_ = 0; // start with no vectors
