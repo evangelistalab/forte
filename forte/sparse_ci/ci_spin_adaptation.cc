@@ -93,8 +93,8 @@ double overlap(int N, const String& spin_coupling, const String& det_occ) {
 // SpinAdapter class
 
 SpinAdapter::SpinAdapter(int twoS, int twoMs, int norb)
-    : twoS_(twoS), twoMs_(twoMs), norb_(norb), N_ncsf_(norb, 0), N_to_det_occupations_(norb),
-      N_to_overlaps_(norb), N_to_noverlaps_(norb) {}
+    : twoS_(twoS), twoMs_(twoMs), norb_(norb), N_ncsf_(norb + 1, 0),
+      N_to_det_occupations_(norb + 1), N_to_overlaps_(norb + 1), N_to_noverlaps_(norb + 1) {}
 
 size_t SpinAdapter::ncsf() const { return ncsf_; }
 
