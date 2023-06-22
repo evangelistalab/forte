@@ -102,30 +102,33 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                     gas_configuration.push_back(0);
                 }
             }
-            //            for (size_t ii = 0; ii < gas_configuration.size(); ii++) {
-            //                outfile->Printf("  %d", gas_configuration[ii]);
-            //            }
-            //            outfile->Printf("\n");
-            // Generate a excitations
-            for (auto& gas_count : gas_single_criterion_.first[gas_configuration]) {
-                size_t gas_count_1 = gas_count.first;
-                size_t gas_count_2 = gas_count.second;
-                //                outfile->Printf("\n Allowed a %d %d", gas_count_1, gas_count_2);
-                auto& occ = gas_occ_a[gas_count_1];
-                auto& vir = gas_vir_a[gas_count_2];
+
+            // Generate excitations
+            for (auto& [gas_count_i, gas_count_a] :
+                 gas_single_criterion_.first[gas_configuration]) {
+
+                // gas_single_criterion_.first stores all allowed i,a for alpha electron transition
+                // from GAS_count_i to GAS_count_a
+                // For example, the current gas_configuration allows an alpha electron from GAS1
+                // to GAS3, then gas_count_i = 0 and gas_count_a = 2 will be contained in the list.
+
+                auto& occ = gas_occ_a[gas_count_i]; // Occupied orbitals for GAS_count_i
+                auto& vir = gas_vir_a[gas_count_a]; // Virtual orbitals for GAS_count_a
+
                 Determinant new_det(det);
+
                 for (size_t ii : occ) {
                     for (size_t aa : vir) {
+
+                        // Check if the symmetry of MOs ii and aa is the same
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                             double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa) * Cp;
+
+                            // Check if the absolute value of HIJ exceeds the screening threshold
                             if (std::abs(HIJ) >= screen_thresh_) {
                                 new_det = det;
                                 new_det.set_alfa_bit(ii, false);
                                 new_det.set_alfa_bit(aa, true);
-                                //                                outfile->Printf("\n a %d %d %f",
-                                //                                ii, aa,
-                                //                                                as_ints_->slater_rules_single_alpha(det,
-                                //                                                ii, aa));
                                 V_hash_t[new_det] += HIJ;
                             }
                         }
@@ -134,17 +137,25 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
             }
 
             // Generate b excitations
-            for (auto& gas_count : gas_single_criterion_.second[gas_configuration]) {
-                size_t gas_count_1 = gas_count.first;
-                size_t gas_count_2 = gas_count.second;
-                //                outfile->Printf("\n Allowed b %d %d", gas_count_1, gas_count_2);
-                auto& occ = gas_occ_b[gas_count_1];
-                auto& vir = gas_vir_b[gas_count_2];
+            for (auto& [gas_count_i, gas_count_a] :
+                 gas_single_criterion_.second[gas_configuration]) {
+
+                // gas_single_criterion_.second stores all allowed i,a for beta electron transition
+                // from GAS_count_i to GAS_count_a
+
+                auto& occ = gas_occ_b[gas_count_i]; // Occupied orbitals for GAS_count_i
+                auto& vir = gas_vir_b[gas_count_a]; // Virtual orbitals for GAS_count_a
+
                 Determinant new_det(det);
+
                 for (size_t ii : occ) {
                     for (size_t aa : vir) {
+
+                        // Check if the symmetry of MOs ii and aa is the same
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                             double HIJ = as_ints_->slater_rules_single_beta(det, ii, aa) * Cp;
+
+                            // Check if the absolute value of HIJ exceeds the screening threshold
                             if (std::abs(HIJ) >= screen_thresh_) {
                                 new_det = det;
                                 new_det.set_beta_bit(ii, false);
@@ -157,32 +168,53 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
             }
 
             // Generate aa excitations
-            for (auto& gas_count : std::get<0>(gas_double_criterion_)[gas_configuration]) {
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<0>(gas_double_criterion_)[gas_configuration]) {
+
+                // The first element of gas_double_criterion_ stores all allowed two alpha electron
+                // transitions from GAS_count_i to GAS_count_a and GAS_count_j to GAS_count_b
+
+                // For example, the current gas_configuration allows two alpha electron transitions
+                // from GAS1 to GAS3 and GAS2 to GAS4, then gas_count_i = 0, gas_count_j = 1,
+                // gas_count_a = 2, and gas_count_b = 3
+
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_a[gas_count_1];
-                auto& occ2 = gas_occ_a[gas_count_2];
-                auto& vir1 = gas_vir_a[gas_count_3];
-                auto& vir2 = gas_vir_a[gas_count_4];
-                //                outfile->Printf("\n Allowed aa %d %d %d %d", gas_count_1,
-                //                gas_count_2, gas_count_3,
-                //                                gas_count_4);
+                auto& occ1 = gas_occ_a[gas_count_i];
+                auto& occ2 = gas_occ_a[gas_count_j];
+                auto& vir1 = gas_vir_a[gas_count_a];
+                auto& vir2 = gas_vir_a[gas_count_b];
+
+                // Loop over occupied orbitals occ1
                 for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                     size_t ii = occ1[i];
-                    size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
+
+                    // Determine the starting index for the inner loop based on gas_count_i and
+                    // gas_count_j
+                    size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
+
+                    // Loop over occupied orbitals occ2
                     for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
                         size_t jj = occ2[j];
+
+                        // Loop over virtual orbitals vir1
                         for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
                             size_t aa = vir1[a];
-                            size_t bstart = (gas_count_3 == gas_count_4 ? a + 1 : 0);
+
+                            // Determine the starting index for the innermost loop based on
+                            // gas_count_a and gas_count_b
+                            size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
+
+                            // Loop over virtual orbitals vir2
                             for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
                                 size_t bb = vir2[b];
+
+                                // Check if the symmetry of MOs ii, jj, aa, and bb is the same
                                 if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                      mo_symmetry_[bb]) == 0) {
                                     double HIJ = as_ints_->tei_aa(ii, jj, aa, bb) * Cp;
+
+                                    // Check if the absolute value of HIJ exceeds the screening
+                                    // threshold
                                     if (std::abs(HIJ) >= screen_thresh_) {
                                         new_det = det;
                                         HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
@@ -196,26 +228,35 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
             }
 
             // Generate ab excitations
-            for (auto& gas_count : std::get<2>(gas_double_criterion_)[gas_configuration]) {
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<2>(gas_double_criterion_)[gas_configuration]) {
+
+                // The third element of gas_double_criterion_ stores all allowed choice of
+                // i,j,a,b for alpha-beta electron transitions from GAS_count_i to GAS_count_a and
+                // GAS_count_j to GAS_count_b
+
+                // For example, the current gas_configuration allows an alpha electron from GAS1 to
+                // GAS2 and a beta electron from GAS3 to GAS4, then gas_count_i = 0, gas_count_j =
+                // 1, gas_count_a = 2, and gas_count_b = 3
+
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_a[gas_count_1];
-                auto& occ2 = gas_occ_b[gas_count_2];
-                auto& vir1 = gas_vir_a[gas_count_3];
-                auto& vir2 = gas_vir_b[gas_count_4];
-                //                outfile->Printf("\n Allowed ab %d %d %d %d", gas_count_1,
-                //                gas_count_2, gas_count_3,
-                //                                gas_count_4);
+                auto& occ1 = gas_occ_a[gas_count_i];
+                auto& occ2 = gas_occ_b[gas_count_j];
+                auto& vir1 = gas_vir_a[gas_count_a];
+                auto& vir2 = gas_vir_b[gas_count_b];
+
                 for (size_t ii : occ1) {
                     for (size_t jj : occ2) {
                         for (size_t aa : vir1) {
                             for (size_t bb : vir2) {
+
+                                // Check if the symmetry of MOs ii, jj, aa, and bb is the same
                                 if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                      mo_symmetry_[bb]) == 0) {
                                     double HIJ = as_ints_->tei_ab(ii, jj, aa, bb) * Cp;
+
+                                    // Check if the absolute value of HIJ exceeds the screening
+                                    // threshold
                                     if (std::abs(HIJ) >= screen_thresh_) {
                                         new_det = det;
                                         HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
@@ -228,33 +269,45 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                 }
             }
 
-            // Genearte bb excitations
-            for (auto& gas_count : std::get<1>(gas_double_criterion_)[gas_configuration]) {
+            // Generate bb excitations
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<1>(gas_double_criterion_)[gas_configuration]) {
+
+                // The second element of gas_double_criterion_ stores all allowed choice of
+                // i,j,a,b  two beta electron transitions from GAS_count_i to GAS_count_a and
+                // GAS_count_j to GAS_count_b
+
+                // For example, the current gas_configuration allows two beta electron transitions
+                // from GAS1 to GAS3 and GAS2 to GAS4, then gas_count_i = 0, gas_count_j = 1,
+                // gas_count_a = 2, and gas_count_b = 3
+
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_b[gas_count_1];
-                auto& occ2 = gas_occ_b[gas_count_2];
-                auto& vir1 = gas_vir_b[gas_count_3];
-                auto& vir2 = gas_vir_b[gas_count_4];
-                //                outfile->Printf("\n Allowed bb %d %d %d %d", gas_count_1,
-                //                gas_count_2, gas_count_3,
-                //                                gas_count_4);
+                auto& occ1 = gas_occ_b[gas_count_i];
+                auto& occ2 = gas_occ_b[gas_count_j];
+                auto& vir1 = gas_vir_b[gas_count_a];
+                auto& vir2 = gas_vir_b[gas_count_b];
+
                 for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                     size_t ii = occ1[i];
-                    size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
+                    size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
+
                     for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
                         size_t jj = occ2[j];
+
                         for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
                             size_t aa = vir1[a];
-                            size_t bstart = (gas_count_3 == gas_count_4 ? a + 1 : 0);
+                            size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
+
                             for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
                                 size_t bb = vir2[b];
+
+                                // Check if the symmetry of MOs ii, jj, aa, and bb is the same
                                 if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                      mo_symmetry_[bb]) == 0) {
                                     double HIJ = as_ints_->tei_bb(ii, jj, aa, bb) * Cp;
+
+                                    // Check if the absolute value of HIJ exceeds the screening
+                                    // threshold
                                     if (std::abs(HIJ) >= screen_thresh_) {
                                         new_det = det;
                                         HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
@@ -378,25 +431,34 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
             }
 
             // Generate a excitations
-            for (auto& gas_count : gas_single_criterion_.first[gas_configuration]) {
-                size_t gas_count_1 = gas_count.first;
-                size_t gas_count_2 = gas_count.second;
-                auto& occ = gas_occ_a[gas_count_1];
-                auto& vir = gas_vir_a[gas_count_2];
+            for (auto& [gas_count_i, gas_count_a] :
+                 gas_single_criterion_.first[gas_configuration]) {
+
+                auto& occ = gas_occ_a[gas_count_i];
+                auto& vir = gas_vir_a[gas_count_a];
                 Determinant new_det(det);
-                for (size_t ii : occ) {
-                    for (size_t aa : vir) {
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                            double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
+
+                for (size_t i : occ) {
+                    for (size_t a : vir) {
+                        if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
+                            double HIJ = as_ints_->slater_rules_single_alpha(det, i, a);
+
+                            // Check if the absolute value of HIJ multiplied by evecs_P_row_norm
+                            // exceeds the screening threshold
                             if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                 new_det = det;
-                                new_det.set_alfa_bit(ii, false);
-                                new_det.set_alfa_bit(aa, true);
+                                new_det.set_alfa_bit(i, false);
+                                new_det.set_alfa_bit(a, true);
+
+                                // Check if new_det is not present in P_space
                                 if (!(P_space.has_det(new_det))) {
                                     std::vector<double> coupling(nroot, 0.0);
+
+                                    // Compute the coupling between new_det and each root of evecs
                                     for (int n = 0; n < nroot; ++n) {
                                         coupling[n] += HIJ * evecs->get(P, n);
                                     }
+
                                     thread_ex_dets.push_back(std::make_pair(new_det, coupling));
                                 }
                             }
@@ -406,25 +468,40 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
             }
 
             // Generate b excitations
-            for (auto& gas_count : gas_single_criterion_.second[gas_configuration]) {
-                size_t gas_count_1 = gas_count.first;
-                size_t gas_count_2 = gas_count.second;
-                auto& occ = gas_occ_b[gas_count_1];
-                auto& vir = gas_vir_b[gas_count_2];
+            for (auto& [gas_count_i, gas_count_a] :
+                 gas_single_criterion_.second[gas_configuration]) {
+
+                // The second element of gas_single_criterion_ stores all allowed beta electron
+                // transitions from GAS_count_i to GAS_count_a
+
+                // For example, the current gas_configuration allows a beta electron transition
+                // from GAS1 to GAS3, gas_count_i = 0, gas_count_a = 2
+
+                auto& occ = gas_occ_b[gas_count_i];
+                auto& vir = gas_vir_b[gas_count_a];
                 Determinant new_det(det);
+
                 for (size_t ii : occ) {
                     for (size_t aa : vir) {
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                             double HIJ = as_ints_->slater_rules_single_beta(det, ii, aa);
+
+                            // Check if the absolute value of HIJ multiplied by evecs_P_row_norm
+                            // exceeds the screening threshold
                             if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                 new_det = det;
                                 new_det.set_beta_bit(ii, false);
                                 new_det.set_beta_bit(aa, true);
+
+                                // Check if new_det is not present in P_space
                                 if (!(P_space.has_det(new_det))) {
                                     std::vector<double> coupling(nroot, 0.0);
+
+                                    // Compute the coupling between new_det and each root of evecs
                                     for (int n = 0; n < nroot; ++n) {
                                         coupling[n] += HIJ * evecs->get(P, n);
                                     }
+
                                     thread_ex_dets.push_back(std::make_pair(new_det, coupling));
                                 }
                             }
@@ -434,37 +511,48 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
             }
 
             // Generate aa excitations
-            for (auto& gas_count : std::get<0>(gas_double_criterion_)[gas_configuration]) {
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<0>(gas_double_criterion_)[gas_configuration]) {
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_a[gas_count_1];
-                auto& occ2 = gas_occ_a[gas_count_2];
-                auto& vir1 = gas_vir_a[gas_count_3];
-                auto& vir2 = gas_vir_a[gas_count_4];
+                auto& occ1 = gas_occ_a[gas_count_i];
+                auto& occ2 = gas_occ_a[gas_count_j];
+                auto& vir1 = gas_vir_a[gas_count_a];
+                auto& vir2 = gas_vir_a[gas_count_b];
+
                 for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                     size_t ii = occ1[i];
-                    size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
+                    size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
+
                     for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
                         size_t jj = occ2[j];
+
                         for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
                             size_t aa = vir1[a];
-                            size_t bstart = (gas_count_3 == gas_count_4 ? a + 1 : 0);
+                            size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
+
                             for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
                                 size_t bb = vir2[b];
+
                                 if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                      mo_symmetry_[bb]) == 0) {
                                     double HIJ = as_ints_->tei_aa(ii, jj, aa, bb);
+
+                                    // Check if the absolute value of HIJ multiplied by
+                                    // evecs_P_row_norm exceeds the screening threshold
                                     if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                         new_det = det;
                                         HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
+
+                                        // Check if new_det is not present in P_space
                                         if (!(P_space.has_det(new_det))) {
                                             std::vector<double> coupling(nroot, 0.0);
+
+                                            // Compute the coupling between new_det and each root of
+                                            // evecs
                                             for (int n = 0; n < nroot; ++n) {
                                                 coupling[n] += HIJ * evecs->get(P, n);
                                             }
+
                                             thread_ex_dets.push_back(
                                                 std::make_pair(new_det, coupling));
                                         }
@@ -475,17 +563,16 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
                     }
                 }
             }
+
             // Generate ab excitations
-            for (auto& gas_count : std::get<2>(gas_double_criterion_)[gas_configuration]) {
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<2>(gas_double_criterion_)[gas_configuration]) {
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_a[gas_count_1];
-                auto& occ2 = gas_occ_b[gas_count_2];
-                auto& vir1 = gas_vir_a[gas_count_3];
-                auto& vir2 = gas_vir_b[gas_count_4];
+                auto& occ1 = gas_occ_a[gas_count_i];
+                auto& occ2 = gas_occ_b[gas_count_j];
+                auto& vir1 = gas_vir_a[gas_count_a];
+                auto& vir2 = gas_vir_b[gas_count_b];
+
                 for (size_t ii : occ1) {
                     for (size_t jj : occ2) {
                         for (size_t aa : vir1) {
@@ -493,14 +580,23 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
                                 if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                      mo_symmetry_[bb]) == 0) {
                                     double HIJ = as_ints_->tei_ab(ii, jj, aa, bb);
+
+                                    // Check if the absolute value of HIJ multiplied by
+                                    // evecs_P_row_norm exceeds the screening threshold
                                     if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                         new_det = det;
                                         HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
+
+                                        // Check if new_det is not present in P_space
                                         if (!(P_space.has_det(new_det))) {
                                             std::vector<double> coupling(nroot, 0.0);
+
+                                            // Compute the coupling between new_det and each root of
+                                            // evecs
                                             for (int n = 0; n < nroot; ++n) {
                                                 coupling[n] += HIJ * evecs->get(P, n);
                                             }
+
                                             thread_ex_dets.push_back(
                                                 std::make_pair(new_det, coupling));
                                         }
@@ -512,38 +608,49 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
                 }
             }
 
-            // Genearte bb excitations
-            for (auto& gas_count : std::get<1>(gas_double_criterion_)[gas_configuration]) {
+            // Generate bb excitations
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<1>(gas_double_criterion_)[gas_configuration]) {
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_b[gas_count_1];
-                auto& occ2 = gas_occ_b[gas_count_2];
-                auto& vir1 = gas_vir_b[gas_count_3];
-                auto& vir2 = gas_vir_b[gas_count_4];
+                auto& occ1 = gas_occ_b[gas_count_i];
+                auto& occ2 = gas_occ_b[gas_count_j];
+                auto& vir1 = gas_vir_b[gas_count_a];
+                auto& vir2 = gas_vir_b[gas_count_b];
+
                 for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                     size_t ii = occ1[i];
-                    size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
+                    size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
+
                     for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
                         size_t jj = occ2[j];
+
                         for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
                             size_t aa = vir1[a];
-                            size_t bstart = (gas_count_3 == gas_count_4 ? a + 1 : 0);
+                            size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
+
                             for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
                                 size_t bb = vir2[b];
+
                                 if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                      mo_symmetry_[bb]) == 0) {
                                     double HIJ = as_ints_->tei_bb(ii, jj, aa, bb);
+
+                                    // Check if the absolute value of HIJ multiplied by
+                                    // evecs_P_row_norm exceeds the screening threshold
                                     if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                         new_det = det;
                                         HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
+
+                                        // Check if new_det is not present in P_space
                                         if (!(P_space.has_det(new_det))) {
                                             std::vector<double> coupling(nroot, 0.0);
+
+                                            // Compute the coupling between new_det and each root of
+                                            // evecs
                                             for (int n = 0; n < nroot; ++n) {
                                                 coupling[n] += HIJ * evecs->get(P, n);
                                             }
+
                                             thread_ex_dets.push_back(
                                                 std::make_pair(new_det, coupling));
                                         }
@@ -554,52 +661,52 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
                     }
                 }
             }
-        }
 #pragma omp critical
-        {
-            for (size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I) {
-                std::vector<double>& coupling = thread_ex_dets[I].second;
-                Determinant& det = thread_ex_dets[I].first;
-                if (V_hash.count(det) != 0) {
-                    for (int n = 0; n < nroot; ++n) {
-                        V_hash[det][n] += coupling[n];
+            {
+                for (size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I) {
+                    std::vector<double>& coupling = thread_ex_dets[I].second;
+                    Determinant& det = thread_ex_dets[I].first;
+                    if (V_hash.count(det) != 0) {
+                        for (int n = 0; n < nroot; ++n) {
+                            V_hash[det][n] += coupling[n];
+                        }
+                    } else {
+                        V_hash[det] = coupling;
                     }
-                } else {
-                    V_hash[det] = coupling;
                 }
             }
-        }
-    } // Close threads
+        } // Close threads
 
-    F_space.resize(V_hash.size());
-    outfile->Printf("\n  Size of F space: %zu", F_space.size());
+        F_space.resize(V_hash.size());
+        outfile->Printf("\n  Size of F space: %zu", F_space.size());
 
-    local_timer convert;
+        local_timer convert;
 
 #pragma omp parallel
-    {
-        size_t tid = omp_get_thread_num();
-        size_t ntd = omp_get_num_threads();
-        size_t N = 0;
-        for (const auto& detpair : V_hash) {
-            if (N % ntd == tid) {
-                double EI = as_ints_->energy(detpair.first);
-                std::vector<double> criteria(nroot, 0.0);
-                for (int n = 0; n < nroot; ++n) {
-                    double V = detpair.second[n];
-                    double delta = EI - evals->get(n);
-                    double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                    criteria[n] = std::fabs(criterion);
+        {
+            size_t tid = omp_get_thread_num();
+            size_t ntd = omp_get_num_threads();
+            size_t N = 0;
+            for (const auto& detpair : V_hash) {
+                if (N % ntd == tid) {
+                    double EI = as_ints_->energy(detpair.first);
+                    std::vector<double> criteria(nroot, 0.0);
+                    for (int n = 0; n < nroot; ++n) {
+                        double V = detpair.second[n];
+                        double delta = EI - evals->get(n);
+                        double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
+                        criteria[n] = std::fabs(criterion);
+                    }
+                    double value = average_q_values(criteria);
+
+                    F_space[N] = std::make_pair(value, detpair.first);
                 }
-                double value = average_q_values(criteria);
-
-                F_space[N] = std::make_pair(value, detpair.first);
+                N++;
             }
-            N++;
         }
-    }
 
-    outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
+        outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
+    }
 }
 
 void AdaptiveCI::get_gas_excited_determinants_core(
@@ -668,11 +775,10 @@ void AdaptiveCI::get_gas_excited_determinants_core(
             }
 
             // Generate a excitations
-            for (auto& gas_count : gas_single_criterion_.first[gas_configuration]) {
-                size_t gas_count_1 = gas_count.first;
-                size_t gas_count_2 = gas_count.second;
-                auto& occ = gas_occ_a[gas_count_1];
-                auto& vir = gas_vir_a[gas_count_2];
+            for (auto& [gas_count_i, gas_count_a] :
+                 gas_single_criterion_.second[gas_configuration]) {
+                auto& occ = gas_occ_a[gas_count_i];
+                auto& vir = gas_vir_a[gas_count_a];
                 Determinant new_det(det);
                 for (size_t ii : occ) {
                     for (size_t aa : vir) {
@@ -696,11 +802,10 @@ void AdaptiveCI::get_gas_excited_determinants_core(
             }
 
             // Generate b excitations
-            for (auto& gas_count : gas_single_criterion_.second[gas_configuration]) {
-                size_t gas_count_1 = gas_count.first;
-                size_t gas_count_2 = gas_count.second;
-                auto& occ = gas_occ_b[gas_count_1];
-                auto& vir = gas_vir_b[gas_count_2];
+            for (auto& [gas_count_i, gas_count_a] :
+                 gas_single_criterion_.second[gas_configuration]) {
+                auto& occ = gas_occ_b[gas_count_i];
+                auto& vir = gas_vir_b[gas_count_a];
                 Determinant new_det(det);
                 for (size_t ii : occ) {
                     for (size_t aa : vir) {
@@ -724,24 +829,21 @@ void AdaptiveCI::get_gas_excited_determinants_core(
             }
 
             // Generate aa excitations
-            for (auto& gas_count : std::get<0>(gas_double_criterion_)[gas_configuration]) {
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<1>(gas_double_criterion_)[gas_configuration]) {
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_a[gas_count_1];
-                auto& occ2 = gas_occ_a[gas_count_2];
-                auto& vir1 = gas_vir_a[gas_count_3];
-                auto& vir2 = gas_vir_a[gas_count_4];
+                auto& occ1 = gas_occ_b[gas_count_i];
+                auto& occ2 = gas_occ_b[gas_count_j];
+                auto& vir1 = gas_vir_b[gas_count_a];
+                auto& vir2 = gas_vir_b[gas_count_b];
                 for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                     size_t ii = occ1[i];
-                    size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
+                    size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
                     for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
                         size_t jj = occ2[j];
                         for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
                             size_t aa = vir1[a];
-                            size_t bstart = (gas_count_3 == gas_count_4 ? a + 1 : 0);
+                            size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
                             for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
                                 size_t bb = vir2[b];
                                 if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
@@ -766,16 +868,13 @@ void AdaptiveCI::get_gas_excited_determinants_core(
                 }
             }
             // Generate ab excitations
-            for (auto& gas_count : std::get<2>(gas_double_criterion_)[gas_configuration]) {
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<1>(gas_double_criterion_)[gas_configuration]) {
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_a[gas_count_1];
-                auto& occ2 = gas_occ_b[gas_count_2];
-                auto& vir1 = gas_vir_a[gas_count_3];
-                auto& vir2 = gas_vir_b[gas_count_4];
+                auto& occ1 = gas_occ_b[gas_count_i];
+                auto& occ2 = gas_occ_b[gas_count_j];
+                auto& vir1 = gas_vir_b[gas_count_a];
+                auto& vir2 = gas_vir_b[gas_count_b];
                 for (size_t ii : occ1) {
                     for (size_t jj : occ2) {
                         for (size_t aa : vir1) {
@@ -803,24 +902,21 @@ void AdaptiveCI::get_gas_excited_determinants_core(
             }
 
             // Genearte bb excitations
-            for (auto& gas_count : std::get<1>(gas_double_criterion_)[gas_configuration]) {
+            for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+                 std::get<1>(gas_double_criterion_)[gas_configuration]) {
                 Determinant new_det(det);
-                size_t gas_count_1 = std::get<0>(gas_count);
-                size_t gas_count_2 = std::get<1>(gas_count);
-                size_t gas_count_3 = std::get<2>(gas_count);
-                size_t gas_count_4 = std::get<3>(gas_count);
-                auto& occ1 = gas_occ_b[gas_count_1];
-                auto& occ2 = gas_occ_b[gas_count_2];
-                auto& vir1 = gas_vir_b[gas_count_3];
-                auto& vir2 = gas_vir_b[gas_count_4];
+                auto& occ1 = gas_occ_b[gas_count_i];
+                auto& occ2 = gas_occ_b[gas_count_j];
+                auto& vir1 = gas_vir_b[gas_count_a];
+                auto& vir2 = gas_vir_b[gas_count_b];
                 for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                     size_t ii = occ1[i];
-                    size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
+                    size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
                     for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
                         size_t jj = occ2[j];
                         for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
                             size_t aa = vir1[a];
-                            size_t bstart = (gas_count_3 == gas_count_4 ? a + 1 : 0);
+                            size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
                             for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
                                 size_t bb = vir2[b];
                                 if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
