@@ -661,53 +661,54 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
                     }
                 }
             }
+        }
 #pragma omp critical
-            {
-                for (size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I) {
-                    std::vector<double>& coupling = thread_ex_dets[I].second;
-                    Determinant& det = thread_ex_dets[I].first;
-                    if (V_hash.count(det) != 0) {
-                        for (int n = 0; n < nroot; ++n) {
-                            V_hash[det][n] += coupling[n];
-                        }
-                    } else {
-                        V_hash[det] = coupling;
-                    }
-                }
-            }
-        } // Close threads
-
-        F_space.resize(V_hash.size());
-        outfile->Printf("\n  Size of F space: %zu", F_space.size());
-
-        local_timer convert;
-
-#pragma omp parallel
         {
-            size_t tid = omp_get_thread_num();
-            size_t ntd = omp_get_num_threads();
-            size_t N = 0;
-            for (const auto& detpair : V_hash) {
-                if (N % ntd == tid) {
-                    double EI = as_ints_->energy(detpair.first);
-                    std::vector<double> criteria(nroot, 0.0);
+            for (size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I) {
+                std::vector<double>& coupling = thread_ex_dets[I].second;
+                Determinant& det = thread_ex_dets[I].first;
+                if (V_hash.count(det) != 0) {
                     for (int n = 0; n < nroot; ++n) {
-                        double V = detpair.second[n];
-                        double delta = EI - evals->get(n);
-                        double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                        criteria[n] = std::fabs(criterion);
+                        V_hash[det][n] += coupling[n];
                     }
-                    double value = average_q_values(criteria);
-
-                    F_space[N] = std::make_pair(value, detpair.first);
+                } else {
+                    V_hash[det] = coupling;
                 }
-                N++;
             }
         }
+    } // Close threads
 
-        outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
+    F_space.resize(V_hash.size());
+    outfile->Printf("\n  Size of F space: %zu", F_space.size());
+
+    local_timer convert;
+
+#pragma omp parallel
+    {
+        size_t tid = omp_get_thread_num();
+        size_t ntd = omp_get_num_threads();
+        size_t N = 0;
+        for (const auto& detpair : V_hash) {
+            if (N % ntd == tid) {
+                double EI = as_ints_->energy(detpair.first);
+                std::vector<double> criteria(nroot, 0.0);
+                for (int n = 0; n < nroot; ++n) {
+                    double V = detpair.second[n];
+                    double delta = EI - evals->get(n);
+                    double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
+                    criteria[n] = std::fabs(criterion);
+                }
+                double value = average_q_values(criteria);
+
+                F_space[N] = std::make_pair(value, detpair.first);
+            }
+            N++;
+        }
     }
-}
+
+    outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
+
+} // namespace forte
 
 void AdaptiveCI::get_gas_excited_determinants_core(
     SharedMatrix evecs, std::shared_ptr<psi::Vector> evals, DeterminantHashVec& P_space,
