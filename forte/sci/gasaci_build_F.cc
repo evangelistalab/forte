@@ -438,17 +438,17 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
                 auto& vir = gas_vir_a[gas_count_a];
                 Determinant new_det(det);
 
-                for (size_t i : occ) {
-                    for (size_t a : vir) {
-                        if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
-                            double HIJ = as_ints_->slater_rules_single_alpha(det, i, a);
+                for (size_t ii : occ) {
+                    for (size_t aa : vir) {
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                            double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
 
                             // Check if the absolute value of HIJ multiplied by evecs_P_row_norm
                             // exceeds the screening threshold
                             if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                 new_det = det;
-                                new_det.set_alfa_bit(i, false);
-                                new_det.set_alfa_bit(a, true);
+                                new_det.set_alfa_bit(ii, false);
+                                new_det.set_alfa_bit(aa, true);
 
                                 // Check if new_det is not present in P_space
                                 if (!(P_space.has_det(new_det))) {

@@ -1139,17 +1139,17 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
         }
 
         // Generate ab excitations
-        for (auto& [gas_count_1, gas_count_2, gas_count_3, gas_count_4] :
+        for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
              std::get<2>(gas_double_criterion_)[gas_configuration]) {
 
             // The third element of gas_double_criterion_ stores all allowed choice of
             // i,j,a,b for alpha-beta electron transitions from GAS_count_i to GAS_count_a and
             // GAS_count_j to GAS_count_b
 
-            auto& occ1 = gas_occ_a[gas_count_1];
-            auto& occ2 = gas_occ_b[gas_count_2];
-            auto& vir1 = gas_vir_a[gas_count_3];
-            auto& vir2 = gas_vir_b[gas_count_4];
+            auto& occ1 = gas_occ_a[gas_count_i];
+            auto& occ2 = gas_occ_b[gas_count_j];
+            auto& vir1 = gas_vir_a[gas_count_a];
+            auto& vir2 = gas_vir_b[gas_count_b];
 
             for (size_t ii : occ1) {
                 for (size_t jj : occ2) {
@@ -1171,28 +1171,28 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
         }
 
         // Generate bb excitations
-        for (auto& [gas_count_1, gas_count_2, gas_count_3, gas_count_4] :
+        for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
              std::get<1>(gas_double_criterion_)[gas_configuration]) {
 
             // The second element of gas_double_criterion_ stores all allowed choice of
             // i,j,a,b  two beta electron transitions from GAS_count_i to GAS_count_a and
             // GAS_count_j to GAS_count_b
 
-            auto& occ1 = gas_occ_b[gas_count_1];
-            auto& occ2 = gas_occ_b[gas_count_2];
-            auto& vir1 = gas_vir_b[gas_count_3];
-            auto& vir2 = gas_vir_b[gas_count_4];
+            auto& occ1 = gas_occ_b[gas_count_i];
+            auto& occ2 = gas_occ_b[gas_count_j];
+            auto& vir1 = gas_vir_b[gas_count_a];
+            auto& vir2 = gas_vir_b[gas_count_b];
 
             for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                 size_t ii = occ1[i];
-                size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
+                size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
 
                 for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
                     size_t jj = occ2[j];
 
                     for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
                         size_t aa = vir1[a];
-                        size_t bstart = (gas_count_3 == gas_count_4 ? a + 1 : 0);
+                        size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
 
                         for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
                             size_t bb = vir2[b];
