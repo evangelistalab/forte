@@ -1115,14 +1115,20 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
             auto& vir1 = gas_vir_a[gas_count_a];
             auto& vir2 = gas_vir_a[gas_count_b];
 
-            for (size_t ii : occ1) {
-                size_t jstart = (gas_count_i == gas_count_j ? ii + 1 : 0);
+            for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
+                size_t ii = occ1[i];
+                size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
 
-                for (size_t jj : occ2) {
-                    for (size_t aa : vir1) {
-                        size_t bstart = (gas_count_a == gas_count_b ? aa + 1 : 0);
+                for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
+                    size_t jj = occ2[j];
 
-                        for (size_t bb : vir2) {
+                    for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
+                        size_t aa = vir1[a];
+                        size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
+
+                        for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
+                            size_t bb = vir2[b];
+
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
                                 Determinant new_det(det);
