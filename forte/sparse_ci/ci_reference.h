@@ -91,7 +91,7 @@ class CI_Reference {
 
     Determinant get_occupation();
 
-    void get_gas_occupation();
+    void get_gas_occupation(int gas_ref_num);
 
     std::pair<std::vector<int>, std::vector<int>> get_gas_max_min();
 
@@ -99,6 +99,9 @@ class CI_Reference {
 
     /// The number of used GAS
     size_t gas_num_;
+
+    /// The number of used GAS to build the reference (generally for ACI)
+    size_t gas_ref_num_;
 
     /// All the possible alpha and beta electron occupations of each GAS
     /// GAS1_A, GAS1_B, GAS2_A, .... GAS6_B (12 elements)

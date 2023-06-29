@@ -83,6 +83,9 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     // Size of subspace
     subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");
 
+    // The number of GAS to build the reference
+    gas_ref_num_ = options->get_int("GAS_REF_COUNT");
+
     // Reference type
     ref_type_ = options->get_str("ACTIVE_REF_TYPE");
 
@@ -652,7 +655,7 @@ CI_Reference::build_gas_occ_string(const std::vector<std::vector<std::vector<boo
 void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     // build the determinant from aufbau principle
     print_gas_scf_epsilon();
-    get_gas_occupation();
+    get_gas_occupation(6);
     ref_space.clear();
 
     std::vector<std::vector<size_t>> rel_gas_mos;     // relative indices within active
@@ -877,14 +880,18 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 
 void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     print_gas_scf_epsilon();
-    get_gas_occupation();
-
+    // build gas determinants using only first gas_ref_num_ number of GAS
+    if (gas_ref_num_ != 6) {
+        outfile->Printf("\n ");
+        outfile->Printf("\n  Using only GAS1-GAS%d for reference space!", gas_ref_num_);
+    }
+    get_gas_occupation(gas_ref_num_);
     ref_space.clear();
 
     // relative indices within the active orbitals
     std::vector<std::vector<size_t>> rel_gas_mos;
 
-    for (int gas = 0; gas < 6; ++gas) {
+    for (int gas = 0; gas < gas_ref_num_; ++gas) {
         std::string space_name = "GAS" + std::to_string(gas + 1);
         auto abs_mos = mo_space_info_->absolute_mo(space_name);
         if (abs_mos.size() == 0)
@@ -993,6 +1000,13 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     //    for (const auto& det : ref_space) {
     //        outfile->Printf("\n    %s", str(det, nact_).c_str());
     //    }
+
+    // Use all of GAS for further ACI calculation if the initial guess of ACI uses a small GAS
+    if (gas_ref_num_ != 6) {
+        outfile->Printf("\n  ");
+        outfile->Printf("\n  Reference space build up complete!");
+        get_gas_occupation(6);
+    }
 }
 
 void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
@@ -1273,7 +1287,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
     return labeled_orb;
 }
 
-void CI_Reference::get_gas_occupation() {
+void CI_Reference::get_gas_occupation(int gas_ref_num) {
     gas_electrons_.clear();
 
     print_h2("Number of Electrons in GAS");
@@ -1290,7 +1304,7 @@ void CI_Reference::get_gas_occupation() {
         std::string space = "GAS" + std::to_string(gas_count + 1);
         int orbital_maximum = mo_space_info_->size(space);
         gas_orbital.push_back(orbital_maximum);
-        if (orbital_maximum) {
+        if (orbital_maximum && gas_count < gas_ref_num) {
             outfile->Printf("\n    %3d", gas_count + 1);
 
             // define max_e_number to be the largest possible
