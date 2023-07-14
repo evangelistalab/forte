@@ -130,7 +130,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Save a wave function
     void wfn_to_file(DeterminantHashVec& det_space, std::shared_ptr<psi::Matrix> evecs, int root);
     /// Save a wave function
-    void dets_to_file(DeterminantHashVec& det_space, int root);
+    void dets_to_file(DeterminantHashVec& det_space, const std::string& filename);
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs, int nroot);
 

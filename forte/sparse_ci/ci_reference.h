@@ -163,6 +163,9 @@ class CI_Reference {
     /// Build single lowest energy state
     void build_gas_single(std::vector<Determinant>& ref_space);
 
+    /// Read a CI reference from file 
+    void read_ci_reference(std::vector<Determinant>& ref_space);
+
     /// Set the reference type
     void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
 

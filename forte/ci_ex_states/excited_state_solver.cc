@@ -278,8 +278,8 @@ double ExcitedStateSolver::compute_energy() {
 
     // Save final wave function to a file
     if (save_final_dets_) {
-        psi::outfile->Printf("\n  Saving final wave function for root %d", root_);
-        dets_to_file(final_wfn_, root_);
+        psi::outfile->Printf("\n  Saving final determinants for root %d", root_);
+        dets_to_file(final_wfn_, wfn_filename_);
     }
 
     //    psi::outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
@@ -552,19 +552,21 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space,
 }
 
 void ExcitedStateSolver::dets_to_file(DeterminantHashVec& det_space,
-                                     int root) {
+                                      const std::string& filename) {
+    std::string base = filename.substr(0, filename.size()-4);  // Everything before the extension
 
-    std::ofstream final_wfn;
-    final_wfn.open("sci_final_dets_" + std::to_string(root) + ".txt");
+    std::string dets_filename = base + "_dets.txt";  // New filename
+
+    std::ofstream file(dets_filename);
     const det_hashvec& detmap = det_space.wfn_hash();
     const size_t nwords_half = detmap[0].nwords_half;
     for (size_t I = 0, maxI = detmap.size(); I < maxI; ++I) {
         for (size_t j = 0; j < nwords_half*2; ++j){
-        final_wfn << detmap[I].get_word(j) << " \t ";
+            file << detmap[I].get_word(j) << " \t ";
         }
-        final_wfn << std::endl;
+        file << std::endl;
     }
-    final_wfn.close();
+    file.close();
 }
 
 std::vector<std::shared_ptr<RDMs>>

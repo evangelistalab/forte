@@ -112,6 +112,8 @@ void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
     } else if (ref_type_ == "GAS_CIS" or ref_type_ == "GAS_CISD" or ref_type_ == "GAS_CID") {
         build_gas_single(ref_space);
         build_gas_ci_reference(ref_space);
+    } else if (ref_type_ == "READ") {
+        read_ci_reference(ref_space);
     } else {
         build_ci_reference(ref_space);
     }
@@ -1238,6 +1240,12 @@ void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
         // }
     }
 }
+
+
+void CI_Reference::read_ci_reference(std::vector<Determinant>& ref_space) {
+    ref_space.clear();
+}
+
 std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std::string type) {
     size_t nact = mo_space_info_->size("ACTIVE");
 
