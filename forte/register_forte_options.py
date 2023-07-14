@@ -409,6 +409,8 @@ def register_sci_options(options):
 
     options.add_bool("SCI_SAVE_FINAL_WFN", False, "Save final wavefunction to file?")
 
+    options.add_bool("SCI_SAVE_FINAL_DETS", False, "Save final determinants to file?")
+
     options.add_bool("SCI_TEST_RDMS", False, "Run test for the RDMs?")
 
     options.add_bool("SCI_FIRST_ITER_ROOTS", False, "Compute all roots on first iteration?")

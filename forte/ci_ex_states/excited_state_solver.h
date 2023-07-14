@@ -106,6 +106,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     bool test_rdms_ = false;
     /// Print final wavefunction to file
     bool save_final_wfn_ = false;
+    /// Print final dets to file
+    bool save_final_dets_ = false;
     /// Compute all roots on first iteration?
     bool first_iter_roots_ = false;
     /// Do full EN-MRPT2 correction?
@@ -127,6 +129,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
                      std::shared_ptr<psi::Vector>& PQ_evals, size_t cycle);
     /// Save a wave function
     void wfn_to_file(DeterminantHashVec& det_space, std::shared_ptr<psi::Matrix> evecs, int root);
+    /// Save a wave function
+    void dets_to_file(DeterminantHashVec& det_space, int root);
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs, int nroot);
 

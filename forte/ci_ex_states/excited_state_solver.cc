@@ -82,6 +82,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
+    save_final_dets_ = options->get_bool("SCI_SAVE_FINAL_DETS");
     first_iter_roots_ = options->get_bool("SCI_FIRST_ITER_ROOTS");
     transition_dipole_ = options->get_bool("TRANSITION_DIPOLES");
     sparse_solver_ = std::make_shared<SparseCISolver>();
@@ -272,6 +273,13 @@ double ExcitedStateSolver::compute_energy() {
     if (save_final_wfn_) {
         psi::outfile->Printf("\n  Saving final wave function for root %d", root_);
         wfn_to_file(final_wfn_, PQ_evecs, root_);
+    }
+
+
+    // Save final wave function to a file
+    if (save_final_dets_) {
+        psi::outfile->Printf("\n  Saving final wave function for root %d", root_);
+        dets_to_file(final_wfn_, root_);
     }
 
     //    psi::outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
@@ -539,6 +547,22 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space,
     for (size_t I = 0, maxI = detmap.size(); I < maxI; ++I) {
         final_wfn << std::scientific << std::setw(20) << std::setprecision(11)
                   << evecs->get(I, root) << " \t " << str(detmap[I], nact_).c_str() << std::endl;
+    }
+    final_wfn.close();
+}
+
+void ExcitedStateSolver::dets_to_file(DeterminantHashVec& det_space,
+                                     int root) {
+
+    std::ofstream final_wfn;
+    final_wfn.open("sci_final_dets_" + std::to_string(root) + ".txt");
+    const det_hashvec& detmap = det_space.wfn_hash();
+    const size_t nwords_half = detmap[0].nwords_half;
+    for (size_t I = 0, maxI = detmap.size(); I < maxI; ++I) {
+        for (size_t j = 0; j < nwords_half*2; ++j){
+        final_wfn << detmap[I].get_word(j) << " \t ";
+        }
+        final_wfn << std::endl;
     }
     final_wfn.close();
 }
