@@ -417,7 +417,7 @@ double MCSCF_2STEP::compute_energy() {
 
 bool MCSCF_2STEP::is_single_reference() {
     auto nactv = mo_space_info_->size("ACTIVE");
-    auto nclosed_electrons = 2 * mo_space_info_->size("INACTIVE_DOCC");
+    auto nclosed_electrons = mo_space_info_->size("INACTIVE_DOCC");
 
     if (state_weights_map_.size() == 1) {
         for (const auto& [state, _] : state_weights_map_) {
