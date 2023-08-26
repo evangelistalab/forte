@@ -55,14 +55,15 @@ class PCISigmaVector : public SigmaVector {
             dets_max_couplings,
         double dets_single_max_coupling, double dets_double_max_coupling,
         const std::vector<std::pair<det_hashvec, std::vector<double>>>& bad_roots);
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) override;
+    void compute_sigma(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b) override;
     void get_diagonal(psi::Vector& diag) override;
     double compute_spin(const std::vector<double>& /*c*/) override {
         return 0.0;
     } // TODO: this should be implemented
 
     void reset(std::vector<double>& ref_C);
-    void compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b);
+    void compute_sigma_with_diag(std::shared_ptr<psi::Vector> sigma,
+                                 std::shared_ptr<psi::Vector> b);
     size_t get_num_off_diag();
     size_t get_sigma_build_count();
 

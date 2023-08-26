@@ -262,7 +262,7 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
         return false;
     };
 
-    for (const std::string& block : {"vc", "va", "ac"}) {
+    for (const std::string block : {"vc", "va", "ac"}) {
         const auto& mos1 = label_to_mos_[block.substr(0, 1)];
         const auto& mos2 = label_to_mos_[block.substr(1, 1)];
 
@@ -468,7 +468,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
 
     // Transform C matrix to C1 symmetry
     // JK does not support mixed symmetry needed for 4-index integrals (York 09/09/2020)
-    psi::SharedMatrix aotoso = ints_->wfn()->aotoso();
+    auto aotoso = ints_->wfn()->aotoso();
     auto C_nosym = std::make_shared<psi::Matrix>(nso_, nmo_);
 
     // Transform from the SO to the AO basis for the C matrix
@@ -492,7 +492,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     std::vector<std::shared_ptr<psi::Matrix>> Cact_vec(nactv_);
 
     for (size_t x = 0; x < nactv_; ++x) {
-        psi::SharedVector Ca_nosym_vec = C_nosym->get_column(0, actv_mos_[x]);
+        auto Ca_nosym_vec = C_nosym->get_column(0, actv_mos_[x]);
         Cact->set_column(0, x, Ca_nosym_vec);
 
         std::string name = "Cact slice " + std::to_string(x);
@@ -507,8 +507,8 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     //         = C_{Mp}^T J_{MN}^{xy} C_{Nu}
 
     JK_->set_do_K(false);
-    std::vector<psi::SharedMatrix>& Cl = JK_->C_left();
-    std::vector<psi::SharedMatrix>& Cr = JK_->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
     Cl.clear();
     Cr.clear();
 
@@ -645,7 +645,7 @@ void CASSCF_ORB_GRAD::build_fock_active() {
     }
 }
 
-void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F) {
+void CASSCF_ORB_GRAD::format_fock(std::shared_ptr<psi::Matrix> Fock, ambit::BlockedTensor F) {
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         auto irrep_index_pair1 = mos_rel_[i[0]];
         auto irrep_index_pair2 = mos_rel_[i[1]];
@@ -662,7 +662,7 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
     });
 }
 
-psi::SharedMatrix CASSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
+std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
     // put spin-summed 1RDM to psi4 Matrix
     auto rdm1 = tensor_to_matrix(rdms->SF_G1(), nactvpi_);
 
@@ -675,7 +675,8 @@ psi::SharedMatrix CASSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
     return Fock;
 }
 
-double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g) {
+double CASSCF_ORB_GRAD::evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
+                                 bool do_g) {
     // if need to update orbitals and integrals
     if (update_orbitals(x)) {
         build_mo_integrals();
@@ -693,7 +694,7 @@ double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool 
     return energy_;
 }
 
-bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
+bool CASSCF_ORB_GRAD::update_orbitals(std::shared_ptr<psi::Vector> x) {
     // test if need to update orbitals
     auto dR = std::make_shared<psi::Matrix>("Delta Orbital Rotation", nmopi_, nmopi_);
 
@@ -715,7 +716,7 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     R_->add(dR);
 
     // compute incremental step dU and test against previous step
-    psi::SharedMatrix dU;
+    std::shared_ptr<psi::Matrix> dU;
     if (ortho_trans_algo_ == "PADE") {
         dU = dR->clone();
         dU->expm(3);
@@ -747,7 +748,8 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     return true;
 }
 
-psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(const psi::SharedMatrix& A, int n) {
+std::shared_ptr<psi::Matrix>
+CASSCF_ORB_GRAD::matrix_exponential(const std::shared_ptr<psi::Matrix>& A, int n) {
     auto U = std::make_shared<psi::Matrix>("U = exp(A)", A->rowspi(), A->colspi());
     U->identity();
     U->add(A);
@@ -768,7 +770,7 @@ psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(const psi::SharedMatrix& A
     return U;
 }
 
-psi::SharedMatrix CASSCF_ORB_GRAD::cayley_trans(const psi::SharedMatrix& A) {
+std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::cayley_trans(const std::shared_ptr<psi::Matrix>& A) {
     auto n = std::make_shared<psi::Matrix>("I + A / 2", A->rowspi(), A->colspi());
     n->identity();
 
@@ -788,7 +790,7 @@ psi::SharedMatrix CASSCF_ORB_GRAD::cayley_trans(const psi::SharedMatrix& A) {
 }
 
 std::vector<std::tuple<int, int, int>>
-CASSCF_ORB_GRAD::test_orbital_rotations(const psi::SharedMatrix& U,
+CASSCF_ORB_GRAD::test_orbital_rotations(const std::shared_ptr<psi::Matrix>& U,
                                         const std::string& warning_msg) {
     // the overlap between new and old orbitals is simply U
     // O = Cold^T S Cnew = Cold^T S Cold U = U
@@ -868,7 +870,7 @@ void CASSCF_ORB_GRAD::compute_orbital_grad() {
     g_["pq"] = 2.0 * A_["pq"];
     g_["pq"] -= 2.0 * A_["qp"];
 
-    // reshape and format to SharedVector
+    // reshape and format to std::shared_ptr<psi::Vector>
     reshape_rot_ambit(g_, grad_);
 
     if (debug_print_) {
@@ -876,7 +878,8 @@ void CASSCF_ORB_GRAD::compute_orbital_grad() {
     }
 }
 
-void CASSCF_ORB_GRAD::hess_diag(psi::SharedVector, const psi::SharedVector& h0) {
+void CASSCF_ORB_GRAD::hess_diag(std::shared_ptr<psi::Vector>,
+                                const std::shared_ptr<psi::Vector>& h0) {
     compute_orbital_hess_diag();
     h0->copy(*hess_diag_);
 }
@@ -973,7 +976,7 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
         });
     }
 
-    // reshape and format to SharedVector
+    // reshape and format to std::shared_ptr<psi::Vector>
     reshape_rot_ambit(h_diag_, hess_diag_);
 
     if (debug_print_) {
@@ -981,10 +984,12 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
     }
 }
 
-void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, const psi::SharedVector& sv) {
+void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt,
+                                        const std::shared_ptr<psi::Vector>& sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
-        throw std::runtime_error("Inconsistent size between SharedVector and number of rotations");
+        throw std::runtime_error(
+            "Inconsistent size between std::shared_ptr<psi::Vector> and number of rotations");
     }
 
     for (size_t n = 0; n < nrot_; ++n) {
@@ -1049,7 +1054,7 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
     return fci_ints;
 }
 
-void CASSCF_ORB_GRAD::canonicalize_final(const psi::SharedMatrix& U) {
+void CASSCF_ORB_GRAD::canonicalize_final(const std::shared_ptr<psi::Matrix>& U) {
     U_ = psi::linalg::doublet(U_, U, false, false);
     U_->set_name("Orthogonal Transformation");
 

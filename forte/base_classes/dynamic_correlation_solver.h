@@ -30,18 +30,25 @@
 #ifndef _dynamic_correlation_solver_h_
 #define _dynamic_correlation_solver_h_
 
+#include <map>
 #include <memory>
+#include <vector>
 
-#include "base_classes/active_space_solver.h"
-#include "base_classes/forte_options.h"
-#include "base_classes/rdms.h"
-#include "integrals/integrals.h"
-#include "integrals/active_space_integrals.h"
-#include "integrals/one_body_integrals.h"
+namespace ambit {
+class Tensor;
+}
 
 namespace forte {
 
+class ActiveSpaceIntegrals;
+class ActiveMultipoleIntegrals;
+class ActiveSpaceSolver;
+class RDMs;
 class SCFInfo;
+class StateInfo;
+class ForteIntegrals;
+class ForteOptions;
+class MOSpaceInfo;
 
 class DynamicCorrelationSolver {
   public:
@@ -56,7 +63,6 @@ class DynamicCorrelationSolver {
                              std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
-
     /// Compute energy
     virtual double compute_energy() = 0;
 
@@ -77,15 +83,18 @@ class DynamicCorrelationSolver {
     /// Clean up amplitudes checkpoint files
     void clean_checkpoints();
 
+    /// Set CI coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
+    virtual void set_ci_vectors(const std::vector<ambit::Tensor>& ci_vectors) {
+        ci_vectors_ = ci_vectors;
+    }
     /// Set the active space solver
     void set_active_space_solver(std::shared_ptr<ActiveSpaceSolver> as_solver) {
         as_solver_ = as_solver;
     }
 
     /// Set state to weights
-    void set_state_weights_map(const std::map<StateInfo, std::vector<double>>& state_to_weights) {
-        state_to_weights_ = state_to_weights;
-    }
+    void set_state_weights_map(const std::map<StateInfo, std::vector<double>>& state_to_weights);
 
   protected:
     /// The molecular integrals
@@ -103,6 +112,9 @@ class DynamicCorrelationSolver {
     /// The ForteOptions
     std::shared_ptr<ForteOptions> foptions_;
 
+    /// The CI coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
+    std::vector<ambit::Tensor> ci_vectors_;
     /// Active space solver
     std::shared_ptr<ActiveSpaceSolver> as_solver_ = nullptr;
     /// State to weights map
@@ -168,4 +180,4 @@ make_dynamic_correlation_solver(const std::string& type, std::shared_ptr<ForteOp
 
 } // namespace forte
 
-#endif // DYNAMIC_CORRELATION_SOLVER_H
+#endif // _dynamic_correlation_solver_h_

@@ -51,14 +51,14 @@ void add(const det_hashvec& A, std::vector<double>& Ca, double beta, const det_h
 double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec& B,
            const std::vector<double> Cb);
 
-std::vector<double> to_std_vector(psi::SharedVector c) {
+std::vector<double> to_std_vector(std::shared_ptr<psi::Vector> c) {
     const size_t c_size = c->dim();
     std::vector<double> c_vec(c_size);
     std::memcpy(c_vec.data(), c->pointer(), c_size * sizeof(double));
     return c_vec;
 }
 
-void set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec) {
+void set_psi_Vector(std::shared_ptr<psi::Vector> c_psi, const std::vector<double>& c_vec) {
     std::memcpy(c_psi->pointer(), c_vec.data(), c_vec.size() * sizeof(double));
 }
 
@@ -106,7 +106,8 @@ void PCISigmaVector::reset(std::vector<double>& ref_C) {
     }
 }
 
-void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+void PCISigmaVector::compute_sigma(std::shared_ptr<psi::Vector> sigma,
+                                   std::shared_ptr<psi::Vector> b) {
     if ((not first_sigma_vec_.empty()) and
         0 == std::memcmp(ref_C_.data(), b->pointer(), ref_size_) and
         std::all_of(b->pointer() + ref_size_, b->pointer() + b->dim(),
@@ -128,7 +129,8 @@ void PCISigmaVector::get_diagonal(psi::Vector& diag) {
     std::memcpy(diag.pointer(), diag_.data(), size_);
 }
 
-void PCISigmaVector::compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b) {
+void PCISigmaVector::compute_sigma_with_diag(std::shared_ptr<psi::Vector> sigma,
+                                             std::shared_ptr<psi::Vector> b) {
     compute_sigma(sigma, b);
 
 #pragma omp parallel for

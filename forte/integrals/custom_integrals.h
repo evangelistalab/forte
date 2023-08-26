@@ -77,22 +77,24 @@ class CustomIntegrals : public ForteIntegrals {
     void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) override;
 
     /// Make the closed-shell Fock matrix
-    std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
 
     /// Make the active Fock matrix
-    std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
-                                                                      ambit::Tensor Db) override;
+    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+    make_fock_active(ambit::Tensor Da, ambit::Tensor Db) override;
 
     /// Make the active Fock matrix using restricted equation
-    psi::SharedMatrix make_fock_active_restricted(psi::SharedMatrix D) override;
+    std::shared_ptr<psi::Matrix>
+    make_fock_active_restricted(std::shared_ptr<psi::Matrix> D) override;
 
     /// Make the active Fock matrix using unrestricted equation
-    std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-    make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) override;
+    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+    make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> Da,
+                                  std::shared_ptr<psi::Matrix> Db) override;
 
     /// Orbital coefficients in AO x MO basis where MO is in Pitzer order
-    psi::SharedMatrix Ca_AO() const override;
+    std::shared_ptr<psi::Matrix> Ca_AO() const override;
 
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 

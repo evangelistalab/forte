@@ -125,6 +125,14 @@ template <size_t N> class ConfigurationImpl : public BitArray<N> {
     /// Count the number of singly occupied orbitals
     int count_socc() const { return count(nwords_half, nwords_); }
 
+    BitArray<nbits_half> get_docc_str() const {
+        BitArray<nbits_half> str;
+        for (size_t k = 0; k < nwords_half; ++k) {
+            str.set_word(k, words_[k]);
+        }
+        return str;
+    }
+
     /// Return a vector with the indices of the doubly occupied orbitals
     /// @param docc_vec is a vector large enough to contain the list of orbitals
     void get_docc_vec(int norb, std::vector<int>& docc_vec) const {

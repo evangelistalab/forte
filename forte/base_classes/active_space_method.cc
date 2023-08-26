@@ -43,10 +43,10 @@
 #include "casscf/casscf.h"
 #include "sci/aci.h"
 #include "sci/asci.h"
-#include "sci/fci_mo.h"
 #include "sci/detci.h"
 #include "pci/pci.h"
 #include "ci_ex_states/excited_state_solver.h"
+#include "external/external_active_space_method.h"
 #ifdef HAVE_CHEMPS2
 #include "dmrg/dmrgsolver.h"
 #endif
@@ -65,7 +65,7 @@ void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIn
     as_ints_ = as_ints;
 }
 
-psi::SharedVector ActiveSpaceMethod::evals() { return evals_; }
+std::shared_ptr<psi::Vector> ActiveSpaceMethod::evals() { return evals_; }
 
 const std::vector<double>& ActiveSpaceMethod::energies() const { return energies_; }
 
@@ -87,7 +87,11 @@ void ActiveSpaceMethod::set_root(int value) { root_ = value; }
 
 void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
-void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
+void ActiveSpaceMethod::set_quiet_mode(bool quiet) { quiet_ = quiet; }
+
+DeterminantHashVec ActiveSpaceMethod::get_PQ_space() { return final_wfn_; }
+
+std::shared_ptr<psi::Matrix> ActiveSpaceMethod::get_PQ_evecs() { return evecs_; }
 
 void ActiveSpaceMethod::save_transition_rdms(
     const std::vector<std::shared_ptr<RDMs>>& rdms,
@@ -114,7 +118,7 @@ void ActiveSpaceMethod::save_transition_rdms(
     }
 }
 
-std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
+std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_permanent_quadrupole(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list) {
     // print title
@@ -140,7 +144,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute quadrupole
-    std::vector<psi::SharedVector> out(root_list.size());
+    std::vector<std::shared_ptr<psi::Vector>> out(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         const auto& [root1, root2] = root_list[i];
         if (root1 != root2)
@@ -179,7 +183,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_permanent_quadrupole(
     return out;
 }
 
-std::vector<psi::SharedVector>
+std::vector<std::shared_ptr<psi::Vector>>
 ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                             std::vector<std::pair<size_t, size_t>>& root_list) {
     // print title
@@ -204,7 +208,7 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute dipole
-    std::vector<psi::SharedVector> dipoles_out(root_list.size());
+    std::vector<std::shared_ptr<psi::Vector>> dipoles_out(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         const auto& [root1, root2] = root_list[i];
         if (root1 != root2)
@@ -279,7 +283,7 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
     return out;
 }
 
-std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same_orbs(
+std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_transition_dipole_same_orbs(
     std::shared_ptr<ActiveMultipoleIntegrals> ampints,
     const std::vector<std::pair<size_t, size_t>>& root_list,
     std::shared_ptr<ActiveSpaceMethod> method2) {
@@ -300,7 +304,7 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute transition dipole
-    std::vector<psi::SharedVector> trans_dipoles(root_list.size());
+    std::vector<std::shared_ptr<psi::Vector>> trans_dipoles(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         auto td = ampints->compute_electronic_dipole(rdms[i], true);
         trans_dipoles[i] = td;
@@ -361,7 +365,6 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
         double maxS = S->get(0);
 
         // push to Psi4 environment
-        auto& globals = psi::Process::environment.globals;
         std::string prefix = "TRANS " + upper_string(state_.multiplicity_label());
         std::string key = " S_MAX " + name1 + " -> " + name2;
         push_to_psi4_env_globals(maxS, prefix + key);
@@ -396,20 +399,18 @@ std::vector<psi::SharedVector> ActiveSpaceMethod::compute_transition_dipole_same
     return trans_dipoles;
 }
 
-std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
+std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options) {
 
-    std::unique_ptr<ActiveSpaceMethod> method;
+    std::shared_ptr<ActiveSpaceMethod> method;
     if (type == "FCI") {
         method = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {
         method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
-    } else if (type == "CAS") {
-        method = std::make_unique<FCI_MO>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "DETCI") {
         method = std::make_unique<DETCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "ASCI") {
@@ -420,6 +421,8 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
         method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
+    } else if (type == "EXTERNAL") {
+        method = std::make_unique<ExternalActiveSpaceMethod>(state, nroot, mo_space_info, as_ints);
     } else if (type == "DMRG") {
 #ifdef HAVE_CHEMPS2
         method =

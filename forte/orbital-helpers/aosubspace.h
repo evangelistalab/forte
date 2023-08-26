@@ -96,7 +96,7 @@ class AOInfo {
  *    AOSubspace aosub(subspace_str, wfn->molecule(), min_basis, atom_normals, debug);
  *
  *    // Build a projector for computational (large) basis
- *    psi::SharedMatrix Ps = aosub.build_projector(wfn->basisset());
+ *    std::shared_ptr<psi::Matrix> Ps = aosub.build_projector(wfn->basisset());
  *
  *  Syntax:
  *
@@ -243,9 +243,9 @@ class AOSubspace {
 /// @param wfn: A Psi4 Wavefunction object
 /// @param options: A ForteOptions object
 /// @param atom_normals: The direction of 'pz' orbital on each atom
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
-                                            std::shared_ptr<ForteOptions> options,
-                                            const pybind11::dict& atom_normals);
+std::shared_ptr<psi::Matrix> make_aosubspace_projector(psi::SharedWavefunction wfn,
+                                                       std::shared_ptr<ForteOptions> options,
+                                                       const pybind11::dict& atom_normals);
 } // namespace forte
 
 #endif // _aosubspace_h_

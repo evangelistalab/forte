@@ -42,13 +42,11 @@
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "boost/format.hpp"
-#include "sci/fci_mo.h"
 #include "fci/fci_solver.h"
 #include "helpers/printing.h"
 #include "dsrg_mrpt2.h"
 
 using namespace ambit;
-
 using namespace psi;
 
 namespace forte {
@@ -262,15 +260,15 @@ void DSRG_MRPT2::print_options_summary() {
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {
-        calculation_info_string.push_back({"state_type", "MULTI-STATE"});
-        calculation_info_string.push_back({"multi-state type", multi_state_algorithm_});
+        calculation_info_string.emplace_back("state_type", "MULTI-STATE");
+        calculation_info_string.emplace_back("multi-state type", multi_state_algorithm_);
     } else {
-        calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
+        calculation_info_string.emplace_back("state_type", "STATE-SPECIFIC");
     }
 
     if (internal_amp_) {
-        calculation_info_string.push_back({"internal_amp", foptions_->get_str("INTERNAL_AMP")});
-        calculation_info_string.push_back({"internal_amp_select", internal_amp_select_});
+        calculation_info_string.emplace_back("internal_amp", foptions_->get_str("INTERNAL_AMP"));
+        calculation_info_string.emplace_back("internal_amp_select", internal_amp_select_);
     }
 
     std::vector<std::pair<std::string, bool>> calculation_info_bool{
@@ -360,35 +358,35 @@ double DSRG_MRPT2::compute_energy() {
     double Ecorr = 0.0;
     double Etotal = 0.0;
     std::vector<std::pair<std::string, double>> energy;
-    energy.push_back({"E0 (reference)", Eref_});
+    energy.emplace_back("E0 (reference)", Eref_);
 
     Etemp = E_FT1();
     Ecorr += Etemp;
-    energy.push_back({"<[F, T1]>", Etemp});
+    energy.emplace_back("<[F, T1]>", Etemp);
 
     Etemp = E_FT2();
     Ecorr += Etemp;
-    energy.push_back({"<[F, T2]>", Etemp});
+    energy.emplace_back("<[F, T2]>", Etemp);
 
     Etemp = E_VT1();
     Ecorr += Etemp;
-    energy.push_back({"<[V, T1]>", Etemp});
+    energy.emplace_back("<[V, T1]>", Etemp);
 
     Etemp = E_VT2_2();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> (C_2)^4", Etemp});
+    energy.emplace_back("<[V, T2]> (C_2)^4", Etemp);
 
     Etemp = E_VT2_4HH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 HH", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 HH", Etemp);
 
     Etemp = E_VT2_4PP();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PP", Etemp);
 
     Etemp = E_VT2_4PH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PH", Etemp);
 
     if (do_cu3_) {
         Etemp = E_VT2_6();
@@ -396,13 +394,13 @@ double DSRG_MRPT2::compute_energy() {
         Etemp = 0.0;
     }
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
+    energy.emplace_back("<[V, T2]> C_6 C_2", Etemp);
 
     Ecorr += EVT2;
     Etotal = Ecorr + Eref_;
-    energy.push_back({"<[V, T2]>", EVT2});
-    energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
-    energy.push_back({"DSRG-MRPT2 total energy", Etotal});
+    energy.emplace_back("<[V, T2]>", EVT2);
+    energy.emplace_back("DSRG-MRPT2 correlation energy", Ecorr);
+    energy.emplace_back("DSRG-MRPT2 total energy", Etotal);
     Hbar0_ = Ecorr;
 
     // Analyze T1 and T2
@@ -416,10 +414,10 @@ double DSRG_MRPT2::compute_energy() {
     }
     check_t1();
     check_t2();
-    energy.push_back({"max(T1)", T1max_});
-    energy.push_back({"max(T2)", T2max_});
-    energy.push_back({"||T1||", T1norm_});
-    energy.push_back({"||T2||", T2norm_});
+    energy.emplace_back("max(T1)", T1max_);
+    energy.emplace_back("max(T2)", T2max_);
+    energy.emplace_back("||T1||", T1norm_);
+    energy.emplace_back("||T2||", T2norm_);
 
     print_h2("Possible Intruders");
     print_intruder("A", lt1a_);
@@ -587,7 +585,7 @@ void DSRG_MRPT2::compute_t2() {
                 }
             }
         } else if (internal_amp_select_ == "OOVV") {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
 
@@ -605,7 +603,7 @@ void DSRG_MRPT2::compute_t2() {
                 }
             }
         } else {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
                 T2_.block(block).zero();
@@ -1442,7 +1440,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
 
-    auto dipole_array = std::make_shared<Matrix>(1, 3);
+    auto dipole_array = std::make_shared<psi::Matrix>(1, 3);
     dipole_array->set(0, 0, x);
     dipole_array->set(0, 1, y);
     dipole_array->set(0, 2, z);
@@ -1474,8 +1472,9 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    D1["AB"] += 0.5 * T2_["MNBC"] * T2_["MNAC"];
     //    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
 
-    //    // transform D1 with a irrep psi::SharedMatrix
-    //    psi::SharedMatrix SOdens(new psi::Matrix("SO density ", this->nmopi(), this->nmopi()));
+    //    // transform D1 with a irrep std::shared_ptr<psi::Matrix>
+    //    auto SOdens = std::make_shared<psi::Matrix>("SO density ", this->nmopi(,
+    //    this->nmopi()));
 
     //    for (const auto& pair: mo_space_info_->relative_mo("FROZEN_DOCC")) {
     //        size_t h = pair.first;
@@ -1508,12 +1507,12 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 
     //    SOdens->back_transform(this->Ca());
 
-    //    psi::SharedMatrix sotoao(this->aotoso()->transpose());
+    //    std::shared_ptr<psi::Matrix> sotoao(this->aotoso()->transpose());
     //    size_t nao = sotoao->coldim(0);
-    //    psi::SharedMatrix AOdens(new psi::Matrix("AO density ", nao, nao));
+    //    auto AOdens = std::make_shared<psi::Matrix>("AO density ", nao, nao);
     //    AOdens->remove_symmetry(SOdens, sotoao);
 
-    //    std::vector<psi::SharedMatrix> aodipole_ints = ints_->ao_dipole_ints();
+    //    std::vector<std::shared_ptr<psi::Matrix>> aodipole_ints = ints_->ao_dipole_ints();
     //    std::vector<double> de(4, 0.0);
     //    for (int i = 0; i < 3; ++i) {
     //        de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
@@ -2821,8 +2820,8 @@ ambit::BlockedTensor DSRG_MRPT2::get_RH1deGNO() {
     return RH1eff;
 }
 
-void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose,
-                            const bool& t1eff) {
+void DSRG_MRPT2::rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                            const bool& transpose, const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
@@ -2831,7 +2830,7 @@ void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bo
     space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     // alpha
-    for (const std::string& block : {"cc", "aa", "vv"}) {
+    for (const std::string block : {"cc", "aa", "vv"}) {
         char space = block[0];
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -2851,7 +2850,7 @@ void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bo
     }
 
     // beta
-    for (const std::string& block : {"CC", "AA", "VV"}) {
+    for (const std::string block : {"CC", "AA", "VV"}) {
         char space = tolower(block[0]);
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {

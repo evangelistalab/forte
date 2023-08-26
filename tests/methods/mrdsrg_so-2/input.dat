@@ -25,7 +25,7 @@ set {
 }
 
 set forte {
-  active_space_solver    cas
+  active_space_solver    detci
   correlation_solver     somrdsrg
   corr_level             ldsrg2
   frozen_docc            [0,0,0,0,0,0,0,0]

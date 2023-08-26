@@ -8,12 +8,13 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
+#include "base_classes/mo_space_info.h"
+#include "integrals/active_space_integrals.h"
+
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
 #include "master_mrdsrg.h"
-
-#include "base_classes/mo_space_info.h"
 
 using namespace psi;
 
@@ -179,14 +180,18 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     bvirt_label_ = "V";
 
     // add Ambit index labels
-    BTF_->add_mo_space(acore_label_, "m,n,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "M,N,C0,C1,C2,C3,C4,C5,C6,C7,C8,C9", core_mos_, BetaSpin);
-    BTF_->add_mo_space(aactv_label_, "u,v,w,x,y,z,1,2,3,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9", actv_mos_,
+    BTF_->add_mo_space(acore_label_, "m,n,m1,n1,m2,n2,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9", core_mos_,
                        AlphaSpin);
-    BTF_->add_mo_space(bactv_label_, "U,V,W,X,Y,Z,!,@,#,A0,A1,A2,A3,A4,A5,A6,A7,A8,A9", actv_mos_,
+    BTF_->add_mo_space(bcore_label_, "M,N,M1,N1,M2,N2,C0,C1,C2,C3,C4,C5,C6,C7,C8,C9", core_mos_,
                        BetaSpin);
-    BTF_->add_mo_space(avirt_label_, "e,f,v0,v1,v2,v3,v4,v5,v6,v7,v8,v9", virt_mos_, AlphaSpin);
-    BTF_->add_mo_space(bvirt_label_, "E,F,V0,V1,V2,V3,V4,V5,V6,V7,V8,V9", virt_mos_, BetaSpin);
+    BTF_->add_mo_space(aactv_label_,
+                       "u,v,w,x,y,z,u1,w1,z1,x1,y1,1,2,3,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9", actv_mos_,
+                       AlphaSpin);
+    BTF_->add_mo_space(bactv_label_,
+                       "U,V,W,X,Y,Z,U1,W1,Z1,X1,Y1,!,@,#,A0,A1,A2,A3,A4,A5,A6,A7,A8,A9", actv_mos_,
+                       BetaSpin);
+    BTF_->add_mo_space(avirt_label_, "e,f,e1,f1,v0,v2,v3,v4,v5,v6,v7,v8,v9", virt_mos_, AlphaSpin);
+    BTF_->add_mo_space(bvirt_label_, "E,F,E1,F1,V0,V2,V3,V4,V5,V6,V7,V8,V9", virt_mos_, BetaSpin);
 
     // map space labels to mo spaces
     label_to_spacemo_[acore_label_[0]] = core_mos_;
@@ -213,7 +218,7 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     // if DF/CD
     if (eri_df_) {
         aux_label_ = "L";
-        BTF_->add_mo_space(aux_label_, "g", aux_mos_, NoSpin);
+        BTF_->add_mo_space(aux_label_, "g,g!,g@,P!,Q!,A!,B!,R!,S!", aux_mos_, NoSpin);
         label_to_spacemo_[aux_label_[0]] = aux_mos_;
     }
 
@@ -235,7 +240,7 @@ void MASTER_DSRG::fill_density() {
     Gamma1_.block("AA")("pq") = rdms_->g1b()("pq");
 
     // 1-hole density
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const std::string block : {"aa", "AA"}) {
         (Eta1_.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = (i[0] == i[1]) ? 1.0 : 0.0;
         });
@@ -450,7 +455,7 @@ void MASTER_DSRG::init_dm_ints() {
         dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
-    std::vector<psi::SharedMatrix> dm_a = ints_->mo_dipole_ints();
+    std::vector<std::shared_ptr<psi::Matrix>> dm_a = ints_->mo_dipole_ints();
     fill_MOdm(dm_a, dm_a); // beta-spin integrals are equivalent to those of alpha-spin
     compute_dm_ref();
 
@@ -470,8 +475,8 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("Done");
 }
 
-void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
-                            std::vector<psi::SharedMatrix>& dm_b) {
+void MASTER_DSRG::fill_MOdm(std::vector<std::shared_ptr<psi::Matrix>>& dm_a,
+                            std::vector<std::shared_ptr<psi::Matrix>>& dm_b) {
     // consider frozen-core part
     std::vector<size_t> frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
     for (int z = 0; z < 3; ++z) {
@@ -512,7 +517,7 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
 void MASTER_DSRG::compute_dm_ref() {
     for (int z = 0; z < 3; ++z) {
         double dipole = dm_frzc_[z];
-        for (const std::string& block : {"cc", "CC"}) {
+        for (const std::string block : {"cc", "CC"}) {
             dm_[z].block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
                 if (i[0] == i[1]) {
                     dipole += value;
@@ -1946,7 +1951,7 @@ bool MASTER_DSRG::check_semi_orbs() {
 
     // space, spin, Fmax, Fmean
     std::vector<std::tuple<std::string, std::string, double, double>> Fcheck;
-    for (const auto& block : {"cc", "CC", "vv", "VV"}) {
+    for (const auto block : {"cc", "CC", "vv", "VV"}) {
         double fmax = Fd.block(block).norm(0);
         double fmean = Fd.block(block).norm(1);
         fmean /= Fd.block(block).numel() > 2 ? Fd.block(block).numel() : 1.0;

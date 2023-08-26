@@ -45,7 +45,7 @@ compare_values(Escf, variable("CURRENT ENERGY"), 8, "DF-SCF(RHF) energy")
 
 set forte{
   int_type             df
-  active_space_solver  cas
+  active_space_solver  detci
   correlation_solver   sa-mrdsrg
   corr_level           pt2
   calc_type            sa

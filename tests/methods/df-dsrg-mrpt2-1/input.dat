@@ -23,7 +23,7 @@ set globals{
 }
 
 set forte{
-   active_space_solver   cas
+   active_space_solver   detci
    correlation_solver    three-dsrg-mrpt2
    int_type              df
    restricted_docc       [2,0,0,0]

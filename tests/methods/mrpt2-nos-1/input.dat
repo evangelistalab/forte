@@ -35,7 +35,7 @@ set forte{
   orbital_type            mrpt2no
   nat_act                 true
   nat_orbs_print          true
-  active_space_solver     cas
+  active_space_solver     detci
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]

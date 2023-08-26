@@ -38,7 +38,7 @@ Ecas, wfn = energy('casscf', return_wfn=True)
 compare_values(ref_cas, Ecas, 8, "CASSCF energy")
 
 set forte{
-  active_space_solver  cas
+  active_space_solver  detci
   correlation_solver   sa-mrdsrg
   corr_level           pt3
   calc_type            sa

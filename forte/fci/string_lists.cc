@@ -106,8 +106,8 @@ void StringLists::startup() {
 
     {
         local_timer t;
-        make_strings(alfa_graph_, alfa_list_);
-        make_strings(beta_graph_, beta_list_);
+        make_strings(alfa_graph_, alfa_strings_);
+        make_strings(beta_graph_, beta_string_);
         str_list_timer += t.get();
     }
     {
@@ -231,23 +231,61 @@ void StringLists::make_strings(GraphPtr graph, StringList& list) {
     }
 }
 
-StringList StringLists::make_strings(const int norb, const int ne) {
-    auto list = StringList(nirrep_, std::vector<String>());
+StringList StringLists::make_strings(const int norb, const int ne, GraphPtr address) {
+    auto list = StringList();
     if ((ne >= 0) and (ne <= norb)) {
         String I;
         const auto I_begin = I.begin();
         const auto I_end = I.begin() + norb;
-        // Generate the strings 1111100000
-        //                      { k }{n-k}
+        // First we count the number of strings in each irrep
+        std::vector<size_t> strpi(nirrep_, 0);
         I.zero();
         for (int i = std::max(0, norb - ne); i < norb; ++i)
-            I[i] = true;
+            I[i] = true; // Generate the string 000011111
         do {
             size_t sym_I = I.symmetry(cmo_sym_);
-            list[sym_I].push_back(I);
+            strpi[sym_I]++;
+        } while (std::next_permutation(I_begin, I_end));
+
+        // Then we allocate the memory
+        for (int h = 0; h < nirrep_; ++h) {
+            list.push_back(std::vector<String>(strpi[h]));
+        }
+
+        // Finally we generate the strings and store them in the list
+        I.zero();
+        for (int i = std::max(0, norb - ne); i < norb; ++i)
+            I[i] = true; // Generate the string 000011111
+        do {
+            size_t add_I = address->rel_add(I);
+            size_t sym_I = I.symmetry(cmo_sym_);
+            list[sym_I][add_I] = I;
         } while (std::next_permutation(I_begin, I_end));
     }
     return list;
+}
+
+std::vector<Determinant> StringLists::make_determinants(int symmetry) const {
+    size_t ndets = 0;
+    for (int ha = 0; ha < nirrep_; ha++) {
+        const int hb = symmetry ^ ha;
+        ndets += alfa_strings()[ha].size() * beta_strings()[hb].size();
+    }
+    std::vector<Determinant> dets(ndets);
+    size_t addI = 0;
+    // Loop over irreps of alpha
+    for (int ha = 0; ha < nirrep_; ha++) {
+        const int hb = symmetry ^ ha;
+        // Loop over alpha strings in this irrep
+        for (const auto& Ia : alfa_strings()[ha]) {
+            // Loop over beta strings in this irrep
+            for (const auto& Ib : beta_strings()[hb]) {
+                dets[addI] = Determinant(Ia, Ib);
+                addI++;
+            }
+        }
+    }
+    return dets;
 }
 
 } // namespace forte

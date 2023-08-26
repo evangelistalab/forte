@@ -2,11 +2,17 @@
 *.d
 *.so
 *.pyc
+*.log
+*.dat
+*.clean
 Makefile.*
 Makefile
 timer.dat
 *~
 forte/version.h
+forte.egg-info
+docs/build
+
 
 # Qt Creator project files
 *.config
@@ -35,6 +41,8 @@ tests/pytest/.cache/
 doc/doxygen/html
 doc/doxygen/latex
 docs/sphinx/_*
+
+forte.egg-info/*
 
 *.html
 */*/*.html

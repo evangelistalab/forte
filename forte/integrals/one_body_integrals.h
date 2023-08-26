@@ -95,16 +95,17 @@ class MultipoleIntegrals {
     double qp_ints_corr(int direction, size_t p, size_t q) const;
 
     /// Nuclear contributions to dipole moments in X, Y, Z order
-    psi::SharedVector nuclear_dipole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
+    std::shared_ptr<psi::Vector> nuclear_dipole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
 
     /// Nuclear contributions to quadrupole moments in XX, XY, XZ, YY, YZ, ZZ order
-    psi::SharedVector nuclear_quadrupole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
+    std::shared_ptr<psi::Vector> nuclear_quadrupole(const psi::Vector3& origin = {0.0, 0.0,
+                                                                                  0.0}) const;
 
     /// Frozen-orbital contributions to dipole moments
-    psi::SharedVector dp_frozen_core() const;
+    std::shared_ptr<psi::Vector> dp_frozen_core() const;
 
     /// Frozen-orbital contributions to quadrupole moments
-    psi::SharedVector qp_frozen_core() const;
+    std::shared_ptr<psi::Vector> qp_frozen_core() const;
 
     /// Return the MO space info object
     std::shared_ptr<MOSpaceInfo> mo_space_info() const;
@@ -119,14 +120,14 @@ class MultipoleIntegrals {
     std::shared_ptr<psi::Molecule> molecule_;
 
     /// MO dipole integrals (frozen orbitals included)
-    /// each element is a nmo x nmo psi::SharedMatrix in Pitzer order
+    /// each element is a nmo x nmo std::shared_ptr<psi::Matrix> in Pitzer order
     /// X, Y, Z
-    std::vector<psi::SharedMatrix> dp_ints_;
+    std::vector<std::shared_ptr<psi::Matrix>> dp_ints_;
 
     /// MO quadrupole integrals (frozen orbitals included)
-    /// each element is a nmo x nmo psi::SharedMatrix in Pitzer order
+    /// each element is a nmo x nmo std::shared_ptr<psi::Matrix> in Pitzer order
     /// XX, XY, XZ, YY, YZ, ZZ
-    std::vector<psi::SharedMatrix> qp_ints_;
+    std::vector<std::shared_ptr<psi::Matrix>> qp_ints_;
 };
 
 class ActiveMultipoleIntegrals {
@@ -143,23 +144,24 @@ class ActiveMultipoleIntegrals {
     // ==> Class Interface <==
 
     /// Nuclear contributions to dipole moment
-    psi::SharedVector nuclear_dipole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
+    std::shared_ptr<psi::Vector> nuclear_dipole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
     /// Nuclear contributions to quadrupole moment
-    psi::SharedVector nuclear_quadrupole(const psi::Vector3& origin = {0.0, 0.0, 0.0}) const;
+    std::shared_ptr<psi::Vector> nuclear_quadrupole(const psi::Vector3& origin = {0.0, 0.0,
+                                                                                  0.0}) const;
 
     /// Compute electronic contributions to dipole moment [X, Y, Z]
-    psi::SharedVector compute_electronic_dipole(std::shared_ptr<RDMs> rdms,
-                                                bool transition = false);
+    std::shared_ptr<psi::Vector> compute_electronic_dipole(std::shared_ptr<RDMs> rdms,
+                                                           bool transition = false);
     /// Compute electronic contributions to dipole moment [XX, XY, XZ, YY, YZ, ZZ]
-    psi::SharedVector compute_electronic_quadrupole(std::shared_ptr<RDMs> rdms,
-                                                    bool transition = false);
+    std::shared_ptr<psi::Vector> compute_electronic_quadrupole(std::shared_ptr<RDMs> rdms,
+                                                               bool transition = false);
 
     /// Dipole from frozen orbitals
-    psi::SharedVector dp_scalars_fdocc() const;
+    std::shared_ptr<psi::Vector> dp_scalars_fdocc() const;
     /// Dipole from restricted docc orbitals
-    psi::SharedVector dp_scalars_rdocc() const;
+    std::shared_ptr<psi::Vector> dp_scalars_rdocc() const;
     /// Dipole from doubly occupied orbitals
-    psi::SharedVector dp_scalars() const;
+    std::shared_ptr<psi::Vector> dp_scalars() const;
 
     /// Set dipole scalar term from restricted docc orbitals
     void set_dp_scalar_rdocc(int direction, double value);
@@ -171,11 +173,11 @@ class ActiveMultipoleIntegrals {
     void set_dp2_ints(int direction, ambit::Tensor M2aa, ambit::Tensor M2ab, ambit::Tensor M2bb);
 
     /// Quadrupole from frozen orbitals
-    psi::SharedVector qp_scalars_fdocc() const;
+    std::shared_ptr<psi::Vector> qp_scalars_fdocc() const;
     /// Quadrupole from restricted docc orbitals
-    psi::SharedVector qp_scalars_rdocc() const;
+    std::shared_ptr<psi::Vector> qp_scalars_rdocc() const;
     /// Quadrupole from doubly occupied orbitals
-    psi::SharedVector qp_scalars() const;
+    std::shared_ptr<psi::Vector> qp_scalars() const;
 
     /// Set quadrupole scalar term from restricted docc orbitals
     void set_qp_scalar_rdocc(int direction, double value);
@@ -225,7 +227,7 @@ class ActiveMultipoleIntegrals {
     size_t nmo4_;
 
     /// Dipole from inactive orbitals
-    psi::SharedVector dp0_rdocc_;
+    std::shared_ptr<psi::Vector> dp0_rdocc_;
     /// One-body dipole integrals
     std::vector<ambit::Tensor> dp1_ints_;
     /// Two-body dipole integrals, spin free
@@ -238,7 +240,7 @@ class ActiveMultipoleIntegrals {
     std::vector<ambit::Tensor> dp2_ints_bb_;
 
     /// Quadrupole from inactive orbitals
-    psi::SharedVector qp0_rdocc_;
+    std::shared_ptr<psi::Vector> qp0_rdocc_;
     /// One-body quadrupole integrals
     std::vector<ambit::Tensor> qp1_ints_;
     /// Two-body quadrupole integrals, spin free

@@ -59,8 +59,8 @@ class CINO : public OrbitalTransform {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    CINO(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~CINO();
@@ -105,8 +105,8 @@ class CINO : public OrbitalTransform {
     //    psi::Dimension bvirpi_;
 
     // The transformation matrices
-    psi::SharedMatrix Ua_;
-    psi::SharedMatrix Ub_;
+    std::shared_ptr<psi::Matrix> Ua_;
+    std::shared_ptr<psi::Matrix> Ub_;
 
     // ==> CINO Options <==
     /// Add missing degenerate determinants excluded from the aimed selection?
@@ -132,19 +132,23 @@ class CINO : public OrbitalTransform {
 
     std::vector<Determinant> build_dets(int irrep);
 
-    std::pair<psi::SharedVector, psi::SharedMatrix>
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
-    std::pair<psi::SharedMatrix, psi::SharedMatrix>
-    build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMatrix evecs, int nroot_);
+    std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+    build_density_matrix(const std::vector<Determinant>& dets, std::shared_ptr<psi::Matrix> evecs,
+                         int nroot_);
 
     /// Diagonalize the density matrix
-    std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
-    diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix> gamma);
+    std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
+               std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    diagonalize_density_matrix(
+        std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> gamma);
 
     /// Find optimal active space and transform the orbitals
     void find_active_space_and_transform(
-        std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
+        std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
+                   std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
             no_U);
 };
 std::string dimension_to_string(psi::Dimension dim);

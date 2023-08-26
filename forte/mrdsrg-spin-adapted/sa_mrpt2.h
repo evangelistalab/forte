@@ -52,8 +52,8 @@ class SA_MRPT2 : public SA_DSRGPT {
     double compute_energy() override;
 
     /// Compute the diagonal parts of the unrelaxed 1-RDM
-    void build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D1v,
-                              psi::SharedMatrix& D1a);
+    void build_1rdm_unrelaxed(std::shared_ptr<psi::Matrix>& D1c, std::shared_ptr<psi::Matrix>& D1v,
+                              std::shared_ptr<psi::Matrix>& D1a);
 
     /// Compute virtual part of the natural orbitals
     std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> build_fno();
@@ -131,11 +131,11 @@ class SA_MRPT2 : public SA_DSRGPT {
     ambit::BlockedTensor D1_;
 
     /// Compute the core-core part of the unrelaxed 1-RDM
-    psi::SharedMatrix build_1rdm_cc();
+    std::shared_ptr<psi::Matrix> build_1rdm_cc();
     /// Compute the virtual-virtual part of the unrelaxed 1-RDM
-    psi::SharedMatrix build_1rdm_vv();
+    std::shared_ptr<psi::Matrix> build_1rdm_vv();
     /// Compute the active-active part of the unrelaxed 1-RDM
-    psi::SharedMatrix build_1rdm_aa(bool build_aa_large_t2 = false);
+    std::shared_ptr<psi::Matrix> build_1rdm_aa(bool build_aa_large_t2 = false);
 
     /// Return a vector of empty ambit Tensor objects
     std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);

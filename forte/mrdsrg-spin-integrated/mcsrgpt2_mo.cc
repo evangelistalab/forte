@@ -34,6 +34,8 @@
 #include <string>
 #include <utility>
 
+#include "ambit/tensor.h"
+
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -42,7 +44,6 @@
 #include "psi4/libqt/qt.h"
 
 #include "mcsrgpt2_mo.h"
-#include "sci/fci_mo.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "helpers/printing.h"
 
@@ -3342,7 +3343,7 @@ void MCSRGPT2_MO::print_Fock(const std::string& spin, const d2& Fock) {
                 }
             }
 
-            psi::SharedMatrix FT = Fr.transpose();
+            auto FT = Fr.transpose();
             for (size_t i = 0; i < dim1; ++i) {
                 for (size_t j = 0; j < dim2; ++j) {
                     double diff = FT->get(i, j) - F.get(i, j);
@@ -3547,7 +3548,7 @@ void MCSRGPT2_MO::print_density(const std::string& spin, const d2& density) {
     std::string name = "Density " + spin;
     outfile->Printf("  ==> %s <==\n\n", name.c_str());
 
-    psi::SharedMatrix dens(new psi::Matrix("A-A", nactv_, nactv_));
+    auto dens = std::make_shared<psi::Matrix>("A-A", nactv_, nactv_);
     for (size_t u = 0; u < nactv_; ++u) {
         size_t nu = actv_mos_[u];
         for (size_t v = 0; v < nactv_; ++v) {

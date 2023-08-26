@@ -250,7 +250,7 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("\n");
     }
 
-    std::shared_ptr<psi::Matrix> Bpq(new psi::Matrix("Bpq", naux, nmo_ * nmo_));
+    auto Bpq = std::make_shared<psi::Matrix>("Bpq", naux, nmo_ * nmo_);
 
     Bpq = df->get_tensor("B");
 
@@ -260,7 +260,7 @@ void DFIntegrals::gather_integrals() {
 
 void DFIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    std::shared_ptr<psi::Matrix> temp_threeint(new psi::Matrix("tmp", ncmo_ * ncmo_, nthree_));
+    auto temp_threeint = std::make_shared<psi::Matrix>("tmp", ncmo_ * ncmo_, nthree_);
     temp_threeint->zero();
 
     // Borrwed from resort_four.

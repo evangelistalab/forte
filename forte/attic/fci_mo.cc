@@ -64,7 +64,6 @@
 #define omp_get_num_threads() 1
 #endif
 
-using namespace psi;
 using namespace ambit;
 
 namespace forte {
@@ -343,6 +342,7 @@ std::vector<double> FCI_MO::compute_ss_energies() {
     }
     print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
+    // TODO: Unclear what's the purpose of this code (Francesco)
     //    if (integral_->integral_type() != Custom) {
     //        // compute dipole moments
     //        compute_permanent_dipole();
@@ -832,7 +832,7 @@ std::vector<double> FCI_MO::compute_T1_percentage() {
         // the first singles_size_ determinants in determinant_ are singles
         for (size_t n = 0, eigen_size = eigen_.size(); n < eigen_size; ++n) {
             double t1 = 0;
-            psi::SharedVector evec = eigen_[n].first;
+            auto evec = eigen_[n].first;
             for (size_t i = 0; i < singles_size_; ++i) {
                 double v = evec->get(i);
                 t1 += v * v;
@@ -844,8 +844,9 @@ std::vector<double> FCI_MO::compute_T1_percentage() {
     return out;
 }
 
-void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
-                                std::vector<std::pair<psi::SharedVector, double>>& eigen) {
+void FCI_MO::Diagonalize_H_noHF(
+    const vecdet& p_space, const int& multi, const int& nroot,
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen) {
     // recompute RHF determinant
     std::vector<bool> string_ref = Form_String_Ref();
     Determinant rhf(string_ref, string_ref);
@@ -860,7 +861,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
         outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
         outfile->Printf("\n  Recompute RHF energy ... ");
         double Erhf = fci_ints_->energy(rhf) + fci_ints_->scalar_energy() + e_nuc_;
-        psi::SharedVector rhf_vec(new psi::Vector("RHF Eigen Vector", det_size));
+        auto rhf_vec = std::make_shared<psi::Vector>("RHF Eigen Vector", det_size);
         rhf_vec->set(det_size - 1, 1.0);
         eigen.push_back(std::make_pair(rhf_vec, Erhf));
         outfile->Printf("Done.");
@@ -872,15 +873,15 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
             int nroot_noHF = nroot - 1;
             vecdet p_space_noHF(p_space);
             p_space_noHF.pop_back();
-            std::vector<std::pair<psi::SharedVector, double>> eigen_noHF;
+            std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> eigen_noHF;
             Diagonalize_H(p_space_noHF, multi, nroot_noHF, eigen_noHF);
 
             for (int i = 0; i < nroot_noHF; ++i) {
-                psi::SharedVector vec_noHF = eigen_noHF[i].first;
+                auto vec_noHF = eigen_noHF[i].first;
                 double Ethis = eigen_noHF[i].second;
 
                 std::string name = "Root " + std::to_string(i) + " Eigen Vector";
-                psi::SharedVector vec(new psi::Vector(name, det_size));
+                auto vec = std::make_shared<psi::Vector>(name, det_size);
                 for (size_t n = 0; n < det_size - 1; ++n) {
                     vec->set(n, vec_noHF->get(n));
                 }
@@ -898,7 +899,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
 }
 
 void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& nroot,
-                           std::vector<std::pair<psi::SharedVector, double>>& eigen) {
+                           std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen) {
     timer_on("Diagonalize H");
     local_timer tdiagH;
     if (!quiet_) {
@@ -913,11 +914,11 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     sparse_solver.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    if (projected_roots_.size() != 0) {
+    if (!projected_roots_.empty()) {
         sparse_solver.set_root_project(true);
         sparse_solver.add_bad_states(projected_roots_);
     }
-    if (initial_guess_.size() != 0) {
+    if (!initial_guess_.empty()) {
         sparse_solver.set_initial_guess(initial_guess_);
     }
     if (!quiet_) {
@@ -925,24 +926,25 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     }
 
     // setup eigen values and vectors
-    psi::SharedMatrix evecs;
-    psi::SharedVector evals;
+    std::shared_ptr<psi::Matrix> evecs;
+    std::shared_ptr<psi::Vector> evals;
 
-    // use determinant map
-    DeterminantHashVec detmap(p_space);
+    // always store a copy in DeterminantHashVec format
+    det_hash_vec_ = DeterminantHashVec(p_space);
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
-    auto sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    //    auto sigma_vector_type = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    auto sigma_vector_type = string_to_sigma_vector_type("SPARSE");
     size_t max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
-    auto sigma_vector = make_sigma_vector(detmap, as_ints_, max_memory, sigma_vector_type_);
+    sigma_vector_ = make_sigma_vector(det_hash_vec_, as_ints_, max_memory, sigma_vector_type);
     std::tie(evals, evecs) =
-        sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nroot, multi);
+        sparse_solver.diagonalize_hamiltonian(det_hash_vec_, sigma_vector_, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)
     double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
     for (int i = 0; i != nroot; ++i) {
         double value = evals->get(i);
-        eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
+        eigen.emplace_back(evecs->get_column(0, i), value + energy_offset);
     }
     spin2_ = sparse_solver.spin();
 
@@ -953,7 +955,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
 }
 
 void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
-                      const std::vector<std::pair<psi::SharedVector, double>>& eigen,
+                      const std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen,
                       const vecdet& det) {
     timer_on("Print CI Vectors");
     if (!quiet_) {
@@ -971,7 +973,7 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
         for (size_t j = 0, det_size = det.size(); j < det_size; ++j) {
             double value = (eigen[i].first)->get(j);
             if (std::fabs(value) > CI_threshold)
-                ci_select.push_back(std::make_tuple(value, j));
+                ci_select.emplace_back(value, j);
         }
         std::sort(ci_select.begin(), ci_select.end(),
                   [](const std::tuple<double, int>& lhs, const std::tuple<double, int>& rhs) {
@@ -981,10 +983,10 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
 
         if (!quiet_) {
             outfile->Printf("\n  ==> Root No. %d <==\n", i);
-            for (size_t j = 0, ci_select_size = ci_select.size(); j < ci_select_size; ++j) {
+            for (auto& j : ci_select) {
                 outfile->Printf("\n    ");
-                double ci = std::get<0>(ci_select[j]);
-                size_t index = std::get<1>(ci_select[j]);
+                double ci = std::get<0>(j);
+                size_t index = std::get<1>(j);
                 size_t ncmopi = 0;
                 for (int h = 0; h < nirrep_; ++h) {
                     for (int k = 0; k < actv_dim_[h]; ++k) {
@@ -1017,7 +1019,7 @@ void FCI_MO::compute_permanent_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from ForteIntegrals
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
+    std::vector<std::shared_ptr<psi::Matrix>> aodipole_ints = integral_->ao_dipole_ints();
 
     // Nuclear dipole contribution
     Vector3 ndip =
@@ -1025,12 +1027,12 @@ void FCI_MO::compute_permanent_dipole() {
     //        DipoleInt::nuclear_contribution(psi::Process::environment.molecule(), );
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());
+    std::shared_ptr<psi::Matrix> sotoao(integral_->wfn()->aotoso()->transpose());
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
     size_t eigen_size = eigen_.size();
-    psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+    auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
     for (size_t i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
@@ -1043,11 +1045,12 @@ void FCI_MO::compute_permanent_dipole() {
         std::vector<double> opdm_a, opdm_b;
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-        psi::SharedMatrix SOdens = reformat_1rdm("SO density " + trans_name, opdm_a, false);
+        std::shared_ptr<psi::Matrix> SOdens =
+            reformat_1rdm("SO density " + trans_name, opdm_a, false);
         SOdens->back_transform(integral_->Ca());
 
         size_t nao = sotoao->coldim(0);
-        psi::SharedMatrix AOdens(new psi::Matrix("AO density " + trans_name, nao, nao));
+        auto AOdens = std::make_shared<psi::Matrix>("AO density " + trans_name, nao, nao);
         AOdens->remove_symmetry(SOdens, sotoao);
 
         std::vector<double> de(4, 0.0);
@@ -1067,9 +1070,9 @@ void FCI_MO::compute_permanent_dipole() {
     outfile->Printf("\n");
 }
 
-psi::SharedMatrix FCI_MO::reformat_1rdm(const std::string& name, const std::vector<double>& data,
-                                        bool TrD) {
-    psi::SharedMatrix rdm(new psi::Matrix(name, nmopi_, nmopi_));
+std::shared_ptr<psi::Matrix> FCI_MO::reformat_1rdm(const std::string& name,
+                                                   const std::vector<double>& data, bool TrD) {
+    auto rdm = std::make_shared<psi::Matrix>(name, nmopi_, nmopi_);
 
     // active
     size_t offset = 0;
@@ -1116,13 +1119,13 @@ void FCI_MO::compute_transition_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from libmints
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
+    std::vector<std::shared_ptr<psi::Matrix>> aodipole_ints = integral_->ao_dipole_ints();
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());
+    std::shared_ptr<psi::Matrix> sotoao(integral_->wfn()->aotoso()->transpose());
 
     //    // obtain SO dipole from libmints
-    //    std::vector<psi::SharedMatrix> dipole_ints;
+    //    std::vector<std::shared_ptr<psi::Matrix>> dipole_ints;
     //    for(const std::string& direction: {"X","Y","Z"}){
     //        std::string name = "SO Dipole" + direction;
     //        dipole_ints.push_back(std::make_shared<psi::Matrix>(name, this->nsopi(),
@@ -1140,14 +1143,14 @@ void FCI_MO::compute_transition_dipole() {
     //    sodOBI->compute(dipole_ints);
 
     //    // transform SO dipole to MO dipole
-    //    for(psi::SharedMatrix& dipole: dipole_ints){
+    //    for(std::shared_ptr<psi::Matrix>& dipole: dipole_ints){
     //        dipole->transform(ints_->Ca());
     //    }
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
     size_t eigen_size = eigen_.size();
-    psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+    auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
     for (size_t i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
@@ -1162,13 +1165,12 @@ void FCI_MO::compute_transition_dipole() {
             std::vector<double> opdm_a, opdm_b;
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-            psi::SharedMatrix SOtransD =
-                reformat_1rdm("SO transition density " + trans_name, opdm_a, true);
+            auto SOtransD = reformat_1rdm("SO transition density " + trans_name, opdm_a, true);
             SOtransD->back_transform(integral_->Ca());
 
             size_t nao = sotoao->coldim(0);
-            psi::SharedMatrix AOtransD(
-                new psi::Matrix("AO transition density " + trans_name, nao, nao));
+            auto AOtransD =
+                std::make_shared<psi::Matrix>("AO transition density " + trans_name, nao, nao);
             AOtransD->remove_symmetry(SOtransD, sotoao);
 
             std::vector<double> de(4, 0.0);
@@ -1197,8 +1199,8 @@ void FCI_MO::compute_transition_dipole() {
     //        std::vector<double> opdm_b (na_ * na_, 0.0);
     //        ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-    //        psi::SharedMatrix transD (new psi::Matrix("MO transition density 0 -> " +
-    //        std::to_string(A), nmopi_, nmopi_));
+    //        auto transD = std::make_shared<psi::Matrix>("MO transition density 0 -> " +
+    //        std::to_string(A), nmopi_, nmopi_);
     //        symmetrize_density(opdm_a, transD);
     //        transD->back_transform(ints_->Ca());
 
@@ -1281,7 +1283,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         // prepare CI_RDMS
         int dim = (eigen_[0].first)->dim();
         size_t eigen_size = eigen_.size();
-        psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+        auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
         for (size_t i = 0; i < eigen_size; ++i) {
             evecs->set_column(0, i, (eigen_[i]).first);
         }
@@ -1314,7 +1316,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
             // eigen vectors for current symmetry
             int dim = (eigens_[n][0].first)->dim();
             size_t eigen_size = eigens_[n].size();
-            psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+            auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
             for (size_t i = 0; i < eigen_size; ++i) {
                 evecs->set_column(0, i, (eigens_[n][i]).first);
             }
@@ -1379,7 +1381,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         // prepare CI_RDMS
         int dim = (eigen_[0].first)->dim();
         size_t eigen_size = eigen_.size();
-        psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+        auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
         for (size_t i = 0; i < eigen_size; ++i) {
             evecs->set_column(0, i, (eigen_[i]).first);
         }
@@ -1413,7 +1415,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
             // eigen vectors for current symmetry
             int dim = (eigens_[n][0].first)->dim();
             size_t eigen_size = eigens_[n].size();
-            psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+            auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
             for (size_t i = 0; i < eigen_size; ++i) {
                 evecs->set_column(0, i, (eigens_[n][i]).first);
             }
@@ -1475,7 +1477,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
         std::tie(irrep0, multi0, nroots0, weights0) = sa_info_[A];
 
         size_t ndets0 = (eigens_[A][0].first)->dim();
-        psi::SharedMatrix evecs0(new psi::Matrix("evecs", ndets0, nroots0));
+        auto evecs0 = std::make_shared<psi::Matrix>("evecs", ndets0, nroots0);
         for (int i = 0; i < nroots0; ++i) {
             evecs0->set_column(0, i, (eigens_[A][i]).first);
         }
@@ -1512,12 +1514,12 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             size_t ndets1 = (eigens_[B][0].first)->dim();
             size_t ndets = ndets0 + ndets1;
             size_t nroots = nroots0 + nroots1;
-            psi::SharedMatrix evecs(new psi::Matrix("evecs", ndets, nroots));
+            auto evecs = std::make_shared<psi::Matrix>("evecs", ndets, nroots);
 
             for (int n = 0; n < nroots0; ++n) {
-                psi::SharedVector evec0 = evecs0->get_column(0, n);
-                psi::SharedVector evec(
-                    new psi::Vector("combined evec0 " + std::to_string(n), ndets));
+                auto evec0 = evecs0->get_column(0, n);
+                auto evec =
+                    std::make_shared<psi::Vector>("combined evec0 " + std::to_string(n), ndets);
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
                 }
@@ -1525,9 +1527,9 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             }
 
             for (int n = 0; n < nroots1; ++n) {
-                psi::SharedVector evec1 = eigens_[B][n].first;
-                psi::SharedVector evec(
-                    new psi::Vector("combined evec1 " + std::to_string(n), ndets));
+                auto evec1 = eigens_[B][n].first;
+                auto evec =
+                    std::make_shared<psi::Vector>("combined evec1 " + std::to_string(n), ndets);
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
                 }
@@ -1595,7 +1597,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
         std::tie(irrep0, multi0, nroots0, weights0) = sa_info_[A];
 
         size_t ndets0 = (eigens_[A][0].first)->dim();
-        psi::SharedMatrix evecs0(new psi::Matrix("evecs", ndets0, nroots0));
+        auto evecs0 = std::make_shared<psi::Matrix>("evecs", ndets0, nroots0);
         for (int i = 0; i < nroots0; ++i) {
             evecs0->set_column(0, i, (eigens_[A][i]).first);
         }
@@ -1633,12 +1635,12 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             size_t ndets1 = (eigens_[B][0].first)->dim();
             size_t ndets = ndets0 + ndets1;
             size_t nroots = nroots0 + nroots1;
-            psi::SharedMatrix evecs(new psi::Matrix("evecs", ndets, nroots));
+            auto evecs = std::make_shared<psi::Matrix>("evecs", ndets, nroots);
 
             for (int n = 0; n < nroots0; ++n) {
-                psi::SharedVector evec0 = evecs0->get_column(0, n);
-                psi::SharedVector evec(
-                    new psi::Vector("combined evec0 " + std::to_string(n), ndets));
+                auto evec0 = evecs0->get_column(0, n);
+                auto evec =
+                    std::make_shared<psi::Vector>("combined evec0 " + std::to_string(n), ndets);
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
                 }
@@ -1646,9 +1648,9 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             }
 
             for (int n = 0; n < nroots1; ++n) {
-                psi::SharedVector evec1 = eigens_[B][n].first;
-                psi::SharedVector evec(
-                    new psi::Vector("combined evec1 " + std::to_string(n), ndets));
+                auto evec1 = eigens_[B][n].first;
+                auto evec =
+                    std::make_shared<psi::Vector>("combined evec1 " + std::to_string(n), ndets);
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
                 }
@@ -1816,7 +1818,7 @@ d3 FCI_MO::compute_orbital_extents() {
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
 
-    std::vector<psi::SharedMatrix> ao_Qpole;
+    std::vector<std::shared_ptr<psi::Matrix>> ao_Qpole;
     for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
         std::string name = "AO Quadrupole" + direction;
         ao_Qpole.push_back(std::make_shared<psi::Matrix>(name, basisset->nbf(), basisset->nbf()));
@@ -1825,14 +1827,14 @@ d3 FCI_MO::compute_orbital_extents() {
     aoqOBI->compute(ao_Qpole);
 
     // orbital coefficients arranged by orbital energies
-    psi::SharedMatrix Ca_ao = integral_->wfn()->Ca_subset("AO");
+    auto Ca_ao = integral_->wfn()->Ca_subset("AO");
     int nao = Ca_ao->nrow();
     int nmo = Ca_ao->ncol();
 
-    std::vector<psi::SharedVector> quadrupole;
-    quadrupole.push_back(psi::SharedVector(new psi::Vector("Orbital Quadrupole XX", nmo)));
-    quadrupole.push_back(psi::SharedVector(new psi::Vector("Orbital Quadrupole YY", nmo)));
-    quadrupole.push_back(psi::SharedVector(new psi::Vector("Orbital Quadrupole ZZ", nmo)));
+    std::vector<std::shared_ptr<psi::Vector>> quadrupole;
+    quadrupole.push_back(std::make_shared<psi::Vector>("Orbital Quadrupole XX", nmo));
+    quadrupole.push_back(std::make_shared<psi::Vector>("Orbital Quadrupole YY", nmo));
+    quadrupole.push_back(std::make_shared<psi::Vector>("Orbital Quadrupole ZZ", nmo));
 
     for (int i = 0; i < nmo; ++i) {
         double sumx = 0.0, sumy = 0.0, sumz = 0.0;
@@ -1850,7 +1852,7 @@ d3 FCI_MO::compute_orbital_extents() {
         quadrupole[2]->set(0, i, std::fabs(sumz));
     }
 
-    psi::SharedVector epsilon_a = scf_info_->epsilon_a();
+    auto epsilon_a = scf_info_->epsilon_a();
     std::vector<std::tuple<double, int, int>> metric;
     for (int h = 0; h < epsilon_a->nirrep(); ++h) {
         for (int i = 0; i < epsilon_a->dimpi()[h]; ++i) {
@@ -1927,7 +1929,7 @@ FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rd
     bool disk = false;
 
     // TODO: remove this when removing eigen_
-    psi::SharedMatrix evecs = prepare_for_rdm();
+    auto evecs = prepare_for_rdm();
 
     std::vector<size_t> dim6(6, nactv_);
 
@@ -2035,6 +2037,91 @@ FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
     }
 
     return refs;
+}
+
+void FCI_MO::generalized_rdms(size_t root, const std::vector<double>& X,
+                              ambit::BlockedTensor& grdms, bool c_right, int rdm_level,
+                              std::vector<std::string>) {
+    // test rdm level
+    if (rdm_level > 3) {
+        throw std::runtime_error("RDM level too large!");
+    }
+
+    // test X size
+    auto ndets = determinant_.size();
+    if (X.size() != ndets) {
+        throw std::runtime_error("Incorrect dimension for the input vector X.");
+    }
+
+    // test consistency between grdms and rdm_level
+    auto blabels = grdms.block_labels();
+    if (blabels.size() != rdm_level + 1) {
+        throw std::runtime_error("Incorrect number of tensors in the result BlockedTensor.");
+    }
+
+    // test the dimension of the tensor
+    if (nactv_ != grdms.block(blabels[0]).dim(0)) {
+        throw std::runtime_error("Incorrect dimension for tensors in the result BlockedTensor.");
+    }
+
+    // prepare the expansion vectors to SharedMatrix format for CI_RDMs
+    auto evecs = std::make_shared<psi::Matrix>("CI and Multiplier Vectors", ndets, 2);
+    int col_c = c_right ? 1 : 0;
+    int col_x = c_right ? 0 : 1;
+
+    evecs->set_column(0, col_c, (eigen_[root]).first);
+    for (size_t i = 0; i < ndets; ++i) {
+        evecs->set(0, i, col_x, X.at(i));
+    }
+
+    // use CI_RDMs to compute the "transition" RDMs
+    CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, 0, 1);
+
+    if (rdm_level == 3) {
+        ci_rdms.compute_3rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data(),
+                             grdms.block(blabels[2]).data(), grdms.block(blabels[3]).data());
+    } else if (rdm_level == 2) {
+        ci_rdms.compute_2rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data(),
+                             grdms.block(blabels[2]).data());
+    } else {
+        ci_rdms.compute_1rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data());
+    }
+}
+
+void FCI_MO::add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
+                             const std::map<std::string, double>& block_label_to_factor,
+                             std::vector<double>& sigma) {
+    const auto& evec = eigen_[root].first;
+
+    for (const auto& pair : block_label_to_factor) {
+        const auto factor = pair.second;
+        const auto block_label = pair.first;
+        if (not h.is_block(block_label)) {
+            throw std::runtime_error("Block " + block_label + " not available!");
+        }
+        const auto& data = h.block(block_label).data();
+
+        auto h_rank = block_label.size();
+        if (h_rank == 2) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_1(data, evec, factor, sigma, spin);
+        }
+        if (h_rank == 4) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            spin += islower(block_label[1]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_2(data, evec, factor, sigma, spin);
+        }
+        if (h_rank == 6) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            spin += islower(block_label[1]) ? "a" : "b";
+            spin += islower(block_label[2]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_3(data, evec, factor, sigma, spin);
+        }
+    }
+}
+
+void FCI_MO::generalized_sigma(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> sigma) {
+    sigma_vector_->compute_sigma(sigma, x);
 }
 
 void FCI_MO::build_dets321() {
@@ -2500,7 +2587,8 @@ FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>&
     auto p_add =
         [&](const std::vector<
                 std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>& J2I_lists,
-            SharedVector evec, std::vector<double>& pbra_data, std::vector<double>& pket_data) {
+            std::shared_ptr<psi::Vector> evec, std::vector<double>& pbra_data,
+            std::vector<double>& pket_data) {
             for (const auto& coupled_dets : J2I_lists) {
                 const auto [I, u, v, z, sign] = coupled_dets;
                 auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
@@ -2582,7 +2670,7 @@ void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
     timer_on("Compute Ref");
 
     // prepare eigen vectors for ci_rdms
-    psi::SharedMatrix evecs = prepare_for_rdm();
+    auto evecs = prepare_for_rdm();
 
     // compute 1-RDM
     auto D1 = compute_n_rdm(determinant_, evecs, 1, root1, root2, root_sym_, multi_, false);
@@ -2706,30 +2794,31 @@ void FCI_MO::xms_rotate_civecs() {
         outfile->Printf("\n  XMS Rotation for %s %s.\n", multi_symbols_[multi - 1].c_str(),
                         irrep_symbols_[irrep].c_str());
 
-        // put eigen vectors of current symmetry entry to psi::SharedMatrix form
+        // put eigen vectors of current symmetry entry to std::shared_ptr<psi::Matrix> form
         auto& eigen = eigens_[n];
         int dim = (eigen[0].first)->dim();
-        psi::SharedMatrix civecs(new psi::Matrix("ci vecs", dim, nroots));
+        auto civecs = std::make_shared<psi::Matrix>("ci vecs", dim, nroots);
         for (int i = 0; i < nroots; ++i) {
             civecs->set_column(0, i, (eigen[i]).first);
         }
 
         // compute averaged Fock matrix between states <M|F|N>
-        psi::SharedMatrix rcivecs = xms_rotate_this_civecs(p_spaces_[n], civecs, Fa, Fb);
+        auto rcivecs = xms_rotate_this_civecs(p_spaces_[n], civecs, Fa, Fb);
 
         // put in eigens_
         for (int i = 0; i < nroots; ++i) {
-            eigens_[n][i] =
-                std::make_pair<psi::SharedVector, double>(rcivecs->get_column(0, i), 0.0);
+            eigens_[n][i] = std::make_pair<std::shared_ptr<psi::Vector>, double>(
+                rcivecs->get_column(0, i), 0.0);
         }
     }
 }
 
-psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
-                                                 ambit::Tensor Fa, ambit::Tensor Fb) {
+std::shared_ptr<psi::Matrix> FCI_MO::xms_rotate_this_civecs(const det_vec& p_space,
+                                                            std::shared_ptr<psi::Matrix> civecs,
+                                                            ambit::Tensor Fa, ambit::Tensor Fb) {
     int nroots = civecs->ncol();
     outfile->Printf("\n");
-    psi::SharedMatrix Fock(new psi::Matrix("Fock <M|F|N>", nroots, nroots));
+    auto Fock = std::make_shared<psi::Matrix>("Fock <M|F|N>", nroots, nroots);
 
     for (int M = 0; M < nroots; ++M) {
         for (int N = M; N < nroots; ++N) {
@@ -2753,13 +2842,13 @@ psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::Sh
     Fock->print();
 
     // diagonalize Fock
-    psi::SharedMatrix Fevec(new psi::Matrix("Fock Evec", nroots, nroots));
-    psi::SharedVector Feval(new psi::Vector("Fock Eval", nroots));
+    auto Fevec = std::make_shared<psi::Matrix>("Fock Evec", nroots, nroots);
+    auto Feval = std::make_shared<psi::Vector>("Fock Eval", nroots);
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);
 
     // Rotate CI vectors
-    psi::SharedMatrix rcivecs(civecs->clone());
+    std::shared_ptr<psi::Matrix> rcivecs(civecs->clone());
     rcivecs->zero();
     rcivecs->gemm(false, false, 1.0, civecs, Fevec, 0.0);
 
@@ -2868,7 +2957,7 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
 }
 
 void FCI_MO::set_eigens(
-    const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
+    const std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>>& eigens) {
     size_t nentry = sa_info_.size();
     if (eigens.size() == nentry) {
         for (size_t n = 0; n < nentry; ++n) {
@@ -2885,16 +2974,16 @@ void FCI_MO::set_eigens(
     }
 }
 
-psi::SharedMatrix FCI_MO::prepare_for_rdm() {
+std::shared_ptr<psi::Matrix> FCI_MO::prepare_for_rdm() {
     size_t n_dets = determinant_.size();
-    psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroot_);
+    auto evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroot_);
     for (size_t i = 0; i < nroot_; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
     return evecs;
 }
 
-std::pair<std::shared_ptr<vecdet>, psi::SharedMatrix>
+std::pair<std::shared_ptr<vecdet>, std::shared_ptr<psi::Matrix>>
 FCI_MO::prepare_for_trans_rdm(std::shared_ptr<FCI_MO> method2) {
     // combine p_space
     std::vector<Determinant> dets(determinant_);
@@ -2906,7 +2995,7 @@ FCI_MO::prepare_for_trans_rdm(std::shared_ptr<FCI_MO> method2) {
     size_t n_dets_1 = determinant_.size();
     size_t n_dets = dets.size();
     size_t nroots = nroot_ + method2->nroot();
-    psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroots);
+    auto evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroots);
 
     for (size_t n = 0; n < nroot_; ++n) {
         for (size_t i = 0; i < n_dets_1; ++i) {
@@ -2924,9 +3013,10 @@ FCI_MO::prepare_for_trans_rdm(std::shared_ptr<FCI_MO> method2) {
     return std::make_pair(p_space, evecs);
 }
 
-std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
-                                                 int rdm_level, int root1, int root2,
-                                                 const StateInfo& state2, bool disk) {
+std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space,
+                                                 std::shared_ptr<psi::Matrix> evecs, int rdm_level,
+                                                 int root1, int root2, const StateInfo& state2,
+                                                 bool disk) {
     if (rdm_level > 3 || rdm_level < 1) {
         throw psi::PSIEXCEPTION("Incorrect RDM_LEVEL. Check your code!");
     }
@@ -2998,7 +3088,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
     return out;
 }
 
-ambit::Tensor FCI_MO::compute_n_rdm_sf(const vecdet& p_space, psi::SharedMatrix evecs,
+ambit::Tensor FCI_MO::compute_n_rdm_sf(const vecdet& p_space, std::shared_ptr<psi::Matrix> evecs,
                                        int rdm_level, int root1, int root2,
                                        const StateInfo& state2) {
     if (rdm_level > 3 || rdm_level < 1) {
@@ -3044,9 +3134,10 @@ ambit::Tensor FCI_MO::compute_n_rdm_sf(const vecdet& p_space, psi::SharedMatrix 
     return out;
 }
 
-std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
-                                                 int rdm_level, int root1, int root2, int irrep,
-                                                 int multi, bool disk) {
+std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space,
+                                                 std::shared_ptr<psi::Matrix> evecs, int rdm_level,
+                                                 int root1, int root2, int irrep, int multi,
+                                                 bool disk) {
     if (rdm_level > 3 || rdm_level < 1) {
         throw psi::PSIEXCEPTION("Incorrect RDM_LEVEL. Check your code!");
     }
@@ -3139,13 +3230,13 @@ std::shared_ptr<RDMs> FCI_MO::transition_reference(int root1, int root2, bool mu
     }
 
     vecdet& p_space = multi_state ? p_spaces_[entry] : determinant_;
-    std::vector<std::pair<psi::SharedVector, double>>& eigen =
+    std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>& eigen =
         multi_state ? eigens_[entry] : eigen_;
 
     // prepare eigenvectors
     size_t dim = p_space.size();
     size_t eigen_size = eigen.size();
-    psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+    auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
     for (size_t i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen[i]).first);
     }
@@ -3166,7 +3257,7 @@ std::shared_ptr<RDMs> FCI_MO::transition_reference(int root1, int root2, bool mu
     }
 }
 
-psi::SharedMatrix FCI_MO::ci_wave_functions() {
+std::shared_ptr<psi::Matrix> FCI_MO::ci_wave_functions() {
     int nroots = static_cast<int>(eigen_.size());
     int ndets = static_cast<int>(determinant_.size());
     auto evecs = std::make_shared<psi::Matrix>("evecs", ndets, nroots);
@@ -3200,4 +3291,26 @@ void FCI_MO::print_occupation_strings_perirrep(
         }
     }
 }
+
+std::vector<ambit::Tensor> FCI_MO::eigenvectors() {
+    size_t ndets = determinant_.size();
+
+    std::vector<ambit::Tensor> out;
+    out.reserve(nroot_);
+
+    for (size_t root = 0; root < nroot_; ++root) {
+        auto tmp = ambit::Tensor::build(ambit::CoreTensor, "evec_" + std::to_string(root), {ndets});
+
+        for (size_t I = 0; I < ndets; ++I) {
+            tmp.data()[I] = (eigen_[root].first)->get(I);
+        }
+
+        out.push_back(tmp);
+    }
+
+    return out;
+}
+
+size_t FCI_MO::det_size() { return determinant_.size(); }
+
 } // namespace forte

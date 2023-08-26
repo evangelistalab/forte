@@ -1108,7 +1108,7 @@ void SADSRG::H1d_A2_C2pphh(BlockedTensor& H1, BlockedTensor& T2, const double& a
 
     // small T2 blocks
     std::vector<std::string> small_blocks;
-    for (const std::string& block : {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"}) {
+    for (const auto block : {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"}) {
         std::string sblock;
         for (int i : {1, 0, 3, 2})
             sblock.push_back(block[i]);
@@ -1118,7 +1118,7 @@ void SADSRG::H1d_A2_C2pphh(BlockedTensor& H1, BlockedTensor& T2, const double& a
     auto temp2 = ambit::BlockedTensor::build(tensor_type_, "temp_H1dA2C2pphh", small_blocks);
     H1d_A2_C2pphh_small(H1, T2, 1.0, temp2);
     C2["pqrs"] += alpha * temp2["pqrs"];
-    for (const std::string& block : {"avca", "avac", "vaaa", "aaca"}) {
+    for (const auto block : {"avca", "avac", "vaaa", "aaca"}) {
         std::string sblock;
         for (int i : {1, 0, 3, 2})
             sblock.push_back(block[i]);

@@ -42,9 +42,7 @@ namespace forte {
  */
 class SortedStringList {
   public:
-    SortedStringList(const DeterminantHashVec& space,
-                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                     DetSpinType sorted_string_spin);
+    SortedStringList(size_t nmo, const DeterminantHashVec& space, DetSpinType sorted_string_spin);
 
     SortedStringList();
     ~SortedStringList();
@@ -56,7 +54,7 @@ class SortedStringList {
     size_t add(size_t pos) const;
 
   protected:
-    int nmo_ = 0;
+    size_t nmo_ = 0;
     size_t num_dets_ = 0;
     DetSpinType sorted_spin_type_;
     std::vector<String> sorted_half_dets_;

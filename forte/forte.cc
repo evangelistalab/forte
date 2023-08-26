@@ -58,8 +58,6 @@
 
 #include "forte.h"
 
-using namespace psi;
-
 namespace forte {
 
 #ifdef HAVE_GA
@@ -116,7 +114,7 @@ void cleanup() {
 }
 
 void banner() {
-    outfile->Printf(
+    psi::outfile->Printf(
         "\n"
         "  Forte\n"
         "  ----------------------------------------------------------------------------\n"
@@ -128,7 +126,7 @@ void banner() {
         "    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang\n"
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
-    outfile->Printf("\n  Size of Determinant class: %d bits", sizeof(Determinant) * 8);
+    psi::outfile->Printf("\n  Size of Determinant class: %d bits", sizeof(Determinant) * 8);
 }
 
 } // namespace forte

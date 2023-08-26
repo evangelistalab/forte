@@ -35,7 +35,7 @@ compare_values(refcasscf, Ecasscf, 8, "CASSCF energy")
 
 set forte {
   job_type             casscf
-  active_space_solver  cas
+  active_space_solver  detci
   int_type             df
   multiplicity         1
   restricted_docc      [0,0,0,0]

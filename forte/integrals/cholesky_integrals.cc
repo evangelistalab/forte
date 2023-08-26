@@ -34,7 +34,6 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/sieve.h"
 #include "psi4/lib3index/cholesky.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
@@ -174,27 +173,28 @@ void CholeskyIntegrals::gather_integrals() {
     size_t nbf = primary->nbf();
 
     /// Needed to generate sieve information
-    std::shared_ptr<IntegralFactory> integral(
-        new IntegralFactory(primary, primary, primary, primary));
+    auto integral = std::make_shared<IntegralFactory>(primary, primary, primary, primary);
+
     double tol_cd = options_->get_double("CHOLESKY_TOLERANCE");
 
     // This is creates the cholesky decomposed AO integrals
     local_timer timer;
-    std::shared_ptr<CholeskyERI> Ch(new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
-                                                    options_->get_double("INTS_TOLERANCE"), tol_cd,
-                                                    psi::Process::environment.get_memory()));
+    auto twobodyaoints = std::shared_ptr<TwoBodyAOInt>(integral->eri());
+    auto Ch = std::make_shared<CholeskyERI>(twobodyaoints, options_->get_double("INTS_TOLERANCE"),
+                                            tol_cd, psi::Process::environment.get_memory());
+
     if (options_->get_str("DF_INTS_IO") == "LOAD") {
-        std::shared_ptr<ERISieve> sieve(
-            new ERISieve(primary, options_->get_double("INTS_TOLERANCE")));
-        const std::vector<std::pair<int, int>>& function_pairs = sieve->function_pairs();
-        size_t ntri = sieve->function_pairs().size();
+        // std::shared_ptr<ERISieve> sieve(
+        //     new ERISieve(primary, options_->get_double("INTS_TOLERANCE")));
+        const std::vector<std::pair<int, int>>& function_pairs = twobodyaoints->function_pairs();
+        size_t ntri = twobodyaoints->function_pairs().size();
         size_t nbf = primary->nbf();
         std::string str = "Reading CD Integrals";
         if (print_) {
             outfile->Printf("\n    %-36s ...", str.c_str());
         }
 
-        std::shared_ptr<PSIO> psio(new PSIO());
+        auto psio = std::make_shared<PSIO>();
         int file_unit = PSIF_DFSCF_BJ;
 
         if (psio->exists(file_unit)) {

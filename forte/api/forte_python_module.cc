@@ -63,6 +63,7 @@
 #include "mrdsrg-spin-adapted/sa_mrpt2.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
+#include "sci/tdci.h"
 
 #include "post_process/spin_corr.h"
 
@@ -90,8 +91,9 @@ double get_master_screen_threshold();
 
 /// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {
-    py::class_<ActiveSpaceMethod>(m, "ActiveSpaceMethod")
+    py::class_<ActiveSpaceMethod, std::shared_ptr<ActiveSpaceMethod>>(m, "ActiveSpaceMethod")
         .def("compute_energy", &ActiveSpaceMethod::compute_energy)
+        .def("set_quiet_mode", &ActiveSpaceMethod::set_quiet_mode)
         .def("dump_wave_function", &ActiveSpaceMethod::dump_wave_function)
         .def("read_wave_function", &ActiveSpaceMethod::read_wave_function);
 }
@@ -105,6 +107,8 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Solve the contracted CI eigenvalue problem using given integrals")
         .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
              "Compute the weighted average reference")
+        .def("state_energies_map", &ActiveSpaceSolver::state_energies_map,
+             "Return a map of StateInfo to the computed nroots of energies")
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
              "Set the active space integrals manually")
         .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
@@ -120,7 +124,8 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("state_filename_map", &ActiveSpaceSolver::state_filename_map,
              "Return a map from StateInfo to wave function file names")
         .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function,
-             "Dump wave functions to disk");
+             "Dump wave functions to disk")
+        .def("eigenvectors", &ActiveSpaceSolver::eigenvectors, "Return the CI wave functions");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
@@ -208,6 +213,7 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
+
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
     m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
@@ -258,6 +264,8 @@ PYBIND11_MODULE(_forte, m) {
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
 
+    //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
+
     export_ForteOptions(m);
 
     export_ActiveSpaceMethod(m);
@@ -300,7 +308,9 @@ PYBIND11_MODULE(_forte, m) {
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
         m, "DynamicCorrelationSolver")
-        .def("compute_energy", &DynamicCorrelationSolver::compute_energy);
+        .def("compute_energy", &DynamicCorrelationSolver::compute_energy)
+        .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
+             "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
 
     // export ActiveSpaceIntegrals
     py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
@@ -314,6 +324,8 @@ PYBIND11_MODULE(_forte, m) {
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
              "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
         .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
+        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry,
+             "Return the symmetry of the active MOs")
         .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
         .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
@@ -337,6 +349,7 @@ PYBIND11_MODULE(_forte, m) {
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
+        .def("compute_gradient", &MASTER_DSRG::compute_gradient, "Compute the DSRG gradient")
         .def("compute_Heff_actv", &MASTER_DSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
@@ -352,7 +365,11 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
-             "Delete amplitudes checkpoint files");
+             "Delete amplitudes checkpoint files")
+        .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
+             "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
+        .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
+             "Set the shared pointer for ActiveSpaceSolver");
 
     // export SADSRG
     py::class_<SADSRG>(m, "SADSRG")
@@ -408,6 +425,13 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &DSRG_MRPT::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
+
+    // export the time-dependent ACI code
+    py::class_<TDCI>(m, "TDCI", "Time-dependent ACI")
+        .def(py::init<std::shared_ptr<ActiveSpaceMethod>, std::shared_ptr<SCFInfo>,
+                      std::shared_ptr<ForteOptions>, std::shared_ptr<MOSpaceInfo>,
+                      std::shared_ptr<ActiveSpaceIntegrals>>())
+        .def("compute_energy", &TDCI::compute_energy, "Compute TD-ACI");
 
     py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
         .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>,

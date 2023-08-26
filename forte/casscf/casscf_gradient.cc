@@ -236,7 +236,7 @@ SharedMatrix CASSCF::compute_gradient() {
     tpdm_backtransform();
 
     outfile->Printf("\n    Computing Gradient .............................. Done\n");
-    return std::make_shared<Matrix>("nullptr", 0, 0);
+    return std::make_shared<psi::Matrix>("nullptr", 0, 0);
 }
 
 /**
@@ -247,7 +247,8 @@ SharedMatrix CASSCF::compute_gradient() {
 void CASSCF::write_1rdm_spin_dependent() {
     outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
 
-    SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep_, nmo_dim_, nmo_dim_));
+    auto D1 = std::make_shared<psi::Matrix>("1rdm coefficients contribution", nirrep_, nmo_dim_,
+                                            nmo_dim_);
 
     for (size_t i = 0, size_c = core_mos_rel_.size(); i < size_c; ++i) {
         D1->set(core_mos_rel_[i].first, core_mos_rel_[i].second, core_mos_rel_[i].second, 1.0);
@@ -276,9 +277,9 @@ void CASSCF::write_lagrangian() {
     outfile->Printf("\n    Writing Lagrangian .............................. ");
 
     set_lagrangian();
-    SharedMatrix L(new Matrix("Lagrangian", nirrep_, nmo_dim_, nmo_dim_));
+    auto L = std::make_shared<psi::Matrix>("Lagrangian", nirrep_, nmo_dim_, nmo_dim_);
 
-    for (const std::string& block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC"}) {
+    for (const std::string block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC"}) {
         std::vector<std::vector<std::pair<unsigned long, unsigned long>,
                                 std::allocator<std::pair<unsigned long, unsigned long>>>>
             spin_pair;

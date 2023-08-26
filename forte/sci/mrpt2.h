@@ -46,7 +46,7 @@ class MRPT2 {
     // Class constructor and destructor
     MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
-          psi::SharedMatrix evecs, psi::SharedVector evals, int nroot);
+          std::shared_ptr<psi::Matrix> evecs, std::shared_ptr<psi::Vector> evals, int nroot);
 
     ~MRPT2();
 
@@ -64,9 +64,9 @@ class MRPT2 {
     // MoSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     // The sCI expansion coefficients
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
     // The sCI energies
-    psi::SharedVector evals_;
+    std::shared_ptr<psi::Vector> evals_;
     // the orbital symmetry labels
     std::vector<int> mo_symmetry_;
     // Number of reference roots

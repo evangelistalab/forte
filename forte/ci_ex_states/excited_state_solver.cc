@@ -78,7 +78,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
-    quiet_mode_ = options->get_bool("SCI_QUIET_MODE");
+    quiet_ = options->get_bool("SCI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
@@ -126,7 +126,7 @@ double ExcitedStateSolver::compute_energy() {
         {"Selected Configuration Interaction Excited States",
          "written by Jeffrey B. Schriber, Tianyuan Zhang, and Francesco A. Evangelista"});
     print_info();
-    if (!quiet_mode_) {
+    if (!quiet_) {
         psi::outfile->Printf("\n  Using %d thread(s)", omp_get_max_threads());
     }
 
@@ -148,16 +148,16 @@ double ExcitedStateSolver::compute_energy() {
 
     DeterminantHashVec full_space;
     std::vector<size_t> sizes(nroot_);
-    psi::SharedVector energies(new psi::Vector(nroot_));
+    auto energies = std::make_shared<psi::Vector>(nroot_);
     std::vector<double> pt2_energies(nroot_);
 
     // The eigenvalues and eigenvectors
     DeterminantHashVec PQ_space;
-    psi::SharedMatrix PQ_evecs;
-    psi::SharedVector PQ_evals;
+    std::shared_ptr<psi::Matrix> PQ_evecs;
+    std::shared_ptr<psi::Vector> PQ_evals;
 
     for (int i = 0; i < nrun; ++i) {
-        if (!quiet_mode_)
+        if (!quiet_)
             psi::outfile->Printf("\n  Computing wavefunction for root %d", i);
 
         if (multi_state) {
@@ -186,7 +186,7 @@ double ExcitedStateSolver::compute_energy() {
 
         if (ex_alg_ == "ROOT_COMBINE") {
             sizes[i] = PQ_space.size();
-            if (!quiet_mode_)
+            if (!quiet_)
                 psi::outfile->Printf("\n  Combining determinant spaces");
             // Combine selected determinants into total space
             full_space.merge(PQ_space);
@@ -220,7 +220,7 @@ double ExcitedStateSolver::compute_energy() {
     }
 
     std::shared_ptr<DeterminantSubstitutionLists> op_c =
-        std::make_shared<DeterminantSubstitutionLists>(as_ints_);
+        std::make_shared<DeterminantSubstitutionLists>(as_ints_->active_mo_symmetry());
 
     if (ex_alg_ == "ROOT_COMBINE") {
         psi::outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
@@ -290,13 +290,13 @@ double ExcitedStateSolver::compute_energy() {
            as_ints_->scalar_energy();
 }
 
-void ExcitedStateSolver::compute_multistate(psi::SharedVector& PQ_evals) {
+void ExcitedStateSolver::compute_multistate(std::shared_ptr<psi::Vector>& PQ_evals) {
     psi::outfile->Printf("\n  Computing multistate solution");
     int nroot = old_roots_.size();
 
     // Form the overlap matrix
 
-    psi::SharedMatrix S(new psi::Matrix(nroot, nroot));
+    auto S = std::make_shared<psi::Matrix>(nroot, nroot);
     S->identity();
     for (int A = 0; A < nroot; ++A) {
         std::vector<std::pair<Determinant, double>>& stateA = old_roots_[A];
@@ -321,15 +321,15 @@ void ExcitedStateSolver::compute_multistate(psi::SharedVector& PQ_evals) {
         }
     }
     // Diagonalize the overlap
-    psi::SharedMatrix Sevecs(new psi::Matrix(nroot, nroot));
-    psi::SharedVector Sevals(new psi::Vector(nroot));
+    auto Sevecs = std::make_shared<psi::Matrix>(nroot, nroot);
+    auto Sevals = std::make_shared<psi::Vector>(nroot);
     S->diagonalize(Sevecs, Sevals);
 
     // Form symmetric orthogonalization matrix
 
-    psi::SharedMatrix Strans(new psi::Matrix(nroot, nroot));
-    psi::SharedMatrix Sint(new psi::Matrix(nroot, nroot));
-    psi::SharedMatrix Diag(new psi::Matrix(nroot, nroot));
+    auto Strans = std::make_shared<psi::Matrix>(nroot, nroot);
+    auto Sint = std::make_shared<psi::Matrix>(nroot, nroot);
+    auto Diag = std::make_shared<psi::Matrix>(nroot, nroot);
     Diag->identity();
     for (int n = 0; n < nroot; ++n) {
         Diag->set(n, n, 1.0 / sqrt(Sevals->get(n)));
@@ -340,7 +340,7 @@ void ExcitedStateSolver::compute_multistate(psi::SharedVector& PQ_evals) {
 
     // Form the Hamiltonian
 
-    psi::SharedMatrix H(new psi::Matrix(nroot, nroot));
+    auto H = std::make_shared<psi::Matrix>(nroot, nroot);
 
 #pragma omp parallel for
     for (int A = 0; A < nroot; ++A) {
@@ -364,8 +364,8 @@ void ExcitedStateSolver::compute_multistate(psi::SharedVector& PQ_evals) {
     //    H->print();
     H->transform(Strans);
 
-    psi::SharedMatrix Hevecs(new psi::Matrix(nroot, nroot));
-    psi::SharedVector Hevals(new psi::Vector(nroot));
+    auto Hevecs = std::make_shared<psi::Matrix>(nroot, nroot);
+    auto Hevals = std::make_shared<psi::Vector>(nroot);
 
     H->diagonalize(Hevecs, Hevals);
 
@@ -392,7 +392,7 @@ void ExcitedStateSolver::dump_wave_function(const std::string& filename) {
     file.close();
 }
 
-std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
 ExcitedStateSolver::read_wave_function(const std::string& filename) {
     std::string line;
     std::ifstream file(filename);
@@ -457,8 +457,9 @@ ExcitedStateSolver::read_wave_function(const std::string& filename) {
     return {norbs, det_space, evecs};
 }
 
-void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
-                                     psi::SharedVector& PQ_evals, size_t cycle) {
+void ExcitedStateSolver::print_final(DeterminantHashVec& dets,
+                                     std::shared_ptr<psi::Matrix>& PQ_evecs,
+                                     std::shared_ptr<psi::Vector>& PQ_evals, size_t cycle) {
     size_t dim = dets.size();
     // Print a summary
     psi::outfile->Printf("\n\n  ==> Excited state solver summary <==\n");
@@ -529,8 +530,8 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<ps
     }
 }
 
-void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs,
-                                     int root) {
+void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space,
+                                     std::shared_ptr<psi::Matrix> evecs, int root) {
 
     std::ofstream final_wfn;
     final_wfn.open("sci_final_wfn_" + std::to_string(root) + ".txt");
@@ -566,7 +567,7 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
     // read wave function from method2
     size_t norbs2;
     std::vector<Determinant> dets2;
-    psi::SharedMatrix evecs2;
+    std::shared_ptr<psi::Matrix> evecs2;
     std::tie(norbs2, dets2, evecs2) = method2->read_wave_function(method2->wfn_filename());
 
     if (norbs2 != size_t(nact_)) {
@@ -610,7 +611,7 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
         size_t root1 = roots_pair.first;
         size_t root2 = roots_pair.second + nroot_;
 
-        CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
+        CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), dets, evecs, root1, root2);
         ci_rdms.set_print(false);
 
         ambit::Tensor a, b, aa, ab, bb, aaa, aab, abb, bbb;
@@ -679,12 +680,12 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
 
 std::shared_ptr<RDMs>
 ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                 DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root1,
-                                 int root2, int max_rdm_level, RDMsType rdm_type) {
+                                 DeterminantHashVec& dets, std::shared_ptr<psi::Matrix>& PQ_evecs,
+                                 int root1, int root2, int max_rdm_level, RDMsType rdm_type) {
 
     // TODO: this code might be OBSOLETE (Francesco)
     if (!direct_rdms_) {
-        auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints);
+        auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints->active_mo_symmetry());
         if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
             op->build_strings(dets);
         }
@@ -702,7 +703,7 @@ ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         }
     }
 
-    CI_RDMS ci_rdms(dets, fci_ints, PQ_evecs, root1, root2);
+    CI_RDMS ci_rdms(fci_ints->active_mo_symmetry(), dets, PQ_evecs, root1, root2);
 
     ci_rdms.set_max_rdm(max_rdm_level);
 
@@ -822,11 +823,12 @@ ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
     return out;
 }
 
-void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
-                                       int root, int ref_root) {
+void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets,
+                                       std::shared_ptr<psi::Matrix>& PQ_evecs, int root,
+                                       int ref_root) {
     std::vector<std::pair<Determinant, double>> vec;
 
-    if (!quiet_mode_ and nroot_ > 0) {
+    if (!quiet_ and nroot_ > 0) {
         psi::outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root);
     }
     const det_hashvec& detmap = dets.wfn_hash();
@@ -834,7 +836,7 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatr
         vec.push_back(std::make_pair(detmap[i], PQ_evecs->get(i, ref_root)));
     }
     old_roots_.push_back(vec);
-    if (!quiet_mode_ and nroot_ > 0) {
+    if (!quiet_ and nroot_ > 0) {
         psi::outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
     }
 }
@@ -852,6 +854,4 @@ ExcitedStateSolver::~ExcitedStateSolver() {
 void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ = ex_alg; }
 
 void ExcitedStateSolver::set_core_excitation(bool core_ex) { core_ex_ = core_ex; }
-
-void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
 } // namespace forte

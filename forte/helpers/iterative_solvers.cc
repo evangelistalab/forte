@@ -55,7 +55,7 @@ DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), n
     residual_.resize(nroot, 0.0);
 }
 
-void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
+void DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     // set space size
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
@@ -102,7 +102,7 @@ void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = 
 
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
-void DavidsonLiuSolver::add_guess(psi::SharedVector vec) {
+void DavidsonLiuSolver::add_guess(std::shared_ptr<psi::Vector> vec) {
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
         b_->set(basis_size_, j, vec->get(j));
@@ -110,7 +110,7 @@ void DavidsonLiuSolver::add_guess(psi::SharedVector vec) {
     basis_size_++;
 }
 
-void DavidsonLiuSolver::get_b(psi::SharedVector vec) {
+void DavidsonLiuSolver::get_b(std::shared_ptr<psi::Vector> vec) {
     PRINT_VARS("get_b")
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
@@ -118,7 +118,7 @@ void DavidsonLiuSolver::get_b(psi::SharedVector vec) {
     }
 }
 
-bool DavidsonLiuSolver::add_sigma(psi::SharedVector vec) {
+bool DavidsonLiuSolver::add_sigma(std::shared_ptr<psi::Vector> vec) {
     PRINT_VARS("add_sigma")
     // Place the new sigma vector at the end
     for (size_t j = 0; j < size_; ++j) {
@@ -132,14 +132,13 @@ void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
     project_out_ = project_out;
 }
 
-psi::SharedVector DavidsonLiuSolver::eigenvalues() const { return lambda; }
+std::shared_ptr<psi::Vector> DavidsonLiuSolver::eigenvalues() const { return lambda; }
 
-psi::SharedMatrix DavidsonLiuSolver::eigenvectors() const { return bnew; }
+std::shared_ptr<psi::Matrix> DavidsonLiuSolver::eigenvectors() const { return bnew; }
 
-psi::SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
+std::shared_ptr<psi::Vector> DavidsonLiuSolver::eigenvector(size_t n) const {
     double** v = bnew->pointer();
-
-    psi::SharedVector evec(new psi::Vector("V", size_));
+    auto evec = std::make_shared<psi::Vector>("V", size_);
     for (size_t I = 0; I < size_; I++) {
         evec->set(I, v[n][I]);
     }
@@ -219,6 +218,8 @@ SolverStatus DavidsonLiuSolver::update() {
         }
     }
 
+    check_orthogonality();
+
     // if we do not add any new vector then we are in trouble and we better finish the computation
     if ((num_added == 0) and is_energy_converged) {
         return SolverStatus::Converged;
@@ -278,7 +279,7 @@ void DavidsonLiuSolver::compute_residual_norm() {
     }
 }
 
-void DavidsonLiuSolver::project_out_roots(psi::SharedMatrix v) {
+void DavidsonLiuSolver::project_out_roots(std::shared_ptr<psi::Matrix> v) {
     double** v_p = v->pointer();
     for (size_t k = 0; k < nroot_; k++) {
         for (auto& bad_root : project_out_) {
@@ -297,20 +298,20 @@ void DavidsonLiuSolver::project_out_roots(psi::SharedMatrix v) {
     }
 }
 
-std::vector<double> DavidsonLiuSolver::normalize_vectors(psi::SharedMatrix v, size_t n) {
+std::vector<double> DavidsonLiuSolver::normalize_vectors(std::shared_ptr<psi::Matrix> v, size_t n) {
     // normalize each residual
     std::vector<double> v_norm;
-    double** v_p = v->pointer();
     for (size_t k = 0; k < n; k++) {
-        double norm = 0.0;
-        for (size_t I = 0; I < size_; I++) {
-            norm += v_p[k][I] * v_p[k][I];
-        }
+        double* v_k = v->pointer()[k];
+        double norm = C_DDOT(size_, v_k, 1, v_k, 1);
+        // for (size_t I = 0; I < size_; I++) {
+        //     norm += v_p[k][I] * v_p[k][I];
+        // }
         norm = std::sqrt(norm);
-        v_norm.push_back(norm);
         for (size_t I = 0; I < size_; I++) {
-            v_p[k][I] /= norm;
+            v_k[I] /= norm;
         }
+        v_norm.push_back(norm);
     }
     return v_norm;
 }
@@ -334,7 +335,7 @@ bool DavidsonLiuSolver::subspace_collapse() {
         for (size_t k = 0; k < collapse_size_; k++) {
             double norm_bnew_k = std::fabs(bnew->get_row(0, k)->norm());
             if (norm_bnew_k > schmidt_threshold_) {
-                if (schmidt_add(b_, k, size_, bnew, k)) {
+                if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
                     basis_size_++; // <- Increase L if we add one more basis vector
                 }
             }
@@ -364,7 +365,7 @@ bool DavidsonLiuSolver::subspace_collapse() {
         basis_size_ = 0;
         sigma_size_ = 0;
         for (size_t k = 0; k < collapse_size_; k++) {
-            if (schmidt_add(b_, k, size_, bnew, k)) {
+            if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
                 basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
@@ -390,8 +391,8 @@ void DavidsonLiuSolver::collapse_vectors() {
 }
 
 /// add a new vector and orthogonalize it against the existing ones
-bool DavidsonLiuSolver::schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t cols,
-                                    psi::SharedMatrix vvec, int l) {
+bool DavidsonLiuSolver::schmidt_add(std::shared_ptr<psi::Matrix> Amat, size_t rows, size_t cols,
+                                    std::shared_ptr<psi::Matrix> vvec, int l) {
     double** A = Amat->pointer();
     double* v = vvec->pointer()[l];
 
@@ -406,6 +407,7 @@ bool DavidsonLiuSolver::schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t 
         return false;
     for (size_t I = 0; I < cols; I++)
         A[rows][I] = v[I] / normval;
+
     return true;
 }
 

@@ -209,6 +209,7 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
 
     if (print_) {
         outfile->Printf("\n    %s", dash.c_str());
+        outfile->Printf("\n\n    Canonicalization test %s\n", semi ? "passed" : "failed");
     }
 
     return semi;
@@ -290,7 +291,7 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
     Ub_t_.copy(Ua_t_);
 }
 
-void SemiCanonical::fill_Uactv(const psi::SharedMatrix& U, ambit::Tensor& Ut) {
+void SemiCanonical::fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
     auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"}
                                   : mo_space_info_->composite_space_names()["ACTIVE"];
     auto& Ut_data = Ut.data();

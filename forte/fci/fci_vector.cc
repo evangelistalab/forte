@@ -40,11 +40,9 @@ using namespace psi;
 
 namespace forte {
 
-psi::SharedMatrix FCIVector::C1;
-psi::SharedMatrix FCIVector::Y1;
+std::shared_ptr<psi::Matrix> FCIVector::C1;
+std::shared_ptr<psi::Matrix> FCIVector::Y1;
 size_t FCIVector::sizeC1 = 0;
-// FCIVector* FCIVector::tmp_wfn1 = nullptr;
-// FCIVector* FCIVector::tmp_wfn2 = nullptr;
 
 double FCIVector::hdiag_timer = 0.0;
 double FCIVector::h1_aa_timer = 0.0;
@@ -116,8 +114,8 @@ void FCIVector::startup() {
         int beta_sym = alfa_sym ^ symmetry_;
         //    outfile->Printf("\n\n  Block %d: allocate %d *
         //    %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
-        C_.push_back(psi::SharedMatrix(
-            new psi::Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
+        C_.push_back(std::make_shared<psi::Matrix>("C", alfa_graph_->strpi(alfa_sym),
+                                                   beta_graph_->strpi(beta_sym)));
     }
 }
 
@@ -154,7 +152,7 @@ void FCIVector::copy(FCIVector& wfn) {
     }
 }
 
-void FCIVector::copy(psi::SharedVector vec) {
+void FCIVector::copy(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -170,7 +168,7 @@ void FCIVector::copy(psi::SharedVector vec) {
     }
 }
 
-void FCIVector::copy_to(psi::SharedVector vec) {
+void FCIVector::copy_to(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -188,10 +186,7 @@ void FCIVector::copy_to(psi::SharedVector vec) {
 
 void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
     zero();
-    double C;
-    size_t h, Ia, Ib;
-    for (auto& el : sparse_vec) {
-        std::tie(h, Ia, Ib, C) = el;
+    for (const auto& [h, Ia, Ib, C] : sparse_vec) {
         C_[h]->set(Ia, Ib, C);
     }
 }
@@ -326,7 +321,7 @@ void FCIVector::normalize() {
  * Zero the wave function
  */
 void FCIVector::zero() {
-    for (psi::SharedMatrix C_h : C_) {
+    for (auto C_h : C_) {
         C_h->zero();
     }
 }
@@ -338,7 +333,7 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    auto opdm = std::make_shared<psi::Matrix>(new psi::Matrix("OPDM", active_dim, active_dim));
+    auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {

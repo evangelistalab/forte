@@ -30,6 +30,7 @@
 #define _dsrg_source_h_
 
 #include <cmath>
+#include <stdexcept>
 
 namespace forte {
 
@@ -46,8 +47,16 @@ class DSRG_SOURCE {
 
     /// Bare effect of source operator
     virtual double compute_renormalized(const double& D) = 0;
-    /// Renormalize denominator
+
+    /// Regularize denominator
     virtual double compute_renormalized_denominator(const double& D) = 0;
+
+    /// Partial components of the regularized denominator derivatives w.r.t. Møller-Plesset
+    /// denominators
+    /// TODO: probably not general and only useful for STD and LABS
+    virtual double compute_regularized_denominator_derivR(const double& /*D*/) {
+        throw std::runtime_error("Not implemented for this class! Please override this function!");
+    }
 
   protected:
     /// Flow parameter
@@ -69,11 +78,22 @@ class STD_SOURCE : public DSRG_SOURCE {
 
     /// Return [1 - exp(-s * D^2)] / D
     virtual double compute_renormalized_denominator(const double& D) {
+        double S = std::sqrt(s_);
+        double Z = S * D;
+        if (std::fabs(Z) < small_) {
+            return Taylor_Exp(Z, taylor_order_) * S;
+        } else {
+            return (1.0 - std::exp(-Z * Z)) / D;
+        }
+    }
+
+    /// Return [1 - exp(-s * D^2)] / D^2
+    virtual double compute_regularized_denominator_derivR(const double& D) {
         double Z = std::sqrt(s_) * D;
         if (std::fabs(Z) < small_) {
-            return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
+            return Taylor_Exp(Z, taylor_order_, 2) * s_;
         } else {
-            return (1.0 - std::exp(-s_ * D * D)) / D;
+            return (1.0 - std::exp(-Z * Z)) / (D * D);
         }
     }
 
@@ -84,18 +104,21 @@ class STD_SOURCE : public DSRG_SOURCE {
     /// Smaller than which will do Taylor expansion
     double small_ = std::pow(0.1, taylor_threshold_);
 
-    /// Taylor Expansion of [1 - exp(- Z^2)] / Z
-    double Taylor_Exp(const double& Z, const int& n) {
-        if (n > 0) {
-            double value = Z, tmp = Z;
-            for (int x = 0; x < n - 1; ++x) {
-                tmp *= -1.0 * Z * Z / (x + 2);
-                value += tmp;
-            }
-            return value;
-        } else {
+    /// Taylor Expansion of [1 - exp(- Z^2)] / Z^k for k = 1, 2
+    double Taylor_Exp(const double Z, const int n, const int k = 1) {
+        if (k < 1 or k > 2)
+            throw std::runtime_error("Invalid power of denominator");
+        if (n < 0)
             return 0.0;
+
+        double value = (k == 1) ? Z : 1.0;
+        double tmp = Z;
+
+        for (int x = 0; x < n - 1; ++x) {
+            tmp *= -1.0 * Z * Z / (x + 2);
+            value += tmp;
         }
+        return value;
     }
 };
 

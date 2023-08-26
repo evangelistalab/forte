@@ -31,6 +31,11 @@
 
 #include <vector>
 #include <unordered_set>
+#include "ambit/tensor.h"
+
+namespace ambit {
+class BlockedTensor;
+}
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
@@ -152,22 +157,74 @@ class ActiveSpaceMethod {
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }
 
+    /// Compute generalized RDM
+    ///     Gamma' = C_I <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param x: the X vector to be contracted with H_IJ
+    virtual void generalized_rdms([[maybe_unused]] size_t root,
+                                  [[maybe_unused]] const std::vector<double>& X,
+                                  [[maybe_unused]] ambit::BlockedTensor& result,
+                                  [[maybe_unused]] bool c_right, [[maybe_unused]] int rdm_level,
+                                  [[maybe_unused]] std::vector<std::string> spin) {
+        throw std::runtime_error(
+            "The function generalized_rdms is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    /// Add k-body contributions to the sigma vector
+    ///    σ_I += h_{p1,p2,...}^{q1,q2,...} <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J
+    /// @param root: the root number of the state
+    /// @param h: the antisymmetrized k-body integrals
+    /// @param block_label_to_factor: map from the block labels of integrals to its factors
+    /// @param sigma: the sigma vector to be added
+    virtual void
+    add_sigma_kbody([[maybe_unused]] size_t root, [[maybe_unused]] ambit::BlockedTensor& h,
+                    [[maybe_unused]] const std::map<std::string, double>& block_label_to_factor,
+                    [[maybe_unused]] std::vector<double>& sigma) {
+        throw std::runtime_error(
+            "The function add_sigma_kbody is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    /// Compute generalized sigma vector
+    ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param x: the X vector to be contracted with H_IJ
+    /// @param sigma: the sigma vector (will be zeroed first)
+    virtual void generalized_sigma([[maybe_unused]] std::shared_ptr<psi::Vector> x,
+                                   [[maybe_unused]] std::shared_ptr<psi::Vector> sigma) {
+        throw std::runtime_error(
+            "The function generalized_sigma is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    /// Return the space size
+    virtual size_t space_size() {
+        throw std::runtime_error(
+            "The function space_size is not implemented for this ActiveSpaceMethod type!");
+    }
+
     /// Set options from an option object
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
+    /// Return the eigen vectors
+    virtual std::vector<ambit::Tensor> eigenvectors() {
+        throw std::runtime_error(
+            "ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
+    }
+    /// Compute permanent dipole moments
+    std::vector<std::vector<double>>
+    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
     /// Compute permanent dipole moments (electronic + nuclear)
-    std::vector<psi::SharedVector>
+    std::vector<std::shared_ptr<psi::Vector>>
     compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                              std::vector<std::pair<size_t, size_t>>& root_list);
 
     /// Compute permanent quadrupole moments (electronic + nuclear)
-    std::vector<psi::SharedVector>
+    std::vector<std::shared_ptr<psi::Vector>>
     compute_permanent_quadrupole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                  const std::vector<std::pair<size_t, size_t>>& root_list);
 
     /// Compute transition dipole moments assuming same orbitals
-    std::vector<psi::SharedVector>
+    std::vector<std::shared_ptr<psi::Vector>>
     compute_transition_dipole_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                         const std::vector<std::pair<size_t, size_t>>& root_list,
                                         std::shared_ptr<ActiveSpaceMethod> method2);
@@ -187,13 +244,13 @@ class ActiveSpaceMethod {
     /// Read the wave function from file
     /// @param file name
     /// @return the number of active orbitals, the set of determinants, CI coefficients
-    virtual std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    virtual std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
     read_wave_function(const std::string&) {
         throw std::runtime_error("ActiveSpaceMethod::read_wave_function: Not yet implemented!");
     }
 
     /// @return the CI wave functions for the current StateInfo (deterministic determinant space)
-    virtual psi::SharedMatrix ci_wave_functions() {
+    virtual std::shared_ptr<psi::Matrix> ci_wave_functions() {
         throw std::runtime_error("ActiveSpaceMethod::ci_wave_functions: Not yet implemented!");
     }
 
@@ -204,7 +261,7 @@ class ActiveSpaceMethod {
     void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Return the eigenvalues
-    psi::SharedVector evals();
+    std::shared_ptr<psi::Vector> evals();
 
     /// Return a vector with the energies of all the states
     const std::vector<double>& energies() const;
@@ -259,7 +316,13 @@ class ActiveSpaceMethod {
     void set_print(int level);
 
     /// Quiet mode (no printing, for use with CASSCF)
-    void set_quite_mode(bool quiet);
+    void set_quiet_mode(bool quiet);
+
+    /// Get the model space
+    DeterminantHashVec get_PQ_space();
+
+    /// Get model space coefficients
+    std::shared_ptr<psi::Matrix> get_PQ_evecs();
 
   protected:
     /// The list of active orbitals (absolute ordering)
@@ -283,6 +346,10 @@ class ActiveSpaceMethod {
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
+    DeterminantHashVec final_wfn_;
+
+    std::shared_ptr<psi::Matrix> evecs_;
+
     // ==> Base Class Handles [can be changed before running compute_energy()]  <==
 
     /// The energy convergence criterion
@@ -301,7 +368,7 @@ class ActiveSpaceMethod {
     bool quiet_ = false;
 
     /// Eigenvalues
-    psi::SharedVector evals_;
+    std::shared_ptr<psi::Vector> evals_;
 
     /// The energies (including nuclear repulsion) of all the states
     std::vector<double> energies_;
@@ -329,7 +396,7 @@ class ActiveSpaceMethod {
  * @param options user-provided options
  * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
+std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);

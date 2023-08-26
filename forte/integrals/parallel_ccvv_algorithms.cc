@@ -411,7 +411,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
 
         ambit::Tensor BmQe =
             ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
-        // std::shared_ptr<psi::Matrix> BmQe_mat(new psi::Matrix("BmQe_mat", m_batch.size() *
+        // auto BmQe_mat = std::make_shared<psi::Matrix>("BmQe_mat", m_batch.size( *
         // nthree_, virtual_));
         int begin_offset[2];
         int end_offset[2];
@@ -443,7 +443,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         ambit::Tensor BnQf =
             ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
         // ambit::Tensor BnQf;
-        // std::shared_ptr<psi::Matrix> BnQf_mat(new psi::Matrix("BnQf", n_batch.size() * nthree_,
+        // auto BnQf_mat = std::make_shared<psi::Matrix>("BnQf", n_batch.size( * nthree_,
         // virtual_));
         // std::vector<double> BnQf(n_batch.size() * nthree_ * virtual_, 0);
 

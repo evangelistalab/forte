@@ -41,10 +41,11 @@ class DETCI : public ActiveSpaceMethod {
     /// Transition RDMs override
     std::vector<std::shared_ptr<RDMs>>
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level, RDMsType rdm_type) override;
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType rdm_type) override;
 
     /// Return the CI wave functions for current state symmetry
-    psi::SharedMatrix ci_wave_functions() override { return evecs_; }
+    std::shared_ptr<psi::Matrix> ci_wave_functions() override { return evecs_; }
 
     /// Set options override
     void set_options(std::shared_ptr<ForteOptions> options) override;
@@ -64,8 +65,14 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Read wave function from disk
     /// Return the number of active orbitals, set of determinants, CI coefficients
-    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
     read_wave_function(const std::string& filename) override;
+
+    /// Return the number of determinants
+    size_t space_size() override { return p_space_.size(); }
+
+    /// Return the eigen vector in ambit Tensor format
+    std::vector<ambit::Tensor> eigenvectors() override;
 
   private:
     /// SCFInfo object
@@ -78,7 +85,7 @@ class DETCI : public ActiveSpaceMethod {
     void startup();
 
     /// Number of active orbitals
-    int nactv_;
+    size_t nactv_;
     /// Number of active orbitals per irrep
     psi::Dimension actv_dim_;
 
@@ -123,13 +130,15 @@ class DETCI : public ActiveSpaceMethod {
     void diagonalize_hamiltonian();
     /// Prepare Davidson-Liu solver
     std::shared_ptr<SparseCISolver> prepare_ci_solver();
+
+    std::shared_ptr<SigmaVector> sigma_vector_;
     /// Algorithm to build sigma vector
     SigmaVectorType sigma_vector_type_;
     /// Max memory can be used for sigma build
     size_t sigma_max_memory_;
 
     /// Eigen vectors
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
     /// Print important CI vectors
     void print_ci_wfn();
     /// Threshold to print CI coefficients
@@ -138,9 +147,9 @@ class DETCI : public ActiveSpaceMethod {
     /// Compute 1RDMs
     void compute_1rdms();
     /// 1RDMs alpha spin
-    std::vector<psi::SharedMatrix> opdm_a_;
+    std::vector<std::shared_ptr<psi::Matrix>> opdm_a_;
     /// 1RDMs beta spin
-    std::vector<psi::SharedMatrix> opdm_b_;
+    std::vector<std::shared_ptr<psi::Matrix>> opdm_b_;
 
     /// Compute the (transition) 1RDMs, same orbital, same set of determinants
     std::vector<ambit::Tensor> compute_trans_1rdms_sosd(int root1, int root2);
@@ -154,6 +163,29 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess(const std::string& filename);
+
+    // Functions for gradients
+
+    /// Compute the generalized reduced density matrix of a given level
+    void generalized_rdms(size_t root, const std::vector<double>& X, ambit::BlockedTensor& grdms,
+                          bool c_right, int rdm_level, std::vector<std::string> spin) override;
+
+    /// Add k-body contributions to the sigma vector
+    ///    σ_I += h_{p1,p2,...}^{q1,q2,...} <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J
+    /// @param root: the root number of the state
+    /// @param h: the antisymmetrized k-body integrals
+    /// @param block_label_to_factor: map from the block labels of integrals to its factors
+    /// @param sigma: the sigma vector to be added
+    void add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
+                         const std::map<std::string, double>& block_label_to_factor,
+                         std::vector<double>& sigma) override;
+
+    /// Compute generalized sigma vector
+    ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param x: the X vector to be contracted with H_IJ
+    /// @param sigma: the sigma vector (will be zeroed first)
+    void generalized_sigma(std::shared_ptr<psi::Vector> x,
+                           std::shared_ptr<psi::Vector> sigma) override;
 };
 } // namespace forte
 

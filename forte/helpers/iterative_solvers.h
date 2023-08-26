@@ -98,23 +98,23 @@ class DavidsonLiuSolver {
     size_t collapse_size() const;
 
     /// Add a guess basis vector
-    void add_guess(psi::SharedVector vec);
+    void add_guess(std::shared_ptr<psi::Vector> vec);
     /// Get a basis vector
-    void get_b(psi::SharedVector vec);
+    void get_b(std::shared_ptr<psi::Vector> vec);
     /// Add a sigma vector
-    bool add_sigma(psi::SharedVector vec);
+    bool add_sigma(std::shared_ptr<psi::Vector> vec);
 
     void set_project_out(std::vector<sparse_vec> project_out);
 
     /// Return the eigenvalues
-    psi::SharedVector eigenvalues() const;
+    std::shared_ptr<psi::Vector> eigenvalues() const;
     /// Return the eigenvectors
-    psi::SharedMatrix eigenvectors() const;
+    std::shared_ptr<psi::Matrix> eigenvectors() const;
     /// Return the n-th eigenvector
-    psi::SharedVector eigenvector(size_t n) const;
+    std::shared_ptr<psi::Vector> eigenvector(size_t n) const;
 
     /// Initialize the object
-    void startup(psi::SharedVector diagonal);
+    void startup(std::shared_ptr<psi::Vector> diagonal);
 
     /// Perform an update step
     SolverStatus update();
@@ -140,13 +140,13 @@ class DavidsonLiuSolver {
     /// Compute the 2-norm of the residual
     void compute_residual_norm();
     /// Project out undesired roots
-    void project_out_roots(psi::SharedMatrix v);
+    void project_out_roots(std::shared_ptr<psi::Matrix> v);
     /// Perform the Schmidt orthogonalization (add a new vector to the subspace)
-    bool schmidt_add(psi::SharedMatrix Amat, size_t rows, size_t cols, psi::SharedMatrix vvec,
-                     int l);
+    bool schmidt_add(std::shared_ptr<psi::Matrix> Amat, size_t rows, size_t cols,
+                     std::shared_ptr<psi::Matrix> vvec, int l);
     /// Normalize the correction vectors and return the norm of the vectors before they were
     /// normalized
-    std::vector<double> normalize_vectors(psi::SharedMatrix v, size_t n);
+    std::vector<double> normalize_vectors(std::shared_ptr<psi::Matrix> v, size_t n);
     /// Perform subspace collapse
     bool subspace_collapse();
     /// Collapse the vectors
@@ -165,7 +165,7 @@ class DavidsonLiuSolver {
     /// The threshold used to detect a nonhermitian Hamiltonian
     double nonhermitian_G_threshold_ = 1.0e-12;
     /// The threshold used to detect nonorthogonality among the roots
-    double orthogonality_threshold_ = 1.0e-12;
+    double orthogonality_threshold_ = 1.0e-10;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested
@@ -179,35 +179,40 @@ class DavidsonLiuSolver {
     /// The maximum subspace size
     size_t subspace_size_;
 
+    /// The number of iterations performed
     int iter_ = 0;
+    /// The number of basis vectors
     size_t basis_size_;
-    /// The size
+    /// The number of sigma vectors
     size_t sigma_size_;
+    /// The number of converged roots
     size_t converged_ = 0;
+    /// Timing information
     double timing_ = 0.0;
+    /// Did we collapse the subspace in the last update?
     bool last_update_collapsed_ = false;
 
     /// Current set of basis vectors stored by row
-    psi::SharedMatrix b_;
+    std::shared_ptr<psi::Matrix> b_;
     /// Guess vectors formed from old vectors, stored by row
-    psi::SharedMatrix bnew;
+    std::shared_ptr<psi::Matrix> bnew;
     /// Residual eigenvectors, stored by row
-    psi::SharedMatrix f;
+    std::shared_ptr<psi::Matrix> f;
     /// Sigma vectors, stored by column
-    psi::SharedMatrix sigma_;
+    std::shared_ptr<psi::Matrix> sigma_;
     /// Davidson-Liu mini-Hamitonian
-    psi::SharedMatrix G;
+    std::shared_ptr<psi::Matrix> G;
     /// Davidson-Liu mini-metric
-    psi::SharedMatrix S;
+    std::shared_ptr<psi::Matrix> S;
     /// Eigenvectors of the Davidson mini-Hamitonian
-    psi::SharedMatrix alpha;
+    std::shared_ptr<psi::Matrix> alpha;
 
     /// Eigenvalues of the Davidson mini-Hamitonian
-    psi::SharedVector lambda;
+    std::shared_ptr<psi::Vector> lambda;
     /// Old eigenvalues of the Davidson mini-Hamitonian
-    psi::SharedVector lambda_old;
+    std::shared_ptr<psi::Vector> lambda_old;
     /// Diagonal elements of the Hamiltonian
-    psi::SharedVector h_diag;
+    std::shared_ptr<psi::Vector> h_diag;
     /// 2-Norm of the residuals
     std::vector<double> residual_;
 

@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include "ambit/tensor.h"
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
@@ -79,10 +81,10 @@ void Localize::compute_transformation() {
         exit(1);
     }
 
-    psi::SharedMatrix Ca = ints_->Ca();
+    auto Ca = ints_->Ca();
 
-    Ua_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
-    Ub_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
+    Ua_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());
+    Ub_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());
 
     Ua_->identity();
     Ub_->identity();
@@ -110,10 +112,10 @@ void Localize::compute_transformation() {
         size_t orb_dim = last - first + 1;
 
         // Build C matrix to localize
-        psi::SharedMatrix Ca_loc = std::make_shared<psi::Matrix>("Caact", Ca->rowdim(), orb_dim);
+        auto Ca_loc = std::make_shared<psi::Matrix>("Caact", Ca->rowdim(), orb_dim);
 
         for (size_t i = 0; i < orb_dim; ++i) {
-            psi::SharedVector col = Ca->get_column(0, first + i);
+            auto col = Ca->get_column(0, first + i);
             Ca_loc->set_column(0, i, col);
         }
 
@@ -124,7 +126,7 @@ void Localize::compute_transformation() {
         loc_a->localize();
 
         // Grab the transformation and localized matrices
-        psi::SharedMatrix Ua_loc = loc_a->U();
+        auto Ua_loc = loc_a->U();
 
         // Set Ua, Ub
         for (size_t i = 0; i < orb_dim; ++i) {

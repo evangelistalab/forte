@@ -35,52 +35,30 @@
 #include "integrals/active_space_integrals.h"
 #include "fci_vector.h"
 #include "binary_graph.hpp"
+#include "string_lists.h"
 
 namespace forte {
 
 void FCIVector::form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     local_timer t;
 
-    int wfn_sym = symmetry_;
-    int n = ncmo_;
-    int ka = alfa_graph_->nones();
-    int kb = beta_graph_->nones();
-
     Determinant I;
-    String Ia, Ib;
-
-    // Generate the alfa string 1111000000
-    //                          {ka}{n-ka}
-    for (int i = 0; i < n - ka; ++i)
-        Ia[i] = false; // 0
-    for (int i = n - ka; i < n; ++i)
-        Ia[i] = true; // 1
-    // Loop over all alfa strings
-    do {
-        // Compute irrep
-        int alfa_sym = alfa_graph_->sym(Ia);
-        int beta_sym = alfa_sym ^ wfn_sym;
-
-        double** C_ha = C_[alfa_sym]->pointer();
-
-        // Generate the beta string 1111000000
-        //                          {kb}{n-kb}
-        for (int i = 0; i < n - kb; ++i)
-            Ib[i] = false; // 0
-        for (int i = n - kb; i < n; ++i)
-            Ib[i] = true; // 1
-        // Loop over all beta strings
-        do {
-            // Check if the product of strings gives the right irrep
-            if (beta_graph_->sym(Ib) == beta_sym) {
+    // loop over all irreps of the alpha strings
+    for (int ha = 0; ha < nirrep_; ha++) {
+        const int hb = ha ^ symmetry_;
+        double** C_ha = C_[ha]->pointer();
+        const auto& sa = lists_->alfa_strings()[ha];
+        const auto& sb = lists_->beta_strings()[hb];
+        for (const auto& Ia : sa) {
+            for (const auto& Ib : sb) {
                 size_t addIa = alfa_graph_->rel_add(Ia);
                 size_t addIb = beta_graph_->rel_add(Ib);
                 I.set_str(Ia, Ib);
                 C_ha[addIa][addIb] = fci_ints->energy(I) + fci_ints->scalar_energy() +
                                      fci_ints->nuclear_repulsion_energy();
             }
-        } while (std::next_permutation(Ib.begin(), Ib.begin() + n));
-    } while (std::next_permutation(Ia.begin(), Ia.begin() + n));
+        }
+    }
 
     hdiag_timer += t.get();
     if (print_) {

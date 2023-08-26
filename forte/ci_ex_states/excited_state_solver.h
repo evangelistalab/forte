@@ -79,20 +79,15 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Set core excitation
     void set_core_excitation(bool core_ex);
 
-    /// Set the printing level
-    void set_quiet(bool quiet);
-
     /// Dump temporary wave function to disk
     void dump_wave_function(const std::string& filename) override;
 
     /// Read temporary ave function from disk
     /// Return the number of active orbitals, set of determinants, CI coefficients
-    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
     read_wave_function(const std::string& filename) override;
 
   protected:
-    DeterminantHashVec final_wfn_;
-
     /// The number of active orbitals
     size_t nact_;
     std::unique_ptr<SelectedCIMethod> sci_;
@@ -101,14 +96,10 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     std::string ex_alg_;
     /// Type of excited state to compute
     bool core_ex_;
-    /// Control amount of printing
-    bool quiet_mode_;
     /// Storage of past roots
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    /// The CI coeffiecients
-    std::shared_ptr<psi::Matrix> evecs_;
     /// Computes RDMs without coupling lists
     bool direct_rdms_ = false;
     /// Run test for the RDMs
@@ -129,11 +120,11 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     void save_old_root(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix>& PQ_evecs, int root,
                        int ref_root);
 
-    void compute_multistate(psi::SharedVector& PQ_evals);
+    void compute_multistate(std::shared_ptr<psi::Vector>& PQ_evals);
 
     /// Print Summary
     void print_final(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix>& PQ_evecs,
-                     psi::SharedVector& PQ_evals, size_t cycle);
+                     std::shared_ptr<psi::Vector>& PQ_evals, size_t cycle);
     /// Save a wave function
     void wfn_to_file(DeterminantHashVec& det_space, std::shared_ptr<psi::Matrix> evecs, int root);
     /// Print a wave function

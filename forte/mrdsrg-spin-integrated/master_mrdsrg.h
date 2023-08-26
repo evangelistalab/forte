@@ -3,6 +3,7 @@
 
 #include "ambit/blocked_tensor.h"
 
+#include "base_classes/active_space_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
 
 #include "helpers/blockedtensorfactory.h"
@@ -38,6 +39,11 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Compute energy
     virtual double compute_energy() = 0;
+
+    /// Compute the DSRG gradient
+    virtual std::shared_ptr<psi::Matrix> compute_gradient() {
+        throw std::runtime_error("The analytic gradient code is only implemented for DSRG-MRPT2.");
+    }
 
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
@@ -114,12 +120,20 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
         actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
     }
 
+    /// Set the active space solver pointer
+    void set_active_space_solver(std::shared_ptr<ActiveSpaceSolver> active_space_solver) {
+        as_solver_ = active_space_solver;
+    }
+
   protected:
     /// Startup function called in constructor
     void startup();
 
     /// Warnings <description, changes in this run, how to get rid of it>
     std::vector<std::tuple<const char*, const char*, const char*>> warnings_;
+
+    /// A shared pointer for ActiveSpaceSolver
+    std::shared_ptr<ActiveSpaceSolver> as_solver_ = nullptr;
 
     // ==> settings from options <==
 
@@ -341,7 +355,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::array<ambit::BlockedTensor, 3> dm_;
 
     /// Fill in bare MO dipole integrals
-    void fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b);
+    void fill_MOdm(std::vector<std::shared_ptr<psi::Matrix>>& dm_a,
+                   std::vector<std::shared_ptr<psi::Matrix>>& dm_b);
     /// Compute dipole moment of the reference
     void compute_dm_ref();
     /// Compute dipole for a certain direction or not

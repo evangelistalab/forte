@@ -61,7 +61,6 @@
 #include "helpers/timer.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
-#include "sci/fci_mo.h"
 #include "sci/aci.h"
 #include "three_dsrg_mrpt2.h"
 
@@ -560,7 +559,7 @@ void THREE_DSRG_MRPT2::compute_t2() {
                 }
             }
         } else if (internal_amp_select_ == "OOVV") {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
 
@@ -578,7 +577,7 @@ void THREE_DSRG_MRPT2::compute_t2() {
                 }
             }
         } else {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
                 T2_.block(block).zero();
@@ -680,7 +679,7 @@ THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces) 
     // internal amplitudes (AA->AA)
     std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
 
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         if (std::find(t2_spaces.begin(), t2_spaces.end(), block) != t2_spaces.end()) {
 
             if (internal_amp.find("DOUBLES") != string::npos) {
@@ -2283,13 +2282,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
-    psi::SharedMatrix Cwfn = ints_->Ca();
+    auto Cwfn = ints_->Ca();
     if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
     /// Create the AtomicOrbitalHelper Class
-    psi::SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
-    psi::SharedVector epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
+    auto epsilon_rdocc = std::make_shared<psi::Vector>("EPS_RDOCC", ncore_);
+    auto epsilon_virtual = std::make_shared<psi::Vector>("EPS_VIRTUAL", nvirtual_);
     int core_count = 0;
     for (auto m : core_mos_) {
         epsilon_rdocc->set(core_count, Fa_[m]);
@@ -2310,10 +2309,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     ao_helper.Compute_AO_Screen(primary);
     ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
     size_t weights = ao_helper.Weights();
-    psi::SharedMatrix AO_Screen = ao_helper.AO_Screen();
-    psi::SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
-    psi::SharedMatrix Occupied_Density = ao_helper.POcc();
-    psi::SharedMatrix Virtual_Density = ao_helper.PVir();
+    auto AO_Screen = ao_helper.AO_Screen();
+    auto TransAO_Screen = ao_helper.TransAO_Screen();
+    auto Occupied_Density = ao_helper.POcc();
+    auto Virtual_Density = ao_helper.PVir();
     Occupied_Density->print();
     Virtual_Density->print();
     size_t nmo = mo_space_info_->dimension("ALL").sum();
@@ -2330,7 +2329,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     // ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew",
     // {weights});
     DFTensor df_tensor(primary, auxiliary, Cwfn, ncore_, nvirtual_);
-    psi::SharedMatrix Qso = df_tensor.Qso();
+    auto Qso = df_tensor.Qso();
     DF_AO.iterate([&](const std::vector<size_t>& i, double& value) {
         value = Qso->get(i[0], i[1] * nmo + i[2]);
     });
@@ -3028,15 +3027,17 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     }
 
     if (foptions_->get_bool("PRINT_1BODY_EVALS")) {
-        psi::SharedMatrix Hb1 = std::make_shared<psi::Matrix>("HB1", nactive_, nactive_);
+        auto Hb1 = std::make_shared<psi::Matrix>("HB1", nactive_, nactive_);
         for (size_t p = 0; p < nactive_; ++p) {
             for (size_t q = 0; q < nactive_; ++q) {
                 Hb1->set(p, q, Hbar1_.block("aa").data()[p * nactive_ + q]);
             }
         }
 
-        psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", nactive_, nactive_);
-        psi::SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
+        std::shared_ptr<psi::Matrix> evecs =
+            std::make_shared<psi::Matrix>("evecs", nactive_, nactive_);
+        std::shared_ptr<psi::Vector> evals =
+            std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
         Hb1->diagonalize(evecs, evals);
 
         evals->print();
@@ -3116,13 +3117,14 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 //    return E_relaxed[0];
 //}
 
-void THREE_DSRG_MRPT2::set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
+void THREE_DSRG_MRPT2::set_Ufull(std::shared_ptr<psi::Matrix>& Ua,
+                                 std::shared_ptr<psi::Matrix>& Ub) {
     outfile->Printf("\n here");
 
     psi::Dimension nmopi = mo_space_info_->dimension("ALL");
 
-    Ua_full_.reset(new psi::Matrix("Ua", nmopi, nmopi));
-    Ub_full_.reset(new psi::Matrix("Ub", nmopi, nmopi));
+    Ua_full_ = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+    Ub_full_ = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
 
     Ua_full_->copy(Ua);
     Ub_full_->copy(Ub);
@@ -3402,11 +3404,11 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 //        if (!multi_state_) {
 //            Erelax.push_back(Eci);
 //        } else {
-//            std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens =
-//            fci_mo.eigens(); size_t nentry = eigens.size(); for (size_t n = 0; n < nentry; ++n) {
-//                std::vector<std::pair<psi::SharedVector, double>> eigen = eigens[n];
-//                size_t ni = eigen.size();
-//                for (size_t i = 0; i < ni; ++i) {
+//            std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>> eigens
+//            = fci_mo.eigens(); size_t nentry = eigens.size(); for (size_t n = 0; n < nentry; ++n)
+//            {
+//                std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> eigen =
+//                eigens[n]; size_t ni = eigen.size(); for (size_t i = 0; i < ni; ++i) {
 //                    Erelax.push_back(eigen[i].second);
 //                }
 //            }
@@ -3508,7 +3510,7 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 
 //                // compute energy and fill in results
 //                fci->compute_energy();
-//                psi::SharedVector Ems = fci->evals();
+//                auto Ems = fci->evals();
 //                for (int i = 0; i < nstates; ++i) {
 //                    Erelax.push_back(Ems->get(i) + Enuc);
 //                }
@@ -3590,7 +3592,7 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
     I = ambit::Tensor::build(tensor_type_, "I", std::vector<size_t>{1, 1});
     I.data()[0] = 1.0;
     for (const size_t& m : core_mos_) {
-        for (const std::string& block : {"ac", "va", "vc"}) {
+        for (const std::string block : {"ac", "va", "vc"}) {
             std::string block_beta =
                 std::string(1, toupper(block[0])) + std::string(1, toupper(block[1]));
             std::vector<size_t>& mos1 = label_to_spacemo_[block[0]];
@@ -3906,8 +3908,8 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T2(const std::vector<std::string>& bl
     return out;
 }
 
-void THREE_DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose,
-                                  const bool& t1eff) {
+void THREE_DSRG_MRPT2::rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                                  const bool& transpose, const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
@@ -3916,7 +3918,7 @@ void THREE_DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, co
     space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     // alpha
-    for (const std::string& block : {"cc", "aa", "vv"}) {
+    for (const std::string block : {"cc", "aa", "vv"}) {
         char space = block[0];
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3936,7 +3938,7 @@ void THREE_DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, co
     }
 
     // beta
-    for (const std::string& block : {"CC", "AA", "VV"}) {
+    for (const std::string block : {"CC", "AA", "VV"}) {
         char space = tolower(block[0]);
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {

@@ -42,10 +42,10 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
+#include "helpers/helpers.h"
 #include "helpers/timer.h"
 #include "helpers/blockedtensorfactory.h"
 #include "fci/fci_solver.h"
-#include "sci/fci_mo.h"
 #include "boost/format.hpp"
 #include "helpers/printing.h"
 #include "dsrg_mrpt3.h"
@@ -815,7 +815,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
         V_["aBiJ"] += O2_["iJaB"];
         V_["ABIJ"] += O2_["IJAB"];
     } else {
-        for (const std::string& block : {"gggg", "gGgG", "GGGG"}) {
+        for (const std::string block : {"gggg", "gGgG", "GGGG"}) {
             BlockedTensor C2 = BTF_->build(tensor_type_, "C2 pt3 2/3", {block});
             C2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
                            double& value) {
@@ -1423,7 +1423,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 
 //                // compute energy and fill in results
 //                fci->compute_energy();
-//                psi::SharedVector Ems = fci->evals();
+//                auto Ems = fci->evals();
 //                for (int i = 0; i < nstates; ++i) {
 //                    Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
 //                }
@@ -1436,14 +1436,15 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 
 //                int dim = (eigens_[n][0].first)->dim();
 //                size_t eigen_size = eigens_[n].size();
-//                psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+//                auto evecs = std::make_shared<psi::Matrix>("evecs", dim, eigen_size);
 //                for (size_t i = 0; i < eigen_size; ++i) {
 //                    evecs->set_column(0, i, (eigens_[n][i]).first);
 //                }
 
-//                psi::SharedMatrix Heff(
-//                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-//                                    nstates, nstates));
+//                auto Heff =
+//                    std::make_shared<psi::Matrix>("Heff " + multi_label[multi - 1] + " " +
+//                    irrep_symbol[irrep],
+//                                    nstates, nstates);
 //                for (int A = 0; A < nstates; ++A) {
 //                    for (int B = A; B < nstates; ++B) {
 
@@ -1487,8 +1488,8 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //                print_h2("Effective Hamiltonian Summary");
 //                outfile->Printf("\n");
 //                Heff->print();
-//                psi::SharedMatrix U(new psi::Matrix("U of Heff", nstates, nstates));
-//                psi::SharedVector Ems(new Vector("MS Energies", nstates));
+//                auto U = std::make_shared<psi::Matrix>("U of Heff", nstates, nstates);
+//                auto Ems = std::make_shared<psi::Vector>("MS Energies", nstates);
 //                Heff->diagonalize(U, Ems);
 //                U->eivprint(Ems);
 
@@ -1650,7 +1651,7 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     print_vector4("DSRG-MRPT3", Mbar0_);
 
-    auto dipole_array = std::make_shared<Matrix>(1, 3);
+    auto dipole_array = std::make_shared<psi::Matrix>(1, 3);
     dipole_array->set(0, 0, Mbar0_[0] + dm_nuc_[0]);
     dipole_array->set(0, 1, Mbar0_[1] + dm_nuc_[1]);
     dipole_array->set(0, 2, Mbar0_[2] + dm_nuc_[2]);
