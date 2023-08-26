@@ -54,6 +54,10 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Compute the diagonal parts of the unrelaxed 1-RDM
     void build_1rdm_unrelaxed(psi::SharedMatrix& D1c, psi::SharedMatrix& D1v,
                               psi::SharedMatrix& D1a);
+
+    /// Compute virtual part of the natural orbitals
+    std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> build_fno();
+
     /// Compute the virtual part of the unrelaxed 1-RDM
     psi::SharedMatrix build_1rdm_unrelaxed_virt();
 

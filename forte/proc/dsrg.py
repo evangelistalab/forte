@@ -32,6 +32,7 @@ import json
 import warnings
 import math
 import numpy as np
+from forte.proc.dsrg_fno import dsrg_fno_procrouting
 
 
 class ProcedureDSRG:
@@ -149,6 +150,16 @@ class ProcedureDSRG:
         if self.do_semicanonical:
             self.semi.semicanonicalize(self.rdms)
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
+
+        # Perform FNO-DSRG
+        if options.get_bool("DSRG_FNO"):
+            fno_data = dsrg_fno_procrouting(state_weights_map, scf_info, options, ints,
+                                            mo_space_info, active_space_solver, self.rdms)
+            self.mo_space_info, self.ints, dept2, dhpt2 = fno_data
+            if options.get_bool("DSRG_FNO_PT2_CORRECTION"):
+                self.fno_pt2_energy_shift = dept2
+                self.fno_pt2_Heff_shift = dhpt2
+                psi4.core.set_scalar_variable("FNO ENERGY CORRECTION", dept2)
 
     def make_dsrg_solver(self):
         """ Make a DSRG solver. """

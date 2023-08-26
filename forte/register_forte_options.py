@@ -610,13 +610,21 @@ def register_dsrg_options(options):
         "DSRG_RSC_THRESHOLD", 1.0e-12, "The threshold for terminating the recursive single commutator approximation"
     )
 
-    options.add_bool("DSRG_FNO", False, "Perform frozen-natural-orbital based on DSRG-MRPT2")
+    options.add_bool("DSRG_FNO", False, "Perform frozen natural orbital based on DSRG-MRPT2")
 
     options.add_bool("DSRG_FNO_PT2_CORRECTION", True, "PT2 correction to the discarded FNOs")
 
     options.add_double("DSRG_FNO_PT2_S", 0.5, "The DSRG flow parameter s for PT2 FNO correction")
 
     options.add_double("DSRG_FNO_CUTOFF", 1.0e-5, "The cutoff used to discard FNOs")
+
+    options.add_double("DSRG_FNO_PV", 100.0,
+                       "Percentage of virtual orbitals kept unfrozen."
+                       " If not 100.0, it takes priority over direct cutoff.")
+
+    options.add_double("DSRG_FNO_PO", 100.0,
+                       "Percentage of cumulative virtual occupancy kept unfrozen."
+                       " If not 100.0, it takes priority over all other selection schemes.")
 
     options.add_str(
         "T_ALGORITHM", "DSRG", ["DSRG", "DSRG_NOSEMI", "SELEC", "ISA"],

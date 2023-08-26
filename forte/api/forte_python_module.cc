@@ -383,6 +383,7 @@ PYBIND11_MODULE(_forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("compute_mp_eff_actv", &SA_MRPT2::compute_mp_eff_actv,
              "Return the DSRG dressed ActiveMultipoleIntegrals")
+        .def("build_fno", &SA_MRPT2::build_fno, "Build DSRG-MRPT2 frozen natural orbitals")
         .def("set_Uactv", &SA_MRPT2::set_Uactv, "Ua"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
         .def("set_active_space_solver", &SA_MRPT2::set_active_space_solver,

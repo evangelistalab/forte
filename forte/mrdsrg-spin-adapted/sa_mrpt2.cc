@@ -927,4 +927,144 @@ void SA_MRPT2::compute_hbar() {
         Hbar1_.block("aa")("vu") -= 0.5 * C1_VT2_CCAV_("uv");
     }
 }
+
+std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
+    print_h2("DSRG-MRPT2 Frozen Natural Orbitals");
+
+    auto D1v = build_1rdm_unrelaxed_virt();
+
+    auto dim_virt = D1v->rowspi();
+    auto nirrep = dim_virt.n();
+    auto nvirt = dim_virt.sum();
+    auto D1v_evals = std::make_shared<psi::Vector>("D1v_evals", dim_virt);
+    auto D1v_evecs = std::make_shared<psi::Matrix>("D1v_evecs", dim_virt, dim_virt);
+    D1v->diagonalize(D1v_evecs, D1v_evals, descending);
+
+    // number of virtual electrons
+    double nelec = 0.0;
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < dim_virt[h]; ++i) {
+            nelec += D1v_evals->get(h, i);
+        }
+    }
+
+    // determine natural occupation cutoff
+    auto cutoff_0 = foptions_->get_double("DSRG_FNO_CUTOFF");
+    auto pv = foptions_->get_double("DSRG_FNO_PV") * 0.01;
+    auto po = foptions_->get_double("DSRG_FNO_PO") * 0.01;
+
+    enum class NOS_SELECT { CUTOFF, PV, PO };
+    auto nos_selection = NOS_SELECT::CUTOFF;
+    if (1.0 - pv > 1.0e-15)
+        nos_selection = NOS_SELECT::PV;
+    if (1.0 - po > 1.0e-15)
+        nos_selection = NOS_SELECT::PO;
+
+    auto cutoff = cutoff_0; // actual cutoff to be applied
+
+    if (nos_selection != NOS_SELECT::CUTOFF) {
+        // remove symmetry
+        std::vector<std::pair<double, std::pair<int, int>>> occ_list;
+        occ_list.reserve(nvirt);
+        for (int h = 0; h < nirrep; ++h) {
+            for (int i = 0; i < dim_virt[h]; ++i) {
+                occ_list.emplace_back(D1v_evals->get(h, i), std::make_pair(h, i));
+            }
+        }
+        std::sort(occ_list.rbegin(), occ_list.rend()); // in descending order
+
+        // determine virtual index to be truncated for PV/PO schemes
+        auto nv_p = nvirt;
+        if (nos_selection == NOS_SELECT::PV) {
+            nv_p = static_cast<int>(nvirt * pv);
+        } else {
+            auto nf_target = (1.0 - po) * nelec;
+            auto nf_temp = 0.0;
+            for (int i = nvirt - 1; i >= 0; --i) {
+                auto n = nf_temp + occ_list[i].first;
+                if (n <= nf_target) {
+                    nf_temp = n;
+                } else {
+                    nv_p = i + 1;
+                    break;
+                }
+            }
+        }
+
+        // include orbital degeneracy
+        cutoff = occ_list[nv_p - 1].first;
+        for (int i = nv_p; i < nvirt; ++i) {
+            auto ntemp = occ_list[i].first;
+            if (cutoff - ntemp < 1.0e-6)
+                cutoff = ntemp;
+            else
+                break;
+        }
+    }
+
+    // actual dimension for frozen virtuals
+    psi::Dimension dim_frzv(nirrep, "FNO");
+    auto frzv_on = 0.0;
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < dim_virt[h]; ++i) {
+            if (D1v_evals->get(h, i) - cutoff < 1.0e-6) {
+                dim_frzv[h] += 1;
+                frzv_on += D1v_evals->get(h, i);
+            }
+        }
+    }
+    auto nfno = dim_frzv.sum();
+
+    // printing
+    if (nos_selection == NOS_SELECT::PV) {
+        outfile->Printf("\n\n    FNO selection scheme: Percentage of number of virtual orbitals");
+        outfile->Printf("\n    Input PV cutoff: %.4f %%", pv * 100.0);
+    } else if (nos_selection == NOS_SELECT::PO) {
+        outfile->Printf("\n\n    FNO selection scheme: Percentage of cumulative virtual occupancy");
+        outfile->Printf("\n    Input PO cutoff: %.4f %%", po * 100.0);
+    } else {
+        outfile->Printf("\n\n    FNO selection scheme: Direct occupancy cutoff");
+        outfile->Printf("\n    Input occupation number cutoff: %.4e", cutoff_0);
+    }
+    outfile->Printf("\n    Occupation number cutoff: %.4e", cutoff);
+    outfile->Printf("\n    Number of FNOs: %d (%.4f %%)", nfno, 100.0 * nfno / nvirt);
+    outfile->Printf("\n    Cumulative occupancy of FNOs: %.4e (%.4f %%)", frzv_on,
+                    frzv_on / nelec * 100.0);
+
+    // build transformation matrix to FNO
+    auto dim_virt_small = dim_virt - dim_frzv;
+    auto Va = std::make_shared<psi::Matrix>("Va", dim_virt, dim_virt_small);
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < dim_virt_small[h]; ++i) {
+            Va->set_column(h, i, D1v_evecs->get_column(h, i));
+        }
+    }
+
+    // canonicalize truncated virtual space
+    auto F = tensor_to_matrix(F_.block("vv"), dim_virt);
+    auto Ft = psi::linalg::triplet(Va, F, Va, true, false, false);
+    auto Ft_evals = std::make_shared<psi::Vector>("Ft_evals", dim_virt_small);
+    auto Ft_evecs = std::make_shared<psi::Matrix>("Ft_evecs", dim_virt_small, dim_virt_small);
+    Ft->diagonalize(Ft_evecs, Ft_evals, ascending);
+    auto Wa = psi::linalg::doublet(Va, Ft_evecs, false, false);
+
+    // build final transformation matrix
+    auto nmopi = mo_space_info_->dimension("ALL");
+    auto ncmopi = mo_space_info_->dimension("CORRELATED");
+    auto frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    auto holepi = mo_space_info_->dimension("INACTIVE_DOCC") + mo_space_info_->dimension("ACTIVE");
+
+    auto Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+    Ua->identity();
+
+    Slice slice_row(holepi, holepi + dim_virt);
+    Slice slice_col(holepi, holepi + dim_virt_small);
+    Ua->set_block(slice_row, slice_col, Wa);
+
+    save_psi4_vector("NAT_OCC_VIRT", *D1v_evals, holepi);
+    dim_frzv.print();
+    // Ua->print();
+    return std::make_tuple(dim_frzv, Ua);
+}
+
 } // namespace forte

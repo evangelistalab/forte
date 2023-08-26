@@ -474,12 +474,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
-        if options.get_bool("DSRG_FNO"):
-            mo_space_info, ints, dept2, dhpt2 = dsrg_fno_procrouting(state_weights_map, scf_info, options, ints,
-                                                                     mo_space_info, active_space_solver)
+        # if options.get_bool("DSRG_FNO"):
+        #     mo_space_info, ints, dept2, dhpt2 = dsrg_fno_procrouting(state_weights_map, scf_info, options, ints,
+        #                                                              mo_space_info, active_space_solver)
         dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
-        if options.get_bool("DSRG_FNO") and options.get_bool("DSRG_FNO_PT2_CORRECTION"):
-            dsrg_proc.set_fno_shift(dept2, dhpt2)
+        # if options.get_bool("DSRG_FNO") and options.get_bool("DSRG_FNO_PT2_CORRECTION"):
+        #     dsrg_proc.set_fno_shift(dept2, dhpt2)
         return_en = dsrg_proc.compute_energy()
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
