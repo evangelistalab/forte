@@ -50,9 +50,6 @@ class MRPT2_NOS : public OrbitalTransform {
 
     void compute_transformation() override;
 
-    /// Transform to frozen-natural orbitals basis
-    psi::SharedMatrix compute_fno();
-
   private:
     /// Pointer to ForteOptions
     std::shared_ptr<ForteOptions> options_;

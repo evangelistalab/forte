@@ -1,7 +1,7 @@
 # Test DSRG-MRPT2 FNO and PT2 corrections
 
 ref_escf    = -152.976768854792113
-ref_efno_c  =   -0.016920429572735
+ref_efno_c  =   -0.017203964479279
 ref_ept2_s0 = -153.550159832259851
 ref_ept2_s1 = -153.392970452426312
 
@@ -58,7 +58,6 @@ dl_maxiter          500
 threepdc            zero
 dsrg_fno            true
 dsrg_fno_cutoff     1.0e-4
-semi_canonical      false
 }
 energy('forte', ref_wfn=wfn)
 compare_values(ref_efno_c, variable("FNO ENERGY CORRECTION"), 7, "FNO energy correction")

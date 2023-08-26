@@ -53,35 +53,6 @@ MRPT2_NOS::MRPT2_NOS(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_in
     mrpt2_ = std::make_shared<SA_MRPT2>(rdms, scf_info, options, ints, mo_space_info);
 }
 
-psi::SharedMatrix MRPT2_NOS::compute_fno() {
-    print_h2("DSRG-MRPT2 Frozen Natural Orbitals");
-
-    D1v_ = mrpt2_->build_1rdm_unrelaxed_virt();
-    psi::Process::environment.arrays["MRPT2 1RDM VV"] = D1v_;
-
-    auto virt_mospi = D1v_->rowspi();
-    psi::Vector D1v_evals("D1v_evals", virt_mospi);
-    psi::Matrix D1v_evecs("D1v_evecs", virt_mospi, virt_mospi);
-    D1v_->diagonalize(D1v_evecs, D1v_evals, descending);
-
-    // build transformation matrix
-    auto nmopi = mo_space_info_->dimension("ALL");
-    auto ncmopi = mo_space_info_->dimension("CORRELATED");
-    auto frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
-    auto doccpi = mo_space_info_->dimension("INACTIVE_DOCC");
-    auto holepi = doccpi + mo_space_info_->dimension("ACTIVE");
-
-    Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
-    Ua_->identity();
-
-    Slice slice_virt(holepi, frzcpi + ncmopi);
-    Ua_->set_block(slice_virt, D1v_evecs);
-    Ub_ = Ua_->clone();
-
-    save_psi4_vector("NAT_OCC_VIRT", D1v_evals, holepi);
-    return Ua_;
-}
-
 void MRPT2_NOS::compute_transformation() {
     // compute unrelaxed 1-RDMs for diagonal blocks
     mrpt2_->build_1rdm_unrelaxed(D1c_, D1v_, D1a_);

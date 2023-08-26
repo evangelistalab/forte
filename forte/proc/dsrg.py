@@ -214,7 +214,7 @@ class ProcedureDSRG:
         self.dsrg_setup()
         e_dsrg = self.dsrg_solver.compute_energy() + self.fno_pt2_energy_shift
         if self.fno_pt2_energy_shift != 0.0:
-            psi4.core.print_out(f"\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
+            psi4.core.print_out(f"\n\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
             psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy:   {e_dsrg:20.15f}")
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
@@ -326,7 +326,7 @@ class ProcedureDSRG:
             self.dsrg_solver.set_read_cwd_amps(not self.restart_amps)  # don't read from cwd if checkpoint available
             e_dsrg = self.dsrg_solver.compute_energy() + self.fno_pt2_energy_shift
             if self.fno_pt2_energy_shift != 0.0:
-                psi4.core.print_out(f"\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
+                psi4.core.print_out(f"\n\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
                 psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy:   {e_dsrg:20.15f}")
 
         self.dsrg_cleanup()

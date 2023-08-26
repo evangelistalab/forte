@@ -940,16 +940,16 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     auto D1v_evecs = std::make_shared<psi::Matrix>("D1v_evecs", dim_virt, dim_virt);
     D1v->diagonalize(D1v_evecs, D1v_evals, descending);
 
-    // number of virtual electrons
-    double nelec = 0.0;
+    // sum of occupation numbers of virtuals
+    double virt_on = 0.0;
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < dim_virt[h]; ++i) {
-            nelec += D1v_evals->get(h, i);
+            virt_on += D1v_evals->get(h, i);
         }
     }
 
     // determine natural occupation cutoff
-    auto cutoff_0 = foptions_->get_double("DSRG_FNO_CUTOFF");
+    auto cutoff = foptions_->get_double("DSRG_FNO_CUTOFF");
     auto pv = foptions_->get_double("DSRG_FNO_PV") * 0.01;
     auto po = foptions_->get_double("DSRG_FNO_PO") * 0.01;
 
@@ -960,15 +960,13 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     if (1.0 - po > 1.0e-15)
         nos_selection = NOS_SELECT::PO;
 
-    auto cutoff = cutoff_0; // actual cutoff to be applied
-
     if (nos_selection != NOS_SELECT::CUTOFF) {
-        // remove symmetry
-        std::vector<std::pair<double, std::pair<int, int>>> occ_list;
-        occ_list.reserve(nvirt);
-        for (int h = 0; h < nirrep; ++h) {
+        // sort natural occupation numbers
+        std::vector<double> occ_list(nvirt);
+        for (int h = 0, m = 0; h < nirrep; ++h) {
             for (int i = 0; i < dim_virt[h]; ++i) {
-                occ_list.emplace_back(D1v_evals->get(h, i), std::make_pair(h, i));
+                occ_list[m] = D1v_evals->get(h, i);
+                m++;
             }
         }
         std::sort(occ_list.rbegin(), occ_list.rend()); // in descending order
@@ -976,12 +974,12 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
         // determine virtual index to be truncated for PV/PO schemes
         auto nv_p = nvirt;
         if (nos_selection == NOS_SELECT::PV) {
-            nv_p = static_cast<int>(nvirt * pv);
+            nv_p = nvirt - static_cast<int>(nvirt * (1.0 - pv));
         } else {
-            auto nf_target = (1.0 - po) * nelec;
+            auto nf_target = (1.0 - po) * virt_on;
             auto nf_temp = 0.0;
             for (int i = nvirt - 1; i >= 0; --i) {
-                auto n = nf_temp + occ_list[i].first;
+                auto n = nf_temp + occ_list[i];
                 if (n <= nf_target) {
                     nf_temp = n;
                 } else {
@@ -992,9 +990,9 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
         }
 
         // include orbital degeneracy
-        cutoff = occ_list[nv_p - 1].first;
+        cutoff = occ_list[nv_p - 1];
         for (int i = nv_p; i < nvirt; ++i) {
-            auto ntemp = occ_list[i].first;
+            auto ntemp = occ_list[i];
             if (cutoff - ntemp < 1.0e-6)
                 cutoff = ntemp;
             else
@@ -1007,7 +1005,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     auto frzv_on = 0.0;
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < dim_virt[h]; ++i) {
-            if (D1v_evals->get(h, i) - cutoff < 1.0e-6) {
+            if (D1v_evals->get(h, i) < cutoff) {
                 dim_frzv[h] += 1;
                 frzv_on += D1v_evals->get(h, i);
             }
@@ -1019,17 +1017,19 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     if (nos_selection == NOS_SELECT::PV) {
         outfile->Printf("\n\n    FNO selection scheme: Percentage of number of virtual orbitals");
         outfile->Printf("\n    Input PV cutoff: %.4f %%", pv * 100.0);
+        outfile->Printf("\n    Occupation number cutoff: %.4e", cutoff);
     } else if (nos_selection == NOS_SELECT::PO) {
         outfile->Printf("\n\n    FNO selection scheme: Percentage of cumulative virtual occupancy");
         outfile->Printf("\n    Input PO cutoff: %.4f %%", po * 100.0);
+        outfile->Printf("\n    Occupation number cutoff: %.4e", cutoff);
     } else {
         outfile->Printf("\n\n    FNO selection scheme: Direct occupancy cutoff");
-        outfile->Printf("\n    Input occupation number cutoff: %.4e", cutoff_0);
+        outfile->Printf("\n    Input occupation number cutoff: %.4E", cutoff);
     }
-    outfile->Printf("\n    Occupation number cutoff: %.4e", cutoff);
-    outfile->Printf("\n    Number of FNOs: %d (%.4f %%)", nfno, 100.0 * nfno / nvirt);
-    outfile->Printf("\n    Cumulative occupancy of FNOs: %.4e (%.4f %%)", frzv_on,
-                    frzv_on / nelec * 100.0);
+    outfile->Printf("\n    Total Number of FNOs: %d (%d / %d = %.4f %%)", nfno, nfno, nvirt,
+                    100.0 * nfno / nvirt);
+    outfile->Printf("\n    Cumulative occupancy of FNOs: %.4E (%.4E / %.4E = %.4f %%)", frzv_on,
+                    frzv_on, virt_on, frzv_on / virt_on * 100.0);
 
     // build transformation matrix to FNO
     auto dim_virt_small = dim_virt - dim_frzv;
@@ -1062,8 +1062,6 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     Ua->set_block(slice_row, slice_col, Wa);
 
     save_psi4_vector("NAT_OCC_VIRT", *D1v_evals, holepi);
-    dim_frzv.print();
-    // Ua->print();
     return std::make_tuple(dim_frzv, Ua);
 }
 
