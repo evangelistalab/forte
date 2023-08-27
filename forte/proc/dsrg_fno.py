@@ -79,5 +79,8 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
             dhpt2.add(pt2_solver.compute_Heff_actv(), -1.0)
         pt2_solver = None  # clean up
 
+    # reset flow parameter
+    options.set_double("DSRG_S", dsrg_s)
+
     # return
     return mo_space_info, ints, dept2, dhpt2
