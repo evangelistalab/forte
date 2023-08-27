@@ -27,6 +27,7 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "forte-def.h"
@@ -1029,7 +1030,9 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     outfile->Printf("\n    Total Number of FNOs: %d (%d / %d = %.4f %%)", nfno, nfno, nvirt,
                     100.0 * nfno / nvirt);
     outfile->Printf("\n    Cumulative occupancy of FNOs: %.4E (%.4E / %.4E = %.4f %%)", frzv_on,
-                    frzv_on, virt_on, frzv_on / virt_on * 100.0);
+                    frzv_on, virt_on, 100.0 * frzv_on / virt_on);
+    psi::Process::environment.globals["DSRG FNO PV"] = 100.0 - 100.0 * nfno / nvirt;
+    psi::Process::environment.globals["DSRG FNO PO"] = 100.0 - 100.0 * frzv_on / virt_on;
 
     // build transformation matrix to FNO
     auto dim_virt_small = dim_virt - dim_frzv;
