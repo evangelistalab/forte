@@ -1435,28 +1435,17 @@ The FNO MR-DSRG procedure add the following additional steps before a regular MR
 
   (1) Build natural virtual orbitals by diagonalizing the virtual-virtual block of
   the unrelaxed DSRG-MRPT2 one-particle reduced density matrix.
-  Integrals are subsequently updated to the natural-virtual-orbital basis.
 
-  (2) Read natural virtual occupations from :code:`NAT_OCC_VIRT` file.
-  Throw away virtual orbitals whose natural occupations are smaller than the
-  user-defined threshold.
+  (2) Throw away virtual orbitals whose natural occupations are smaller than the
+  user-defined threshold. Transform integrals to the FNO truncated semicanonical basis.
 
-  (3) Compute the MRPT2 corrections due to FNO truncation.
-  Perform two MRPT2 computations: one with complete virtual orbitals and
-  the other with FNO truncated virtual orbitals.
+  (3) Compute the MRPT2 corrections due to FNO truncation by performing a MRPT2 computation
+  in the truncated virtual space. This correction applies to both energy and DSRG Hamiltonian.
 
 .. note::
-  - If the :code:`NAT_OCC_VIRT` file is available in the same directory as the input file,
-    we assume the orbitals are already in DSRG-MRPT2 quasi-natural-orbital basis such that
-    step (1) is skipped.
-
-  - In step (1), the DSRG-MRPT2 ccvv amplitudes have the same expressions to those of MP2.
-    This behavior is hard coded in :code:`proc/dsrg_fno.py` by the option :code:`CCVV_SOURCE`.
-
   - If option :code:`THREEPDC` is set to :code:`ZERO`, 3-RDM will also be ignored for the
     1-RDM build of DSRG-MRPT2.
     The resulting quasi-natural orbitals are thus approximated, but the error is negligible.
-    This behavior can be changed by modifying :code:`max_rdm_level` in :code:`proc/dsrg_fno.py`.
 
   - Because the recommended flow parameter is different between MRPT2 and others,
     the flow parameter for MRPT2 related steps [i.e., (1) and (3)] is controlled by option
@@ -1495,7 +1484,6 @@ acetaldehyde from ground state to the first singlet A'' state (test case "fno-2"
   e_convergence 1.0e-8
   }
   escf, wfn = energy('scf', return_wfn=True)
-  compare_values(ref_escf, escf, 7, "SCF energy")
   wfn_cas = wfn.from_file("../fno-1/wfn_casscf.npy")
   wfn.Ca().copy(wfn_cas.Ca())
 
@@ -1521,19 +1509,19 @@ acetaldehyde from ground state to the first singlet A'' state (test case "fno-2"
 Here, we read converged SA-CASSCF orbitals from test case "fno-1".
 The FNO procedure is activated by :code:`dsrg_fno` and the occupation truncation
 is managed by the option :code:`dsrg_fno_cutoff`.
-Using 1.0e-4 as the FNO cutoff, 82 (out of 134) A' and 49 (out of 82) A'' orbitals are discarded.
+Using 1.0e-4 as the FNO cutoff, 82 (out of 134) A' and 50 (out of 82) A'' orbitals are discarded.
 
 .. tip::
   When computing vertical transition energies using SA-DSRG-PT2, -PT3, or LDSRG(2),
-  there is no need to compute the SA-3RDM.
+  there is no need to compute the SA-3RDM in the full basis.
 
 The PT2 corrected FNO SA-DSRG-PT3 energies are ::
 
   Multi.(2ms)  Irrep.  No.               Energy      <S^2>
   --------------------------------------------------------
-     1  (  0)    Ap     0     -153.578330831999   0.000000
+     1  (  0)    Ap     0     -153.578159792958   0.000000
   --------------------------------------------------------
-     1  (  0)   App     0     -153.415039030319   0.000000
+     1  (  0)   App     0     -153.414826866551   0.000000
   --------------------------------------------------------
 
 For comparison, the PT2 uncorrected (by setting :code:`DSRG_FNO_PT2_CORRECTION` to :code:`False`)
@@ -1541,9 +1529,9 @@ FNO SA-DSRG-PT3 energies read as ::
 
   Multi.(2ms)  Irrep.  No.               Energy      <S^2>
   --------------------------------------------------------
-     1  (  0)    Ap     0     -153.561250184637   0.000000
+     1  (  0)    Ap     0     -153.560798429865   0.000000
   --------------------------------------------------------
-     1  (  0)   App     0     -153.398282723341  -0.000000
+     1  (  0)   App     0     -153.397787755784  -0.000000
   --------------------------------------------------------
 
 and the untruncated SA-DSRG-PT3 gives ::
@@ -1560,10 +1548,10 @@ The resulting SA-DSRG-PT3 vertical excitation energies are:
 ============================================  =====================
 Method                                         :math:`\Delta E` / eV
 ============================================  =====================
-FNO (PT2 uncorrected, w/o :math:`\lambda_3`)         4.4346
-FNO (PT2 uncorrected, w/  :math:`\lambda_3`)         4.4336
-FNO (PT2 corrected, w/o :math:`\lambda_3`)           4.4434
-FNO (PT2 corrected, w/  :math:`\lambda_3`)           4.4425
+FNO (PT2 uncorrected, w/o :math:`\lambda_3`)         4.4357
+FNO (PT2 uncorrected, w/  :math:`\lambda_3`)         4.4350
+FNO (PT2 corrected, w/o :math:`\lambda_3`)           4.4445
+FNO (PT2 corrected, w/  :math:`\lambda_3`)           4.4438
 untruncated                                          4.4418
 ============================================  =====================
 
@@ -1592,6 +1580,24 @@ The virtual orbitals with natural occupations smaller than this cutoff will be d
 
 * Type: double
 * Default: 1.0e-5
+
+**DSRG_FNO_PV**
+
+The percentage of the number of virtual orbitals kept unfrozen.
+If changed, it takes the priority over direct cutoff to the occupation number.
+A typical :math:`p_v` value is around 40 -- 60 %.
+
+* Type: double
+* Default: 100.0
+
+**DSRG_FNO_PO**
+
+The percentage of the cumulative virtual occupancy kept unfrozen.
+If changed, it takes the priority over all other FNO selection scheme.
+A typical :math:`p_o` value is around 99.0 %.
+
+* Type: double
+* Default: 100.0
 
 **DSRG_FNO_PT2_S**
 
