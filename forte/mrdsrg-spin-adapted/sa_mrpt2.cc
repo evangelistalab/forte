@@ -994,7 +994,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
         cutoff = occ_list[nv_p - 1];
         for (int i = nv_p; i < nvirt; ++i) {
             auto ntemp = occ_list[i];
-            if (cutoff - ntemp < 1.0e-6)
+            if (cutoff - ntemp < 0.01 * cutoff)
                 cutoff = ntemp;
             else
                 break;
