@@ -1031,6 +1031,8 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
                     100.0 * nfno / nvirt);
     outfile->Printf("\n    Cumulative occupancy of FNOs: %.4E (%.4E / %.4E = %.4f %%)", frzv_on,
                     frzv_on, virt_on, 100.0 * frzv_on / virt_on);
+
+    psi::Process::environment.globals["DSRG FNO CUTOFF"] = cutoff;
     psi::Process::environment.globals["DSRG FNO PV"] = 100.0 - 100.0 * nfno / nvirt;
     psi::Process::environment.globals["DSRG FNO PO"] = 100.0 - 100.0 * frzv_on / virt_on;
 
