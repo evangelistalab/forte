@@ -93,7 +93,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(std::shared_ptr<RDMs> rdms, std::shared_ptr<S
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     num_threads_ = omp_get_max_threads();
-    //num_threads_ = 1;
+    // num_threads_ = 1;
     /// Get processor number
     int nproc = 1;
     int my_proc = 0;
@@ -1938,7 +1938,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
             RDVec.push_back(ambit::Tensor::build(tensor_type_, "RD", {nvirtual_, nvirtual_}));
         }
         bool ao_dsrg_check = foptions_->get_bool("AO_DSRG_MRPT2");
-        //bool ao_dsrg_check = true;
+        // bool ao_dsrg_check = true;
 
 #pragma omp parallel for num_threads(num_threads_) schedule(dynamic)                               \
     reduction(+ : Ealpha, Ebeta, Emixed) shared(Ba, Bb)
@@ -2334,7 +2334,7 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
         E_cavv = LaplaceDSRG->compute_cavv();
         outfile->Printf("\n\n  LAPLACE: cavv takes %8.8f", timer2.get());
         outfile->Printf("\n  LAPLACE: E_cavv %8.10f", E_cavv);
-        vir_start_cavv = LaplaceDSRG->vir_start_cavv();
+        vir_start_cavv = LaplaceDSRG->vir_start();
     }
 
     if (laplace_ccav) {
@@ -2342,7 +2342,7 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
         E_ccav = LaplaceDSRG->compute_ccav();
         outfile->Printf("\n\n  LAPLACE: ccav takes %8.8f", timer3.get());
         outfile->Printf("\n  LAPLACE: E_ccav %8.10f", E_ccav);
-        vir_start_ccav = LaplaceDSRG->vir_start_ccav();
+        vir_start_ccav = LaplaceDSRG->vir_start();
     }
 
     LaplaceDSRG.reset();
@@ -2429,7 +2429,7 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
         ambit::Tensor V_MeUF_laplace = ambit::Tensor::build(
             tensor_type_, "V", {ncore_, vir_start_cavv, nactive_, vir_laplace_cavv});
         ambit::Tensor temp = ambit::Tensor::build(
-            tensor_type_, "temp", {ncore_, vir_start_cavv, nactive_, vir_laplace_cavv});    
+            tensor_type_, "temp", {ncore_, vir_start_cavv, nactive_, vir_laplace_cavv});
         V_MeUF_laplace("m,e,u,f") += B_QMe("Q, m, e") * B_QUF("Q, u, f");
 
         ambit::Tensor V_MEUf_laplace = ambit::Tensor::build(
@@ -2493,7 +2493,7 @@ double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
         temp_aa("u,v") += temp2("m,e,u,f") * T_MEUf_laplace("m,e,v,f");
 
         E_cavv += temp_aa("u,v") * Gamma1a("u,v");
-        
+
         if (print_ > 0) {
             outfile->Printf("\n\n  Leftover CAVV computation takes %8.8f", cavvTimer.get());
             outfile->Printf("\n  Corrected LAPLACE: E_cavv %8.10f", E_cavv);

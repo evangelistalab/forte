@@ -78,7 +78,6 @@ LaplaceDSRG::LaplaceDSRG(std::shared_ptr<ForteOptions> options,
     theta_schwarz_ccav_ = foptions_->get_double("THETA_SCHWARZ_CCAV");
     theta_ij_sqrt_ccav_ = sqrt(theta_ij_ccav_);
 
-
     C_pq_ = erfc_metric(Omega_, ints_);
 
     outfile->Printf("\n    Done with C_pq");
@@ -108,74 +107,110 @@ void LaplaceDSRG::print_header() {
     std::vector<std::pair<std::string, std::string>> calculation_info_string;
     std::vector<std::pair<std::string, bool>> calculation_info_bool;
     std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"laplace_threshold", laplace_threshold_}, {"Omega", Omega_},
-        {"theta_NB", theta_NB_},           {"theta_NB_IAP", theta_NB_IAP_},
-        {"theta_ij", theta_ij_},           {"theta_schwarz", theta_schwarz_},
-        {"theta_NB_cavv", theta_NB_cavv_}, {"theta_NB_IAP_cavv", theta_NB_IAP_cavv_},
-        {"theta_XNB_cavv",theta_XNB_cavv_},{"theta_NB_XAP_cavv", theta_NB_XAP_cavv_}, 
-        {"theta_ij_cavv", theta_ij_cavv_}, {"theta_schwarz_cavv", theta_schwarz_cavv_}, 
-        {"theta_NB_ccav", theta_NB_ccav_}, {"theta_NB_IAP_ccav", theta_NB_IAP_ccav_}, 
-        {"theta_ij_ccav", theta_ij_ccav_}, {"theta_schwarz_ccav", theta_schwarz_ccav_}, 
+        {"laplace_threshold", laplace_threshold_},
+        {"Omega", Omega_},
+        {"theta_NB", theta_NB_},
+        {"theta_NB_IAP", theta_NB_IAP_},
+        {"theta_ij", theta_ij_},
+        {"theta_schwarz", theta_schwarz_},
+        {"theta_NB_cavv", theta_NB_cavv_},
+        {"theta_NB_IAP_cavv", theta_NB_IAP_cavv_},
+        {"theta_XNB_cavv", theta_XNB_cavv_},
+        {"theta_NB_XAP_cavv", theta_NB_XAP_cavv_},
+        {"theta_ij_cavv", theta_ij_cavv_},
+        {"theta_schwarz_cavv", theta_schwarz_cavv_},
+        {"theta_NB_ccav", theta_NB_ccav_},
+        {"theta_NB_IAP_ccav", theta_NB_IAP_ccav_},
+        {"theta_ij_ccav", theta_ij_ccav_},
+        {"theta_schwarz_ccav", theta_schwarz_ccav_},
         {"vir_tol", vir_tol_}};
     print_selected_options("Calculation Information", calculation_info_string,
                            calculation_info_bool, calculation_info_double, calculation_info_int);
 }
 
-double LaplaceDSRG::compute_ccvv() {
-    local_timer loadingTime;
-    E_J_ = 0.0;
-    E_K_ = 0.0;
-    AtomicOrbitalHelper ao_helper(Cwfn_, eps_rdocc_, eps_virtual_, laplace_threshold_, nactive_,
-                                  nfrozen_, vir_tol_);
-    int weights = ao_helper.Weights();
-    vir_start_ = ao_helper.vir_start();
-    ao_helper.Compute_Cholesky_Pseudo_Density();
-    ao_helper.Compute_Cholesky_Density();
-    Occupied_cholesky_ = ao_helper.LOcc_list();
-    Virtual_cholesky_ = ao_helper.LVir_list();
-    Cholesky_Occ_ = ao_helper.L_Occ_real();
+// void LaplaceDSRG::prepare_cholesky_coeff(&psi::SharedMatrix C_wfn, &psi::SharedVector eps_rdocc,
+// &psi::SharedVector eps_virtual,
+//                                         &double laplace_threshold, &size_t nactive, &size_t
+//                                         nfrozen, &double vir_tol) {
 
-    /// |L_Occ|, |L_Vir| and |L_ChoMO|
-    Occupied_cholesky_abs_.resize(weights);
-    Virtual_cholesky_abs_.resize(weights);
-    Cholesky_Occ_abs_ = std::make_shared<psi::Matrix>("LOcc_abs", nmo_, Cholesky_Occ_->coldim());
+// }
 
-    for (int nweight = 0; nweight < weights; nweight++) {
+void LaplaceDSRG::prepare_cholesky_coeff(std::shared_ptr<AtomicOrbitalHelper> ao_helper_ptr,
+                                         const std::string& algorithm) {
+    weights_ = ao_helper_ptr->Weights();
+    vir_start_ = ao_helper_ptr->vir_start();
+    ao_helper_ptr->Compute_Cholesky_Pseudo_Density();
+    if (algorithm == "ccvv") {
+        ao_helper_ptr->Compute_Cholesky_Density();
+        Cholesky_Occ_ = ao_helper_ptr->L_Occ_real();
+        Cholesky_Occ_abs_ =
+            std::make_shared<psi::Matrix>("LOcc_abs", nmo_, Cholesky_Occ_->coldim());
+        for (size_t u = 0; u < nmo_; u++) {
+            for (size_t i = 0; i < Cholesky_Occ_->coldim(); i++) {
+                Cholesky_Occ_abs_->set(u, i, std::abs(Cholesky_Occ_->get(u, i)));
+            }
+        }
+
+    } else if (algorithm == "cavv") {
+        // I assume that Cholesky_Occ_ has been initialized in the CCVV algorithm.
+        ao_helper_ptr->Compute_Cholesky_Active_Density(Gamma1_mat_);
+        Active_cholesky_ = ao_helper_ptr->LAct_list();
+        Active_cholesky_abs_.resize(weights_);
+    } else if (algorithm == "ccav") {
+        ao_helper_ptr->Compute_Cholesky_Active_Density(Eta1_mat_);
+        Active_cholesky_ = ao_helper_ptr->LAct_list();
+        Active_cholesky_abs_.resize(weights_);
+    }
+
+    Occupied_cholesky_ = ao_helper_ptr->LOcc_list();
+    Virtual_cholesky_ = ao_helper_ptr->LVir_list();
+    Occupied_cholesky_abs_.resize(weights_);
+    Virtual_cholesky_abs_.resize(weights_);
+
+    // Copy from CAVV. Start from here.
+
+    for (size_t nweight = 0; nweight < weights_; nweight++) {
         Occupied_cholesky_abs_[nweight] =
             std::make_shared<psi::Matrix>("LOcc_abs", nmo_, Occupied_cholesky_[nweight]->coldim());
         Virtual_cholesky_abs_[nweight] =
             std::make_shared<psi::Matrix>("LVir_abs", nmo_, Virtual_cholesky_[nweight]->coldim());
-        for (int u = 0; u < nmo_; u++) {
-            for (int i = 0; i < Occupied_cholesky_[nweight]->coldim(); i++) {
+
+        if (algorithm != "ccvv") {
+            Active_cholesky_abs_[nweight] = std::make_shared<psi::Matrix>(
+                "LAct_abs", nmo_, Active_cholesky_[nweight]->coldim());
+        }
+
+        for (size_t u = 0; u < nmo_; u++) {
+            for (size_t i = 0; i < Occupied_cholesky_[nweight]->coldim(); i++) {
                 Occupied_cholesky_abs_[nweight]->set(
                     u, i, std::abs(Occupied_cholesky_[nweight]->get(u, i)));
             }
-            for (int a = 0; a < Virtual_cholesky_[nweight]->coldim(); a++) {
+            for (size_t a = 0; a < Virtual_cholesky_[nweight]->coldim(); a++) {
                 Virtual_cholesky_abs_[nweight]->set(
                     u, a, std::abs(Virtual_cholesky_[nweight]->get(u, a)));
+            }
+            if (algorithm != "ccvv") {
+                for (size_t v = 0; v < Active_cholesky_[nweight]->coldim(); v++) {
+                    Active_cholesky_abs_[nweight]->set(
+                        u, v, std::abs(Active_cholesky_[nweight]->get(u, v)));
+                }
             }
         }
     }
 
-    for (int u = 0; u < nmo_; u++) {
-        for (int i = 0; i < Cholesky_Occ_->coldim(); i++) {
-            Cholesky_Occ_abs_->set(u, i, std::abs(Cholesky_Occ_->get(u, i)));
-        }
-    }
-
-    std::vector<psi::SharedMatrix> T_ibar_i_list(weights);
-    for (int i_weight = 0; i_weight < weights; i_weight++) {
-        T_ibar_i_list[i_weight] = psi::linalg::triplet(Occupied_cholesky_[i_weight], S_,
+    T_ibar_i_list_.clear();
+    T_ibar_i_list_.resize(weights_);
+    for (size_t nweight = 0; nweight < weights_; nweight++) {
+        T_ibar_i_list_[nweight] = psi::linalg::triplet(Occupied_cholesky_[nweight], S_,
                                                        Cholesky_Occ_, true, false, false);
     }
+}
 
-    /// Construct (P|iu)
-    P_iu.resize(nthree_); /// [([i]_p * ao_list_per_q), ...]
-
-    /// Below is the code for loading data from disk.
+void LaplaceDSRG::Load_int(double& theta_NB, const std::string& algorithm) {
+    local_timer loadingTime;
     int file_unit = PSIF_DFSCF_BJ;
-    int n_func_pairs = (nmo_ + 1) * nmo_ / 2;
-    int max_rows = 1;
+    size_t n_func_pairs = (nmo_ + 1) * nmo_ / 2;
+    size_t max_rows = 1;
     std::shared_ptr<PSIO> psio(new PSIO());
     psi::SharedMatrix loadAOtensor =
         std::make_shared<psi::Matrix>("DiskDF: Load (A|mn) from DF-SCF", max_rows, n_func_pairs);
@@ -184,21 +219,21 @@ double LaplaceDSRG::compute_ccvv() {
     std::vector<psi::SharedMatrix> amn;
     std::vector<psi::SharedMatrix> amn_new;
 
-    SparseMap ao_list_per_q; ///{u}_P
-    ao_list_per_q.resize(nthree_);
+    ao_list_per_q_.clear();
+    ao_list_per_q_.resize(nthree_);
 
-    SparseMap i_p_up(nthree_);
-    i_p_.resize(nthree_);
-    SparseMap i_p_for_i_up(nthree_);
-
-    psi::SharedMatrix N_pu = std::make_shared<psi::Matrix>("N_pu", nthree_, nmo_);
-    N_pu->zero();
-    double* N_pu_p = N_pu->get_pointer();
+    N_pu_ = std::make_shared<psi::Matrix>("N_pu_", nthree_, nmo_);
+    N_pu_->zero();
+    double* N_pu_p = N_pu_->get_pointer();
     outfile->Printf("\n    Start loading");
+
+    P_xbar_u_cavv_.assign(weights_, std::vector<psi::SharedMatrix>(nthree_));
+    P_xbar_u_ccav_.assign(weights_, std::vector<psi::SharedMatrix>(nthree_));
 
     for (int Q = 0; Q < nthree_; Q += max_rows) {
         int naux = (nthree_ - Q <= max_rows ? nthree_ - Q : max_rows);
-        psio_address addr = psio_get_address(PSIO_ZERO, (Q * (int)n_func_pairs) * sizeof(double));
+        psio_address addr =
+            psio_get_address(PSIO_ZERO, (Q * (size_t)n_func_pairs) * sizeof(double));
         psio->read(file_unit, "ERFC Integrals", (char*)(loadAOtensor->pointer()[0]),
                    sizeof(double) * naux * n_func_pairs, addr, &addr);
 
@@ -233,8 +268,8 @@ double LaplaceDSRG::compute_ccvv() {
                     row_add++;
                     // M_uv_p++;
                 }
-                if (std::abs(max_per_uq) >= theta_NB_) {
-                    ao_list_per_q[Q + q].push_back(u);
+                if (std::abs(max_per_uq) >= theta_NB) {
+                    ao_list_per_q_[Q + q].push_back(u);
                 }
                 *N_pu_p = std::abs(*N_pu_p) > max_per_uq ? std::abs(*N_pu_p) : max_per_uq;
                 *N_pu_batch_p =
@@ -244,39 +279,125 @@ double LaplaceDSRG::compute_ccvv() {
             }
             /// Slice Amn -> Amn_new
             amn_new[q] =
-                submatrix_rows_and_cols(*amn[q], ao_list_per_q[Q + q], ao_list_per_q[Q + q]);
+                submatrix_rows_and_cols(*amn[q], ao_list_per_q_[Q + q], ao_list_per_q_[Q + q]);
         }
-
-        psi::SharedMatrix N_pi_batch =
-            psi::linalg::doublet(N_pu_batch, Cholesky_Occ_abs_, false, false);
-        double* N_pi_batch_p = N_pi_batch->get_pointer();
-        for (int q = 0; q < naux; q++) {
-            for (int i = 0; i < Cholesky_Occ_->coldim(); i++) {
-                if (std::abs(*N_pi_batch_p) >= theta_NB_) {
-                    i_p_up[Q + q].push_back(i);
+        if (algorithm == "ccvv") {
+            P_iu_.resize(nthree_);
+            SparseMap i_p_up(nthree_);
+            i_p_.resize(nthree_);
+            SparseMap i_p_for_i_up(nthree_);
+            psi::SharedMatrix N_pi_batch =
+                psi::linalg::doublet(N_pu_batch, Cholesky_Occ_abs_, false, false);
+            double* N_pi_batch_p = N_pi_batch->get_pointer();
+            for (int q = 0; q < naux; q++) {
+                for (int i = 0; i < Cholesky_Occ_->coldim(); i++) {
+                    if (std::abs(*N_pi_batch_p) >= theta_NB_) {
+                        i_p_up[Q + q].push_back(i);
+                    }
+                    N_pi_batch_p++;
                 }
-                N_pi_batch_p++;
-            }
-            psi::SharedMatrix Cholesky_Occ_new =
-                submatrix_rows_and_cols(*Cholesky_Occ_, ao_list_per_q[Q + q], i_p_up[Q + q]);
-            P_iu[Q + q] = psi::linalg::doublet(Cholesky_Occ_new, amn_new[q], true, false);
-            for (int inew = 0; inew < i_p_up[Q + q].size(); inew++) {
-                for (int u = 0; u < ao_list_per_q[Q + q].size(); u++) {
-                    if (std::abs(P_iu[Q + q]->get(inew, u)) >= theta_NB_) {
-                        i_p_for_i_up[Q + q].push_back(inew);
-                        i_p_[Q + q].push_back(i_p_up[Q + q][inew]);
-                        break;
+                psi::SharedMatrix Cholesky_Occ_new =
+                    submatrix_rows_and_cols(*Cholesky_Occ_, ao_list_per_q_[Q + q], i_p_up[Q + q]);
+                P_iu_[Q + q] = psi::linalg::doublet(Cholesky_Occ_new, amn_new[q], true, false);
+                for (int inew = 0; inew < i_p_up[Q + q].size(); inew++) {
+                    for (int u = 0; u < ao_list_per_q_[Q + q].size(); u++) {
+                        if (std::abs(P_iu_[Q + q]->get(inew, u)) >= theta_NB_) {
+                            i_p_for_i_up[Q + q].push_back(inew);
+                            i_p_[Q + q].push_back(i_p_up[Q + q][inew]);
+                            break;
+                        }
                     }
                 }
+                P_iu_[Q + q] = submatrix_rows(*P_iu_[Q + q], i_p_for_i_up[Q + q]);
             }
-            P_iu[Q + q] = submatrix_rows(*P_iu[Q + q], i_p_for_i_up[Q + q]);
+        } else if (algorithm == "cavv") {
+            std::vector<SparseMap> xbar_p_up_cavv(weights_, SparseMap(nthree_));
+            std::vector<SparseMap> xbar_u_p_for_xbar_up(weights_, SparseMap(nthree_));
+            xbar_u_p_.assign(weights_, SparseMap(nthree_));
+
+            for (int nweight = 0; nweight < weights_; nweight++) {
+                psi::SharedMatrix N_px_cavv_batch =
+                    psi::linalg::doublet(N_pu_batch, Active_cholesky_abs_[nweight]);
+                double* N_px_batch_p = N_px_cavv_batch->get_pointer();
+                for (int q = 0; q < naux; q++) {
+                    for (int x = 0; x < Active_cholesky_abs_[nweight]->coldim(); x++) {
+                        if (std::abs(*N_px_batch_p) >= theta_XNB_cavv_) {
+                            xbar_p_up_cavv[nweight][Q + q].push_back(x);
+                        }
+                        N_px_batch_p++;
+                    }
+                    psi::SharedMatrix Active_cholesky_new =
+                        submatrix_rows_and_cols(*Active_cholesky_[nweight], ao_list_per_q_[Q + q],
+                                                xbar_p_up_cavv[nweight][Q + q]);
+                    P_xbar_u_cavv_[nweight][Q + q] =
+                        psi::linalg::doublet(Active_cholesky_new, amn_new[q], true, false);
+                    for (int inew = 0; inew < xbar_p_up_cavv[nweight][Q + q].size(); inew++) {
+                        for (int u = 0; u < ao_list_per_q_[Q + q].size(); u++) {
+                            if (std::abs(P_xbar_u_cavv_[nweight][Q + q]->get(inew, u)) >=
+                                theta_XNB_cavv_) {
+                                xbar_u_p_for_xbar_up[nweight][Q + q].push_back(inew);
+                                xbar_u_p_[nweight][Q + q].push_back(
+                                    xbar_p_up_cavv[nweight][Q + q][inew]);
+                                break;
+                            }
+                        }
+                    }
+                    P_xbar_u_cavv_[nweight][Q + q] = submatrix_rows(
+                        *P_xbar_u_cavv_[nweight][Q + q], xbar_u_p_for_xbar_up[nweight][Q + q]);
+                }
+            }
+        } else if (algorithm == "ccav") {
+            std::vector<SparseMap> xbar_p_up_ccav(weights_, SparseMap(nthree_));
+            std::vector<SparseMap> xbar_u_p_for_xbar_up(weights_, SparseMap(nthree_));
+            std::vector<SparseMap> xbar_u_p_(weights_, SparseMap(nthree_));
+
+            for (int nweight = 0; nweight < weights_; nweight++) {
+                psi::SharedMatrix N_px_ccav_batch =
+                    psi::linalg::doublet(N_pu_batch, Active_cholesky_abs_[nweight]);
+                double* N_px_batch_p = N_px_ccav_batch->get_pointer();
+                for (int q = 0; q < naux; q++) {
+                    for (int x = 0; x < Active_cholesky_abs_[nweight]->coldim(); x++) {
+                        if (std::abs(*N_px_batch_p) >= theta_NB) {
+                            xbar_p_up_ccav[nweight][Q + q].push_back(x);
+                        }
+                        N_px_batch_p++;
+                    }
+                    psi::SharedMatrix Active_cholesky_new =
+                        submatrix_rows_and_cols(*Active_cholesky_[nweight], ao_list_per_q_[Q + q],
+                                                xbar_p_up_ccav[nweight][Q + q]);
+                    P_xbar_u_ccav_[nweight][Q + q] =
+                        psi::linalg::doublet(Active_cholesky_new, amn_new[q], true, false);
+                    for (int inew = 0; inew < xbar_p_up_ccav[nweight][Q + q].size(); inew++) {
+                        for (int u = 0; u < ao_list_per_q_[Q + q].size(); u++) {
+                            if (std::abs(P_xbar_u_ccav_[nweight][Q + q]->get(inew, u)) >=
+                                theta_NB) {
+                                xbar_u_p_for_xbar_up[nweight][Q + q].push_back(inew);
+                                xbar_u_p_[nweight][Q + q].push_back(
+                                    xbar_p_up_ccav[nweight][Q + q][inew]);
+                                break;
+                            }
+                        }
+                    }
+                    P_xbar_u_ccav_[nweight][Q + q] = submatrix_rows(
+                        *P_xbar_u_ccav_[nweight][Q + q], xbar_u_p_for_xbar_up[nweight][Q + q]);
+                }
+            }
         }
     }
     psio->close(file_unit, 1);
-    loadAOtensor.reset();
     outfile->Printf("\n    End loading");
+    outfile->Printf("\n\n  Loading takes %8.8f", loadingTime.get());
+}
 
-    //outfile->Printf("\n\n  Loading takes %8.8f", loadingTime.get());
+double LaplaceDSRG::compute_ccvv() {
+    local_timer loadingTime;
+    E_J_ = 0.0;
+    E_K_ = 0.0;
+    std::shared_ptr<AtomicOrbitalHelper> ao_helper = std::make_shared<AtomicOrbitalHelper>(
+        Cwfn_, eps_rdocc_, eps_virtual_, laplace_threshold_, nactive_, nfrozen_, vir_tol_);
+
+    prepare_cholesky_coeff(ao_helper, "ccvv");
+    Load_int(theta_NB_, "ccvv");
 
     /// Construct [ibar]_p and [abar]_p
     SparseMap i_bar_p_up(nthree_);
@@ -295,10 +416,10 @@ double LaplaceDSRG::compute_ccvv() {
     SparseMap P_ibar;
 
     /// Construct {abar}_p
-    //SparseMap abar_p(nthree_);
+    // SparseMap abar_p(nthree_);
 
     /// Construct {p}_abar.  Obtain this by "inversion" of {abar}_p
-    //SparseMap P_abar;
+    // SparseMap P_abar;
 
     /// Construct (ibar abar|P)
     std::vector<psi::SharedMatrix> i_bar_a_bar_P;
@@ -325,24 +446,24 @@ double LaplaceDSRG::compute_ccvv() {
 
     local_timer looptime;
 
-    for (int nweight = 0; nweight < weights; nweight++) {
+    for (int nweight = 0; nweight < weights_; nweight++) {
         int nocc = Occupied_cholesky_[nweight]->coldim();
         int nvir = Virtual_cholesky_[nweight]->coldim();
         // keep track of ij prescreening
         int unselected_occ = 0;
 
         psi::SharedMatrix N_pi_bar =
-            psi::linalg::doublet(N_pu, Occupied_cholesky_abs_[nweight], false, false);
+            psi::linalg::doublet(N_pu_, Occupied_cholesky_abs_[nweight], false, false);
         double* N_pi_bar_p = N_pi_bar->get_pointer();
         psi::SharedMatrix N_pa_bar =
-            psi::linalg::doublet(N_pu, Virtual_cholesky_abs_[nweight], false, false);
+            psi::linalg::doublet(N_pu_, Virtual_cholesky_abs_[nweight], false, false);
         double* N_pa_bar_p = N_pa_bar->get_pointer();
 
         for (int qa = 0; qa < nthree_; qa++) {
             i_bar_p_up[qa].clear();
             a_bar_p_up[qa].clear();
             ibar_p[qa].clear();
-            //abar_p[qa].clear();
+            // abar_p[qa].clear();
             for (int ibar = 0; ibar < nocc; ibar++) {
                 if (std::abs(*N_pi_bar_p) >= theta_NB_) {
                     i_bar_p_up[qa].push_back(ibar);
@@ -351,8 +472,8 @@ double LaplaceDSRG::compute_ccvv() {
             }
 
             psi::SharedMatrix T_ibar_i_new =
-                submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p_[qa]);
-            P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
+                submatrix_rows_and_cols(*T_ibar_i_list_[nweight], i_bar_p_up[qa], i_p_[qa]);
+            P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu_[qa], false, false);
 
             for (int abar = 0; abar < nvir; abar++) {
                 if (std::abs(*N_pa_bar_p) >= theta_NB_) {
@@ -362,7 +483,7 @@ double LaplaceDSRG::compute_ccvv() {
             }
 
             psi::SharedMatrix Pseudo_Vir_Mo = submatrix_rows_and_cols(
-                *Virtual_cholesky_[nweight], ao_list_per_q[qa], a_bar_p_up[qa]);
+                *Virtual_cholesky_[nweight], ao_list_per_q_[qa], a_bar_p_up[qa]);
             P_ibar_abar[qa] = psi::linalg::doublet(P_ibar_u[qa], Pseudo_Vir_Mo, false, false);
 
             /// Construct {ibar}_p.
@@ -445,7 +566,7 @@ double LaplaceDSRG::compute_ccvv() {
             E_J_ -= 2 * D_pq->get_row(0, q)->vector_dot(*D_pq->get_column(0, q));
         }
 
-        //outfile->Printf("\n\n  Coulomb finished %8.8f", looptime.get());
+        // outfile->Printf("\n\n  Coulomb finished %8.8f", looptime.get());
 
         /// Exchange part
         B_ia_Q.resize(nocc);
@@ -467,7 +588,7 @@ double LaplaceDSRG::compute_ccvv() {
             }
         }
 
-        //outfile->Printf("\n\n  ii Exchange finished %8.8f", looptime.get());
+        // outfile->Printf("\n\n  ii Exchange finished %8.8f", looptime.get());
 
         /// Start ij-prescreening.
         psi::SharedMatrix A_ij = psi::linalg::doublet(Q_ia, Q_ia, false, true);
@@ -539,8 +660,8 @@ double LaplaceDSRG::compute_ccvv() {
                 }
             }
         }
-        //outfile->Printf("\n\n  Exchange finished %8.8f", looptime.get());
-        //outfile->Printf("  Number of unselected ij pairs: %d. \n", unselected_occ);
+        // outfile->Printf("\n\n  Exchange finished %8.8f", looptime.get());
+        // outfile->Printf("  Number of unselected ij pairs: %d. \n", unselected_occ);
     }
 
     // std::cout << E_J_ << "\n";
@@ -552,164 +673,16 @@ double LaplaceDSRG::compute_ccvv() {
 double LaplaceDSRG::compute_cavv() {
     E_J_ = 0.0;
     E_K_ = 0.0;
-    AtomicOrbitalHelper ao_helper_cavv(Cwfn_, eps_rdocc_, eps_active_, eps_virtual_,
-                                       laplace_threshold_, nactive_, nfrozen_, true, vir_tol_);
 
-    int weights_cavv = ao_helper_cavv.Weights();
-    vir_start_cavv_ = ao_helper_cavv.vir_start();
-    ao_helper_cavv.Compute_Cholesky_Pseudo_Density();
-    ao_helper_cavv.Compute_Cholesky_Active_Density(Gamma1_mat_);
-    Occupied_cholesky_cavv_ = ao_helper_cavv.LOcc_list();
-    Active_cholesky_cavv_ = ao_helper_cavv.LAct_list();
-    Virtual_cholesky_cavv_ = ao_helper_cavv.LVir_list();
-    Occupied_cholesky_cavv_abs_.resize(weights_cavv);
-    Active_cholesky_cavv_abs_.resize(weights_cavv);
-    Virtual_cholesky_cavv_abs_.resize(weights_cavv);
+    std::shared_ptr<AtomicOrbitalHelper> ao_helper = std::make_shared<AtomicOrbitalHelper>(
+        Cwfn_, eps_rdocc_, eps_active_, eps_virtual_, laplace_threshold_, nactive_, nfrozen_, true,
+        vir_tol_);
 
-    for (int nweight = 0; nweight < weights_cavv; nweight++) {
-        Occupied_cholesky_cavv_abs_[nweight] = std::make_shared<psi::Matrix>(
-            "LOcc_abs", nmo_, Occupied_cholesky_cavv_[nweight]->coldim());
-        Active_cholesky_cavv_abs_[nweight] = std::make_shared<psi::Matrix>(
-            "LAct_abs", nmo_, Active_cholesky_cavv_[nweight]->coldim());
-        Virtual_cholesky_cavv_abs_[nweight] = std::make_shared<psi::Matrix>(
-            "LVir_abs", nmo_, Virtual_cholesky_cavv_[nweight]->coldim());
-        for (int u = 0; u < nmo_; u++) {
-            for (int i = 0; i < Occupied_cholesky_cavv_[nweight]->coldim(); i++) {
-                Occupied_cholesky_cavv_abs_[nweight]->set(
-                    u, i, std::abs(Occupied_cholesky_cavv_[nweight]->get(u, i)));
-            }
-            for (int v = 0; v < Active_cholesky_cavv_[nweight]->coldim(); v++) {
-                Active_cholesky_cavv_abs_[nweight]->set(
-                    u, v, std::abs(Active_cholesky_cavv_[nweight]->get(u, v)));
-            }
-            for (int a = 0; a < Virtual_cholesky_cavv_[nweight]->coldim(); a++) {
-                Virtual_cholesky_cavv_abs_[nweight]->set(
-                    u, a, std::abs(Virtual_cholesky_cavv_[nweight]->get(u, a)));
-            }
-        }
-    }
+    prepare_cholesky_coeff(ao_helper, "cavv");
+    Load_int(theta_NB_cavv_, "cavv");
 
-    std::vector<psi::SharedMatrix> T_ibar_i_list(weights_cavv);
-    for (int i_weight = 0; i_weight < weights_cavv; i_weight++) {
-        T_ibar_i_list[i_weight] = psi::linalg::triplet(Occupied_cholesky_cavv_[i_weight], S_,
-                                                       Cholesky_Occ_, true, false, false);
-    }
-
-    // std::vector<psi::SharedMatrix> N_px_cavv_batch_list(weights_cavv);
-    std::vector<SparseMap> xbar_p_up_cavv(weights_cavv, SparseMap(nthree_));
-    std::vector<std::vector<psi::SharedMatrix>> P_xbar_u_cavv(
-        weights_cavv, std::vector<psi::SharedMatrix>(nthree_));
-    std::vector<SparseMap> xbar_u_p_for_xbar_up(weights_cavv, SparseMap(nthree_));
-    std::vector<SparseMap> xbar_u_p(weights_cavv, SparseMap(nthree_));
-
-    /// Below is the code for loading data from disk.
-    int file_unit = PSIF_DFSCF_BJ;
-    int n_func_pairs = (nmo_ + 1) * nmo_ / 2;
-    int max_rows = 1;
-    std::shared_ptr<PSIO> psio(new PSIO());
-    psi::SharedMatrix loadAOtensor =
-        std::make_shared<psi::Matrix>("DiskDF: Load (A|mn) from DF-SCF", max_rows, n_func_pairs);
-    psio->open(file_unit, PSIO_OPEN_OLD);
-
-    std::vector<psi::SharedMatrix> amn;
-    std::vector<psi::SharedMatrix> amn_new;
-
-    SparseMap ao_list_per_q; ///{u}_P
-    ao_list_per_q.resize(nthree_);
-
-    psi::SharedMatrix N_pu = std::make_shared<psi::Matrix>("N_pu", nthree_, nmo_);
-    N_pu->zero();
-    double* N_pu_p = N_pu->get_pointer();
-    outfile->Printf("\n    Start loading");
-
-    for (int Q = 0; Q < nthree_; Q += max_rows) {
-        int naux = (nthree_ - Q <= max_rows ? nthree_ - Q : max_rows);
-        psio_address addr = psio_get_address(PSIO_ZERO, (Q * (int)n_func_pairs) * sizeof(double));
-        psio->read(file_unit, "ERFC Integrals", (char*)(loadAOtensor->pointer()[0]),
-                   sizeof(double) * naux * n_func_pairs, addr, &addr);
-
-        double* add = loadAOtensor->get_pointer();
-
-        amn.resize(naux);
-        amn_new.resize(naux);
-
-        psi::SharedMatrix N_pu_batch = std::make_shared<psi::Matrix>("N_pu_batch", naux, nmo_);
-        N_pu_batch->zero();
-        double* N_pu_batch_p = N_pu_batch->get_pointer();
-
-        for (int q = 0; q < naux; q++) {
-            amn[q] = std::make_shared<psi::Matrix>("(m * n)", nmo_, nmo_);
-            /// Fill amn
-            for (int u_idx = 0; u_idx < nmo_; u_idx++) {
-                for (int v_idx = 0; v_idx <= u_idx; v_idx++) {
-                    amn[q]->set(u_idx, v_idx, *add);
-                    amn[q]->set(v_idx, u_idx, *add);
-                    add++;
-                }
-            }
-            /// Loop over amn
-            double* row_add = amn[q]->get_pointer();
-            for (int u = 0; u < nmo_; u++) {
-                double max_per_uq = (double)0.0;
-                for (int v = 0; v < nmo_; v++) {
-                    double row_add_abs = std::abs(*row_add);
-                    max_per_uq =
-                        std::abs(max_per_uq) > row_add_abs ? std::abs(max_per_uq) : row_add_abs;
-                    //*M_uv_p = std::abs(*M_uv_p) > row_add_abs ? std::abs(*M_uv_p) : row_add_abs;
-                    row_add++;
-                    // M_uv_p++;
-                }
-                if (std::abs(max_per_uq) >= theta_NB_cavv_) {
-                    ao_list_per_q[Q + q].push_back(u);
-                }
-                *N_pu_p = std::abs(*N_pu_p) > max_per_uq ? std::abs(*N_pu_p) : max_per_uq;
-                *N_pu_batch_p =
-                    std::abs(*N_pu_batch_p) > max_per_uq ? std::abs(*N_pu_batch_p) : max_per_uq;
-                N_pu_p++;
-                N_pu_batch_p++;
-            }
-            /// Slice Amn -> Amn_new
-            amn_new[q] =
-                submatrix_rows_and_cols(*amn[q], ao_list_per_q[Q + q], ao_list_per_q[Q + q]);
-        }
-
-        for (int nweight = 0; nweight < weights_cavv; nweight++) {
-            psi::SharedMatrix N_px_cavv_batch =
-                psi::linalg::doublet(N_pu_batch, Active_cholesky_cavv_abs_[nweight]);
-            double* N_px_batch_p = N_px_cavv_batch->get_pointer();
-            for (int q = 0; q < naux; q++) {
-                for (int x = 0; x < Active_cholesky_cavv_abs_[nweight]->coldim(); x++) {
-                    if (std::abs(*N_px_batch_p) >= theta_XNB_cavv_) {
-                        xbar_p_up_cavv[nweight][Q + q].push_back(x);
-                    }
-                    N_px_batch_p++;
-                }
-                psi::SharedMatrix Active_cholesky_new =
-                    submatrix_rows_and_cols(*Active_cholesky_cavv_[nweight], ao_list_per_q[Q + q],
-                                            xbar_p_up_cavv[nweight][Q + q]);
-                P_xbar_u_cavv[nweight][Q + q] =
-                    psi::linalg::doublet(Active_cholesky_new, amn_new[q], true, false);
-                for (int inew = 0; inew < xbar_p_up_cavv[nweight][Q + q].size(); inew++) {
-                    for (int u = 0; u < ao_list_per_q[Q + q].size(); u++) {
-                        if (std::abs(P_xbar_u_cavv[nweight][Q + q]->get(inew, u)) >= theta_XNB_cavv_) {
-                            xbar_u_p_for_xbar_up[nweight][Q + q].push_back(inew);
-                            xbar_u_p[nweight][Q + q].push_back(
-                                xbar_p_up_cavv[nweight][Q + q][inew]);
-                            break;
-                        }
-                    }
-                }
-                P_xbar_u_cavv[nweight][Q + q] = submatrix_rows(
-                    *P_xbar_u_cavv[nweight][Q + q], xbar_u_p_for_xbar_up[nweight][Q + q]);
-            }
-        }
-    }
-    psio->close(file_unit, 1);
-    loadAOtensor.reset();
-    outfile->Printf("\n    End loading");
-
-    //////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////
 
     /// Construct [ibar]_p and [abar]_p
     SparseMap i_bar_p_up(nthree_);
@@ -734,10 +707,10 @@ double LaplaceDSRG::compute_cavv() {
     SparseMap P_ibar;
 
     /// Construct {abar}_p
-    //SparseMap abar_p(nthree_);
+    // SparseMap abar_p(nthree_);
 
     /// Construct {p}_abar.  Obtain this by "inversion" of {abar}_p
-    //SparseMap P_abar;
+    // SparseMap P_abar;
 
     /// Construct {p}_xbar
     SparseMap P_xbar;
@@ -781,22 +754,24 @@ double LaplaceDSRG::compute_cavv() {
     std::vector<int> aux_intersection_per_ix;
     std::vector<int> aux_in_B_i;
 
-    for (int nweight = 0; nweight < weights_cavv; nweight++) {
-        int nocc = Occupied_cholesky_cavv_[nweight]->coldim();
-        int nvir = Virtual_cholesky_cavv_[nweight]->coldim();
-        int nact = Active_cholesky_cavv_[nweight]->coldim();
+    outfile->Printf("\n    before loop CAVV");
+
+    for (int nweight = 0; nweight < weights_; nweight++) {
+        int nocc = Occupied_cholesky_[nweight]->coldim();
+        int nvir = Virtual_cholesky_[nweight]->coldim();
+        int nact = Active_cholesky_[nweight]->coldim();
         psi::SharedMatrix N_pi_bar =
-            psi::linalg::doublet(N_pu, Occupied_cholesky_cavv_abs_[nweight], false, false);
+            psi::linalg::doublet(N_pu_, Occupied_cholesky_abs_[nweight], false, false);
         double* N_pi_bar_p = N_pi_bar->get_pointer();
         psi::SharedMatrix N_pa_bar =
-            psi::linalg::doublet(N_pu, Virtual_cholesky_cavv_abs_[nweight], false, false);
+            psi::linalg::doublet(N_pu_, Virtual_cholesky_abs_[nweight], false, false);
         double* N_pa_bar_p = N_pa_bar->get_pointer();
 
         for (int qa = 0; qa < nthree_; qa++) {
             i_bar_p_up[qa].clear();
             a_bar_p_up[qa].clear();
             ibar_p[qa].clear();
-            //abar_p[qa].clear();
+            // abar_p[qa].clear();
             xbar_p[qa].clear();
             for (int ibar = 0; ibar < nocc; ibar++) {
                 if (std::abs(*N_pi_bar_p) >= theta_NB_cavv_) {
@@ -804,22 +779,20 @@ double LaplaceDSRG::compute_cavv() {
                 }
                 N_pi_bar_p++;
             }
-
             psi::SharedMatrix T_ibar_i_new =
-                submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p_[qa]);
-            P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
+                submatrix_rows_and_cols(*T_ibar_i_list_[nweight], i_bar_p_up[qa], i_p_[qa]);
+            P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu_[qa], false, false);
             for (int abar = 0; abar < nvir; abar++) {
                 if (std::abs(*N_pa_bar_p) >= theta_NB_cavv_) {
                     a_bar_p_up[qa].push_back(abar);
                 }
                 N_pa_bar_p++;
             }
-
             psi::SharedMatrix Pseudo_Vir_Mo = submatrix_rows_and_cols(
-                *Virtual_cholesky_cavv_[nweight], ao_list_per_q[qa], a_bar_p_up[qa]);
+                *Virtual_cholesky_[nweight], ao_list_per_q_[qa], a_bar_p_up[qa]);
             P_ibar_abar[qa] = psi::linalg::doublet(P_ibar_u[qa], Pseudo_Vir_Mo, false, false);
             P_xbar_abar[qa] =
-                psi::linalg::doublet(P_xbar_u_cavv[nweight][qa], Pseudo_Vir_Mo, false, false);
+                psi::linalg::doublet(P_xbar_u_cavv_[nweight][qa], Pseudo_Vir_Mo, false, false);
 
             /// Construct {ibar}_p.
             for (int i = 0; i < P_ibar_abar[qa]->rowdim(); i++) {
@@ -835,7 +808,7 @@ double LaplaceDSRG::compute_cavv() {
             for (int x = 0; x < P_xbar_abar[qa]->rowdim(); x++) {
                 for (int a = 0; a < P_xbar_abar[qa]->coldim(); a++) {
                     if (std::abs(P_xbar_abar[qa]->get(x, a)) >= theta_NB_XAP_cavv_) {
-                        xbar_p[qa].push_back(xbar_u_p[nweight][qa][x]);
+                        xbar_p[qa].push_back(xbar_u_p_[nweight][qa][x]);
                         break;
                     }
                 }
@@ -870,8 +843,8 @@ double LaplaceDSRG::compute_cavv() {
         for (int q = 0; q < nthree_; q++) {
             for (int x = 0; x < P_xbar_abar[q]->rowdim(); x++) {
                 for (int a = 0; a < P_xbar_abar[q]->coldim(); a++) {
-                    x_bar_a_bar_P[xbar_u_p[nweight][q][x]]->set(a_bar_p_up[q][a], q,
-                                                                P_xbar_abar[q]->get(x, a));
+                    x_bar_a_bar_P[xbar_u_p_[nweight][q][x]]->set(a_bar_p_up[q][a], q,
+                                                                 P_xbar_abar[q]->get(x, a));
                 }
             }
         }
@@ -888,7 +861,7 @@ double LaplaceDSRG::compute_cavv() {
                     }
                 }
             }
-            //outfile->Printf("\n\n  Number for i %d", abar_ibar[i].size());
+            // outfile->Printf("\n\n  Number for i %d", abar_ibar[i].size());
         }
 
         /// Construct {abar}_xbar.
@@ -903,7 +876,7 @@ double LaplaceDSRG::compute_cavv() {
                     }
                 }
             }
-            //outfile->Printf("\n\n  Number for x %d", abar_xbar[x].size());
+            // outfile->Printf("\n\n  Number for x %d", abar_xbar[x].size());
         }
         /// Coulomb contribution.
         /// Construct Z_pq
@@ -1057,161 +1030,13 @@ double LaplaceDSRG::compute_cavv() {
 double LaplaceDSRG::compute_ccav() {
     E_J_ = 0.0;
     E_K_ = 0.0;
-    AtomicOrbitalHelper ao_helper_ccav(Cwfn_, eps_rdocc_, eps_active_, eps_virtual_,
-                                       laplace_threshold_, nactive_, nfrozen_, false, vir_tol_);
+    std::shared_ptr<AtomicOrbitalHelper> ao_helper = std::make_shared<AtomicOrbitalHelper>(
+        Cwfn_, eps_rdocc_, eps_active_, eps_virtual_, laplace_threshold_, nactive_, nfrozen_, false,
+        vir_tol_);
 
-    int weights_ccav = ao_helper_ccav.Weights();
-    vir_start_ccav_ = ao_helper_ccav.vir_start();
-    ao_helper_ccav.Compute_Cholesky_Pseudo_Density();
-    ao_helper_ccav.Compute_Cholesky_Active_Density(Eta1_mat_);
-    Occupied_cholesky_ccav_ = ao_helper_ccav.LOcc_list();
-    Active_cholesky_ccav_ = ao_helper_ccav.LAct_list();
-    Virtual_cholesky_ccav_ = ao_helper_ccav.LVir_list();
-    Occupied_cholesky_ccav_abs_.resize(weights_ccav);
-    Active_cholesky_ccav_abs_.resize(weights_ccav);
-    Virtual_cholesky_ccav_abs_.resize(weights_ccav);
+    prepare_cholesky_coeff(ao_helper, "ccav");
 
-    for (int nweight = 0; nweight < weights_ccav; nweight++) {
-        Occupied_cholesky_ccav_abs_[nweight] = std::make_shared<psi::Matrix>(
-            "LOcc_abs", nmo_, Occupied_cholesky_ccav_[nweight]->coldim());
-        Active_cholesky_ccav_abs_[nweight] = std::make_shared<psi::Matrix>(
-            "LAct_abs", nmo_, Active_cholesky_ccav_[nweight]->coldim());
-        Virtual_cholesky_ccav_abs_[nweight] = std::make_shared<psi::Matrix>(
-            "LVir_abs", nmo_, Virtual_cholesky_ccav_[nweight]->coldim());
-        for (int u = 0; u < nmo_; u++) {
-            for (int i = 0; i < Occupied_cholesky_ccav_[nweight]->coldim(); i++) {
-                Occupied_cholesky_ccav_abs_[nweight]->set(
-                    u, i, std::abs(Occupied_cholesky_ccav_[nweight]->get(u, i)));
-            }
-            for (int v = 0; v < Active_cholesky_ccav_[nweight]->coldim(); v++) {
-                Active_cholesky_ccav_abs_[nweight]->set(
-                    u, v, std::abs(Active_cholesky_ccav_[nweight]->get(u, v)));
-            }
-            for (int a = 0; a < Virtual_cholesky_ccav_[nweight]->coldim(); a++) {
-                Virtual_cholesky_ccav_abs_[nweight]->set(
-                    u, a, std::abs(Virtual_cholesky_ccav_[nweight]->get(u, a)));
-            }
-        }
-    }
-
-    std::vector<psi::SharedMatrix> T_ibar_i_list(weights_ccav);
-    for (int i_weight = 0; i_weight < weights_ccav; i_weight++) {
-        T_ibar_i_list[i_weight] = psi::linalg::triplet(Occupied_cholesky_ccav_[i_weight], S_,
-                                                       Cholesky_Occ_, true, false, false);
-    }
-
-    // std::vector<psi::SharedMatrix> N_px_ccav_batch_list(weights_ccav);
-    std::vector<SparseMap> xbar_p_up_ccav(weights_ccav, SparseMap(nthree_));
-    std::vector<std::vector<psi::SharedMatrix>> P_xbar_u_ccav(
-        weights_ccav, std::vector<psi::SharedMatrix>(nthree_));
-    std::vector<SparseMap> xbar_u_p_for_xbar_up(weights_ccav, SparseMap(nthree_));
-    std::vector<SparseMap> xbar_u_p(weights_ccav, SparseMap(nthree_));
-
-    /// Below is the code for loading data from disk.
-    int file_unit = PSIF_DFSCF_BJ;
-    int n_func_pairs = (nmo_ + 1) * nmo_ / 2;
-    int max_rows = 1;
-    std::shared_ptr<PSIO> psio(new PSIO());
-    psi::SharedMatrix loadAOtensor =
-        std::make_shared<psi::Matrix>("DiskDF: Load (A|mn) from DF-SCF", max_rows, n_func_pairs);
-    psio->open(file_unit, PSIO_OPEN_OLD);
-
-    std::vector<psi::SharedMatrix> amn;
-    std::vector<psi::SharedMatrix> amn_new;
-
-    SparseMap ao_list_per_q; ///{u}_P
-    ao_list_per_q.resize(nthree_);
-
-    psi::SharedMatrix N_pu = std::make_shared<psi::Matrix>("N_pu", nthree_, nmo_);
-    N_pu->zero();
-    double* N_pu_p = N_pu->get_pointer();
-    outfile->Printf("\n    Start loading");
-
-    for (int Q = 0; Q < nthree_; Q += max_rows) {
-        int naux = (nthree_ - Q <= max_rows ? nthree_ - Q : max_rows);
-        psio_address addr = psio_get_address(PSIO_ZERO, (Q * (int)n_func_pairs) * sizeof(double));
-        psio->read(file_unit, "ERFC Integrals", (char*)(loadAOtensor->pointer()[0]),
-                   sizeof(double) * naux * n_func_pairs, addr, &addr);
-
-        double* add = loadAOtensor->get_pointer();
-
-        amn.resize(naux);
-        amn_new.resize(naux);
-
-        psi::SharedMatrix N_pu_batch = std::make_shared<psi::Matrix>("N_pu_batch", naux, nmo_);
-        N_pu_batch->zero();
-        double* N_pu_batch_p = N_pu_batch->get_pointer();
-
-        for (int q = 0; q < naux; q++) {
-            amn[q] = std::make_shared<psi::Matrix>("(m * n)", nmo_, nmo_);
-            /// Fill amn
-            for (int u_idx = 0; u_idx < nmo_; u_idx++) {
-                for (int v_idx = 0; v_idx <= u_idx; v_idx++) {
-                    amn[q]->set(u_idx, v_idx, *add);
-                    amn[q]->set(v_idx, u_idx, *add);
-                    add++;
-                }
-            }
-            /// Loop over amn
-            double* row_add = amn[q]->get_pointer();
-            for (int u = 0; u < nmo_; u++) {
-                double max_per_uq = (double)0.0;
-                for (int v = 0; v < nmo_; v++) {
-                    double row_add_abs = std::abs(*row_add);
-                    max_per_uq =
-                        std::abs(max_per_uq) > row_add_abs ? std::abs(max_per_uq) : row_add_abs;
-                    //*M_uv_p = std::abs(*M_uv_p) > row_add_abs ? std::abs(*M_uv_p) : row_add_abs;
-                    row_add++;
-                    // M_uv_p++;
-                }
-                if (std::abs(max_per_uq) >= theta_NB_ccav_) {
-                    ao_list_per_q[Q + q].push_back(u);
-                }
-                *N_pu_p = std::abs(*N_pu_p) > max_per_uq ? std::abs(*N_pu_p) : max_per_uq;
-                *N_pu_batch_p =
-                    std::abs(*N_pu_batch_p) > max_per_uq ? std::abs(*N_pu_batch_p) : max_per_uq;
-                N_pu_p++;
-                N_pu_batch_p++;
-            }
-            /// Slice Amn -> Amn_new
-            amn_new[q] =
-                submatrix_rows_and_cols(*amn[q], ao_list_per_q[Q + q], ao_list_per_q[Q + q]);
-        }
-
-        for (int nweight = 0; nweight < weights_ccav; nweight++) {
-            psi::SharedMatrix N_px_ccav_batch =
-                psi::linalg::doublet(N_pu_batch, Active_cholesky_ccav_abs_[nweight]);
-            double* N_px_batch_p = N_px_ccav_batch->get_pointer();
-            for (int q = 0; q < naux; q++) {
-                for (int x = 0; x < Active_cholesky_ccav_abs_[nweight]->coldim(); x++) {
-                    if (std::abs(*N_px_batch_p) >= theta_NB_ccav_) {
-                        xbar_p_up_ccav[nweight][Q + q].push_back(x);
-                    }
-                    N_px_batch_p++;
-                }
-                psi::SharedMatrix Active_cholesky_new =
-                    submatrix_rows_and_cols(*Active_cholesky_ccav_[nweight], ao_list_per_q[Q + q],
-                                            xbar_p_up_ccav[nweight][Q + q]);
-                P_xbar_u_ccav[nweight][Q + q] =
-                    psi::linalg::doublet(Active_cholesky_new, amn_new[q], true, false);
-                for (int inew = 0; inew < xbar_p_up_ccav[nweight][Q + q].size(); inew++) {
-                    for (int u = 0; u < ao_list_per_q[Q + q].size(); u++) {
-                        if (std::abs(P_xbar_u_ccav[nweight][Q + q]->get(inew, u)) >= theta_NB_ccav_) {
-                            xbar_u_p_for_xbar_up[nweight][Q + q].push_back(inew);
-                            xbar_u_p[nweight][Q + q].push_back(
-                                xbar_p_up_ccav[nweight][Q + q][inew]);
-                            break;
-                        }
-                    }
-                }
-                P_xbar_u_ccav[nweight][Q + q] = submatrix_rows(
-                    *P_xbar_u_ccav[nweight][Q + q], xbar_u_p_for_xbar_up[nweight][Q + q]);
-            }
-        }
-    }
-    psio->close(file_unit, 1);
-    loadAOtensor.reset();
-    outfile->Printf("\n    End loading");
+    Load_int(theta_NB_ccav_, "ccav");
 
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
@@ -1239,10 +1064,10 @@ double LaplaceDSRG::compute_ccav() {
     SparseMap P_ibar;
 
     /// Construct {abar}_p
-    //SparseMap abar_p(nthree_);
+    // SparseMap abar_p(nthree_);
 
     /// Construct {p}_abar.  Obtain this by "inversion" of {abar}_p
-    //SparseMap P_abar;
+    // SparseMap P_abar;
 
     /// Construct {p}_ibar_x
     SparseMap P_ibar_x;
@@ -1288,23 +1113,23 @@ double LaplaceDSRG::compute_ccav() {
     std::vector<int> aux_in_B_i;
     std::vector<int> aux_in_B_ix;
 
-    for (int nweight = 0; nweight < weights_ccav; nweight++) {
-        int nocc = Occupied_cholesky_ccav_[nweight]->coldim();
-        int nvir = Virtual_cholesky_ccav_[nweight]->coldim();
-        int nact = Active_cholesky_ccav_[nweight]->coldim();
+    for (int nweight = 0; nweight < weights_; nweight++) {
+        int nocc = Occupied_cholesky_[nweight]->coldim();
+        int nvir = Virtual_cholesky_[nweight]->coldim();
+        int nact = Active_cholesky_[nweight]->coldim();
 
         psi::SharedMatrix N_pi_bar =
-            psi::linalg::doublet(N_pu, Occupied_cholesky_ccav_abs_[nweight], false, false);
+            psi::linalg::doublet(N_pu_, Occupied_cholesky_abs_[nweight], false, false);
         double* N_pi_bar_p = N_pi_bar->get_pointer();
         psi::SharedMatrix N_pa_bar =
-            psi::linalg::doublet(N_pu, Virtual_cholesky_ccav_abs_[nweight], false, false);
+            psi::linalg::doublet(N_pu_, Virtual_cholesky_abs_[nweight], false, false);
         double* N_pa_bar_p = N_pa_bar->get_pointer();
 
         for (int qa = 0; qa < nthree_; qa++) {
             i_bar_p_up[qa].clear();
             a_bar_p_up[qa].clear();
             ibar_p[qa].clear();
-            //abar_p[qa].clear();
+            // abar_p[qa].clear();
             ibar_x_p[qa].clear();
             for (int ibar = 0; ibar < nocc; ibar++) {
                 if (std::abs(*N_pi_bar_p) >= theta_NB_ccav_) {
@@ -1314,8 +1139,8 @@ double LaplaceDSRG::compute_ccav() {
             }
 
             psi::SharedMatrix T_ibar_i_new =
-                submatrix_rows_and_cols(*T_ibar_i_list[nweight], i_bar_p_up[qa], i_p_[qa]);
-            P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu[qa], false, false);
+                submatrix_rows_and_cols(*T_ibar_i_list_[nweight], i_bar_p_up[qa], i_p_[qa]);
+            P_ibar_u[qa] = psi::linalg::doublet(T_ibar_i_new, P_iu_[qa], false, false);
 
             for (int abar = 0; abar < nvir; abar++) {
                 if (std::abs(*N_pa_bar_p) >= theta_NB_ccav_) {
@@ -1325,12 +1150,12 @@ double LaplaceDSRG::compute_ccav() {
             }
 
             psi::SharedMatrix Pseudo_Vir_Mo = submatrix_rows_and_cols(
-                *Virtual_cholesky_ccav_[nweight], ao_list_per_q[qa], a_bar_p_up[qa]);
+                *Virtual_cholesky_[nweight], ao_list_per_q_[qa], a_bar_p_up[qa]);
             psi::SharedMatrix Pseudo_Occ_Mo = submatrix_rows_and_cols(
-                *Occupied_cholesky_ccav_[nweight], ao_list_per_q[qa], i_bar_p_up[qa]);
+                *Occupied_cholesky_[nweight], ao_list_per_q_[qa], i_bar_p_up[qa]);
             P_ibar_abar[qa] = psi::linalg::doublet(P_ibar_u[qa], Pseudo_Vir_Mo, false, false);
             P_ibar_xbar[qa] =
-                psi::linalg::doublet(Pseudo_Occ_Mo, P_xbar_u_ccav[nweight][qa], true, true);
+                psi::linalg::doublet(Pseudo_Occ_Mo, P_xbar_u_ccav_[nweight][qa], true, true);
 
             /// Construct {ibar}_p.
             for (int i = 0; i < P_ibar_abar[qa]->rowdim(); i++) {
@@ -1373,7 +1198,7 @@ double LaplaceDSRG::compute_ccav() {
                                                          P_ibar_abar[q]->get(i, a));
                 }
                 for (int x = 0; x < P_ibar_xbar[q]->coldim(); x++) {
-                    i_bar_x_bar_P[i_bar_p_up[q][i]]->set(xbar_u_p[nweight][q][x], q,
+                    i_bar_x_bar_P[i_bar_p_up[q][i]]->set(xbar_u_p_[nweight][q][x], q,
                                                          P_ibar_xbar[q]->get(i, x));
                 }
             }
@@ -1425,8 +1250,10 @@ double LaplaceDSRG::compute_ccav() {
                     Z_pq->add(row, col, multi_per_i->get(p, q));
                 }
             }
-            i_bar_x_bar_P_sliced[i] = submatrix_rows_and_cols(*i_bar_x_bar_P[i], xbar_ibar[i], P_ibar_x[i]);
-            psi::SharedMatrix multi_per_ix = psi::linalg::doublet(i_bar_x_bar_P_sliced[i], i_bar_x_bar_P_sliced[i], true, false);
+            i_bar_x_bar_P_sliced[i] =
+                submatrix_rows_and_cols(*i_bar_x_bar_P[i], xbar_ibar[i], P_ibar_x[i]);
+            psi::SharedMatrix multi_per_ix =
+                psi::linalg::doublet(i_bar_x_bar_P_sliced[i], i_bar_x_bar_P_sliced[i], true, false);
             for (int px = 0; px < P_ibar_x[i].size(); px++) {
                 for (int qx = 0; qx < P_ibar_x[i].size(); qx++) {
                     int row_x = P_ibar_x[i][px];
@@ -1456,12 +1283,15 @@ double LaplaceDSRG::compute_ccav() {
 
         for (int i = 0; i < nocc; i++) {
             psi::SharedMatrix sliced_C_pq = submatrix_rows_and_cols(*C_pq_, P_ibar[i], P_ibar[i]);
-            psi::SharedMatrix sliced_C_pq_A = submatrix_rows_and_cols(*C_pq_, P_ibar_x[i], P_ibar_x[i]);
+            psi::SharedMatrix sliced_C_pq_A =
+                submatrix_rows_and_cols(*C_pq_, P_ibar_x[i], P_ibar_x[i]);
             B_ia_Q[i] =
                 psi::linalg::doublet(i_bar_a_bar_P_sliced[i], sliced_C_pq, false, false); /// a*p
-            B_ix_Q[i] = psi::linalg::doublet(i_bar_x_bar_P_sliced[i], sliced_C_pq_A, false, false); /// x*p
+            B_ix_Q[i] =
+                psi::linalg::doublet(i_bar_x_bar_P_sliced[i], sliced_C_pq_A, false, false); /// x*p
 
-            /// Cannot do (ia|ib) before screening. The reason is that P_ibar and P_ibar_x are different.
+            /// Cannot do (ia|ib) before screening. The reason is that P_ibar and P_ibar_x are
+            /// different.
 
             for (int abar = 0; abar < B_ia_Q[i]->rowdim(); abar++) {
                 double Q_value_2 = B_ia_Q[i]->get_row(0, abar)->vector_dot(
@@ -1476,9 +1306,8 @@ double LaplaceDSRG::compute_ccav() {
         }
 
         /// Start ix-prescreening.
-        psi::SharedMatrix Aa_ij = psi::linalg::doublet(Q_ix, Q_ix, false, true); 
+        psi::SharedMatrix Aa_ij = psi::linalg::doublet(Q_ix, Q_ix, false, true);
         psi::SharedMatrix A_ij = psi::linalg::doublet(Q_ia, Q_ia, false, true);
-        
 
         for (int i = 0; i < nocc; i++) {
             for (int j = 0; j <= i; j++) {
@@ -1499,7 +1328,8 @@ double LaplaceDSRG::compute_ccav() {
                     }
                     aux_in_B_ix.clear();
                     for (auto aux : aux_intersection_per_ixj) {
-                        int idx_aux_i = binary_search_recursive(P_ibar_x[i], aux, 0, P_ibar_x[i].size() -1);
+                        int idx_aux_i =
+                            binary_search_recursive(P_ibar_x[i], aux, 0, P_ibar_x[i].size() - 1);
                         aux_in_B_ix.push_back(idx_aux_i);
                     }
                     for (int a_idx = 0; a_idx < abar_ibar[i].size(); a_idx++) {
