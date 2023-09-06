@@ -18,9 +18,14 @@ class LaplaceDSRG {
 
     void prepare_cholesky_coeff(std::shared_ptr<AtomicOrbitalHelper> ao_helper_ptr,
                                 const std::string& algorithm);
-
     void Load_int(double& theta_NB, const std::string& algorithm);
-
+    void clear_maps(const std::string& algorithm);
+    void fill_maps(const std::string& algorithm, const int& nweight, const int& nocc,
+                   const int& nact, const int& nvir);
+    void compute_coulomb(const std::string& algorithm, const int& nocc, const int& nact,
+                         const int& nvir);
+    void compute_exchange(const std::string& algorithm, const int& nocc, const int& nact,
+                          const int& nvir);
     double compute_ccvv();
     double compute_cavv();
     double compute_ccav();
@@ -72,26 +77,66 @@ class LaplaceDSRG {
     double theta_schwarz_cavv_;
     double theta_ij_sqrt_cavv_;
 
-    std::vector<std::vector<psi::SharedMatrix>> P_xbar_u_cavv_;
-
     /// CCAV
     double theta_NB_ccav_;
     double theta_NB_IAP_ccav_;
     double theta_ij_ccav_;
     double theta_schwarz_ccav_;
     double theta_ij_sqrt_ccav_;
-    std::vector<std::vector<psi::SharedMatrix>> P_xbar_u_ccav_;
 
     /// Energy
     double E_J_;
     double E_K_;
 
-    /// Common use
+    /// SparseMaps related
+    SparseMap ao_list_per_q_;
+    SparseMap i_bar_p_up_; /// Construct [ibar]_p
+    SparseMap a_bar_p_up_; /// Construct [abar]_p
+    SparseMap ibar_p_;     /// Construct {ibar}_p
+    SparseMap xbar_p_;     /// Construct {xbar}_p
+    SparseMap ibar_x_p_;   /// Construct {ibar_x}_p
+    SparseMap P_ibar_;     /// Construct {P}_ibar.  Obtain this by "inversion" of {ibar}_p
+    SparseMap P_xbar_;     /// Construct {P}_xbar
+    SparseMap P_ibar_x_;   /// Construct {p}_ibar_x
+    SparseMap abar_ibar_;  /// Construct {a_bar}_ibar
+    SparseMap abar_xbar_;  /// Construct {a_bar}_xbar
+    SparseMap xbar_ibar_;  /// Construct {x_bar}_ibar
+
+    psi::SharedMatrix N_pu_;
     std::vector<psi::SharedMatrix> P_iu_;
     std::vector<psi::SharedMatrix> T_ibar_i_list_;
-    SparseMap ao_list_per_q_;
+    std::vector<SparseMap> xbar_u_p_;
+    std::vector<std::vector<psi::SharedMatrix>> P_xbar_u_cavv_;
+    std::vector<std::vector<psi::SharedMatrix>> P_xbar_u_ccav_;
+    std::vector<psi::SharedMatrix> P_ibar_u_;             /// Construct (P|ibar u)
+    std::vector<psi::SharedMatrix> P_ibar_abar_;          /// Construct (P|ibar abar)
+    std::vector<psi::SharedMatrix> P_xbar_abar_;          /// Construct (P|xbar abar)
+    std::vector<psi::SharedMatrix> P_ibar_xbar_;          /// Construct (P|ibar xbar)
+    std::vector<psi::SharedMatrix> i_bar_a_bar_P_;        /// Construct (ibar abar|P)
+    std::vector<psi::SharedMatrix> x_bar_a_bar_P_;        /// Construct (xbar abar|P)
+    std::vector<psi::SharedMatrix> i_bar_x_bar_P_;        /// Construct (ibar xbar|P)
+    std::vector<psi::SharedMatrix> i_bar_a_bar_P_sliced_; /// Constrcut Sliced (ibar abar|P);
+    std::vector<psi::SharedMatrix> x_bar_a_bar_P_sliced_; /// Construct Sliced (xbar abar|P)
+    std::vector<psi::SharedMatrix> i_bar_x_bar_P_sliced_; /// Construct Sliced (ibar xbar|P)
+    psi::SharedMatrix Z_pq_;                              /// Construct Z_pq
+    psi::SharedMatrix ZA_pq_;                             /// Construct ZA_pq
+    std::vector<psi::SharedMatrix> B_ia_Q_;               /// Construct B_ia_Q
+    std::vector<psi::SharedMatrix> B_xa_Q_;               /// Construct B_xa_Q
+    std::vector<psi::SharedMatrix> B_ix_Q_;               /// Construct B_ix_Q
+    psi::SharedMatrix Q_ia_;                              /// Construc Q_ia square;
+    psi::SharedMatrix Q_xa_;
+    psi::SharedMatrix Q_ix_;
+    std::vector<int> vir_intersection_per_ij_;
+    std::vector<int> aux_intersection_per_ij_;
+    std::vector<int> aux_in_B_i_;
+    std::vector<int> aux_in_B_j_;
+    std::vector<int> aux_in_B_ix_;
+    std::vector<int> vir_intersection_per_ix_;
+    std::vector<int> aux_intersection_per_ix_;
+    std::vector<int> aux_intersection_per_ijx_;
+    std::vector<int> aux_intersection_per_ixj_;
 
-    /// CCVV
+    /// CCVV Cholesky
     std::vector<psi::SharedMatrix> Occupied_cholesky_;
     std::vector<psi::SharedMatrix> Virtual_cholesky_;
     psi::SharedMatrix Cholesky_Occ_;
@@ -100,15 +145,12 @@ class LaplaceDSRG {
     std::vector<psi::SharedMatrix> Virtual_cholesky_abs_;
     psi::SharedMatrix Cholesky_Occ_abs_;
 
-    psi::SharedMatrix N_pu_;
-
-    /// CAVV
+    /// CAVV Cholesky
     std::vector<psi::SharedMatrix> Active_cholesky_;
     std::vector<psi::SharedMatrix> Active_cholesky_abs_;
     psi::SharedMatrix Gamma1_mat_;
-    std::vector<SparseMap> xbar_u_p_;
 
-    /// CCAV
+    /// CCAV Cholesky
     psi::SharedMatrix Eta1_mat_;
 };
 } // namespace forte
