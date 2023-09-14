@@ -190,6 +190,7 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
         outfile->Printf(" %s!", status.c_str());
     }
 
+    solver->set_num_vecs(dl_guess_size_);
     solver->set_guess_dimension(dl_guess_size_);
     if (not initial_guess_.empty()) {
         solver->set_initial_guess(initial_guess_);
