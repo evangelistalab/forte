@@ -33,7 +33,7 @@ def register_forte_options(options):
 def register_driver_options(options):
     options.set_group("")
     options.add_str(
-        'JOB_TYPE', 'NEWDRIVER', ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP', 'TDCI'],
+        'JOB_TYPE', 'NEWDRIVER', ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP', 'TDCI', 'TD-DSRG'],
         'Specify the job type'
     )
 
