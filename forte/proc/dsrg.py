@@ -141,7 +141,10 @@ class ProcedureDSRG:
         self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type)
 
         # Save a copy CI vectors
-        if self.active_space_solver != "ACI":
+        if self.options.get_str('ACTIVE_SPACE_SOLVER') == "ACI":
+            print("Weight reordering will be skipped.")
+            self.state_ci_wfn_map = None
+        else:
             try:
                 self.state_ci_wfn_map = active_space_solver.state_ci_wfn_map()
             except RuntimeError as err:
