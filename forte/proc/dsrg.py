@@ -141,11 +141,12 @@ class ProcedureDSRG:
         self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type)
 
         # Save a copy CI vectors
-        try:
-            self.state_ci_wfn_map = active_space_solver.state_ci_wfn_map()
-        except RuntimeError as err:
-            print("Warning DSRG Python driver:", err)
-            self.state_ci_wfn_map = None
+        if self.active_space_solver != "ACI":
+            try:
+                self.state_ci_wfn_map = active_space_solver.state_ci_wfn_map()
+            except RuntimeError as err:
+                print("Warning DSRG Python driver:", err)
+                self.state_ci_wfn_map = None
 
         # Semi-canonicalize orbitals and rotation matrices
         self.semi = forte.SemiCanonical(mo_space_info, ints, options)
