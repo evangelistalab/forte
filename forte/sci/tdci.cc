@@ -52,12 +52,11 @@ extern void zheev(char* jobz, char* uplo, int* n, std::complex<double>* a, int* 
 
 namespace forte {
 
-TDCI::TDCI(std::shared_ptr<ActiveSpaceMethod> active_space_method,
-           std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-           std::shared_ptr<MOSpaceInfo> mo_space_info,
+TDCI::TDCI(DeterminantHashVec aci_dets, SharedMatrix aci_coeffs, std::shared_ptr<SCFInfo> scf_info,
+           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : scf_info_(scf_info), as_ints_(as_ints), options_(options), mo_space_info_(mo_space_info),
-      active_space_method_(active_space_method) {}
+    : aci_dets_(aci_dets), aci_coeffs_(aci_coeffs), scf_info_(scf_info), as_ints_(as_ints),
+      options_(options), mo_space_info_(mo_space_info) {}
 
 TDCI::~TDCI() {}
 
@@ -79,14 +78,12 @@ double TDCI::compute_energy() {
     }
 
     // 1. Grab the CI wavefunction
-    DeterminantHashVec aci_dets = active_space_method_->get_PQ_space();
-    SharedMatrix aci_coeffs = active_space_method_->get_PQ_evecs();
 
     // 1.5 Compute ACI occs and save to file
     std::vector<double> ref_occs(nact, 0.0);
-    for (size_t I = 0, maxI = aci_dets.size(); I < maxI; ++I) {
-        const Determinant& det = aci_dets.get_det(I);
-        const double CI = aci_coeffs->get(I, 0);
+    for (size_t I = 0, maxI = aci_dets_.size(); I < maxI; ++I) {
+        const Determinant& det = aci_dets_.get_det(I);
+        const double CI = aci_coeffs_->get(I, 0);
         for (int p = 0; p < nact; ++p) {
             double value = 0.0;
             if (det.get_alfa_bit(p) == true) {
@@ -102,7 +99,7 @@ double TDCI::compute_energy() {
 
     // 2. Generate the n-1 Determinants (not just core)
     for (int i = 0; i < nact; ++i) {
-        annihilate_wfn(aci_dets, ann_dets_, i);
+        annihilate_wfn(aci_dets_, ann_dets_, i);
     }
     size_t nann = ann_dets_.size();
     outfile->Printf("\n  Number of cationic determinants: %zu", ann_dets_.size());
@@ -129,7 +126,7 @@ double TDCI::compute_energy() {
     auto core_coeffs = std::make_shared<Vector>("init", nann);
     core_coeffs->zero();
 
-    const det_hashvec& dets = aci_dets.wfn_hash();
+    const det_hashvec& dets = aci_dets_.wfn_hash();
     size_t ndet = dets.size();
     // size_t ncore = 0;
     for (size_t I = 0; I < ndet; ++I) {
@@ -139,7 +136,7 @@ double TDCI::compute_energy() {
             adet.set_alfa_bit(hole, false);
             size_t idx = ann_dets_.get_idx(adet);
             core_coeffs->set(idx,
-                             core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI), 0));
+                             core_coeffs->get(idx) + aci_coeffs_->get(aci_dets_.get_idx(detI), 0));
             core_dets_.add(adet);
         }
     }

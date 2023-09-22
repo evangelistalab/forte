@@ -88,6 +88,12 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
+    /// Shuhang Li: Return ACI final wavefunction which will be used in TD-DSRG.
+    DeterminantHashVec get_PQ_space() { return final_aci_wfn_; }
+
+    /// Shuhang Li: Get model space coefficients. Only for ACI.
+    std::shared_ptr<psi::Matrix> get_PQ_evecs() { return aci_evecs_; }
+
     /// Compute permanent dipole moments
     void compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
@@ -206,6 +212,10 @@ class ActiveSpaceSolver {
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
+
+    /// Shuhang Li: These two will only be used in ACI.
+    DeterminantHashVec final_aci_wfn_;
+    std::shared_ptr<psi::Matrix> aci_evecs_;
 
     /// A map of electronic states to the number of roots computed
     ///   {state_1 : n_1, state_2 : n_2, ...}

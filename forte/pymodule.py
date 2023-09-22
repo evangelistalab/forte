@@ -610,29 +610,31 @@ def run_forte(name, **kwargs):
         )
         active_space_method.set_quiet_mode(True)
         active_space_method.compute_energy()
-
-        tdci = forte.TDCI(active_space_method, scf_info, options, mo_space_info, as_ints)
+        PQ_space = active_space_method.get_PQ_space()
+        PQ_evec = active_space_method.get_PQ_evecs()
+        tdci = forte.TDCI(PQ_space, PQ_evec, scf_info, options, mo_space_info, as_ints)
         energy = tdci.compute_energy()
         
     if (job_type == "TD-DSRG"):
-        # First, we need dsrg.
-        state_map = forte.to_state_nroots_map(state_weights_map)
-        active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER') # Can we use CAS solver?
-        as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
-        active_space_solver = forte.make_active_space_solver(active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options)
-        active_space_solver.compute_energy()
-        dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
-        dsrg_proc.compute_energy()
-        # Create updated asint
-        ints_dressed = dsrg_proc.dsrg_solver.compute_Heff_actv()
-        # Run TDCI
-        state = forte.make_state_info_from_psi(options)
-        active_space_method = forte.make_active_space_method("ACI", state, options.get_int("NROOT"), scf_info, mo_space_info, ints_dressed, options)
-        active_space_method.set_quiet_mode(True)
-        active_space_method.compute_energy()
-        
-        tdci = forte.TDCI(active_space_method, scf_info, options, mo_space_info, ints_dressed)
-        energy = tdci.compute_energy()
+        active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
+        if active_space_solver_type != "ACI":
+            raise Exception("Only ACI is available for TD-DSRG!")
+        else:
+            # First, we need dsrg.
+            state_map = forte.to_state_nroots_map(state_weights_map)
+            as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+            active_space_solver = forte.make_active_space_solver(active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options)
+            active_space_solver.compute_energy()
+            dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
+            dsrg_proc.compute_energy()
+            # Update active space integrals, PQ space, model space coefficients
+            PQ_space = active_space_solver.get_PQ_space()
+            PQ_evec = active_space_solver.get_PQ_evecs()
+            ints_dressed = dsrg_proc.dsrg_solver.compute_Heff_actv()
+            # Run TD-ACI
+            state = forte.make_state_info_from_psi(options)
+            tdci = forte.TDCI(PQ_space, PQ_evec, scf_info, options, mo_space_info, ints_dressed)   
+            energy = tdci.compute_energy()
         
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)

@@ -115,6 +115,12 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         // check that the effective values of S are within a given tolerance
         validate_spin(spin2, state);
         state_spin2_map_[state] = spin2;
+        if (method_ == "ACI") {
+            if (state_nroots_map_.size() == 1 && nroot == 1) {
+                final_aci_wfn_ = method->get_PQ_space();
+                aci_evecs_ = method->get_PQ_evecs();
+            }
+        }
     }
     print_energies();
 

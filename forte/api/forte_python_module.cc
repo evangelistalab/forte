@@ -94,6 +94,9 @@ void export_ActiveSpaceMethod(py::module& m) {
         .def("compute_energy", &ActiveSpaceMethod::compute_energy)
         .def("set_quiet_mode", &ActiveSpaceMethod::set_quiet_mode)
         .def("dump_wave_function", &ActiveSpaceMethod::dump_wave_function)
+        .def("get_PQ_space", &ActiveSpaceMethod::get_PQ_space, "Get PQ space if ACI solver is used")
+        .def("get_PQ_evecs", &ActiveSpaceMethod::get_PQ_evecs,
+             "Get model space coefficients. Only for ACI.")
         .def("read_wave_function", &ActiveSpaceMethod::read_wave_function);
 }
 
@@ -112,6 +115,9 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Set the active space integrals manually")
         .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
              "Set unitary matrices for changing orbital basis in RDMs when computing dipoles")
+        .def("get_PQ_space", &ActiveSpaceSolver::get_PQ_space, "Get PQ space if ACI solver is used")
+        .def("get_PQ_evecs", &ActiveSpaceSolver::get_PQ_evecs,
+             "Get model space coefficients. Only for ACI.")
         .def("compute_dipole_moment", &ActiveSpaceSolver::compute_dipole_moment,
              "Compute transition dipole moment")
         .def("compute_quadrupole_moment", &ActiveSpaceSolver::compute_quadrupole_moment,
@@ -405,7 +411,7 @@ PYBIND11_MODULE(_forte, m) {
 
     // export the time-dependent ACI code
     py::class_<TDCI>(m, "TDCI", "Time-dependent ACI")
-        .def(py::init<std::shared_ptr<ActiveSpaceMethod>, std::shared_ptr<SCFInfo>,
+        .def(py::init<DeterminantHashVec, psi::SharedMatrix, std::shared_ptr<SCFInfo>,
                       std::shared_ptr<ForteOptions>, std::shared_ptr<MOSpaceInfo>,
                       std::shared_ptr<ActiveSpaceIntegrals>>())
         .def("compute_energy", &TDCI::compute_energy, "Compute TD-ACI");

@@ -82,9 +82,9 @@ class TDCI {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    TDCI(std::shared_ptr<ActiveSpaceMethod> active_space_method, std::shared_ptr<SCFInfo> scf_info,
-         std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-         std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    TDCI(DeterminantHashVec aci_dets, psi::SharedMatrix aci_coeffs,
+         std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Destructor
     ~TDCI();
@@ -99,7 +99,8 @@ class TDCI {
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
     std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    std::shared_ptr<ActiveSpaceMethod> active_space_method_;
+    DeterminantHashVec aci_dets_;
+    psi::SharedMatrix aci_coeffs_;
 
     std::vector<std::vector<double>> occupations_;
 
