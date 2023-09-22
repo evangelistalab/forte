@@ -1,0 +1,42 @@
+import forte                              
+                                         
+molecule Li2{                            
+0 1
+Li
+Li 1 1.0 
+symmetry c1
+}                                        
+                                         
+set {                                    
+  scf_type pk                            
+  basis sto-3g
+  e_convergence 12
+  r_convergence 12
+  d_convergence 12
+}                                        
+  
+set forte {
+  active_space_solver aci
+  correlation_solver sa-mrdsrg
+  corr_level pt2
+  RELAX_REF once
+  dsrg_s 1.0                              
+  job_type td-dsrg                          
+  sigma 0.000                  
+  active [6]
+  localize_space [0,5]
+  nroot 1
+  dl_maxiter 500
+  aci_prescreen_threshold 0.0
+  TDCI_PROPAGATOR exact
+  TDCI_NSTEP 100
+  TDCI_TIMESTEP 1.0
+  TDCI_HOLE 0
+  TDCI_OCC_ORB [0]
+  tdci_test_occ true
+}                                        
+                                         
+Escf, scf_wfn = energy('scf', return_wfn=True)
+e, wfn = energy('forte', ref_wfn = scf_wfn, return_wfn=True) 
+
+compare_values(0.0,variable("OCCUPATION ERROR"), 6, "Error in occupations")
