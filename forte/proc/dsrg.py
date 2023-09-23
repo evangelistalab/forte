@@ -167,6 +167,7 @@ class ProcedureDSRG:
                 self.fno_pt2_energy_shift = dept2
                 self.fno_pt2_Heff_shift = dhpt2
                 psi4.core.set_scalar_variable("FNO ENERGY CORRECTION", dept2)
+            self.semi = forte.SemiCanonical(self.mo_space_info, self.ints, options)
 
     def make_dsrg_solver(self):
         """ Make a DSRG solver. """
