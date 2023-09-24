@@ -620,12 +620,11 @@ void AdaptiveCI::pre_iter_preparation() {
     sparse_solver_->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_->set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
+    sparse_solver_->set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
+    sparse_solver_->set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
     sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver_->set_spin_project(project_out_spin_contaminants_);
-    sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
-    sparse_solver_->set_ncollapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
-    sparse_solver_->set_nsubspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
+    sparse_solver_->set_ndets_per_guess_state(options_->get_int("DL_DETS_PER_GUESS"));
     sparse_solver_->set_spin_project_full(
         (gas_iteration_ and sigma_ == 0.0) ? true : options_->get_bool("SPIN_PROJECT_FULL"));
 }

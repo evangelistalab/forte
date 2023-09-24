@@ -101,6 +101,7 @@ class SparseCISolver {
 
     /// Spin adapt the wave function
     void set_spin_adapt(bool value);
+
     /// Spin adapt the wave function using a full preconditioner?
     void set_spin_adapt_full_preconditioner(bool value);
 
@@ -116,8 +117,11 @@ class SparseCISolver {
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
 
-    void set_ncollapse_per_root(int value);
-    void set_nsubspace_per_root(int value);
+    /// Set the number of collapse vectors for each root
+    void set_collapse_per_root(int value);
+
+    /// Set the maximum subspace size for each root
+    void set_subspace_per_root(int value);
 
     /// Build the full Hamiltonian matrix
     std::shared_ptr<psi::Matrix>
@@ -130,13 +134,12 @@ class SparseCISolver {
     /// Set option to force diagonalization type
     void set_force_diag(bool value);
 
-    /// Set the size of the guess space
-    void set_guess_dimension(size_t value) { dl_guess_ = value; }
+    /// Set the number of determinants per root to use to form the initial guess
+    void set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
 
     /// Set the initial guess
     void set_initial_guess(const std::vector<std::vector<std::pair<size_t, double>>>& guess);
     void manual_guess(bool value);
-    void set_num_vecs(size_t value);
 
   private:
     /// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
@@ -196,24 +199,24 @@ class SparseCISolver {
     /// The residual 2-norm convergence threshold
     double r_convergence_ = 1.0e-6;
     /// Number of collapse vectors per roots
-    int ncollapse_per_root_ = 2;
+    /// This variable also defines the number of guess vectors (collapse_per_root_ * nroot_)
+    size_t collapse_per_root_ = 2;
     /// Number of max subspace vectors per roots
-    int nsubspace_per_root_ = 4;
+    size_t subspace_per_root_ = 4;
     /// Maximum number of iterations in the Davidson-Liu algorithm
     int maxiter_davidson_ = 100;
     /// Number of determinants used to form guess vector per root
-    size_t dl_guess_ = 50;
+    size_t ndets_per_guess_ = 10;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
+    /// A variable to control printing information
+    int print_ = 0;
     /// Set the initial guess?
     bool set_guess_ = false;
     std::vector<std::vector<std::pair<size_t, double>>>
         guess_; // nroot of guess size of (id, coefficent)
-    // Number of guess vectors
-    size_t nvec_ = 10;
 };
 } // namespace forte
 

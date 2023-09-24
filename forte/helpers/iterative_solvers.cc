@@ -158,8 +158,10 @@ SolverStatus DavidsonLiuSolver::update() {
     // If converged or exceeded the maximum number of iterations return true
     // if ((converged_ >= nroot_) or (iter_ > maxiter_)) return
     // SolverStatus::Converged;
-    if ((converged_ >= nroot_))
+    if ((converged_ >= nroot_)) {
+        get_results();
         return SolverStatus::Converged;
+    }
 
     PRINT_VARS("update")
 
@@ -183,8 +185,10 @@ SolverStatus DavidsonLiuSolver::update() {
         }
     }
 
-    if (size_ == 1)
+    if (size_ == 1) {
+        get_results();
         return SolverStatus::Converged;
+    }
 
     check_orthogonality();
 
@@ -229,6 +233,9 @@ SolverStatus DavidsonLiuSolver::update() {
 
     // if we do not add any new vector then we are in trouble and we better finish the computation
     if ((num_added == 0) and is_energy_converged) {
+        outfile->Printf("\n  Davidson-Liu solver:  No new vectors added, but energy converged. "
+                        "Finishing computation.");
+        get_results();
         return SolverStatus::Converged;
     }
 
@@ -481,12 +488,6 @@ void DavidsonLiuSolver::get_results() {
             v[i][I] /= norm;
         }
     }
-    //    if (print_level_){
-    //        outfile->Printf("\n  The Davidson-Liu algorithm converged in %d
-    //        iterations.", iter_);
-    //        outfile->Printf("\n  %s: %f s","Time spent diagonalizing
-    //        H",timing_);
-    //    }
 }
 
 void DavidsonLiuSolver::check_orthogonality() {

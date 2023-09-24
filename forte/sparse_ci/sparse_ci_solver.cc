@@ -65,9 +65,9 @@ void SparseCISolver::set_r_convergence(double value) { r_convergence_ = value; }
 
 void SparseCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
 
-void SparseCISolver::set_ncollapse_per_root(int value) { ncollapse_per_root_ = value; }
+void SparseCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
-void SparseCISolver::set_nsubspace_per_root(int value) { nsubspace_per_root_ = value; }
+void SparseCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
 
@@ -95,8 +95,6 @@ void SparseCISolver::set_initial_guess(
     set_guess_ = true;
     guess_ = guess;
 }
-
-void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
 
 std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
 SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
@@ -362,11 +360,13 @@ SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
 }
 
 void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
-                                       std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
-                                       DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> b,
-                                       int nroot, int multiplicity) {
+                                       std::shared_ptr<SigmaVector> sigma_vector,
+                                       size_t num_guess_states, DavidsonLiuSolver& dls,
+                                       std::shared_ptr<psi::Vector> b, int nroot,
+                                       int multiplicity) {
     size_t ndets = space.size();
-    size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_, ndets);
+    size_t num_guess_dets = std::min(num_guess_states * ndets_per_guess_, ndets);
+
     std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>> guess;
 
     // Find the ntrial lowest diagonals
@@ -383,7 +383,7 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     std::sort(smallest.begin(), smallest.end());
 
     std::vector<Determinant> guess_det;
-    for (size_t i = 0; i < nguess; i++) {
+    for (size_t i = 0; i < num_guess_dets; i++) {
         const Determinant& detI = smallest[i].second;
         guess_det.push_back(detI);
     }
@@ -397,11 +397,11 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
         outfile->Printf("\n  Guess determinants after screening: %zu",
                         spin_complete_guess_det.size());
         guess_det = spin_complete_guess_det;
+        // Update the number of guess determinants
+        num_guess_dets = guess_det.size();
     } else {
         outfile->Printf("\n\n  Skipping spin-adaptation of the initial guess");
     }
-
-    nguess = guess_det.size();
 
     for (const auto& d : guess_det) {
         guess_dets_pos.push_back(
@@ -409,9 +409,9 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     }
 
     // Form the S^2 operator matrix and diagonalize it
-    Matrix S2("S^2", nguess, nguess);
-    for (size_t I = 0; I < nguess; I++) {
-        for (size_t J = I; J < nguess; J++) {
+    Matrix S2("S^2", num_guess_dets, num_guess_dets);
+    for (size_t I = 0; I < num_guess_dets; I++) {
+        for (size_t J = I; J < num_guess_dets; J++) {
             const Determinant& detI = guess_dets_pos[I].first;
             const Determinant& detJ = guess_dets_pos[J].first;
             double S2IJ = spin2(detI, detJ);
@@ -419,14 +419,14 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
             S2.set(J, I, S2IJ);
         }
     }
-    Matrix S2evecs("S^2", nguess, nguess);
-    Vector S2evals("S^2", nguess);
+    Matrix S2evecs("S^2", num_guess_dets, num_guess_dets);
+    Vector S2evals("S^2", num_guess_dets);
     S2.diagonalize(S2evecs, S2evals);
 
     // Form the Hamiltonian
-    Matrix H("H", nguess, nguess);
-    for (size_t I = 0; I < nguess; I++) {
-        for (size_t J = I; J < nguess; J++) {
+    Matrix H("H", num_guess_dets, num_guess_dets);
+    for (size_t I = 0; I < num_guess_dets; I++) {
+        for (size_t J = I; J < num_guess_dets; J++) {
             const Determinant& detI = guess_dets_pos[I].first;
             const Determinant& detJ = guess_dets_pos[J].first;
             double HIJ = as_ints->slater_rules(detI, detJ);
@@ -441,7 +441,7 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     // Find groups of solutions with same spin
     double Stollerance = 1.0e-9;
     std::map<int, std::vector<int>> mult_list;
-    for (size_t i = 0; i < nguess; ++i) {
+    for (size_t i = 0; i < num_guess_dets; ++i) {
         double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
         int mult_int = std::round(mult);
         double error = mult - static_cast<double>(mult_int);
@@ -457,7 +457,7 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
         size_t nfound = mult_list[multiplicity].size();
         outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only "
                         "%d were found!",
-                        nguess, multiplicity, nfound);
+                        num_guess_dets, multiplicity, nfound);
         if (nfound == 0) {
             exit(1);
         }
@@ -494,7 +494,7 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
         // Project the spin-adapted solution onto the full manifold
         for (int r = 0; r < nspin_states; ++r) {
             std::vector<std::pair<size_t, double>> det_C;
-            for (size_t I = 0; I < nguess; I++) {
+            for (size_t I = 0; I < num_guess_dets; I++) {
                 double CIr = 0.0;
                 for (int J = 0; J < nspin_states; ++J) {
                     CIr += S2evecs.get(I, mult_list_s[J]) * HS2evecs(J, r);
@@ -531,14 +531,14 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
         }
 
         // number of guess to be used
-        size_t nguess = std::min(guess_list.size(), guess_size);
+        size_t num_guess_used = std::min(guess_list.size(), num_guess_states);
 
-        if (nguess == 0) {
+        if (num_guess_used == 0) {
             throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
                                     "requested multiplicity.\n\n");
         }
 
-        for (size_t n = 0; n < nguess; ++n) {
+        for (size_t n = 0; n < num_guess_used; ++n) {
             b->zero();
             for (auto& guess_vec_info : std::get<2>(guess[guess_list[n]])) {
                 b->set(guess_vec_info.first, guess_vec_info.second);
@@ -559,21 +559,16 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     if (spin_project_) {
         // Prepare a list of bad roots to project out and pass them to the solver
         bad_roots.clear();
-        size_t rejected = 0;
         for (auto& g : guess) {
-            int guess_multiplicity = std::get<0>(g);
-            double guess_energy = std::get<1>(g);
-            // project out the guess with differnt multiplicity and energy lower than the good
-            // guesses
+            const auto& [guess_multiplicity, guess_energy, guess_det_C] = g;
+            // project out solutions with wrong multiplicity and energy lower than good guesses
             if ((guess_multiplicity != multiplicity) and (guess_energy <= guess_max_energy)) {
                 outfile->Printf("\n  Projecting out guess  2S+1 = %-3d  E = %.6f",
                                 guess_multiplicity, guess_energy);
-
-                bad_roots.push_back(std::get<2>(g));
-                rejected += 1;
+                bad_roots.push_back(guess_det_C);
             }
         }
-        outfile->Printf("\n\n  Projecting out %zu solutions", rejected);
+        outfile->Printf("\n\n  Projecting out %zu solutions", bad_roots.size());
         dls.set_project_out(bad_roots);
     } else {
         outfile->Printf("\n\n  Projecting out no solutions");
@@ -585,8 +580,10 @@ void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t
                                        int multiplicity) {
     local_timer t;
 
-    // Get the list of most important CSFs
-    std::vector<std::pair<double, size_t>> lowest_energy(n, std::make_pair(1e100, 0));
+    // Get the list of most important CSFs (those with the lowest energy)
+    std::vector<std::pair<double, size_t>> lowest_energy(
+        n, std::make_pair(std::numeric_limits<double>::max(), 0));
+
     size_t nfound = 0;
     const size_t ncsf = spin_adapter_->ncsf();
     for (size_t i = 0; i < ncsf; ++i) {
@@ -700,6 +697,10 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     DavidsonLiuSolver dls(basis_size, nroot);
     dls.set_e_convergence(e_convergence_);
     dls.set_r_convergence(r_convergence_);
+    dls.set_print_level(print_);
+    dls.set_collapse_per_root(collapse_per_root_);
+    dls.set_subspace_per_root(subspace_per_root_);
+
     dls.set_print_level(0);
 
     // allocate vectors
@@ -716,21 +717,18 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     }
 
     // Form the diagonal of the Hamiltonian and the initial guess
-    size_t guess_size = 0;
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(sigma_vector->as_ints(), spin_adapter_);
         dls.startup(Hdiag_vec);
-        guess_size = dls.collapse_size();
-        /// TODO: store multiplicity in a private variable multiplicity_
-        initial_guess_csf(Hdiag_vec, guess_size, dls, sigma_basis, multiplicity);
+        // note: collapse_size() should be called after startup()
+        const size_t num_guess_states = std::min(dls.collapse_size(), basis_size);
+        initial_guess_csf(Hdiag_vec, num_guess_states, dls, sigma_basis, multiplicity);
     } else {
-        // get and pass diagonal
         sigma_vector->get_diagonal(*sigma);
         dls.startup(sigma);
-        guess_size = std::min(nvec_, dls.collapse_size());
-        // generate a set of initial guesses removed: auto guess =
-        initial_guess_det(space, sigma_vector, guess_size, dls, b, nroot, multiplicity);
-        outfile->Printf("\n\n  Setting initial guess and roots to project");
+        // note: collapse_size() should be called after startup()
+        const size_t num_guess_states = std::min(dls.collapse_size(), basis_size);
+        initial_guess_det(space, sigma_vector, num_guess_states, dls, b, nroot, multiplicity);
     }
 
     // Set a variable to track the convergence of the solver
@@ -806,10 +804,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
                           "the option DL_MAXITER.";
         throw std::runtime_error(msg);
     }
-
-    // Compute final eigenvectors
-
-    //    dls.get_results();
 
     // Copy eigenvalues and eigenvectors from the Davidson-Liu solver
     spin_.clear();

@@ -376,7 +376,6 @@ def register_fci_options(options):
     options.add_int('FCI_MAXITER', 30, 'Maximum number of iterations for FCI code')
     options.add_bool('FCI_TEST_RDMS', False, 'Test the FCI reduced density matrices?')
     options.add_bool('PRINT_NO', False, 'Print the NO from the rdm of FCI')
-    options.add_int('NTRIAL_PER_ROOT', 10, 'The number of trial guess vectors to generate per root')
     options.add_bool('CI_SPIN_ADAPT', False, 'Spin-adapt the CI wavefunction?')
     options.add_bool('CI_SPIN_ADAPT_FULL_PRECONDITIONER', False, 'Use full preconditioner for spin-adapted CI?')
 
@@ -455,8 +454,6 @@ def register_aci_options(options):
 
     options.add_bool("ACI_PRINT_REFS", False, "Print the P space?")
 
-    options.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver")
-
     options.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction")
 
     options.add_double("ACI_SPIN_TOL", 0.02, "Tolerance for S^2 value")
@@ -530,8 +527,7 @@ def register_davidson_liu_options(options):
     options.add_int("DL_MAXITER", 100, "The maximum number of Davidson-Liu iterations")
 
     options.add_int(
-        "DL_GUESS_SIZE", 50, "Set the number of determinants in the initial guess"
-        " space for the DL solver"
+        "DL_DETS_PER_GUESS", 50, "The number of determinants to use for each guess state"
     )
 
     options.add_int("DL_COLLAPSE_PER_ROOT", 2, "The number of trial vector to retain after collapsing")

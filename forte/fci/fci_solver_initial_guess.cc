@@ -42,7 +42,7 @@
 
 namespace forte {
 
-void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
+void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
                                   std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                   DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp) {
     local_timer t;
@@ -52,12 +52,12 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
 
     size_t ndets = diag.size();
     // number of guess to be used must be at most as large as the number of determinants
-    size_t ntrial = std::min(n * ndets_per_guess_, ndets);
+    size_t num_guess_dets = std::min(num_guess_states * ndets_per_guess_, ndets);
 
-    // Get the list of most important determinants
-    std::vector<std::tuple<double, size_t, size_t, size_t>> dets = diag.min_elements(ntrial);
-
-    size_t num_dets = dets.size();
+    // Get the list of most important determinants in the format
+    // std::vector<std::tuple<double, size_t, size_t, size_t>>
+    // this list has size exactly num_guess_dets
+    auto dets = diag.min_elements(num_guess_dets);
 
     std::vector<Determinant> bsdets;
 
@@ -71,9 +71,9 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
 
     // Make sure that the spin space is complete
     enforce_spin_completeness(bsdets, nact);
-    if (bsdets.size() > num_dets) {
+    if (bsdets.size() > num_guess_dets) {
         String Ia, Ib;
-        size_t nnew_dets = bsdets.size() - num_dets;
+        size_t nnew_dets = bsdets.size() - num_guess_dets;
         if (print_ > 0) {
             psi::outfile->Printf("\n  Initial guess space is incomplete.\n  Adding "
                                  "%d determinant(s).",
@@ -81,26 +81,26 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
         }
         for (size_t i = 0; i < nnew_dets; ++i) {
             // Find the address of a determinant
-            size_t h, add_Ia, add_Ib;
             for (size_t j = 0; j < nact; ++j) {
-                Ia[j] = bsdets[num_dets + i].get_alfa_bit(j);
-                Ib[j] = bsdets[num_dets + i].get_beta_bit(j);
+                Ia[j] = bsdets[num_guess_dets + i].get_alfa_bit(j);
+                Ib[j] = bsdets[num_guess_dets + i].get_beta_bit(j);
             }
-            h = lists_->alfa_address()->sym(Ia);
-            add_Ia = lists_->alfa_address()->add(Ia);
-            add_Ib = lists_->beta_address()->add(Ib);
+            const auto h = lists_->alfa_address()->sym(Ia);
+            const auto add_Ia = lists_->alfa_address()->add(Ia);
+            const auto add_Ib = lists_->beta_address()->add(Ib);
             std::tuple<double, size_t, size_t, size_t> d(0.0, h, add_Ia, add_Ib);
             dets.push_back(d);
         }
+        // update the number of guess determinants
+        num_guess_dets = dets.size();
     }
-    num_dets = dets.size();
 
-    psi::Matrix H("H", num_dets, num_dets);
-    psi::Matrix evecs("Evecs", num_dets, num_dets);
-    psi::Vector evals("Evals", num_dets);
+    psi::Matrix H("H", num_guess_dets, num_guess_dets);
+    psi::Matrix evecs("Evecs", num_guess_dets, num_guess_dets);
+    psi::Vector evals("Evals", num_guess_dets);
 
-    for (size_t I = 0; I < num_dets; ++I) {
-        for (size_t J = I; J < num_dets; ++J) {
+    for (size_t I = 0; I < num_guess_dets; ++I) {
+        for (size_t J = I; J < num_guess_dets; ++J) {
             double HIJ = fci_ints->slater_rules(bsdets[I], bsdets[J]);
             if (I == J)
                 HIJ += scalar_energy;
@@ -115,12 +115,12 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
 
     std::vector<std::string> table;
 
-    for (size_t r = 0; r < num_dets; ++r) {
+    for (size_t r = 0; r < num_guess_dets; ++r) {
         double energy = evals.get(r) + nuclear_repulsion_energy;
         double norm = 0.0;
         double S2 = 0.0;
-        for (size_t I = 0; I < num_dets; ++I) {
-            for (size_t J = 0; J < num_dets; ++J) {
+        for (size_t I = 0; I < num_guess_dets; ++I) {
+            for (size_t J = 0; J < num_guess_dets; ++J) {
                 const double S2IJ = ::forte::spin2(bsdets[I], bsdets[J]);
                 S2 += evecs.get(I, r) * evecs.get(J, r) * S2IJ;
             }
@@ -135,7 +135,7 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
                                    std::fabs(S2) % state_label.c_str()));
         // Save states of the desired multiplicity
         std::vector<std::tuple<size_t, size_t, size_t, double>> solution;
-        for (size_t I = 0; I < num_dets; ++I) {
+        for (size_t I = 0; I < num_guess_dets; ++I) {
             auto det = dets[I];
             double e;
             size_t h, add_Ia, add_Ib;
@@ -162,7 +162,7 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
     }
 
     // number of guess to be used
-    size_t nguess = std::min(guess_list.size(), n);
+    size_t nguess = std::min(guess_list.size(), num_guess_states);
 
     if (nguess == 0) {
         throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
@@ -201,12 +201,13 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t n,
     }
 }
 
-void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
+void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
                                   DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp) {
     local_timer t;
 
     // Get the list of most important CSFs
-    std::vector<std::pair<double, size_t>> lowest_energy(n, std::make_pair(1e100, 0));
+    std::vector<std::pair<double, size_t>> lowest_energy(
+        num_guess_states, std::make_pair(std::numeric_limits<double>::max(), 0));
     size_t nfound = 0;
     const size_t ncsf = spin_adapter_->ncsf();
     for (size_t i = 0; i < ncsf; ++i) {
@@ -218,9 +219,14 @@ void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
         }
     }
     // number of guess to be used
-    size_t nguess = std::min(nfound, n);
+    size_t num_guess_states_found = std::min(nfound, num_guess_states);
 
-    if (nguess == 0) {
+    if (num_guess_states_found != num_guess_states) {
+        psi::outfile->Printf("\n  Warning: Found %zu CSF with the requested multiplicity instead "
+                             "of the number requested (%zu).\n",
+                             num_guess_states_found, num_guess_states);
+    }
+    if (num_guess_states_found == 0) {
         throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
                                 "multiplicity.\n\n");
     }
@@ -231,7 +237,7 @@ void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
     }
 
     // Set the initial guess
-    for (size_t g = 0; g < nguess; ++g) {
+    for (size_t g = 0; g < num_guess_states_found; ++g) {
         const auto& [e, i] = lowest_energy[g];
         temp->zero();
         temp->set(i, 1.0);
@@ -240,13 +246,13 @@ void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
 
     if (print_) {
         print_h2("FCI Initial Guess");
-        psi::outfile->Printf("\n  Selected %zu CSF", n);
+        psi::outfile->Printf("\n  Selected %zu CSF", num_guess_states);
         psi::outfile->Printf("\n  ---------------------------------------------");
         psi::outfile->Printf("\n    CSF             Energy     <S^2>   Spin");
         psi::outfile->Printf("\n  ---------------------------------------------");
         double S2_target = 0.25 * (state().multiplicity() - 1) * (state().multiplicity() + 1);
         auto label = s2_label(state().multiplicity() - 1);
-        for (size_t g = 0; g < nguess; ++g) {
+        for (size_t g = 0; g < num_guess_states_found; ++g) {
             const auto& [e, i] = lowest_energy[g];
             auto str =
                 boost::str(boost::format("  %6d %20.12f  %.3f  %s") % i % e % S2_target % label);
