@@ -370,7 +370,6 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>> guess;
 
     // Find the ntrial lowest diagonals
-    std::vector<std::pair<Determinant, size_t>> guess_dets_pos;
     std::vector<std::pair<double, Determinant>> smallest;
     const det_hashvec& detmap = space.wfn_hash();
 
@@ -381,39 +380,37 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
         smallest.emplace_back(as_ints->energy(det), det);
     }
     std::sort(smallest.begin(), smallest.end());
-
-    std::vector<Determinant> guess_det;
+    std::vector<Determinant> guess_dets(num_guess_dets);
     for (size_t i = 0; i < num_guess_dets; i++) {
-        const Determinant& detI = smallest[i].second;
-        guess_det.push_back(detI);
+        guess_dets[i] = smallest[i].second;
     }
 
-    outfile->Printf("\n  Initial guess determinants:         %zu", guess_det.size());
+    outfile->Printf("\n  Initial guess determinants:         %zu", guess_dets.size());
 
     if (spin_project_) {
         outfile->Printf(
             "\n\n  Spin-adaptation of the initial guess based on minimum spin-complete subset");
-        auto spin_complete_guess_det = find_minimum_spin_complete(guess_det, nmo);
+        auto spin_complete_guess_det = find_minimum_spin_complete(guess_dets, nmo);
         outfile->Printf("\n  Guess determinants after screening: %zu",
                         spin_complete_guess_det.size());
-        guess_det = spin_complete_guess_det;
+        guess_dets = spin_complete_guess_det;
         // Update the number of guess determinants
-        num_guess_dets = guess_det.size();
+        num_guess_dets = guess_dets.size();
     } else {
         outfile->Printf("\n\n  Skipping spin-adaptation of the initial guess");
     }
 
-    for (const auto& d : guess_det) {
-        guess_dets_pos.push_back(
-            std::make_pair(d, space.get_idx(d))); // store a det and its position
+    std::vector<size_t> guess_dets_pos(num_guess_dets);
+    for (size_t i = 0; i < num_guess_dets; i++) {
+        guess_dets_pos[i] = space.get_idx(guess_dets[i]);
     }
 
     // Form the S^2 operator matrix and diagonalize it
     Matrix S2("S^2", num_guess_dets, num_guess_dets);
     for (size_t I = 0; I < num_guess_dets; I++) {
+        const Determinant& detI = guess_dets[I];
         for (size_t J = I; J < num_guess_dets; J++) {
-            const Determinant& detI = guess_dets_pos[I].first;
-            const Determinant& detJ = guess_dets_pos[J].first;
+            const Determinant& detJ = guess_dets[J];
             double S2IJ = spin2(detI, detJ);
             S2.set(I, J, S2IJ);
             S2.set(J, I, S2IJ);
@@ -426,9 +423,9 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     // Form the Hamiltonian
     Matrix H("H", num_guess_dets, num_guess_dets);
     for (size_t I = 0; I < num_guess_dets; I++) {
+        const Determinant& detI = guess_dets[I];
         for (size_t J = I; J < num_guess_dets; J++) {
-            const Determinant& detI = guess_dets_pos[I].first;
-            const Determinant& detJ = guess_dets_pos[J].first;
+            const Determinant& detJ = guess_dets[J];
             double HIJ = as_ints->slater_rules(detI, detJ);
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
@@ -499,7 +496,7 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
                 for (int J = 0; J < nspin_states; ++J) {
                     CIr += S2evecs.get(I, mult_list_s[J]) * HS2evecs(J, r);
                 }
-                det_C.push_back(std::make_pair(guess_dets_pos[I].second, CIr));
+                det_C.push_back(std::make_pair(guess_dets_pos[I], CIr));
             }
             double E = HS2evals.get(r);
             guess.push_back(std::make_tuple(m, E, det_C));

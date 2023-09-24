@@ -59,21 +59,21 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
     // this list has size exactly num_guess_dets
     auto dets = diag.min_elements(num_guess_dets);
 
-    std::vector<Determinant> bsdets;
+    std::vector<Determinant> guess_dets;
 
     // Build the full determinants
     size_t nact = active_mo_.size();
     for (const auto& [e, h, add_Ia, add_Ib] : dets) {
         auto Ia = lists_->alfa_str(h, add_Ia);
         auto Ib = lists_->beta_str(h ^ symmetry_, add_Ib);
-        bsdets.emplace_back(Ia, Ib);
+        guess_dets.emplace_back(Ia, Ib);
     }
 
     // Make sure that the spin space is complete
-    enforce_spin_completeness(bsdets, nact);
-    if (bsdets.size() > num_guess_dets) {
+    enforce_spin_completeness(guess_dets, nact);
+    if (guess_dets.size() > num_guess_dets) {
         String Ia, Ib;
-        size_t nnew_dets = bsdets.size() - num_guess_dets;
+        size_t nnew_dets = guess_dets.size() - num_guess_dets;
         if (print_ > 0) {
             psi::outfile->Printf("\n  Initial guess space is incomplete.\n  Adding "
                                  "%d determinant(s).",
@@ -82,8 +82,8 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
         for (size_t i = 0; i < nnew_dets; ++i) {
             // Find the address of a determinant
             for (size_t j = 0; j < nact; ++j) {
-                Ia[j] = bsdets[num_guess_dets + i].get_alfa_bit(j);
-                Ib[j] = bsdets[num_guess_dets + i].get_beta_bit(j);
+                Ia[j] = guess_dets[num_guess_dets + i].get_alfa_bit(j);
+                Ib[j] = guess_dets[num_guess_dets + i].get_beta_bit(j);
             }
             const auto h = lists_->alfa_address()->sym(Ia);
             const auto add_Ia = lists_->alfa_address()->add(Ia);
@@ -101,7 +101,7 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
 
     for (size_t I = 0; I < num_guess_dets; ++I) {
         for (size_t J = I; J < num_guess_dets; ++J) {
-            double HIJ = fci_ints->slater_rules(bsdets[I], bsdets[J]);
+            double HIJ = fci_ints->slater_rules(guess_dets[I], guess_dets[J]);
             if (I == J)
                 HIJ += scalar_energy;
             H.set(I, J, HIJ);
@@ -121,7 +121,7 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
         double S2 = 0.0;
         for (size_t I = 0; I < num_guess_dets; ++I) {
             for (size_t J = 0; J < num_guess_dets; ++J) {
-                const double S2IJ = ::forte::spin2(bsdets[I], bsdets[J]);
+                const double S2IJ = ::forte::spin2(guess_dets[I], guess_dets[J]);
                 S2 += evecs.get(I, r) * evecs.get(J, r) * S2IJ;
             }
             norm += std::pow(evecs.get(I, r), 2.0);
