@@ -301,7 +301,10 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
+    sparse_solver.set_guess_per_root(options_->get_int("DL_GUESS_PER_ROOT"));
     sparse_solver.set_ndets_per_guess_state(options_->get_int("DL_DETS_PER_GUESS"));
+    sparse_solver.set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
+    sparse_solver.set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
     sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 
