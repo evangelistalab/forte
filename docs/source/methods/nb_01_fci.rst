@@ -238,6 +238,83 @@ quadrupole operators and the occupation numer of natural orbitals
            1B3u    0.143579      1B2u    0.143579      2B1u    0.024482
            ...
 
+Initial guess and parameters of the Davidson-Liu algorithm
+----------------------------------------------------------
+
+The Davidson-Liu procedure requires an initial set of guess vectors. In
+Forte, the initial guesses are determined by diagonalizing the
+Hamiltonian in a small space of determinants
+:math:`\{ |\Phi'_I\rangle \}`. This space is spin complete. The
+procedure starts with the diagonalization of the matrix representation
+of the :math:`\hat{S}^2` operator
+
+.. math::
+
+
+   (\mathbf{S}^2)_{IJ} = \langle \Phi'_I | \hat{S}^2 |\Phi'_J\rangle
+
+which allows to group the solution according to the multiplicity. After
+this step, we transform the Hamiltonian to the basis of eigenstates of
+:math:`\hat{S}^2` and diagonalize each block separately. The guess
+vectors are taken from the lowest energy solutions with the correct
+multiplicity. If a guess vector with wrong multiplicity happens to fall
+below the energy of guess vector with the correct multiplicity, we
+project the incorrect guess during the diagonalization procedure.
+
+The number of guess vectors and the size of the determinant space used
+to generate the initial guess is determined by options controlled by the
+user. Once the user specifies the number of target states (roots) and
+the multiplicity, then the option ``DL_GUESS_PER_ROOT`` (default = 1)
+controls the number of guess states requested, that is:
+
+Number of guess states = Number of roots :math:`\times`
+``DL_GUESS_PER_ROOT``
+
+The subspace of determinants selected for the initial guess has size
+controlled by the option ``DL_DETS_PER_GUESS`` (default = 50) , which
+determines the number of determinants included in the following way
+
+Number of determinants used to build guesses = Number of guess states
+:math:`\times` ``DL_DETS_PER_GUESS``
+
+Note that the number of determinants used in the initial guess procedure
+could be larger than the one determined by the equation above. This
+happens if the determinants selected do not form a spin-complete set. In
+this case, additional determinants are added to ensure that the
+determinant space is spin-complete.
+
+Two other options control the Davidson-Liu procedure: -
+``DL_SUBSPACE_PER_ROOT``: this option controls the maximum number of
+subspace vectors stored by the DL algorithm:
+
+::
+
+   Maximum number of subspace vectors =  Number of roots $\times$ `DL_SUBSPACE_PER_ROOT`
+
+-  ``DL_COLLAPSE_PER_ROOT``: once the maximum number of subspace vectors
+   is reached, the DL procedure forms the best solution vectors and
+   collapses (resets) the subspace size. This option controls the number
+   of vectors kept after collapes:
+
+   Number of subspace vectors after collapse = Number of roots
+   :math:`\times` ``DL_COLLAPSE_PER_ROOT``
+
+**When should you modify these options?** ``DL_GUESS_PER_ROOT`` and
+``DL_DETS_PER_GUESS`` should be modified **if the DL procedure has
+trouble finding the correct initial guess**. For example, if the
+determinant space is too small, the initial guess procedure may produce
+a list of states with incorrect energetic ordering. See the test case
+``forte/tests/methods/detci-5`` for an example.
+
+``DL_COLLAPSE_PER_ROOT`` and ``DL_SUBSPACE_PER_ROOT`` should be modified
+**if the DL procedure has trouble converging**.
+
+Note that these options need to be changed carefully. If you ask for
+more guess vectors than those available in a given space the code will
+fail. Additionally, ``DL_COLLAPSE_PER_ROOT`` should be greater or equal
+to ``DL_GUESS_PER_ROOT``, and ``DL_SUBSPACE_PER_ROOT`` should be greater
+than ``DL_COLLAPSE_PER_ROOT``.
+
 Spin-adapted FCI
 ----------------
 
@@ -365,3 +442,5 @@ composition and in the final energy summary that reports the value of
        --------------------------------------------------------
           5  (  0)    Ag     0      -12.596862494551   6.000000
        --------------------------------------------------------
+
+

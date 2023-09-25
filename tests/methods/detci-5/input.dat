@@ -24,6 +24,7 @@ set forte{
   active                  [2,0,0,0]
   casscf_e_convergence    12
   casscf_final_orbital    natural
+  dl_guess_per_root       2
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
