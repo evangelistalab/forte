@@ -217,6 +217,38 @@ void push_to_psi4_env_globals(double value, const std::string& label) {
     globals[label] = value;
 }
 
+bool is_near_integer(double value, double toll) {
+    return std::abs(value - std::round(value)) <= toll;
+}
+
+std::vector<std::tuple<int, size_t, size_t>> find_integer_groups(const std::vector<double>& vec,
+                                                                 double toll) {
+    std::vector<std::tuple<int, size_t, size_t>> groups;
+
+    auto it = vec.begin();
+    while (it != vec.end()) {
+        // Find the start of the group
+        it = std::find_if(it, vec.end(), [toll](double val) { return is_near_integer(val, toll); });
+
+        // If we found a start, find the end of the group
+        if (it != vec.end()) {
+            auto start = it;
+            it = std::adjacent_find(it, vec.end(), [toll](double a, double b) {
+                return is_near_integer(a, toll) and (std::fabs(a - b) > 2 * toll);
+            });
+
+            // If we didn't find an end, the group goes to the end of the vector
+            auto end = (it != vec.end()) ? it : vec.end() - 1;
+
+            groups.push_back({std::llround(*start), std::distance(vec.begin(), start),
+                              std::distance(vec.begin(), end) + 1});
+            it = end + 1;
+        }
+    }
+
+    return groups;
+}
+
 // void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
 //                             const std::shared_ptr<Vector>& diag_F,
 //                             const std::shared_ptr<Vector>& occupation) {

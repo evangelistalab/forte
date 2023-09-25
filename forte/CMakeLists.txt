@@ -220,6 +220,7 @@ sparse_ci/sigma_vector_full.cc
 sparse_ci/sigma_vector_sparse_list.cc
 sparse_ci/sorted_string_list.cc
 sparse_ci/sparse_ci_solver.cc
+sparse_ci/sparse_initial_guess.cc
 sparse_ci/sparse_operator.cc
 sparse_ci/sparse_exp.cc
 sparse_ci/sparse_fact_exp.cc

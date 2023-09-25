@@ -198,6 +198,11 @@ void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const 
 
 void push_to_psi4_env_globals(double value, const std::string& label);
 
+bool is_near_integer(double value, double toll = 1.0e-12);
+
+std::vector<std::tuple<int, size_t, size_t>> find_integer_groups(const std::vector<double>& vec,
+                                                                 double toll = 1.0e-12);
+
 namespace math {
 /// Return the number of combinations of n identical objects
 size_t combinations(size_t n, size_t k);

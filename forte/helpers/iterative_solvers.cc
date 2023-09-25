@@ -139,6 +139,8 @@ void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
     project_out_ = project_out;
 }
 
+size_t DavidsonLiuSolver::size() const { return size_; }
+
 std::shared_ptr<psi::Vector> DavidsonLiuSolver::eigenvalues() const { return lambda; }
 
 std::shared_ptr<psi::Matrix> DavidsonLiuSolver::eigenvectors() const { return bnew; }

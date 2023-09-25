@@ -192,9 +192,15 @@ class FCISolver : public ActiveSpaceMethod {
                            std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DavidsonLiuSolver& dls,
                            std::shared_ptr<psi::Vector> temp);
 
+    /// @brief Generate at least num_guess_states of the lowest energy determinants
+    /// @param diag
+    /// @param num_guess_states
+    /// @return
+    std::vector<Determinant> initial_guess_generate_dets(FCIVector& diag, size_t num_guess_states);
+
     /// @brief Compute initial guess vectors in the CSF basis
-    /// @note  This function is only used for spin-adapted calculations and works differnt than the
-    /// one used to generate the guess vectors in the determinant basis. Here we generate
+    /// @note  This function is only used for spin-adapted calculations and works differnt than
+    /// the one used to generate the guess vectors in the determinant basis. Here we generate
     /// num_guess_states CSFs and use those as initial guess.
     /// @param diag The diagonal of the Hamiltonian in the CSF basis
     /// @param num_guess_states The number of guess vectors to generate

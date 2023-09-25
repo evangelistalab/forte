@@ -40,16 +40,12 @@
 #include "helpers/string_algorithms.h"
 #include "string_address.h"
 
+#include "sparse_ci/sparse_initial_guess.h"
+
 namespace forte {
 
-void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
-                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                  DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp) {
-    local_timer t;
-
-    double nuclear_repulsion_energy = fci_ints->nuclear_repulsion_energy();
-    double scalar_energy = fci_ints->scalar_energy();
-
+std::vector<Determinant> FCISolver::initial_guess_generate_dets(FCIVector& diag,
+                                                                size_t num_guess_states) {
     size_t ndets = diag.size();
     // number of guess to be used must be at most as large as the number of determinants
     size_t num_guess_dets = std::min(num_guess_states * ndets_per_guess_, ndets);
@@ -72,30 +68,29 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
     // Make sure that the spin space is complete
     enforce_spin_completeness(guess_dets, nact);
     if (guess_dets.size() > num_guess_dets) {
-        String Ia, Ib;
-        size_t nnew_dets = guess_dets.size() - num_guess_dets;
         if (print_ > 0) {
             psi::outfile->Printf("\n  Initial guess space is incomplete.\n  Adding "
                                  "%d determinant(s).",
-                                 nnew_dets);
+                                 guess_dets.size() - num_guess_dets);
         }
-        for (size_t i = 0; i < nnew_dets; ++i) {
-            // Find the address of a determinant
-            for (size_t j = 0; j < nact; ++j) {
-                Ia[j] = guess_dets[num_guess_dets + i].get_alfa_bit(j);
-                Ib[j] = guess_dets[num_guess_dets + i].get_beta_bit(j);
-            }
-            const auto h = lists_->alfa_address()->sym(Ia);
-            const auto add_Ia = lists_->alfa_address()->add(Ia);
-            const auto add_Ib = lists_->beta_address()->add(Ib);
-            std::tuple<double, size_t, size_t, size_t> d(0.0, h, add_Ia, add_Ib);
-            dets.push_back(d);
-        }
-        // update the number of guess determinants
-        num_guess_dets = dets.size();
     }
+    return guess_dets;
+}
 
-    psi::Matrix H("H", num_guess_dets, num_guess_dets);
+void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
+                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                  DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp) {
+    local_timer t;
+
+    auto guess_dets = initial_guess_generate_dets(diag, num_guess_states);
+    size_t num_guess_dets = guess_dets.size();
+    psi::outfile->Printf("\n  Initial guess determinants:         %zu", num_guess_dets);
+
+    auto [H, S2evals, S2evecs] = compute_s2_transformed_hamiltonian_matrix(guess_dets, fci_ints);
+
+    double nuclear_repulsion_energy = fci_ints->nuclear_repulsion_energy();
+    double scalar_energy = fci_ints->scalar_energy();
+    // psi::Matrix H("H", num_guess_dets, num_guess_dets);
     psi::Matrix evecs("Evecs", num_guess_dets, num_guess_dets);
     psi::Vector evals("Evals", num_guess_dets);
 
@@ -136,10 +131,12 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
         // Save states of the desired multiplicity
         std::vector<std::tuple<size_t, size_t, size_t, double>> solution;
         for (size_t I = 0; I < num_guess_dets; ++I) {
-            auto det = dets[I];
-            double e;
-            size_t h, add_Ia, add_Ib;
-            std::tie(e, h, add_Ia, add_Ib) = det;
+            auto det = guess_dets[I];
+            String Ia = det.get_alfa_bits();
+            String Ib = det.get_beta_bits();
+            const auto h = lists_->alfa_address()->sym(Ia);
+            const auto add_Ia = lists_->alfa_address()->add(Ia);
+            const auto add_Ib = lists_->beta_address()->add(Ib);
             solution.push_back(std::make_tuple(h, add_Ia, add_Ib, evecs.get(I, r)));
         }
         guess.push_back(std::make_pair(state_multp, solution));

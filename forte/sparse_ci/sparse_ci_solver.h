@@ -137,16 +137,24 @@ class SparseCISolver {
     /// Set the number of determinants per root to use to form the initial guess
     void set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
 
-    /// Set the initial guess
+    /// Set the initial guess for the Davidson-Liu solver in the form of a vector of vectors of
+    /// pairs of the form (determinant index, coefficient). If this vector is not empty, then we
+    /// will use the user guess instead of the standard guess.
     void set_initial_guess(const std::vector<std::vector<std::pair<size_t, double>>>& guess);
-    void manual_guess(bool value);
+
+    /// Reset the initial guess
+    void reset_initial_guess();
 
   private:
     /// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
     void initial_guess_det(const DeterminantHashVec& space,
                            std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
-                           DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> b, int nroot,
-                           int multiplicity);
+                           DavidsonLiuSolver& dls, int multiplicity, bool do_spin_project);
+
+    std::vector<Determinant>
+    initial_guess_generate_dets(const DeterminantHashVec& space,
+                                const std::shared_ptr<SigmaVector> sigma_vector,
+                                const size_t num_guess_states) const;
 
     bool davidson_liu_solver(const DeterminantHashVec& space,
                              std::shared_ptr<SigmaVector> sigma_vector,
@@ -213,10 +221,8 @@ class SparseCISolver {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
     /// A variable to control printing information
     int print_ = 0;
-    /// Set the initial guess?
-    bool set_guess_ = false;
-    std::vector<std::vector<std::pair<size_t, double>>>
-        guess_; // nroot of guess size of (id, coefficent)
+    // nroot of guess size of (id, coefficent)
+    std::vector<std::vector<std::pair<size_t, double>>> user_guess_;
 };
 } // namespace forte
 

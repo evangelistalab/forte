@@ -663,7 +663,7 @@ void AdaptiveCI::diagonalize_P_space() {
         sparse_solver_->add_bad_states(bad_roots_);
     }
 
-    sparse_solver_->manual_guess(false);
+    sparse_solver_->reset_initial_guess();
     local_timer diag;
 
     auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);
