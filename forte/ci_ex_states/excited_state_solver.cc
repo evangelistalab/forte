@@ -89,6 +89,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     sparse_solver_->set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_->set_e_convergence(options->get_double("E_CONVERGENCE"));
     sparse_solver_->set_r_convergence(options->get_double("R_CONVERGENCE"));
+    sparse_solver_->set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
     sparse_solver_->set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     sparse_solver_->set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
     sparse_solver_->set_maxiter_davidson(options->get_int("DL_MAXITER"));

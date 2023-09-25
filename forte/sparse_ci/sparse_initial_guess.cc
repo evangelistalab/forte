@@ -4,8 +4,12 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
+#include "boost/format.hpp"
+
 #include "helpers/helpers.h"
 #include "helpers/iterative_solvers.h"
+#include "helpers/printing.h"
+#include "helpers/string_algorithms.h"
 
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
@@ -54,8 +58,8 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
                             const std::vector<size_t>& guess_dets_pos, size_t num_guess_states,
                             const std::shared_ptr<ActiveSpaceIntegrals>& as_ints,
                             DavidsonLiuSolver& dls, int multiplicity, bool do_spin_project,
+                            bool print,
                             const std::vector<std::vector<std::pair<size_t, double>>>& user_guess) {
-
     bool print_details_ = true;
 
     size_t num_guess_dets = guess_dets.size();
@@ -84,13 +88,23 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
             is_integer_root[i] = true;
         }
     }
-    psi::outfile->Printf("\n\n  The following solutions are not close to integer spin");
-    for (size_t i = 0; i < num_guess_dets; ++i) {
-        if (!is_integer_root[i])
-            psi::outfile->Printf("\n %5d    %4.2f", i, multp_vec[i]);
+    psi::outfile->Printf("\n  ========================");
+
+    // count the number of false in is_integer_root
+    size_t num_non_integer_roots =
+        std::count(is_integer_root.begin(), is_integer_root.end(), false);
+
+    if (num_non_integer_roots > 0) {
+        psi::outfile->Printf("\n\n  The following solutions are not close to integer spin");
+        for (size_t i = 0; i < num_guess_dets; ++i) {
+            if (!is_integer_root[i])
+                psi::outfile->Printf("\n %5d    %4.2f", i, multp_vec[i]);
+        }
     }
 
     std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>> guess;
+
+    std::vector<std::string> table;
 
     for (const auto& [m, start, end] : groups) {
         // setup dimension objects
@@ -124,6 +138,23 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
             double E = HS2evals_block.get(r);
             guess.push_back(std::make_tuple(m, E, det_C));
         }
+        int twice_S = m - 1;
+        std::string state_label = s2_label(twice_S);
+
+        for (int r = 0; r < std::min(end - start, num_guess_states); r++) {
+            table.push_back(boost::str(boost::format("    %3d  %20.12f  %.3f  %s") % r %
+                                       HS2evals_block.get(r) % std::fabs(m) % state_label.c_str()));
+        }
+    }
+
+    bool print_ = true;
+    if (print_) {
+        print_h2("Initial Guess");
+        psi::outfile->Printf("\n  ---------------------------------------------");
+        psi::outfile->Printf("\n    Root            Energy     <S^2>   Spin");
+        psi::outfile->Printf("\n  ---------------------------------------------");
+        psi::outfile->Printf("\n%s", join(table, "\n").c_str());
+        psi::outfile->Printf("\n  ---------------------------------------------");
     }
 
     double guess_max_energy = std::numeric_limits<double>::lowest();

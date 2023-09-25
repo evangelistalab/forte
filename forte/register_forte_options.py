@@ -530,8 +530,8 @@ def register_davidson_liu_options(options):
         "DL_DETS_PER_GUESS", 50, "The number of determinants to use for each guess state"
     )
 
+    options.add_int("DL_GUESS_PER_ROOT", 2, "The number of trial vectors per target root")
     options.add_int("DL_COLLAPSE_PER_ROOT", 2, "The number of trial vector to retain after collapsing")
-
     options.add_int("DL_SUBSPACE_PER_ROOT", 10, "The maxim number of trial vectors")
 
     options.add_int(

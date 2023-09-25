@@ -34,6 +34,7 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
                             const std::vector<size_t>& guess_dets_pos, size_t num_guess_states,
                             const std::shared_ptr<ActiveSpaceIntegrals>& as_ints,
                             DavidsonLiuSolver& dls, int multiplicity, bool do_spin_project,
+                            bool print,
                             const std::vector<std::vector<std::pair<size_t, double>>>& user_guess);
 
 } // namespace forte

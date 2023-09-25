@@ -67,6 +67,8 @@ void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
 
 void FCISolver::set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
 
+void FCISolver::set_guess_per_root(int value) { guess_per_root_ = value; }
+
 void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
@@ -124,6 +126,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_root(options->get_int("ROOT"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
     set_fci_iterations(options->get_int("FCI_MAXITER"));
+    set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
     set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
@@ -174,7 +177,7 @@ double FCISolver::compute_energy() {
     dls.set_subspace_per_root(subspace_per_root_);
 
     // determine the number of guess vectors
-    const size_t num_guess_states = std::min(collapse_per_root_ * nroot_, basis_size);
+    const size_t num_guess_states = std::min(guess_per_root_ * nroot_, basis_size);
 
     // Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {

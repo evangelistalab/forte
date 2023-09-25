@@ -117,6 +117,9 @@ class SparseCISolver {
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
 
+    /// Set the number of guess vectors for each root
+    void set_guess_per_root(int value);
+
     /// Set the number of collapse vectors for each root
     void set_collapse_per_root(int value);
 
@@ -206,8 +209,9 @@ class SparseCISolver {
     double e_convergence_ = 1.0e-12;
     /// The residual 2-norm convergence threshold
     double r_convergence_ = 1.0e-6;
+    /// The number of guess vectors for each root
+    size_t guess_per_root_ = 2;
     /// Number of collapse vectors per roots
-    /// This variable also defines the number of guess vectors (collapse_per_root_ * nroot_)
     size_t collapse_per_root_ = 2;
     /// Number of max subspace vectors per roots
     size_t subspace_per_root_ = 4;

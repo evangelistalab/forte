@@ -302,4 +302,19 @@ std::vector<Determinant> StringLists::make_determinants(int symmetry) const {
     return dets;
 }
 
+size_t StringLists::determinant_address(const Determinant& d) const {
+    const auto Ia = d.get_alfa_bits();
+    const auto Ib = d.get_beta_bits();
+    const size_t ha = alfa_address_->sym(Ia);
+    const size_t hb = beta_address_->sym(Ib);
+    const auto symmetry = ha ^ hb;
+    const size_t addIa = alfa_address_->add(Ia);
+    const size_t addIb = beta_address_->add(Ib);
+    size_t addI = addIa * beta_address_->strpi(hb) + addIb;
+    for (size_t h = 0; h < ha; h++) {
+        addI += alfa_address_->strpi(h) * beta_address_->strpi(symmetry ^ h);
+    }
+    return addI;
+}
+
 } // namespace forte

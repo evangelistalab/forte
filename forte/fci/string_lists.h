@@ -173,6 +173,8 @@ class StringLists {
     auto alfa_address_3h() { return alfa_address_3h_; }
     auto beta_address_3h() { return beta_address_3h_; }
 
+    size_t determinant_address(const Determinant& d) const;
+
     /// @return the alpha string list
     const auto& alfa_strings() const { return alfa_strings_; }
     /// @return the beta string list

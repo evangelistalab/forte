@@ -90,6 +90,9 @@ class FCISolver : public ActiveSpaceMethod {
     /// Set the convergence for FCI
     void set_fci_iterations(int value);
 
+    /// Set the number of guess vectors to use
+    void set_guess_per_root(int value);
+
     /// Set the number of collapse vectors for each root
     void set_collapse_per_root(int value);
 
@@ -156,8 +159,9 @@ class FCISolver : public ActiveSpaceMethod {
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
+    /// The number of guess vectors for each root
+    size_t guess_per_root_ = 2;
     /// The number of collapse vectors for each root.
-    /// This variable also defines the number of guess vectors (collapse_per_root_ * nroot_)
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
     size_t subspace_per_root_ = 4;

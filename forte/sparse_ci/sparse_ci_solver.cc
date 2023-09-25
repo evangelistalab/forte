@@ -68,6 +68,8 @@ void SparseCISolver::set_r_convergence(double value) { r_convergence_ = value; }
 
 void SparseCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
 
+void SparseCISolver::set_guess_per_root(int value) { guess_per_root_ = value; }
+
 void SparseCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void SparseCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
@@ -405,7 +407,6 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
 
     auto guess_dets = initial_guess_generate_dets(space, sigma_vector, num_guess_states);
     size_t num_guess_dets = guess_dets.size();
-    outfile->Printf("\n  Initial guess determinants:         %zu", guess_dets.size());
 
     std::vector<size_t> guess_dets_pos(num_guess_dets);
     for (size_t I = 0; I < num_guess_dets; ++I) {
@@ -413,7 +414,7 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     }
 
     find_initial_guess_det(guess_dets, guess_dets_pos, num_guess_states, sigma_vector->as_ints(),
-                           dls, multiplicity, do_spin_project, user_guess_);
+                           dls, multiplicity, do_spin_project, print_, user_guess_);
 }
 
 void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
@@ -557,18 +558,16 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         sigma_basis = std::make_shared<psi::Vector>("sigma", basis_size);
     }
 
+    const size_t num_guess_states = std::min(guess_per_root_ * nroot, basis_size);
+
     // Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(sigma_vector->as_ints(), spin_adapter_);
         dls.startup(Hdiag_vec);
-        // note: collapse_size() should be called after startup()
-        const size_t num_guess_states = std::min(dls.collapse_size(), basis_size);
         initial_guess_csf(Hdiag_vec, num_guess_states, dls, sigma_basis, multiplicity);
     } else {
         sigma_vector->get_diagonal(*sigma);
         dls.startup(sigma);
-        // note: collapse_size() should be called after startup()
-        const size_t num_guess_states = std::min(dls.collapse_size(), basis_size);
         initial_guess_det(space, sigma_vector, num_guess_states, dls, multiplicity, spin_project_);
     }
 

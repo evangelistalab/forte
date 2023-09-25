@@ -180,6 +180,7 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
 
     solver->set_e_convergence(e_convergence_);
     solver->set_r_convergence(r_convergence_);
+    solver->set_guess_per_root(options_->get_int("DL_GUESS_PER_ROOT"));
     solver->set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
     solver->set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
     solver->set_maxiter_davidson(maxiter_);
