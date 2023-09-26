@@ -193,8 +193,7 @@ class FCISolver : public ActiveSpaceMethod {
     /// @param dls The Davidson-Liu-Solver object
     /// @param temp A temporary vector of dimension ndets to store the guess vectors
     void initial_guess_det(FCIVector& diag, size_t num_guess_states,
-                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DavidsonLiuSolver& dls,
-                           std::shared_ptr<psi::Vector> temp);
+                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DavidsonLiuSolver& dls);
 
     /// @brief Generate at least num_guess_states of the lowest energy determinants
     /// @param diag
@@ -211,7 +210,7 @@ class FCISolver : public ActiveSpaceMethod {
     /// @param dls The Davidson-Liu-Solver object
     /// @param temp A temporary vector of dimension ncfs to store the guess vectors
     void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
-                           DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp);
+                           DavidsonLiuSolver& dls);
 
     /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
     /// @param fci_ints The integrals object

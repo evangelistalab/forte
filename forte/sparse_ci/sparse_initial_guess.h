@@ -27,6 +27,7 @@ compute_s2_transformed_hamiltonian_matrix(const std::vector<Determinant>& dets,
 /// @param dls The Davidson-Liu solver object
 /// @param multiplicity The desired multiplicity of the guess states
 /// @param do_spin_project Whether or not to project out guess states with the wrong multiplicity
+/// @param print Whether or not to print information about the guess procedure
 /// @param user_guess A vector of vectors of pairs of the form (determinant index, coefficient)
 /// passed in by the user. If this vector is not empty, then we will use the user guess instead.
 /// Spin projection can be still applied.
@@ -36,6 +37,17 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
                             DavidsonLiuSolver& dls, int multiplicity, bool do_spin_project,
                             bool print,
                             const std::vector<std::vector<std::pair<size_t, double>>>& user_guess);
+
+/// @brief Generate initial guess vectors for the Davidson-Liu solver starting from a set of guess
+/// configurations
+/// @param diag A vector of guess configurations energies
+/// @param num_guess_states The number of guess states to generate
+/// @param dls The Davidson-Liu solver object
+/// @param multiplicity The desired multiplicity of the guess states
+/// @param temp A temporary vector
+/// @param print Whether or not to print information about the guess procedure
+void find_initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                            DavidsonLiuSolver& dls, size_t multiplicity, bool print);
 
 } // namespace forte
 

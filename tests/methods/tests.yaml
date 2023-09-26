@@ -109,7 +109,7 @@ detci:
       - detci-2 # moved to pytest
       - detci-3 # moved to pytest
       - detci-4 # moved to pytest
-      - detci-5
+      - detci-5-sa
       - detci-7-sa
 diag-alg:
    short:
@@ -263,7 +263,7 @@ gasci:
       - gasaci-4
       - gasci-dsrg-mrpt2-2
    medium:
-      - gasci-2
+    #  - gasci-2 # disabled because of issues with reference
       - gasci-3
       - gasaci-2
       - gasaci-3

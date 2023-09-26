@@ -395,63 +395,10 @@ void SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
                            dls, multiplicity, do_spin_project, print_, user_guess_);
 }
 
-void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n,
-                                       DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp,
-                                       int multiplicity) {
-    local_timer t;
+void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                                       DavidsonLiuSolver& dls, int multiplicity) {
 
-    // Get the list of most important CSFs (those with the lowest energy)
-    std::vector<std::pair<double, size_t>> lowest_energy(
-        n, std::make_pair(std::numeric_limits<double>::max(), 0));
-
-    size_t nfound = 0;
-    const size_t ncsf = spin_adapter_->ncsf();
-    for (size_t i = 0; i < ncsf; ++i) {
-        double e = diag->get(i);
-        if (e < lowest_energy.back().first) {
-            nfound += 1;
-            lowest_energy.back() = std::make_pair(e, i);
-            std::sort(lowest_energy.begin(), lowest_energy.end());
-        }
-    }
-    // number of guess to be used
-    size_t nguess = std::min(nfound, n);
-
-    if (nguess == 0) {
-        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
-                                "multiplicity.\n\n");
-    }
-
-    std::vector<size_t> guess;
-    for (const auto& [e, i] : lowest_energy) {
-        guess.push_back(i);
-    }
-
-    // Set the initial guess
-    for (size_t g = 0; g < nguess; ++g) {
-        const auto& [e, i] = lowest_energy[g];
-        temp->zero();
-        temp->set(i, 1.0);
-        dls.add_guess(temp);
-    }
-
-    if (print_details_) {
-        print_h2("FCI Initial Guess");
-        psi::outfile->Printf("\n  Selected %zu CSF", n);
-        psi::outfile->Printf("\n  ---------------------------------------------");
-        psi::outfile->Printf("\n    CSF             Energy     <S^2>   Spin");
-        psi::outfile->Printf("\n  ---------------------------------------------");
-        double S2_target = 0.25 * (multiplicity - 1) * (multiplicity + 1);
-        auto label = s2_label(multiplicity - 1);
-        for (size_t g = 0; g < nguess; ++g) {
-            const auto& [e, i] = lowest_energy[g];
-            auto str =
-                boost::str(boost::format("  %6d %20.12f  %.3f  %s") % i % e % S2_target % label);
-            psi::outfile->Printf("\n%s", str.c_str());
-        }
-        psi::outfile->Printf("\n  ---------------------------------------------");
-        psi::outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.get());
-    }
+    find_initial_guess_csf(diag, num_guess_states, dls, multiplicity, print_details_);
 }
 
 std::shared_ptr<psi::Vector>
@@ -542,7 +489,7 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(sigma_vector->as_ints(), spin_adapter_);
         dls.startup(Hdiag_vec);
-        initial_guess_csf(Hdiag_vec, num_guess_states, dls, sigma_basis, multiplicity);
+        initial_guess_csf(Hdiag_vec, num_guess_states, dls, multiplicity);
     } else {
         sigma_vector->get_diagonal(*sigma);
         dls.startup(sigma);

@@ -79,7 +79,7 @@ std::vector<Determinant> FCISolver::initial_guess_generate_dets(FCIVector& diag,
 
 void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
                                   std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                  DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp) {
+                                  DavidsonLiuSolver& dls) {
     auto guess_dets = initial_guess_generate_dets(diag, num_guess_states);
     size_t num_guess_dets = guess_dets.size();
 
@@ -95,65 +95,8 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
 }
 
 void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
-                                  DavidsonLiuSolver& dls, std::shared_ptr<psi::Vector> temp) {
-    local_timer t;
-
-    // Get the list of most important CSFs
-    std::vector<std::pair<double, size_t>> lowest_energy(
-        num_guess_states, std::make_pair(std::numeric_limits<double>::max(), 0));
-    size_t nfound = 0;
-    const size_t ncsf = spin_adapter_->ncsf();
-    for (size_t i = 0; i < ncsf; ++i) {
-        double e = diag->get(i);
-        if (e < lowest_energy.back().first) {
-            nfound += 1;
-            lowest_energy.back() = std::make_pair(e, i);
-            std::sort(lowest_energy.begin(), lowest_energy.end());
-        }
-    }
-    // number of guess to be used
-    size_t num_guess_states_found = std::min(nfound, num_guess_states);
-
-    if (num_guess_states_found != num_guess_states) {
-        psi::outfile->Printf("\n  Warning: Found %zu CSF with the requested multiplicity instead "
-                             "of the number requested (%zu).\n",
-                             num_guess_states_found, num_guess_states);
-    }
-    if (num_guess_states_found == 0) {
-        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
-                                "multiplicity.\n\n");
-    }
-
-    std::vector<size_t> guess;
-    for (const auto& [e, i] : lowest_energy) {
-        guess.push_back(i);
-    }
-
-    // Set the initial guess
-    for (size_t g = 0; g < num_guess_states_found; ++g) {
-        const auto& [e, i] = lowest_energy[g];
-        temp->zero();
-        temp->set(i, 1.0);
-        dls.add_guess(temp);
-    }
-
-    if (print_) {
-        print_h2("FCI Initial Guess");
-        psi::outfile->Printf("\n  Selected %zu CSF", num_guess_states);
-        psi::outfile->Printf("\n  ---------------------------------------------");
-        psi::outfile->Printf("\n    CSF             Energy     <S^2>   Spin");
-        psi::outfile->Printf("\n  ---------------------------------------------");
-        double S2_target = 0.25 * (state().multiplicity() - 1) * (state().multiplicity() + 1);
-        auto label = s2_label(state().multiplicity() - 1);
-        for (size_t g = 0; g < num_guess_states_found; ++g) {
-            const auto& [e, i] = lowest_energy[g];
-            auto str =
-                boost::str(boost::format("  %6d %20.12f  %.3f  %s") % i % e % S2_target % label);
-            psi::outfile->Printf("\n%s", str.c_str());
-        }
-        psi::outfile->Printf("\n  ---------------------------------------------");
-        psi::outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.get());
-    }
+                                  DavidsonLiuSolver& dls) {
+    find_initial_guess_csf(diag, num_guess_states, dls, state().multiplicity(), print_);
 }
 
 std::shared_ptr<psi::Vector>

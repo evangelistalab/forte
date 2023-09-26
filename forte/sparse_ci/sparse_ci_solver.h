@@ -171,8 +171,8 @@ class SparseCISolver {
     /// @param dls The Davidson-Liu-Solver object
     /// @param temp A temporary vector of dimension ncfs to store the guess vectors
     /// @param multiplicity The multiplicity
-    void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n, DavidsonLiuSolver& dls,
-                           std::shared_ptr<psi::Vector> temp, int multiplicity);
+    void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                           DavidsonLiuSolver& dls, int multiplicity);
 
     /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
     /// @param ci_ints The integrals object

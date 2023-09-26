@@ -183,12 +183,12 @@ double FCISolver::compute_energy() {
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
         dls.startup(Hdiag_vec);
-        initial_guess_csf(Hdiag_vec, num_guess_states, dls, sigma_basis);
+        initial_guess_csf(Hdiag_vec, num_guess_states, dls);
     } else {
         Hdiag.form_H_diagonal(as_ints_);
         Hdiag.copy_to(sigma);
         dls.startup(sigma);
-        initial_guess_det(Hdiag, num_guess_states, as_ints_, dls, sigma);
+        initial_guess_det(Hdiag, num_guess_states, as_ints_, dls);
     }
 
     // Set a variable to track the convergence of the solver
