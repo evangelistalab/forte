@@ -14,7 +14,7 @@ class ActiveSpaceIntegrals;
 /// @param as_ints The active space integrals object
 /// @return A tuple of the form (S^2 transformed Hamiltonian matrix, S^2 eigenvalues, S^2
 /// eigenvectors)
-std::tuple<psi::Matrix, psi::Vector, psi::Matrix>
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
 compute_s2_transformed_hamiltonian_matrix(const std::vector<Determinant>& dets,
                                           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 

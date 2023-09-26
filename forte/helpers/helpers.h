@@ -91,6 +91,8 @@ std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t);
  */
 std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
+std::vector<double> Vector_to_vector_double(const psi::Vector& v);
+
 // /**
 //  * @brief view_modified_orbitals Write orbitals using molden
 //  * @param Ca  The Ca matrix to be viewed with MOLDEN

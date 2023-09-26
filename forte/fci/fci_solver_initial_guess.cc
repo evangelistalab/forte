@@ -88,6 +88,7 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
         guess_dets_pos[I] = lists()->determinant_address(guess_dets[I]);
     }
 
+    // here we use a standard guess procedure
     find_initial_guess_det(guess_dets, guess_dets_pos, num_guess_states, fci_ints, dls,
                            state().multiplicity(), true, print_,
                            std::vector<std::vector<std::pair<size_t, double>>>());

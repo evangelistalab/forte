@@ -113,6 +113,15 @@ std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t, psi::Dimension di
     return M_sym;
 }
 
+std::vector<double> Vector_to_vector_double(const psi::Vector& v) {
+    const size_t dim = v.dim();
+    std::vector<double> v_double(dim);
+    for (size_t i = 0; i < dim; ++i) {
+        v_double[i] = v.get(i);
+    }
+    return v_double;
+}
+
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     if (nele == 0)
         return {0.0, "B"};

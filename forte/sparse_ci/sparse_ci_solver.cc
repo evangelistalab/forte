@@ -39,6 +39,7 @@
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
+#include "helpers/determinant_helpers.h"
 #include "sparse_ci_solver.h"
 #include "ci_spin_adaptation.h"
 #include "sigma_vector_dynamic.h"
@@ -147,13 +148,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
     auto H = build_full_hamiltonian(space, as_ints);
 
     // Build the S^2 matrix
-    auto S2 = std::make_shared<psi::Matrix>("S^2", dim_space, dim_space);
-    for (size_t I = 0; I < dim_space; ++I) {
-        for (size_t J = 0; J < dim_space; ++J) {
-            double S2IJ = spin2(space[I], space[J]);
-            S2->set(I, J, S2IJ);
-        }
-    }
+    auto S2 = make_s2_matrix(space);
 
     const double target_S = 0.5 * (static_cast<double>(multiplicity) - 1.0);
 
@@ -322,28 +317,11 @@ std::shared_ptr<psi::Matrix>
 SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
                                        std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     // Build the H matrix
-    size_t dim_space = space.size();
-    auto H = std::make_shared<psi::Matrix>("H", dim_space, dim_space);
-    // If we are running DiskDF then we need to revert to a single thread loop
-    int threads = 0;
-    if (as_ints->get_integral_type() == DiskDF) {
-        threads = 1;
-    } else {
-        threads = omp_get_max_threads();
-    }
-#pragma omp parallel for schedule(dynamic) num_threads(threads)
-    for (size_t I = 0; I < dim_space; ++I) {
-        const Determinant& detI = space[I];
-        for (size_t J = I; J < dim_space; ++J) {
-            const Determinant& detJ = space[J];
-            double HIJ = as_ints->slater_rules(detI, detJ);
-            H->set(I, J, HIJ);
-            H->set(J, I, HIJ);
-        }
-    }
+    auto H = make_hamiltonian_matrix(space, as_ints);
 
     if (root_project_) {
         // Form the projection matrix
+        size_t dim_space = space.size();
         for (int n = 0, max_n = bad_states_.size(); n < max_n; ++n) {
             auto P = std::make_shared<psi::Matrix>("P", dim_space, dim_space);
             P->identity();

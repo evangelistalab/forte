@@ -10,6 +10,7 @@
 #include "helpers/iterative_solvers.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
+#include "helpers/determinant_helpers.h"
 
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
@@ -18,39 +19,23 @@
 
 namespace forte {
 
-std::tuple<psi::Matrix, psi::Vector, psi::Matrix>
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
 compute_s2_transformed_hamiltonian_matrix(const std::vector<Determinant>& dets,
                                           std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     size_t num_dets = dets.size();
     // Form the S^2 operator matrix and diagonalize it
-    psi::Matrix S2("S^2", num_dets, num_dets);
-    for (size_t I = 0; I < num_dets; I++) {
-        const Determinant& detI = dets[I];
-        for (size_t J = I; J < num_dets; J++) {
-            const Determinant& detJ = dets[J];
-            double S2IJ = spin2(detI, detJ);
-            S2.set(I, J, S2IJ);
-            S2.set(J, I, S2IJ);
-        }
-    }
-    psi::Matrix S2evecs("S^2", num_dets, num_dets);
-    psi::Vector S2evals("S^2", num_dets);
-    S2.diagonalize(S2evecs, S2evals);
+    auto S2 = make_s2_matrix(dets);
+
+    auto S2evecs = std::make_shared<psi::Matrix>("S^2", num_dets, num_dets);
+    auto S2evals = std::make_shared<psi::Vector>("S^2", num_dets);
+    S2->diagonalize(S2evecs, S2evals);
 
     // Form the Hamiltonian
-    psi::Matrix H("H", num_dets, num_dets);
-    for (size_t I = 0; I < num_dets; I++) {
-        const Determinant& detI = dets[I];
-        for (size_t J = I; J < num_dets; J++) {
-            const Determinant& detJ = dets[J];
-            double HIJ = as_ints->slater_rules(detI, detJ);
-            H.set(I, J, HIJ);
-            H.set(J, I, HIJ);
-        }
-    }
+    auto H = make_hamiltonian_matrix(dets, as_ints);
 
     // Project H onto the spin-adapted subspace
-    H.transform(S2evecs);
+    H->transform(S2evecs);
+
     return std::make_tuple(H, S2evals, S2evecs);
 }
 
@@ -60,10 +45,12 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
                             DavidsonLiuSolver& dls, int multiplicity, bool do_spin_project,
                             bool print,
                             const std::vector<std::vector<std::pair<size_t, double>>>& user_guess) {
-    bool print_details_ = true;
-
     size_t num_guess_dets = guess_dets.size();
-    psi::outfile->Printf("\n  Initial guess determinants:         %zu", guess_dets.size());
+
+    if (print) {
+        print_h2("Initial Guess");
+        psi::outfile->Printf("\n  Initial guess determinants:         %zu", guess_dets.size());
+    }
 
     auto [HS2full, S2evals, S2evecs] =
         compute_s2_transformed_hamiltonian_matrix(guess_dets, as_ints);
@@ -71,40 +58,44 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
     // Convert the S2evals to a std::vector
     std::vector<double> multp_vec(num_guess_dets);
     for (size_t i = 0; i < num_guess_dets; ++i) {
-        multp_vec[i] = std::sqrt(1.0 + 4.0 * S2evals.get(i));
+        multp_vec[i] = std::sqrt(1.0 + 4.0 * S2evals->get(i));
     }
 
     auto groups = find_integer_groups(multp_vec, 1.0e-6);
 
-    psi::outfile->Printf("\n\n  Classification of the initial guess solutions");
-    psi::outfile->Printf("\n  ========================");
-    psi::outfile->Printf("\n  Number   2S+1   Selected");
-    psi::outfile->Printf("\n  ------------------------");
     std::vector<bool> is_integer_root(num_guess_dets, false);
     for (const auto& [m, start, end] : groups) {
-        psi::outfile->Printf("\n %5d    %4d       %c", end - start, m,
-                             m == multiplicity ? '*' : ' ');
-        for (size_t i = start; i < end; ++i) {
+        for (size_t i = start; i < end; ++i)
             is_integer_root[i] = true;
-        }
     }
-    psi::outfile->Printf("\n  ========================");
+
+    if (print) {
+        psi::outfile->Printf("\n\n  Classification of the initial guess solutions");
+        psi::outfile->Printf("\n\n  Number   2S+1   Selected");
+        psi::outfile->Printf("\n  ------------------------");
+        for (const auto& [m, start, end] : groups) {
+            psi::outfile->Printf("\n %5d    %4d       %c", end - start, m,
+                                 m == multiplicity ? '*' : ' ');
+        }
+        psi::outfile->Printf("\n  ------------------------");
+    }
 
     // count the number of false in is_integer_root
     size_t num_non_integer_roots =
         std::count(is_integer_root.begin(), is_integer_root.end(), false);
 
     if (num_non_integer_roots > 0) {
-        psi::outfile->Printf("\n\n  The following solutions are not close to integer spin");
+        psi::outfile->Printf("\n\n  The following guess solutions are not close to integer spin "
+                             "and will be ignored");
         for (size_t i = 0; i < num_guess_dets; ++i) {
             if (!is_integer_root[i])
                 psi::outfile->Printf("\n %5d    %4.2f", i, multp_vec[i]);
         }
     }
 
-    std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>> guess;
-
-    std::vector<std::string> table;
+    std::map<int,
+             std::tuple<std::vector<double>, std::vector<double>, std::shared_ptr<psi::Matrix>>>
+        guess_info;
 
     for (const auto& [m, start, end] : groups) {
         // setup dimension objects
@@ -121,49 +112,35 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
 
         auto block_slice = psi::Slice(start_dim, end_dim);
         auto col_slice = psi::Slice(zero_dim, col_dim);
-        auto HS2_block = HS2full.get_block(block_slice, block_slice);
+        auto HS2_block = HS2full->get_block(block_slice, block_slice);
         psi::Vector HS2evals_block("HS2", block_dim);
         psi::Matrix HS2evecs_block("HS2", block_dim, block_dim);
         HS2_block->diagonalize(HS2evecs_block, HS2evals_block);
-        auto S2evecs_block = S2evecs.get_block(col_slice, block_slice);
+        auto S2evecs_block = S2evecs->get_block(col_slice, block_slice);
+        auto S2evals_block = S2evals->get_block(block_slice);
 
-        psi::Matrix C_block("C", col_dim, block_dim);
-        C_block.gemm(false, false, 1.0, S2evecs_block, HS2evecs_block, 0.0);
+        std::vector<double> energies = Vector_to_vector_double(HS2evals_block);
+        std::vector<double> s2 = Vector_to_vector_double(S2evals_block);
 
-        for (int r = 0; r < end - start; ++r) {
-            std::vector<std::pair<size_t, double>> det_C;
-            for (size_t I = 0; I < num_guess_dets; I++) {
-                det_C.push_back(std::make_pair(guess_dets_pos[I], C_block.get(I, r)));
-            }
-            double E = HS2evals_block.get(r);
-            guess.push_back(std::make_tuple(m, E, det_C));
-        }
-        int twice_S = m - 1;
-        std::string state_label = s2_label(twice_S);
+        auto C_block = std::make_shared<psi::Matrix>("C", col_dim, block_dim);
+        C_block->gemm(false, false, 1.0, S2evecs_block, HS2evecs_block, 0.0);
 
-        for (int r = 0; r < std::min(end - start, num_guess_states); r++) {
-            table.push_back(boost::str(boost::format("    %3d  %20.12f  %.3f  %s") % r %
-                                       HS2evals_block.get(r) % std::fabs(m) % state_label.c_str()));
-        }
+        guess_info[m] =
+            std::tuple<std::vector<double>, std::vector<double>, std::shared_ptr<psi::Matrix>>(
+                energies, s2, C_block);
     }
 
-    bool print_ = true;
-    if (print_) {
-        print_h2("Initial Guess");
-        psi::outfile->Printf("\n  ---------------------------------------------");
-        psi::outfile->Printf("\n    Root            Energy     <S^2>   Spin");
-        psi::outfile->Printf("\n  ---------------------------------------------");
-        psi::outfile->Printf("\n%s", join(table, "\n").c_str());
-        psi::outfile->Printf("\n  ---------------------------------------------");
-    }
-
+    // keep track of the maximum energy of the guess states with the correct multiplicity
     double guess_max_energy = std::numeric_limits<double>::lowest();
+
+    // keep track of the table of guess states
+    std::vector<std::pair<double, std::string>> table;
 
     // Add the user guess vectors if any are passed in
     if (user_guess.size() > 0) {
         auto b = std::make_shared<psi::Vector>("b", dls.size());
         // Use previous solution as guess
-        if (print_details_)
+        if (print)
             psi::outfile->Printf("\n  Adding %zu guess vectors passed in by the user",
                                  user_guess.size());
         for (const auto& guess_root : user_guess) {
@@ -177,53 +154,82 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
         }
     } else {
         // Use the initial guess. Here we sort out the roots of correct multiplicity
-        auto b = std::make_shared<psi::Vector>("b", dls.size());
-        std::vector<int> guess_list;
-        for (size_t g = 0; g < guess.size(); ++g) {
-            if (std::get<0>(guess[g]) == multiplicity)
-                guess_list.push_back(g);
-        }
-
-        if (guess_list.size() < num_guess_states) {
+        // check if multiplicity is in the guess
+        if (guess_info.find(multiplicity) == guess_info.end()) {
             throw std::runtime_error(
-                "\n\n  Found " + std::to_string(guess_list.size()) +
+                "\n\n  No guess with the requested multiplicity was found.\n\n");
+        }
+        auto& [energies, s2, C] = guess_info[multiplicity];
+
+        if (energies.size() < num_guess_states) {
+            throw std::runtime_error(
+                "\n\n  Found " + std::to_string(energies.size()) +
                 " guess(es) with the requested multiplicity but " +
                 std::to_string(num_guess_states) +
                 " were requested.\n  Increase the value of DL_DETS_PER_GUESS\n\n");
         }
 
+        auto b = std::make_shared<psi::Vector>("b", dls.size());
+
         for (size_t r = 0; r < num_guess_states; ++r) {
             b->zero();
-            for (auto& [pos, c] : std::get<2>(guess[guess_list[r]])) {
-                b->set(pos, c);
+            for (size_t I = 0; I < num_guess_dets; I++) {
+                b->set(guess_dets_pos[I], C->get(I, r));
             }
-            int guess_multiplicity = std::get<0>(guess[guess_list[r]]);
-            double guess_energy = std::get<1>(guess[guess_list[r]]);
-
-            if (print_details_)
-                psi::outfile->Printf("\n  Adding guess %-3d      2S+1 = %-3d  E = %.6f", r,
-                                     guess_multiplicity, guess_energy);
             dls.add_guess(b);
+
+            auto guess_energy = energies[r];
+            auto guess_s2 = s2[r];
             guess_max_energy = std::max(guess_max_energy, guess_energy);
+            auto state_label = s2_label(multiplicity - 1);
+
+            auto s = boost::str(boost::format("   %7s  %3d  %20.12f  %+.6f  added") %
+                                state_label.c_str() % r % guess_energy % guess_s2);
+
+            table.push_back(std::make_pair(guess_energy, s));
         }
     }
 
     if (do_spin_project) {
         // Prepare a list of bad roots to project out and pass them to the solver
         std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
-        for (auto& g : guess) {
-            const auto& [guess_multiplicity, guess_energy, guess_det_C] = g;
-            // project out solutions with wrong multiplicity and energy lower than good guesses
-            if ((guess_multiplicity != multiplicity) and (guess_energy <= guess_max_energy)) {
-                psi::outfile->Printf("\n  Projecting out guess  2S+1 = %-3d  E = %.6f",
-                                     guess_multiplicity, guess_energy);
-                bad_roots.push_back(guess_det_C);
+        for (auto& [mult, tup] : guess_info) {
+            auto& [energies, s2, C] = tup;
+            if (mult == multiplicity)
+                continue;
+            size_t n = energies.size();
+            for (size_t r = 0; r < n; r++) {
+                auto guess_energy = energies[r];
+                auto guess_s2 = s2[r];
+                if (guess_energy < guess_max_energy) {
+                    std::vector<std::pair<size_t, double>> guess_det_C(num_guess_dets);
+                    for (size_t I = 0; I < num_guess_dets; I++) {
+                        guess_det_C[I] = std::make_pair(guess_dets_pos[I], C->get(I, r));
+                    }
+                    bad_roots.push_back(guess_det_C);
+
+                    auto state_label = s2_label(mult - 1);
+
+                    auto s = boost::str(boost::format("   %7s  %3d  %20.12f  %+.6f  removed") %
+                                        state_label.c_str() % r % guess_energy % guess_s2);
+
+                    table.push_back(std::make_pair(guess_energy, s));
+                }
             }
         }
-        psi::outfile->Printf("\n\n  Projecting out %zu solutions", bad_roots.size());
         dls.set_project_out(bad_roots);
-    } else {
-        psi::outfile->Printf("\n\n  Projecting out no solutions");
+    }
+
+    std::sort(table.begin(), table.end());
+    std::vector<std::string> sorted_table;
+    for (const auto& [e, s] : table) {
+        sorted_table.push_back(s);
+    }
+    if (print) {
+        psi::outfile->Printf("\n\n    Spin    Root           Energy        <S^2>    Status");
+        psi::outfile->Printf("\n  -------------------------------------------------------");
+        psi::outfile->Printf("\n%s", join(sorted_table, "\n").c_str());
+        psi::outfile->Printf("\n  -------------------------------------------------------");
     }
 }
 } // namespace forte

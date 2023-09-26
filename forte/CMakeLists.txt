@@ -120,6 +120,7 @@ helpers/cube_file.cc
 helpers/disk_io.cc
 helpers/helpers.cc
 helpers/symmetry.cc
+helpers/determinant_helpers.cc
 helpers/iterative_solvers.cc
 helpers/lbfgs/lbfgs.cc
 helpers/lbfgs/lbfgs_param.cc
