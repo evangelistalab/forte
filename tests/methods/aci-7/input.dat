@@ -20,7 +20,7 @@ set {
   reference rhf
   e_convergence 10
   d_convergence 10
-  r_convergence 10
+  r_convergence 7
   docc [2,0,0,0,0,2,1,1]
   guess gwh
 }

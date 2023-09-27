@@ -263,9 +263,9 @@ gasci:
       - gasaci-4
       - gasci-dsrg-mrpt2-2
    medium:
-    #  - gasci-2 # disabled because of issues with reference
+      - gasci-2
       - gasci-3
-      - gasaci-2
+      # - gasaci-2 # disabled because of issues with reference
       - gasaci-3
    long:
       - gasaci-5

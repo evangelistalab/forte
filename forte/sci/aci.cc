@@ -197,13 +197,6 @@ void AdaptiveCI::find_q_space() {
 
     local_timer build_space;
 
-    // Sanity check
-    if (P_space_.size() < nroot_) {
-        std::string except = "The number of determinants in the P space is smaller than the number "
-                             "of roots requested! Select a different initial reference.";
-        throw std::runtime_error(except);
-    }
-
     // First get the F space, using one of many algorithms
     std::vector<std::pair<double, Determinant>> F_space;
     std::string screen_alg = options_->get_str("ACI_SCREEN_ALG");
@@ -280,11 +273,11 @@ void AdaptiveCI::find_q_space() {
         }
     }
 
-    if (add_aimed_degenerate_) {
+    if (add_aimed_degenerate_ and last_excluded < F_space.size()) {
         // Add missing determinants that have the same weight as the last one
+        const double first_included_energy = F_space[last_excluded + 1].first;
         double degeneracy_threshold = 1.0e-9;
         size_t num_extra = 0;
-        const double first_included_energy = F_space[last_excluded + 1].first;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
             const double f = F_space[J].first;
