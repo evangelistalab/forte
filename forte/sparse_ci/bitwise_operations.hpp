@@ -45,20 +45,13 @@ inline uint64_t ui64_clear_lowest_one_bit(uint64_t x) { return x & (x - 1); }
 
 /// @brief Find the index of the lowest bit set in a uint64_t word and clear it. A modified version
 ///        of x with the lowest bit set to 1 turned into a 0 is stored in x
-/// @param x the uint64_t integer to test
+/// @param x the uint64_t integer to test. This value is modified by the function
 /// @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
 inline uint64_t ui64_find_and_clear_lowest_one_bit(uint64_t& x) {
     uint64_t result = ui64_find_lowest_one_bit(x);
-    x = x & (x - 1);
+    x = ui64_clear_lowest_one_bit(x);
     return result;
 }
-
-/**
- * @brief Count the number of 1 from position 0 up to n - 1 and return the parity of this number.
- * @param x the uint64_t integer to test
- * @param n the end position (not counted)
- * @return the parity defined as parity = (-1)^(number of bits set between position 0 and n - 1)
- */
 
 /// @brief Count the number of 1's from position 0 up to n - 1 and return the parity of this number.
 /// @param x the uint64_t integer to test
