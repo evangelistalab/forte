@@ -29,7 +29,7 @@ set forte{
   restricted_docc      [1,0,0,0,0,1,0,0]
   active               [1,0,1,1,0,1,1,1]
   e_convergence        12
-  r_convergence        12
+  r_convergence        7
   casscf_maxiter       100
   casscf_g_convergence 1e-12
   casscf_e_convergence 1e-12

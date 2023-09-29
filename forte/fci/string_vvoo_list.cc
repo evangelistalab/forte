@@ -31,6 +31,8 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "fci/string_address.h"
+
 #include "string_lists.h"
 
 namespace forte {
@@ -51,15 +53,15 @@ std::vector<StringSubstitution>& StringLists::get_beta_vvoo_list(size_t p, size_
     return beta_vvoo_list[pqrs_pair];
 }
 
-void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
+void StringLists::make_vvoo_list(std::shared_ptr<StringAddress> addresser, VVOOList& list) {
     // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         int rs_sym = pq_sym;
         // Loop over irreps of p,r
-        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
             int q_sym = pq_sym ^ p_sym;
-            for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
-                int s_sym = rs_sym ^ r_sym;
+            for (size_t r_sym = 0; r_sym < nirrep_; ++r_sym) {
+                size_t s_sym = rs_sym ^ r_sym;
                 for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                     for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
                         for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
@@ -71,7 +73,7 @@ void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
                                 if ((p_abs > q_abs) && (r_abs > s_abs)) {
                                     // Avoid
                                     if (not((p_abs == r_abs) and (q_abs == s_abs))) {
-                                        make_vvoo(graph, list, p_abs, q_abs, r_abs, s_abs);
+                                        make_vvoo(addresser, list, p_abs, q_abs, r_abs, s_abs);
                                     }
                                 }
                             }
@@ -83,7 +85,8 @@ void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
     }
 }
 
-void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s) {
+void StringLists::make_vvoo(std::shared_ptr<StringAddress> addresser, VVOOList& list, int p, int q,
+                            int r, int s) {
     // Sort pqrs
     int a[4];
     a[0] = s;
@@ -114,14 +117,14 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
     if ((a[0] == a[1]) || (a[1] == a[2]) || (a[2] == a[3]))
         overlap = true;
 
-    int n = graph->nbits() - 4 + (overlap ? 1 : 0);
-    int k = graph->nones() - 2;
+    int n = addresser->nbits() - 4 + (overlap ? 1 : 0);
+    int k = addresser->nones() - 2;
 
     if (k >= 0 and n >= 0 and (n >= k)) {
         std::vector<int8_t> b(n);
         String I, J;
 
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
             // Create the key to the map
             std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
 
@@ -158,7 +161,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                     I[i] = b[k];
                     k++;
                 }
-                if (graph->sym(I) == h) {
+                if (string_class_->symmetry(I) == h) {
                     J = I;
                     short sign = 1;
                     // Apply a^{+}_p a^{+}_q a_s a_r to I
@@ -174,7 +177,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                             J[p] = true;
                             sign *= J.slater_sign(p);
                             list[pqrs_pair].push_back(
-                                StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
+                                StringSubstitution(sign, addresser->add(I), addresser->add(J)));
                         }
                     }
                 }

@@ -38,6 +38,7 @@
 #include "fci_vector.h"
 #include "string_lists.h"
 #include "helpers/printing.h"
+#include "fci/string_address.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -62,9 +63,11 @@ FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo>
     nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
 }
 
-void FCISolver::set_ntrial_per_root(int value) { ntrial_per_root_ = value; }
-
 void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
+
+void FCISolver::set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
+
+void FCISolver::set_guess_per_root(int value) { guess_per_root_ = value; }
 
 void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
@@ -82,8 +85,8 @@ void FCISolver::startup() {
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h) {
-        size_t nastr = lists_->alfa_graph()->strpi(h);
-        size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
+        size_t nastr = lists_->alfa_address()->strpi(h);
+        size_t nbstr = lists_->beta_address()->strpi(h ^ symmetry_);
         ndfci += nastr * nbstr;
     }
 
@@ -102,8 +105,7 @@ void FCISolver::startup() {
             {"Symmetry", symmetry_},
             {"Multiplicity", state().multiplicity()},
             {"Number of roots", nroot_},
-            {"Target root", root_},
-            {"Trial vectors per root", ntrial_per_root_}};
+            {"Target root", root_}};
 
         std::vector<std::pair<std::string, bool>> calculation_info_bool{
             {"Spin adapt", spin_adapt_}};
@@ -124,9 +126,10 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_root(options->get_int("ROOT"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
     set_fci_iterations(options->get_int("FCI_MAXITER"));
+    set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
-    set_ntrial_per_root(options->get_int("NTRIAL_PER_ROOT"));
+    set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
     set_print(options->get_int("PRINT"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
     set_r_convergence(options->get_double("R_CONVERGENCE"));
@@ -174,19 +177,22 @@ double FCISolver::compute_energy() {
     dls.set_subspace_per_root(subspace_per_root_);
     dls.set_save_state_at_destruction(restart_dl_);
 
+    // determine the number of guess vectors
+    const size_t num_guess_states = std::min(guess_per_root_ * nroot_, basis_size);
+
     // Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
         bool loaded_state = dls.startup(Hdiag_vec);
         if (not loaded_state) {
-            initial_guess_csf(Hdiag_vec, dls.collapse_size(), dls, sigma_basis);
+            initial_guess_csf(Hdiag_vec, num_guess_states, dls);
         }
     } else {
         Hdiag.form_H_diagonal(as_ints_);
         Hdiag.copy_to(sigma);
         bool loaded_state = dls.startup(sigma);
         if (not loaded_state) {
-            initial_guess_det(Hdiag, dls.collapse_size(), as_ints_, dls, sigma);
+            initial_guess_det(Hdiag, num_guess_states, as_ints_, dls);
         }
     }
 
@@ -265,9 +271,6 @@ double FCISolver::compute_energy() {
         throw std::runtime_error("FCI did not converge. Try increasing FCI_MAXITER.");
     }
 
-    // Compute final eigenvectors
-    dls.get_results();
-
     // Copy eigenvalues and eigenvectors from the Davidson-Liu solver
     evals_ = dls.eigenvalues();
     energies_ = std::vector<double>(nroot_, 0.0);
@@ -287,7 +290,7 @@ double FCISolver::compute_energy() {
 
     // Print determinants
     if (print_) {
-        print_solutions(collapse_per_root_, b, b_basis, dls);
+        print_solutions(num_guess_states, b, b_basis, dls);
     }
 
     // Optionally, test the RDMs
@@ -353,7 +356,7 @@ void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> 
         }
         C_->copy(b);
         std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
-            C_->max_abs_elements(guess_size * ntrial_per_root_);
+            C_->max_abs_elements(guess_size);
 
         for (auto& det_config : dets_config) {
             double ci_abs, ci;

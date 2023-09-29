@@ -38,6 +38,7 @@
 #include <algorithm>
 
 #include "psi4/psi4-dec.h"
+#include "fci/string_address.h"
 
 #include "string_lists.h"
 
@@ -53,12 +54,13 @@ std::vector<H1StringSubstitution>& StringLists::get_beta_1h_list(int h_I, size_t
     return beta_1h_list[I_tuple];
 }
 
-void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) {
-    int n = graph->nbits();
-    int k = graph->nones();
+void StringLists::make_1h_list(std::shared_ptr<StringAddress> addresser,
+                               std::shared_ptr<StringAddress> addresser_1h, H1List& list) {
+    int n = addresser->nbits();
+    int k = addresser->nones();
     String I, J;
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (int h_I = 0; h_I < nirrep_; ++h_I) {
+        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
             // Generate the strings 1111100000
             //                      { k }{n-k}
             for (int i = 0; i < n - k; ++i)
@@ -66,16 +68,16 @@ void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) 
             for (int i = std::max(0, n - k); i < n; ++i)
                 I[i] = true; // 1
             do {
-                if (graph->sym(I) == h_I) {
-                    size_t add_I = graph->rel_add(I);
+                if (string_class_->symmetry(I) == h_I) {
+                    size_t add_I = addresser->add(I);
                     for (size_t p = 0; p < ncmo_; ++p) {
                         if (I[p]) {
                             J = I;
                             J[p] = false;
                             short sign = J.slater_sign(p);
 
-                            int h_J = graph_1h->sym(J);
-                            size_t add_J = graph_1h->rel_add(J);
+                            int h_J = addresser_1h->sym(J);
+                            size_t add_J = addresser_1h->add(J);
 
                             std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
                             list[I_tuple].push_back(H1StringSubstitution(sign, p, add_I));
@@ -97,13 +99,14 @@ std::vector<H2StringSubstitution>& StringLists::get_beta_2h_list(int h_I, size_t
     return beta_2h_list[I_tuple];
 }
 
-void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) {
-    int n = graph->nbits();
-    int k = graph->nones();
+void StringLists::make_2h_list(std::shared_ptr<StringAddress> addresser,
+                               std::shared_ptr<StringAddress> addresser_2h, H2List& list) {
+    int n = addresser->nbits();
+    int k = addresser->nones();
     String I, J;
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (int h_I = 0; h_I < nirrep_; ++h_I) {
+        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
             // Generate the strings 1111100000
             //                      { k }{n-k}
             for (int i = 0; i < n - k; ++i)
@@ -111,8 +114,8 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) 
             for (int i = std::max(0, n - k); i < n; ++i)
                 I[i] = true; // 1
             do {
-                if (graph->sym(I) == h_I) {
-                    size_t add_I = graph->rel_add(I);
+                if (string_class_->symmetry(I) == h_I) {
+                    size_t add_I = addresser->add(I);
                     for (size_t q = 0; q < ncmo_; ++q) {
                         for (size_t p = q + 1; p < ncmo_; ++p) {
                             if (I[q] and I[p]) {
@@ -124,8 +127,8 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) 
 
                                 short sign = p_sign * q_sign;
 
-                                int h_J = graph_2h->sym(J);
-                                size_t add_J = graph_2h->rel_add(J);
+                                int h_J = addresser_2h->sym(J);
+                                size_t add_J = addresser_2h->add(J);
 
                                 std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
                                 list[I_tuple].push_back(H2StringSubstitution(sign, p, q, add_I));
@@ -155,13 +158,14 @@ std::vector<H3StringSubstitution>& StringLists::get_beta_3h_list(int h_I, size_t
  * that is: J = ± a^{+}_p a_q I. p and q are
  * absolute indices and I belongs to the irrep h.
  */
-void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) {
-    int n = graph->nbits();
-    int k = graph->nones();
+void StringLists::make_3h_list(std::shared_ptr<StringAddress> addresser,
+                               std::shared_ptr<StringAddress> addresser_3h, H3List& list) {
+    int n = addresser->nbits();
+    int k = addresser->nones();
     String I, J;
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (int h_I = 0; h_I < nirrep_; ++h_I) {
+        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
             // Generate the strings 1111100000
             //                      { k }{n-k}
             for (int i = 0; i < n - k; ++i)
@@ -169,8 +173,8 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
             for (int i = std::max(0, n - k); i < n; ++i)
                 I[i] = true; // 1
             do {
-                if (graph->sym(I) == h_I) {
-                    size_t add_I = graph->rel_add(I);
+                if (string_class_->symmetry(I) == h_I) {
+                    size_t add_I = addresser->add(I);
 
                     // apply a_r I
                     for (size_t r = 0; r < ncmo_; ++r) {
@@ -186,8 +190,8 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
                                     short p_sign = J.slater_sign(p);
                                     short sign = p_sign * q_sign * r_sign;
 
-                                    int h_J = graph_3h->sym(J);
-                                    size_t add_J = graph_3h->rel_add(J);
+                                    int h_J = addresser_3h->sym(J);
+                                    size_t add_J = addresser_3h->add(J);
 
                                     std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
                                     list[I_tuple].push_back(

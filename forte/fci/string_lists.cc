@@ -33,6 +33,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "string_lists.h"
+#include "string_address.h"
 
 using namespace psi;
 
@@ -47,50 +48,47 @@ StringLists::StringLists(psi::Dimension cmopi, std::vector<size_t> core_mo,
 
 void StringLists::startup() {
     cmopi_offset_.push_back(0);
-    for (int h = 1; h < nirrep_; ++h) {
+    for (size_t h = 1; h < nirrep_; ++h) {
         cmopi_offset_.push_back(cmopi_offset_[h - 1] + cmopi_[h - 1]);
     }
 
     std::vector<int> cmopi_int;
-    for (int h = 0; h < nirrep_; ++h) {
+    for (size_t h = 0; h < nirrep_; ++h) {
         cmopi_int.push_back(cmopi_[h]);
     }
 
-    for (int h = 0; h < nirrep_; h++) {
+    for (size_t h = 0; h < nirrep_; h++) {
         fill_n(back_inserter(cmo_sym_), cmopi_int[h], h); // insert h irrep_size[h] times
     }
 
-    // Allocate the alfa and beta graphs
-    alfa_graph_ = std::make_shared<BinaryGraph>(ncmo_, na_, cmopi_int);
-    beta_graph_ = std::make_shared<BinaryGraph>(ncmo_, nb_, cmopi_int);
-    pair_graph_ = std::make_shared<BinaryGraph>(ncmo_, 2, cmopi_int);
+    // this object is used to compute the class of a string (a generalization of the irrep)
+    string_class_ = std::make_shared<StringClass>(cmopi_int, StringClassType::FCI);
 
     if (na_ >= 1) {
-        alfa_graph_1h_ = std::make_shared<BinaryGraph>(ncmo_, na_ - 1, cmopi_int);
+        auto alfa_1h_strings = make_fci_strings(ncmo_, na_ - 1);
+        alfa_address_1h_ = std::make_shared<StringAddress>(ncmo_, na_ - 1, alfa_1h_strings);
     }
     if (nb_ >= 1) {
-        beta_graph_1h_ = std::make_shared<BinaryGraph>(ncmo_, nb_ - 1, cmopi_int);
+        auto beta_1h_strings = make_fci_strings(ncmo_, nb_ - 1);
+        beta_address_1h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 1, beta_1h_strings);
     }
 
     if (na_ >= 2) {
-        alfa_graph_2h_ = std::make_shared<BinaryGraph>(ncmo_, na_ - 2, cmopi_int);
+        auto alfa_2h_strings = make_fci_strings(ncmo_, na_ - 2);
+        alfa_address_2h_ = std::make_shared<StringAddress>(ncmo_, na_ - 2, alfa_2h_strings);
     }
     if (nb_ >= 2) {
-        beta_graph_2h_ = std::make_shared<BinaryGraph>(ncmo_, nb_ - 2, cmopi_int);
+        auto beta_2h_strings = make_fci_strings(ncmo_, nb_ - 2);
+        beta_address_2h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 2, beta_2h_strings);
     }
 
     if (na_ >= 3) {
-        alfa_graph_3h_ = std::make_shared<BinaryGraph>(ncmo_, na_ - 3, cmopi_int);
+        auto alfa_3h_strings = make_fci_strings(ncmo_, na_ - 3);
+        alfa_address_3h_ = std::make_shared<StringAddress>(ncmo_, na_ - 3, alfa_3h_strings);
     }
     if (nb_ >= 3) {
-        beta_graph_3h_ = std::make_shared<BinaryGraph>(ncmo_, nb_ - 3, cmopi_int);
-    }
-
-    nas_ = 0;
-    nbs_ = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        nas_ += alfa_graph_->strpi(h);
-        nbs_ += beta_graph_->strpi(h);
+        auto beta_3h_strings = make_fci_strings(ncmo_, nb_ - 3);
+        beta_address_3h_ = std::make_shared<StringAddress>(ncmo_, nb_ - 3, beta_3h_strings);
     }
 
     // local_timers
@@ -106,49 +104,61 @@ void StringLists::startup() {
 
     {
         local_timer t;
-        make_strings(alfa_graph_, alfa_strings_);
-        make_strings(beta_graph_, beta_string_);
+        alfa_strings_ = make_fci_strings(ncmo_, na_);
+        beta_strings_ = make_fci_strings(ncmo_, nb_);
+
+        alfa_address_ = std::make_shared<StringAddress>(ncmo_, na_, alfa_strings_);
+        beta_address_ = std::make_shared<StringAddress>(ncmo_, nb_, beta_strings_);
+
         str_list_timer += t.get();
     }
+
+    nas_ = 0;
+    nbs_ = 0;
+    for (size_t h = 0; h < nirrep_; ++h) {
+        nas_ += alfa_address_->strpi(h);
+        nbs_ += beta_address_->strpi(h);
+    }
+
     {
         local_timer t;
-        make_pair_list(nn_list);
+        make_pair_list(pair_list_);
         nn_list_timer += t.get();
     }
     {
         local_timer t;
-        make_vo_list(alfa_graph_, alfa_vo_list);
-        make_vo_list(beta_graph_, beta_vo_list);
+        make_vo_list(alfa_address_, alfa_vo_list);
+        make_vo_list(beta_address_, beta_vo_list);
         vo_list_timer += t.get();
     }
     {
         local_timer t;
-        make_oo_list(alfa_graph_, alfa_oo_list);
-        make_oo_list(beta_graph_, beta_oo_list);
+        make_oo_list(alfa_address_, alfa_oo_list);
+        make_oo_list(beta_address_, beta_oo_list);
         oo_list_timer += t.get();
     }
     {
         local_timer t;
-        make_1h_list(alfa_graph_, alfa_graph_1h_, alfa_1h_list);
-        make_1h_list(beta_graph_, beta_graph_1h_, beta_1h_list);
+        make_1h_list(alfa_address_, alfa_address_1h_, alfa_1h_list);
+        make_1h_list(beta_address_, beta_address_1h_, beta_1h_list);
         h1_list_timer += t.get();
     }
     {
         local_timer t;
-        make_2h_list(alfa_graph_, alfa_graph_2h_, alfa_2h_list);
-        make_2h_list(beta_graph_, beta_graph_2h_, beta_2h_list);
+        make_2h_list(alfa_address_, alfa_address_2h_, alfa_2h_list);
+        make_2h_list(beta_address_, beta_address_2h_, beta_2h_list);
         h2_list_timer += t.get();
     }
     {
         local_timer t;
-        make_3h_list(alfa_graph_, alfa_graph_3h_, alfa_3h_list);
-        make_3h_list(beta_graph_, beta_graph_3h_, beta_3h_list);
+        make_3h_list(alfa_address_, alfa_address_3h_, alfa_3h_list);
+        make_3h_list(beta_address_, beta_address_3h_, beta_3h_list);
         h3_list_timer += t.get();
     }
     {
         local_timer t;
-        make_vvoo_list(alfa_graph_, alfa_vvoo_list);
-        make_vvoo_list(beta_graph_, beta_vvoo_list);
+        make_vvoo_list(alfa_address_, alfa_vvoo_list);
+        make_vvoo_list(beta_address_, beta_vvoo_list);
         vvoo_list_timer += t.get();
     }
 
@@ -162,10 +172,10 @@ void StringLists::startup() {
         outfile->Printf("\n  Number of alpha strings       = %zu", nas_);
         outfile->Printf("\n  Number of beta strings        = %zu", nbs_);
         // if (na_ >= 3) {
-        //     outfile->Printf("\n  Number of alpha strings (N-3) = %zu", alfa_graph_3h_->nstr());
+        //     outfile->Printf("\n  Number of alpha strings (N-3) = %zu", alfa_address_3h_->nstr());
         // }
         // if (nb_ >= 3) {
-        //     outfile->Printf("\n  Number of beta strings (N-3)  = %zu", beta_graph_3h_->nstr());
+        //     outfile->Printf("\n  Number of beta strings (N-3)  = %zu", beta_address_3h_->nstr());
         // }
         outfile->Printf("\n  Timing for strings        = %10.3f s", str_list_timer);
         outfile->Printf("\n  Timing for NN strings     = %10.3f s", nn_list_timer);
@@ -184,12 +194,12 @@ void StringLists::startup() {
  * Generate all the pairs p > q with pq in pq_sym
  * these are stored as pair<int,int> in pair_list[pq_sym][pairpi]
  */
-void StringLists::make_pair_list(NNList& list) {
+void StringLists::make_pair_list(PairList& list) {
     // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         list.push_back(std::vector<std::pair<int, int>>(0));
         // Loop over irreps of p
-        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
             int q_sym = pq_sym ^ p_sym;
             for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                 for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
@@ -204,13 +214,13 @@ void StringLists::make_pair_list(NNList& list) {
     }
 }
 
-void StringLists::make_strings(GraphPtr graph, StringList& list) {
-    for (int h = 0; h < nirrep_; ++h) {
-        list.push_back(std::vector<String>(graph->strpi(h)));
+void StringLists::make_strings(std::shared_ptr<StringAddress> addresser, StringList& list) {
+    for (size_t h = 0; h < nirrep_; ++h) {
+        list.push_back(std::vector<String>(addresser->strpi(h)));
     }
 
-    int n = graph->nbits();
-    int k = graph->nones();
+    int n = addresser->nbits();
+    int k = addresser->nones();
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         String I;
@@ -224,42 +234,46 @@ void StringLists::make_strings(GraphPtr graph, StringList& list) {
         for (int i = std::max(0, n - k); i < n; ++i)
             I[i] = true; // 1
         do {
-            size_t sym_I = graph->sym(I);
-            size_t add_I = graph->rel_add(I);
+            size_t sym_I = string_class_->symmetry(I);
+            size_t add_I = addresser->add(I);
             list[sym_I][add_I] = I;
         } while (std::next_permutation(I_begin, I_end));
     }
 }
 
-StringList StringLists::make_strings(const int norb, const int ne, GraphPtr address) {
+StringList StringLists::make_fci_strings(const int norb, const int ne) {
     auto list = StringList();
     if ((ne >= 0) and (ne <= norb)) {
         String I;
         const auto I_begin = I.begin();
         const auto I_end = I.begin() + norb;
         // First we count the number of strings in each irrep
-        std::vector<size_t> strpi(nirrep_, 0);
+        auto nclasses = string_class_->nclasses(); // stores the number of strings in each class
+        std::vector<size_t> strpcls(nclasses, 0);
         I.zero();
         for (int i = std::max(0, norb - ne); i < norb; ++i)
             I[i] = true; // Generate the string 000011111
         do {
-            size_t sym_I = I.symmetry(cmo_sym_);
-            strpi[sym_I]++;
+            size_t sym_I = string_class_->symmetry(I);
+            strpcls[sym_I]++;
         } while (std::next_permutation(I_begin, I_end));
 
         // Then we allocate the memory
-        for (int h = 0; h < nirrep_; ++h) {
-            list.push_back(std::vector<String>(strpi[h]));
+        for (size_t h = 0; h < nclasses; ++h) {
+            list.push_back(std::vector<String>(strpcls[h]));
         }
 
         // Finally we generate the strings and store them in the list
         I.zero();
         for (int i = std::max(0, norb - ne); i < norb; ++i)
             I[i] = true; // Generate the string 000011111
+
+        std::vector<size_t> str_add(nclasses, 0);
         do {
-            size_t add_I = address->rel_add(I);
-            size_t sym_I = I.symmetry(cmo_sym_);
+            size_t sym_I = string_class_->symmetry(I);
+            size_t add_I = str_add[sym_I];
             list[sym_I][add_I] = I;
+            str_add[sym_I]++;
         } while (std::next_permutation(I_begin, I_end));
     }
     return list;
@@ -267,14 +281,14 @@ StringList StringLists::make_strings(const int norb, const int ne, GraphPtr addr
 
 std::vector<Determinant> StringLists::make_determinants(int symmetry) const {
     size_t ndets = 0;
-    for (int ha = 0; ha < nirrep_; ha++) {
+    for (size_t ha = 0; ha < nirrep_; ha++) {
         const int hb = symmetry ^ ha;
         ndets += alfa_strings()[ha].size() * beta_strings()[hb].size();
     }
     std::vector<Determinant> dets(ndets);
     size_t addI = 0;
     // Loop over irreps of alpha
-    for (int ha = 0; ha < nirrep_; ha++) {
+    for (size_t ha = 0; ha < nirrep_; ha++) {
         const int hb = symmetry ^ ha;
         // Loop over alpha strings in this irrep
         for (const auto& Ia : alfa_strings()[ha]) {
@@ -286,6 +300,21 @@ std::vector<Determinant> StringLists::make_determinants(int symmetry) const {
         }
     }
     return dets;
+}
+
+size_t StringLists::determinant_address(const Determinant& d) const {
+    const auto Ia = d.get_alfa_bits();
+    const auto Ib = d.get_beta_bits();
+    const size_t ha = alfa_address_->sym(Ia);
+    const size_t hb = beta_address_->sym(Ib);
+    const auto symmetry = ha ^ hb;
+    const size_t addIa = alfa_address_->add(Ia);
+    const size_t addIb = beta_address_->add(Ib);
+    size_t addI = addIa * beta_address_->strpi(hb) + addIb;
+    for (size_t h = 0; h < ha; h++) {
+        addI += alfa_address_->strpi(h) * beta_address_->strpi(symmetry ^ h);
+    }
+    return addI;
 }
 
 } // namespace forte

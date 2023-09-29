@@ -28,11 +28,14 @@ option_with_print(ENABLE_UNTESTED_CODE "Enable code not covered by code coverage
 include(autocmake_omp)  # no longer useful, probably need to copy psi4/external/common/lapack to cmake
 include(autocmake_mpi)  # MPI option A
 
-find_package(psi4 1.3 REQUIRED)
+find_package(psi4 1.4 REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(TargetLAPACK REQUIRED)
-find_package(ambit 0.5 REQUIRED)
+find_package(ambit 0.6 REQUIRED)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(DMRG_SOLVER "")
 if(ENABLE_CheMPS2)
@@ -120,6 +123,7 @@ helpers/cube_file.cc
 helpers/disk_io.cc
 helpers/helpers.cc
 helpers/symmetry.cc
+helpers/determinant_helpers.cc
 helpers/iterative_solvers.cc
 helpers/lbfgs/lbfgs.cc
 helpers/lbfgs/lbfgs_param.cc
@@ -220,6 +224,7 @@ sparse_ci/sigma_vector_full.cc
 sparse_ci/sigma_vector_sparse_list.cc
 sparse_ci/sorted_string_list.cc
 sparse_ci/sparse_ci_solver.cc
+sparse_ci/sparse_initial_guess.cc
 sparse_ci/sparse_operator.cc
 sparse_ci/sparse_exp.cc
 sparse_ci/sparse_fact_exp.cc
@@ -229,17 +234,16 @@ sparse_ci/sparse_state_vector.cc
 v2rdm/v2rdm.cc
 )
 
-target_link_libraries(_forte PRIVATE psi4::core)
+target_include_directories(_forte PRIVATE .)
+
 target_link_libraries(_forte PRIVATE tgt::MathOpenMP)
-#set_target_properties(forte PROPERTIES PREFIX "")
+target_link_libraries(_forte PRIVATE psi4::core)
 target_link_libraries(_forte PRIVATE ambit::ambit)
 
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(_forte PRIVATE CheMPS2::chemps2)
     add_definitions(-DHAVE_CHEMPS2)
 endif()
-
-target_include_directories(_forte PRIVATE .)
 
 if(ENABLE_MPI)
     target_link_libraries(_forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A

@@ -34,6 +34,7 @@
 #include "fci_vector.h"
 #include "binary_graph.hpp"
 #include "string_lists.h"
+#include "string_address.h"
 
 using namespace psi;
 
@@ -109,8 +110,8 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
             if (!alfa) {
                 C->zero();
                 Y->zero();
-                size_t maxIa = alfa_graph_->strpi(alfa_sym);
-                size_t maxIb = beta_graph_->strpi(beta_sym);
+                size_t maxIa = alfa_address_->strpi(alfa_sym);
+                size_t maxIb = beta_address_->strpi(beta_sym);
 
                 double** C0h = C_[alfa_sym]->pointer();
 
@@ -120,7 +121,7 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL = alfa ? beta_graph_->strpi(beta_sym) : alfa_graph_->strpi(alfa_sym);
+            size_t maxL = alfa ? beta_address_->strpi(beta_sym) : alfa_address_->strpi(alfa_sym);
 
             for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
@@ -154,8 +155,8 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
                 }
             }
             if (!alfa) {
-                size_t maxIa = alfa_graph_->strpi(alfa_sym);
-                size_t maxIb = beta_graph_->strpi(beta_sym);
+                size_t maxIa = alfa_address_->strpi(alfa_sym);
+                size_t maxIb = beta_address_->strpi(beta_sym);
 
                 double** HC = result.C_[alfa_sym]->pointer();
                 // Add Y1 transposed to Y
@@ -187,8 +188,8 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
             if (!alfa) {
                 C->zero();
                 Y->zero();
-                size_t maxIa = alfa_graph_->strpi(ha);
-                size_t maxIb = beta_graph_->strpi(hb);
+                size_t maxIa = alfa_address_->strpi(ha);
+                size_t maxIb = beta_address_->strpi(hb);
 
                 double** C0h = C_[ha]->pointer();
 
@@ -198,12 +199,12 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL = alfa ? beta_graph_->strpi(hb) : alfa_graph_->strpi(ha);
+            size_t maxL = alfa ? beta_address_->strpi(hb) : alfa_address_->strpi(ha);
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_nn_list_pair(pq_sym, pq);
+                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
 
@@ -224,11 +225,11 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_nn_list_pair(pq_sym, pq);
+                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
                     for (size_t rs = 0; rs < pq; ++rs) {
-                        const Pair& rs_pair = lists_->get_nn_list_pair(pq_sym, rs);
+                        const Pair& rs_pair = lists_->get_pair_list(pq_sym, rs);
                         int r_abs = rs_pair.first;
                         int s_abs = rs_pair.second;
                         double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, r_abs, s_abs)
@@ -260,8 +261,8 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
                 }
             }
             if (!alfa) {
-                size_t maxIa = alfa_graph_->strpi(ha);
-                size_t maxIb = beta_graph_->strpi(hb);
+                size_t maxIa = alfa_address_->strpi(ha);
+                size_t maxIb = beta_address_->strpi(hb);
 
                 double** HC = result.C_[ha]->pointer();
 
@@ -281,7 +282,7 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
 void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
-        size_t maxIa = alfa_graph_->strpi(Ia_sym);
+        size_t maxIa = alfa_address_->strpi(Ia_sym);
         int Ib_sym = Ia_sym ^ symmetry_;
         double** C = C_[Ia_sym]->pointer();
 
@@ -295,7 +296,7 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
             //            int Ja_sym = Ia_sym ^ rs_sym; // <- Looks like it
             //            should fail for states with symmetry != A1  URGENT
 
-            size_t maxJa = alfa_graph_->strpi(Ja_sym);
+            size_t maxJa = alfa_address_->strpi(Ja_sym);
             double** Y = result.C_[Ja_sym]->pointer();
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;

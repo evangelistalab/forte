@@ -65,6 +65,13 @@ bool DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
 
+    if (collapse_size_ > subspace_size_) {
+        std::string msg =
+            "DavidsonLiuSolver: collapse space size (" + std::to_string(collapse_size_) +
+            ") must be less or equal to subspace size (" + std::to_string(subspace_size_) + ")";
+        throw std::runtime_error(msg);
+    }
+
     basis_size_ = 0; // start with no vectors
     sigma_size_ = 0; // start with no sigma vectors
     iter_ = 0;
@@ -147,6 +154,8 @@ void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
     project_out_ = project_out;
 }
 
+size_t DavidsonLiuSolver::size() const { return size_; }
+
 std::shared_ptr<psi::Vector> DavidsonLiuSolver::eigenvalues() const { return lambda; }
 
 std::shared_ptr<psi::Matrix> DavidsonLiuSolver::eigenvectors() const { return bnew; }
@@ -166,8 +175,10 @@ SolverStatus DavidsonLiuSolver::update() {
     // If converged or exceeded the maximum number of iterations return true
     // if ((converged_ >= nroot_) or (iter_ > maxiter_)) return
     // SolverStatus::Converged;
-    if ((converged_ >= nroot_))
+    if ((converged_ >= nroot_)) {
+        get_results();
         return SolverStatus::Converged;
+    }
 
     PRINT_VARS("update")
 
@@ -176,7 +187,7 @@ SolverStatus DavidsonLiuSolver::update() {
     // form and diagonalize mini-matrix
     G->zero();
     G->gemm(false, false, 1.0, b_, sigma_, 0.0);
-    check_G_hermiticity();
+    G->hermitivitize();
     G->diagonalize(alpha, lambda);
 
     bool is_energy_converged = false;
@@ -191,8 +202,10 @@ SolverStatus DavidsonLiuSolver::update() {
         }
     }
 
-    if (size_ == 1)
+    if (size_ == 1) {
+        get_results();
         return SolverStatus::Converged;
+    }
 
     check_orthogonality();
 
@@ -237,6 +250,9 @@ SolverStatus DavidsonLiuSolver::update() {
 
     // if we do not add any new vector then we are in trouble and we better finish the computation
     if ((num_added == 0) and is_energy_converged) {
+        outfile->Printf("\n  Davidson-Liu solver:  No new vectors added, but energy converged. "
+                        "Finishing computation.");
+        get_results();
         return SolverStatus::Converged;
     }
 
@@ -489,12 +505,6 @@ void DavidsonLiuSolver::get_results() {
             v[i][I] /= norm;
         }
     }
-    //    if (print_level_){
-    //        outfile->Printf("\n  The Davidson-Liu algorithm converged in %d
-    //        iterations.", iter_);
-    //        outfile->Printf("\n  %s: %f s","Time spent diagonalizing
-    //        H",timing_);
-    //    }
 }
 
 void DavidsonLiuSolver::check_orthogonality() {

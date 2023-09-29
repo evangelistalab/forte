@@ -118,6 +118,9 @@ class DavidsonLiuSolver {
     /// Initialize the object
     bool startup(std::shared_ptr<psi::Vector> diagonal);
 
+    /// Return the size of the subspace
+    size_t size() const;
+
     /// Perform an update step
     SolverStatus update();
 
@@ -138,8 +141,6 @@ class DavidsonLiuSolver {
 
     /// Check that the eigenvectors are orthogonal. Throws if fails
     void check_orthogonality();
-    /// Check that the mini-Hamiltonian is Hermitian. Throws if fails
-    void check_G_hermiticity();
     /// Check if the the iterative procedure has converged
     /// @return a pair of boolean (is_energy_converged,is_residual_converged)
     std::pair<bool, bool> check_convergence();
@@ -170,8 +171,6 @@ class DavidsonLiuSolver {
     double r_convergence_ = 1.0e-6;
     /// The threshold used to discard correction vectors
     double schmidt_threshold_ = 1.0e-8;
-    /// The threshold used to detect a nonhermitian Hamiltonian
-    double nonhermitian_G_threshold_ = 1.0e-12;
     /// The threshold used to detect nonorthogonality among the roots
     double orthogonality_threshold_ = 1.0e-10;
     /// The dimension of the vectors

@@ -36,6 +36,7 @@
 #include "fci_vector.h"
 #include "binary_graph.hpp"
 #include "string_lists.h"
+#include "string_address.h"
 
 namespace forte {
 
@@ -51,8 +52,8 @@ void FCIVector::form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) 
         const auto& sb = lists_->beta_strings()[hb];
         for (const auto& Ia : sa) {
             for (const auto& Ib : sb) {
-                size_t addIa = alfa_graph_->rel_add(Ia);
-                size_t addIb = beta_graph_->rel_add(Ib);
+                size_t addIa = alfa_address_->add(Ia);
+                size_t addIb = beta_address_->add(Ib);
                 I.set_str(Ia, Ib);
                 C_ha[addIa][addIb] = fci_ints->energy(I) + fci_ints->scalar_energy() +
                                      fci_ints->nuclear_repulsion_energy();
@@ -79,8 +80,8 @@ std::vector<std::tuple<double, size_t, size_t, size_t>> FCIVector::min_elements(
 
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-        size_t maxIb = beta_graph_->strpi(beta_sym);
+        size_t maxIa = alfa_address_->strpi(alfa_sym);
+        size_t maxIb = beta_address_->strpi(beta_sym);
         double** C_ha = C_[alfa_sym]->pointer();
         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
             for (size_t Ib = 0; Ib < maxIb; ++Ib) {
@@ -113,8 +114,8 @@ FCIVector::max_abs_elements(size_t num_dets) {
 
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-        size_t maxIb = beta_graph_->strpi(beta_sym);
+        size_t maxIa = alfa_address_->strpi(alfa_sym);
+        size_t maxIb = beta_address_->strpi(beta_sym);
         double** C_ha = C_[alfa_sym]->pointer();
         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
             for (size_t Ib = 0; Ib < maxIb; ++Ib) {
