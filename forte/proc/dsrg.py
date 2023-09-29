@@ -161,7 +161,8 @@ class ProcedureDSRG:
         # Perform FNO-DSRG
         if options.get_bool("DSRG_FNO"):
             fno_data = dsrg_fno_procrouting(state_weights_map, scf_info, options, ints,
-                                            mo_space_info, active_space_solver, self.rdms)
+                                            mo_space_info, active_space_solver, self.rdms,
+                                            self.Ua)
             self.mo_space_info, self.ints, dept2, dhpt2 = fno_data
             if options.get_bool("DSRG_FNO_PT2_CORRECTION"):
                 self.fno_pt2_energy_shift = dept2

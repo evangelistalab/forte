@@ -33,7 +33,7 @@ import forte
 
 
 def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_info,
-                         active_space_solver, rdms):
+                         active_space_solver, rdms, Ua):
     """ Driver for frozen-natural-orbital truncated DSRG. """
     # read options
     pt2_correction = options.get_bool("DSRG_FNO_PT2_CORRECTION")
@@ -48,12 +48,13 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
     pt2_solver = forte.SA_MRPT2(rdms, scf_info, options, ints, mo_space_info)
     pt2_solver.set_state_weights_map(state_weights_map)
     pt2_solver.set_active_space_solver(active_space_solver)
+    pt2_solver.set_Uactv(Ua)
 
     if pt2_correction:
         dept2 = pt2_solver.compute_energy()
         if options.get_str("CALC_TYPE") != "SS" or options.get_str("RELAX_REF") != "NONE":
             dhpt2 = pt2_solver.compute_Heff_actv()
-    
+
     fnopi, Va = pt2_solver.build_fno()
     pt2_solver = None  # clean up
 
@@ -73,6 +74,7 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
         pt2_solver = forte.SA_MRPT2(rdms, scf_info, options, ints, mo_space_info)
         pt2_solver.set_state_weights_map(state_weights_map)
         pt2_solver.set_active_space_solver(active_space_solver)
+        pt2_solver.set_Uactv(Ua)
 
         dept2 -= pt2_solver.compute_energy()
         if options.get_str("CALC_TYPE") != "SS" or options.get_str("RELAX_REF") != "NONE":
