@@ -36,6 +36,11 @@
 
 using namespace psi;
 
+std::vector<std::string> __s2_labels{
+    "singlet", "doublet", "triplet", "quartet", "quintet", "sextet", "septet", "octet",
+    "nonet",   "decet",   "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+    "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
+
 namespace forte {
 
 void print_h1(const std::string& text, bool centerd, const std::string& left_filler,
@@ -107,5 +112,7 @@ void print_selected_options(const std::string& title,
     }
     outfile->Printf("\n");
 }
+
+const std::string& s2_label(int twiceS) { return __s2_labels.at(twiceS); }
 
 } // namespace forte

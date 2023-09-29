@@ -94,11 +94,13 @@ void ASCI::pre_iter_preparation() {
     sparse_solver_->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_->set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
+    sparse_solver_->set_guess_per_root(options_->get_int("DL_GUESS_PER_ROOT"));
+    sparse_solver_->set_ndets_per_guess_state(options_->get_int("DL_DETS_PER_GUESS"));
+    sparse_solver_->set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
+    sparse_solver_->set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
     sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver_->set_spin_project_full(options_->get_bool("SPIN_PROJECT_FULL"));
     sparse_solver_->set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-    sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
 }
 
 void ASCI::startup() {
@@ -173,7 +175,7 @@ void ASCI::diagonalize_P_space() {
         outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
     }
 
-    sparse_solver_->manual_guess(false);
+    sparse_solver_->reset_initial_guess();
     local_timer diag;
 
     auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);

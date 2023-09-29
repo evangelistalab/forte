@@ -116,6 +116,9 @@ class DavidsonLiuSolver {
     /// Initialize the object
     void startup(std::shared_ptr<psi::Vector> diagonal);
 
+    /// Return the size of the subspace
+    size_t size() const;
+
     /// Perform an update step
     SolverStatus update();
 
