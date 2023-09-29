@@ -55,13 +55,13 @@ std::vector<StringSubstitution>& StringLists::get_beta_vvoo_list(size_t p, size_
 
 void StringLists::make_vvoo_list(std::shared_ptr<StringAddress> addresser, VVOOList& list) {
     // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         int rs_sym = pq_sym;
         // Loop over irreps of p,r
-        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
             int q_sym = pq_sym ^ p_sym;
-            for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
-                int s_sym = rs_sym ^ r_sym;
+            for (size_t r_sym = 0; r_sym < nirrep_; ++r_sym) {
+                size_t s_sym = rs_sym ^ r_sym;
                 for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                     for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
                         for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {

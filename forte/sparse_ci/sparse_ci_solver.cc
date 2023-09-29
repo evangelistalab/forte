@@ -404,12 +404,13 @@ void SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t
 std::shared_ptr<psi::Vector>
 SparseCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                std::shared_ptr<SpinAdapter> spin_adapter) {
-    auto Hdiag_csf = std::make_shared<psi::Vector>(spin_adapter->ncsf());
+    auto ncsf = spin_adapter->ncsf();
+    auto Hdiag_csf = std::make_shared<psi::Vector>(ncsf);
     // Compute the diagonal elements of the Hamiltonian in the CSF basis
     double E0 = fci_ints->nuclear_repulsion_energy() + fci_ints->scalar_energy();
     // Compute the diagonal elements of the Hamiltonian in the CSF basis
     if (spin_adapt_full_preconditioner_) {
-        for (size_t i = 0, imax = spin_adapter->ncsf(); i < imax; ++i) {
+        for (size_t i = 0; i < ncsf; ++i) {
             double energy = E0;
             int I = 0;
             for (const auto& [det_add_I, c_I] : spin_adapter_->csf(i)) {
@@ -430,7 +431,7 @@ SparseCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             Hdiag_csf->set(i, energy);
         }
     } else {
-        for (size_t i = 0, imax = spin_adapter->ncsf(); i < imax; ++i) {
+        for (size_t i = 0; i < ncsf; ++i) {
             double energy = E0;
             for (const auto& [det_add_I, c_I] : spin_adapter_->csf(i)) {
                 energy += c_I * c_I * fci_ints->energy(dets_[det_add_I]);
