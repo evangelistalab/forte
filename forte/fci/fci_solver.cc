@@ -137,7 +137,6 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
     set_maxiter_davidson(options->get_int("DL_MAXITER"));
-    // set_save_dl_vectors(options->get_bool("DL_SAVE_VECTORS"));
 
     set_print(options->get_int("PRINT"));
 }

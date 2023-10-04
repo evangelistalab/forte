@@ -41,19 +41,6 @@
 
 namespace forte {
 
-/// @brief A flag to enable/disable debug messages
-// constexpr bool DEBUG_SPIN_ADAPTATION = true;
-#define DEBUG_SPIN_ADAPTATION 1
-
-#if DEBUG_SPIN_ADAPTATION
-template <typename... Args> void debug(const std::string& format, Args... args) {
-    std::string new_format = "[DEBUG] " + format;
-    psi::outfile->Printf(new_format.c_str(), args...);
-}
-#else
-template <typename... Args> void debug(const std::string& format, Args... args) {}
-#endif
-
 // Utility functions
 
 /// @brief A function to compute the Clebsch-Gordan coefficient

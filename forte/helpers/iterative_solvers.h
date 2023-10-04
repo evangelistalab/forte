@@ -131,7 +131,7 @@ class DavidsonLiuSolver {
   private:
     // ==> Class Private Functions <==
 
-    /// Check that the eigenvectors are orthogonal. Here we use a  Throws if fails
+    /// Check that the eigenvectors are orthogonal. Here we throw if the check fails
     void check_orthogonality();
     /// Check if the the iterative procedure has converged
     /// @return a pair of boolean (is_energy_converged,is_residual_converged)

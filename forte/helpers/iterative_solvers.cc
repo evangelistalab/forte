@@ -379,9 +379,6 @@ bool DavidsonLiuSolver::subspace_collapse() {
                 basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
-        // outfile->Printf("\n  Subspace collapse1: %d vectors left", basis_size_);
-        // S->gemm(false, true, 1.0, b_, b_, 0.0);
-        // S->print();
         return false;
     }
 
@@ -413,10 +410,6 @@ bool DavidsonLiuSolver::subspace_collapse() {
                 basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
-
-        // outfile->Printf("\n  Subspace collapse2: %d vectors left\n", basis_size_);
-        // S->gemm(false, true, 1.0, b_, b_, 0.0);
-        // S->print();
 
         /// Need new sigma vectors to continue, so return control to caller
         return true;
@@ -472,10 +465,6 @@ bool DavidsonLiuSolver::schmidt_add(std::shared_ptr<psi::Matrix> Amat, size_t ro
             max_overlap = std::max(max_overlap, std::fabs(C_DDOT(cols, A[i], 1, v, 1)));
         }
         double norm = C_DDOT(cols, v, 1, v, 1);
-
-        // outfile->Printf(
-        //     "\n  Schmidt orthogonalization cycle %d: max_overlap = %20.16f, norm = %20.16f",
-        //     cycle, max_overlap, norm);
 
         if ((max_overlap < schmidt_orthogonality_threshold_) and
             (std::fabs(norm - 1.0) < schmidt_orthogonality_threshold_)) {

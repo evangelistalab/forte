@@ -257,8 +257,6 @@ class ProcedureDSRG:
 
             # Call the active space solver using the dressed integrals
             self.active_space_solver.set_active_space_integrals(ints_dressed)
-            # Tell the active space solver to save the state of the iterative solver
-            self.active_space_solver.save_dl_vectors(False)
             # pass to the active space solver the unitary transformation between the original basis
             # and the current semi-canonical basis
             self.active_space_solver.set_Uactv(self.Ua, self.Ub)

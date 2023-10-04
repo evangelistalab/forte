@@ -533,8 +533,6 @@ def register_davidson_liu_options(options):
     options.add_int("DL_COLLAPSE_PER_ROOT", 2, "The number of trial vector to retain after collapsing")
     options.add_int("DL_SUBSPACE_PER_ROOT", 10, "The maxim number of trial vectors")
 
-    options.add_bool("DL_SAVE_VECTORS", False, "Save the DL vectors to disk?")
-
     options.add_int(
         "SIGMA_VECTOR_MAX_MEMORY", 67108864,
         "The maximum number of doubles stored in memory in the sigma vector algorithm"

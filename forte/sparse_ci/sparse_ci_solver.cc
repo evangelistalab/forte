@@ -80,9 +80,6 @@ void SparseCISolver::set_collapse_per_root(int value) { collapse_per_root_ = val
 
 void SparseCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
-/// Set if we save the Davidson-Liu vectors
-void SparseCISolver::set_save_dl_vectors(bool save) { save_dl_vectors_ = save; }
-
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
 
 void SparseCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }

@@ -130,8 +130,6 @@ class SparseCISolver {
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
 
-    void set_save_dl_vectors(bool save);
-
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options);
 
@@ -230,8 +228,6 @@ class SparseCISolver {
     size_t subspace_per_root_ = 4;
     /// Maximum number of iterations in the Davidson-Liu algorithm
     int maxiter_davidson_ = 100;
-    /// Save the Davidson-Liu vectors?
-    bool save_dl_vectors_ = false;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
     /// Additional roots to project out
