@@ -97,8 +97,6 @@ size_t DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
 
     h_diag->copy(*diagonal);
 
-    basis_size_ = load_state();
-
     // Print a summary of the calculation options
     table_printer printer;
     printer.add_double_data({{"Energy convergence threshold", e_convergence_},
@@ -120,11 +118,7 @@ size_t DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     return basis_size_;
 }
 
-DavidsonLiuSolver::~DavidsonLiuSolver() {
-    if (save_state_at_destruction_) {
-        save_state();
-    }
-}
+DavidsonLiuSolver::~DavidsonLiuSolver() {}
 
 void DavidsonLiuSolver::set_print_level(size_t n) { print_level_ = n; }
 
@@ -610,59 +604,4 @@ void DavidsonLiuSolver::check_orthogonality() {
         throw std::runtime_error(msg);
     }
 }
-
-void DavidsonLiuSolver::save_state() const {
-    // save the current state of the solver
-    std::filesystem::path filepath = "./dl.b";
-
-    write_psi_matrix(filepath.c_str(), *b_, true);
-    psi::outfile->Printf("\n\n  Storing the DL solver to file: %s", filepath.c_str());
-
-    VecFileIO file("dl.badroots");
-    file.write<std::pair<size_t, double>>(project_out_, true);
-}
-
-size_t DavidsonLiuSolver::load_state() {
-    // restore the state of the solver
-    std::filesystem::path filepath = "./dl.b";
-
-    if (not std::filesystem::exists(filepath)) {
-        return 0;
-    }
-
-    psi::outfile->Printf("\n  Restoring DL solver from file: %s", filepath.c_str());
-
-    read_psi_matrix("dl.b", *b_);
-
-    VecFileIO file("dl.badroots");
-    project_out_ = file.read_vector_of_vectors<std::pair<size_t, double>>();
-
-    // Compute the inner product matrix
-    S->gemm(false, true, 1.0, b_, b_, 0.0);
-
-    // Determine the number of non-zero vectors
-    size_t nnonzero = 0;
-    for (size_t i = 0; i < subspace_size_; i++) {
-        if (std::fabs(S->get(i, i) - 1.0) < schmidt_orthogonality_threshold_ * 3.0) {
-            nnonzero++;
-        }
-    }
-    // Check for orthogonality
-    try {
-        check_orthogonality();
-    } catch (const std::exception& e) {
-        psi::outfile->Printf("\n  Orthogonality check failed: %s", e.what());
-        return 0;
-    }
-
-    if (nnonzero < nroot_) {
-        outfile->Printf("\n  Not enought valid initial guess vectors. Using initial guess.");
-        return false;
-    }
-    outfile->Printf("\n  Restored %d vectors from file.", nnonzero);
-    outfile->Printf("\n  Restored %d bad roots from file.", project_out_.size());
-
-    return nnonzero;
-}
-
 } // namespace forte

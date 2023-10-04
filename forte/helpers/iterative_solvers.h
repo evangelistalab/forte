@@ -130,12 +130,6 @@ class DavidsonLiuSolver {
     /// A vector with the 2-norm of the residual for each root
     std::vector<double> residuals() const;
 
-    /// Save the state of the solver to a file
-    void save_state() const;
-
-    /// Load the state of the solver from a file and return the size of the subspace
-    size_t load_state();
-
   private:
     // ==> Class Private Functions <==
 
