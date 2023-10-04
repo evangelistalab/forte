@@ -68,7 +68,6 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
-    save_dl_vectors_ = options->get_bool("DL_SAVE_VECTORS");
     gas_diff_only_ = options->get_bool("PRINT_DIFFERENT_GAS_ONLY");
 
     auto nactv = mo_space_info_->size("ACTIVE");
@@ -117,7 +116,6 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
-        method->set_save_dl_vectors(save_dl_vectors_);
         state_method_map_[state] = method;
 
         if (read_initial_guess_) {

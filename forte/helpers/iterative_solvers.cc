@@ -27,7 +27,6 @@
  */
 
 #include <cmath>
-#include <filesystem>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsio/psio.hpp"
@@ -62,7 +61,7 @@ DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), n
     residual_.resize(nroot, 0.0);
 }
 
-size_t DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
+void DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     // set space size
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
@@ -110,12 +109,8 @@ size_t DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
                           {"Maximum subspace size", subspace_size_},
                           {"States read from file", basis_size_}});
 
-    printer.add_bool_data({{"Save state at destruction", save_state_at_destruction_}});
-
     std::string table = printer.get_table("Davidson-Liu Solver");
     outfile->Printf("%s", table.c_str());
-
-    return basis_size_;
 }
 
 DavidsonLiuSolver::~DavidsonLiuSolver() {}
@@ -133,10 +128,6 @@ double DavidsonLiuSolver::get_r_convergence() const { return r_convergence_; }
 void DavidsonLiuSolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
-
-void DavidsonLiuSolver::set_save_state_at_destruction(bool value) {
-    save_state_at_destruction_ = value;
-}
 
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
@@ -269,7 +260,8 @@ SolverStatus DavidsonLiuSolver::update() {
     // outfile->Printf("\n 2 Iteration %d:  %d converged roots", iter_, basis_size_);
     check_orthogonality();
 
-    // if we do not add any new vector then we are in trouble and we better finish the computation
+    // if we do not add any new vector then we are in trouble and we better finish the
+    // computation
     if ((num_added == 0) and is_energy_converged) {
         outfile->Printf("\n  Davidson-Liu solver:  No new vectors added, but energy converged. "
                         "Finishing computation.");

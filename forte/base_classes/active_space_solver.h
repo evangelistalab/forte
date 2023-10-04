@@ -189,9 +189,6 @@ class ActiveSpaceSolver {
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
-    /// Set if we want to save the information to restart the iterative solver
-    void set_save_dl_vectors(bool save) { save_dl_vectors_ = save; }
-
     /// Return the eigen vectors for a given state
     std::vector<ambit::Tensor> eigenvectors(const StateInfo& state) const;
     /// Set unitary matrices for changing orbital basis in RDMs when computing dipole moments
@@ -254,9 +251,6 @@ class ActiveSpaceSolver {
 
     /// The residual 2-norm convergence criterion
     double r_convergence_ = 1.0e-6;
-
-    /// Save the Davidson-Liu vectors?
-    bool save_dl_vectors_ = false;
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;

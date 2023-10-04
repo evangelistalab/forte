@@ -93,8 +93,6 @@ class DavidsonLiuSolver {
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
-    /// Save the state of the solver to a file at distruction?
-    void set_save_state_at_destruction(bool value);
 
     /// Return the size of the collapse vectors
     size_t collapse_size() const;
@@ -116,7 +114,7 @@ class DavidsonLiuSolver {
     std::shared_ptr<psi::Vector> eigenvector(size_t n) const;
 
     /// Initialize the object
-    size_t startup(std::shared_ptr<psi::Vector> diagonal);
+    void startup(std::shared_ptr<psi::Vector> diagonal);
 
     /// Return the size of the subspace
     size_t size() const;
@@ -192,8 +190,6 @@ class DavidsonLiuSolver {
     double timing_ = 0.0;
     /// Did we collapse the subspace in the last update?
     bool last_update_collapsed_ = false;
-    /// Should we save the state of the solver to a file at distruction?
-    bool save_state_at_destruction_ = false;
 
     /// Current set of basis vectors stored by row
     std::shared_ptr<psi::Matrix> b_;

@@ -171,7 +171,6 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     solver->set_options(options_);
     solver->set_spin_project(true);
     solver->set_print_details(not quiet_);
-    solver->set_save_dl_vectors(save_dl_vectors_);
 
     if (read_wfn_guess_) {
         outfile->Printf("\n  Reading wave function from disk as initial guess:");

@@ -500,7 +500,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
     dls.set_print_level(print_);
-    dls.set_save_state_at_destruction(save_dl_vectors_);
 
     // allocate vectors
     auto b = std::make_shared<psi::Vector>("b", fci_size);
@@ -520,17 +519,13 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     // Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(sigma_vector->as_ints(), spin_adapter_);
-        size_t loaded_state = dls.startup(Hdiag_vec);
-        if (not loaded_state) {
-            initial_guess_csf(Hdiag_vec, num_guess_states, dls, multiplicity);
-        }
+        dls.startup(Hdiag_vec);
+        initial_guess_csf(Hdiag_vec, num_guess_states, dls, multiplicity);
+
     } else {
         sigma_vector->get_diagonal(*sigma);
-        size_t loaded_state = dls.startup(sigma);
-        if (not loaded_state) {
-            initial_guess_det(space, sigma_vector, num_guess_states, dls, multiplicity,
-                              spin_project_);
-        }
+        dls.startup(sigma);
+        initial_guess_det(space, sigma_vector, num_guess_states, dls, multiplicity, spin_project_);
     }
 
     // Set a variable to track the convergence of the solver
