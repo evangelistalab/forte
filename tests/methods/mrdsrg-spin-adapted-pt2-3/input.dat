@@ -52,7 +52,6 @@ set forte{
   casscf_g_convergence   1e-8
   casscf_e_convergence   1e-12
   int_type               df
-  fci_maxiter            50
   casscf_final_orbital   unspecified
 }
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
@@ -71,7 +70,6 @@ set forte{
   e_convergence          12
   r_convergence          9
   int_type               diskdf
-  fci_maxiter            50
   semi_canonical_mix_inactive true
 }
 energy('forte', ref_wfn=wfn)

@@ -120,7 +120,6 @@ void SparseCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_spin_project_full(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
 
     set_print(options->get_int("PRINT"));
-    set_print_details(options->get_int("PRINT_DETAILS"));
 
     set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
     set_spin_adapt_full_preconditioner(options->get_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER"));
