@@ -37,9 +37,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
-
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
@@ -47,8 +44,6 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
-
-namespace py = pybind11;
 
 namespace forte {
 

@@ -20,6 +20,7 @@ set {
 }
 
 set forte {
+  dl_save_vectors true
   active_space_solver fci 
 }
 

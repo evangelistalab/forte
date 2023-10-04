@@ -168,6 +168,7 @@ void DETCI::diagonalize_hamiltonian() {
 
 std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     auto solver = std::make_shared<SparseCISolver>();
+    solver->set_options(options_);
     solver->set_spin_project(true);
     solver->set_print_details(not quiet_);
     solver->set_save_dl_vectors(save_dl_vectors_);

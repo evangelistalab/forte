@@ -36,6 +36,7 @@
 
 #include "helpers/timer.h"
 #include "helpers/disk_io.h"
+#include "helpers/vec_file_io.h"
 #include "helpers/printing.h"
 
 #include "helpers/iterative_solvers.h"
@@ -616,6 +617,9 @@ void DavidsonLiuSolver::save_state() const {
 
     write_psi_matrix(filepath.c_str(), *b_, true);
     psi::outfile->Printf("\n\n  Storing the DL solver to file: %s", filepath.c_str());
+
+    VecFileIO file("dl.badroots");
+    file.write<std::pair<size_t, double>>(project_out_, true);
 }
 
 size_t DavidsonLiuSolver::load_state() {
@@ -629,6 +633,9 @@ size_t DavidsonLiuSolver::load_state() {
     psi::outfile->Printf("\n  Restoring DL solver from file: %s", filepath.c_str());
 
     read_psi_matrix("dl.b", *b_);
+
+    VecFileIO file("dl.badroots");
+    project_out_ = file.read_vector_of_vectors<std::pair<size_t, double>>();
 
     // Compute the inner product matrix
     S->gemm(false, true, 1.0, b_, b_, 0.0);
@@ -653,6 +660,7 @@ size_t DavidsonLiuSolver::load_state() {
         return false;
     }
     outfile->Printf("\n  Restored %d vectors from file.", nnonzero);
+    outfile->Printf("\n  Restored %d bad roots from file.", project_out_.size());
 
     return nnonzero;
 }
