@@ -401,3 +401,7 @@ tdci:
 x2c:
    short:
       - x2c-1
+dl:
+   short:
+      - dl-restart-fci
+      - dl-restart-detci
