@@ -56,8 +56,6 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     auto de_maxiter = options->get_int("MAXITER");
     maxiter_ = dl_maxiter > de_maxiter ? dl_maxiter : de_maxiter;
 
-    dl_guess_size_ = options->get_int("DL_DETS_PER_GUESS");
-
     sigma_vector_type_ = string_to_sigma_vector_type(options->get_str("DIAG_ALGORITHM"));
     sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 
@@ -170,20 +168,9 @@ void DETCI::diagonalize_hamiltonian() {
 
 std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     auto solver = std::make_shared<SparseCISolver>();
-    solver->set_parallel(true);
     solver->set_spin_project(true);
     solver->set_print_details(not quiet_);
-    solver->set_spin_adapt(options_->get_bool("CI_SPIN_ADAPT"));
-    solver->set_spin_adapt_full_preconditioner(
-        options_->get_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER"));
-    solver->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-
-    solver->set_e_convergence(e_convergence_);
-    solver->set_r_convergence(r_convergence_);
-    solver->set_guess_per_root(options_->get_int("DL_GUESS_PER_ROOT"));
-    solver->set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
-    solver->set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
-    solver->set_maxiter_davidson(maxiter_);
+    solver->set_save_dl_vectors(save_dl_vectors_);
 
     if (read_wfn_guess_) {
         outfile->Printf("\n  Reading wave function from disk as initial guess:");
@@ -191,7 +178,6 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
         outfile->Printf(" %s!", status.c_str());
     }
 
-    solver->set_ndets_per_guess_state(dl_guess_size_);
     if (not initial_guess_.empty()) {
         solver->set_initial_guess(initial_guess_);
     }

@@ -89,7 +89,7 @@ void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 void ActiveSpaceMethod::set_quiet_mode(bool quiet) { quiet_ = quiet; }
 
-void ActiveSpaceMethod::set_restart_dl(bool restart_dl) { restart_dl_ = restart_dl; }
+void ActiveSpaceMethod::set_save_dl_vectors(bool save) { save_dl_vectors_ = save; }
 
 DeterminantHashVec ActiveSpaceMethod::get_PQ_space() { return final_wfn_; }
 

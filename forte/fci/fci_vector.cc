@@ -301,7 +301,7 @@ void FCIVector::zero() {
 }
 
 void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    print_h2("NATURAL ORBITALS");
+    print_h2("Natural Orbitals");
     psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
     auto nfdocc = mo_space_info->size("FROZEN_DOCC");
 

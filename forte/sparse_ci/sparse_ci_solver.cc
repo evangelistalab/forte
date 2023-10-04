@@ -29,23 +29,28 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+
 #include "boost/format.hpp"
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "forte-def.h"
+
+#include "base_classes/forte_options.h"
+
 #include "helpers/iterative_solvers.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
 #include "helpers/determinant_helpers.h"
-#include "sparse_ci_solver.h"
+
 #include "ci_spin_adaptation.h"
 #include "sigma_vector_dynamic.h"
 #include "determinant_functions.hpp"
-
 #include "sparse_initial_guess.h"
+
+#include "sparse_ci_solver.h"
 
 using namespace psi;
 
@@ -75,9 +80,14 @@ void SparseCISolver::set_collapse_per_root(int value) { collapse_per_root_ = val
 
 void SparseCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
+/// Set if we save the Davidson-Liu vectors
+void SparseCISolver::set_save_dl_vectors(bool save) { save_dl_vectors_ = save; }
+
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
 
 void SparseCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
+
+void SparseCISolver::set_print(int value) { print_ = value; }
 
 void SparseCISolver::set_spin_adapt_full_preconditioner(bool value) {
     spin_adapt_full_preconditioner_ = value;
@@ -93,6 +103,28 @@ void SparseCISolver::add_bad_states(std::vector<std::vector<std::pair<size_t, do
 }
 
 void SparseCISolver::set_root_project(bool value) { root_project_ = value; }
+
+void SparseCISolver::set_options(std::shared_ptr<ForteOptions> options) {
+    set_parallel(true);
+    set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
+    set_e_convergence(options->get_double("E_CONVERGENCE"));
+    set_r_convergence(options->get_double("R_CONVERGENCE"));
+
+    set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
+    set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
+    set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
+    set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
+    set_maxiter_davidson(options->get_int("DL_MAXITER"));
+
+    set_spin_project(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+    set_spin_project_full(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+
+    set_print(options->get_int("PRINT"));
+    set_print_details(options->get_int("PRINT_DETAILS"));
+
+    set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
+    set_spin_adapt_full_preconditioner(options->get_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER"));
+}
 
 void SparseCISolver::set_initial_guess(
     const std::vector<std::vector<std::pair<size_t, double>>>& guess) {
@@ -468,8 +500,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
-
-    dls.set_print_level(0);
+    dls.set_print_level(print_);
+    dls.set_save_state_at_destruction(save_dl_vectors_);
 
     // allocate vectors
     auto b = std::make_shared<psi::Vector>("b", fci_size);
@@ -489,12 +521,17 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     // Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(sigma_vector->as_ints(), spin_adapter_);
-        dls.startup(Hdiag_vec);
-        initial_guess_csf(Hdiag_vec, num_guess_states, dls, multiplicity);
+        size_t loaded_state = dls.startup(Hdiag_vec);
+        if (not loaded_state) {
+            initial_guess_csf(Hdiag_vec, num_guess_states, dls, multiplicity);
+        }
     } else {
         sigma_vector->get_diagonal(*sigma);
-        dls.startup(sigma);
-        initial_guess_det(space, sigma_vector, num_guess_states, dls, multiplicity, spin_project_);
+        size_t loaded_state = dls.startup(sigma);
+        if (not loaded_state) {
+            initial_guess_det(space, sigma_vector, num_guess_states, dls, multiplicity,
+                              spin_project_);
+        }
     }
 
     // Set a variable to track the convergence of the solver

@@ -190,7 +190,7 @@ class ActiveSpaceSolver {
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
     /// Set if we want to save the information to restart the iterative solver
-    void set_restart_dl(bool restart_dl);
+    void set_save_dl_vectors(bool save) { save_dl_vectors_ = save; }
 
     /// Return the eigen vectors for a given state
     std::vector<ambit::Tensor> eigenvectors(const StateInfo& state) const;
@@ -255,14 +255,14 @@ class ActiveSpaceSolver {
     /// The residual 2-norm convergence criterion
     double r_convergence_ = 1.0e-6;
 
+    /// Save the Davidson-Liu vectors?
+    bool save_dl_vectors_ = false;
+
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
 
     /// Only print the transitions between states with different gas
     bool gas_diff_only_;
-
-    /// Save information to restart the iterative solver?
-    bool restart_dl_ = false;
 
     /// Unitary matrices for orbital rotations used to compute dipole moments
     /// The issue is dipole integrals are transformed to semi-canonical orbital basis,

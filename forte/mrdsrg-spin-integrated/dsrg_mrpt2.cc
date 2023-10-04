@@ -247,12 +247,13 @@ void DSRG_MRPT2::build_fock() {
 
 void DSRG_MRPT2::print_options_summary() {
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info_int{{"ntamp", ntamp_}};
+    table_printer printer;
+    printer.add_int_data({{"ntamp", ntamp_}});
+    printer.add_double_data({{"flow parameter", s_},
+                             {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+                             {"intruder_tamp", intruder_tamp_}});
 
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"flow parameter", s_},
-        {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"intruder_tamp", intruder_tamp_}};
+    printer.add_bool_data({{"form Hbar3", foptions_->get_bool("FORM_HBAR3")}});
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"int_type", ints_type_},
@@ -270,13 +271,10 @@ void DSRG_MRPT2::print_options_summary() {
         calculation_info_string.emplace_back("internal_amp", foptions_->get_str("INTERNAL_AMP"));
         calculation_info_string.emplace_back("internal_amp_select", internal_amp_select_);
     }
+    printer.add_string_data(calculation_info_string);
 
-    std::vector<std::pair<std::string, bool>> calculation_info_bool{
-        {"form Hbar3", foptions_->get_bool("FORM_HBAR3")}};
-
-    // print information
-    print_selected_options("Calculation Information", calculation_info_string,
-                           calculation_info_bool, calculation_info_double, calculation_info_int);
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 
     if (foptions_->get_bool("MEMORY_SUMMARY")) {
         BTF_->print_memory_info();

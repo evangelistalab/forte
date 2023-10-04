@@ -318,14 +318,14 @@ class ActiveSpaceMethod {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quiet_mode(bool quiet);
 
+    /// Set if we save the Davidson-Liu vectors
+    void set_save_dl_vectors(bool save);
+
     /// Get the model space
     DeterminantHashVec get_PQ_space();
 
     /// Get model space coefficients
     std::shared_ptr<psi::Matrix> get_PQ_evecs();
-
-    /// Set if we want to save the information to restart the iterative solver
-    void set_restart_dl(bool restart_dl);
 
   protected:
     /// The list of active orbitals (absolute ordering)
@@ -361,6 +361,9 @@ class ActiveSpaceMethod {
     /// The residual 2-norm convergence criterion
     double r_convergence_ = 1.0e-6;
 
+    /// Save the Davidson-Liu vectors?
+    bool save_dl_vectors_ = false;
+
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
 
@@ -369,9 +372,6 @@ class ActiveSpaceMethod {
 
     /// Quiet printing
     bool quiet_ = false;
-
-    /// Save information to restart the iterative solver?
-    bool restart_dl_ = false;
 
     /// Eigenvalues
     std::shared_ptr<psi::Vector> evals_;

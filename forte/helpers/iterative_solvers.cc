@@ -36,6 +36,7 @@
 
 #include "helpers/timer.h"
 #include "helpers/disk_io.h"
+#include "helpers/printing.h"
 
 #include "helpers/iterative_solvers.h"
 
@@ -60,7 +61,7 @@ DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), n
     residual_.resize(nroot, 0.0);
 }
 
-bool DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
+size_t DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     // set space size
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
@@ -95,7 +96,27 @@ bool DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
 
     h_diag->copy(*diagonal);
 
-    return load_state();
+    basis_size_ = load_state();
+
+    // Print a summary of the calculation options
+    table_printer printer;
+    printer.add_double_data({{"Energy convergence threshold", e_convergence_},
+                             {"Residual convergence threshold", r_convergence_},
+                             {"Schmidt orthogonality threshold", schmidt_orthogonality_threshold_},
+                             {"Schmidt discard threshold", schmidt_discard_threshold_}});
+
+    printer.add_int_data({{"Size of the space", size_},
+                          {"Number of roots", nroot_},
+                          {"Collapse subspace size", collapse_size_},
+                          {"Maximum subspace size", subspace_size_},
+                          {"States read from file", basis_size_}});
+
+    printer.add_bool_data({{"Save state at destruction", save_state_at_destruction_}});
+
+    std::string table = printer.get_table("Davidson-Liu Solver");
+    outfile->Printf("%s", table.c_str());
+
+    return basis_size_;
 }
 
 DavidsonLiuSolver::~DavidsonLiuSolver() {
@@ -125,6 +146,9 @@ void DavidsonLiuSolver::set_save_state_at_destruction(bool value) {
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
 void DavidsonLiuSolver::add_guess(std::shared_ptr<psi::Vector> vec) {
+    if (basis_size_ >= subspace_size_) {
+        throw std::runtime_error("DavidsonLiuSolver: subspace is full.");
+    }
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
         b_->set(basis_size_, j, vec->get(j));
@@ -142,6 +166,9 @@ void DavidsonLiuSolver::get_b(std::shared_ptr<psi::Vector> vec) {
 
 bool DavidsonLiuSolver::add_sigma(std::shared_ptr<psi::Vector> vec) {
     PRINT_VARS("add_sigma")
+    if (sigma_size_ >= subspace_size_) {
+        throw std::runtime_error("DavidsonLiuSolver: sigma subspace is full.");
+    }
     // Place the new sigma vector at the end
     for (size_t j = 0; j < size_; ++j) {
         sigma_->set(j, sigma_size_, vec->get(j));
@@ -207,6 +234,7 @@ SolverStatus DavidsonLiuSolver::update() {
         return SolverStatus::Converged;
     }
 
+    // outfile->Printf("\n  Iteration %d:  %d converged roots", iter_, basis_size_);
     check_orthogonality();
 
     // Do subspace collapse
@@ -232,20 +260,18 @@ SolverStatus DavidsonLiuSolver::update() {
     size_t num_added = 0;
     for (size_t k = 0; k < nroot_; k++) {
         if (basis_size_ < subspace_size_) {
-            // check that the norm of the correction vector (before normalization) is "not small"
-            if (f_norm[k] > 0.01 * r_convergence_) {
-                // Schmidt-orthogonalize the correction vector
-                if (schmidt_add(b_, basis_size_, size_, f, k)) {
-                    basis_size_++; // <- Increase L if we add one more basis vector
-                    num_added += 1;
-                } else {
-                    outfile->Printf("\n  Rejected new correction vector %d with norm: %f", k,
-                                    f_norm[k]);
-                }
+            // Schmidt-orthogonalize the correction vector
+            if (schmidt_add(b_, basis_size_, size_, f, k)) {
+                basis_size_++;
+                num_added += 1;
+            } else {
+                outfile->Printf("\n  Rejected new correction vector %d with norm: %f", k,
+                                f_norm[k]);
             }
         }
     }
 
+    // outfile->Printf("\n 2 Iteration %d:  %d converged roots", iter_, basis_size_);
     check_orthogonality();
 
     // if we do not add any new vector then we are in trouble and we better finish the computation
@@ -335,9 +361,6 @@ std::vector<double> DavidsonLiuSolver::normalize_vectors(std::shared_ptr<psi::Ma
     for (size_t k = 0; k < n; k++) {
         double* v_k = v->pointer()[k];
         double norm = C_DDOT(size_, v_k, 1, v_k, 1);
-        // for (size_t I = 0; I < size_; I++) {
-        //     norm += v_p[k][I] * v_p[k][I];
-        // }
         norm = std::sqrt(norm);
         for (size_t I = 0; I < size_; I++) {
             v_k[I] /= norm;
@@ -351,26 +374,27 @@ bool DavidsonLiuSolver::subspace_collapse() {
     if (collapse_size_ + nroot_ > subspace_size_) { // in this case I will never
                                                     // be able to add new
                                                     // vectors
+        auto collapsable_size = std::min(collapse_size_, basis_size_);
 
         // collapse vectors
-        collapse_vectors();
+        collapse_vectors(collapsable_size);
 
         // normalize new vectors
-        normalize_vectors(bnew, collapse_size_);
+        normalize_vectors(bnew, collapsable_size);
 
         // Copy them into place
         b_->zero();
         sigma_->zero();
         basis_size_ = 0;
         sigma_size_ = 0;
-        for (size_t k = 0; k < collapse_size_; k++) {
-            double norm_bnew_k = std::fabs(bnew->get_row(0, k)->norm());
-            if (norm_bnew_k > schmidt_threshold_) {
-                if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
-                    basis_size_++; // <- Increase L if we add one more basis vector
-                }
+        for (size_t k = 0; k < collapsable_size; k++) {
+            if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
+                basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
+        // outfile->Printf("\n  Subspace collapse1: %d vectors left", basis_size_);
+        // S->gemm(false, true, 1.0, b_, b_, 0.0);
+        // S->print();
         return false;
     }
 
@@ -384,22 +408,28 @@ bool DavidsonLiuSolver::subspace_collapse() {
                             subspace_size_, basis_size_);
             outfile->Printf("Collapsing eigenvectors.\n");
         }
+        auto collapsable_size = std::min(collapse_size_, basis_size_);
+
         // collapse vectors
-        collapse_vectors();
+        collapse_vectors(collapsable_size);
 
         // normalize new vectors
-        normalize_vectors(bnew, collapse_size_);
+        normalize_vectors(bnew, collapsable_size);
 
         // Copy them into place
         b_->zero();
         sigma_->zero();
         basis_size_ = 0;
         sigma_size_ = 0;
-        for (size_t k = 0; k < collapse_size_; k++) {
+        for (size_t k = 0; k < collapsable_size; k++) {
             if (schmidt_add(b_, basis_size_, size_, bnew, k)) {
                 basis_size_++; // <- Increase L if we add one more basis vector
             }
         }
+
+        // outfile->Printf("\n  Subspace collapse2: %d vectors left\n", basis_size_);
+        // S->gemm(false, true, 1.0, b_, b_, 0.0);
+        // S->print();
 
         /// Need new sigma vectors to continue, so return control to caller
         return true;
@@ -407,12 +437,12 @@ bool DavidsonLiuSolver::subspace_collapse() {
     return false;
 }
 
-void DavidsonLiuSolver::collapse_vectors() {
+void DavidsonLiuSolver::collapse_vectors(size_t collapsable_size) {
     bnew->zero();
     double** alpha_p = alpha->pointer();
     double** b_p = b_->pointer();
     double** bnew_p = bnew->pointer();
-    for (size_t i = 0; i < collapse_size_; i++) {
+    for (size_t i = 0; i < collapsable_size; i++) {
         for (size_t j = 0; j < basis_size_; j++) {
             for (size_t k = 0; k < size_; k++) {
                 bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
@@ -427,19 +457,50 @@ bool DavidsonLiuSolver::schmidt_add(std::shared_ptr<psi::Matrix> Amat, size_t ro
     double** A = Amat->pointer();
     double* v = vvec->pointer()[l];
 
-    for (size_t i = 0; i < rows; i++) {
-        const auto dotval = C_DDOT(cols, A[i], 1, v, 1);
+    int max_orthogonalization_cycles = 10;
+
+    // here we do the schmidt orthogonalization several times. Often, one step is enough
+    // but sometimes it takes more than one step to guarantee orthogonality to within
+    // a tight tolerance. The option that controls this is schmidt_orthogonality_threshold_
+
+    for (int cycle = 0; cycle < max_orthogonalization_cycles; cycle++) {
+        // schmidt orthogonalize the v vector against the set of A[i]
+        for (size_t i = 0; i < rows; i++) {
+            const auto dotval = C_DDOT(cols, A[i], 1, v, 1);
+            for (size_t I = 0; I < cols; I++)
+                v[I] -= dotval * A[i][I];
+        }
+        // compute the norm of the vector
+        const auto normval = std::sqrt(C_DDOT(cols, v, 1, v, 1));
+
+        // if the norm is small, discard the vector
+        if (normval < schmidt_discard_threshold_)
+            return false;
         for (size_t I = 0; I < cols; I++)
-            v[I] -= dotval * A[i][I];
+            v[I] /= normval;
+
+        // check the overlap with the previous vectors
+        double max_overlap = 0.0;
+        for (size_t i = 0; i < rows; i++) {
+            max_overlap = std::max(max_overlap, std::fabs(C_DDOT(cols, A[i], 1, v, 1)));
+        }
+        double norm = C_DDOT(cols, v, 1, v, 1);
+
+        // outfile->Printf(
+        //     "\n  Schmidt orthogonalization cycle %d: max_overlap = %20.16f, norm = %20.16f",
+        //     cycle, max_overlap, norm);
+
+        if ((max_overlap < schmidt_orthogonality_threshold_) and
+            (std::fabs(norm - 1.0) < schmidt_orthogonality_threshold_)) {
+            // add the new vector to the set of A[i]
+            for (size_t I = 0; I < cols; I++)
+                A[rows][I] = v[I];
+            return true;
+        }
     }
 
-    const auto normval = std::sqrt(C_DDOT(cols, v, 1, v, 1));
-    if (normval < schmidt_threshold_)
-        return false;
-    for (size_t I = 0; I < cols; I++)
-        A[rows][I] = v[I] / normval;
-
-    return true;
+    // if we did not converge, return false
+    return false;
 }
 
 std::pair<bool, bool> DavidsonLiuSolver::check_convergence() {
@@ -508,6 +569,9 @@ void DavidsonLiuSolver::get_results() {
 }
 
 void DavidsonLiuSolver::check_orthogonality() {
+    // here we use a looser threshold than the one used in the schmidt orthogonalization
+    double orthogonality_threshold = schmidt_orthogonality_threshold_ * 3.0;
+
     // Compute the overlap matrix
     S->gemm(false, true, 1.0, b_, b_, 0.0);
 
@@ -516,9 +580,11 @@ void DavidsonLiuSolver::check_orthogonality() {
     for (size_t i = 0; i < basis_size_; ++i) {
         maxdiag = std::max(maxdiag, std::fabs(S->get(i, i) - 1.0));
     }
-    if (maxdiag > orthogonality_threshold_) {
+    if (maxdiag > orthogonality_threshold) {
+        outfile->Printf("\n\nDavidsonLiuSolver::check_orthogonality(): eigenvectors are not "
+                        "normalized!\nMaximum absolute deviation from normalization: %e",
+                        maxdiag);
         S->print();
-        outfile->Printf("\n  Maximum absolute deviation from normalization: %e", maxdiag);
         std::string msg =
             "DavidsonLiuSolver::check_orthogonality(): eigenvectors are not normalized!";
         throw std::runtime_error(msg);
@@ -533,73 +599,53 @@ void DavidsonLiuSolver::check_orthogonality() {
             }
         }
     }
-    if (maxoffdiag > orthogonality_threshold_) {
+    if (maxoffdiag > orthogonality_threshold) {
+        outfile->Printf("\n\nDavidsonLiuSolver::check_orthogonality(): eigenvectors are not "
+                        "normalized!\nMaximum absolute off-diagonal element of the overlap: %e",
+                        maxoffdiag);
         S->print();
-        outfile->Printf("\n  Maximum absolute off-diagonal element of the overlap: %e", maxoffdiag);
         std::string msg =
             "DavidsonLiuSolver::check_orthogonality(): eigenvectors are not orthogonal!";
         throw std::runtime_error(msg);
     }
 }
 
-void DavidsonLiuSolver::check_G_hermiticity() {
-    double maxnonherm = 0.0;
-    for (size_t i = 0; i < basis_size_; ++i) {
-        for (size_t j = i + 1; j < basis_size_; ++j) {
-            maxnonherm = std::max(maxnonherm, std::fabs(G->get(i, j) - G->get(j, i)));
-        }
-    }
-    if (maxnonherm > nonhermitian_G_threshold_) {
-        G->print();
-        outfile->Printf("\n  Maximum absolute off-diagonal element of the Hamiltonian: %e",
-                        maxnonherm);
-        std::string msg =
-            "DavidsonLiuSolver::check_G_hermiticity(): the Hamiltonian in not Hermitian";
-        throw std::runtime_error(msg);
-    } else {
-        // // symmetrize G just in case
-        // for (size_t i = 0; i < basis_size_; ++i) {
-        //     for (size_t j = i + 1; j < basis_size_; ++j) {
-        //         auto od = 0.5 * (G->get(i, j) + G->get(j, i));
-        //         G->set(i, j, od);
-        //         G->set(j, i, od);
-        //     }
-        // }
-    }
-}
-
 void DavidsonLiuSolver::save_state() const {
     // save the current state of the solver
-    write_psi_matrix("dl.b", *b_, true);
+    std::filesystem::path filepath = "./dl.b";
+
+    write_psi_matrix(filepath.c_str(), *b_, true);
+    psi::outfile->Printf("\n\n  Storing the DL solver to file: %s", filepath.c_str());
 }
 
-bool DavidsonLiuSolver::load_state() {
+size_t DavidsonLiuSolver::load_state() {
     // restore the state of the solver
     std::filesystem::path filepath = "./dl.b";
 
     if (not std::filesystem::exists(filepath)) {
-        return false;
+        return 0;
     }
 
     psi::outfile->Printf("\n  Restoring DL solver from file: %s", filepath.c_str());
 
     read_psi_matrix("dl.b", *b_);
 
+    // Compute the inner product matrix
+    S->gemm(false, true, 1.0, b_, b_, 0.0);
+
     // Determine the number of non-zero vectors
     size_t nnonzero = 0;
     for (size_t i = 0; i < subspace_size_; i++) {
-        if (std::fabs(S->get(i, i) - 1.0) < orthogonality_threshold_ * 2.0) {
+        if (std::fabs(S->get(i, i) - 1.0) < schmidt_orthogonality_threshold_ * 3.0) {
             nnonzero++;
         }
     }
-    basis_size_ += nnonzero;
-
     // Check for orthogonality
     try {
         check_orthogonality();
     } catch (const std::exception& e) {
         psi::outfile->Printf("\n  Orthogonality check failed: %s", e.what());
-        return false;
+        return 0;
     }
 
     if (nnonzero < nroot_) {
@@ -608,7 +654,7 @@ bool DavidsonLiuSolver::load_state() {
     }
     outfile->Printf("\n  Restored %d vectors from file.", nnonzero);
 
-    return true;
+    return nnonzero;
 }
 
 } // namespace forte

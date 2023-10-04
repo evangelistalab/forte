@@ -63,7 +63,7 @@ FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo>
     nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
 }
 
-void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
+void FCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
 
 void FCISolver::set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
 
@@ -78,6 +78,18 @@ void FCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
 void FCISolver::set_spin_adapt_full_preconditioner(bool value) {
     spin_adapt_full_preconditioner_ = value;
 }
+
+void FCISolver::set_test_rdms(bool value) { test_rdms_ = value; }
+
+void FCISolver::set_print_no(bool value) { print_no_ = value; }
+
+std::shared_ptr<FCIVector> FCISolver::get_FCIWFN() { return C_; }
+
+std::shared_ptr<psi::Matrix> FCISolver::evecs() { return eigen_vecs_; }
+
+std::shared_ptr<StringLists> FCISolver::lists() { return lists_; }
+
+int FCISolver::symmetry() { return symmetry_; }
 
 void FCISolver::startup() {
     // Create the string lists
@@ -99,42 +111,35 @@ void FCISolver::startup() {
     }
 
     if (print_) {
-        // Print a summary of options
-        std::vector<std::pair<std::string, int>> calculation_info{
-            {"Number of determinants", ndfci},
-            {"Symmetry", symmetry_},
-            {"Multiplicity", state().multiplicity()},
-            {"Number of roots", nroot_},
-            {"Target root", root_}};
-
-        std::vector<std::pair<std::string, bool>> calculation_info_bool{
-            {"Spin adapt", spin_adapt_}};
-
-        // Print some information
-        outfile->Printf("\n\n  ==> FCI Solver <==\n\n");
-        for (auto& str_dim : calculation_info) {
-            outfile->Printf("    %-39s %10d\n", str_dim.first.c_str(), str_dim.second);
-        }
-        for (auto& str_dim : calculation_info_bool) {
-            outfile->Printf("    %-39s %10s\n", str_dim.first.c_str(),
-                            str_dim.second ? "true" : "false");
-        }
+        table_printer printer;
+        printer.add_int_data({{"Number of determinants", ndfci},
+                              {"Symmetry", symmetry_},
+                              {"Multiplicity", state().multiplicity()},
+                              {"Number of roots", nroot_},
+                              {"Target root", root_}});
+        printer.add_bool_data({{"Spin adapt", spin_adapt_}});
+        std::string table = printer.get_table("FCI Solver");
+        outfile->Printf("%s", table.c_str());
     }
 }
 
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
-    set_root(options->get_int("ROOT"));
-    set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
-    set_fci_iterations(options->get_int("FCI_MAXITER"));
-    set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
-    set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
-    set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
-    set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
-    set_print(options->get_int("PRINT"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
     set_r_convergence(options->get_double("R_CONVERGENCE"));
     set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
     set_spin_adapt_full_preconditioner(options->get_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER"));
+    set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
+
+    set_root(options->get_int("ROOT"));
+
+    set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
+    set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
+    set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
+    set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
+    set_maxiter_davidson(options->get_int("DL_MAXITER"));
+    // set_save_dl_vectors(options->get_bool("DL_SAVE_VECTORS"));
+
+    set_print(options->get_int("PRINT"));
 }
 
 /*
@@ -175,7 +180,7 @@ double FCISolver::compute_energy() {
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
-    dls.set_save_state_at_destruction(restart_dl_);
+    dls.set_save_state_at_destruction(save_dl_vectors_);
 
     // determine the number of guess vectors
     const size_t num_guess_states = std::min(guess_per_root_ * nroot_, basis_size);
@@ -183,14 +188,14 @@ double FCISolver::compute_energy() {
     // Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
-        bool loaded_state = dls.startup(Hdiag_vec);
+        size_t loaded_state = dls.startup(Hdiag_vec);
         if (not loaded_state) {
             initial_guess_csf(Hdiag_vec, num_guess_states, dls);
         }
     } else {
         Hdiag.form_H_diagonal(as_ints_);
         Hdiag.copy_to(sigma);
-        bool loaded_state = dls.startup(sigma);
+        size_t loaded_state = dls.startup(sigma);
         if (not loaded_state) {
             initial_guess_det(Hdiag, num_guess_states, as_ints_, dls);
         }
@@ -210,7 +215,7 @@ double FCISolver::compute_energy() {
 
     double old_avg_energy = 0.0;
     int real_cycle = 1;
-    for (int cycle = 0; cycle < fci_iterations_; ++cycle) {
+    for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
         bool add_sigma = true;
         do {
             // get the next b vector and compute the sigma vector
@@ -268,7 +273,7 @@ double FCISolver::compute_energy() {
 
     if (converged == SolverStatus::NotConverged) {
         outfile->Printf("\n  FCI did not converge!");
-        throw std::runtime_error("FCI did not converge. Try increasing FCI_MAXITER.");
+        throw std::runtime_error("FCI did not converge. Try increasing DL_MAXITER.");
     }
 
     // Copy eigenvalues and eigenvectors from the Davidson-Liu solver

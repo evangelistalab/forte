@@ -43,7 +43,7 @@ set forte {
   dsrg_s             0.5
   relax_ref          once
   e_convergence      12
-  r_convergence      9
+  r_convergence      6
 }
 
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)

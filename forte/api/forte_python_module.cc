@@ -95,7 +95,8 @@ void export_ActiveSpaceMethod(py::module& m) {
         .def("set_quiet_mode", &ActiveSpaceMethod::set_quiet_mode)
         .def("dump_wave_function", &ActiveSpaceMethod::dump_wave_function)
         .def("read_wave_function", &ActiveSpaceMethod::read_wave_function)
-        .def("set_restart_dl", &ActiveSpaceMethod::set_restart_dl, "Enable/disable restart file");
+        .def("save_dl_vectors", &ActiveSpaceMethod::set_save_dl_vectors,
+             "Enable/disable restart file");
 }
 
 void export_ActiveSpaceSolver(py::module& m) {
@@ -126,7 +127,8 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function,
              "Dump wave functions to disk")
         .def("eigenvectors", &ActiveSpaceSolver::eigenvectors, "Return the CI wave functions")
-        .def("set_restart_dl", &ActiveSpaceSolver::set_restart_dl, "Enable/disable restart file");
+        .def("save_dl_vectors", &ActiveSpaceSolver::set_save_dl_vectors,
+             "Enable/disable restart file");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
