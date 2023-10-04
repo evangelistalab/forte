@@ -318,9 +318,6 @@ class ActiveSpaceMethod {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quiet_mode(bool quiet);
 
-    /// Set if we save the Davidson-Liu vectors
-    void set_save_dl_vectors(bool save);
-
     /// Get the model space
     DeterminantHashVec get_PQ_space();
 
@@ -360,9 +357,6 @@ class ActiveSpaceMethod {
 
     /// The residual 2-norm convergence criterion
     double r_convergence_ = 1.0e-6;
-
-    /// Save the Davidson-Liu vectors?
-    bool save_dl_vectors_ = false;
 
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
