@@ -1,11 +1,9 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 memory 1 gb
 
 r_scf = -154.979263255832
 r_avg_cas = -154.745701429278
-r_0ag = -155.618385970396
+r_0ag = -155.6183871646
 
 molecule butadiene{
 0 1
@@ -38,7 +36,7 @@ Escf, wfn = energy('scf', return_wfn=True)
 compare_values(r_scf, Escf, 8, "SCF energy")
 
 set forte{
-  job_type             casscf
+  job_type             mcscf_two_step
   int_type             df
   e_convergence        12
   dsrg_s               0.5
@@ -49,18 +47,15 @@ set forte{
   rotate_mos           [1,17,20]
   casscf_maxiter       250
   casscf_g_convergence 1.0e-6
-  casscf_e_convergence 1.0e-8
-  casscf_max_rotation  0.2
-  casscf_diis_start    20
-  casscf_diis_freq     4
-  fci_maxiter          1000
+  casscf_e_convergence 1.0e-12
+  ci_spin_adapt        true
 }
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
 
 set forte{
   job_type            newdriver
-  active_space_solver detci
+  active_space_solver fci
   correlation_solver  dsrg-mrpt2
   calc_type           sa
   int_type            df

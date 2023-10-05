@@ -120,7 +120,7 @@ class DeterminantSubstitutionLists {
     std::vector<int> mo_symmetry_;
 
     /// Print level
-    bool quiet_ = false;
+    bool quiet_ = true;
 };
 } // namespace forte
 

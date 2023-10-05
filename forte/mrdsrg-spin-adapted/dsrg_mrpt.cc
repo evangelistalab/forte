@@ -115,24 +115,22 @@ void DSRG_MRPT::read_options() {
 }
 
 void DSRG_MRPT::print_options() {
-    // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info_int{{"ntamp", ntamp_}};
-
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"flow parameter", s_},
-        {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"intruder_tamp", intruder_tamp_}};
-
-    std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"corr_level", corr_lv_},
-        {"int_type", foptions_->get_str("INT_TYPE")},
-        {"source operator", source_},
-        {"reference relaxation", ref_relax_},
-        {"core virtual source type", ccvv_source_}};
-
     // print information
-    print_selected_options("Calculation Information", calculation_info_string, {},
-                           calculation_info_double, calculation_info_int);
+    table_printer printer;
+    printer.add_int_data({{"ntamp", ntamp_}});
+
+    printer.add_double_data({{"flow parameter", s_},
+                             {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+                             {"intruder_tamp", intruder_tamp_}});
+
+    printer.add_string_data({{"corr_level", corr_lv_},
+                             {"int_type", foptions_->get_str("INT_TYPE")},
+                             {"source operator", source_},
+                             {"reference relaxation", ref_relax_},
+                             {"core virtual source type", ccvv_source_}});
+
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 void DSRG_MRPT::startup() {

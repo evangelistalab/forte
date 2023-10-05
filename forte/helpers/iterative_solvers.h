@@ -131,7 +131,7 @@ class DavidsonLiuSolver {
   private:
     // ==> Class Private Functions <==
 
-    /// Check that the eigenvectors are orthogonal. Throws if fails
+    /// Check that the eigenvectors are orthogonal. Here we throw if the check fails
     void check_orthogonality();
     /// Check if the the iterative procedure has converged
     /// @return a pair of boolean (is_energy_converged,is_residual_converged)
@@ -151,7 +151,7 @@ class DavidsonLiuSolver {
     /// Perform subspace collapse
     bool subspace_collapse();
     /// Collapse the vectors
-    void collapse_vectors();
+    void collapse_vectors(size_t collapsable_size);
 
     // ==> Class Private Data <==
 
@@ -162,9 +162,9 @@ class DavidsonLiuSolver {
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
     /// The threshold used to discard correction vectors
-    double schmidt_threshold_ = 1.0e-8;
-    /// The threshold used to detect nonorthogonality among the roots
-    double orthogonality_threshold_ = 1.0e-10;
+    double schmidt_discard_threshold_ = 1.0e-7;
+    /// The threshold used to guarantee orthogonality among the roots
+    double schmidt_orthogonality_threshold_ = 1.0e-12;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested

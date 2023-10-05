@@ -113,8 +113,6 @@ class DETCI : public ActiveSpaceMethod {
     /// Max iteration of Davidson-Liu
     int maxiter_;
 
-    /// Number of guess basis for Davidson-Liu
-    int dl_guess_size_;
     /// Initial guess vector
     std::vector<std::vector<std::pair<size_t, double>>> initial_guess_;
 

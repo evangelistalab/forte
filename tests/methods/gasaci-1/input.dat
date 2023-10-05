@@ -3,9 +3,9 @@
 
 import forte
 
-refscf = -14.839846512738 #TEST
-refaci = -14.889166944306 #TEST
-refacipt2 = -14.890163810516 #TEST
+refscf = -14.839846512738
+refaci = -14.88916699373 
+refacipt2 = -14.8901638599
 
 molecule li2{
 0 1
@@ -35,7 +35,6 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete false
-  r_convergence 0.1
   active_ref_type gas_single
   dl_guess_per_root 2
   dl_dets_per_guess 25

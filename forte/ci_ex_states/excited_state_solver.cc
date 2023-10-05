@@ -85,17 +85,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     first_iter_roots_ = options->get_bool("SCI_FIRST_ITER_ROOTS");
     transition_dipole_ = options->get_bool("TRANSITION_DIPOLES");
     sparse_solver_ = std::make_shared<SparseCISolver>();
-    sparse_solver_->set_parallel(true);
-    sparse_solver_->set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_->set_e_convergence(options->get_double("E_CONVERGENCE"));
-    sparse_solver_->set_r_convergence(options->get_double("R_CONVERGENCE"));
-    sparse_solver_->set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
-    sparse_solver_->set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
-    sparse_solver_->set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
-    sparse_solver_->set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
-    sparse_solver_->set_maxiter_davidson(options->get_int("DL_MAXITER"));
-    sparse_solver_->set_spin_project(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-    sparse_solver_->set_spin_project_full(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+    sparse_solver_->set_options(options);
     sci_->set_options(options);
 }
 

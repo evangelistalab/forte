@@ -87,8 +87,8 @@ class FCISolver : public ActiveSpaceMethod {
     /// Set the number of determinants per root to use to form the initial guess
     void set_ndets_per_guess_state(size_t value);
 
-    /// Set the convergence for FCI
-    void set_fci_iterations(int value);
+    /// Set the maximum number of DL iterations
+    void set_maxiter_davidson(int value);
 
     /// Set the number of guess vectors to use
     void set_guess_per_root(int value);
@@ -107,25 +107,25 @@ class FCISolver : public ActiveSpaceMethod {
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
-    void set_test_rdms(bool value) { test_rdms_ = value; }
+    void set_test_rdms(bool value);
 
     /// Print the Natural Orbitals
-    void set_print_no(bool value) { print_no_ = value; }
+    void set_print_no(bool value);
 
     /// Return a FCIVector
-    std::shared_ptr<FCIVector> get_FCIWFN() { return C_; }
+    std::shared_ptr<FCIVector> get_FCIWFN();
 
     /// Return eigen vectors (n_DL_guesses x ndets)
-    std::shared_ptr<psi::Matrix> evecs() { return eigen_vecs_; }
+    std::shared_ptr<psi::Matrix> evecs();
 
     /// Return the CI wave functions for current state symmetry (ndets x nroots)
     std::shared_ptr<psi::Matrix> ci_wave_functions() override;
 
     /// Return string lists
-    std::shared_ptr<StringLists> lists() { return lists_; }
+    std::shared_ptr<StringLists> lists();
 
     /// Return symmetry
-    int symmetry() { return symmetry_; }
+    int symmetry();
 
   private:
     // ==> Class Data <==
@@ -168,7 +168,7 @@ class FCISolver : public ActiveSpaceMethod {
     /// The number of determinants selected for each guess vector
     size_t ndets_per_guess_ = 10;
     /// Iterations for FCI
-    int fci_iterations_ = 30;
+    int maxiter_davidson_ = 30;
     /// Test the RDMs?
     bool test_rdms_ = false;
     /// Print the NO from the 1-RDM

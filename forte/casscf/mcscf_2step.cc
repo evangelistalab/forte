@@ -116,20 +116,7 @@ void MCSCF_2STEP::print_options() {
         {"Max number of micro iterations", micro_maxiter_},
         {"Min number of micro iterations", micro_miniter_}};
 
-    std::vector<std::pair<std::string, double>> info_double{{"Energy convergence", e_conv_},
-                                                            {"Gradient convergence", g_conv_},
-                                                            {"Max value for rotation", max_rot_}};
-
-    std::vector<std::pair<std::string, std::string>> info_string{
-        {"Integral type", int_type_},
-        {"CI solver type", ci_type_},
-        {"Final orbital type", orb_type_redundant_},
-        {"Derivative type", der_type_}};
-
-    std::vector<std::pair<std::string, bool>> info_bool{
-        {"Optimize orbitals", opt_orbs_},
-        {"Include internal rotations", internal_rot_},
-        {"Debug printing", debug_print_}};
+    std::vector<std::pair<std::string, std::string>> info_string;
 
     if (do_diis_) {
         info_int.emplace_back("DIIS start", diis_start_);
@@ -138,9 +125,21 @@ void MCSCF_2STEP::print_options() {
         info_int.emplace_back("Frequency of DIIS extrapolation", diis_freq_);
     }
 
-    // print some information
-    print_selected_options("Calculation Information", info_string, info_bool, info_double,
-                           info_int);
+    table_printer printer;
+    printer.add_int_data(info_int);
+    printer.add_double_data({{"Energy convergence", e_conv_},
+                             {"Gradient convergence", g_conv_},
+                             {"Max value for rotation", max_rot_}});
+    printer.add_string_data({{"Integral type", int_type_},
+                             {"CI solver type", ci_type_},
+                             {"Final orbital type", orb_type_redundant_},
+                             {"Derivative type", der_type_}});
+    printer.add_bool_data({{"Optimize orbitals", opt_orbs_},
+                           {"Include internal rotations", internal_rot_},
+                           {"Debug printing", debug_print_}});
+
+    std::string table = printer.get_table("MCSCF Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 double MCSCF_2STEP::compute_energy() {

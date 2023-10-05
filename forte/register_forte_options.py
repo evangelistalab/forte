@@ -373,7 +373,6 @@ def register_pci_options(options):
 
 def register_fci_options(options):
     options.set_group("FCI")
-    options.add_int('FCI_MAXITER', 30, 'Maximum number of iterations for FCI code')
     options.add_bool('FCI_TEST_RDMS', False, 'Test the FCI reduced density matrices?')
     options.add_bool('PRINT_NO', False, 'Print the NO from the rdm of FCI')
     options.add_bool('CI_SPIN_ADAPT', False, 'Spin-adapt the CI wavefunction?')

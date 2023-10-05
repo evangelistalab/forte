@@ -86,21 +86,11 @@ void ASCI::pre_iter_preparation() {
     ref.build_reference(initial_reference_);
     P_space_ = initial_reference_;
 
+    sparse_solver_->set_options(options_);
+
     if (quiet_mode_) {
         sparse_solver_->set_print_details(false);
     }
-
-    sparse_solver_->set_parallel(true);
-    sparse_solver_->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_->set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
-    sparse_solver_->set_guess_per_root(options_->get_int("DL_GUESS_PER_ROOT"));
-    sparse_solver_->set_ndets_per_guess_state(options_->get_int("DL_DETS_PER_GUESS"));
-    sparse_solver_->set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
-    sparse_solver_->set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
-    sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_->set_spin_project_full(options_->get_bool("SPIN_PROJECT_FULL"));
-    sparse_solver_->set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
 }
 
 void ASCI::startup() {
@@ -344,7 +334,7 @@ void ASCI::prune_PQ_to_P() {
 }
 
 void ASCI::print_nos() {
-    print_h2("NATURAL ORBITALS");
+    print_h2("Natural Orbitals");
 
     CI_RDMS ci_rdm(as_ints_->active_mo_symmetry(), PQ_space_, PQ_evecs_, 0, 0);
     ci_rdm.set_max_rdm(1);

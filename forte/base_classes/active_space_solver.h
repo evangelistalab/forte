@@ -162,23 +162,17 @@ class ActiveSpaceSolver {
     std::map<StateInfo, size_t> state_space_size_map() const;
 
     /// Return a map of StateInfo to the computed nroots of energies
-    const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
-        return state_energies_map_;
-    }
-
+    const std::map<StateInfo, std::vector<double>>& state_energies_map() const;
     /// Return a map of StateInfo to the CI wave functions (deterministic determinant space)
     std::map<StateInfo, std::shared_ptr<psi::Matrix>> state_ci_wfn_map() const;
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
-    /// @param as_ints the pointer to a set of acitve-space integrals
-    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-        as_ints_ = as_ints;
-    }
+    /// @param as_ints the pointer to a set of active-space integrals
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
-    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
-        as_mp_ints_ = as_mp_ints;
-    }
+    /// @param as_mp_ints the pointer to a set of multipole integrals
+    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints);
 
     /// Return the map of StateInfo to the wave function file name
     std::map<StateInfo, std::string> state_filename_map() const { return state_filename_map_; }

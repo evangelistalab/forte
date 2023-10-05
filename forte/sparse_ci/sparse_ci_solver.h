@@ -46,6 +46,7 @@ class SigmaVector;
 class ActiveSpaceIntegrals;
 class SpinAdapter;
 class DavidsonLiuSolver;
+class ForteOptions;
 
 /**
  * @brief The SparseCISolver class
@@ -90,6 +91,9 @@ class SparseCISolver {
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) { parallel_ = parallel; }
 
+    /// Set the print level
+    void set_print(int value);
+
     /// Enable/disable printing of details
     void set_print_details(bool print_details) { print_details_ = print_details; }
 
@@ -125,6 +129,9 @@ class SparseCISolver {
 
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
+
+    /// Set the options
+    void set_options(std::shared_ptr<ForteOptions> options);
 
     /// Build the full Hamiltonian matrix
     std::shared_ptr<psi::Matrix>
@@ -194,6 +201,8 @@ class SparseCISolver {
     bool parallel_ = false;
     /// Print details?
     bool print_details_ = true;
+    /// A variable to control printing information
+    int print_ = 0;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
     /// Project solutions onto given multiplicity in full algorithm?
@@ -211,20 +220,18 @@ class SparseCISolver {
     double r_convergence_ = 1.0e-6;
     /// The number of guess vectors for each root
     size_t guess_per_root_ = 2;
+    /// Number of determinants used to form guess vector per root
+    size_t ndets_per_guess_ = 10;
     /// Number of collapse vectors per roots
     size_t collapse_per_root_ = 2;
     /// Number of max subspace vectors per roots
     size_t subspace_per_root_ = 4;
     /// Maximum number of iterations in the Davidson-Liu algorithm
     int maxiter_davidson_ = 100;
-    /// Number of determinants used to form guess vector per root
-    size_t ndets_per_guess_ = 10;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-    /// A variable to control printing information
-    int print_ = 0;
     // nroot of guess size of (id, coefficent)
     std::vector<std::vector<std::pair<size_t, double>>> user_guess_;
 };
