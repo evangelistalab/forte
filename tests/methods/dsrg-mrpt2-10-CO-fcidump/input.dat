@@ -1,10 +1,7 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
-refcasscf    = -112.881481489289456
-refpt2       = -113.11005783259 # -113.110057830915 
-#-113.10564937040 #-113.10564937477
+refcasscf    = -112.88148148929
+refpt2       = -113.11005783259
 refpt2_relax = -113.10890275212
 refdm        =    0.078159
 refdm_relax  =    0.008678
