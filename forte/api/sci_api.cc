@@ -394,4 +394,5 @@ void export_SparseCISolver(py::module& m) {
         },
         "Diagonalize the Hamiltonian in a basis of determinants");
 }
+
 } // namespace forte

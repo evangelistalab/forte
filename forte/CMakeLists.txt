@@ -80,6 +80,7 @@ api/orbital_api.cc
 api/sci_api.cc
 api/state_info_api.cc
 api/forte_python_module.cc
+api/dl_solver_api.cc
 base_classes/active_space_method.cc
 base_classes/active_space_solver.cc
 base_classes/dynamic_correlation_solver.cc
