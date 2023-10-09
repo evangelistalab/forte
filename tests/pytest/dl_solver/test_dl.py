@@ -133,10 +133,65 @@ def test_project_out():
 
     assert np.isclose(solver.eigenvalues().get(0),evals[1])        
 
+def test_dl_restart_1():
+    # Calling the solver twice
+    # Random guesses will be generated
+    size = 4
+    nroot = 1
+    matrix = np.array([[-1, 1, 1, 1],[1, 0, 1, 1],[1, 1, 0, 1],[1, 1, 1, 0]])
+    evals, evecs = np.linalg.eigh(matrix)
+
+    h_diag = psi4.core.Vector("h_diag",size)
+    for i in range(size):
+        h_diag.set(i,matrix[i][i])
+
+    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver.add_test_sigma_builder(matrix.tolist())
+    solver.add_h_diag(h_diag)
+    solver.add_guesses([[(0,1.0)]])            
+    solver.solve()
+
+    solver.solve()
+
+    assert np.isclose(solver.eigenvalues().get(0),evals[0])         
+
+def test_dl_restart_2():
+    # Calling the solver twice
+    # Random guesses will be generated
+    size = 4
+    nroot = 1
+    matrix = np.array([[-1, 1, 1, 1],[1, 0, 1, 1],[1, 1, 0, 1],[1, 1, 1, 0]])
+    evals, evecs = np.linalg.eigh(matrix)
+
+    h_diag = psi4.core.Vector("h_diag",size)
+    for i in range(size):
+        h_diag.set(i,matrix[i][i])
+
+    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver.add_test_sigma_builder(matrix.tolist())
+    solver.add_h_diag(h_diag)
+    solver.add_guesses([[(0,1.0)]])            
+    solver.solve()
+
+    matrix2 = np.array([[-2, 1, 1, 1],[1, 0, 1, 1],[1, 1, 0, 1],[1, 1, 1, 0]])
+    evals2, evecs2 = np.linalg.eigh(matrix2)
+
+    h_diag2 = psi4.core.Vector("h_diag",size)
+    for i in range(size):
+        h_diag2.set(i,matrix[i][i])
+
+    solver.add_test_sigma_builder(matrix2.tolist())
+    solver.add_h_diag(h_diag2)
+    solver.solve()
+
+    assert np.isclose(solver.eigenvalues().get(0),evals2[0])
+
 if __name__ == '__main__':
-    # test_dl_1()
-    # test_dl_2()
-    # test_dl_3()
-    # test_dl_range()
-    # test_dl_no_guess()
+    test_dl_1()
+    test_dl_2()
+    test_dl_3()
+    test_dl_range()
+    test_dl_no_guess()
     test_project_out()
+    test_dl_restart_1()
+    test_dl_restart_2()

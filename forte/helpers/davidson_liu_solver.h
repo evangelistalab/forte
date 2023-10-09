@@ -148,12 +148,15 @@ class DavidsonLiuSolver2 {
     std::vector<double> residual_;
 
     void startup();
+    void print_table();
     void compute_sigma();
 
     void form_and_diagonalize_effective_hamiltonian();
     std::pair<bool, bool> check_convergence();
 
     void get_results();
+
+    void form_residual_vectors();
 
     void form_correction_vectors();
     void subspace_collapse();
