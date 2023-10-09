@@ -41,8 +41,8 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-// create a vector of functions and add to it test_sigma_builder_1
-auto make_sigma_builder(std::vector<std::vector<double>> M)
+// a utility function to create a sigma builder from a matrix
+auto make_sigma_builder(const std::vector<std::vector<double>>& M)
     -> std::function<void(std::span<double>, std::span<double>)> {
     return {[M](std::span<double> b, std::span<double> sigma) {
         auto n = sigma.size();
@@ -59,27 +59,25 @@ auto make_sigma_builder(std::vector<std::vector<double>> M)
 void export_DavidsonLiuSolver(py::module& m) {
     py::class_<DavidsonLiuSolver2, std::shared_ptr<DavidsonLiuSolver2>>(
         m, "DavidsonLiuSolver2", "A class to diagonalize hermitian matrices")
-        .def(py::init<size_t, size_t>())
+        .def(py::init<size_t, size_t, size_t, size_t>(), "Initialize the solver", "size"_a,
+             "nroots"_a, "collapse_per_root"_a = 1, "subspace_per_root"_a = 5)
         .def("add_sigma_builder", &DavidsonLiuSolver2::add_sigma_builder,
              "Add a function to build the sigma vector", "sigma_builder"_a)
-        .def("add_test_sigma_builder",
-             [](DavidsonLiuSolver2& self, std::vector<std::vector<double>> M) {
-                 self.add_sigma_builder(make_sigma_builder(M));
-             })
+        .def(
+            "add_test_sigma_builder",
+            [](DavidsonLiuSolver2& self, const std::vector<std::vector<double>>& M) {
+                self.add_sigma_builder(make_sigma_builder(M));
+            },
+            "Create a sigma builder from a matrix", "M"_a)
         .def("add_h_diag", &DavidsonLiuSolver2::add_h_diag, "Add the diagonal of the Hamiltonian")
         .def("add_guesses", &DavidsonLiuSolver2::add_guesses, "Add the initial guesses")
         .def("add_project_out_vectors", &DavidsonLiuSolver2::add_project_out_vectors,
              "Add vectors to project out of the subspace")
-        .def("startup", &DavidsonLiuSolver2::startup, "Function to initialize the solver")
         .def("set_print_level", &DavidsonLiuSolver2::set_print_level, "Set the print level")
         .def("set_e_convergence", &DavidsonLiuSolver2::set_e_convergence,
              "Set the energy convergence")
         .def("set_r_convergence", &DavidsonLiuSolver2::set_r_convergence,
              "Set the residual convergence")
-        .def("set_collapse_per_root", &DavidsonLiuSolver2::set_collapse_per_root,
-             "Set the number of collapse vectors for each root")
-        .def("set_subspace_per_root", &DavidsonLiuSolver2::set_subspace_per_root,
-             "Set the maximum subspace size for each root")
         .def("solve", &DavidsonLiuSolver2::solve, "The main solver function")
         .def("reset", &DavidsonLiuSolver2::reset, "Function to reset the solver")
         .def("eigenvalues", &DavidsonLiuSolver2::eigenvalues, "Return the eigenvalues")

@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <random>
+
 #include "helpers/printing.h"
 
 #include "helpers/davidson_liu_solver.h"
@@ -42,18 +44,22 @@ template <typename Func> void debug(Func func) {
 
 namespace forte {
 
-DavidsonLiuSolver2::DavidsonLiuSolver2(size_t size, size_t nroot) : size_(size), nroot_(nroot) {
+DavidsonLiuSolver2::DavidsonLiuSolver2(size_t size, size_t nroot, size_t collapse_per_root,
+                                       size_t subspace_per_root)
+    : size_(size), nroot_(nroot), collapse_per_root_(collapse_per_root),
+      subspace_per_root_(subspace_per_root) {
+
+    startup();
+}
+
+void DavidsonLiuSolver2::startup() {
+    // sanity checks
+    // collapse_per_root_ must greater than or equal to one. This guarantees that we have at least
+    // one vector per root after the collapse
     if (size_ == 0)
         throw std::runtime_error("DavidsonLiuSolver2 called with space of dimension zero.");
     if (nroot_ == 0)
         throw std::runtime_error("DavidsonLiuSolver2 called with zero roots.");
-}
-
-void DavidsonLiuSolver2::startup() {
-
-    // sanity checks
-    // collapse_per_root_ must greater than or equal to one. This guarantees that we have at least
-    // one vector per root after the collapse
     if (collapse_per_root_ < 1) {
         std::string msg =
             "DavidsonLiuSolver2: collapse_per_root_ (" + std::to_string(collapse_per_root_) +
@@ -73,20 +79,12 @@ void DavidsonLiuSolver2::startup() {
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
 
-    if (collapse_size_ > subspace_size_) {
-        std::string msg =
-            "DavidsonLiuSolver2: collapse space size (" + std::to_string(collapse_size_) +
-            ") must be less or equal to subspace size (" + std::to_string(subspace_size_) + ")";
-        throw std::runtime_error(msg);
-    }
-
     basis_size_ = 0; // start with no vectors
     sigma_size_ = 0; // start with no vectors
 
     // Vectors (here we store the vectors as row vectors)
-    h_diag_ = std::make_shared<psi::Vector>("h_diag", size_);
+    temp_ = std::make_shared<psi::Matrix>("temp", subspace_size_, size_);
     b_ = std::make_shared<psi::Matrix>("b", subspace_size_, size_);
-    bnew_ = std::make_shared<psi::Matrix>("bnew", subspace_size_, size_);
     r_ = std::make_shared<psi::Matrix>("r", subspace_size_, size_);
     sigma_ = std::make_shared<psi::Matrix>("sigma", subspace_size_, size_);
 
@@ -120,7 +118,7 @@ void DavidsonLiuSolver2::startup() {
 }
 
 void DavidsonLiuSolver2::add_h_diag(std::shared_ptr<psi::Vector>& h_diag) {
-    if (h_diag_->dim() != size_) {
+    if (h_diag->dim() != size_) {
         std::string msg = "DavidsonLiuSolver2: h_diag vector size (" +
                           std::to_string(h_diag_->dim()) + ") must be equal to space size (" +
                           std::to_string(size_) + ")";
@@ -152,16 +150,12 @@ void DavidsonLiuSolver2::set_e_convergence(double value) { e_convergence_ = valu
 
 void DavidsonLiuSolver2::set_r_convergence(double value) { r_convergence_ = value; }
 
-void DavidsonLiuSolver2::set_collapse_per_root(int value) { collapse_per_root_ = value; }
-
-void DavidsonLiuSolver2::set_subspace_per_root(int value) { subspace_per_root_ = value; }
-
 std::shared_ptr<psi::Vector> DavidsonLiuSolver2::eigenvalues() const { return lambda_; }
 
-std::shared_ptr<psi::Matrix> DavidsonLiuSolver2::eigenvectors() const { return bnew_; }
+std::shared_ptr<psi::Matrix> DavidsonLiuSolver2::eigenvectors() const { return b_; }
 
 std::shared_ptr<psi::Vector> DavidsonLiuSolver2::eigenvector(size_t n) const {
-    double** v = bnew_->pointer();
+    double** v = b_->pointer();
     auto evec = std::make_shared<psi::Vector>("V", size_);
     for (size_t I = 0; I < size_; I++) {
         evec->set(I, v[n][I]);
@@ -175,18 +169,44 @@ bool DavidsonLiuSolver2::solve() {
     psi::outfile->Printf(
         "\n  ------------------------------------------------------------------------");
 
+    // check that the sigma builder has been set
+    if (sigma_builder_ == nullptr) {
+        std::string msg = "DavidsonLiuSolver2: sigma builder has not been set";
+        throw std::runtime_error(msg);
+    }
+
+    // ensure that h_diag was set
+    if (h_diag_ == nullptr) {
+        std::string msg = "DavidsonLiuSolver2: h_diag has not been set";
+        throw std::runtime_error(msg);
+    }
+
     // Add the initial guess to the basis and orthonormalize it
     if (basis_size_ == 0) {
-        if (guesses_.size() < nroot_) {
-            std::string msg = "DavidsonLiuSolver2: number of guesses (" +
+        // add the guesses to temp
+        if ((guesses_.size() >= nroot_) and (guesses_.size() <= subspace_size_)) {
+            // guesses [copy] -> temp [orthonormalize] -> b
+            set_vector(temp_, guesses_);
+
+        } else if (guesses_.size() == 0) {
+            // add random vectors
+            temp_->zero();
+            auto added = add_random_vectors(temp_, 0, nroot_);
+        } else {
+            std::string msg = "DavidsonLiuSolver2: number of guess vectors (" +
                               std::to_string(guesses_.size()) +
-                              ") must be greater or equal to the number of roots (" +
-                              std::to_string(nroot_) + ")";
+                              ") must be between 0 and the subspace size (" +
+                              std::to_string(subspace_size_) + ")";
             throw std::runtime_error(msg);
         }
-        set_vector(bnew_, guesses_);
-        auto added = add_rows_and_orthonormalize(b_, 0, bnew_, guesses_.size());
-        if (added != guesses_.size()) {
+        auto should_be_added = std::max(nroot_, guesses_.size());
+
+        // project out the unwanted roots
+        project_out_roots(temp_);
+
+        // orthonormalize what is left
+        auto added = add_rows_and_orthonormalize(b_, 0, temp_, should_be_added);
+        if (added != should_be_added) {
             std::string msg = "DavidsonLiuSolver2: guess vectors are zero or linearly dependent";
             throw std::runtime_error(msg);
         }
@@ -231,11 +251,18 @@ bool DavidsonLiuSolver2::solve() {
             subspace_collapse();
         }
 
-        // 8. Add the correction vectors to the basis (optionally collapsed) and orthonormalize it
-        // we add one vector per root, up to the subspace size
+        // 8. Add the correction vectors to the basis (optionally collapsed) and orthonormalize
+        // it we add one vector per root, up to the subspace size
         auto num_to_add = std::min(nroot_, subspace_size_ - basis_size_);
         auto added = add_rows_and_orthonormalize(b_, basis_size_, r_, num_to_add);
         basis_size_ += added;
+        auto missing = num_to_add - added;
+
+        // if we did not add as many vectors as we wanted, we will add orthogonal random vectors
+        // to get ourself unstuck
+        auto random_added = add_random_vectors(b_, basis_size_, missing);
+        basis_size_ += random_added;
+        added += random_added;
 
         // if we do not add any new vector then we are in trouble and we better finish the
         // computation
@@ -339,8 +366,8 @@ void DavidsonLiuSolver2::form_correction_vectors() {
             if (std::fabs(denom) > 1.0e-6) {
                 f_p[k][I] /= denom;
             } else {
-                // if the denominator is too small, we set the element of the correction vector to
-                // 1 or -1 depending on the sign
+                // if the denominator is too small, we set the element of the correction vector
+                // to 1 or -1 depending on the sign
                 f_p[k][I] = f_p[k][I] * denom > 0.0 ? 1.0 : -1.0;
             }
         }
@@ -405,11 +432,11 @@ std::pair<bool, bool> DavidsonLiuSolver2::check_convergence() {
 
 void DavidsonLiuSolver2::get_results() {
     /* generate final eigenvalues and eigenvectors */
+    temp_->zero();
     double** alpha_p = alpha_->pointer();
     double** b_p = b_->pointer();
     double* eps = lambda_old_->pointer();
-    double** v = bnew_->pointer();
-    bnew_->zero();
+    double** v = temp_->pointer();
 
     for (size_t i = 0; i < nroot_; i++) {
         eps[i] = lambda_->get(i);
@@ -428,6 +455,7 @@ void DavidsonLiuSolver2::get_results() {
             v[i][I] /= norm;
         }
     }
+    b_->copy(*temp_);
 }
 
 void DavidsonLiuSolver2::set_vector(std::shared_ptr<psi::Matrix> M,
@@ -448,6 +476,23 @@ void DavidsonLiuSolver2::set_vector(std::shared_ptr<psi::Matrix> M,
     }
 }
 
+size_t DavidsonLiuSolver2::add_random_vectors(std::shared_ptr<psi::Matrix> A, size_t rowsA,
+                                              size_t n) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dist(-1.0, 1.0);
+    // generate n random vectors of size size_ and add them to the matrix A
+    temp_->zero();
+    for (size_t j = 0; j < n; j++) {
+        auto v = temp_->pointer()[j];
+        for (size_t I = 0; I < size_; I++) {
+            v[I] = dist(gen); // Random number between -1 and 1
+        }
+    }
+    auto added = add_rows_and_orthonormalize(A, rowsA, temp_, n);
+    return added;
+}
+
 void DavidsonLiuSolver2::subspace_collapse() {
     debug([&]() {
         psi::outfile->Printf("\n  Subspace collapse: %d -> %d", basis_size_, collapse_size_);
@@ -462,11 +507,7 @@ void DavidsonLiuSolver2::subspace_collapse() {
     }
 
     // collapse basis and sigma vectors (stored in bnew_ and sigma_)
-    collapse_vectors(collapsable_size);
-
-    // orthonormalize new vectors
-    b_->zero();
-    auto added = add_rows_and_orthonormalize(b_, 0, bnew_, collapsable_size);
+    auto added = collapse_vectors(collapsable_size);
 
     // ensure that we have added as many vectors as we wanted
     if (added != collapsable_size) {
@@ -478,51 +519,51 @@ void DavidsonLiuSolver2::subspace_collapse() {
     debug([&]() { sigma_->print(); });
 }
 
-void DavidsonLiuSolver2::collapse_vectors(size_t collapsable_size) {
-    bnew_->zero();
+size_t DavidsonLiuSolver2::collapse_vectors(size_t collapsable_size) {
     double** alpha_p = alpha_->pointer();
     double** b_p = b_->pointer();
-    double** bnew_p = bnew_->pointer();
+    double** temp_p = temp_->pointer();
     double** sigma_p = sigma_->pointer();
+
+    // collapse the basis vectors
+    temp_->zero();
     for (size_t i = 0; i < collapsable_size; i++) {
         for (size_t j = 0; j < basis_size_; j++) {
             for (size_t k = 0; k < size_; k++) {
-                bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
+                temp_p[i][k] += alpha_p[j][i] * b_p[j][k];
             }
         }
     }
     b_->zero();
+    auto added = add_rows_and_orthonormalize(b_, 0, temp_, collapsable_size);
+
+    // collapse the sigma vectors
+    temp_->zero();
     for (size_t i = 0; i < collapsable_size; i++) {
         for (size_t j = 0; j < basis_size_; j++) {
             for (size_t k = 0; k < size_; k++) {
-                b_p[i][k] += alpha_p[j][i] * sigma_p[j][k];
+                temp_p[i][k] += alpha_p[j][i] * sigma_p[j][k];
             }
         }
     }
-    sigma_->zero();
-    for (size_t i = 0; i < collapsable_size; i++) {
-        for (size_t k = 0; k < size_; k++) {
-            sigma_p[i][k] = b_p[i][k];
-        }
-    }
+    sigma_->copy(*temp_);
+
     basis_size_ = collapsable_size;
     sigma_size_ = collapsable_size;
+
+    return added;
 }
 
 void DavidsonLiuSolver2::project_out_roots(std::shared_ptr<psi::Matrix> v) {
-    double** v_p = v->pointer();
     for (size_t k = 0; k < nroot_; k++) {
+        auto v_k = v->pointer()[k];
         for (auto& bad_root : project_out_vectors_) {
             double overlap = 0.0;
-            for (auto& I_CI : bad_root) {
-                size_t I = I_CI.first;
-                double CI = I_CI.second;
-                overlap += v_p[k][I] * CI;
+            for (const auto& [I, CI] : bad_root) {
+                overlap += v_k[I] * CI;
             }
-            for (auto& I_CI : bad_root) {
-                size_t I = I_CI.first;
-                double CI = I_CI.second;
-                v_p[k][I] -= overlap * CI;
+            for (const auto& [I, CI] : bad_root) {
+                v_k[I] -= overlap * CI;
             }
         }
     }
@@ -602,7 +643,8 @@ bool DavidsonLiuSolver2::add_row_and_orthonormalize(std::shared_ptr<psi::Matrix>
         // compute the norm of the vector (again)
         double norm = psi::C_DDOT(ncols, v, 1, v, 1);
 
-        // if the vector is orthogonal to the previous ones, and it is normalized, we're done
+        // if the vector is orthogonal to the previous ones, and it is normalized, we're
+        // done
         if ((max_overlap < schmidt_orthogonality_threshold_) and
             (std::fabs(norm - 1.0) < schmidt_orthogonality_threshold_)) {
             return true;

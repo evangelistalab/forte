@@ -48,7 +48,8 @@ class DavidsonLiuSolver2 {
     using sparse_vec = std::vector<std::pair<size_t, double>>;
 
   public:
-    DavidsonLiuSolver2(size_t size, size_t nroot);
+    DavidsonLiuSolver2(size_t size, size_t nroot, size_t set_collapse_per_root = 1,
+                       size_t set_subspace_per_root = 5);
 
     /// Setup the solver
     void add_sigma_builder(std::function<void(std::span<double>, std::span<double>)> sigma_builder);
@@ -62,13 +63,6 @@ class DavidsonLiuSolver2 {
     void set_e_convergence(double value);
     /// Set the residual convergence
     void set_r_convergence(double value);
-    /// Set the number of collapse vectors for each root
-    void set_collapse_per_root(int value);
-    /// Set the maximum subspace size for each root
-    void set_subspace_per_root(int value);
-
-    /// Function to reset the solver
-    void startup();
 
     /// Function to reset the solver
     void reset();
@@ -92,6 +86,11 @@ class DavidsonLiuSolver2 {
     const size_t size_;
     /// The number of roots requested
     const size_t nroot_;
+    /// The number of collapse vectors for each root
+    const size_t collapse_per_root_;
+    /// The maximum subspace size for each root
+    const size_t subspace_per_root_;
+
     /// The sigma builder function
     std::function<void(std::span<double>, std::span<double>)> sigma_builder_;
 
@@ -115,10 +114,6 @@ class DavidsonLiuSolver2 {
     double schmidt_discard_threshold_ = 1.0e-7;
     /// The threshold used to guarantee orthogonality among the roots
     double schmidt_orthogonality_threshold_ = 1.0e-12;
-    /// The number of collapse vectors for each root
-    size_t collapse_per_root_ = 1;
-    /// The maximum subspace size for each root
-    size_t subspace_per_root_ = 5;
     /// The number of vectors to retain after collapse
     size_t collapse_size_;
     /// The maximum subspace size
@@ -129,8 +124,8 @@ class DavidsonLiuSolver2 {
     size_t sigma_size_;
     /// Current set of basis vectors stored by row
     std::shared_ptr<psi::Matrix> b_;
-    /// Guess vectors formed from old vectors, stored by row
-    std::shared_ptr<psi::Matrix> bnew_;
+    /// A matrix to store temporary results
+    std::shared_ptr<psi::Matrix> temp_;
     /// Residual eigenvectors, stored by row
     std::shared_ptr<psi::Matrix> r_;
     /// Sigma vectors, stored by column
@@ -152,6 +147,7 @@ class DavidsonLiuSolver2 {
     /// 2-Norm of the residuals
     std::vector<double> residual_;
 
+    void startup();
     void compute_sigma();
 
     void form_and_diagonalize_effective_hamiltonian();
@@ -161,7 +157,9 @@ class DavidsonLiuSolver2 {
 
     void form_correction_vectors();
     void subspace_collapse();
-    void collapse_vectors(size_t collapsable_size);
+    size_t collapse_vectors(size_t collapsable_size);
+
+    size_t add_random_vectors(std::shared_ptr<psi::Matrix> A, size_t rowsA, size_t n);
 
     void check_orthogonality();
 
