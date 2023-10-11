@@ -44,16 +44,19 @@ class Matrix;
 
 namespace forte {
 
-class DavidsonLiuSolver2 {
+/// @brief A class to solve the symmetric eigenvalue problem using the Davidson-Liu algorithm
+/// @details This class implements the Davidson-Liu algorithm to solve the symmetric eigenvalue
+/// problem.
+class DavidsonLiuSolver {
     using sparse_vec = std::vector<std::pair<size_t, double>>;
 
   public:
-    DavidsonLiuSolver2(size_t size, size_t nroot, size_t set_collapse_per_root = 1,
-                       size_t set_subspace_per_root = 5);
+    DavidsonLiuSolver(size_t size, size_t nroot, size_t set_collapse_per_root = 1,
+                      size_t set_subspace_per_root = 5);
 
     /// Setup the solver
     void add_sigma_builder(std::function<void(std::span<double>, std::span<double>)> sigma_builder);
-    void add_h_diag(std::shared_ptr<psi::Vector>& h_diag);
+    void add_h_diag(std::shared_ptr<psi::Vector> h_diag);
     void add_guesses(const std::vector<sparse_vec>& guesses);
     void add_project_out_vectors(const std::vector<sparse_vec>& project_out_vectors);
 
@@ -71,6 +74,8 @@ class DavidsonLiuSolver2 {
     /// @return true if the solver converged
     bool solve();
 
+    size_t size() const;
+
     /// Return the eigenvalues
     std::shared_ptr<psi::Vector> eigenvalues() const;
     /// Return the eigenvectors
@@ -82,6 +87,7 @@ class DavidsonLiuSolver2 {
     // ==> Class Private Data <==
 
     // Passed in by the user at construction
+
     /// The dimension of the vectors
     const size_t size_;
     /// The number of roots requested
@@ -91,10 +97,9 @@ class DavidsonLiuSolver2 {
     /// The maximum subspace size for each root
     const size_t subspace_per_root_;
 
+    // Passed in by the user at setup
     /// The sigma builder function
     std::function<void(std::span<double>, std::span<double>)> sigma_builder_;
-
-    // Passed in by the user at setup
     /// Diagonal elements of the Hamiltonian
     std::shared_ptr<psi::Vector> h_diag_;
     /// The initial guess
@@ -122,55 +127,86 @@ class DavidsonLiuSolver2 {
     size_t basis_size_;
     /// The number of sigma vectors currently stored
     size_t sigma_size_;
-    /// Current set of basis vectors stored by row
-    std::shared_ptr<psi::Matrix> b_;
+
     /// A matrix to store temporary results
     std::shared_ptr<psi::Matrix> temp_;
+    /// Current set of basis vectors stored by row
+    std::shared_ptr<psi::Matrix> b_;
     /// Residual eigenvectors, stored by row
     std::shared_ptr<psi::Matrix> r_;
-    /// Sigma vectors, stored by column
+    /// Sigma vectors, stored by row
     std::shared_ptr<psi::Matrix> sigma_;
-    /// Sigma vectors, stored by column
-    std::shared_ptr<psi::Matrix> sigmanew_;
     /// Davidson-Liu mini-Hamitonian
     std::shared_ptr<psi::Matrix> G_;
     /// Davidson-Liu mini-metric
     std::shared_ptr<psi::Matrix> S_;
     /// Eigenvectors of the Davidson mini-Hamitonian
     std::shared_ptr<psi::Matrix> alpha_;
-
     /// Eigenvalues of the Davidson mini-Hamitonian
     std::shared_ptr<psi::Vector> lambda_;
     /// Old eigenvalues of the Davidson mini-Hamitonian
     std::shared_ptr<psi::Vector> lambda_old_;
-
     /// 2-Norm of the residuals
-    std::vector<double> residual_;
+    std::vector<double> residual_2norm_;
 
+    /// Allocate memory for the solver
     void startup();
+
+    /// Print the solver variables
     void print_table();
+
+    /// Set the initial guesses
+    void setup_guesses();
+
+    /// Run sanity checks before the iteration starts
+    void preiteration_sanity_checks();
+
+    /// Print the header of the iteration table
+    void print_header();
+    /// Print the current iteration
+    void print_iteration(size_t iter);
+    /// Print the footer of the iteration table
+    void print_footer();
+
+    /// Compute the sigma vectors for the new basis vectors
     void compute_sigma();
 
+    /// Form the effective Hamiltonian and diagonalize it
     void form_and_diagonalize_effective_hamiltonian();
+
+    /// Collapse the subspace
+    void subspace_collapse();
+
+    /// Check if the the iterative procedure has converged
+    /// @return a pair of boolean (is_energy_converged,is_residual_converged)
     std::pair<bool, bool> check_convergence();
 
-    void get_results();
-
+    /// Form the residual vectors r = (Hc - Ec)
     void form_residual_vectors();
 
-    void form_correction_vectors();
-    void subspace_collapse();
-    size_t collapse_vectors(size_t collapsable_size);
-
-    size_t add_random_vectors(std::shared_ptr<psi::Matrix> A, size_t rowsA, size_t n);
-
-    void check_orthogonality();
-
+    /// Compute the 2-norm of the residual
     void compute_residual_norm();
 
-    void project_out_roots(std::shared_ptr<psi::Matrix> v);
+    /// Form the correction vectors c = r / preconditioner
+    void form_correction_vectors();
 
-    void print_iteration(size_t iter);
+    /// Perform an update step that saves the final results in the class variables
+    void get_results();
+
+    /// Perform the actual collapse
+    size_t collapse_vectors(size_t collapsable_size);
+
+    /// Add random rows to a matrix
+    /// @param A the matrix to add the rows to
+    /// @param rowsA the rows of A where we can add the new rows
+    /// @param n the number of rows to add
+    size_t add_random_vectors(std::shared_ptr<psi::Matrix> A, size_t rowsA, size_t n);
+
+    /// Check that the eigenvectors are orthonormal. Here we throw if the check fails
+    void check_orthonormality();
+
+    /// Project out undesired roots from a matrix
+    void project_out_roots(std::shared_ptr<psi::Matrix> v);
 
     /// @brief Add rows to a matrix and orthonormalize them
     /// @param A the matrix to add the rows to
@@ -190,134 +226,8 @@ class DavidsonLiuSolver2 {
     bool add_row_and_orthonormalize(std::shared_ptr<psi::Matrix> A, size_t rowsA,
                                     std::shared_ptr<psi::Matrix> B, size_t rowB);
 
+    /// Set a dense matrix from a vector of sparse vectors
     void set_vector(std::shared_ptr<psi::Matrix> M, const std::vector<sparse_vec>& vecs);
 };
 
-// class DavidsonLiuSolver2 {
-//     using sparse_vec = std::vector<std::pair<size_t, double>>;
-
-//   public:
-//     // ==> Class Constructor and Destructor <==
-
-//     /// Constructor
-//     DavidsonLiuSolver2(size_t size, size_t nroot);
-
-//     /// Destructor
-//     ~DavidsonLiuSolver2();
-
-//     // ==> Class Interface <==
-
-//     /// Set the print level
-//     void set_print_level(size_t n);
-//     /// Set the energy convergence
-//     void set_e_convergence(double value);
-//     /// Set the residual convergence
-//     void set_r_convergence(double value);
-//     /// Get the energy convergence
-//     double get_e_convergence() const;
-//     /// Get the residual convergence
-//     double get_r_convergence() const;
-//     /// Set the number of collapse vectors for each root
-//     void set_collapse_per_root(int value);
-//     /// Set the maximum subspace size for each root
-//     void set_subspace_per_root(int value);
-
-//     /// Return the size of the collapse vectors
-//     size_t collapse_size() const;
-
-//     /// Add a guess basis vector
-//     void add_guess(std::shared_ptr<psi::Vector> vec);
-//     /// Get a basis vector
-//     void get_b(std::shared_ptr<psi::Vector> vec);
-//     /// Add a sigma vector
-//     bool add_sigma(std::shared_ptr<psi::Vector> vec);
-
-//     void set_project_out(std::vector<sparse_vec> project_out);
-
-//     /// Return the eigenvalues
-//     std::shared_ptr<psi::Vector> eigenvalues() const;
-//     /// Return the eigenvectors
-//     std::shared_ptr<psi::Matrix> eigenvectors() const;
-//     /// Return the n-th eigenvector
-//     std::shared_ptr<psi::Vector> eigenvector(size_t n) const;
-
-//     /// Initialize the object
-//     void startup(std::shared_ptr<psi::Vector> diagonal);
-
-//     /// Return the size of the subspace
-//     size_t size() const;
-
-//     /// Perform an update step
-//     SolverStatus update();
-
-//     /// Produce the final eigenvectors and eigenvalues
-//     void get_results();
-
-//     /// A vector with the 2-norm of the residual for each root
-//     std::vector<double> residuals() const;
-
-//   private:
-//     // ==> Class Private Functions <==
-
-//     /// Check that the eigenvectors are orthogonal. Here we throw if the check fails
-//     void check_orthogonality();
-//     /// Check if the the iterative procedure has converged
-//     /// @return a pair of boolean (is_energy_converged,is_residual_converged)
-//     std::pair<bool, bool> check_convergence();
-//     /// Build the correction vectors
-//     void form_correction_vectors();
-//     /// Compute the 2-norm of the residual
-//     void compute_residual_norm();
-//     /// Project out undesired roots
-//     void project_out_roots(std::shared_ptr<psi::Matrix> v);
-//     /// Perform the Schmidt orthogonalization (add a new vector to the subspace)
-//     bool schmidt_add(std::shared_ptr<psi::Matrix> Amat, size_t rows, size_t cols,
-//                      std::shared_ptr<psi::Matrix> vvec, int l);
-//     /// Normalize the correction vectors and return the norm of the vectors before they were
-//     /// normalized
-//     std::vector<double> normalize_vectors(std::shared_ptr<psi::Matrix> v, size_t n);
-//     /// Perform subspace collapse
-//     bool subspace_collapse();
-//     /// Collapse the vectors
-//     void collapse_vectors(size_t collapsable_size);
-
-//     /// The number of iterations performed
-//     int iter_ = 0;
-
-//     /// The number of sigma vectors
-//     size_t sigma_size_;
-//     /// The number of converged roots
-//     size_t converged_ = 0;
-//     /// Timing information
-//     double timing_ = 0.0;
-//     /// Did we collapse the subspace in the last update?
-//     bool last_update_collapsed_ = false;
-
-//     /// Current set of basis vectors stored by row
-//     std::shared_ptr<psi::Matrix> b_;
-//     /// Guess vectors formed from old vectors, stored by row
-//     std::shared_ptr<psi::Matrix> bnew;
-//     /// Residual eigenvectors, stored by row
-//     std::shared_ptr<psi::Matrix> f;
-//     /// Sigma vectors, stored by column
-//     std::shared_ptr<psi::Matrix> sigma_;
-//     /// Davidson-Liu mini-Hamitonian
-//     std::shared_ptr<psi::Matrix> G;
-//     /// Davidson-Liu mini-metric
-//     std::shared_ptr<psi::Matrix> S;
-//     /// Eigenvectors of the Davidson mini-Hamitonian
-//     std::shared_ptr<psi::Matrix> alpha;
-
-//     /// Eigenvalues of the Davidson mini-Hamitonian
-//     std::shared_ptr<psi::Vector> lambda;
-//     /// Old eigenvalues of the Davidson mini-Hamitonian
-//     std::shared_ptr<psi::Vector> lambda_old;
-//     /// Diagonal elements of the Hamiltonian
-//     std::shared_ptr<psi::Vector> h_diag;
-//     /// 2-Norm of the residuals
-//     std::vector<double> residual_;
-
-//     /// Approximate eigenstates to project out
-//     std::vector<sparse_vec> project_out_;
-// };
 } // namespace forte

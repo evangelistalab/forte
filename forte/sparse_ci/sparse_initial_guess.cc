@@ -7,7 +7,6 @@
 #include "boost/format.hpp"
 
 #include "helpers/helpers.h"
-#include "helpers/iterative_solvers.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
 #include "helpers/determinant_helpers.h"
@@ -40,12 +39,12 @@ compute_s2_transformed_hamiltonian_matrix(const std::vector<Determinant>& dets,
     return std::make_tuple(H, S2evals, S2evecs);
 }
 
-void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
-                            const std::vector<size_t>& guess_dets_pos, size_t num_guess_states,
-                            const std::shared_ptr<ActiveSpaceIntegrals>& as_ints,
-                            DavidsonLiuSolver& dls, int multiplicity, bool do_spin_project,
-                            bool print,
-                            const std::vector<std::vector<std::pair<size_t, double>>>& user_guess) {
+std::pair<sparse_mat, sparse_mat>
+find_initial_guess_det(const std::vector<Determinant>& guess_dets,
+                       const std::vector<size_t>& guess_dets_pos, size_t num_guess_states,
+                       const std::shared_ptr<ActiveSpaceIntegrals>& as_ints, int multiplicity,
+                       bool do_spin_project, bool print,
+                       const std::vector<std::vector<std::pair<size_t, double>>>& user_guess) {
     size_t num_guess_dets = guess_dets.size();
 
     if (print) {
@@ -98,6 +97,7 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
              std::tuple<std::vector<double>, std::vector<double>, std::shared_ptr<psi::Matrix>>>
         guess_info;
 
+    // Loop over the groups of roots with the same multiplicity and compute the guess vectors
     for (const auto& [m, start, end] : groups) {
         // setup dimension objects
         auto start_dim = psi::Dimension(1);
@@ -136,22 +136,17 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
 
     // keep track of the table of guess states
     std::vector<std::pair<double, std::string>> table;
+    // the guess vectors stored as a vector of pairs of determinant address and coefficient
+    sparse_mat guesses;
 
     // Add the user guess vectors if any are passed in
     if (user_guess.size() > 0) {
-        auto b = std::make_shared<psi::Vector>("b", dls.size());
         // Use previous solution as guess
         if (print)
             psi::outfile->Printf("\n  Adding %zu guess vectors passed in by the user",
                                  user_guess.size());
         for (const auto& guess_root : user_guess) {
-            b->zero();
-            for (auto& [pos, c] : guess_root) {
-                b->set(pos, c);
-            }
-            double norm = sqrt(1.0 / b->norm());
-            b->scale(norm);
-            dls.add_guess(b);
+            guesses.push_back(guess_root);
         }
     } else {
         // Use the initial guess. Here we sort out the roots of correct multiplicity
@@ -160,6 +155,8 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
             throw std::runtime_error(
                 "\n\n  No guess with the requested multiplicity was found.\n\n");
         }
+
+        // grab the guess vectors with the correct multiplicity
         auto& [energies, s2, C] = guess_info[multiplicity];
 
         if (energies.size() < num_guess_states) {
@@ -170,14 +167,13 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
                 " were requested.\n  Increase the value of DL_DETS_PER_GUESS\n\n");
         }
 
-        auto b = std::make_shared<psi::Vector>("b", dls.size());
-
+        // Add the guess vectors to list of guesses
         for (size_t r = 0; r < num_guess_states; ++r) {
-            b->zero();
+            auto guess = std::vector<std::pair<size_t, double>>(num_guess_dets);
             for (size_t I = 0; I < num_guess_dets; I++) {
-                b->set(guess_dets_pos[I], C->get(I, r));
+                guess[I] = std::make_pair(guess_dets_pos[I], C->get(I, r));
             }
-            dls.add_guess(b);
+            guesses.push_back(guess);
 
             auto guess_energy = energies[r];
             auto guess_s2 = s2[r];
@@ -191,9 +187,9 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
         }
     }
 
+    sparse_mat bad_roots;
     if (do_spin_project) {
         // Prepare a list of bad roots to project out and pass them to the solver
-        std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
         for (auto& [mult, tup] : guess_info) {
             auto& [energies, s2, C] = tup;
             if (mult == multiplicity)
@@ -218,7 +214,6 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
                 }
             }
         }
-        dls.set_project_out(bad_roots);
     }
 
     std::sort(table.begin(), table.end());
@@ -232,10 +227,11 @@ void find_initial_guess_det(const std::vector<Determinant>& guess_dets,
         psi::outfile->Printf("\n%s", join(sorted_table, "\n").c_str());
         psi::outfile->Printf("\n  -------------------------------------------------------");
     }
+    return std::make_pair(guesses, bad_roots);
 }
 
-void find_initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
-                            DavidsonLiuSolver& dls, size_t multiplicity, bool print) {
+sparse_mat find_initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                                  size_t multiplicity, bool print) {
     local_timer t;
 
     // Get the list of most important CSFs
@@ -270,12 +266,12 @@ void find_initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_
     }
 
     // Set the initial guess
+    sparse_mat guesses;
     auto temp = std::make_shared<psi::Vector>("temp", ncsf);
     for (size_t g = 0; g < num_guess_states_found; ++g) {
         const auto& [e, i] = lowest_energy[g];
-        temp->zero();
-        temp->set(i, 1.0);
-        dls.add_guess(temp);
+        auto guess = {std::make_pair(i, 1.0)};
+        guesses.push_back(guess);
     }
 
     if (print) {
@@ -295,6 +291,7 @@ void find_initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_
         psi::outfile->Printf("\n  ---------------------------------------------");
         psi::outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.get());
     }
+    return guesses;
 }
 
 } // namespace forte

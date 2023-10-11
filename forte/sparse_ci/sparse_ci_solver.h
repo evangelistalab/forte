@@ -156,10 +156,9 @@ class SparseCISolver {
     void reset_initial_guess();
 
   private:
-    /// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
-    void initial_guess_det(const DeterminantHashVec& space,
+    auto initial_guess_det(const DeterminantHashVec& space,
                            std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
-                           DavidsonLiuSolver& dls, int multiplicity, bool do_spin_project);
+                           int multiplicity, bool do_spin_project);
 
     std::vector<Determinant>
     initial_guess_generate_dets(const DeterminantHashVec& space,
@@ -178,8 +177,8 @@ class SparseCISolver {
     /// @param dls The Davidson-Liu-Solver object
     /// @param temp A temporary vector of dimension ncfs to store the guess vectors
     /// @param multiplicity The multiplicity
-    void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
-                           DavidsonLiuSolver& dls, int multiplicity);
+    auto initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                           int multiplicity);
 
     /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
     /// @param ci_ints The integrals object
@@ -197,6 +196,8 @@ class SparseCISolver {
     std::vector<double> spin_;
     /// A object that handles spin adaptation
     std::shared_ptr<SpinAdapter> spin_adapter_;
+    /// The Davidson-Liu-Solver object
+    std::shared_ptr<DavidsonLiuSolver> dl_solver_;
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?

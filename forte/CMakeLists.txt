@@ -126,7 +126,6 @@ helpers/helpers.cc
 helpers/symmetry.cc
 helpers/determinant_helpers.cc
 helpers/davidson_liu_solver.cc
-helpers/iterative_solvers.cc
 helpers/lbfgs/lbfgs.cc
 helpers/lbfgs/lbfgs_param.cc
 helpers/lbfgs/rosenbrock.cc
