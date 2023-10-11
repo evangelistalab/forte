@@ -106,8 +106,7 @@ void DavidsonLiuSolver::startup(std::shared_ptr<psi::Vector> diagonal) {
     printer.add_int_data({{"Size of the space", size_},
                           {"Number of roots", nroot_},
                           {"Collapse subspace size", collapse_size_},
-                          {"Maximum subspace size", subspace_size_},
-                          {"States read from file", basis_size_}});
+                          {"Maximum subspace size", subspace_size_}});
 
     std::string table = printer.get_table("Davidson-Liu Solver");
     outfile->Printf("%s", table.c_str());

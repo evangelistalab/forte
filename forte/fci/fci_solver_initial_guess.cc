@@ -77,9 +77,9 @@ std::vector<Determinant> FCISolver::initial_guess_generate_dets(FCIVector& diag,
     return guess_dets;
 }
 
-void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
-                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                  DavidsonLiuSolver& dls) {
+std::pair<sparse_mat, sparse_mat>
+FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
+                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     auto guess_dets = initial_guess_generate_dets(diag, num_guess_states);
     size_t num_guess_dets = guess_dets.size();
 
@@ -89,14 +89,14 @@ void FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
     }
 
     // here we use a standard guess procedure
-    find_initial_guess_det(guess_dets, guess_dets_pos, num_guess_states, fci_ints, dls,
-                           state().multiplicity(), true, print_,
-                           std::vector<std::vector<std::pair<size_t, double>>>());
+    return find_initial_guess_det(guess_dets, guess_dets_pos, num_guess_states, fci_ints,
+                                  state().multiplicity(), true, print_,
+                                  std::vector<std::vector<std::pair<size_t, double>>>());
 }
 
-void FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
-                                  DavidsonLiuSolver& dls) {
-    find_initial_guess_csf(diag, num_guess_states, dls, state().multiplicity(), print_);
+sparse_mat FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag,
+                                        size_t num_guess_states) {
+    return find_initial_guess_csf(diag, num_guess_states, state().multiplicity(), print_);
 }
 
 std::shared_ptr<psi::Vector>

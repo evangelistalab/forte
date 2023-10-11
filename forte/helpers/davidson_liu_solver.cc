@@ -112,7 +112,6 @@ void DavidsonLiuSolver2::print_table() {
                           {"Maximum number of iterations", max_iter_},
                           {"Collapse subspace size", collapse_size_},
                           {"Maximum subspace size", subspace_size_},
-                          {"States read from file", basis_size_},
                           {"Print level", print_level_}});
 
     std::string table = printer.get_table("Davidson-Liu Solver");
@@ -396,7 +395,7 @@ void DavidsonLiuSolver2::form_correction_vectors() {
             } else {
                 // if the denominator is too small, we set the element of the correction vector
                 // to 1 or -1 depending on the sign
-                r_k[I] = r_k[I] * denom > 0.0 ? 1.0 : -1.0;
+                r_k[I] = 0.0; // r_k[I] * denom > 0.0 ? 1.0 : -1.0;
             }
         }
     }
@@ -490,9 +489,11 @@ void DavidsonLiuSolver2::subspace_collapse() {
     // 2. we need to collapse to at most the number of vectors in the basis (min)
     // 3. if the basis is smaller than the number of the collapse space, we pass
     auto collapsable_size = std::min(std::max(collapse_size_, nroot_), basis_size_);
-    if (collapsable_size <= basis_size_) {
-        return;
-    }
+    debug([&]() { psi::outfile->Printf("\n  Collapsing to %d vectors", collapsable_size); });
+    // I think the line below is not needed or should be changed to >=
+    // if (collapsable_size <= basis_size_) {
+    //     return;
+    // }
 
     // collapse basis and sigma vectors (stored in bnew_ and sigma_)
     auto added = collapse_vectors(collapsable_size);

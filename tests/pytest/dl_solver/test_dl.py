@@ -187,11 +187,11 @@ def test_dl_restart_2():
     assert np.isclose(solver.eigenvalues().get(0),evals2[0])
 
 if __name__ == '__main__':
-    test_dl_1()
-    test_dl_2()
-    test_dl_3()
-    test_dl_range()
-    test_dl_no_guess()
-    test_project_out()
-    test_dl_restart_1()
+    # test_dl_1()
+    # test_dl_2()
+    # test_dl_3()
+    # test_dl_range()
+    # test_dl_no_guess()
+    # test_project_out()
+    # test_dl_restart_1()
     test_dl_restart_2()

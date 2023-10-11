@@ -32,7 +32,7 @@
 
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/ci_spin_adaptation.h"
-#include "helpers/iterative_solvers.h"
+#include "helpers/davidson_liu_solver.h"
 
 #include "fci_solver.h"
 #include "fci_vector.h"
@@ -159,6 +159,15 @@ double FCISolver::compute_energy() {
     size_t det_size = Hdiag.size();
     size_t basis_size = spin_adapt_ ? spin_adapter_->ncsf() : det_size;
 
+    // if not allocate, create the DL solver
+    if (dl_solver_ == nullptr) {
+        dl_solver_ = std::make_shared<DavidsonLiuSolver2>(basis_size, nroot_, collapse_per_root_,
+                                                          subspace_per_root_);
+        dl_solver_->set_e_convergence(e_convergence_);
+        dl_solver_->set_r_convergence(r_convergence_);
+        dl_solver_->set_print_level(print_);
+    }
+
     // Create the vectors that stores the b and sigma vectors in the determinant basis
     auto b = std::make_shared<psi::Vector>("b", det_size);
     auto sigma = std::make_shared<psi::Vector>("sigma", det_size);
@@ -172,111 +181,110 @@ double FCISolver::compute_energy() {
         sigma_basis = std::make_shared<psi::Vector>("sigma", basis_size);
     }
 
-    // Create the Davidson solver and set the options
-    DavidsonLiuSolver dls(basis_size, nroot_);
-    dls.set_e_convergence(e_convergence_);
-    dls.set_r_convergence(r_convergence_);
-    dls.set_print_level(print_);
-    dls.set_collapse_per_root(collapse_per_root_);
-    dls.set_subspace_per_root(subspace_per_root_);
-
     // determine the number of guess vectors
     const size_t num_guess_states = std::min(guess_per_root_ * nroot_, basis_size);
 
     // Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {
         auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
-        dls.startup(Hdiag_vec);
-        initial_guess_csf(Hdiag_vec, num_guess_states, dls);
+        dl_solver_->add_h_diag(Hdiag_vec);
+        auto guesses = initial_guess_csf(Hdiag_vec, num_guess_states);
+        dl_solver_->add_guesses(guesses);
     } else {
         Hdiag.form_H_diagonal(as_ints_);
         Hdiag.copy_to(sigma);
-        dls.startup(sigma);
-        initial_guess_det(Hdiag, num_guess_states, as_ints_, dls);
+        dl_solver_->add_h_diag(sigma);
+        auto [guesses, bad_roots] = initial_guess_det(Hdiag, num_guess_states, as_ints_);
+        dl_solver_->add_guesses(guesses);
+        dl_solver_->add_project_out_vectors(bad_roots);
     }
 
-    // Set a variable to track the convergence of the solver
-    SolverStatus converged = SolverStatus::NotConverged;
-
-    if (print_) {
-        outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
-        outfile->Printf("\n  Energy   convergence: %.2e", dls.get_e_convergence());
-        outfile->Printf("\n  Residual convergence: %.2e", dls.get_r_convergence());
-        outfile->Printf("\n  -----------------------------------------------------");
-        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
-        outfile->Printf("\n  -----------------------------------------------------");
-    }
-
-    double old_avg_energy = 0.0;
-    int real_cycle = 1;
-    for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
-        bool add_sigma = true;
-        do {
-            // get the next b vector and compute the sigma vector
-            dls.get_b(b_basis);
-            if (spin_adapt_) {
-                // Compute sigma in the CSF basis and convert it to the determinant basis
-                spin_adapter_->csf_C_to_det_C(b_basis, b);
-                C_->copy(b);
-                C_->Hamiltonian(HC, as_ints_);
-                HC.copy_to(sigma);
-                spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
-            } else {
-                // Compute sigma in the determinant basis
-                C_->copy(b_basis);
-                C_->Hamiltonian(HC, as_ints_);
-                HC.copy_to(sigma_basis);
-            }
-            add_sigma = dls.add_sigma(sigma_basis);
-        } while (add_sigma);
-
-        converged = dls.update();
-
-        if (converged != SolverStatus::Collapse) {
-            // compute the average energy
-            double avg_energy = 0.0;
-            for (size_t r = 0; r < nroot_; ++r) {
-                avg_energy += dls.eigenvalues()->get(r);
-            }
-            avg_energy /= static_cast<double>(nroot_);
-
-            // compute the average residual
-            auto r = dls.residuals();
-            double avg_residual =
-                std::accumulate(r.begin(), r.end(), 0.0) / static_cast<double>(nroot_);
-
-            if (print_) {
-                outfile->Printf("\n    %3d  %20.12f  %+.3e  %+.3e", real_cycle, avg_energy,
-                                avg_energy - old_avg_energy, avg_residual);
-            }
-            old_avg_energy = avg_energy;
-            real_cycle++;
+    // Print the initial guess
+    auto sigma_builder = [this, &HC, &b_basis, &b, &sigma,
+                          &sigma_basis](std::span<double> b_span, std::span<double> sigma_span) {
+        // copy the b vector
+        size_t basis_size = b_span.size();
+        for (size_t I = 0; I < basis_size; ++I) {
+            b_basis->set(I, b_span[I]);
         }
-
-        if (converged == SolverStatus::Converged)
-            break;
-    }
-
-    if (print_) {
-        outfile->Printf("\n  -----------------------------------------------------");
-        if (converged == SolverStatus::Converged) {
-            outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.",
-                            real_cycle);
+        if (spin_adapt_) {
+            // Compute sigma in the CSF basis and convert it to the determinant basis
+            spin_adapter_->csf_C_to_det_C(b_basis, b);
+            C_->copy(b);
+            C_->Hamiltonian(HC, as_ints_);
+            HC.copy_to(sigma);
+            spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
+        } else {
+            // Compute sigma in the determinant basis
+            C_->copy(b_basis);
+            C_->Hamiltonian(HC, as_ints_);
+            HC.copy_to(sigma_basis);
         }
-    }
+        for (size_t I = 0; I < basis_size; ++I) {
+            sigma_span[I] = sigma_basis->get(I);
+        }
+    };
 
-    if (converged == SolverStatus::NotConverged) {
-        outfile->Printf("\n  FCI did not converge!");
-        throw std::runtime_error("FCI did not converge. Try increasing DL_MAXITER.");
-    }
+    // Run the Davidson-Liu solver
+    dl_solver_->add_sigma_builder(sigma_builder);
+
+    dl_solver_->solve();
+
+    // double old_avg_energy = 0.0;
+    // int real_cycle = 1;
+    // for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
+    //     bool add_sigma = true;
+    //     do {
+
+    //     } while (add_sigma);
+
+    //     converged = dl_solver_->update();
+
+    //     if (converged != SolverStatus::Collapse) {
+    //         // compute the average energy
+    //         double avg_energy = 0.0;
+    //         for (size_t r = 0; r < nroot_; ++r) {
+    //             avg_energy += dl_solver_->eigenvalues()->get(r);
+    //         }
+    //         avg_energy /= static_cast<double>(nroot_);
+
+    //         // compute the average residual
+    //         auto r = dl_solver_->residuals();
+    //         double avg_residual =
+    //             std::accumulate(r.begin(), r.end(), 0.0) / static_cast<double>(nroot_);
+
+    //         if (print_) {
+    //             outfile->Printf("\n    %3d  %20.12f  %+.3e  %+.3e", real_cycle, avg_energy,
+    //                             avg_energy - old_avg_energy, avg_residual);
+    //         }
+    //         old_avg_energy = avg_energy;
+    //         real_cycle++;
+    //     }
+
+    //     if (converged == SolverStatus::Converged)
+    //         break;
+    // }
+
+    // if (print_) {
+    //     outfile->Printf("\n  -----------------------------------------------------");
+    //     if (converged == SolverStatus::Converged) {
+    //         outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.",
+    //                         real_cycle);
+    //     }
+    // }
+
+    // if (converged == SolverStatus::NotConverged) {
+    //     outfile->Printf("\n  FCI did not converge!");
+    //     throw std::runtime_error("FCI did not converge. Try increasing DL_MAXITER.");
+    // }
 
     // Copy eigenvalues and eigenvectors from the Davidson-Liu solver
-    evals_ = dls.eigenvalues();
+    evals_ = dl_solver_->eigenvalues();
     energies_ = std::vector<double>(nroot_, 0.0);
     spin2_ = std::vector<double>(nroot_, 0.0);
     for (size_t r = 0; r < nroot_; r++) {
         energies_[r] = evals_->get(r);
-        b_basis = dls.eigenvector(r);
+        b_basis = dl_solver_->eigenvector(r);
         if (spin_adapt_) {
             spin_adapter_->csf_C_to_det_C(b_basis, b);
         } else {
@@ -285,19 +293,19 @@ double FCISolver::compute_energy() {
         C_->copy(b);
         spin2_[r] = C_->compute_spin2();
     }
-    eigen_vecs_ = dls.eigenvectors();
+    eigen_vecs_ = dl_solver_->eigenvectors();
 
     // Print determinants
     if (print_) {
-        print_solutions(num_guess_states, b, b_basis, dls);
+        print_solutions(num_guess_states, b, b_basis, dl_solver_);
     }
 
     // Optionally, test the RDMs
     if (test_rdms_) {
-        test_rdms(b, b_basis, dls);
+        test_rdms(b, b_basis, dl_solver_);
     }
 
-    energy_ = dls.eigenvalues()->get(root_);
+    energy_ = dl_solver_->eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
 
@@ -343,11 +351,12 @@ void FCISolver::compute_rdms_root(size_t root1, size_t /*root2*/, int max_rdm_le
 }
 
 void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
-                                std::shared_ptr<psi::Vector> b_basis, DavidsonLiuSolver& dls) {
+                                std::shared_ptr<psi::Vector> b_basis,
+                                std::shared_ptr<DavidsonLiuSolver2> dls) {
     for (size_t r = 0; r < nroot_; ++r) {
         outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
-        b_basis = dls.eigenvector(r);
+        b_basis = dls->eigenvector(r);
         if (spin_adapt_) {
             spin_adapter_->csf_C_to_det_C(b_basis, b);
         } else {
@@ -388,15 +397,15 @@ void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> 
             outfile->Printf("%15.8f", ci);
         }
 
-        double root_energy = dls.eigenvalues()->get(r);
+        double root_energy = dl_solver_->eigenvalues()->get(r);
 
         outfile->Printf("\n\n    Total Energy: %20.12f, <S^2>: %8.6f", root_energy, spin2_[r]);
     }
 }
 
 void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
-                          DavidsonLiuSolver& dls) {
-    b_basis = dls.eigenvector(root_);
+                          std::shared_ptr<DavidsonLiuSolver2> dls) {
+    b_basis = dls->eigenvector(root_);
     if (spin_adapt_) {
         spin_adapter_->csf_C_to_det_C(b_basis, b);
     } else {

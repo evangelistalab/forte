@@ -160,6 +160,9 @@ class FCIVector {
     std::shared_ptr<StringAddress> beta_address_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
+
+
+    
     std::vector<double> opdm_a_;
     std::vector<double> opdm_b_;
     std::vector<double> tpdm_aa_;

@@ -20,7 +20,8 @@ set {
 }
 
 set forte {
-  active_space_solver fci 
+  active_space_solver fci
+  dl_guess_per_root 2 
 }
 
 energy('scf')
