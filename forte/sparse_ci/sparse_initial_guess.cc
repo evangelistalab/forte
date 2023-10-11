@@ -7,7 +7,6 @@
 #include "boost/format.hpp"
 
 #include "helpers/helpers.h"
-#include "helpers/iterative_solvers.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
 #include "helpers/determinant_helpers.h"

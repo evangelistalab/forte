@@ -31,7 +31,6 @@
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_functions.hpp"
 #include "sparse_ci/ci_spin_adaptation.h"
-#include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
 #include "fci_vector.h"
