@@ -35,7 +35,7 @@ namespace forte {
 class FCIVector;
 class StringLists;
 class SpinAdapter;
-class DavidsonLiuSolver2;
+class DavidsonLiuSolver;
 
 /// @brief The FCISolver class
 /// This class performs Full CI calculations in the active space.
@@ -151,7 +151,7 @@ class FCISolver : public ActiveSpaceMethod {
     std::vector<Determinant> dets_;
 
     /// The Davidson-Liu-Solver object
-    std::shared_ptr<DavidsonLiuSolver2> dl_solver_;
+    std::shared_ptr<DavidsonLiuSolver> dl_solver_;
 
     /// Eigenvectors
     std::shared_ptr<psi::Matrix> eigen_vecs_;
@@ -224,10 +224,10 @@ class FCISolver : public ActiveSpaceMethod {
     /// @brief Print a summary of the FCI calculation
     void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
                          std::shared_ptr<psi::Vector> b_basis,
-                         std::shared_ptr<DavidsonLiuSolver2> dls);
+                         std::shared_ptr<DavidsonLiuSolver> dls);
 
     /// @brief Test the RDMs
     void test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
-                   std::shared_ptr<DavidsonLiuSolver2> dls);
+                   std::shared_ptr<DavidsonLiuSolver> dls);
 };
 } // namespace forte

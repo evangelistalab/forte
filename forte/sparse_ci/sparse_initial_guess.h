@@ -9,7 +9,7 @@ namespace forte {
 using sparse_vec = std::vector<std::pair<size_t, double>>;
 using sparse_mat = std::vector<std::vector<std::pair<size_t, double>>>;
 
-class DavidsonLiuSolver2;
+class DavidsonLiuSolver;
 class ActiveSpaceIntegrals;
 
 /// @brief Return the Hamiltonian matrix transformed into the S^2 eigenbasis

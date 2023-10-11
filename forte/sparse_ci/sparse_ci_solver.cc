@@ -493,8 +493,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     // if the DL solver is not allocated or if the basis size changed create a new one
     if ((dl_solver_ == nullptr) or (dl_solver_->size() != basis_size)) {
-        dl_solver_ = std::make_shared<DavidsonLiuSolver2>(basis_size, nroot, collapse_per_root_,
-                                                          subspace_per_root_);
+        dl_solver_ = std::make_shared<DavidsonLiuSolver>(basis_size, nroot, collapse_per_root_,
+                                                         subspace_per_root_);
         dl_solver_->set_e_convergence(e_convergence_);
         dl_solver_->set_r_convergence(r_convergence_);
         dl_solver_->set_print_level(print_);

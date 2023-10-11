@@ -161,8 +161,8 @@ double FCISolver::compute_energy() {
 
     // if not allocate, create the DL solver
     if (dl_solver_ == nullptr) {
-        dl_solver_ = std::make_shared<DavidsonLiuSolver2>(basis_size, nroot_, collapse_per_root_,
-                                                          subspace_per_root_);
+        dl_solver_ = std::make_shared<DavidsonLiuSolver>(basis_size, nroot_, collapse_per_root_,
+                                                         subspace_per_root_);
         dl_solver_->set_e_convergence(e_convergence_);
         dl_solver_->set_r_convergence(r_convergence_);
         dl_solver_->set_print_level(print_);
@@ -304,7 +304,7 @@ void FCISolver::compute_rdms_root(size_t root1, size_t /*root2*/, int max_rdm_le
 
 void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
                                 std::shared_ptr<psi::Vector> b_basis,
-                                std::shared_ptr<DavidsonLiuSolver2> dls) {
+                                std::shared_ptr<DavidsonLiuSolver> dls) {
     for (size_t r = 0; r < nroot_; ++r) {
         outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
@@ -356,7 +356,7 @@ void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> 
 }
 
 void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
-                          std::shared_ptr<DavidsonLiuSolver2> dls) {
+                          std::shared_ptr<DavidsonLiuSolver> dls) {
     b_basis = dls->eigenvector(root_);
     if (spin_adapt_) {
         spin_adapter_->csf_C_to_det_C(b_basis, b);

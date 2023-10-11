@@ -47,12 +47,12 @@ namespace forte {
 /// @brief A class to solve the symmetric eigenvalue problem using the Davidson-Liu algorithm
 /// @details This class implements the Davidson-Liu algorithm to solve the symmetric eigenvalue
 /// problem.
-class DavidsonLiuSolver2 {
+class DavidsonLiuSolver {
     using sparse_vec = std::vector<std::pair<size_t, double>>;
 
   public:
-    DavidsonLiuSolver2(size_t size, size_t nroot, size_t set_collapse_per_root = 1,
-                       size_t set_subspace_per_root = 5);
+    DavidsonLiuSolver(size_t size, size_t nroot, size_t set_collapse_per_root = 1,
+                      size_t set_subspace_per_root = 5);
 
     /// Setup the solver
     void add_sigma_builder(std::function<void(std::span<double>, std::span<double>)> sigma_builder);

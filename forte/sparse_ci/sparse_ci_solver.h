@@ -45,7 +45,7 @@ namespace forte {
 class SigmaVector;
 class ActiveSpaceIntegrals;
 class SpinAdapter;
-class DavidsonLiuSolver2;
+class DavidsonLiuSolver;
 class ForteOptions;
 
 /**
@@ -197,7 +197,7 @@ class SparseCISolver {
     /// A object that handles spin adaptation
     std::shared_ptr<SpinAdapter> spin_adapter_;
     /// The Davidson-Liu-Solver object
-    std::shared_ptr<DavidsonLiuSolver2> dl_solver_;
+    std::shared_ptr<DavidsonLiuSolver> dl_solver_;
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?

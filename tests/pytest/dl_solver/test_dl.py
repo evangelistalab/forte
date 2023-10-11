@@ -21,7 +21,7 @@ def solve_dl(size, nroot):
 
     evals, evecs = np.linalg.eigh(matrix)
     
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     h_diag = psi4.core.Vector("h_diag",size)
     for i in range(size):
         h_diag.set(i,matrix[i][i])
@@ -47,7 +47,7 @@ def test_dl_1():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_h_diag(h_diag)
     solver.add_guesses([[(0,1.0)],[(1,1.0)],[(2,1.0)],[(3,1.0)]])
     solver.add_test_sigma_builder(matrix.tolist())
@@ -65,7 +65,7 @@ def test_dl_2():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_h_diag(h_diag)
     solver.add_guesses([[(0,0.1)]])
     solver.add_test_sigma_builder(matrix.tolist())
@@ -104,7 +104,7 @@ def test_dl_no_guess():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_test_sigma_builder(matrix.tolist())
     solver.add_h_diag(h_diag)
     solver.add_guesses([[(0,0.1)]])            
@@ -125,7 +125,7 @@ def test_project_out():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_test_sigma_builder(matrix.tolist())
     solver.add_h_diag(h_diag) 
     solver.add_project_out_vectors([[(i,v) for i,v in enumerate(proj_out_evec)]])       
@@ -145,7 +145,7 @@ def test_dl_restart_1():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_test_sigma_builder(matrix.tolist())
     solver.add_h_diag(h_diag)
     solver.add_guesses([[(0,1.0)]])            
@@ -167,7 +167,7 @@ def test_dl_restart_2():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_test_sigma_builder(matrix.tolist())
     solver.add_h_diag(h_diag)
     solver.add_guesses([[(0,1.0)]])            

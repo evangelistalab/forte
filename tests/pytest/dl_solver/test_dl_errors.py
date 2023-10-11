@@ -19,7 +19,7 @@ def solve_dl(size, nroot):
             matrix[i][j] = 0.05 / (1. + abs(i - j))
             matrix[j][i] = matrix[i][j]
     
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.startup()
     h_diag = psi4.core.Vector("h_diag",size)
     for i in range(size):
@@ -38,7 +38,7 @@ def test_dl_error_1():
     """Test RuntimeError when the guesses are not linearly independent"""
     size = 4
     nroot = 1
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     h_diag = psi4.core.Vector("h_diag",4)
     h_diag.zero()
     h_diag.set(0,-1.0)
@@ -57,7 +57,7 @@ def test_dl_error_2():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_h_diag(h_diag)
     solver.add_guesses([[(0,0.1)]])
     solver.add_test_sigma_builder(matrix.tolist())
@@ -75,7 +75,7 @@ def test_dl_no_builder_set():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_h_diag(h_diag)
     solver.add_guesses([[(0,0.1)]])
     with pytest.raises(RuntimeError):
@@ -93,7 +93,7 @@ def test_dl_no_h_diag_set():
     for i in range(size):
         h_diag.set(i,matrix[i][i])
 
-    solver = forte.DavidsonLiuSolver2(size, nroot)
+    solver = forte.DavidsonLiuSolver(size, nroot)
     solver.add_test_sigma_builder(matrix.tolist())
     with pytest.raises(RuntimeError):
         solver.solve()
