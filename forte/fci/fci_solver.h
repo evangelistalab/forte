@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _fci_solver_h_
-#define _fci_solver_h_
+#pragma once
 
 #include "base_classes/active_space_method.h"
 #include "psi4/libmints/dimension.h"
@@ -232,5 +231,3 @@ class FCISolver : public ActiveSpaceMethod {
                    std::shared_ptr<DavidsonLiuSolver2> dls);
 };
 } // namespace forte
-
-#endif // _fci_solver_h_

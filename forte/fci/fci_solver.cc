@@ -33,6 +33,7 @@
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/ci_spin_adaptation.h"
 #include "helpers/davidson_liu_solver.h"
+#include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
 #include "fci_vector.h"
@@ -229,54 +230,6 @@ double FCISolver::compute_energy() {
     dl_solver_->add_sigma_builder(sigma_builder);
 
     dl_solver_->solve();
-
-    // double old_avg_energy = 0.0;
-    // int real_cycle = 1;
-    // for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
-    //     bool add_sigma = true;
-    //     do {
-
-    //     } while (add_sigma);
-
-    //     converged = dl_solver_->update();
-
-    //     if (converged != SolverStatus::Collapse) {
-    //         // compute the average energy
-    //         double avg_energy = 0.0;
-    //         for (size_t r = 0; r < nroot_; ++r) {
-    //             avg_energy += dl_solver_->eigenvalues()->get(r);
-    //         }
-    //         avg_energy /= static_cast<double>(nroot_);
-
-    //         // compute the average residual
-    //         auto r = dl_solver_->residuals();
-    //         double avg_residual =
-    //             std::accumulate(r.begin(), r.end(), 0.0) / static_cast<double>(nroot_);
-
-    //         if (print_) {
-    //             outfile->Printf("\n    %3d  %20.12f  %+.3e  %+.3e", real_cycle, avg_energy,
-    //                             avg_energy - old_avg_energy, avg_residual);
-    //         }
-    //         old_avg_energy = avg_energy;
-    //         real_cycle++;
-    //     }
-
-    //     if (converged == SolverStatus::Converged)
-    //         break;
-    // }
-
-    // if (print_) {
-    //     outfile->Printf("\n  -----------------------------------------------------");
-    //     if (converged == SolverStatus::Converged) {
-    //         outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.",
-    //                         real_cycle);
-    //     }
-    // }
-
-    // if (converged == SolverStatus::NotConverged) {
-    //     outfile->Printf("\n  FCI did not converge!");
-    //     throw std::runtime_error("FCI did not converge. Try increasing DL_MAXITER.");
-    // }
 
     // Copy eigenvalues and eigenvectors from the Davidson-Liu solver
     evals_ = dl_solver_->eigenvalues();

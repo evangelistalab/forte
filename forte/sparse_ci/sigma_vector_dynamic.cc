@@ -32,10 +32,10 @@
 #include <future>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/vector.h"
 
 #include "forte-def.h"
 #include "helpers/timer.h"
-#include "helpers/iterative_solvers.h"
 #include "sigma_vector_dynamic.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_functions.hpp"

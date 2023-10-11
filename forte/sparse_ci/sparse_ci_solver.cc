@@ -491,13 +491,15 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     size_t fci_size = sigma_vector->size();
     size_t basis_size = spin_adapt_ ? spin_adapter_->ncsf() : fci_size;
 
-    // if the DL solver is not allocated yet, allocate it
-    if (dl_solver_ == nullptr) {
+    // if the DL solver is not allocated or if the basis size changed create a new one
+    if ((dl_solver_ == nullptr) or (dl_solver_->size() != basis_size)) {
         dl_solver_ = std::make_shared<DavidsonLiuSolver2>(basis_size, nroot, collapse_per_root_,
                                                           subspace_per_root_);
         dl_solver_->set_e_convergence(e_convergence_);
         dl_solver_->set_r_convergence(r_convergence_);
         dl_solver_->set_print_level(print_);
+    } else {
+        dl_solver_->reset();
     }
 
     // allocate vectors
@@ -530,19 +532,7 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         dl_solver_->add_project_out_vectors(bad_roots);
     }
 
-    // // Set a variable to track the convergence of the solver
-    // SolverStatus converged = SolverStatus::NotConverged;
-
-    // if (print_details_) {
-    //     outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
-    //     outfile->Printf("\n  Energy   convergence: %.2e", dl_solver_->get_e_convergence());
-    //     outfile->Printf("\n  Residual convergence: %.2e", dl_solver_->get_r_convergence());
-    //     outfile->Printf("\n  -----------------------------------------------------");
-    //     outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
-    //     outfile->Printf("\n  -----------------------------------------------------");
-    // }
-
-    // Print the initial guess
+    // Setup the sigma builder
     auto sigma_builder = [this, &b_basis, &b, &sigma, &sigma_basis,
                           &sigma_vector](std::span<double> b_span, std::span<double> sigma_span) {
         // copy the b vector
@@ -566,70 +556,7 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     // Run the Davidson-Liu solver
     dl_solver_->add_sigma_builder(sigma_builder);
-
     dl_solver_->solve();
-
-    // double old_avg_energy = 0.0;
-    // int real_cycle = 1;
-
-    // for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
-    //     bool add_sigma = true;
-    //     do {
-    //         // get the next b vector and compute the sigma vector
-    //         dl_solver_->get_b(b_basis);
-    //         if (spin_adapt_) {
-    //             // Compute sigma in the CSF basis and convert it to the determinant basis
-    //             spin_adapter_->csf_C_to_det_C(b_basis, b);
-    //             sigma_vector->compute_sigma(sigma, b);
-    //             spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
-    //         } else {
-    //             // Compute sigma in the determinant basis
-    //             sigma_vector->compute_sigma(sigma_basis, b_basis);
-    //         }
-
-    //         add_sigma = dl_solver_->add_sigma(sigma_basis);
-    //     } while (add_sigma);
-
-    //     converged = dl_solver_->update();
-
-    //     if (converged != SolverStatus::Collapse) {
-    //         // compute the average energy
-    //         double avg_energy = 0.0;
-    //         for (int r = 0; r < nroot; ++r) {
-    //             avg_energy += dl_solver_->eigenvalues()->get(r);
-    //         }
-    //         avg_energy /= static_cast<double>(nroot);
-
-    //         // compute the average residual
-    //         auto r = dl_solver_->residuals();
-    //         double avg_residual =
-    //             std::accumulate(r.begin(), r.end(), 0.0) / static_cast<double>(nroot);
-
-    //         if (print_details_) {
-    //             outfile->Printf("\n    %3d  %20.12f  %+.3e  %+.3e", real_cycle, avg_energy,
-    //                             avg_energy - old_avg_energy, avg_residual);
-    //         }
-    //         old_avg_energy = avg_energy;
-    //         real_cycle++;
-    //     }
-
-    //     if (converged == SolverStatus::Converged)
-    //         break;
-    // }
-
-    // if (print_details_) {
-    //     outfile->Printf("\n  -----------------------------------------------------");
-    //     if (converged == SolverStatus::Converged) {
-    //         outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.",
-    //                         real_cycle);
-    //     }
-    // }
-
-    // if (converged != SolverStatus::Converged) {
-    //     std::string msg = "\n  The Davidson-Liu algorithm did not converge! Consider increasing "
-    //                       "the option DL_MAXITER.";
-    //     throw std::runtime_error(msg);
-    // }
 
     // Copy eigenvalues and eigenvectors from the Davidson-Liu solver
     spin_.clear();

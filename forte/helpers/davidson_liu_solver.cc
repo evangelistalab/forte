@@ -29,7 +29,6 @@
 #include <random>
 
 #include "helpers/printing.h"
-
 #include "helpers/davidson_liu_solver.h"
 
 // Global debug flag
@@ -51,6 +50,8 @@ DavidsonLiuSolver2::DavidsonLiuSolver2(size_t size, size_t nroot, size_t collaps
 
     startup();
 }
+
+size_t DavidsonLiuSolver2::size() const { return size_; }
 
 void DavidsonLiuSolver2::startup() {
     // sanity checks
@@ -96,7 +97,7 @@ void DavidsonLiuSolver2::startup() {
     lambda_ = std::make_shared<psi::Vector>("lambda", subspace_size_);
     lambda_old_ = std::make_shared<psi::Vector>("lambda_old", subspace_size_);
 
-    residual_.resize(nroot_, 0.0);
+    residual_2norm_.resize(nroot_, 0.0);
 }
 
 void DavidsonLiuSolver2::print_table() {
@@ -118,14 +119,17 @@ void DavidsonLiuSolver2::print_table() {
     psi::outfile->Printf("%s", table.c_str());
 }
 
-void DavidsonLiuSolver2::add_h_diag(std::shared_ptr<psi::Vector>& h_diag) {
+void DavidsonLiuSolver2::add_h_diag(std::shared_ptr<psi::Vector> h_diag) {
     if (static_cast<size_t>(h_diag->dim()) != size_) {
         std::string msg = "DavidsonLiuSolver2: h_diag vector size (" +
                           std::to_string(h_diag_->dim()) + ") must be equal to space size (" +
                           std::to_string(size_) + ")";
         throw std::runtime_error(msg);
     }
-    h_diag_ = h_diag;
+    if (h_diag_ == nullptr) {
+        h_diag_ = std::make_shared<psi::Vector>("h_diag", size_);
+    }
+    h_diag_->copy(*h_diag);
 }
 
 void DavidsonLiuSolver2::add_guesses(const std::vector<sparse_vec>& guesses) { guesses_ = guesses; }
@@ -141,7 +145,9 @@ void DavidsonLiuSolver2::add_sigma_builder(
 }
 
 void DavidsonLiuSolver2::reset() {
+    basis_size_ = 0;
     sigma_size_ = 0;
+    b_->zero();
     sigma_->zero();
 }
 
@@ -166,36 +172,106 @@ std::shared_ptr<psi::Vector> DavidsonLiuSolver2::eigenvector(size_t n) const {
 
 bool DavidsonLiuSolver2::solve() {
     print_table();
-    psi::outfile->Printf(
-        "\n  Iteration     Average Energy            max(∆E)            max(Residual)");
-    psi::outfile->Printf(
-        "\n  ------------------------------------------------------------------------");
 
-    // check that the sigma builder has been set
-    if (sigma_builder_ == nullptr) {
-        std::string msg = "DavidsonLiuSolver2: sigma builder has not been set";
-        throw std::runtime_error(msg);
+    setup_guesses();
+
+    preiteration_sanity_checks();
+
+    print_header();
+
+    for (size_t iter = 0; iter < max_iter_; iter++) {
+        // ensure that the basis is orthonormal
+        check_orthonormality();
+
+        // 1. Compute the matrix-vector product (sigma) for the basis vectors that have not been
+        // computed yet
+        compute_sigma();
+
+        // 2. Form and diagonalize mini-matrix
+        form_and_diagonalize_effective_hamiltonian();
+
+        // 3. Form preconditioned residue vectors
+        form_residual_vectors();
+        compute_residual_norm();
+        form_correction_vectors();
+
+        // 4. Project out undesired roots from the correction vectors
+        project_out_roots(r_);
+
+        // 5. Print iteration summary
+        print_iteration(iter);
+
+        // 6. Check for convergence
+        auto [is_energy_converged, is_residual_converged] = check_convergence();
+        bool is_converged = (is_energy_converged and is_residual_converged);
+        // Edge case: if the basis is the same size as the subspace, we are done
+        bool is_edge_case = (basis_size_ == size_);
+        if (is_converged or is_edge_case) {
+            print_footer();
+            get_results();
+            return true;
+        }
+
+        // 7. Check if we need to collapse the subspace
+        if (basis_size_ + nroot_ > subspace_size_) {
+            subspace_collapse();
+        }
+
+        // 8. Add the correction vectors to the basis (optionally collapsed) and orthonormalize
+        // it. We add one vector per root, up to the subspace size
+        auto num_to_add = std::min(nroot_, subspace_size_ - basis_size_);
+        auto added = add_rows_and_orthonormalize(b_, basis_size_, r_, num_to_add);
+        basis_size_ += added;
+        auto missing = num_to_add - added;
+
+        // if we did not add as many vectors as we wanted, we will add orthogonal random vectors
+        // to get ourself unstuck
+        temp_->zero();
+        add_random_vectors(temp_, 0, missing);
+        project_out_roots(temp_);
+        auto random_added = add_rows_and_orthonormalize(b_, basis_size_, temp_, missing);
+        basis_size_ += random_added;
+        added += random_added;
+
+        // if we do not add any new vector then we are in trouble and we better finish the
+        // computation
+        if (added == 0) {
+            if (is_residual_converged) {
+                print_footer();
+                psi::outfile->Printf(
+                    "\n\n  Davidson-Liu solver:  No new vectors added, but residual converged. "
+                    "Finishing computation.");
+                get_results();
+                return true;
+            } else {
+                psi::outfile->Printf("\n\n  Davidson-Liu solver:  No new vectors added, and "
+                                     "energy not converged. "
+                                     "Finishing computation.");
+                return false;
+            }
+        }
+        lambda_old_->copy(*lambda_);
     }
 
-    // ensure that h_diag was set
-    if (h_diag_ == nullptr) {
-        std::string msg = "DavidsonLiuSolver2: h_diag has not been set";
-        throw std::runtime_error(msg);
-    }
+    psi::outfile->Printf("\n\n  Davidson-Liu solver:  Maximum number of iterations reached.");
+    return false;
+}
 
-    psi::outfile->Printf("\n  basis size = %d", basis_size_);
-
+void DavidsonLiuSolver2::setup_guesses() {
     // Add the initial guess to the basis and orthonormalize it
     if (basis_size_ == 0) {
         // add the guesses to temp
         if ((guesses_.size() >= nroot_) and (guesses_.size() <= subspace_size_)) {
             // guesses [copy] -> temp [orthonormalize] -> b
+            psi::outfile->Printf("\n\n  Davidson-Liu solver: adding %d guess vectors",
+                                 guesses_.size());
             set_vector(temp_, guesses_);
 
         } else if (guesses_.size() == 0) {
             // add random vectors
             temp_->zero();
             add_random_vectors(temp_, 0, nroot_);
+            psi::outfile->Printf("\n\n  Davidson-Liu solver: adding %d random vectors", nroot_);
         } else {
             std::string msg = "DavidsonLiuSolver2: number of guess vectors (" +
                               std::to_string(guesses_.size()) +
@@ -225,84 +301,32 @@ bool DavidsonLiuSolver2::solve() {
             ") must be between 0 and the subspace size (" + std::to_string(subspace_size_) + ")";
         throw std::runtime_error(msg);
     }
+}
 
-    // Print the initial basis
-
-    for (size_t iter = 0; iter < max_iter_; iter++) {
-        // ensure that the DL basis is orthonormal
-        check_orthogonality();
-
-        // 1. Compute the matrix-vector product (sigma) for the basis vectors that have not been
-        // computed yet
-        compute_sigma();
-
-        // 2. Form and diagonalize mini-matrix
-        form_and_diagonalize_effective_hamiltonian();
-
-        // 3. Form preconditioned residue vectors
-        form_residual_vectors();
-        form_correction_vectors();
-        compute_residual_norm();
-
-        // 4. Project out undesired roots from the correction vectors
-        project_out_roots(r_);
-
-        // 5. Print iteration summary
-        print_iteration(iter);
-
-        // 6. Check for convergence
-        auto [is_energy_converged, is_residual_converged] = check_convergence();
-        bool is_converged = (is_energy_converged and is_residual_converged);
-        // Edge case: if the basis is orthogonal (as it should) is the same size as the
-        // subspace, we are done
-        bool is_edge_case = (basis_size_ == size_);
-        if (is_converged or is_edge_case) {
-            get_results();
-            return true;
-        }
-
-        // 7. Check if we need to collapse the subspace
-        if (basis_size_ + nroot_ > subspace_size_) {
-            subspace_collapse();
-        }
-
-        // 8. Add the correction vectors to the basis (optionally collapsed) and orthonormalize
-        // it we add one vector per root, up to the subspace size
-        auto num_to_add = std::min(nroot_, subspace_size_ - basis_size_);
-        auto added = add_rows_and_orthonormalize(b_, basis_size_, r_, num_to_add);
-        basis_size_ += added;
-        auto missing = num_to_add - added;
-
-        // if we did not add as many vectors as we wanted, we will add orthogonal random vectors
-        // to get ourself unstuck
-        temp_->zero();
-        add_random_vectors(temp_, 0, missing);
-        project_out_roots(temp_);
-        auto random_added = add_rows_and_orthonormalize(b_, basis_size_, temp_, missing);
-        basis_size_ += random_added;
-        added += random_added;
-
-        // if we do not add any new vector then we are in trouble and we better finish the
-        // computation
-        if (added == 0) {
-            if (is_residual_converged) {
-                psi::outfile->Printf(
-                    "\n\n  Davidson-Liu solver:  No new vectors added, but residual converged. "
-                    "Finishing computation.");
-                get_results();
-                return true;
-            } else {
-                psi::outfile->Printf("\n\n  Davidson-Liu solver:  No new vectors added, and "
-                                     "energy not converged. "
-                                     "Finishing computation.");
-                return false;
-            }
-        }
-        lambda_old_->copy(*lambda_);
+void DavidsonLiuSolver2::preiteration_sanity_checks() {
+    // check that the sigma builder has been set
+    if (sigma_builder_ == nullptr) {
+        std::string msg = "DavidsonLiuSolver2: sigma builder has not been set";
+        throw std::runtime_error(msg);
     }
 
-    psi::outfile->Printf("\n\n  Davidson-Liu solver:  Maximum number of iterations reached.");
-    return false;
+    // ensure that h_diag was set
+    if (h_diag_ == nullptr) {
+        std::string msg = "DavidsonLiuSolver2: h_diag has not been set";
+        throw std::runtime_error(msg);
+    }
+}
+
+void DavidsonLiuSolver2::print_header() {
+    psi::outfile->Printf(
+        "\n  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors");
+    psi::outfile->Printf(
+        "\n  ---------------------------------------------------------------------------------");
+}
+
+void DavidsonLiuSolver2::print_footer() {
+    psi::outfile->Printf(
+        "\n  ---------------------------------------------------------------------------------");
 }
 
 void DavidsonLiuSolver2::print_iteration(size_t iter) {
@@ -313,12 +337,12 @@ void DavidsonLiuSolver2::print_iteration(size_t iter) {
     double max_residual = 0.0;
     double max_e_diff = 0.0;
     for (size_t k = 0; k < nroot_; k++) { // loop over roots
-        max_residual = std::max(max_residual, residual_[k]);
+        max_residual = std::max(max_residual, residual_2norm_[k]);
         max_e_diff = std::max(max_e_diff, std::fabs(e_diff.get(k)));
         average_energy += lambda_->get(k) / static_cast<double>(nroot_);
     }
-    psi::outfile->Printf("\n  %6d  %20.12f  %20.12f  %20.12f %d/%d", iter, average_energy,
-                         max_e_diff, max_residual, basis_size_, subspace_size_);
+    psi::outfile->Printf("\n  %6d  %20.12f  %20.12f  %20.12f %6d", iter, average_energy, max_e_diff,
+                         max_residual, basis_size_);
 }
 
 void DavidsonLiuSolver2::compute_sigma() {
@@ -333,14 +357,13 @@ void DavidsonLiuSolver2::compute_sigma() {
 }
 
 void DavidsonLiuSolver2::form_and_diagonalize_effective_hamiltonian() {
-    G_->zero();
     G_->gemm(false, true, 1.0, b_, sigma_, 0.0);
     G_->hermitivitize();
     // Here we need to copy the matrix to a new one because the diagonalize function will
     // otherwise include zero eigenvalues, which we do not want
     auto Gb_ = std::make_shared<psi::Matrix>("G", basis_size_, basis_size_);
-    auto alpha_b_ = std::make_shared<psi::Matrix>("alpha", subspace_size_, subspace_size_);
-    auto lambda_b_ = std::make_shared<psi::Vector>("lambda", subspace_size_);
+    auto alpha_b_ = std::make_shared<psi::Matrix>("alpha", basis_size_, basis_size_);
+    auto lambda_b_ = std::make_shared<psi::Vector>("lambda", basis_size_);
     // gere
     for (size_t i = 0; i < basis_size_; i++) {
         for (size_t j = 0; j < basis_size_; j++) {
@@ -362,7 +385,6 @@ void DavidsonLiuSolver2::form_and_diagonalize_effective_hamiltonian() {
 
 void DavidsonLiuSolver2::form_residual_vectors() {
     r_->zero();
-    const auto lambda_p = lambda_->pointer();
 
     debug([&]() { h_diag_->print(); });
     debug([&]() { alpha_->print(); });
@@ -371,7 +393,7 @@ void DavidsonLiuSolver2::form_residual_vectors() {
     temp_->gemm(true, false, 1.0, alpha_, b_, 0.0);
 
     for (size_t k = 0; k < nroot_; k++) { // loop over roots
-        const auto lambda_k = lambda_p[k];
+        const auto lambda_k = lambda_->get(k);
         const auto temp_k = temp_->pointer()[k];
         auto r_k = r_->pointer()[k];
         for (size_t I = 0; I < size_; I++) { // loop over elements
@@ -382,14 +404,11 @@ void DavidsonLiuSolver2::form_residual_vectors() {
 }
 
 void DavidsonLiuSolver2::form_correction_vectors() {
-    const auto lambda_p = lambda_->pointer();
-    const auto h_diag_p = h_diag_->pointer();
-
     for (size_t k = 0; k < nroot_; k++) { // loop over roots
         auto r_k = r_->pointer()[k];
-        const auto lambda_k = lambda_p[k];
+        const auto lambda_k = lambda_->get(k);
         for (size_t I = 0; I < size_; I++) { // loop over elements
-            double denom = lambda_k - h_diag_p[I];
+            double denom = lambda_k - h_diag_->get(I);
             if (std::fabs(denom) > 1.0e-6) {
                 r_k[I] /= denom;
             } else {
@@ -405,7 +424,7 @@ void DavidsonLiuSolver2::form_correction_vectors() {
 void DavidsonLiuSolver2::compute_residual_norm() {
     for (size_t k = 0; k < nroot_; k++) { // loop over roots
         auto r_k = r_->pointer()[k];
-        residual_[k] = std::sqrt(psi::C_DDOT(size_, r_k, 1, r_k, 1));
+        residual_2norm_[k] = std::sqrt(psi::C_DDOT(size_, r_k, 1, r_k, 1));
     }
 }
 
@@ -419,7 +438,7 @@ std::pair<bool, bool> DavidsonLiuSolver2::check_convergence() {
         double diff = std::fabs(lambda_->get(k) - lambda_old_->get(k));
         bool this_energy_converged = (diff < e_convergence_);
         // check if the residual converged
-        bool this_residual_converged = (residual_[k] < r_convergence_);
+        bool this_residual_converged = (residual_2norm_[k] < r_convergence_);
         // update counters
         num_converged_energy += this_energy_converged;
         num_converged_residual += this_residual_converged;
@@ -631,7 +650,7 @@ bool DavidsonLiuSolver2::add_row_and_orthonormalize(std::shared_ptr<psi::Matrix>
     return false;
 }
 
-void DavidsonLiuSolver2::check_orthogonality() {
+void DavidsonLiuSolver2::check_orthonormality() {
     // here we use a looser threshold than the one used in the schmidt orthogonalization
     double orthogonality_threshold = schmidt_orthogonality_threshold_ * 3.0;
 

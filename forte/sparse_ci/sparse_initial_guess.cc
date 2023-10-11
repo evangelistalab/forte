@@ -199,20 +199,20 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
             for (size_t r = 0; r < n; r++) {
                 auto guess_energy = energies[r];
                 auto guess_s2 = s2[r];
-                // if (guess_energy < guess_max_energy) {
-                std::vector<std::pair<size_t, double>> guess_det_C(num_guess_dets);
-                for (size_t I = 0; I < num_guess_dets; I++) {
-                    guess_det_C[I] = std::make_pair(guess_dets_pos[I], C->get(I, r));
+                if (guess_energy < guess_max_energy) {
+                    std::vector<std::pair<size_t, double>> guess_det_C(num_guess_dets);
+                    for (size_t I = 0; I < num_guess_dets; I++) {
+                        guess_det_C[I] = std::make_pair(guess_dets_pos[I], C->get(I, r));
+                    }
+                    bad_roots.push_back(guess_det_C);
+
+                    auto state_label = s2_label(mult - 1);
+
+                    auto s = boost::str(boost::format("   %7s  %3d  %20.12f  %+.6f  removed") %
+                                        state_label.c_str() % r % guess_energy % guess_s2);
+
+                    table.push_back(std::make_pair(guess_energy, s));
                 }
-                bad_roots.push_back(guess_det_C);
-
-                auto state_label = s2_label(mult - 1);
-
-                auto s = boost::str(boost::format("   %7s  %3d  %20.12f  %+.6f  removed") %
-                                    state_label.c_str() % r % guess_energy % guess_s2);
-
-                table.push_back(std::make_pair(guess_energy, s));
-                // }
             }
         }
     }
