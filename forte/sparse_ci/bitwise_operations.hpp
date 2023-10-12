@@ -2,6 +2,7 @@
 #define _bitwise_operations_hpp_
 
 #include <bit>
+#include <cstdint>
 
 #define USE_builtin_popcountll 1
 
