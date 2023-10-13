@@ -89,6 +89,12 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
 
+void ActiveSpaceSolver::set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
+
+void ActiveSpaceSolver::set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
+
+void ActiveSpaceSolver::set_maxiter(int maxiter) { maxiter_ = maxiter; }
+
 void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     as_ints_ = as_ints;
     for (auto& [state, nroot] : state_nroots_map_) {
@@ -116,6 +122,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
+        method->set_maxiter(maxiter_);
+
         state_method_map_[state] = method;
 
         if (read_initial_guess_) {
