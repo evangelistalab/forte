@@ -116,21 +116,27 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
-        // compute the energy of state and save it
-        std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
-            method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+
+        // check if the method is already initialized, if not initialize it
+        auto [it, inserted] = state_method_map_.try_emplace(state);
+        if (inserted) {
+            it->second = make_active_space_method(method_, state, nroot, scf_info_, mo_space_info_,
+                                                  as_ints_, options_);
+        }
+        auto method = it->second;
+
+        // set the convergence criteria
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
         method->set_maxiter(maxiter_);
-
-        state_method_map_[state] = method;
 
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();
             method->set_read_wfn_guess(read_initial_guess_);
         }
 
+        // compute the energy of state and save it
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
