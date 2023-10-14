@@ -164,16 +164,27 @@ class StringLists {
     /// @return the number of pairs per irrep
     size_t pairpi(int h) const { return pairpi_[h]; }
 
+    /// @return the alpha string address object
     auto alfa_address() { return alfa_address_; }
+    /// @return the beta string address object
     auto beta_address() { return beta_address_; }
+    /// @return the alpha string address object for N - 1 electrons
     auto alfa_address_1h() { return alfa_address_1h_; }
+    /// @return the beta string address object for N - 1 electrons
     auto beta_address_1h() { return beta_address_1h_; }
+    /// @return the alpha string address object for N - 2 electrons
     auto alfa_address_2h() { return alfa_address_2h_; }
+    /// @return the beta string address object for N - 2 electrons
     auto beta_address_2h() { return beta_address_2h_; }
+    /// @return the alpha string address object for N - 3 electrons
     auto alfa_address_3h() { return alfa_address_3h_; }
+    /// @return the beta string address object for N - 3 electrons
     auto beta_address_3h() { return beta_address_3h_; }
 
+    /// @return the address of a determinant in the CI vector
     size_t determinant_address(const Determinant& d) const;
+    /// @return the determinant corresponding to an address in the CI vector of a given symmetry
+    Determinant determinant(size_t address, size_t symmetry) const;
 
     /// @return the alpha string list
     const auto& alfa_strings() const { return alfa_strings_; }
@@ -184,6 +195,7 @@ class StringLists {
     /// @return the beta string in irrep h and index I
     String beta_str(size_t h, size_t I) const { return beta_strings_[h][I]; }
 
+    /// @return the list of determinants with a given symmetry
     std::vector<Determinant> make_determinants(int symmetry) const;
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);

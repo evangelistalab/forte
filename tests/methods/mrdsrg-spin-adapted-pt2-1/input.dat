@@ -36,6 +36,7 @@ set forte{
   active                  [2,0,0,0]
   dsrg_s                  1.0
   e_convergence           10
+  r_convergence           7
 }
 
 Ept2 = energy('forte', ref_wfn=wfn)

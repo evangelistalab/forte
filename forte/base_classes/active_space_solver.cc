@@ -117,14 +117,19 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
 
-        // check if the method is already initialized, if not initialize it
-        auto [it, inserted] = state_method_map_.try_emplace(state);
-        if (inserted) {
-            it->second = make_active_space_method(method_, state, nroot, scf_info_, mo_space_info_,
-                                                  as_ints_, options_);
+        // so far only FCI and DETCI supports restarting from a previous wavefunction
+        if ((method_ == "FCI") or (method_ == "DETCI")) {
+            auto [it, inserted] = state_method_map_.try_emplace(state);
+            if (inserted) {
+                it->second = make_active_space_method(method_, state, nroot, scf_info_,
+                                                      mo_space_info_, as_ints_, options_);
+            }
+            auto method = it->second;
+        } else {
+            state_method_map_[state] = make_active_space_method(method_, state, nroot, scf_info_,
+                                                                mo_space_info_, as_ints_, options_);
         }
-        auto method = it->second;
-
+        auto method = state_method_map_[state];
         // set the convergence criteria
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);

@@ -24,6 +24,7 @@ set forte{
    active                 [2,0,0,0]
    root_sym               0
    nroot                  1
+   r_convergence          7
 }
 
 refmcscf, refwfn = energy('forte', return_wfn=True)

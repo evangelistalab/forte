@@ -43,29 +43,40 @@
 
 namespace forte {
 
-std::vector<Determinant> FCISolver::initial_guess_generate_dets(FCIVector& diag,
+std::vector<Determinant> FCISolver::initial_guess_generate_dets(std::shared_ptr<psi::Vector> diag,
                                                                 size_t num_guess_states) {
-    size_t ndets = diag.size();
+    size_t ndets = diag->dim();
     // number of guess to be used must be at most as large as the number of determinants
     size_t num_guess_dets = std::min(num_guess_states * ndets_per_guess_, ndets);
 
-    // Get the list of most important determinants in the format
-    // std::vector<std::tuple<double, size_t, size_t, size_t>>
+    // Get the address of the most important determinants
     // this list has size exactly num_guess_dets
-    auto dets = diag.min_elements(num_guess_dets);
+    double emax = std::numeric_limits<double>::max();
+    size_t added = 0;
+
+    std::vector<std::tuple<double, size_t>> vec_e_I(num_guess_dets, std::make_tuple(emax, 0));
+
+    for (size_t I = 0; I < ndets; ++I) {
+        double e = diag->get(I);
+        if ((e < emax) or (added < num_guess_states)) {
+            // Find where to inser this determinant
+            vec_e_I.pop_back();
+            auto it = std::find_if(
+                vec_e_I.begin(), vec_e_I.end(),
+                [&e](const std::tuple<double, size_t>& t) { return e < std::get<0>(t); });
+            vec_e_I.insert(it, std::make_tuple(e, I));
+            emax = std::get<0>(vec_e_I.back());
+            added++;
+        }
+    }
 
     std::vector<Determinant> guess_dets;
-
-    // Build the full determinants
-    size_t nact = active_mo_.size();
-    for (const auto& [e, h, add_Ia, add_Ib] : dets) {
-        auto Ia = lists_->alfa_str(h, add_Ia);
-        auto Ib = lists_->beta_str(h ^ symmetry_, add_Ib);
-        guess_dets.emplace_back(Ia, Ib);
+    for (const auto& [e, I] : vec_e_I) {
+        guess_dets.push_back(lists_->determinant(I, symmetry_));
     }
 
     // Make sure that the spin space is complete
-    enforce_spin_completeness(guess_dets, nact);
+    enforce_spin_completeness(guess_dets, active_mo_.size());
     if (guess_dets.size() > num_guess_dets) {
         if (print_ > 0) {
             psi::outfile->Printf("\n  Initial guess space is incomplete.\n  Adding "
@@ -77,7 +88,7 @@ std::vector<Determinant> FCISolver::initial_guess_generate_dets(FCIVector& diag,
 }
 
 std::pair<sparse_mat, sparse_mat>
-FCISolver::initial_guess_det(FCIVector& diag, size_t num_guess_states,
+FCISolver::initial_guess_det(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
                              std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     auto guess_dets = initial_guess_generate_dets(diag, num_guess_states);
     size_t num_guess_dets = guess_dets.size();
@@ -137,4 +148,28 @@ FCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
     }
     return Hdiag_csf;
 }
+
+std::shared_ptr<psi::Vector>
+FCISolver::form_Hdiag_det(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+    auto Hdiag_det = std::make_shared<psi::Vector>(nfci_dets_);
+
+    Determinant I;
+    size_t Iadd = 0;
+    const double E0 = fci_ints->nuclear_repulsion_energy() + fci_ints->scalar_energy();
+    // loop over all irreps of the alpha strings
+    for (int ha = 0; ha < nirrep_; ha++) {
+        const int hb = ha ^ symmetry_;
+        const auto& sa = lists_->alfa_strings()[ha];
+        const auto& sb = lists_->beta_strings()[hb];
+        for (const auto& Ia : sa) {
+            for (const auto& Ib : sb) {
+                I.set_str(Ia, Ib);
+                Hdiag_det->set(Iadd, E0 + fci_ints->energy(I));
+                Iadd += 1;
+            }
+        }
+    }
+    return Hdiag_det;
+}
+
 } // namespace forte

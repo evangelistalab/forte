@@ -183,7 +183,7 @@ double MCSCF_2STEP::compute_energy() {
                                  mo_space_info_, cas_grad.active_space_ints(), options_);
     as_solver->set_print(print_);
     as_solver->set_e_convergence(e_conv_);
-    as_solver->set_r_convergence(no_orb_opt ? r_conv : 1.0e-2);
+    as_solver->set_r_convergence(r_conv);
     as_solver->set_maxiter(no_orb_opt ? as_maxiter : 15);
     // as_solver->set_die_if_not_converged(no_orb_opt);
 
