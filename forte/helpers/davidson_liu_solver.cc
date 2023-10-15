@@ -228,12 +228,15 @@ bool DavidsonLiuSolver::solve() {
 
         // if we did not add as many vectors as we wanted, we will add orthogonal random vectors
         // to get ourself unstuck
-        temp_->zero();
-        add_random_vectors(temp_, 0, missing);
-        project_out_roots(temp_);
-        auto random_added = add_rows_and_orthonormalize(b_, basis_size_, temp_, missing);
-        basis_size_ += random_added;
-        added += random_added;
+        if (missing > 0) {
+            psi::outfile->Printf(" <- added %d random vector%s", missing, missing > 1 ? "s" : "");
+            temp_->zero();
+            add_random_vectors(temp_, 0, missing);
+            project_out_roots(temp_);
+            auto random_added = add_rows_and_orthonormalize(b_, basis_size_, temp_, missing);
+            basis_size_ += random_added;
+            added += random_added;
+        }
 
         // if we do not add any new vector then we are in trouble and we better finish the
         // computation
