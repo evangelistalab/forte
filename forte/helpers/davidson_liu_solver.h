@@ -190,6 +190,11 @@ class DavidsonLiuSolver {
     /// Form the correction vectors c = r / preconditioner
     void form_correction_vectors();
 
+    /// Normalize the first n rows of a matrix
+    /// @param M the matrix to normalize
+    /// @param n the number of rows to normalize
+    void normalize_vectors(std::shared_ptr<psi::Matrix> M, size_t n);
+
     /// Perform an update step that saves the final results in the class variables
     void get_results();
 

@@ -68,7 +68,6 @@ set forte{
   dsrg_s                 0.5
   relax_ref              once
   e_convergence          12
-  r_convergence          9
   int_type               diskdf
   semi_canonical_mix_inactive true
 }

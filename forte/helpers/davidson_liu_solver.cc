@@ -198,6 +198,8 @@ bool DavidsonLiuSolver::solve() {
         // 4. Project out undesired roots from the correction vectors
         project_out_roots(r_);
 
+        normalize_vectors(r_, nroot_);
+
         // 5. Print iteration summary
         print_iteration(iter);
 
@@ -425,6 +427,16 @@ void DavidsonLiuSolver::compute_residual_norm() {
     for (size_t k = 0; k < nroot_; k++) { // loop over roots
         auto r_k = r_->pointer()[k];
         residual_2norm_[k] = std::sqrt(psi::C_DDOT(size_, r_k, 1, r_k, 1));
+    }
+}
+
+void DavidsonLiuSolver::normalize_vectors(std::shared_ptr<psi::Matrix> M, size_t n) {
+    for (size_t k = 0; k < n; k++) { // loop over roots
+        auto v_k = M->pointer()[k];
+        double norm = std::sqrt(psi::C_DDOT(size_, v_k, 1, v_k, 1));
+        for (size_t I = 0; I < size_; I++) { // loop over elements
+            v_k[I] /= norm;
+        }
     }
 }
 
