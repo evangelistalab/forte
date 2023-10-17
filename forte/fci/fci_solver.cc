@@ -180,6 +180,7 @@ double FCISolver::compute_energy() {
         dl_solver_->set_e_convergence(e_convergence_);
         dl_solver_->set_r_convergence(r_convergence_);
         dl_solver_->set_print_level(print_);
+        dl_solver_->set_maxiter(maxiter_davidson_);
         first_run = true;
     }
 
@@ -235,7 +236,15 @@ double FCISolver::compute_energy() {
     // Run the Davidson-Liu solver
     dl_solver_->add_sigma_builder(sigma_builder);
 
-    dl_solver_->solve();
+    auto converged = dl_solver_->solve();
+    if (not converged) {
+        throw std::runtime_error(
+            "Davidson-Liu solver did not converge.\nPlease try to increase the number of "
+            "Davidson-Liu iterations (DL_MAXITER). You can also try to increase:\n - the maximum "
+            "size of the subspace (DL_SUBSPACE_PER_ROOT)"
+            "\n - the number of guess states (DL_GUESS_PER_ROOT)");
+        return false;
+    }
 
     // Copy eigenvalues and eigenvectors from the Davidson-Liu solver
     evals_ = dl_solver_->eigenvalues();

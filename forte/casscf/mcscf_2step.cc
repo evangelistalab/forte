@@ -185,7 +185,6 @@ double MCSCF_2STEP::compute_energy() {
     as_solver->set_e_convergence(e_conv_);
     as_solver->set_r_convergence(r_conv);
     as_solver->set_maxiter(no_orb_opt ? as_maxiter : 15);
-    // as_solver->set_die_if_not_converged(no_orb_opt);
 
     // initial CI and resulting RDMs
     const auto state_energies_map = as_solver->compute_energy();
@@ -241,8 +240,6 @@ double MCSCF_2STEP::compute_energy() {
 
         // CI solver set up
         bool restart = (ci_type_ == "FCI" or ci_type_ == "DETCI" or ci_type_ == "CAS");
-        // as_solver->set_restart(restart);
-        // as_solver->set_die_if_not_converged(false);
         as_solver->set_maxiter(restart ? 15 : as_maxiter);
 
         // CI convergence criteria along the way
@@ -435,7 +432,7 @@ double MCSCF_2STEP::compute_energy() {
 
 bool MCSCF_2STEP::is_single_reference() {
     auto nactv = mo_space_info_->size("ACTIVE");
-    auto nclosed_electrons = 2 * mo_space_info_->size("INACTIVE_DOCC");
+    auto nclosed_electrons = mo_space_info_->size("INACTIVE_DOCC");
 
     if (state_weights_map_.size() == 1) {
         for (const auto& [state, _] : state_weights_map_) {
@@ -468,8 +465,6 @@ double MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& 
     as_solver->set_print(print);
     as_solver->set_e_convergence(e_conv);
     as_solver->set_r_convergence(r_conv);
-    // as_solver->set_read_initial_guess(read_wfn_guess);
-    // as_solver->set_die_if_not_converged(false);
     as_solver->set_active_space_integrals(fci_ints);
 
     const auto state_energies_map = as_solver->compute_energy();

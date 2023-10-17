@@ -66,6 +66,8 @@ class DavidsonLiuSolver {
     void set_e_convergence(double value);
     /// Set the residual convergence
     void set_r_convergence(double value);
+    /// Set the maximum number of iterations
+    void set_maxiter(size_t value);
 
     /// Function to reset the solver
     void reset();

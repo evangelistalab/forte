@@ -157,6 +157,8 @@ void DavidsonLiuSolver::set_e_convergence(double value) { e_convergence_ = value
 
 void DavidsonLiuSolver::set_r_convergence(double value) { r_convergence_ = value; }
 
+void DavidsonLiuSolver::set_maxiter(size_t n) { max_iter_ = n; }
+
 std::shared_ptr<psi::Vector> DavidsonLiuSolver::eigenvalues() const { return lambda_; }
 
 std::shared_ptr<psi::Matrix> DavidsonLiuSolver::eigenvectors() const { return b_; }
