@@ -1,0 +1,18 @@
+name: forte
+
+dependencies:
+    - python=3.10
+    - pip>=19.0
+    - pybind11
+    - cmake
+    - numpy
+    - scipy
+    - eigen
+    - pydantic
+    - pyyaml
+    - py-cpuinfo
+    - hdf5
+    - boost
+    - yaml
+    - pytest
+    - conda-forge::lcov
