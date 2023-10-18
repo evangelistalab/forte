@@ -87,6 +87,8 @@ class FCIVector {
     double dot(FCIVector& wfn);
     double dot(std::shared_ptr<FCIVector>& wfn);
 
+    std::vector<double>& C(int irrep) { return C_[irrep]; }
+
     std::vector<double>& opdm_a() { return opdm_a_; }
     std::vector<double>& opdm_b() { return opdm_b_; }
     std::vector<double>& tpdm_aa() { return tpdm_aa_; }
@@ -121,6 +123,9 @@ class FCIVector {
     static void allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_);
     static void release_temp_space();
     void set_print(int print) { print_ = print; }
+
+    // ==> Class Static Functions <==
+    static compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order);
 
   private:
     // ==> Class Data <==

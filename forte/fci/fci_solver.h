@@ -83,9 +83,6 @@ class FCISolver : public ActiveSpaceMethod {
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
-    /// Compute RDMs on a given root
-    void compute_rdms_root(size_t root1, size_t root2, int max_rdm_level);
-
     /// Set the number of determinants per root to use to form the initial guess
     void set_ndets_per_guess_state(size_t value);
 
@@ -233,6 +230,15 @@ class FCISolver : public ActiveSpaceMethod {
     void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
                          std::shared_ptr<psi::Vector> b_basis,
                          std::shared_ptr<DavidsonLiuSolver> dls);
+
+    /// @brief Compute the RDMs for a given root
+    /// @param root_left the left root
+    /// @param root_right the right root
+    /// @param C_left the vector of coefficients for the left root (not filled)
+    /// @param C_right the vector of coefficients for the right root (not filled)
+    /// @param max_rdm_level the maximum level of the RDMs to compute
+    void compute_rdms_root(size_t root_left, size_t root_right, std::shared_ptr<FCIVector> C_left,
+                           std::shared_ptr<FCIVector> C_right, max_rdm_level);
 
     /// @brief Test the RDMs
     void test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,

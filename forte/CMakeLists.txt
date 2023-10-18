@@ -104,6 +104,8 @@ dmrg/dmrgsolver.cc
 external/external_active_space_method.cc
 fci/string_address.cc
 fci/fci_solver.cc
+fci/fci_solver_rdms.cc
+fci/fci_solver_transition_rdms.cc
 fci/fci_solver_initial_guess.cc
 fci/fci_vector.cc
 fci/fci_vector_h_diag.cc
