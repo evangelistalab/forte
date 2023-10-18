@@ -66,13 +66,7 @@ class FCIVector {
     /// Copy the wave function object
     void copy_to(std::shared_ptr<psi::Vector> vec);
 
-    /// Form the diagonal part of the Hamiltonian
-    void form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
     //    double approximate_spin(double )
-
-    //    /// Initial guess
-    //    void initial_guess(FCIVector& diag, size_t num_dets = 100);
 
     ////    void set_to(Determinant& det);
     void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
@@ -118,9 +112,6 @@ class FCIVector {
     /// Assume user specified active space
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
 
-    /// Return the elements with the smallest value
-    /// This function returns the tuple (C_I,irrep,Ia,Ib)
-    std::vector<std::tuple<double, size_t, size_t, size_t>> min_elements(size_t num_dets);
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
     std::vector<std::tuple<double, double, size_t, size_t, size_t>>
@@ -161,8 +152,6 @@ class FCIVector {
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
 
-
-    
     std::vector<double> opdm_a_;
     std::vector<double> opdm_b_;
     std::vector<double> tpdm_aa_;

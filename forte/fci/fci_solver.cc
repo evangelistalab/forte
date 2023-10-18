@@ -95,11 +95,11 @@ void FCISolver::startup() {
     // Create the string lists
     lists_ = std::make_shared<StringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
 
-    size_t ndfci = 0;
+    nfci_dets_ = 0;
     for (int h = 0; h < nirrep_; ++h) {
         size_t nastr = lists_->alfa_address()->strpi(h);
         size_t nbstr = lists_->beta_address()->strpi(h ^ symmetry_);
-        ndfci += nastr * nbstr;
+        nfci_dets_ += nastr * nbstr;
     }
 
     // Create the spin adapter
@@ -112,7 +112,7 @@ void FCISolver::startup() {
 
     if (print_) {
         table_printer printer;
-        printer.add_int_data({{"Number of determinants", ndfci},
+        printer.add_int_data({{"Number of determinants", nfci_dets_},
                               {"Symmetry", symmetry_},
                               {"Multiplicity", state().multiplicity()},
                               {"Number of roots", nroot_},
@@ -159,15 +159,6 @@ double FCISolver::compute_energy() {
     size_t det_size = Hdiag.size();
     size_t basis_size = spin_adapt_ ? spin_adapter_->ncsf() : det_size;
 
-    // if not allocate, create the DL solver
-    if (dl_solver_ == nullptr) {
-        dl_solver_ = std::make_shared<DavidsonLiuSolver>(basis_size, nroot_, collapse_per_root_,
-                                                         subspace_per_root_);
-        dl_solver_->set_e_convergence(e_convergence_);
-        dl_solver_->set_r_convergence(r_convergence_);
-        dl_solver_->set_print_level(print_);
-    }
-
     // Create the vectors that stores the b and sigma vectors in the determinant basis
     auto b = std::make_shared<psi::Vector>("b", det_size);
     auto sigma = std::make_shared<psi::Vector>("sigma", det_size);
@@ -181,22 +172,39 @@ double FCISolver::compute_energy() {
         sigma_basis = std::make_shared<psi::Vector>("sigma", basis_size);
     }
 
+    // if not allocate, create the DL solver
+    bool first_run = false;
+    if (dl_solver_ == nullptr) {
+        dl_solver_ = std::make_shared<DavidsonLiuSolver>(basis_size, nroot_, collapse_per_root_,
+                                                         subspace_per_root_);
+        dl_solver_->set_e_convergence(e_convergence_);
+        dl_solver_->set_r_convergence(r_convergence_);
+        dl_solver_->set_print_level(print_);
+        dl_solver_->set_maxiter(maxiter_davidson_);
+        first_run = true;
+    }
+
     // determine the number of guess vectors
     const size_t num_guess_states = std::min(guess_per_root_ * nroot_, basis_size);
 
-    // Form the diagonal of the Hamiltonian and the initial guess
+    auto Hdiag_vec =
+        spin_adapt_ ? form_Hdiag_csf(as_ints_, spin_adapter_) : form_Hdiag_det(as_ints_);
+    dl_solver_->add_h_diag(Hdiag_vec);
+
+    // The first time we run Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {
-        auto Hdiag_vec = form_Hdiag_csf(as_ints_, spin_adapter_);
-        dl_solver_->add_h_diag(Hdiag_vec);
-        auto guesses = initial_guess_csf(Hdiag_vec, num_guess_states);
-        dl_solver_->add_guesses(guesses);
+        if (first_run) {
+            auto guesses = initial_guess_csf(Hdiag_vec, num_guess_states);
+            dl_solver_->add_guesses(guesses);
+        }
     } else {
-        Hdiag.form_H_diagonal(as_ints_);
-        Hdiag.copy_to(sigma);
-        dl_solver_->add_h_diag(sigma);
-        auto [guesses, bad_roots] = initial_guess_det(Hdiag, num_guess_states, as_ints_);
-        dl_solver_->add_guesses(guesses);
-        dl_solver_->add_project_out_vectors(bad_roots);
+        bool use_initial_guess = (num_guess_states * ndets_per_guess_ >= det_size);
+        if (first_run or use_initial_guess) {
+            dl_solver_->reset();
+            auto [guesses, bad_roots] = initial_guess_det(Hdiag_vec, num_guess_states, as_ints_);
+            dl_solver_->add_guesses(guesses);
+            dl_solver_->add_project_out_vectors(bad_roots);
+        }
     }
 
     // Print the initial guess
@@ -228,7 +236,15 @@ double FCISolver::compute_energy() {
     // Run the Davidson-Liu solver
     dl_solver_->add_sigma_builder(sigma_builder);
 
-    dl_solver_->solve();
+    auto converged = dl_solver_->solve();
+    if (not converged) {
+        throw std::runtime_error(
+            "Davidson-Liu solver did not converge.\nPlease try to increase the number of "
+            "Davidson-Liu iterations (DL_MAXITER). You can also try to increase:\n - the maximum "
+            "size of the subspace (DL_SUBSPACE_PER_ROOT)"
+            "\n - the number of guess states (DL_GUESS_PER_ROOT)");
+        return false;
+    }
 
     // Copy eigenvalues and eigenvectors from the Davidson-Liu solver
     evals_ = dl_solver_->eigenvalues();

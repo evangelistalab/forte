@@ -157,6 +157,8 @@ void DavidsonLiuSolver::set_e_convergence(double value) { e_convergence_ = value
 
 void DavidsonLiuSolver::set_r_convergence(double value) { r_convergence_ = value; }
 
+void DavidsonLiuSolver::set_maxiter(size_t n) { max_iter_ = n; }
+
 std::shared_ptr<psi::Vector> DavidsonLiuSolver::eigenvalues() const { return lambda_; }
 
 std::shared_ptr<psi::Matrix> DavidsonLiuSolver::eigenvectors() const { return b_; }
@@ -198,6 +200,8 @@ bool DavidsonLiuSolver::solve() {
         // 4. Project out undesired roots from the correction vectors
         project_out_roots(r_);
 
+        normalize_vectors(r_, nroot_);
+
         // 5. Print iteration summary
         print_iteration(iter);
 
@@ -226,12 +230,15 @@ bool DavidsonLiuSolver::solve() {
 
         // if we did not add as many vectors as we wanted, we will add orthogonal random vectors
         // to get ourself unstuck
-        temp_->zero();
-        add_random_vectors(temp_, 0, missing);
-        project_out_roots(temp_);
-        auto random_added = add_rows_and_orthonormalize(b_, basis_size_, temp_, missing);
-        basis_size_ += random_added;
-        added += random_added;
+        if (missing > 0) {
+            psi::outfile->Printf(" <- added %d random vector%s", missing, missing > 1 ? "s" : "");
+            temp_->zero();
+            add_random_vectors(temp_, 0, missing);
+            project_out_roots(temp_);
+            auto random_added = add_rows_and_orthonormalize(b_, basis_size_, temp_, missing);
+            basis_size_ += random_added;
+            added += random_added;
+        }
 
         // if we do not add any new vector then we are in trouble and we better finish the
         // computation
@@ -425,6 +432,16 @@ void DavidsonLiuSolver::compute_residual_norm() {
     for (size_t k = 0; k < nroot_; k++) { // loop over roots
         auto r_k = r_->pointer()[k];
         residual_2norm_[k] = std::sqrt(psi::C_DDOT(size_, r_k, 1, r_k, 1));
+    }
+}
+
+void DavidsonLiuSolver::normalize_vectors(std::shared_ptr<psi::Matrix> M, size_t n) {
+    for (size_t k = 0; k < n; k++) { // loop over roots
+        auto v_k = M->pointer()[k];
+        double norm = std::sqrt(psi::C_DDOT(size_, v_k, 1, v_k, 1));
+        for (size_t I = 0; I < size_; I++) { // loop over elements
+            v_k[I] /= norm;
+        }
     }
 }
 

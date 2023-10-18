@@ -315,4 +315,25 @@ size_t StringLists::determinant_address(const Determinant& d) const {
     return addI;
 }
 
+Determinant StringLists::determinant(size_t address, size_t symmetry) const {
+    // find the irreps of alpha and beta strings
+    size_t h = 0;
+    size_t addI = 0;
+    // keep adding the number of determinants in each irrep until we reach the right one
+    for (; h < nirrep_; h++) {
+        size_t address_offset = alfa_address_->strpi(h) * beta_address_->strpi(symmetry ^ h);
+        if (address_offset + addI > address) {
+            break;
+        }
+        addI += address_offset;
+    }
+    const size_t shift = address - addI;
+    const size_t beta_size = beta_address_->strpi(symmetry ^ h);
+    const size_t addIa = shift / beta_size;
+    const size_t addIb = shift % beta_size;
+    String Ia = alfa_str(h, addIa);
+    String Ib = beta_str(symmetry ^ h, addIb);
+    return Determinant(Ia, Ib);
+}
+
 } // namespace forte

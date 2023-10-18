@@ -150,6 +150,9 @@ class FCISolver : public ActiveSpaceMethod {
     /// The FCI determinant list
     std::vector<Determinant> dets_;
 
+    /// The number of FCI determinants
+    size_t nfci_dets_;
+
     /// The Davidson-Liu-Solver object
     std::shared_ptr<DavidsonLiuSolver> dl_solver_;
 
@@ -197,14 +200,15 @@ class FCISolver : public ActiveSpaceMethod {
     /// @param fci_ints The integrals object
     /// @param temp A temporary vector of dimension ndets to store the guess vectors
     std::pair<sparse_mat, sparse_mat>
-    initial_guess_det(FCIVector& diag, size_t num_guess_states,
+    initial_guess_det(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
                       std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// @brief Generate at least num_guess_states of the lowest energy determinants
     /// @param diag
     /// @param num_guess_states
     /// @return
-    std::vector<Determinant> initial_guess_generate_dets(FCIVector& diag, size_t num_guess_states);
+    std::vector<Determinant> initial_guess_generate_dets(std::shared_ptr<psi::Vector> diag,
+                                                         size_t num_guess_states);
 
     /// @brief Compute initial guess vectors in the CSF basis
     /// @note  This function is only used for spin-adapted calculations and works differnt than
@@ -214,6 +218,10 @@ class FCISolver : public ActiveSpaceMethod {
     /// @param num_guess_states The number of guess vectors to generate
     /// @param temp A temporary vector of dimension ncfs to store the guess vectors
     sparse_mat initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states);
+
+    /// @brief Compute the diagonal of the Hamiltonian in the determinant basis
+    /// @param fci_ints The integrals object
+    std::shared_ptr<psi::Vector> form_Hdiag_det(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
     /// @param fci_ints The integrals object
