@@ -97,9 +97,7 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) const {
     psi::Dimension dims = dimension(space);
     std::vector<int> result;
     for (int h = 0; h < dims.n(); ++h) {
-        for (int i = 0; i < dims[h]; ++i) {
-            result.push_back(h);
-        }
+        fill_n(back_inserter(result), dims[h], h); // insert h for dims[h] times
     }
     return result;
 }

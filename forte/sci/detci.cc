@@ -56,11 +56,6 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     auto de_maxiter = options->get_int("MAXITER");
     maxiter_ = dl_maxiter > de_maxiter ? dl_maxiter : de_maxiter;
 
-    dl_guess_size_ = options->get_int("DL_GUESS_SIZE");
-
-    ncollapse_per_root_ = options->get_int("DL_COLLAPSE_PER_ROOT");
-    nsubspace_per_root_ = options->get_int("DL_SUBSPACE_PER_ROOT");
-
     sigma_vector_type_ = string_to_sigma_vector_type(options->get_str("DIAG_ALGORITHM"));
     sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 
@@ -173,16 +168,9 @@ void DETCI::diagonalize_hamiltonian() {
 
 std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     auto solver = std::make_shared<SparseCISolver>();
-    solver->set_parallel(true);
+    solver->set_options(options_);
     solver->set_spin_project(true);
     solver->set_print_details(not quiet_);
-
-    solver->set_e_convergence(e_convergence_);
-    solver->set_r_convergence(r_convergence_);
-    solver->set_maxiter_davidson(maxiter_);
-
-    solver->set_ncollapse_per_root(ncollapse_per_root_);
-    solver->set_nsubspace_per_root(nsubspace_per_root_);
 
     if (read_wfn_guess_) {
         outfile->Printf("\n  Reading wave function from disk as initial guess:");
@@ -190,8 +178,6 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
         outfile->Printf(" %s!", status.c_str());
     }
 
-    solver->set_num_vecs(dl_guess_size_);
-    solver->set_guess_dimension(dl_guess_size_);
     if (not initial_guess_.empty()) {
         solver->set_initial_guess(initial_guess_);
     }

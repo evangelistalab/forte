@@ -28,6 +28,8 @@
 
 #include <algorithm>
 
+#include "fci/string_address.h"
+
 #include "string_lists.h"
 
 namespace forte {
@@ -54,38 +56,28 @@ std::vector<StringSubstitution>& StringLists::get_beta_oo_list(int pq_sym, size_
     return beta_oo_list[pq_pair];
 }
 
-/**
- * Generate the list of strings connected by a^{+}_p a^{+}_q a_q a_p
- * @param graph graph for numbering the strings generated
- * @param list  the OO list
- */
-void StringLists::make_oo_list(GraphPtr graph, OOList& list) {
+void StringLists::make_oo_list(std::shared_ptr<StringAddress> addresser, OOList& list) {
     // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         size_t max_pq = pairpi_[pq_sym];
         for (size_t pq = 0; pq < max_pq; ++pq) {
-            make_oo(graph, list, pq_sym, pq);
+            make_oo(addresser, list, pq_sym, pq);
         }
     }
 }
 
-/**
- * Generate all the pairs of strings I,J connected by
- * Op = a^{+}_p a^{+}_q a_q a_p,  that is: J = ± Op I.
- * @param pq_sym symmetry of the pq pair
- * @param pq     relative PAIRINDEX of the pq pair
- */
-void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
-    int k = graph->nones() - 2;
+void StringLists::make_oo(std::shared_ptr<StringAddress> addresser, OOList& list, int pq_sym,
+                          size_t pq) {
+    int k = addresser->nones() - 2;
     if (k >= 0) {
-        int p = nn_list[pq_sym][pq].first;
-        int q = nn_list[pq_sym][pq].second;
+        int p = pair_list_[pq_sym][pq].first;
+        int q = pair_list_[pq_sym][pq].second;
 
-        int n = graph->nbits() - 2;
+        int n = addresser->nbits() - 2;
         String b, I, J;
         auto b_begin = b.begin();
         auto b_end = b.begin() + n;
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
             // Create the key to the map
             std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
 
@@ -114,9 +106,9 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
                 J[p] = true;
                 J[q] = true;
                 // Add the sting only of irrep(I) is h
-                if (graph->sym(I) == h)
+                if (string_class_->symmetry(I) == h)
                     list[pq_pair].push_back(
-                        StringSubstitution(1, graph->rel_add(I), graph->rel_add(J)));
+                        StringSubstitution(1.0, addresser->add(I), addresser->add(J)));
             } while (std::next_permutation(b_begin, b_end));
         } // End loop over h
     }

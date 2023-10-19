@@ -32,6 +32,8 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 
+#include "helpers/determinant_helpers.h"
+
 #include "sparse_ci/sigma_vector.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
@@ -249,8 +251,9 @@ void export_Determinant(py::module& m) {
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
     py::class_<StringAddress>(m, "StringAddress", "A class to compute the address of a string")
-        .def(py::init<const std::vector<std::vector<String>>&>(),
-             "Construct a StringAddress object from a list of lists of strings")
+        .def(py::init<int, int, const std::vector<std::vector<String>>&>(),
+             "Construct a StringAddress object from a list of lists of strings", "nmo"_a, "ne"_a,
+             "strings"_a)
         .def("add", &StringAddress::add, "Return the address of a string")
         .def("sym", &StringAddress::sym, "Return the symmetry of a string")
         .def("strpi", &StringAddress::strpi, "Return the number of strings per irrep");
@@ -335,6 +338,11 @@ void export_Determinant(py::module& m) {
     m.def("get_projection", &get_projection);
     m.def("overlap", &overlap);
     m.def("spin2", &spin2<Determinant::nbits>);
+    m.def("make_hamiltonian_matrix", &make_hamiltonian_matrix, "dets"_a, "as_ints"_a,
+          "Make a Hamiltonian matrix (psi::Matrix) from a list of determinants and an "
+          "ActiveSpaceIntegrals object");
+    m.def("make_s2_matrix", &make_s2_matrix, "dets"_a,
+          "Make a matrix (psi::Matrix) of the S^2 operator from a list of determinants");
 }
 
 void export_SigmaVector(py::module& m) {
@@ -386,4 +394,5 @@ void export_SparseCISolver(py::module& m) {
         },
         "Diagonalize the Hamiltonian in a basis of determinants");
 }
+
 } // namespace forte

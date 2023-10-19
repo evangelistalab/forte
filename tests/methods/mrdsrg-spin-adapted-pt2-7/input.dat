@@ -37,6 +37,7 @@ set forte {
   active                    [0,0,2,0,0,0,0,1]
   avg_state                 [[0,1,1],[5,1,2]]
   casscf_final_orbital      unspecified
+  dl_guess_per_root         1
 }
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(eref_cas, Ecas, 7, f"SA-CASSCF ENERGY")

@@ -86,19 +86,11 @@ void ASCI::pre_iter_preparation() {
     ref.build_reference(initial_reference_);
     P_space_ = initial_reference_;
 
+    sparse_solver_->set_options(options_);
+
     if (quiet_mode_) {
         sparse_solver_->set_print_details(false);
     }
-
-    sparse_solver_->set_parallel(true);
-    sparse_solver_->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_->set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
-    sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_->set_spin_project_full(options_->get_bool("SPIN_PROJECT_FULL"));
-    sparse_solver_->set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-    sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
 }
 
 void ASCI::startup() {
@@ -173,7 +165,7 @@ void ASCI::diagonalize_P_space() {
         outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
     }
 
-    sparse_solver_->manual_guess(false);
+    sparse_solver_->reset_initial_guess();
     local_timer diag;
 
     auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);
@@ -342,7 +334,7 @@ void ASCI::prune_PQ_to_P() {
 }
 
 void ASCI::print_nos() {
-    print_h2("NATURAL ORBITALS");
+    print_h2("Natural Orbitals");
 
     CI_RDMS ci_rdm(as_ints_->active_mo_symmetry(), PQ_space_, PQ_evecs_, 0, 0);
     ci_rdm.set_max_rdm(1);

@@ -37,9 +37,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
-
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
@@ -48,15 +45,13 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
 
-namespace py = pybind11;
-
 namespace forte {
 
 /**
  * @brief Save a vector of double to file
  * @param filename The file name
  * @param data The data to be dumped
- * @param overwrite Overwrite if the file exists
+ * @param overwrite Overwrite file if it exists?
  */
 void write_disk_vector_double(const std::string& filename, const std::vector<double>& data,
                               bool overwrite = false);
@@ -84,8 +79,19 @@ void dump_occupations(const std::string& filename,
  * @param padding The index shifts
  * @param overwrite Overwrite if the file exists
  */
-void save_psi4_vector(const std::string& filename, psi::Vector vec, psi::Dimension padding,
+void write_psi_vector(const std::string& filename, psi::Vector vec, psi::Dimension padding,
                       bool overwrite = true);
+
+/// @brief Write a Psi4 Matrix to disk
+/// @param filename The file name
+/// @param mat The Psi4 Matrix to be dumped
+/// @param overwrite Overwrite file if it exists?
+void write_psi_matrix(const std::string& filename, const psi::Matrix& mat, bool overwrite = false);
+
+/// @brief Read a Psi4 Matrix from disk
+/// @param filename The file name
+/// @param mat The Psi4 Matrix to be filled
+void read_psi_matrix(const std::string& filename, psi::Matrix& mat);
 
 ///**
 // * @brief Save a BlockedTensor to file

@@ -1847,14 +1847,6 @@ Default value: 1e-08
 FCI options
 ===========
 
-**FCI_MAXITER**
-
-Maximum number of iterations for FCI code
-
-Type: int
-
-Default value: 30
-
 **FCI_TEST_RDMS**
 
 Test the FCI reduced density matrices?

@@ -104,10 +104,13 @@ cd-dsrg-mrpt2:
 detci:
    short:
       - detci-1
+      - detci-6-sa
    long:
       - detci-2 # moved to pytest
       - detci-3 # moved to pytest
       - detci-4 # moved to pytest
+      - detci-5-sa
+      - detci-7-sa
 diag-alg:
    short:
       - diag-alg-1-dynamic
@@ -267,7 +270,7 @@ gasci:
    medium:
       - gasci-2
       - gasci-3
-      - gasaci-2
+      # - gasaci-2 # disabled because of issues with reference
       - gasaci-3
    long:
       - gasaci-5

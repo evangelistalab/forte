@@ -40,6 +40,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "fci/string_address.h"
 #include "string_lists.h"
 
 namespace forte {
@@ -66,17 +67,17 @@ std::vector<StringSubstitution>& StringLists::get_beta_vo_list(size_t p, size_t 
     return beta_vo_list[pq_pair];
 }
 
-void StringLists::make_vo_list(GraphPtr graph, VOList& list) {
+void StringLists::make_vo_list(std::shared_ptr<StringAddress> addresser, VOList& list) {
     // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         // Loop over irreps of p
-        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
             int q_sym = pq_sym ^ p_sym;
             for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                 for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
                     int p_abs = p_rel + cmopi_offset_[p_sym];
                     int q_abs = q_rel + cmopi_offset_[q_sym];
-                    make_vo(graph, list, p_abs, q_abs);
+                    make_vo(addresser, list, p_abs, q_abs);
                 }
             }
         }
@@ -88,15 +89,15 @@ void StringLists::make_vo_list(GraphPtr graph, VOList& list) {
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
-    int n = graph->nbits() - 1 - (p == q ? 0 : 1);
-    int k = graph->nones() - 1;
+void StringLists::make_vo(std::shared_ptr<StringAddress> addresser, VOList& list, int p, int q) {
+    int n = addresser->nbits() - 1 - (p == q ? 0 : 1);
+    int k = addresser->nones() - 1;
     std::vector<int8_t> b(n); // vector<int8_t> is fast to generate the permutations
     String I, J;
     auto b_begin = b.begin();
     auto b_end = b.begin() + n;
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
             // Create the key to the map
             std::tuple<size_t, size_t, int> pq_pair(p, q, h);
 
@@ -129,10 +130,10 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
                 J[q] = 0;
                 J[p] = 1;
 
-                // Add the sting only of irrep(I) is h
-                if (graph->sym(I) == h)
+                // Add the string only of irrep(I) is h
+                if (string_class_->symmetry(I) == h)
                     list[pq_pair].push_back(
-                        StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
+                        StringSubstitution(sign, addresser->add(I), addresser->add(J)));
             } while (std::next_permutation(b_begin, b_end));
 
         } // End loop over h

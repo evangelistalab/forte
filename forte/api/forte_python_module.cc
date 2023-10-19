@@ -85,6 +85,7 @@ void export_ForteCubeFile(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
 void export_SemiCanonical(py::module& m);
+void export_DavidsonLiuSolver(py::module& m);
 
 void set_master_screen_threshold(double value);
 double get_master_screen_threshold();
@@ -292,6 +293,8 @@ PYBIND11_MODULE(_forte, m) {
     export_ForteCubeFile(m);
 
     export_MOSpaceInfo(m);
+
+    export_DavidsonLiuSolver(m);
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")

@@ -1066,7 +1066,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     Slice slice_col(holepi, holepi + dim_virt_small);
     Ua->set_block(slice_row, slice_col, Wa);
 
-    save_psi4_vector("NAT_OCC_VIRT", *D1v_evals, holepi);
+    write_psi_vector("NAT_OCC_VIRT", *D1v_evals, holepi);
     return std::make_tuple(dim_frzv, Ua);
 }
 

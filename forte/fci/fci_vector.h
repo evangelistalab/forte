@@ -46,6 +46,7 @@ class ActiveSpaceIntegrals;
 class BinaryGraph;
 class MOSpaceInfo;
 class StringLists;
+class StringAddress;
 
 class FCIVector {
   public:
@@ -65,22 +66,24 @@ class FCIVector {
     /// Copy the wave function object
     void copy_to(std::shared_ptr<psi::Vector> vec);
 
-    /// Form the diagonal part of the Hamiltonian
-    void form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
     //    double approximate_spin(double )
-
-    //    /// Initial guess
-    //    void initial_guess(FCIVector& diag, size_t num_dets = 100);
 
     ////    void set_to(Determinant& det);
     void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
     //    double get(int n);
     //    void plus_equal(double factor,FCIVector& wfn);
     //    void scale(double factor);
+
+    /// @brief Compute the norm of the wave function
+    /// @param power The power of the norm (default 2 = Frobenius norm)
     double norm(double power = 2.0);
-    ////    void normalize_wrt(Determinant& det);
+
+    /// @brief Normalize the wave function
     void normalize();
+
+    /// @brief Compute the dot product of this wave functions with another
+    /// @param wfn The wave function to dot with
+    /// @return The dot product
     double dot(FCIVector& wfn);
     double dot(std::shared_ptr<FCIVector>& wfn);
 
@@ -109,9 +112,6 @@ class FCIVector {
     /// Assume user specified active space
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
 
-    /// Return the elements with the smallest value
-    /// This function returns the tuple (C_I,irrep,Ia,Ib)
-    std::vector<std::tuple<double, size_t, size_t, size_t>> min_elements(size_t num_dets);
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
     std::vector<std::tuple<double, double, size_t, size_t, size_t>>
@@ -146,11 +146,12 @@ class FCIVector {
     std::shared_ptr<StringLists> lists_;
     // Graphs
     /// The alpha string graph
-    std::shared_ptr<BinaryGraph> alfa_graph_;
+    std::shared_ptr<StringAddress> alfa_address_;
     /// The beta string graph
-    std::shared_ptr<BinaryGraph> beta_graph_;
+    std::shared_ptr<StringAddress> beta_address_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
+
     std::vector<double> opdm_a_;
     std::vector<double> opdm_b_;
     std::vector<double> tpdm_aa_;
@@ -227,10 +228,3 @@ class FCIVector {
 } // namespace forte
 
 #endif // _fci_vector_
-
-////    DetAddress get_det_address(Determinant& det) {
-////        int sym = alfa_graph_->sym(det.get_alfa_bits());
-////        size_t alfa_string = alfa_graph_->rel_add(det.get_alfa_bits());
-////        size_t beta_string = beta_graph_->rel_add(det.get_beta_bits());
-////        return DetAddress(sym,alfa_string,beta_string);
-////    };

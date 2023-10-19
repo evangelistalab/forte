@@ -865,7 +865,7 @@ void ProjectorCI::post_iter_process() {
 
         // set SparseCISolver options
         sparse_solver_.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-        sparse_solver_.manual_guess(false);
+        sparse_solver_.reset_initial_guess();
         sparse_solver_.set_force_diag(false);
 
         auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
@@ -988,7 +988,7 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
     //  dyn_dets.push_back(dbs);
     // }
     sparse_solver_.set_spin_project(true);
-    sparse_solver_.manual_guess(false);
+    sparse_solver_.reset_initial_guess();
     sparse_solver_.set_force_diag(false);
 
     DeterminantHashVec det_map(dets_hashvec_);
@@ -1140,7 +1140,7 @@ void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C
 
     // set SparseCISolver options
     sparse_solver_.set_spin_project(true);
-    sparse_solver_.manual_guess(false);
+    sparse_solver_.reset_initial_guess();
     sparse_solver_.set_force_diag(false);
 
     auto sigma_vector2 = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
