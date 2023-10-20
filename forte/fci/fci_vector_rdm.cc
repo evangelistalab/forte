@@ -428,70 +428,45 @@ ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVecto
     const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
 
-    auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g2", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
-    g3.zero();
-    auto& rdm = g3.data();
+    auto Cl = Y1->pointer();
+    auto Cr = C1->pointer();
+
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "3RDM_AAA" : "3RDM_BBB",
+                                    {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+
+    auto na = alfa_address->nones();
+    auto nb = beta_address->nones();
+    if ((alfa and (na < 3)) or ((!alfa) and (nb < 3)))
+        return rdm;
+
+    auto& rdm_data = rdm.data();
 
     for (int h_K = 0; h_K < nirrep; ++h_K) {
         size_t maxK =
             alfa ? lists->alfa_address_3h()->strpi(h_K) : lists->beta_address_3h()->strpi(h_K);
-        for (int h_I = 0; h_I < nirrep; ++h_I) {
-            int h_Ib = h_I ^ symmetry;
-            int h_J = h_I;
-            auto Cl = alfa ? C_left.C(h_I) : C1;
-            auto Cr = alfa ? C_right.C(h_I) : Y1;
-            double** Clh = Cl->pointer();
-            double** Crh = Cr->pointer();
+        for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
+            int h_Ib = h_Ia ^ symmetry;
+            int h_Ja = h_Ia;
+            fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, h_Ia, h_Ib);
+            fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, h_Ia, h_Ib);
 
-            if (!alfa) {
-                Cl->zero();
-                Cr->zero();
-                size_t maxIa = alfa_address->strpi(h_I);
-                size_t maxIb = beta_address->strpi(h_Ib);
-
-                double** C0lh = C_left.C(h_I)->pointer();
-                double** C0rh = C_right.C(h_I)->pointer();
-
-                // Copy C0 transposed in C1
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Clh[Ib][Ia] = C0lh[Ia][Ib];
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Crh[Ib][Ia] = C0rh[Ia][Ib];
-            }
-
-            size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_I);
+            size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_Ia);
             if (maxL > 0) {
                 for (size_t K = 0; K < maxK; ++K) {
                     std::vector<H3StringSubstitution>& Klist =
-                        alfa ? lists->get_alfa_3h_list(h_K, K, h_I)
+                        alfa ? lists->get_alfa_3h_list(h_K, K, h_Ia)
                              : lists->get_beta_3h_list(h_K, K, h_Ib);
-                    for (const auto& Kel : Klist) {
-                        size_t p = Kel.p;
-                        size_t q = Kel.q;
-                        size_t r = Kel.r;
-                        size_t I = Kel.J;
-                        for (const auto& Lel : Klist) {
-                            size_t s = Lel.p;
-                            size_t t = Lel.q;
-                            size_t u = Lel.r;
-                            short sign = Kel.sign * Lel.sign;
-                            size_t J = Lel.J;
-
-                            double rdm_value = 0.0;
-                            rdm_value = psi::C_DDOT(maxL, &(Clh[J][0]), 1, &(Crh[I][0]), 1);
-
-                            rdm_value *= sign;
-
-                            rdm[six_index(p, q, r, s, t, u, ncmo)] += rdm_value;
+                    for (const auto& [sign_K, p, q, r, I] : Klist) {
+                        for (const auto& [sign_L, s, t, u, J] : Klist) {
+                            rdm_data[six_index(p, q, r, s, t, u, ncmo)] +=
+                                sign_K * sign_L * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                         }
                     }
                 }
             }
         }
     }
-    return g3;
+    return rdm;
 }
 
 ambit::Tensor FCIVector::compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVector& C_right) {
