@@ -39,3 +39,12 @@ jobs:
         cd objdir
         make -j4
         make install
+    
+    - name: Compile forte
+      run: |
+        cd ../forte
+        set cmake_psi4 = `psi4 --plugin-compile`
+        $cmake_psi4 --debug-output \
+        -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
+        -DENABLE_ForteTests=TRUE \        
+        make -j10        
