@@ -34,7 +34,6 @@
 #include "helpers/timer.h"
 #include "integrals/active_space_integrals.h"
 #include "fci_vector.h"
-#include "binary_graph.hpp"
 #include "string_lists.h"
 #include "string_address.h"
 

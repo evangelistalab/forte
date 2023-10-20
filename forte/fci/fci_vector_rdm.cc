@@ -25,29 +25,14 @@
  *
  * @END LICENSE
  */
-#include <algorithm>
-#include <cmath>
 
-#include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/process.h"
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libqt/qt.h"
 
-#include "base_classes/mo_space_info.h"
-#include "integrals/active_space_integrals.h"
-#include "helpers/timer.h"
-#include "sparse_ci/determinant.h"
-
-#include "fci_vector.h"
-#include "fci_solver.h"
-#include "binary_graph.hpp"
 #include "string_lists.h"
 #include "string_address.h"
 
-extern int fci_debug_level;
-
-using namespace psi;
+#include "fci_vector.h"
 
 namespace forte {
 
@@ -76,24 +61,9 @@ std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_ri
 
     if (max_rdm_level >= 2) {
         local_timer t;
-        if (na >= 2) {
-            g2aa = compute_2rdm_aa_same_irrep(C_left, C_right, true);
-        } else {
-            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nmo, nmo, nmo, nmo});
-            g2aa.zero();
-        }
-        if (nb >= 2) {
-            g2bb = compute_2rdm_aa_same_irrep(C_left, C_right, false);
-        } else {
-            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nmo, nmo, nmo, nmo});
-            g2bb.zero();
-        }
-        if ((na >= 1) and (nb >= 1)) {
-            g2ab = compute_2rdm_ab_same_irrep(C_left, C_right);
-        } else {
-            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nmo, nmo, nmo, nmo});
-            g2ab.zero();
-        }
+        g2aa = compute_2rdm_aa_same_irrep(C_left, C_right, true);
+        g2bb = compute_2rdm_aa_same_irrep(C_left, C_right, false);
+        g2ab = compute_2rdm_ab_same_irrep(C_left, C_right);
         rdm_timing.push_back(t.get());
     }
 
@@ -133,7 +103,7 @@ std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_ri
     }
 
     for (size_t n = 0; n < rdm_timing.size(); ++n) {
-        outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
+        psi::outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
     }
 
     if (type == RDMsType::spin_dependent) {
@@ -237,7 +207,7 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
                                               : lists->get_beta_vo_list(p_abs, q_abs, hIb);
                         double rdm_element = 0.0;
                         for (const auto& [sign, I, J] : vo) {
-                            rdm_element += sign * C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+                            rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                         }
                         rdm_data[p_abs * ncmo + q_abs] += rdm_element;
                     }
@@ -301,7 +271,7 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
 
                     double rdm_element = 0.0;
                     for (const auto& [sign, I, J] : OO) {
-                        rdm_element += sign * C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+                        rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                     }
 
                     rdm_data[tei_index(p_abs, q_abs, p_abs, q_abs, ncmo)] += rdm_element;
@@ -324,7 +294,7 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
 
                         double rdm_element = 0.0;
                         for (const auto& [sign, I, J] : VVOO) {
-                            rdm_element += sign * C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+                            rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                         }
 
                         rdm_data[tei_index(p_abs, q_abs, r_abs, s_abs, ncmo)] += rdm_element;
@@ -341,13 +311,13 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
         }
     } // End loop over h
 #if 0
-    outfile->Printf("\n TPDM:");
+    psi::outfile->Printf("\n TPDM:");
     for (int p = 0; p < no_; ++p) {
         for (int q = 0; q <= p; ++q) {
             for (int r = 0; r < no_; ++r) {
                 for (int s = 0; s <= r; ++s) {
                     if (std::fabs(rdm[tei_index(p,q,r,s)]) > 1.0e-12){
-                        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm[tei_index(p,q,r,s)]);
+                        psi::outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm[tei_index(p,q,r,s)]);
 
                     }
                 }
@@ -381,13 +351,13 @@ ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector
     // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep; ++Ia_sym) {
         int Ib_sym = Ia_sym ^ symmetry;
-        double** C = C_right.C(Ia_sym)->pointer();
+        const auto Cr = C_right.C(Ia_sym)->pointer();
 
         // Loop over all r,s
         for (int rs_sym = 0; rs_sym < nirrep; ++rs_sym) {
             int Jb_sym = Ib_sym ^ rs_sym;
             int Ja_sym = Jb_sym ^ symmetry;
-            double** Y = C_left.C(Ja_sym)->pointer();
+            const auto Cl = C_left.C(Ja_sym)->pointer();
             for (int r_sym = 0; r_sym < nirrep; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;
 
@@ -414,7 +384,8 @@ ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector
                                     double rdm_element = 0.0;
                                     for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
                                         for (const auto& [sign_b, Ib, Jb] : vo_beta) {
-                                            rdm_element += Y[Ja][Jb] * C[Ia][Ib] * sign_a * sign_b;
+                                            rdm_element +=
+                                                Cl[Ja][Jb] * Cr[Ia][Ib] * sign_a * sign_b;
                                         }
                                     }
                                     rdm_data[tei_index(p_abs, r_abs, q_abs, s_abs, ncmo)] +=
@@ -428,13 +399,13 @@ ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector
         }
     }
 #if 0
-    outfile->Printf("\n TPDM (ab):");
+    psi::outfile->Printf("\n TPDM (ab):");
     for (int p = 0; p < no_; ++p) {
         for (int q = 0; q < no_; ++q) {
             for (int r = 0; r < no_; ++r) {
                 for (int s = 0; s < no_; ++s) {
                     if (std::fabs(rdm[tei_index(p,q,r,s)]) > 1.0e-12){
-                        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm[tei_index(p,q,r,s)]);
+                        psi::outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,r,s, rdm[tei_index(p,q,r,s)]);
 
                     }
                 }
@@ -509,7 +480,7 @@ ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVecto
                             size_t J = Lel.J;
 
                             double rdm_value = 0.0;
-                            rdm_value = C_DDOT(maxL, &(Clh[J][0]), 1, &(Crh[I][0]), 1);
+                            rdm_value = psi::C_DDOT(maxL, &(Clh[J][0]), 1, &(Crh[I][0]), 1);
 
                             rdm_value *= sign;
 
@@ -731,7 +702,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
 
     Determinant I; // <- xsize (no_);
 
-    outfile->Printf("\n\n==> RDMs Test <==\n");
+    psi::outfile->Printf("\n\n==> RDMs Test <==\n");
 
     auto g1a = rdms->g1a();
     double error_1rdm_a = 0.0;
@@ -754,7 +725,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
     }
-    outfile->Printf("\n    AA 1-RDM Error :   %+e", error_1rdm_a);
+    psi::outfile->Printf("\n    AA 1-RDM Error :   %+e", error_1rdm_a);
     psi::Process::environment.globals["AA 1-RDM ERROR"] = error_1rdm_a;
 
     auto g1b = rdms->g1b();
@@ -778,7 +749,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
     }
-    outfile->Printf("\n    BB 1-RDM Error :   %+e", error_1rdm_b);
+    psi::outfile->Printf("\n    BB 1-RDM Error :   %+e", error_1rdm_b);
     psi::Process::environment.globals["BB 1-RDM ERROR"] = error_1rdm_b;
 
     bool test_2rdm_aa = true;
@@ -818,7 +789,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
         psi::Process::environment.globals["AAAA 2-RDM ERROR"] = error_2rdm_aa;
-        outfile->Printf("\n    AAAA 2-RDM Error :   %+e", error_2rdm_aa);
+        psi::outfile->Printf("\n    AAAA 2-RDM Error :   %+e", error_2rdm_aa);
     }
 
     if (test_2rdm_bb) {
@@ -850,7 +821,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
         psi::Process::environment.globals["BBBB 2-RDM ERROR"] = error_2rdm_bb;
-        outfile->Printf("\n    BBBB 2-RDM Error :   %+e", error_2rdm_bb);
+        psi::outfile->Printf("\n    BBBB 2-RDM Error :   %+e", error_2rdm_bb);
     }
 
     if (test_2rdm_ab) {
@@ -882,7 +853,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
         psi::Process::environment.globals["ABAB 2-RDM ERROR"] = error_2rdm_ab;
-        outfile->Printf("\n    ABAB 2-RDM Error :   %+e", error_2rdm_ab);
+        psi::outfile->Printf("\n    ABAB 2-RDM Error :   %+e", error_2rdm_ab);
     }
 
     if (test_3rdm_aab) {
@@ -921,7 +892,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
         psi::Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
-        outfile->Printf("\n    AABAAB 3-RDM Error : %+e", error_3rdm_aab);
+        psi::outfile->Printf("\n    AABAAB 3-RDM Error : %+e", error_3rdm_aab);
     }
 
     if (test_3rdm_abb) {
@@ -960,7 +931,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
         psi::Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
-        outfile->Printf("\n    ABBABB 3-RDM Error : %+e", error_3rdm_abb);
+        psi::outfile->Printf("\n    ABBABB 3-RDM Error : %+e", error_3rdm_abb);
     }
 
     if (test_3rdm_aaa) {
@@ -1000,7 +971,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
         psi::Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
-        outfile->Printf("\n    AAAAAA 3-RDM Error : %+e", error_3rdm_aaa);
+        psi::outfile->Printf("\n    AAAAAA 3-RDM Error : %+e", error_3rdm_aaa);
     }
 
     if (test_3rdm_bbb) {
@@ -1040,7 +1011,7 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
             }
         }
         psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
-        outfile->Printf("\n    BBBBBB 3-RDM Error : %+e", error_3rdm_bbb);
+        psi::outfile->Printf("\n    BBBBBB 3-RDM Error : %+e", error_3rdm_bbb);
     }
 }
 
