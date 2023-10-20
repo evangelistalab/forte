@@ -25,10 +25,17 @@ jobs:
 
     - name: Install dependencies
       run: |
+        echo $HOME
+        ls -l
         conda env update --file environment.yml --name base
         conda install psi4 -c psi4/label/dev
 
     - name: Install ambit
       run: |
-        pwd
+        cd ..
         git clone https://github.com/jturney/ambit.git
+        cd ambit
+        cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/bin/ambit
+        cd objdir
+        make -j4
+        make install
