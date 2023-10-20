@@ -55,257 +55,286 @@ namespace forte {
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIVector::compute_rdms(int max_order) {
+std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_right,
+                                              int max_rdm_level, RDMsType type) {
     std::vector<double> rdm_timing;
 
-    size_t na = alfa_address_->nones();
-    size_t nb = beta_address_->nones();
+    size_t na = C_left.alfa_address()->nones();
+    size_t nb = C_left.beta_address()->nones();
+    size_t nmo = C_left.ncmo_;
 
-    if (max_order >= 1) {
+    ambit::Tensor g1a, g1b;
+    ambit::Tensor g2aa, g2ab, g2bb;
+    ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
+
+    if (max_rdm_level >= 1) {
         local_timer t;
-        if (na >= 1)
-            compute_1rdm(opdm_a_, true);
-        if (nb >= 1)
-            compute_1rdm(opdm_b_, false);
+        g1a = FCIVector::compute_1rdm_same_irrep(C_left, C_right, true);
+        g1b = FCIVector::compute_1rdm_same_irrep(C_left, C_right, false);
         rdm_timing.push_back(t.get());
     }
 
-    if (max_order >= 2) {
+    if (max_rdm_level >= 2) {
         local_timer t;
-        if (na >= 2)
-            compute_2rdm_aa(tpdm_aa_, true);
-        if (nb >= 2)
-            compute_2rdm_aa(tpdm_bb_, false);
-        if ((na >= 1) and (nb >= 1))
-            compute_2rdm_ab(tpdm_ab_);
-        rdm_timing.push_back(t.get());
-    }
-
-    if (max_order >= 3) {
-        local_timer t;
-        if (na >= 3)
-            compute_3rdm_aaa(tpdm_aaa_, true);
-        if (nb >= 3)
-            compute_3rdm_aaa(tpdm_bbb_, false);
-        if ((na >= 2) and (nb >= 1))
-            compute_3rdm_aab(tpdm_aab_);
-        if ((na >= 1) and (nb >= 2))
-            compute_3rdm_abb(tpdm_abb_);
-        rdm_timing.push_back(t.get());
-    }
-
-    if (max_order >= 4) {
-    }
-
-    // Print RDM timings
-    if (print_ > 0) {
-        for (size_t n = 0; n < rdm_timing.size(); ++n) {
-            outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
+        if (na >= 2) {
+            g2aa = compute_2rdm_aa_same_irrep(C_left, C_right, true);
+        } else {
+            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nmo, nmo, nmo, nmo});
+            g2aa.zero();
         }
+        if (nb >= 2) {
+            g2bb = compute_2rdm_aa_same_irrep(C_left, C_right, false);
+        } else {
+            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nmo, nmo, nmo, nmo});
+            g2bb.zero();
+        }
+        if ((na >= 1) and (nb >= 1)) {
+            g2ab = compute_2rdm_ab_same_irrep(C_left, C_right);
+        } else {
+            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nmo, nmo, nmo, nmo});
+            g2ab.zero();
+        }
+        rdm_timing.push_back(t.get());
     }
+
+    if (max_rdm_level >= 3) {
+        local_timer t;
+        if (na >= 3) {
+            g3aaa = compute_3rdm_aaa_same_irrep(C_left, C_right, true);
+        } else {
+            g3aaa =
+                ambit::Tensor::build(ambit::CoreTensor, "g3aaa", {nmo, nmo, nmo, nmo, nmo, nmo});
+            g3aaa.zero();
+        }
+        if (nb >= 3) {
+            g3bbb = compute_3rdm_aaa_same_irrep(C_left, C_right, false);
+        } else {
+            g3bbb =
+                ambit::Tensor::build(ambit::CoreTensor, "g3bbb", {nmo, nmo, nmo, nmo, nmo, nmo});
+            g3bbb.zero();
+        }
+
+        if ((na >= 2) and (nb >= 1)) {
+            g3aab = compute_3rdm_aab_same_irrep(C_left, C_right);
+        } else {
+            g3aab =
+                ambit::Tensor::build(ambit::CoreTensor, "g3aab", {nmo, nmo, nmo, nmo, nmo, nmo});
+            g3aab.zero();
+        }
+
+        if ((na >= 1) and (nb >= 2)) {
+            g3abb = compute_3rdm_abb_same_irrep(C_left, C_right);
+        } else {
+            g3abb =
+                ambit::Tensor::build(ambit::CoreTensor, "g3abb", {nmo, nmo, nmo, nmo, nmo, nmo});
+            g3abb.zero();
+        }
+        rdm_timing.push_back(t.get());
+    }
+
+    for (size_t n = 0; n < rdm_timing.size(); ++n) {
+        outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
+    }
+
+    if (type == RDMsType::spin_dependent) {
+        if (max_rdm_level == 1) {
+            return std::make_shared<RDMsSpinDependent>(g1a, g1b);
+        }
+        if (max_rdm_level == 2) {
+            return std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb);
+        }
+        if (max_rdm_level == 3) {
+            return std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
+                                                       g3abb, g3bbb);
+        }
+    } else {
+        g1a("pq") += g1b("pq");
+
+        if (max_rdm_level > 1) {
+            g2aa("pqrs") += g2ab("pqrs") + g2ab("qpsr");
+            g2aa("pqrs") += g2bb("pqrs");
+        }
+        if (max_rdm_level > 2) {
+            g3aaa("pqrstu") += g3aab("pqrstu") + g3aab("prqsut") + g3aab("qrptus");
+            g3aaa("pqrstu") += g3abb("pqrstu") + g3abb("qprtsu") + g3abb("rpqust");
+            g3aaa("pqrstu") += g3bbb("pqrstu");
+        }
+        if (max_rdm_level == 1)
+            return std::make_shared<RDMsSpinFree>(g1a);
+        if (max_rdm_level == 2)
+            return std::make_shared<RDMsSpinFree>(g1a, g2aa);
+        if (max_rdm_level == 3)
+            return std::make_shared<RDMsSpinFree>(g1a, g2aa, g3aaa);
+    }
+
+    if (max_rdm_level >= 4) {
+        throw std::runtime_error("RDMs of order 4 or higher are not implemented in FCISolver (and "
+                                 "more generally in Forte).");
+    }
+    return std::make_shared<RDMsSpinDependent>();
 }
 
-double FCIVector::energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
-    // Compute the energy from the 1-RDM and 2-RDM
-    size_t na = alfa_address_->nones();
-    size_t nb = beta_address_->nones();
-
-    double nuclear_repulsion_energy =
-        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
-
-    double scalar_energy = fci_ints->frozen_core_energy() + fci_ints->scalar_energy();
-    double energy_1rdm = 0.0;
-    double energy_2rdm = 0.0;
-
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            energy_1rdm += opdm_a_[ncmo_ * p + q] * fci_ints->oei_a(p, q);
-            energy_1rdm += opdm_b_[ncmo_ * p + q] * fci_ints->oei_b(p, q);
-        }
+void fill_C_block(FCIVector& C, double** m, bool alfa, std::shared_ptr<StringAddress> alfa_address,
+                  std::shared_ptr<StringAddress> beta_address, int ha, int hb) {
+    // if alfa is true just copy the block
+    double** c = C.C(ha)->pointer();
+    size_t maxIa = alfa_address->strpi(ha);
+    size_t maxIb = beta_address->strpi(hb);
+    if (alfa) {
+        for (size_t Ia = 0; Ia < maxIa; ++Ia)
+            for (size_t Ib = 0; Ib < maxIb; ++Ib)
+                m[Ia][Ib] = c[Ia][Ib];
+    } else {
+        // if alfa is false, transpose the block
+        // Copy C0 transposed in C1
+        for (size_t Ia = 0; Ia < maxIa; ++Ia)
+            for (size_t Ib = 0; Ib < maxIb; ++Ib)
+                m[Ib][Ia] = c[Ia][Ib];
     }
-
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
-                    if (na >= 2)
-                        energy_2rdm +=
-                            0.25 * tpdm_aa_[tei_index(p, q, r, s)] * fci_ints->tei_aa(p, q, r, s);
-                    if ((na >= 1) and (nb >= 1))
-                        energy_2rdm +=
-                            tpdm_ab_[tei_index(p, q, r, s)] * fci_ints->tei_ab(p, q, r, s);
-                    if (nb >= 2)
-                        energy_2rdm +=
-                            0.25 * tpdm_bb_[tei_index(p, q, r, s)] * fci_ints->tei_bb(p, q, r, s);
-                }
-            }
-        }
-    }
-    double total_energy = nuclear_repulsion_energy + scalar_energy + energy_1rdm + energy_2rdm;
-    outfile->Printf("\n    Total Energy: %25.15f\n", total_energy);
-    outfile->Printf("\n scalar_energy = %8.8f", scalar_energy);
-    outfile->Printf("\n energy_1rdm = %8.8f", energy_1rdm);
-    outfile->Printf("\n energy_2rdm = %8.8f", energy_2rdm);
-    outfile->Printf("\n nuc_repulsion_energy = %8.8f", nuclear_repulsion_energy);
-    return total_energy;
 }
 
 /**
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
-    rdm.assign(ncmo_ * ncmo_, 0.0);
+ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa) {
+    size_t ncmo = C_left.ncmo_;
+    size_t nirrep = C_left.nirrep_;
+    size_t symmetry = C_left.symmetry_;
+    const auto& detpi = C_left.detpi_;
+    const auto& alfa_address = C_left.alfa_address_;
+    const auto& beta_address = C_left.beta_address_;
+    const auto& cmopi = C_left.cmopi_;
+    const auto& cmopi_offset = C_left.cmopi_offset_;
+    const auto& lists = C_left.lists_;
+    auto Cl = Y1->pointer();
+    auto Cr = C1->pointer();
 
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        if (detpi_[alfa_sym] > 0) {
-            auto C = alfa ? C_[alfa_sym] : C1;
-            double** Ch = C->pointer();
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo, ncmo});
 
-            if (!alfa) {
-                C->zero();
-                size_t maxIa = alfa_address_->strpi(alfa_sym);
-                size_t maxIb = beta_address_->strpi(beta_sym);
+    auto na = alfa_address->nones();
+    auto nb = beta_address->nones();
+    if ((alfa and (na < 1)) or (!alfa) and (nb < 1))
+        return rdm;
 
-                double** C0h = C_[alfa_sym]->pointer();
+    auto& rdm_data = rdm.data();
 
-                // Copy C0 transposed in C1
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Ch[Ib][Ia] = C0h[Ia][Ib];
-            }
+    for (size_t hIa = 0; hIa < nirrep; ++hIa) {
+        int hIb = hIa ^ symmetry;
+        if (detpi[hIa] > 0) {
+            // Fill C1 and Y1 with the correct block
+            fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, hIa, hIb);
+            fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, hIa, hIb);
 
-            size_t maxL = alfa ? beta_address_->strpi(beta_sym) : alfa_address_->strpi(alfa_sym);
-
-            for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+            const size_t maxL = alfa ? beta_address->strpi(hIb) : alfa_address->strpi(hIa);
+            for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
-                for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                    for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                        int p_abs = p_rel + cmopi_offset_[p_sym];
-                        int q_abs = q_rel + cmopi_offset_[q_sym];
-                        std::vector<StringSubstitution>& vo =
-                            alfa ? lists_->get_alfa_vo_list(p_abs, q_abs, alfa_sym)
-                                 : lists_->get_beta_vo_list(p_abs, q_abs, beta_sym);
-                        int maxss = vo.size();
-                        for (int ss = 0; ss < maxss; ++ss) {
-                            double H = static_cast<double>(vo[ss].sign);
-                            double* y = &(Ch[vo[ss].J][0]);
-                            double* c = &(Ch[vo[ss].I][0]);
-                            for (size_t L = 0; L < maxL; ++L) {
-                                rdm[p_abs * ncmo_ + q_abs] += c[L] * y[L] * H;
-                            }
+                for (int p_rel = 0; p_rel < cmopi[p_sym]; ++p_rel) {
+                    for (int q_rel = 0; q_rel < cmopi[q_sym]; ++q_rel) {
+                        int p_abs = p_rel + cmopi_offset[p_sym];
+                        int q_abs = q_rel + cmopi_offset[q_sym];
+                        const auto& vo = alfa ? lists->get_alfa_vo_list(p_abs, q_abs, hIa)
+                                              : lists->get_beta_vo_list(p_abs, q_abs, hIb);
+                        double rdm_element = 0.0;
+                        for (const auto& [sign, I, J] : vo) {
+                            rdm_element += sign * C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                         }
+                        rdm_data[p_abs * ncmo + q_abs] += rdm_element;
                     }
                 }
             }
         }
     } // End loop over h
-
-#if 0
-    outfile->Printf("\n OPDM:");
-    for (int p = 0; p < no_; ++p) {
-        outfile->Printf("\n");
-        for (int q = 0; q < no_; ++q) {
-            outfile->Printf("%15.12f ",rdm[oei_index(p,q)]);
-        }
-    }
-#endif
+    return rdm;
 }
 
 /**
  * Compute the aa/bb two-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = aa, false = bb
  */
-void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+                                                    bool alfa) {
+    size_t ncmo = C_left.ncmo_;
+    size_t nirrep = C_left.nirrep_;
+    size_t symmetry = C_left.symmetry_;
+    const auto& detpi = C_left.detpi_;
+    const auto& alfa_address = C_left.alfa_address_;
+    const auto& beta_address = C_left.beta_address_;
+    const auto& cmopi = C_left.cmopi_;
+    const auto& cmopi_offset = C_left.cmopi_offset_;
+    const auto& lists = C_left.lists_;
+    auto Cl = Y1->pointer();
+    auto Cr = C1->pointer();
+
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "2RDM_AA" : "2RDM_BB",
+                                    {ncmo, ncmo, ncmo, ncmo});
+
+    auto na = alfa_address->nones();
+    auto nb = beta_address->nones();
+    if ((alfa and (na < 2)) or ((!alfa) and (nb < 2)))
+        return rdm;
+
+    auto& rdm_data = rdm.data();
+
     // Notation
     // ha - symmetry of alpha strings
     // hb - symmetry of beta strings
-    for (int ha = 0; ha < nirrep_; ++ha) {
-        int hb = ha ^ symmetry_;
-        if (detpi_[ha] > 0) {
-            auto C = alfa ? C_[ha] : C1;
-            double** Ch = C->pointer();
+    for (int ha = 0; ha < nirrep; ++ha) {
+        int hb = ha ^ symmetry;
+        if (detpi[ha] > 0) {
+            // Fill C1 and Y1 with the correct block
+            fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, ha, hb);
+            fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, ha, hb);
 
-            if (!alfa) {
-                C->zero();
-                size_t maxIa = alfa_address_->strpi(ha);
-                size_t maxIb = beta_address_->strpi(hb);
-
-                double** C0h = C_[ha]->pointer();
-
-                // Copy C0 transposed in C1
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Ch[Ib][Ia] = C0h[Ia][Ib];
-            }
-
-            size_t maxL = alfa ? beta_address_->strpi(hb) : alfa_address_->strpi(ha);
+            size_t maxL = alfa ? beta_address->strpi(hb) : alfa_address->strpi(ha);
             // Loop over (p>q) == (p>q)
-            for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
-                size_t max_pq = lists_->pairpi(pq_sym);
+            for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
+                size_t max_pq = lists->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
+                    const Pair& pq_pair = lists->get_pair_list(pq_sym, pq);
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
 
                     std::vector<StringSubstitution>& OO =
-                        alfa ? lists_->get_alfa_oo_list(pq_sym, pq, ha)
-                             : lists_->get_beta_oo_list(pq_sym, pq, hb);
+                        alfa ? lists->get_alfa_oo_list(pq_sym, pq, ha)
+                             : lists->get_beta_oo_list(pq_sym, pq, hb);
+
                     double rdm_element = 0.0;
-                    size_t maxss = OO.size();
-                    for (size_t ss = 0; ss < maxss; ++ss) {
-                        double H = static_cast<double>(OO[ss].sign);
-                        double* y = &(Ch[OO[ss].J][0]);
-                        double* c = &(Ch[OO[ss].I][0]);
-                        for (size_t L = 0; L < maxL; ++L) {
-                            rdm_element += c[L] * y[L] * H;
-                        }
+                    for (const auto& [sign, I, J] : OO) {
+                        rdm_element += sign * C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                     }
 
-                    rdm[tei_index(p_abs, q_abs, p_abs, q_abs)] += rdm_element;
-                    rdm[tei_index(p_abs, q_abs, q_abs, p_abs)] -= rdm_element;
-                    rdm[tei_index(q_abs, p_abs, p_abs, q_abs)] -= rdm_element;
-                    rdm[tei_index(q_abs, p_abs, q_abs, p_abs)] += rdm_element;
+                    rdm_data[tei_index(p_abs, q_abs, p_abs, q_abs, ncmo)] += rdm_element;
+                    rdm_data[tei_index(p_abs, q_abs, q_abs, p_abs, ncmo)] -= rdm_element;
+                    rdm_data[tei_index(q_abs, p_abs, p_abs, q_abs, ncmo)] -= rdm_element;
+                    rdm_data[tei_index(q_abs, p_abs, q_abs, p_abs, ncmo)] += rdm_element;
                 }
             }
             // Loop over (p>q) > (r>s)
-            for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
-                size_t max_pq = lists_->pairpi(pq_sym);
+            for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
+                size_t max_pq = lists->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
-                    int p_abs = pq_pair.first;
-                    int q_abs = pq_pair.second;
+                    const auto& [p_abs, q_abs] = lists->get_pair_list(pq_sym, pq);
                     for (size_t rs = 0; rs < pq; ++rs) {
-                        const Pair& rs_pair = lists_->get_pair_list(pq_sym, rs);
-                        int r_abs = rs_pair.first;
-                        int s_abs = rs_pair.second;
+                        const auto& [r_abs, s_abs] = lists->get_pair_list(pq_sym, rs);
+
+                        const auto& VVOO =
+                            alfa ? lists->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, ha)
+                                 : lists->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, hb);
 
                         double rdm_element = 0.0;
-                        std::vector<StringSubstitution>& VVOO =
-                            alfa ? lists_->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, ha)
-                                 : lists_->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, hb);
-
-                        // TODO loop in a differen way
-                        size_t maxss = VVOO.size();
-                        for (size_t ss = 0; ss < maxss; ++ss) {
-                            double H = static_cast<double>(VVOO[ss].sign);
-                            double* y = &(Ch[VVOO[ss].J][0]);
-                            double* c = &(Ch[VVOO[ss].I][0]);
-                            for (size_t L = 0; L < maxL; ++L) {
-                                rdm_element += c[L] * y[L] * H;
-                            }
+                        for (const auto& [sign, I, J] : VVOO) {
+                            rdm_element += sign * C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                         }
 
-                        rdm[tei_index(p_abs, q_abs, r_abs, s_abs)] += rdm_element;
-                        rdm[tei_index(q_abs, p_abs, r_abs, s_abs)] -= rdm_element;
-                        rdm[tei_index(p_abs, q_abs, s_abs, r_abs)] -= rdm_element;
-                        rdm[tei_index(q_abs, p_abs, s_abs, r_abs)] += rdm_element;
-                        rdm[tei_index(r_abs, s_abs, p_abs, q_abs)] += rdm_element;
-                        rdm[tei_index(r_abs, s_abs, q_abs, p_abs)] -= rdm_element;
-                        rdm[tei_index(s_abs, r_abs, p_abs, q_abs)] -= rdm_element;
-                        rdm[tei_index(s_abs, r_abs, q_abs, p_abs)] += rdm_element;
+                        rdm_data[tei_index(p_abs, q_abs, r_abs, s_abs, ncmo)] += rdm_element;
+                        rdm_data[tei_index(q_abs, p_abs, r_abs, s_abs, ncmo)] -= rdm_element;
+                        rdm_data[tei_index(p_abs, q_abs, s_abs, r_abs, ncmo)] -= rdm_element;
+                        rdm_data[tei_index(q_abs, p_abs, s_abs, r_abs, ncmo)] += rdm_element;
+                        rdm_data[tei_index(r_abs, s_abs, p_abs, q_abs, ncmo)] += rdm_element;
+                        rdm_data[tei_index(r_abs, s_abs, q_abs, p_abs, ncmo)] -= rdm_element;
+                        rdm_data[tei_index(s_abs, r_abs, p_abs, q_abs, ncmo)] -= rdm_element;
+                        rdm_data[tei_index(s_abs, r_abs, q_abs, p_abs, ncmo)] += rdm_element;
                     }
                 }
             }
@@ -326,60 +355,70 @@ void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
         }
     }
 #endif
+    return rdm;
 }
 
-/**
- * Compute the ab two-particle density matrix for a given wave function
- * @param alfa flag for alfa or beta component, true = aa, false = bb
- */
-void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+    size_t ncmo = C_left.ncmo_;
+    size_t nirrep = C_left.nirrep_;
+    size_t symmetry = C_left.symmetry_;
+    const auto& detpi = C_left.detpi_;
+    const auto& alfa_address = C_left.alfa_address_;
+    const auto& beta_address = C_left.beta_address_;
+    const auto& cmopi = C_left.cmopi_;
+    const auto& cmopi_offset = C_left.cmopi_offset_;
+    const auto& lists = C_left.lists_;
+
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, "2RDM_AB", {ncmo, ncmo, ncmo, ncmo});
+
+    auto na = alfa_address->nones();
+    auto nb = beta_address->nones();
+    if ((na < 1) or (nb < 1))
+        return rdm;
+
+    auto& rdm_data = rdm.data();
 
     // Loop over blocks of matrix C
-    for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
-        int Ib_sym = Ia_sym ^ symmetry_;
-        double** C = C_[Ia_sym]->pointer();
+    for (int Ia_sym = 0; Ia_sym < nirrep; ++Ia_sym) {
+        int Ib_sym = Ia_sym ^ symmetry;
+        double** C = C_right.C(Ia_sym)->pointer();
 
         // Loop over all r,s
-        for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
+        for (int rs_sym = 0; rs_sym < nirrep; ++rs_sym) {
             int Jb_sym = Ib_sym ^ rs_sym;
-            int Ja_sym = Jb_sym ^ symmetry_;
-            double** Y = C_[Ja_sym]->pointer();
-            for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
+            int Ja_sym = Jb_sym ^ symmetry;
+            double** Y = C_left.C(Ja_sym)->pointer();
+            for (int r_sym = 0; r_sym < nirrep; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;
 
-                for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                    for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
-                        int r_abs = r_rel + cmopi_offset_[r_sym];
-                        int s_abs = s_rel + cmopi_offset_[s_sym];
+                for (int r_rel = 0; r_rel < cmopi[r_sym]; ++r_rel) {
+                    for (int s_rel = 0; s_rel < cmopi[s_sym]; ++s_rel) {
+                        int r_abs = r_rel + cmopi_offset[r_sym];
+                        int s_abs = s_rel + cmopi_offset[s_sym];
 
                         // Grab list (r,s,Ib_sym)
-                        std::vector<StringSubstitution>& vo_beta =
-                            lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
-                        size_t maxSSb = vo_beta.size();
+                        const auto& vo_beta = lists->get_beta_vo_list(r_abs, s_abs, Ib_sym);
 
                         // Loop over all p,q
                         int pq_sym = rs_sym;
-                        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+                        for (int p_sym = 0; p_sym < nirrep; ++p_sym) {
                             int q_sym = pq_sym ^ p_sym;
-                            for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                                int p_abs = p_rel + cmopi_offset_[p_sym];
-                                for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                                    int q_abs = q_rel + cmopi_offset_[q_sym];
+                            for (int p_rel = 0; p_rel < cmopi[p_sym]; ++p_rel) {
+                                int p_abs = p_rel + cmopi_offset[p_sym];
+                                for (int q_rel = 0; q_rel < cmopi[q_sym]; ++q_rel) {
+                                    int q_abs = q_rel + cmopi_offset[q_sym];
 
-                                    std::vector<StringSubstitution>& vo_alfa =
-                                        lists_->get_alfa_vo_list(p_abs, q_abs, Ia_sym);
+                                    const auto& vo_alfa =
+                                        lists->get_alfa_vo_list(p_abs, q_abs, Ia_sym);
 
-                                    size_t maxSSa = vo_alfa.size();
-                                    for (size_t SSa = 0; SSa < maxSSa; ++SSa) {
-                                        for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                            double V = static_cast<double>(vo_alfa[SSa].sign *
-                                                                           vo_beta[SSb].sign);
-                                            rdm[tei_index(p_abs, r_abs, q_abs, s_abs)] +=
-                                                Y[vo_alfa[SSa].J][vo_beta[SSb].J] *
-                                                C[vo_alfa[SSa].I][vo_beta[SSb].I] * V;
+                                    double rdm_element = 0.0;
+                                    for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
+                                        for (const auto& [sign_b, Ib, Jb] : vo_beta) {
+                                            rdm_element += Y[Ja][Jb] * C[Ia][Ib] * sign_a * sign_b;
                                         }
                                     }
+                                    rdm_data[tei_index(p_abs, r_abs, q_abs, s_abs, ncmo)] +=
+                                        rdm_element;
                                 }
                             }
                         } // End loop over p,q
@@ -403,39 +442,60 @@ void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
         }
     }
 #endif
+    return rdm;
 }
 
-void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+                                                     bool alfa) {
+    size_t ncmo = C_left.ncmo_;
+    size_t nirrep = C_left.nirrep_;
+    size_t symmetry = C_left.symmetry_;
+    const auto& detpi = C_left.detpi_;
+    const auto& alfa_address = C_left.alfa_address_;
+    const auto& beta_address = C_left.beta_address_;
+    const auto& cmopi = C_left.cmopi_;
+    const auto& cmopi_offset = C_left.cmopi_offset_;
+    const auto& lists = C_left.lists_;
 
-    for (int h_K = 0; h_K < nirrep_; ++h_K) {
+    auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g2", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+    g3.zero();
+    auto& rdm = g3.data();
+
+    for (int h_K = 0; h_K < nirrep; ++h_K) {
         size_t maxK =
-            alfa ? lists_->alfa_address_3h()->strpi(h_K) : lists_->beta_address_3h()->strpi(h_K);
-        for (int h_I = 0; h_I < nirrep_; ++h_I) {
-            int h_Ib = h_I ^ symmetry_;
+            alfa ? lists->alfa_address_3h()->strpi(h_K) : lists->beta_address_3h()->strpi(h_K);
+        for (int h_I = 0; h_I < nirrep; ++h_I) {
+            int h_Ib = h_I ^ symmetry;
             int h_J = h_I;
-            auto C = alfa ? C_[h_J] : C1;
-            double** Ch = C->pointer();
+            auto Cl = alfa ? C_left.C(h_I) : C1;
+            auto Cr = alfa ? C_right.C(h_I) : Y1;
+            double** Clh = Cl->pointer();
+            double** Crh = Cr->pointer();
 
             if (!alfa) {
-                C->zero();
-                size_t maxIa = alfa_address_->strpi(h_I);
-                size_t maxIb = beta_address_->strpi(h_Ib);
+                Cl->zero();
+                Cr->zero();
+                size_t maxIa = alfa_address->strpi(h_I);
+                size_t maxIb = beta_address->strpi(h_Ib);
 
-                double** C0h = C_[h_I]->pointer();
+                double** C0lh = C_left.C(h_I)->pointer();
+                double** C0rh = C_right.C(h_I)->pointer();
 
                 // Copy C0 transposed in C1
                 for (size_t Ia = 0; Ia < maxIa; ++Ia)
                     for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Ch[Ib][Ia] = C0h[Ia][Ib];
+                        Clh[Ib][Ia] = C0lh[Ia][Ib];
+                for (size_t Ia = 0; Ia < maxIa; ++Ia)
+                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
+                        Crh[Ib][Ia] = C0rh[Ia][Ib];
             }
 
-            size_t maxL = alfa ? beta_address_->strpi(h_Ib) : alfa_address_->strpi(h_I);
+            size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_I);
             if (maxL > 0) {
                 for (size_t K = 0; K < maxK; ++K) {
                     std::vector<H3StringSubstitution>& Klist =
-                        alfa ? lists_->get_alfa_3h_list(h_K, K, h_I)
-                             : lists_->get_beta_3h_list(h_K, K, h_Ib);
+                        alfa ? lists->get_alfa_3h_list(h_K, K, h_I)
+                             : lists->get_beta_3h_list(h_K, K, h_Ib);
                     for (const auto& Kel : Klist) {
                         size_t p = Kel.p;
                         size_t q = Kel.q;
@@ -449,43 +509,56 @@ void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
                             size_t J = Lel.J;
 
                             double rdm_value = 0.0;
-                            rdm_value = C_DDOT(maxL, &(Ch[J][0]), 1, &(Ch[I][0]), 1);
+                            rdm_value = C_DDOT(maxL, &(Clh[J][0]), 1, &(Crh[I][0]), 1);
 
                             rdm_value *= sign;
 
-                            rdm[six_index(p, q, r, s, t, u)] += rdm_value;
+                            rdm[six_index(p, q, r, s, t, u, ncmo)] += rdm_value;
                         }
                     }
                 }
             }
         }
     }
+    return g3;
 }
 
-void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+ambit::Tensor FCIVector::compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+    size_t ncmo = C_left.ncmo_;
+    size_t nirrep = C_left.nirrep_;
+    size_t symmetry = C_left.symmetry_;
+    const auto& detpi = C_left.detpi_;
+    const auto& alfa_address = C_left.alfa_address_;
+    const auto& beta_address = C_left.beta_address_;
+    const auto& cmopi = C_left.cmopi_;
+    const auto& cmopi_offset = C_left.cmopi_offset_;
+    const auto& lists = C_left.lists_;
 
-    for (int h_K = 0; h_K < nirrep_; ++h_K) {
-        size_t maxK = lists_->alfa_address_2h()->strpi(h_K);
-        for (int h_L = 0; h_L < nirrep_; ++h_L) {
-            size_t maxL = lists_->beta_address_1h()->strpi(h_L);
+    auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g2", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+    g3.zero();
+    auto& rdm = g3.data();
+
+    for (int h_K = 0; h_K < nirrep; ++h_K) {
+        size_t maxK = lists->alfa_address_2h()->strpi(h_K);
+        for (int h_L = 0; h_L < nirrep; ++h_L) {
+            size_t maxL = lists->beta_address_1h()->strpi(h_L);
             // I and J refer to the 2h part of the operator
-            for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
-                int h_Mb = h_Ia ^ symmetry_;
-                double** C_I_p = C_[h_Ia]->pointer();
-                for (int h_Ja = 0; h_Ja < nirrep_; ++h_Ja) {
-                    int h_Nb = h_Ja ^ symmetry_;
-                    double** C_J_p = C_[h_Ja]->pointer();
+            for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
+                int h_Mb = h_Ia ^ symmetry;
+                double** C_I_p = C_right.C(h_Ia)->pointer();
+                for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
+                    int h_Nb = h_Ja ^ symmetry;
+                    double** C_J_p = C_left.C(h_Ja)->pointer();
                     for (size_t K = 0; K < maxK; ++K) {
                         std::vector<H2StringSubstitution>& Ilist =
-                            lists_->get_alfa_2h_list(h_K, K, h_Ia);
+                            lists->get_alfa_2h_list(h_K, K, h_Ia);
                         std::vector<H2StringSubstitution>& Jlist =
-                            lists_->get_alfa_2h_list(h_K, K, h_Ja);
+                            lists->get_alfa_2h_list(h_K, K, h_Ja);
                         for (size_t L = 0; L < maxL; ++L) {
                             std::vector<H1StringSubstitution>& Mlist =
-                                lists_->get_beta_1h_list(h_L, L, h_Mb);
+                                lists->get_beta_1h_list(h_L, L, h_Mb);
                             std::vector<H1StringSubstitution>& Nlist =
-                                lists_->get_beta_1h_list(h_L, L, h_Nb);
+                                lists->get_beta_1h_list(h_L, L, h_Nb);
                             for (const auto& Iel : Ilist) {
                                 size_t q = Iel.p;
                                 size_t p = Iel.q;
@@ -501,7 +574,7 @@ void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
                                             size_t a = Nel.p;
                                             size_t N = Nel.J;
                                             short sign = Iel.sign * Jel.sign * Mel.sign * Nel.sign;
-                                            rdm[six_index(p, q, r, s, t, a)] +=
+                                            rdm[six_index(p, q, r, s, t, a, ncmo)] +=
                                                 sign * C_I_p[I][M] * C_J_p[J][N];
                                         }
                                     }
@@ -513,32 +586,45 @@ void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
             }
         }
     }
+    return g3;
 }
 
-void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
-    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
+ambit::Tensor FCIVector::compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+    size_t ncmo = C_left.ncmo_;
+    size_t nirrep = C_left.nirrep_;
+    size_t symmetry = C_left.symmetry_;
+    const auto& detpi = C_left.detpi_;
+    const auto& alfa_address = C_left.alfa_address_;
+    const auto& beta_address = C_left.beta_address_;
+    const auto& cmopi = C_left.cmopi_;
+    const auto& cmopi_offset = C_left.cmopi_offset_;
+    const auto& lists = C_left.lists_;
 
-    for (int h_K = 0; h_K < nirrep_; ++h_K) {
-        size_t maxK = lists_->alfa_address_1h()->strpi(h_K);
-        for (int h_L = 0; h_L < nirrep_; ++h_L) {
-            size_t maxL = lists_->beta_address_2h()->strpi(h_L);
+    auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g2", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+    g3.zero();
+    auto& rdm = g3.data();
+
+    for (int h_K = 0; h_K < nirrep; ++h_K) {
+        size_t maxK = lists->alfa_address_1h()->strpi(h_K);
+        for (int h_L = 0; h_L < nirrep; ++h_L) {
+            size_t maxL = lists->beta_address_2h()->strpi(h_L);
             // I and J refer to the 1h part of the operator
-            for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
-                int h_Mb = h_Ia ^ symmetry_;
-                double** C_I_p = C_[h_Ia]->pointer();
-                for (int h_Ja = 0; h_Ja < nirrep_; ++h_Ja) {
-                    int h_Nb = h_Ja ^ symmetry_;
-                    double** C_J_p = C_[h_Ja]->pointer();
+            for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
+                int h_Mb = h_Ia ^ symmetry;
+                double** C_I_p = C_right.C(h_Ia)->pointer();
+                for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
+                    int h_Nb = h_Ja ^ symmetry;
+                    double** C_J_p = C_left.C(h_Ja)->pointer();
                     for (size_t K = 0; K < maxK; ++K) {
                         std::vector<H1StringSubstitution>& Ilist =
-                            lists_->get_alfa_1h_list(h_K, K, h_Ia);
+                            lists->get_alfa_1h_list(h_K, K, h_Ia);
                         std::vector<H1StringSubstitution>& Jlist =
-                            lists_->get_alfa_1h_list(h_K, K, h_Ja);
+                            lists->get_alfa_1h_list(h_K, K, h_Ja);
                         for (size_t L = 0; L < maxL; ++L) {
                             std::vector<H2StringSubstitution>& Mlist =
-                                lists_->get_beta_2h_list(h_L, L, h_Mb);
+                                lists->get_beta_2h_list(h_L, L, h_Mb);
                             std::vector<H2StringSubstitution>& Nlist =
-                                lists_->get_beta_2h_list(h_L, L, h_Nb);
+                                lists->get_beta_2h_list(h_L, L, h_Nb);
                             for (size_t Iel = 0; Iel < Ilist.size(); Iel++) {
                                 size_t p = Ilist[Iel].p;
                                 size_t I = Ilist[Iel].J;
@@ -555,7 +641,7 @@ void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
                                             size_t N = Nel.J;
                                             short sign =
                                                 Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
-                                            rdm[six_index(p, q, r, s, t, a)] +=
+                                            rdm[six_index(p, q, r, s, t, a, ncmo)] +=
                                                 sign * C_I_p[I][M] * C_J_p[J][N];
                                             //}//End of if statement
                                         }
@@ -568,48 +654,132 @@ void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
             }
         }
     }
+    return g3;
 }
 
-void FCIVector::rdm_test() {
+void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::shared_ptr<RDMs> rdms) {
     String Ia, Ib;
 
     // Generate the strings 1111100000
     //                      { k }{n-k}
 
-    size_t na = lists_->na();
-    size_t nb = lists_->nb();
+    size_t ncmo = Cl.ncmo_;
 
-    for (size_t i = 0; i < ncmo_ - na; ++i)
-        Ia[i] = false; // 0
-    for (size_t i = ncmo_ - na; i < ncmo_; ++i)
-        Ia[i] = true; // 1
+    std::vector<Determinant> left_dets, right_dets;
+    std::map<Determinant, size_t> left_dets_map, right_dets_map;
+    std::vector<double> left_C, right_C;
 
-    for (size_t i = 0; i < ncmo_ - nb; ++i)
-        Ib[i] = false; // 0
-    for (size_t i = ncmo_ - nb; i < ncmo_; ++i)
-        Ib[i] = true; // 1
+    // left
+    {
+        size_t left_na = Cl.lists_->na();
+        size_t left_nb = Cl.lists_->nb();
+        size_t num_det = 0;
+        for (size_t i = 0; i < ncmo_ - left_na; ++i)
+            Ia[i] = false; // 0
+        for (size_t i = ncmo_ - left_na; i < ncmo_; ++i)
+            Ia[i] = true; // 1
 
-    std::vector<Determinant> dets;
-    std::map<Determinant, size_t> dets_map;
-
-    std::vector<double> C;
-
-    size_t num_det = 0;
-    do {
+        for (size_t i = 0; i < ncmo_ - left_nb; ++i)
+            Ib[i] = false; // 0
+        for (size_t i = ncmo_ - left_nb; i < ncmo_; ++i)
+            Ib[i] = true; // 1
         do {
-            if ((alfa_address_->sym(Ia) ^ beta_address_->sym(Ib)) == static_cast<int>(symmetry_)) {
-                Determinant d(Ia, Ib);
-                dets.push_back(d);
-                double c =
-                    C_[alfa_address_->sym(Ia)]->get(alfa_address_->add(Ia), beta_address_->add(Ib));
-                C.push_back(c);
-                dets_map[d] = num_det;
-                num_det++;
-            }
-        } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo_));
-    } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo_));
+            do {
+                if ((alfa_address_->sym(Ia) ^ beta_address_->sym(Ib)) ==
+                    static_cast<int>(symmetry_)) {
+                    Determinant d(Ia, Ib);
+                    left_dets.push_back(d);
+                    double c = C_[alfa_address_->sym(Ia)]->get(alfa_address_->add(Ia),
+                                                               beta_address_->add(Ib));
+                    left_C.push_back(c);
+                    left_dets_map[d] = num_det;
+                    num_det++;
+                }
+            } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo_));
+        } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo_));
+    }
+
+    // right
+    {
+        size_t right_na = Cr.lists_->na();
+        size_t right_nb = Cr.lists_->nb();
+        size_t num_det = 0;
+        for (size_t i = 0; i < ncmo_ - right_na; ++i)
+            Ia[i] = false; // 0
+        for (size_t i = ncmo_ - right_na; i < ncmo_; ++i)
+            Ia[i] = true; // 1
+
+        for (size_t i = 0; i < ncmo_ - right_nb; ++i)
+            Ib[i] = false; // 0
+        for (size_t i = ncmo_ - right_nb; i < ncmo_; ++i)
+            Ib[i] = true; // 1
+        do {
+            do {
+                if ((alfa_address_->sym(Ia) ^ beta_address_->sym(Ib)) ==
+                    static_cast<int>(symmetry_)) {
+                    Determinant d(Ia, Ib);
+                    right_dets.push_back(d);
+                    double c = C_[alfa_address_->sym(Ia)]->get(alfa_address_->add(Ia),
+                                                               beta_address_->add(Ib));
+                    right_C.push_back(c);
+                    right_dets_map[d] = num_det;
+                    num_det++;
+                }
+            } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo_));
+        } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo_));
+    }
 
     Determinant I; // <- xsize (no_);
+
+    outfile->Printf("\n\n==> RDMs Test <==\n");
+
+    auto g1a = rdms->g1a();
+    double error_1rdm_a = 0.0;
+    for (size_t p = 0; p < ncmo; p++) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            double rdm = 0.0;
+            for (size_t i = 0; i < right_dets.size(); ++i) {
+                I = right_dets[i];
+                double sign = 1.0;
+                sign *= I.destroy_alfa_bit(p);
+                sign *= I.create_alfa_bit(q);
+                if (sign != 0) {
+                    if (left_dets_map.count(I) != 0) {
+                        rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                    }
+                }
+            }
+            if (std::fabs(rdm) > 1.0e-12) {
+                error_1rdm_a += std::fabs(rdm - g1a.at({p, q}));
+            }
+        }
+    }
+    outfile->Printf("\n    AA 1-RDM Error :   %+e", error_1rdm_a);
+    psi::Process::environment.globals["AA 1-RDM ERROR"] = error_1rdm_a;
+
+    auto g1b = rdms->g1b();
+    double error_1rdm_b = 0.0;
+    for (size_t p = 0; p < ncmo; p++) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            double rdm = 0.0;
+            for (size_t i = 0; i < right_dets.size(); ++i) {
+                I = right_dets[i];
+                double sign = 1.0;
+                sign *= I.destroy_beta_bit(p);
+                sign *= I.create_beta_bit(q);
+                if (sign != 0) {
+                    if (left_dets_map.count(I) != 0) {
+                        rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                    }
+                }
+            }
+            if (std::fabs(rdm) > 1.0e-12) {
+                error_1rdm_b += std::fabs(rdm - g1b.at({p, q}));
+            }
+        }
+    }
+    outfile->Printf("\n    BB 1-RDM Error :   %+e", error_1rdm_b);
+    psi::Process::environment.globals["BB 1-RDM ERROR"] = error_1rdm_b;
 
     bool test_2rdm_aa = true;
     bool test_2rdm_bb = true;
@@ -619,40 +789,29 @@ void FCIVector::rdm_test() {
     bool test_3rdm_aab = true;
     bool test_3rdm_abb = true;
 
-    outfile->Printf("\n\n==> RDMs Test <==\n");
     if (test_2rdm_aa) {
+        auto g2aa = rdms->g2aa();
         double error_2rdm_aa = 0.0;
         for (size_t p = 0; p < ncmo_; ++p) {
             for (size_t q = 0; q < ncmo_; ++q) {
                 for (size_t r = 0; r < ncmo_; ++r) {
                     for (size_t s = 0; s < ncmo_; ++s) {
                         double rdm = 0.0;
-                        for (size_t i = 0; i < dets.size(); ++i) {
-                            I = dets[i];
+                        for (size_t i = 0; i < right_dets.size(); ++i) {
+                            I = right_dets[i];
                             double sign = 1.0;
                             sign *= I.destroy_alfa_bit(r);
                             sign *= I.destroy_alfa_bit(s);
                             sign *= I.create_alfa_bit(q);
                             sign *= I.create_alfa_bit(p);
                             if (sign != 0) {
-                                if (dets_map.count(I) != 0) {
-                                    rdm += sign * C[i] * C[dets_map[I]];
+                                if (left_dets_map.count(I) != 0) {
+                                    rdm += sign * left_C[left_dets_map[I]] * right_C[i];
                                 }
                             }
                         }
                         if (std::fabs(rdm) > 1.0e-12) {
-                            //                            outfile->Printf("\n
-                            //                            D2(aaaa)[%3lu][%3lu][%3lu][%3lu] =
-                            //                            %18.12lf "
-                            //                                            "(%18.12lf,%18.12lf)",
-                            //                                            p, q, r, s, rdm -
-                            //                                            tpdm_aa_[tei_index(p, q,
-                            //                                            r,
-                            //                                            s)], rdm,
-                            //                                            tpdm_aa_[tei_index(p, q,
-                            //                                            r,
-                            //                                            s)]);
-                            error_2rdm_aa += std::fabs(rdm - tpdm_aa_[tei_index(p, q, r, s)]);
+                            error_2rdm_aa += std::fabs(rdm - g2aa.at({p, q, r, s}));
                         }
                     }
                 }
@@ -663,32 +822,28 @@ void FCIVector::rdm_test() {
     }
 
     if (test_2rdm_bb) {
+        auto g2bb = rdms->g2bb();
         double error_2rdm_bb = 0.0;
         for (size_t p = 0; p < ncmo_; ++p) {
             for (size_t q = 0; q < ncmo_; ++q) {
                 for (size_t r = 0; r < ncmo_; ++r) {
                     for (size_t s = 0; s < ncmo_; ++s) {
                         double rdm = 0.0;
-                        for (size_t i = 0; i < dets.size(); ++i) {
-                            I = dets[i];
+                        for (size_t i = 0; i < right_dets.size(); ++i) {
+                            I = right_dets[i];
                             double sign = 1.0;
                             sign *= I.destroy_beta_bit(r);
                             sign *= I.destroy_beta_bit(s);
                             sign *= I.create_beta_bit(q);
                             sign *= I.create_beta_bit(p);
                             if (sign != 0) {
-                                if (dets_map.count(I) != 0) {
-                                    rdm += sign * C[i] * C[dets_map[I]];
+                                if (left_dets_map.count(I) != 0) {
+                                    rdm += sign * left_C[left_dets_map[I]] * right_C[i];
                                 }
                             }
                         }
                         if (std::fabs(rdm) > 1.0e-12) {
-                            //                            outfile->Printf("\n
-                            //                            D2(bbbb)[%3lu][%3lu][%3lu][%3lu]
-                            //                            = %18.12lf
-                            //                            (%18.12lf,%18.12lf)",
-                            //                            p,q,r,s,rdm-tpdm_bb_[tei_index(p,q,r,s)],rdm,tpdm_bb_[tei_index(p,q,r,s)]);
-                            error_2rdm_bb += std::fabs(rdm - tpdm_bb_[tei_index(p, q, r, s)]);
+                            error_2rdm_bb += std::fabs(rdm - g2bb.at({p, q, r, s}));
                         }
                     }
                 }
@@ -699,32 +854,28 @@ void FCIVector::rdm_test() {
     }
 
     if (test_2rdm_ab) {
+        auto g2ab = rdms->g2ab();
         double error_2rdm_ab = 0.0;
         for (size_t p = 0; p < ncmo_; ++p) {
             for (size_t q = 0; q < ncmo_; ++q) {
                 for (size_t r = 0; r < ncmo_; ++r) {
                     for (size_t s = 0; s < ncmo_; ++s) {
                         double rdm = 0.0;
-                        for (size_t i = 0; i < dets.size(); ++i) {
-                            I = dets[i];
+                        for (size_t i = 0; i < right_dets.size(); ++i) {
+                            I = right_dets[i];
                             double sign = 1.0;
                             sign *= I.destroy_alfa_bit(r);
                             sign *= I.destroy_beta_bit(s);
                             sign *= I.create_beta_bit(q);
                             sign *= I.create_alfa_bit(p);
                             if (sign != 0) {
-                                if (dets_map.count(I) != 0) {
-                                    rdm += sign * C[i] * C[dets_map[I]];
+                                if (left_dets_map.count(I) != 0) {
+                                    rdm += sign * left_C[left_dets_map[I]] * right_C[i];
                                 }
                             }
                         }
                         if (std::fabs(rdm) > 1.0e-12) {
-                            //                            outfile->Printf("\n
-                            //                            D2(abab)[%3lu][%3lu][%3lu][%3lu]
-                            //                            = %18.12lf
-                            //                            (%18.12lf,%18.12lf)",
-                            //                            p,q,r,s,rdm-tpdm_ab_[tei_index(p,q,r,s)],rdm,tpdm_ab_[tei_index(p,q,r,s)]);
-                            error_2rdm_ab += std::fabs(rdm - tpdm_ab_[tei_index(p, q, r, s)]);
+                            error_2rdm_ab += std::fabs(rdm - g2ab.at({p, q, r, s}));
                         }
                     }
                 }
@@ -735,6 +886,7 @@ void FCIVector::rdm_test() {
     }
 
     if (test_3rdm_aab) {
+        auto g3aab = rdms->g3aab();
         double error_3rdm_aab = 0.0;
         for (size_t p = 0; p < ncmo_; ++p) {
             for (size_t q = p + 1; q < ncmo_; ++q) {
@@ -743,8 +895,8 @@ void FCIVector::rdm_test() {
                         for (size_t t = s + 1; t < ncmo_; ++t) {
                             for (size_t a = 0; a < ncmo_; ++a) {
                                 double rdm = 0.0;
-                                for (size_t i = 0; i < dets.size(); ++i) {
-                                    I = dets[i];
+                                for (size_t i = 0; i < right_dets.size(); ++i) {
+                                    I = right_dets[i];
                                     double sign = 1.0;
                                     sign *= I.destroy_alfa_bit(s);
                                     sign *= I.destroy_alfa_bit(t);
@@ -753,20 +905,13 @@ void FCIVector::rdm_test() {
                                     sign *= I.create_alfa_bit(q);
                                     sign *= I.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (dets_map.count(I) != 0) {
-                                            rdm += sign * C[i] * C[dets_map[I]];
+                                        if (left_dets_map.count(I) != 0) {
+                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
                                         }
                                     }
                                 }
                                 if (std::fabs(rdm) > 1.0e-12) {
-                                    size_t index = six_index(p, q, r, s, t, a);
-                                    double rdm_comp = tpdm_aab_[index];
-                                    //                                    outfile->Printf("\n
-                                    //                                    D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                    //                                    =
-                                    //                                    %18.12lf
-                                    //                                    (%18.12lf,%18.12lf)",
-                                    //                                                    p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    double rdm_comp = g3aab.at({p, q, r, s, t, a});
                                     error_3rdm_aab += std::fabs(rdm - rdm_comp);
                                 }
                             }
@@ -780,6 +925,7 @@ void FCIVector::rdm_test() {
     }
 
     if (test_3rdm_abb) {
+        auto g3abb = rdms->g3abb();
         double error_3rdm_abb = 0.0;
         for (size_t p = 0; p < ncmo_; ++p) {
             for (size_t q = p + 1; q < ncmo_; ++q) {
@@ -788,8 +934,8 @@ void FCIVector::rdm_test() {
                         for (size_t t = s + 1; t < ncmo_; ++t) {
                             for (size_t a = 0; a < ncmo_; ++a) {
                                 double rdm = 0.0;
-                                for (size_t i = 0; i < dets.size(); ++i) {
-                                    I = dets[i];
+                                for (size_t i = 0; i < right_dets.size(); ++i) {
+                                    I = right_dets[i];
                                     double sign = 1.0;
                                     sign *= I.destroy_alfa_bit(s);
                                     sign *= I.destroy_beta_bit(t);
@@ -798,20 +944,13 @@ void FCIVector::rdm_test() {
                                     sign *= I.create_beta_bit(q);
                                     sign *= I.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (dets_map.count(I) != 0) {
-                                            rdm += sign * C[i] * C[dets_map[I]];
+                                        if (left_dets_map.count(I) != 0) {
+                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
                                         }
                                     }
                                 }
                                 if (std::fabs(rdm) > 1.0e-12) {
-                                    size_t index = six_index(p, q, r, s, t, a);
-                                    double rdm_comp = tpdm_abb_[index];
-                                    //                                    outfile->Printf("\n
-                                    //                                    D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                    //                                    =
-                                    //                                    %18.12lf
-                                    //                                    (%18.12lf,%18.12lf)",
-                                    //                                                    p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    double rdm_comp = g3abb.at({p, q, r, s, t, a});
                                     error_3rdm_abb += std::fabs(rdm - rdm_comp);
                                 }
                             }
@@ -825,6 +964,7 @@ void FCIVector::rdm_test() {
     }
 
     if (test_3rdm_aaa) {
+        auto g3aaa = rdms->g3aaa();
         double error_3rdm_aaa = 0.0;
         //        for (size_t p = 0; p < no_; ++p){
         for (size_t p = 0; p < 1; ++p) {
@@ -834,8 +974,8 @@ void FCIVector::rdm_test() {
                         for (size_t t = s + 1; t < ncmo_; ++t) {
                             for (size_t a = t + 1; a < ncmo_; ++a) {
                                 double rdm = 0.0;
-                                for (size_t i = 0; i < dets.size(); ++i) {
-                                    I = dets[i];
+                                for (size_t i = 0; i < right_dets.size(); ++i) {
+                                    I = right_dets[i];
                                     double sign = 1.0;
                                     sign *= I.destroy_alfa_bit(s);
                                     sign *= I.destroy_alfa_bit(t);
@@ -844,20 +984,13 @@ void FCIVector::rdm_test() {
                                     sign *= I.create_alfa_bit(q);
                                     sign *= I.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (dets_map.count(I) != 0) {
-                                            rdm += sign * C[i] * C[dets_map[I]];
+                                        if (left_dets_map.count(I) != 0) {
+                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
                                         }
                                     }
                                 }
                                 if (std::fabs(rdm) > 1.0e-12) {
-                                    size_t index = six_index(p, q, r, s, t, a);
-                                    double rdm_comp = tpdm_aaa_[index];
-                                    //                                    outfile->Printf("\n
-                                    //                                    D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                    //                                    =
-                                    //                                    %18.12lf
-                                    //                                    (%18.12lf,%18.12lf)",
-                                    //                                                    p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    double rdm_comp = g3aaa.at({p, q, r, s, t, a});
                                     error_3rdm_aaa += std::fabs(rdm - rdm_comp);
                                 }
                             }
@@ -871,6 +1004,7 @@ void FCIVector::rdm_test() {
     }
 
     if (test_3rdm_bbb) {
+        auto g3bbb = rdms->g3bbb();
         double error_3rdm_bbb = 0.0;
         for (size_t p = 0; p < 1; ++p) {
             //            for (size_t p = 0; p < no_; ++p){
@@ -880,8 +1014,8 @@ void FCIVector::rdm_test() {
                         for (size_t t = s + 1; t < ncmo_; ++t) {
                             for (size_t a = t + 1; a < ncmo_; ++a) {
                                 double rdm = 0.0;
-                                for (size_t i = 0; i < dets.size(); ++i) {
-                                    I = dets[i];
+                                for (size_t i = 0; i < right_dets.size(); ++i) {
+                                    I = right_dets[i];
                                     double sign = 1.0;
                                     sign *= I.destroy_beta_bit(s);
                                     sign *= I.destroy_beta_bit(t);
@@ -890,20 +1024,13 @@ void FCIVector::rdm_test() {
                                     sign *= I.create_beta_bit(q);
                                     sign *= I.create_beta_bit(p);
                                     if (sign != 0) {
-                                        if (dets_map.count(I) != 0) {
-                                            rdm += sign * C[i] * C[dets_map[I]];
+                                        if (left_dets_map.count(I) != 0) {
+                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
                                         }
                                     }
                                 }
                                 if (std::fabs(rdm) > 1.0e-12) {
-                                    size_t index = six_index(p, q, r, s, t, a);
-                                    double rdm_comp = tpdm_bbb_[index];
-                                    //                                    outfile->Printf("\n
-                                    //                                    D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                    //                                    =
-                                    //                                    %18.12lf
-                                    //                                    (%18.12lf,%18.12lf)",
-                                    //                                                    p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    double rdm_comp = g3bbb.at({p, q, r, s, t, a});
                                     error_3rdm_bbb += std::fabs(rdm - rdm_comp);
                                 }
                             }
@@ -915,50 +1042,6 @@ void FCIVector::rdm_test() {
         psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         outfile->Printf("\n    BBBBBB 3-RDM Error : %+e", error_3rdm_bbb);
     }
-}
-
-double FCIVector::compute_spin2() {
-    double spin2 = 0.0;
-    // Loop over blocks of matrix C
-    for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
-        const int Ib_sym = Ia_sym ^ symmetry_;
-        double** C = C_[Ia_sym]->pointer();
-
-        // Loop over all r,s
-        for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
-            const int Jb_sym = Ib_sym ^ rs_sym;
-            const int Ja_sym = Jb_sym ^ symmetry_;
-            double** Y = C_[Ja_sym]->pointer();
-            for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
-                int s_sym = rs_sym ^ r_sym;
-
-                for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                    const int r_abs = r_rel + cmopi_offset_[r_sym];
-                    for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
-                        const int s_abs = s_rel + cmopi_offset_[s_sym];
-
-                        // Grab list (r,s,Ib_sym)
-                        const auto& vo_alfa = lists_->get_alfa_vo_list(s_abs, r_abs, Ia_sym);
-                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
-
-                        const size_t maxSSa = vo_alfa.size();
-                        const size_t maxSSb = vo_beta.size();
-
-                        for (size_t SSa = 0; SSa < maxSSa; ++SSa) {
-                            for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                spin2 += Y[vo_alfa[SSa].J][vo_beta[SSb].J] *
-                                         C[vo_alfa[SSa].I][vo_beta[SSb].I] *
-                                         static_cast<double>(vo_alfa[SSa].sign * vo_beta[SSb].sign);
-                            }
-                        }
-                    }
-                } // End loop over r_rel,s_rel
-            }
-        }
-    }
-    double na = alfa_address_->nones();
-    double nb = beta_address_->nones();
-    return -spin2 + 0.25 * std::pow(na - nb, 2.0) + 0.5 * (na + nb);
 }
 
 } // namespace forte

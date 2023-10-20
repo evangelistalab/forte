@@ -26,15 +26,16 @@
  * @END LICENSE
  */
 
-#ifndef _fci_vector_
-#define _fci_vector_
+#pragma once
 
 #include <vector>
 
 #include "psi4/libmints/dimension.h"
+#include "ambit/tensor.h"
+
+#include "base_classes/rdms.h"
 
 #define CAPRICCIO_USE_DAXPY 1
-#define CAPRICCIO_USE_UNROLL 0
 
 namespace psi {
 class Matrix;
@@ -47,6 +48,7 @@ class BinaryGraph;
 class MOSpaceInfo;
 class StringLists;
 class StringAddress;
+class RDMs;
 
 class FCIVector {
   public:
@@ -87,25 +89,20 @@ class FCIVector {
     double dot(FCIVector& wfn);
     double dot(std::shared_ptr<FCIVector>& wfn);
 
-    std::vector<double>& C(int irrep) { return C_[irrep]; }
+    // return alfa_address_
+    std::shared_ptr<StringAddress> alfa_address() { return alfa_address_; }
+    // return beta_address_
+    std::shared_ptr<StringAddress> beta_address() { return beta_address_; }
 
-    std::vector<double>& opdm_a() { return opdm_a_; }
-    std::vector<double>& opdm_b() { return opdm_b_; }
-    std::vector<double>& tpdm_aa() { return tpdm_aa_; }
-    std::vector<double>& tpdm_ab() { return tpdm_ab_; }
-    std::vector<double>& tpdm_bb() { return tpdm_bb_; }
-    std::vector<double>& tpdm_aaa() { return tpdm_aaa_; }
-    std::vector<double>& tpdm_aab() { return tpdm_aab_; }
-    std::vector<double>& tpdm_abb() { return tpdm_abb_; }
-    std::vector<double>& tpdm_bbb() { return tpdm_bbb_; }
+    std::shared_ptr<psi::Matrix> C(int irrep) { return C_[irrep]; }
 
     // Operations on the wave function
     void Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     double energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    void compute_rdms(int max_order = 2);
-    void rdm_test();
+    // void compute_rdms(int max_order = 2);
+    void rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::shared_ptr<RDMs> rdms);
 
     /// Compute the expectation value of the S^2 operator
     double compute_spin2();
@@ -125,7 +122,8 @@ class FCIVector {
     void set_print(int print) { print_ = print; }
 
     // ==> Class Static Functions <==
-    static compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order);
+    static std::shared_ptr<RDMs> compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order,
+                                              RDMsType type);
 
   private:
     // ==> Class Data <==
@@ -157,16 +155,6 @@ class FCIVector {
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
 
-    std::vector<double> opdm_a_;
-    std::vector<double> opdm_b_;
-    std::vector<double> tpdm_aa_;
-    std::vector<double> tpdm_ab_;
-    std::vector<double> tpdm_bb_;
-    std::vector<double> tpdm_aaa_;
-    std::vector<double> tpdm_aab_;
-    std::vector<double> tpdm_abb_;
-    std::vector<double> tpdm_bbb_;
-
     // ==> Class Static Data <==
 
     static std::shared_ptr<psi::Matrix> C1;
@@ -188,13 +176,14 @@ class FCIVector {
 
     // ==> Class Private Functions <==
 
-    size_t oei_index(size_t p, size_t q) const { return ncmo_ * p + q; }
-    size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {
-        return ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;
+    static size_t oei_index(size_t p, size_t q, size_t ncmo) { return ncmo * p + q; }
+    static size_t tei_index(size_t p, size_t q, size_t r, size_t s, size_t ncmo) {
+        return ncmo * ncmo * ncmo * p + ncmo * ncmo * q + ncmo * r + s;
     }
-    size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u) const {
-        return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * ncmo_ * ncmo_ * q +
-                ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
+    static size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u,
+                            size_t ncmo) {
+        return (ncmo * ncmo * ncmo * ncmo * ncmo * p + ncmo * ncmo * ncmo * ncmo * q +
+                ncmo * ncmo * ncmo * r + ncmo * ncmo * s + ncmo * t + u);
     }
 
     void H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
@@ -206,30 +195,30 @@ class FCIVector {
     // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]
 
     /// Compute the matrix elements of the same 1-RDM <a^+_{p} a_{q}>
-    void compute_1rdm(std::vector<double>& rdm, bool alfa);
+    static ambit::Tensor compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa);
 
     // 2-RDM elements are stored in the format
     // <a^+_{p} a^+_{q} a_{s} a_r> -> rdm[tei_index(p,q,r,s)]
 
-    /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all indices
-    /// alpha or beta)
-    void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
+    /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all
+    /// indices alpha or beta)
+    static ambit::Tensor compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+                                                    bool alfa);
     /// Compute the matrix elements of the alpha-beta 2-RDM <a^+_{pa} a^+_{qb} a_{sb} a_{ra}>
-    void compute_2rdm_ab(std::vector<double>& rdm);
+    static ambit::Tensor compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector& C_right);
 
     // 3-RDM elements are stored in the format
     // <a^+_p a^+_q a^+_r a_u a_t a_s> -> rdm[six_index(p,q,r,s,t,u)]
 
     /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a_s a_r> (with all indices
     /// alpha or beta)
-    void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
+    static ambit::Tensor compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+                                                     bool alfa);
     /// Compute the matrix elements of the alpha-alpha-beta 3-RDM <a^+_{pa} a^+_{qa} a^+_{rb} a_{ub}
     /// a_{ta} a_{sa}>
-    void compute_3rdm_aab(std::vector<double>& rdm);
+    static ambit::Tensor compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVector& C_right);
     /// Compute the matrix elements of the alpha-beta-beta 3-RDM <a^+_{pa} a^+_{qb} a^+_{rb} a_{ub}
     /// a_{tb} a_{sa}>
-    void compute_3rdm_abb(std::vector<double>& rdm);
+    static ambit::Tensor compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVector& C_right);
 };
 } // namespace forte
-
-#endif // _fci_vector_

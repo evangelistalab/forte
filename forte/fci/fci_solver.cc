@@ -82,7 +82,18 @@ void FCISolver::set_test_rdms(bool value) { test_rdms_ = value; }
 
 void FCISolver::set_print_no(bool value) { print_no_ = value; }
 
-std::shared_ptr<FCIVector> FCISolver::get_FCIWFN() { return C_; }
+void FCISolver::copy_state_into_fci_vector(int root, std::shared_ptr<FCIVector> C) {
+    // grab a row of the eigenvector matrix and put it into the FCIVector
+    std::shared_ptr<psi::Vector> psi_vector;
+    if (spin_adapt_) {
+        auto eig = eigen_vecs_->get_row(0, root);
+        psi_vector = std::make_shared<psi::Vector>(spin_adapter_->ndet());
+        spin_adapter_->csf_C_to_det_C(eig, psi_vector);
+    } else {
+        psi_vector = eigen_vecs_->get_row(0, root);
+    }
+    C->copy(psi_vector);
+}
 
 std::shared_ptr<psi::Matrix> FCISolver::evecs() { return eigen_vecs_; }
 
@@ -149,13 +160,12 @@ double FCISolver::compute_energy() {
 
     FCIVector::allocate_temp_space(lists_, print_);
 
-    FCIVector Hdiag(lists_, symmetry_);
     C_ = std::make_shared<FCIVector>(lists_, symmetry_);
-    FCIVector HC(lists_, symmetry_);
+    T_ = std::make_shared<FCIVector>(lists_, symmetry_);
     C_->set_print(print_);
 
     // Compute the size of the determinant space and the basis used by the Davidson solver
-    size_t det_size = Hdiag.size();
+    size_t det_size = C_->size();
     size_t basis_size = spin_adapt_ ? spin_adapter_->ncsf() : det_size;
 
     // Create the vectors that stores the b and sigma vectors in the determinant basis
@@ -207,8 +217,8 @@ double FCISolver::compute_energy() {
     }
 
     // Print the initial guess
-    auto sigma_builder = [this, &HC, &b_basis, &b, &sigma,
-                          &sigma_basis](std::span<double> b_span, std::span<double> sigma_span) {
+    auto sigma_builder = [this, &b_basis, &b, &sigma, &sigma_basis](std::span<double> b_span,
+                                                                    std::span<double> sigma_span) {
         // copy the b vector
         size_t basis_size = b_span.size();
         for (size_t I = 0; I < basis_size; ++I) {
@@ -218,14 +228,14 @@ double FCISolver::compute_energy() {
             // Compute sigma in the CSF basis and convert it to the determinant basis
             spin_adapter_->csf_C_to_det_C(b_basis, b);
             C_->copy(b);
-            C_->Hamiltonian(HC, as_ints_);
-            HC.copy_to(sigma);
+            C_->Hamiltonian(*T_, as_ints_);
+            T_->copy_to(sigma);
             spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
         } else {
             // Compute sigma in the determinant basis
             C_->copy(b_basis);
-            C_->Hamiltonian(HC, as_ints_);
-            HC.copy_to(sigma_basis);
+            C_->Hamiltonian(*T_, as_ints_);
+            T_->copy_to(sigma_basis);
         }
         for (size_t I = 0; I < basis_size; ++I) {
             sigma_span[I] = sigma_basis->get(I);
@@ -345,8 +355,8 @@ void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::V
         std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
         print_h2(title_rdm);
     }
-    C_->compute_rdms(3);
-    C_->rdm_test();
+    auto rdms = C_->compute_rdms(*C_, *C_, 3, RDMsType::spin_dependent);
+    C_->rdm_test(*C_, *C_, RDMsType::spin_dependent, rdms);
 }
 
 std::shared_ptr<psi::Matrix> FCISolver::ci_wave_functions() {

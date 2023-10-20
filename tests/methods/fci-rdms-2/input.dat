@@ -26,6 +26,8 @@ set forte {
 energy('scf')
 energy('forte')
 
+compare_values(0.0, variable("AA 1-RDM ERROR"),12, "AA 1-RDM") #TEST
+compare_values(0.0, variable("BB 1-RDM ERROR"),12, "BB 1-RDM") #TEST
 compare_values(0.0, variable("AAAA 2-RDM ERROR"),12, "AAAA 2-RDM") #TEST
 compare_values(0.0, variable("BBBB 2-RDM ERROR"),12, "BBBB 2-RDM") #TEST
 compare_values(0.0, variable("ABAB 2-RDM ERROR"),12, "ABAB 2-RDM") #TEST

@@ -111,8 +111,8 @@ class FCISolver : public ActiveSpaceMethod {
     /// Print the Natural Orbitals
     void set_print_no(bool value);
 
-    /// Return a FCIVector
-    std::shared_ptr<FCIVector> get_FCIWFN();
+    // /// Return a FCIVector
+    // std::shared_ptr<FCIVector> fci_vector(int root);
 
     /// Return eigen vectors (n_DL_guesses x ndets)
     std::shared_ptr<psi::Matrix> evecs();
@@ -143,6 +143,9 @@ class FCISolver : public ActiveSpaceMethod {
 
     /// The FCI wave function
     std::shared_ptr<FCIVector> C_;
+
+    /// A temporary wave function
+    std::shared_ptr<FCIVector> T_;
 
     /// The FCI determinant list
     std::vector<Determinant> dets_;
@@ -234,14 +237,14 @@ class FCISolver : public ActiveSpaceMethod {
     /// @brief Compute the RDMs for a given root
     /// @param root_left the left root
     /// @param root_right the right root
-    /// @param C_left the vector of coefficients for the left root (not filled)
-    /// @param C_right the vector of coefficients for the right root (not filled)
     /// @param max_rdm_level the maximum level of the RDMs to compute
-    void compute_rdms_root(size_t root_left, size_t root_right, std::shared_ptr<FCIVector> C_left,
-                           std::shared_ptr<FCIVector> C_right, max_rdm_level);
+    std::shared_ptr<RDMs> compute_rdms_root(size_t root_left, size_t root_right, int max_rdm_level,
+                                            RDMsType type);
 
     /// @brief Test the RDMs
     void test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
                    std::shared_ptr<DavidsonLiuSolver> dls);
+
+    void copy_state_into_fci_vector(int root, std::shared_ptr<FCIVector> C);
 };
 } // namespace forte

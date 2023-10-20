@@ -301,55 +301,55 @@ void FCIVector::zero() {
 }
 
 void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    print_h2("Natural Orbitals");
-    psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
-    auto nfdocc = mo_space_info->size("FROZEN_DOCC");
+    // print_h2("Natural Orbitals");
+    // psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
+    // auto nfdocc = mo_space_info->size("FROZEN_DOCC");
 
-    size_t na = alfa_address_->nones();
-    size_t nb = beta_address_->nones();
+    // size_t na = alfa_address_->nones();
+    // size_t nb = beta_address_->nones();
 
-    auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
+    // auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
 
-    int offset = 0;
-    for (int h = 0; h < nirrep_; h++) {
-        for (int u = 0; u < active_dim[h]; u++) {
-            for (int v = 0; v < active_dim[h]; v++) {
-                double gamma_uv = 0.0;
-                if (na > 0) {
-                    gamma_uv += opdm_a_[(u + offset) * ncmo_ + v + offset];
-                }
-                if (nb > 0) {
-                    gamma_uv += opdm_b_[(u + offset) * ncmo_ + v + offset];
-                }
-                opdm->set(h, u, v, gamma_uv);
-            }
-        }
-        offset += active_dim[h];
-    }
+    // int offset = 0;
+    // for (int h = 0; h < nirrep_; h++) {
+    //     for (int u = 0; u < active_dim[h]; u++) {
+    //         for (int v = 0; v < active_dim[h]; v++) {
+    //             double gamma_uv = 0.0;
+    //             if (na > 0) {
+    //                 gamma_uv += opdm_a_[(u + offset) * ncmo_ + v + offset];
+    //             }
+    //             if (nb > 0) {
+    //                 gamma_uv += opdm_b_[(u + offset) * ncmo_ + v + offset];
+    //             }
+    //             opdm->set(h, u, v, gamma_uv);
+    //         }
+    //     }
+    //     offset += active_dim[h];
+    // }
 
-    auto OCC = std::make_shared<psi::Vector>("Occupation numbers", active_dim);
-    auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim, active_dim);
+    // auto OCC = std::make_shared<psi::Vector>("Occupation numbers", active_dim);
+    // auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim, active_dim);
 
-    opdm->diagonalize(NO, OCC, descending);
-    std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
-    for (int h = 0; h < nirrep_; h++) {
-        for (int u = 0; u < active_dim[h]; u++) {
-            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
-            vec_irrep_occupation.push_back(irrep_occ);
-        }
-    }
-    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
-              std::greater<std::pair<double, std::pair<int, int>>>());
+    // opdm->diagonalize(NO, OCC, descending);
+    // std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
+    // for (int h = 0; h < nirrep_; h++) {
+    //     for (int u = 0; u < active_dim[h]; u++) {
+    //         auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
+    //         vec_irrep_occupation.push_back(irrep_occ);
+    //     }
+    // }
+    // std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
+    //           std::greater<std::pair<double, std::pair<int, int>>>());
 
-    size_t count = 0;
-    outfile->Printf("\n    ");
-    for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
-                        mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
-        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
-            outfile->Printf("\n    ");
-    }
-    outfile->Printf("\n");
+    // size_t count = 0;
+    // outfile->Printf("\n    ");
+    // for (auto vec : vec_irrep_occupation) {
+    //     outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
+    //                     mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
+    //     if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+    //         outfile->Printf("\n    ");
+    // }
+    // outfile->Printf("\n");
 }
 
 ///**
