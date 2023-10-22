@@ -84,6 +84,7 @@ void MCSCF_2STEP::read_options() {
         throw std::runtime_error("MCSCF energy gradient not available for CUSTOM integrals!");
 
     maxiter_ = options_->get_int("CASSCF_MAXITER");
+    dl_maxiter_ = options_->get_int("CASSCF_DL_MAXITER");
     micro_maxiter_ = options_->get_int("CASSCF_MICRO_MAXITER");
     micro_miniter_ = options_->get_int("CASSCF_MICRO_MINITER");
     if (micro_maxiter_ < micro_miniter_)
@@ -116,7 +117,9 @@ void MCSCF_2STEP::print_options() {
         {"Max number of micro iterations", micro_maxiter_},
         {"Min number of micro iterations", micro_miniter_}};
 
-    std::vector<std::pair<std::string, std::string>> info_string;
+    if (opt_orbs_ and (ci_type_ == "FCI" or ci_type_ == "DETCI" or ci_type_ == "CAS")) {
+        info_int.emplace_back("Max number of DL per macro iteration", dl_maxiter_);
+    }
 
     if (do_diis_) {
         info_int.emplace_back("DIIS start", diis_start_);
@@ -183,8 +186,9 @@ double MCSCF_2STEP::compute_energy() {
                                  mo_space_info_, cas_grad.active_space_ints(), options_);
     as_solver->set_print(print_);
     as_solver->set_e_convergence(e_conv_);
-    as_solver->set_r_convergence(r_conv);
-    as_solver->set_maxiter(no_orb_opt ? as_maxiter : 15);
+    as_solver->set_r_convergence(no_orb_opt ? r_conv : 1.0e-2);
+    as_solver->set_maxiter(no_orb_opt ? as_maxiter : dl_maxiter_);
+    as_solver->set_die_if_not_converged(no_orb_opt);
 
     // initial CI and resulting RDMs
     const auto state_energies_map = as_solver->compute_energy();
@@ -240,7 +244,8 @@ double MCSCF_2STEP::compute_energy() {
 
         // CI solver set up
         bool restart = (ci_type_ == "FCI" or ci_type_ == "DETCI" or ci_type_ == "CAS");
-        as_solver->set_maxiter(restart ? 15 : as_maxiter);
+        as_solver->set_maxiter(restart ? dl_maxiter_ : as_maxiter);
+        as_solver->set_die_if_not_converged(false);
 
         // CI convergence criteria along the way
         double dl_e_conv = 5.0e-7;
@@ -374,6 +379,7 @@ double MCSCF_2STEP::compute_energy() {
     }
 
     // perform final CI using converged orbitals
+    // as_solver->set_maxiter(as_maxiter);
     energy_ =
         diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});

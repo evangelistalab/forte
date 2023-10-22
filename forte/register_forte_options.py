@@ -891,6 +891,9 @@ def register_casscf_options(options):
 
     options.add_int("CASSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
 
+    options.add_int("CASSCF_DL_MAXITER", 15,
+                    "The maximum number of Davidson-Liu for CI in every CASSCF macro iteration")
+
     options.add_int("CASSCF_MICRO_MAXITER", 40, "The maximum number of CASSCF micro iterations")
 
     options.add_int("CASSCF_MICRO_MINITER", 6, "The minimum number of CASSCF micro iterations")

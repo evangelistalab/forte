@@ -442,6 +442,7 @@ class ProcedureDSRG:
             overlap_np = np.abs(overlap.to_array())
             max_values = np.max(overlap_np, axis=1)
             permutation = np.argmax(overlap_np, axis=1)
+            psi4.core.print_out(f"\n\n  Permutations: {permutation}")
             check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.5)
 
             if not check_pass:

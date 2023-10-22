@@ -90,7 +90,7 @@ class FCISolver : public ActiveSpaceMethod {
     void set_ndets_per_guess_state(size_t value);
 
     /// Set the maximum number of DL iterations
-    void set_maxiter_davidson(int value);
+    // void set_maxiter_davidson(int value);
 
     /// Set the number of guess vectors to use
     void set_guess_per_root(int value);
@@ -176,7 +176,7 @@ class FCISolver : public ActiveSpaceMethod {
     /// The number of determinants selected for each guess vector
     size_t ndets_per_guess_ = 10;
     /// Iterations for FCI
-    int maxiter_davidson_ = 30;
+    // int maxiter_davidson_ = 30;
     /// Test the RDMs?
     bool test_rdms_ = false;
     /// Print the NO from the 1-RDM

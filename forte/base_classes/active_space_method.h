@@ -298,6 +298,10 @@ class ActiveSpaceMethod {
     /// @param value the maximum number of iterations
     void set_maxiter(size_t value);
 
+    /// Set if throw an error when Davidson-Liu not converged
+    /// @param value stop if not coverged
+    void set_die_if_not_converged(bool value);
+
     /// Set if we dump the wave function to disk
     void set_read_wfn_guess(bool read);
 
@@ -364,6 +368,9 @@ class ActiveSpaceMethod {
 
     /// The maximum number of iterations
     size_t maxiter_ = 100;
+
+    /// Stop if Davidson-Liu not converged
+    bool die_if_not_converged_ = true;
 
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;

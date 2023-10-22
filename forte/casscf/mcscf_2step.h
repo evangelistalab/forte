@@ -102,6 +102,8 @@ class MCSCF_2STEP {
 
     /// Max number of macro iterations
     int maxiter_;
+    /// Max number of Davidson iterations
+    int dl_maxiter_;
     /// Max number of micro iterations
     int micro_maxiter_;
     /// Min number of micro iterations
