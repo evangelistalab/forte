@@ -20,7 +20,6 @@ set {
 }
 
 set forte {
-  #active_space_solver detci
   active_space_solver fci
   fci_test_rdms true
   transition_dipoles true

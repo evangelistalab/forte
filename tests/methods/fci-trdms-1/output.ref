@@ -1,0 +1,988 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.9a1.dev50 
+
+                         Git: Rev {fixtemp} 466ebc2 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 23 October 2023 10:28AM
+
+    Process ID: 81273
+    Host:       macbook-pro-158.wireless.emory.edu
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte
+
+oref_0b1u_dp1 = 0.75448668
+
+molecule {
+0 1
+H
+H 1 R
+R = 2.0
+units bohr 
+}
+
+set {
+  basis sto-3g
+  reference rhf
+  scf_type pk
+  e_convergence 12
+  avg_state [[0,1,1],[5,1,1]] # <-- [(Ag, singlet, 1 state), (B1u,singlet,1 state)]
+
+}
+
+set forte {
+  active_space_solver fci
+  fci_test_rdms true
+  transition_dipoles true
+}
+
+energy('scf')
+energy('forte')
+print_variables()
+compare_values(0.0, variable("SF 1-RDM ERROR"),12, "SF 1-RDM")
+refvals = [
+    ("SINGLET <0AG|DM_X|0AG>"         ,      0.000000000000),
+    ("SINGLET <0AG|DM_Y|0AG>"         ,      0.000000000000),
+    ("SINGLET <0AG|DM_Z|0AG>"         ,     -0.000000000000),
+    ("SINGLET <0AG|QM_XX|0AG>"        ,     -1.388900805473),
+    ("SINGLET <0AG|QM_XY|0AG>"        ,      0.000000000000),
+    ("SINGLET <0AG|QM_XZ|0AG>"        ,      0.000000000000),
+    ("SINGLET <0AG|QM_YY|0AG>"        ,     -1.388900805473),
+    ("SINGLET <0AG|QM_YZ|0AG>"        ,      0.000000000000),
+    ("SINGLET <0AG|QM_ZZ|0AG>"        ,     -0.950051546021),
+    ("SINGLET <0B1U|DM_X|0B1U>"       ,      0.000000000000),
+    ("SINGLET <0B1U|DM_Y|0B1U>"       ,      0.000000000000),
+    ("SINGLET <0B1U|DM_Z|0B1U>"       ,      0.000000000000),
+    ("SINGLET <0B1U|QM_XX|0B1U>"      ,     -1.209268224995),
+    ("SINGLET <0B1U|QM_XY|0B1U>"      ,      0.000000000000),
+    ("SINGLET <0B1U|QM_XZ|0B1U>"      ,      0.000000000000),
+    ("SINGLET <0B1U|QM_YY|0B1U>"      ,     -1.209268224995),
+    ("SINGLET <0B1U|QM_YZ|0B1U>"      ,      0.000000000000),
+    ("SINGLET <0B1U|QM_ZZ|0B1U>"      ,     -1.647765408484),
+    ("SINGLET |<0AG|DM|0AG>|"         ,      0.000000000000),
+    ("SINGLET |<0B1U|DM|0B1U>|"       ,      0.000000000000),
+    ("TRANS SINGLET <0AG|DM_X|0B1U>"  ,      0.000000000000),
+    ("TRANS SINGLET <0AG|DM_Y|0B1U>"  ,      0.000000000000),
+    ("TRANS SINGLET S_MAX 0AG -> 0B1U",      1.387777706274),
+    ("TRANS SINGLET |<0AG|DM|0B1U>|"  ,      1.258484309694),
+    ("OSC. SINGLET 0AG -> 0B1U"       ,      0.754486683665),
+]
+
+for label, val in refvals:
+    compare_values(val, variable(label),10,label)
+
+compare_values(1.258484309694,abs(variable("TRANS SINGLET <0AG|DM_Z|0B1U>")),10, "TRANS SINGLET |<0AG|DM_Z|0B1U>|")
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  5, 4, 3
+    Auxiliary basis highest AM E, G, H:  6, 5, 4
+    Onebody   basis highest AM E, G, H:  6, 5, 4
+    Solid Harmonics ordering:            gaussian
+
+*** tstart() called on macbook-pro-158.wireless.emory.edu
+*** at Mon Oct 23 10:28:24 2023
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         H            0.000000000000     0.000000000000    -1.000000000000     1.007825032230
+         H            0.000000000000     0.000000000000     1.000000000000     1.007825032230
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =     29.86614  C =     29.86614 [cm^-1]
+  Rotational constants: A = ************  B = 895364.34709  C = 895364.34709 [MHz]
+  Nuclear repulsion =    0.500000000000000
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 2
+  Nalpha       = 1
+  Nbeta        = 1
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-06
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 2
+    Number of basis functions: 2
+    Number of Cartesian functions: 2
+    Spherical Harmonics?: true
+    Max angular momentum: 0
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               2
+      Number of primitives:              6
+      Number of atomic orbitals:         2
+      Number of basis functions:         2
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 12 doubles for integral storage.
+  We computed 6 shell quartets total.
+  Whereas there are 6 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 1.0000000000E+00.
+  Reciprocal condition number of the overlap matrix is 1.0000000000E+00.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     Ag         1       1 
+     B1g        0       0 
+     B2g        0       0 
+     B3g        0       0 
+     Au         0       0 
+     B1u        1       1 
+     B2u        0       0 
+     B3u        0       0 
+   -------------------------
+    Total       2       2
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:    -0.62955810228078   -6.29558e-01   0.00000e+00 
+   @RHF iter   1:    -1.04917090198582   -4.19613e-01   0.00000e+00 DIIS
+   @RHF iter   2:    -1.04917090198582    0.00000e+00   0.00000e+00 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -0.466476  
+
+    Virtual:                                                              
+
+       1B1u    0.420927  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     1,    0,    0,    0,    0,    0,    0,    0 ]
+    NA   [     1,    0,    0,    0,    0,    0,    0,    0 ]
+    NB   [     1,    0,    0,    0,    0,    0,    0,    0 ]
+
+  @RHF Final Energy:    -1.04917090198582
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              0.5000000000000000
+    One-Electron Energy =                  -2.1653907362188289
+    Two-Electron Energy =                   0.6162198342330130
+    Total Energy =                         -1.0491709019858160
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :          0.0000000            0.0000000            0.0000000
+ Magnitude           :                                                    0.0000000
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon Oct 23 10:28:24 2023
+Module time:
+	user time   =       0.05 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.05 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: trdm - git commit: 954a3ee4
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  5, 4, 3
+    Auxiliary basis highest AM E, G, H:  6, 5, 4
+    Onebody   basis highest AM E, G, H:  6, 5, 4
+    Solid Harmonics ordering:            gaussian
+
+*** tstart() called on macbook-pro-158.wireless.emory.edu
+*** at Mon Oct 23 10:28:24 2023
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         H            0.000000000000     0.000000000000    -1.000000000000     1.007825032230
+         H            0.000000000000     0.000000000000     1.000000000000     1.007825032230
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =     29.86614  C =     29.86614 [cm^-1]
+  Rotational constants: A = ************  B = 895364.34709  C = 895364.34709 [MHz]
+  Nuclear repulsion =    0.500000000000000
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 2
+  Nalpha       = 1
+  Nbeta        = 1
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 2
+    Number of basis functions: 2
+    Number of Cartesian functions: 2
+    Spherical Harmonics?: true
+    Max angular momentum: 0
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               2
+      Number of primitives:              6
+      Number of atomic orbitals:         2
+      Number of basis functions:         2
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 12 doubles for integral storage.
+  We computed 6 shell quartets total.
+  Whereas there are 6 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 1.0000000000E+00.
+  Reciprocal condition number of the overlap matrix is 1.0000000000E+00.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     Ag         1       1 
+     B1g        0       0 
+     B2g        0       0 
+     B3g        0       0 
+     Au         0       0 
+     B1u        1       1 
+     B2u        0       0 
+     B3u        0       0 
+   -------------------------
+    Total       2       2
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:    -0.62955810228078   -6.29558e-01   0.00000e+00 
+   @RHF iter   1:    -1.04917090198582   -4.19613e-01   0.00000e+00 DIIS
+   @RHF iter   2:    -1.04917090198582    0.00000e+00   0.00000e+00 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -0.466476  
+
+    Virtual:                                                              
+
+       1B1u    0.420927  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     1,    0,    0,    0,    0,    0,    0,    0 ]
+    NA   [     1,    0,    0,    0,    0,    0,    0,    0 ]
+    NB   [     1,    0,    0,    0,    0,    0,    0,    0 ]
+
+  @RHF Final Energy:    -1.04917090198582
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              0.5000000000000000
+    One-Electron Energy =                  -2.1653907362188289
+    Two-Electron Energy =                   0.6162198342330130
+    Total Energy =                         -1.0491709019858160
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :          0.0000000            0.0000000            0.0000000
+ Magnitude           :                                                    0.0000000
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon Oct 23 10:28:24 2023
+Module time:
+	user time   =       0.05 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.12 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0     0     0     0     0
+    GAS1                1     0     0     0     0     1     0     0     2
+    GAS2                0     0     0     0     0     0     0     0     0
+    GAS3                0     0     0     0     0     0     0     0     0
+    GAS4                0     0     0     0     0     0     0     0     0
+    GAS5                0     0     0     0     0     0     0     0     0
+    GAS6                0     0     0     0     0     0     0     0     0
+    RESTRICTED_UOCC     0     0     0     0     0     0     0     0     0
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               1     0     0     0     0     1     0     0     2
+  -------------------------------------------------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 2
+    Number of basis functions: 2
+    Number of Cartesian functions: 2
+    Spherical Harmonics?: true
+    Max angular momentum: 0
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               2
+      Number of primitives:              6
+      Number of atomic orbitals:         2
+      Number of basis functions:         2
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 12 doubles for integral storage.
+  We computed 6 shell quartets total.
+  Whereas there are 6 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                          2
+  Number of correlated molecular orbitals:               2
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00213900 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000000 GB
+  Timing for conventional integral transformation:            0.004 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.004 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+      B1u      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   2
+    --------------------------
+
+
+  ==> String Lists <==
+
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                2
+    number of beta strings                                 2
+    timing for strings                                 0.000 s
+    timing for NN strings                              0.000 s
+    timing for VO strings                              0.000 s
+    timing for OO strings                              0.000 s
+    timing for VVOO strings                            0.000 s
+    timing for 1-hole strings                          0.000 s
+    timing for 2-hole strings                          0.000 s
+    timing for 3-hole strings                          0.000 s
+    total timing                                       0.000 s
+
+
+  ==> FCI Solver <==
+
+    Spin adapt                                         FALSE
+    Number of determinants                                 2
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         2
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     2       1       *
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0       -1.088496308147  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-12
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      2
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  2
+    Print level                                            1
+
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0       -1.088496308147        1.088496308147        0.000000000000      1
+       1       -1.088496308147        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    2 0      0.98130703
+    0 2     -0.19244874
+
+    Total Energy:      -1.088496308147, <S^2>: 0.000000
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+    Timing for 3-RDM: 0.000 s
+
+==> RDMs Test <==
+
+    AA 1-RDM Error :   +0.000000e+00
+    BB 1-RDM Error :   +0.000000e+00
+    AAAA 2-RDM Error :   +0.000000e+00
+    BBBB 2-RDM Error :   +0.000000e+00
+    ABAB 2-RDM Error :   +0.000000e+00
+    AAAAAA 3-RDM Error : +0.000000e+00
+    AABAAB 3-RDM Error : +0.000000e+00
+    ABBABB 3-RDM Error : +0.000000e+00
+    BBBBBB 3-RDM Error : +0.000000e+00
+
+  ==> String Lists <==
+
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                2
+    number of beta strings                                 2
+    timing for strings                                 0.000 s
+    timing for NN strings                              0.000 s
+    timing for VO strings                              0.000 s
+    timing for OO strings                              0.000 s
+    timing for VVOO strings                            0.000 s
+    timing for 1-hole strings                          0.000 s
+    timing for 2-hole strings                          0.000 s
+    timing for 3-hole strings                          0.000 s
+    total timing                                       0.000 s
+
+
+  ==> FCI Solver <==
+
+    Spin adapt                                         FALSE
+    Number of determinants                                 2
+    Symmetry                                               5
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         2
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     1       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   triplet    0       -0.774967219037  +2.000000  removed
+   singlet    0       -0.373922279624  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-12
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      2
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  2
+    Print level                                            1
+
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0       -0.373922279624        0.373922279624        0.000000000000      1 <- added 1 random vector
+  ---------------------------------------------------------------------------------
+
+  Davidson-Liu solver:  No new vectors added, but residual converged. Finishing computation.
+
+  ==> Root No. 0 <==
+
+    a b     -0.70710678
+    b a     -0.70710678
+
+    Total Energy:      -0.373922279624, <S^2>: -0.000000
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+    Timing for 3-RDM: 0.000 s
+
+==> RDMs Test <==
+
+    AA 1-RDM Error :   +0.000000e+00
+    BB 1-RDM Error :   +0.000000e+00
+    AAAA 2-RDM Error :   +0.000000e+00
+    BBBB 2-RDM Error :   +0.000000e+00
+    ABAB 2-RDM Error :   +0.000000e+00
+    AAAAAA 3-RDM Error : +0.000000e+00
+    AABAAB 3-RDM Error : +0.000000e+00
+    ABBABB 3-RDM Error : +0.000000e+00
+    BBBBBB 3-RDM Error : +0.000000e+00
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    Ag     0       -1.088496308147   0.000000
+    --------------------------------------------------------
+       1  (  0)   B1u     0       -0.373922279624  -0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
+
+
+  ==> Computing RDMs <0| ... |0> <==
+
+    Timing for 1-RDM: 0.000 s
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG     0.00000000     0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
+
+
+  ==> Computing RDMs <0| ... |0> <==
+
+    Timing for 1-RDM: 0.000 s
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+        0B1U     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
+
+
+  ==> Computing RDMs <0| ... |0> <==
+
+    Timing for 1-RDM: 0.000 s
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG    -1.38890081     0.00000000     0.00000000    -1.38890081     0.00000000    -0.95005155
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000     2.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
+
+
+  ==> Computing RDMs <0| ... |0> <==
+
+    Timing for 1-RDM: 0.000 s
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+        0B1U    -1.20926822     0.00000000     0.00000000    -1.20926822     0.00000000    -1.64776541
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000     2.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+
+  ==> Computing RDMs <0| ... |0> <==
+
+
+==> RDMs Test <==
+
+    SF 1-RDM Error :   +0.000000e+00
+       Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
+    -------------------------------------------------------------------------
+       0AG   0B1U     0.00000000     0.00000000    -1.25848431     1.25848431
+    -------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG  to State 0B1U :
+      Component  1 with value of W = 1.3878
+        Init. Orbital: 1.0000 Orb.  0
+        Final Orbital: 1.0000 Orb.  1
+      Component  2 with value of W = 0.2722
+        Init. Orbital: 1.0000 Orb.  1
+        Final Orbital: 1.0000 Orb.  0
+
+
+  ==> Transitions for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+     Init.  Final  Energy [a.u.]    Energy [eV]    Osc. [a.u.]
+    ----------------------------------------------------------
+       0AG   0B1U     0.71457403    19.44454973     0.75448668
+    ----------------------------------------------------------
+
+  Time to prepare integrals:        0.006 seconds
+  Time to run job          :        0.002 seconds
+  Total                    :        0.008 seconds
+
+
+  Variable Map:
+  ----------------------------------------------------------------------------
+  "AA 1-RDM ERROR"                  =>       0.000000000000
+  "AAAA 2-RDM ERROR"                =>       0.000000000000
+  "AAAAAA 3-RDM ERROR"              =>       0.000000000000
+  "AABAAB 3-RDM ERROR"              =>       0.000000000000
+  "ABAB 2-RDM ERROR"                =>       0.000000000000
+  "ABBABB 3-RDM ERROR"              =>       0.000000000000
+  "BB 1-RDM ERROR"                  =>       0.000000000000
+  "BBBB 2-RDM ERROR"                =>       0.000000000000
+  "BBBBBB 3-RDM ERROR"              =>       0.000000000000
+  "CURRENT ENERGY"                  =>      -0.731209293886
+  "CURRENT REFERENCE ENERGY"        =>      -1.049170901986
+  "DD SOLVATION ENERGY"             =>       0.000000000000
+  "ENERGY ROOT 0 1AG"               =>      -1.088496308147
+  "ENERGY ROOT 0 1B1U"              =>      -0.373922279624
+  "FCI ENERGY"                      =>      -0.373922279624
+  "HF KINETIC ENERGY"               =>       1.163682671338
+  "HF POTENTIAL ENERGY"             =>      -2.212853573324
+  "HF TOTAL ENERGY"                 =>      -1.049170901986
+  "HF VIRIAL RATIO"                 =>       1.901595364293
+  "NUCLEAR REPULSION ENERGY"        =>       0.500000000000
+  "ONE-ELECTRON ENERGY"             =>      -2.165390736219
+  "OSC. SINGLET 0AG -> 0B1U"        =>       0.754486683665
+  "PCM POLARIZATION ENERGY"         =>       0.000000000000
+  "PE ENERGY"                       =>       0.000000000000
+  "SCF ITERATION ENERGY"            =>      -1.049170901986
+  "SCF ITERATIONS"                  =>       2.000000000000
+  "SCF TOTAL ENERGY"                =>      -1.049170901986
+  "SF 1-RDM ERROR"                  =>       0.000000000000
+  "SINGLET <0AG|DM_X|0AG>"          =>       0.000000000000
+  "SINGLET <0AG|DM_Y|0AG>"          =>       0.000000000000
+  "SINGLET <0AG|DM_Z|0AG>"          =>      -0.000000000000
+  "SINGLET <0AG|QM_XX|0AG>"         =>      -1.388900805473
+  "SINGLET <0AG|QM_XY|0AG>"         =>       0.000000000000
+  "SINGLET <0AG|QM_XZ|0AG>"         =>       0.000000000000
+  "SINGLET <0AG|QM_YY|0AG>"         =>      -1.388900805473
+  "SINGLET <0AG|QM_YZ|0AG>"         =>       0.000000000000
+  "SINGLET <0AG|QM_ZZ|0AG>"         =>      -0.950051546021
+  "SINGLET <0B1U|DM_X|0B1U>"        =>       0.000000000000
+  "SINGLET <0B1U|DM_Y|0B1U>"        =>       0.000000000000
+  "SINGLET <0B1U|DM_Z|0B1U>"        =>       0.000000000000
+  "SINGLET <0B1U|QM_XX|0B1U>"       =>      -1.209268224995
+  "SINGLET <0B1U|QM_XY|0B1U>"       =>       0.000000000000
+  "SINGLET <0B1U|QM_XZ|0B1U>"       =>       0.000000000000
+  "SINGLET <0B1U|QM_YY|0B1U>"       =>      -1.209268224995
+  "SINGLET <0B1U|QM_YZ|0B1U>"       =>       0.000000000000
+  "SINGLET <0B1U|QM_ZZ|0B1U>"       =>      -1.647765408484
+  "SINGLET |<0AG|DM|0AG>|"          =>       0.000000000000
+  "SINGLET |<0B1U|DM|0B1U>|"        =>       0.000000000000
+  "TRANS SINGLET <0AG|DM_X|0B1U>"   =>       0.000000000000
+  "TRANS SINGLET <0AG|DM_Y|0B1U>"   =>       0.000000000000
+  "TRANS SINGLET <0AG|DM_Z|0B1U>"   =>      -1.258484309688
+  "TRANS SINGLET S_MAX 0AG -> 0B1U" =>       1.387777706267
+  "TRANS SINGLET |<0AG|DM|0B1U>|"   =>       1.258484309688
+  "TWO-ELECTRON ENERGY"             =>       0.616219834233
+
+
+    SF 1-RDM..............................................................................PASSED
+    SINGLET <0AG|DM_X|0AG>................................................................PASSED
+    SINGLET <0AG|DM_Y|0AG>................................................................PASSED
+    SINGLET <0AG|DM_Z|0AG>................................................................PASSED
+    SINGLET <0AG|QM_XX|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_XY|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_XZ|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_YY|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_YZ|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_ZZ|0AG>...............................................................PASSED
+    SINGLET <0B1U|DM_X|0B1U>..............................................................PASSED
+    SINGLET <0B1U|DM_Y|0B1U>..............................................................PASSED
+    SINGLET <0B1U|DM_Z|0B1U>..............................................................PASSED
+    SINGLET <0B1U|QM_XX|0B1U>.............................................................PASSED
+    SINGLET <0B1U|QM_XY|0B1U>.............................................................PASSED
+    SINGLET <0B1U|QM_XZ|0B1U>.............................................................PASSED
+    SINGLET <0B1U|QM_YY|0B1U>.............................................................PASSED
+    SINGLET <0B1U|QM_YZ|0B1U>.............................................................PASSED
+    SINGLET <0B1U|QM_ZZ|0B1U>.............................................................PASSED
+    SINGLET |<0AG|DM|0AG>|................................................................PASSED
+    SINGLET |<0B1U|DM|0B1U>|..............................................................PASSED
+    TRANS SINGLET <0AG|DM_X|0B1U>.........................................................PASSED
+    TRANS SINGLET <0AG|DM_Y|0B1U>.........................................................PASSED
+    TRANS SINGLET S_MAX 0AG -> 0B1U.......................................................PASSED
+    TRANS SINGLET |<0AG|DM|0B1U>|.........................................................PASSED
+    OSC. SINGLET 0AG -> 0B1U..............................................................PASSED
+    TRANS SINGLET |<0AG|DM_Z|0B1U>|.......................................................PASSED
+
+    Psi4 stopped on: Monday, 23 October 2023 10:28AM
+    Psi4 wall time for execution: 0:00:00.19
+
+*** Psi4 exiting successfully. Buy a developer a beer!
