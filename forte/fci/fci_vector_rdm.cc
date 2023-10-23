@@ -144,25 +144,6 @@ std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_ri
     return std::make_shared<RDMsSpinDependent>();
 }
 
-void fill_C_block(FCIVector& C, double** m, bool alfa, std::shared_ptr<StringAddress> alfa_address,
-                  std::shared_ptr<StringAddress> beta_address, int ha, int hb) {
-    // if alfa is true just copy the block
-    double** c = C.C(ha)->pointer();
-    size_t maxIa = alfa_address->strpi(ha);
-    size_t maxIb = beta_address->strpi(hb);
-    if (alfa) {
-        for (size_t Ia = 0; Ia < maxIa; ++Ia)
-            for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                m[Ia][Ib] = c[Ia][Ib];
-    } else {
-        // if alfa is false, transpose the block
-        // Copy C0 transposed in C1
-        for (size_t Ia = 0; Ia < maxIa; ++Ia)
-            for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                m[Ib][Ia] = c[Ia][Ib];
-    }
-}
-
 /**
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
@@ -177,34 +158,34 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
     const auto& cmopi = C_left.cmopi_;
     const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
-    auto Cl = Y1->pointer();
-    auto Cr = C1->pointer();
+    auto Cl = CL->pointer();
+    auto Cr = CR->pointer();
 
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo, ncmo});
 
     auto na = alfa_address->nones();
     auto nb = beta_address->nones();
-    if ((alfa and (na < 1)) or (!alfa) and (nb < 1))
+    if ((alfa and (na < 1)) or ((!alfa) and (nb < 1)))
         return rdm;
 
     auto& rdm_data = rdm.data();
 
-    for (size_t hIa = 0; hIa < nirrep; ++hIa) {
-        int hIb = hIa ^ symmetry;
-        if (detpi[hIa] > 0) {
-            // Fill C1 and Y1 with the correct block
-            fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, hIa, hIb);
-            fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, hIa, hIb);
+    for (size_t h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
+        int h_Ib = h_Ia ^ symmetry;
+        if (detpi[h_Ia] > 0) {
+            // Fill CR and CL with the correct block
+            fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, h_Ia, h_Ib);
+            fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, h_Ia, h_Ib);
 
-            const size_t maxL = alfa ? beta_address->strpi(hIb) : alfa_address->strpi(hIa);
+            const size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_Ia);
             for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
                 for (int p_rel = 0; p_rel < cmopi[p_sym]; ++p_rel) {
                     for (int q_rel = 0; q_rel < cmopi[q_sym]; ++q_rel) {
                         int p_abs = p_rel + cmopi_offset[p_sym];
                         int q_abs = q_rel + cmopi_offset[q_sym];
-                        const auto& vo = alfa ? lists->get_alfa_vo_list(p_abs, q_abs, hIa)
-                                              : lists->get_beta_vo_list(p_abs, q_abs, hIb);
+                        const auto& vo = alfa ? lists->get_alfa_vo_list(p_abs, q_abs, h_Ia)
+                                              : lists->get_beta_vo_list(p_abs, q_abs, h_Ib);
                         double rdm_element = 0.0;
                         for (const auto& [sign, I, J] : vo) {
                             rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
@@ -224,17 +205,15 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
  */
 ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector& C_right,
                                                     bool alfa) {
+    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t nirrep = C_left.nirrep_;
     size_t symmetry = C_left.symmetry_;
     const auto& detpi = C_left.detpi_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
-    const auto& cmopi = C_left.cmopi_;
-    const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
-    auto Cl = Y1->pointer();
-    auto Cr = C1->pointer();
+    auto Cl = CL->pointer();
+    auto Cr = CR->pointer();
 
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "2RDM_AA" : "2RDM_BB",
                                     {ncmo, ncmo, ncmo, ncmo});
@@ -252,7 +231,7 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
     for (int ha = 0; ha < nirrep; ++ha) {
         int hb = ha ^ symmetry;
         if (detpi[ha] > 0) {
-            // Fill C1 and Y1 with the correct block
+            // Fill CR and CL with the correct block
             fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, ha, hb);
             fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, ha, hb);
 
@@ -261,9 +240,7 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
             for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
                 size_t max_pq = lists->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists->get_pair_list(pq_sym, pq);
-                    int p_abs = pq_pair.first;
-                    int q_abs = pq_pair.second;
+                    const auto& [p_abs, q_abs] = lists->get_pair_list(pq_sym, pq);
 
                     std::vector<StringSubstitution>& OO =
                         alfa ? lists->get_alfa_oo_list(pq_sym, pq, ha)
@@ -329,10 +306,9 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
 }
 
 ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t nirrep = C_left.nirrep_;
     size_t symmetry = C_left.symmetry_;
-    const auto& detpi = C_left.detpi_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
     const auto& cmopi = C_left.cmopi_;
@@ -418,18 +394,15 @@ ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector
 
 ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVector& C_right,
                                                      bool alfa) {
+    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t nirrep = C_left.nirrep_;
     size_t symmetry = C_left.symmetry_;
-    const auto& detpi = C_left.detpi_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
-    const auto& cmopi = C_left.cmopi_;
-    const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
 
-    auto Cl = Y1->pointer();
-    auto Cr = C1->pointer();
+    auto Cl = CL->pointer();
+    auto Cr = CR->pointer();
 
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "3RDM_AAA" : "3RDM_BBB",
                                     {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
@@ -446,7 +419,7 @@ ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVecto
             alfa ? lists->alfa_address_3h()->strpi(h_K) : lists->beta_address_3h()->strpi(h_K);
         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
             int h_Ib = h_Ia ^ symmetry;
-            int h_Ja = h_Ia;
+            // int h_Ja = h_Ia;
             fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, h_Ia, h_Ib);
             fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, h_Ia, h_Ib);
 
@@ -470,14 +443,9 @@ ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVecto
 }
 
 ambit::Tensor FCIVector::compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t nirrep = C_left.nirrep_;
     size_t symmetry = C_left.symmetry_;
-    const auto& detpi = C_left.detpi_;
-    const auto& alfa_address = C_left.alfa_address_;
-    const auto& beta_address = C_left.beta_address_;
-    const auto& cmopi = C_left.cmopi_;
-    const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
 
     auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g2", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
@@ -536,14 +504,9 @@ ambit::Tensor FCIVector::compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVecto
 }
 
 ambit::Tensor FCIVector::compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t nirrep = C_left.nirrep_;
     size_t symmetry = C_left.symmetry_;
-    const auto& detpi = C_left.detpi_;
-    const auto& alfa_address = C_left.alfa_address_;
-    const auto& beta_address = C_left.beta_address_;
-    const auto& cmopi = C_left.cmopi_;
-    const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
 
     auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g2", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
@@ -603,9 +566,10 @@ ambit::Tensor FCIVector::compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVecto
     return g3;
 }
 
-void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::shared_ptr<RDMs> rdms) {
-    String Ia, Ib;
+void FCIVector::test_rdms(FCIVector& Cl, FCIVector& Cr, int max_rdm_level, RDMsType type,
+                          std::shared_ptr<RDMs> rdms) {
 
+    String Ia, Ib;
     // Generate the strings 1111100000
     //                      { k }{n-k}
 
@@ -617,131 +581,147 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
 
     // left
     {
+        int symmetry_left = Cl.symmetry_;
+        auto alfa_address_left = Cl.alfa_address_;
+        auto beta_address_left = Cl.beta_address_;
         size_t left_na = Cl.lists_->na();
         size_t left_nb = Cl.lists_->nb();
         size_t num_det = 0;
-        for (size_t i = 0; i < ncmo_ - left_na; ++i)
+        for (size_t i = 0; i < ncmo - left_na; ++i)
             Ia[i] = false; // 0
-        for (size_t i = ncmo_ - left_na; i < ncmo_; ++i)
+        for (size_t i = ncmo - left_na; i < ncmo; ++i)
             Ia[i] = true; // 1
 
-        for (size_t i = 0; i < ncmo_ - left_nb; ++i)
+        for (size_t i = 0; i < ncmo - left_nb; ++i)
             Ib[i] = false; // 0
-        for (size_t i = ncmo_ - left_nb; i < ncmo_; ++i)
+        for (size_t i = ncmo - left_nb; i < ncmo; ++i)
             Ib[i] = true; // 1
         do {
             do {
-                if ((alfa_address_->sym(Ia) ^ beta_address_->sym(Ib)) ==
-                    static_cast<int>(symmetry_)) {
+                if ((alfa_address_left->sym(Ia) ^ beta_address_left->sym(Ib)) == symmetry_left) {
                     Determinant d(Ia, Ib);
                     left_dets.push_back(d);
-                    double c = C_[alfa_address_->sym(Ia)]->get(alfa_address_->add(Ia),
-                                                               beta_address_->add(Ib));
+                    double c = Cl.C(alfa_address_left->sym(Ia))
+                                   ->get(alfa_address_left->add(Ia), beta_address_left->add(Ib));
                     left_C.push_back(c);
                     left_dets_map[d] = num_det;
                     num_det++;
                 }
-            } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo_));
-        } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo_));
+            } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo));
+        } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo));
     }
 
     // right
     {
+        int symmetry_right = Cr.symmetry_;
+        auto alfa_address_right = Cr.alfa_address_;
+        auto beta_address_right = Cr.beta_address_;
         size_t right_na = Cr.lists_->na();
         size_t right_nb = Cr.lists_->nb();
         size_t num_det = 0;
-        for (size_t i = 0; i < ncmo_ - right_na; ++i)
+        for (size_t i = 0; i < ncmo - right_na; ++i)
             Ia[i] = false; // 0
-        for (size_t i = ncmo_ - right_na; i < ncmo_; ++i)
+        for (size_t i = ncmo - right_na; i < ncmo; ++i)
             Ia[i] = true; // 1
 
-        for (size_t i = 0; i < ncmo_ - right_nb; ++i)
+        for (size_t i = 0; i < ncmo - right_nb; ++i)
             Ib[i] = false; // 0
-        for (size_t i = ncmo_ - right_nb; i < ncmo_; ++i)
+        for (size_t i = ncmo - right_nb; i < ncmo; ++i)
             Ib[i] = true; // 1
         do {
             do {
-                if ((alfa_address_->sym(Ia) ^ beta_address_->sym(Ib)) ==
-                    static_cast<int>(symmetry_)) {
+                if ((alfa_address_right->sym(Ia) ^ beta_address_right->sym(Ib)) == symmetry_right) {
                     Determinant d(Ia, Ib);
                     right_dets.push_back(d);
-                    double c = C_[alfa_address_->sym(Ia)]->get(alfa_address_->add(Ia),
-                                                               beta_address_->add(Ib));
+                    double c = Cr.C(alfa_address_right->sym(Ia))
+                                   ->get(alfa_address_right->add(Ia), beta_address_right->add(Ib));
                     right_C.push_back(c);
                     right_dets_map[d] = num_det;
                     num_det++;
                 }
-            } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo_));
-        } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo_));
+            } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo));
+        } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo));
     }
 
     Determinant I; // <- xsize (no_);
 
     psi::outfile->Printf("\n\n==> RDMs Test <==\n");
 
-    auto g1a = rdms->g1a();
-    double error_1rdm_a = 0.0;
-    for (size_t p = 0; p < ncmo; p++) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            double rdm = 0.0;
-            for (size_t i = 0; i < right_dets.size(); ++i) {
-                I = right_dets[i];
-                double sign = 1.0;
-                sign *= I.destroy_alfa_bit(p);
-                sign *= I.create_alfa_bit(q);
-                if (sign != 0) {
-                    if (left_dets_map.count(I) != 0) {
-                        rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+    if (max_rdm_level >= 1) {
+        // compute the reference 1-RDM_A
+        auto g1a_ref = ambit::Tensor::build(ambit::CoreTensor, "1RDM_A", {ncmo, ncmo});
+        for (size_t p = 0; p < ncmo; p++) {
+            for (size_t q = 0; q < ncmo; ++q) {
+                double rdm = 0.0;
+                for (size_t i = 0; i < right_dets.size(); ++i) {
+                    I = right_dets[i];
+                    double sign = 1.0;
+                    sign *= I.destroy_alfa_bit(q);
+                    sign *= I.create_alfa_bit(p);
+                    if (sign != 0) {
+                        if (left_dets_map.count(I) != 0) {
+                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                        }
                     }
                 }
-            }
-            if (std::fabs(rdm) > 1.0e-12) {
-                error_1rdm_a += std::fabs(rdm - g1a.at({p, q}));
+                g1a_ref.at({p, q}) = rdm;
             }
         }
-    }
-    psi::outfile->Printf("\n    AA 1-RDM Error :   %+e", error_1rdm_a);
-    psi::Process::environment.globals["AA 1-RDM ERROR"] = error_1rdm_a;
 
-    auto g1b = rdms->g1b();
-    double error_1rdm_b = 0.0;
-    for (size_t p = 0; p < ncmo; p++) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            double rdm = 0.0;
-            for (size_t i = 0; i < right_dets.size(); ++i) {
-                I = right_dets[i];
-                double sign = 1.0;
-                sign *= I.destroy_beta_bit(p);
-                sign *= I.create_beta_bit(q);
-                if (sign != 0) {
-                    if (left_dets_map.count(I) != 0) {
-                        rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+        // compute the reference 1-RDM_B
+        auto g1b_ref = ambit::Tensor::build(ambit::CoreTensor, "1RDM_B", {ncmo, ncmo});
+        for (size_t p = 0; p < ncmo; p++) {
+            for (size_t q = 0; q < ncmo; ++q) {
+                double rdm = 0.0;
+                for (size_t i = 0; i < right_dets.size(); ++i) {
+                    I = right_dets[i];
+                    double sign = 1.0;
+                    sign *= I.destroy_beta_bit(q);
+                    sign *= I.create_beta_bit(p);
+                    if (sign != 0) {
+                        if (left_dets_map.count(I) != 0) {
+                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                        }
                     }
                 }
-            }
-            if (std::fabs(rdm) > 1.0e-12) {
-                error_1rdm_b += std::fabs(rdm - g1b.at({p, q}));
+                g1b_ref.at({p, q}) = rdm;
             }
         }
+
+        if (type == RDMsType::spin_dependent) {
+            // test the 1-RDM
+            auto g1a = rdms->g1a();
+            g1a_ref("pq") -= g1a("pq");
+            auto error_1rdm_a = g1a_ref.norm();
+            psi::outfile->Printf("\n    AA 1-RDM Error :   %+e", error_1rdm_a);
+            psi::Process::environment.globals["AA 1-RDM ERROR"] = error_1rdm_a;
+
+            auto g1b = rdms->g1b();
+            g1b_ref("pq") -= g1b("pq");
+            auto error_1rdm_b = g1b_ref.norm();
+            psi::outfile->Printf("\n    BB 1-RDM Error :   %+e", error_1rdm_b);
+            psi::Process::environment.globals["BB 1-RDM ERROR"] = error_1rdm_b;
+        } else if (type == RDMsType::spin_free) {
+            // test the 1-RDM
+            auto G1 = rdms->SF_G1();
+            auto G1_ref = ambit::Tensor::build(ambit::CoreTensor, "1RDM", {ncmo, ncmo});
+            G1_ref("pq") += g1a_ref("pq");
+            G1_ref("pq") += g1b_ref("pq");
+            G1_ref("pq") -= G1("pq");
+
+            auto error_1rdm_SF = G1_ref.norm();
+            psi::outfile->Printf("\n    SF 1-RDM Error :   %+e", error_1rdm_SF);
+            psi::Process::environment.globals["SF 1-RDM ERROR"] = error_1rdm_SF;
+        }
     }
-    psi::outfile->Printf("\n    BB 1-RDM Error :   %+e", error_1rdm_b);
-    psi::Process::environment.globals["BB 1-RDM ERROR"] = error_1rdm_b;
 
-    bool test_2rdm_aa = true;
-    bool test_2rdm_bb = true;
-    bool test_2rdm_ab = true;
-    bool test_3rdm_aaa = true;
-    bool test_3rdm_bbb = true;
-    bool test_3rdm_aab = true;
-    bool test_3rdm_abb = true;
-
-    if (test_2rdm_aa) {
+    if (max_rdm_level >= 2) {
         auto g2aa = rdms->g2aa();
         double error_2rdm_aa = 0.0;
-        for (size_t p = 0; p < ncmo_; ++p) {
-            for (size_t q = 0; q < ncmo_; ++q) {
-                for (size_t r = 0; r < ncmo_; ++r) {
-                    for (size_t s = 0; s < ncmo_; ++s) {
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = 0; q < ncmo; ++q) {
+                for (size_t r = 0; r < ncmo; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
                         for (size_t i = 0; i < right_dets.size(); ++i) {
                             I = right_dets[i];
@@ -765,15 +745,13 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
         }
         psi::Process::environment.globals["AAAA 2-RDM ERROR"] = error_2rdm_aa;
         psi::outfile->Printf("\n    AAAA 2-RDM Error :   %+e", error_2rdm_aa);
-    }
 
-    if (test_2rdm_bb) {
         auto g2bb = rdms->g2bb();
         double error_2rdm_bb = 0.0;
-        for (size_t p = 0; p < ncmo_; ++p) {
-            for (size_t q = 0; q < ncmo_; ++q) {
-                for (size_t r = 0; r < ncmo_; ++r) {
-                    for (size_t s = 0; s < ncmo_; ++s) {
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = 0; q < ncmo; ++q) {
+                for (size_t r = 0; r < ncmo; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
                         for (size_t i = 0; i < right_dets.size(); ++i) {
                             I = right_dets[i];
@@ -797,15 +775,13 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
         }
         psi::Process::environment.globals["BBBB 2-RDM ERROR"] = error_2rdm_bb;
         psi::outfile->Printf("\n    BBBB 2-RDM Error :   %+e", error_2rdm_bb);
-    }
 
-    if (test_2rdm_ab) {
         auto g2ab = rdms->g2ab();
         double error_2rdm_ab = 0.0;
-        for (size_t p = 0; p < ncmo_; ++p) {
-            for (size_t q = 0; q < ncmo_; ++q) {
-                for (size_t r = 0; r < ncmo_; ++r) {
-                    for (size_t s = 0; s < ncmo_; ++s) {
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = 0; q < ncmo; ++q) {
+                for (size_t r = 0; r < ncmo; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
                         for (size_t i = 0; i < right_dets.size(); ++i) {
                             I = right_dets[i];
@@ -831,94 +807,16 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
         psi::outfile->Printf("\n    ABAB 2-RDM Error :   %+e", error_2rdm_ab);
     }
 
-    if (test_3rdm_aab) {
-        auto g3aab = rdms->g3aab();
-        double error_3rdm_aab = 0.0;
-        for (size_t p = 0; p < ncmo_; ++p) {
-            for (size_t q = p + 1; q < ncmo_; ++q) {
-                for (size_t r = 0; r < ncmo_; ++r) {
-                    for (size_t s = 0; s < ncmo_; ++s) {
-                        for (size_t t = s + 1; t < ncmo_; ++t) {
-                            for (size_t a = 0; a < ncmo_; ++a) {
-                                double rdm = 0.0;
-                                for (size_t i = 0; i < right_dets.size(); ++i) {
-                                    I = right_dets[i];
-                                    double sign = 1.0;
-                                    sign *= I.destroy_alfa_bit(s);
-                                    sign *= I.destroy_alfa_bit(t);
-                                    sign *= I.destroy_beta_bit(a);
-                                    sign *= I.create_beta_bit(r);
-                                    sign *= I.create_alfa_bit(q);
-                                    sign *= I.create_alfa_bit(p);
-                                    if (sign != 0) {
-                                        if (left_dets_map.count(I) != 0) {
-                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
-                                        }
-                                    }
-                                }
-                                if (std::fabs(rdm) > 1.0e-12) {
-                                    double rdm_comp = g3aab.at({p, q, r, s, t, a});
-                                    error_3rdm_aab += std::fabs(rdm - rdm_comp);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        psi::Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
-        psi::outfile->Printf("\n    AABAAB 3-RDM Error : %+e", error_3rdm_aab);
-    }
-
-    if (test_3rdm_abb) {
-        auto g3abb = rdms->g3abb();
-        double error_3rdm_abb = 0.0;
-        for (size_t p = 0; p < ncmo_; ++p) {
-            for (size_t q = p + 1; q < ncmo_; ++q) {
-                for (size_t r = 0; r < ncmo_; ++r) {
-                    for (size_t s = 0; s < ncmo_; ++s) {
-                        for (size_t t = s + 1; t < ncmo_; ++t) {
-                            for (size_t a = 0; a < ncmo_; ++a) {
-                                double rdm = 0.0;
-                                for (size_t i = 0; i < right_dets.size(); ++i) {
-                                    I = right_dets[i];
-                                    double sign = 1.0;
-                                    sign *= I.destroy_alfa_bit(s);
-                                    sign *= I.destroy_beta_bit(t);
-                                    sign *= I.destroy_beta_bit(a);
-                                    sign *= I.create_beta_bit(r);
-                                    sign *= I.create_beta_bit(q);
-                                    sign *= I.create_alfa_bit(p);
-                                    if (sign != 0) {
-                                        if (left_dets_map.count(I) != 0) {
-                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
-                                        }
-                                    }
-                                }
-                                if (std::fabs(rdm) > 1.0e-12) {
-                                    double rdm_comp = g3abb.at({p, q, r, s, t, a});
-                                    error_3rdm_abb += std::fabs(rdm - rdm_comp);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        psi::Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
-        psi::outfile->Printf("\n    ABBABB 3-RDM Error : %+e", error_3rdm_abb);
-    }
-
-    if (test_3rdm_aaa) {
+    if (max_rdm_level >= 3) {
         auto g3aaa = rdms->g3aaa();
         double error_3rdm_aaa = 0.0;
         //        for (size_t p = 0; p < no_; ++p){
         for (size_t p = 0; p < 1; ++p) {
-            for (size_t q = p + 1; q < ncmo_; ++q) {
-                for (size_t r = q + 1; r < ncmo_; ++r) {
-                    for (size_t s = 0; s < ncmo_; ++s) {
-                        for (size_t t = s + 1; t < ncmo_; ++t) {
-                            for (size_t a = t + 1; a < ncmo_; ++a) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
+                        for (size_t t = s + 1; t < ncmo; ++t) {
+                            for (size_t a = t + 1; a < ncmo; ++a) {
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < right_dets.size(); ++i) {
                                     I = right_dets[i];
@@ -947,18 +845,90 @@ void FCIVector::rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::share
         }
         psi::Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
         psi::outfile->Printf("\n    AAAAAA 3-RDM Error : %+e", error_3rdm_aaa);
-    }
 
-    if (test_3rdm_bbb) {
+        auto g3aab = rdms->g3aab();
+        double error_3rdm_aab = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = 0; r < ncmo; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
+                        for (size_t t = s + 1; t < ncmo; ++t) {
+                            for (size_t a = 0; a < ncmo; ++a) {
+                                double rdm = 0.0;
+                                for (size_t i = 0; i < right_dets.size(); ++i) {
+                                    I = right_dets[i];
+                                    double sign = 1.0;
+                                    sign *= I.destroy_alfa_bit(s);
+                                    sign *= I.destroy_alfa_bit(t);
+                                    sign *= I.destroy_beta_bit(a);
+                                    sign *= I.create_beta_bit(r);
+                                    sign *= I.create_alfa_bit(q);
+                                    sign *= I.create_alfa_bit(p);
+                                    if (sign != 0) {
+                                        if (left_dets_map.count(I) != 0) {
+                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                        }
+                                    }
+                                }
+                                if (std::fabs(rdm) > 1.0e-12) {
+                                    double rdm_comp = g3aab.at({p, q, r, s, t, a});
+                                    error_3rdm_aab += std::fabs(rdm - rdm_comp);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
+        psi::outfile->Printf("\n    AABAAB 3-RDM Error : %+e", error_3rdm_aab);
+
+        auto g3abb = rdms->g3abb();
+        double error_3rdm_abb = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = 0; r < ncmo; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
+                        for (size_t t = s + 1; t < ncmo; ++t) {
+                            for (size_t a = 0; a < ncmo; ++a) {
+                                double rdm = 0.0;
+                                for (size_t i = 0; i < right_dets.size(); ++i) {
+                                    I = right_dets[i];
+                                    double sign = 1.0;
+                                    sign *= I.destroy_alfa_bit(s);
+                                    sign *= I.destroy_beta_bit(t);
+                                    sign *= I.destroy_beta_bit(a);
+                                    sign *= I.create_beta_bit(r);
+                                    sign *= I.create_beta_bit(q);
+                                    sign *= I.create_alfa_bit(p);
+                                    if (sign != 0) {
+                                        if (left_dets_map.count(I) != 0) {
+                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                        }
+                                    }
+                                }
+                                if (std::fabs(rdm) > 1.0e-12) {
+                                    double rdm_comp = g3abb.at({p, q, r, s, t, a});
+                                    error_3rdm_abb += std::fabs(rdm - rdm_comp);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
+        psi::outfile->Printf("\n    ABBABB 3-RDM Error : %+e", error_3rdm_abb);
+
         auto g3bbb = rdms->g3bbb();
         double error_3rdm_bbb = 0.0;
         for (size_t p = 0; p < 1; ++p) {
             //            for (size_t p = 0; p < no_; ++p){
-            for (size_t q = p + 1; q < ncmo_; ++q) {
-                for (size_t r = q + 1; r < ncmo_; ++r) {
-                    for (size_t s = 0; s < ncmo_; ++s) {
-                        for (size_t t = s + 1; t < ncmo_; ++t) {
-                            for (size_t a = t + 1; a < ncmo_; ++a) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
+                        for (size_t t = s + 1; t < ncmo; ++t) {
+                            for (size_t a = t + 1; a < ncmo; ++a) {
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < right_dets.size(); ++i) {
                                     I = right_dets[i];

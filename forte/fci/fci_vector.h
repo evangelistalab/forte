@@ -53,34 +53,44 @@ class RDMs;
 class FCIVector {
   public:
     FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry);
-    ~FCIVector();
 
-    //    // Simple operation
-    void print();
+    /// @brief return the number of irreps
+    size_t nirrep() const;
+    /// @brief return the symmetry of this vector
+    size_t symmetry() const;
+    /// @brief return the number of correlated molecular orbitals
+    size_t ncmo() const;
+    /// @brief return the size of the CI basis
+    size_t size() const;
+    /// @brief return the number of determinants per irrep
+    const std::vector<size_t>& detpi() const;
+
+    /// @brief return the number of correlated molecular orbitals per irrep
+    psi::Dimension cmopi() const;
+    /// @brief return the offset array for cmopi
+    const std::vector<size_t>& cmopi_offset() const;
+    const std::shared_ptr<StringLists>& lists() const;
+
+    /// @brief zero the vector
     void zero();
-    /// The size of the CI basis
-    size_t size() const { return ndet_; }
+    /// @brief print the vector
+    void print();
 
-    /// Copy the wave function object
+    /// copy the wave function object
     void copy(FCIVector& wfn);
-    /// Copy the coefficient from a Vector object
+    /// copy the coefficient from a Vector object
     void copy(std::shared_ptr<psi::Vector> vec);
-    /// Copy the wave function object
+    /// copy the wave function object
     void copy_to(std::shared_ptr<psi::Vector> vec);
-
-    //    double approximate_spin(double )
-
-    ////    void set_to(Determinant& det);
+    /// @brief set the vector from a list of tuples
+    /// @param sparse_vec a list of tuples (irrep, Ia, Ib, C)
     void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
-    //    double get(int n);
-    //    void plus_equal(double factor,FCIVector& wfn);
-    //    void scale(double factor);
 
-    /// @brief Compute the norm of the wave function
+    /// @brief compute the norm of the wave function
     /// @param power The power of the norm (default 2 = Frobenius norm)
     double norm(double power = 2.0);
 
-    /// @brief Normalize the wave function
+    /// @brief normalize the wave function
     void normalize();
 
     /// @brief Compute the dot product of this wave functions with another
@@ -94,15 +104,21 @@ class FCIVector {
     // return beta_address_
     std::shared_ptr<StringAddress> beta_address() { return beta_address_; }
 
-    std::shared_ptr<psi::Matrix> C(int irrep) { return C_[irrep]; }
+    std::shared_ptr<psi::Matrix>& C(int irrep) { return C_[irrep]; }
 
     // Operations on the wave function
     void Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     double energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    // void compute_rdms(int max_order = 2);
-    void rdm_test(FCIVector& Cl, FCIVector& Cr, RDMsType type, std::shared_ptr<RDMs> rdms);
+    /// @brief Test the RDMs
+    /// @param Cl the left state
+    /// @param Cr the right state
+    /// @param type the type of RDMs to test
+    /// @param rdms the RDMs object to test
+    /// @param max_rdm_level the maximum RDM level to test
+    static void test_rdms(FCIVector& Cl, FCIVector& Cr, int max_rdm_level, RDMsType type,
+                          std::shared_ptr<RDMs> rdms);
 
     /// Compute the expectation value of the S^2 operator
     double compute_spin2();
@@ -124,6 +140,9 @@ class FCIVector {
     // ==> Class Static Functions <==
     static std::shared_ptr<RDMs> compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order,
                                               RDMsType type);
+
+    static std::shared_ptr<psi::Matrix> get_CR();
+    static std::shared_ptr<psi::Matrix> get_CL();
 
   private:
     // ==> Class Data <==
@@ -147,19 +166,21 @@ class FCIVector {
 
     /// The string list
     std::shared_ptr<StringLists> lists_;
-    // Graphs
-    /// The alpha string graph
+    /// The alpha string addressing object
     std::shared_ptr<StringAddress> alfa_address_;
-    /// The beta string graph
+    /// The beta string addressing object
     std::shared_ptr<StringAddress> beta_address_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
 
     // ==> Class Static Data <==
 
-    static std::shared_ptr<psi::Matrix> C1;
-    static std::shared_ptr<psi::Matrix> Y1;
-    static size_t sizeC1;
+    // Temporary matrix of size as large as the largest block of C. Used to store the right
+    // coefficient vector
+    static std::shared_ptr<psi::Matrix> CR;
+    // Temporary matrix of size as large as the largest block of C. Used to store the left
+    // coefficient vector
+    static std::shared_ptr<psi::Matrix> CL;
 
     // Timers
     static double hdiag_timer;
@@ -221,4 +242,13 @@ class FCIVector {
     /// a_{tb} a_{sa}>
     static ambit::Tensor compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVector& C_right);
 };
+
+void fill_C_block(FCIVector& C, double** m, bool alfa, std::shared_ptr<StringAddress> alfa_address,
+                  std::shared_ptr<StringAddress> beta_address, int ha, int hb);
+
+std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_right,
+                                              int max_rdm_level, RDMsType type);
+
+ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa);
+
 } // namespace forte

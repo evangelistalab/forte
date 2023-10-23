@@ -101,8 +101,8 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
         if (detpi_[alfa_sym] > 0) {
-            auto C = alfa ? C_[alfa_sym] : C1;
-            auto Y = alfa ? result.C_[alfa_sym] : Y1;
+            auto C = alfa ? C_[alfa_sym] : CR;
+            auto Y = alfa ? result.C_[alfa_sym] : CL;
             double** Ch = C->pointer();
             double** Yh = Y->pointer();
 
@@ -114,7 +114,7 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
 
                 double** C0h = C_[alfa_sym]->pointer();
 
-                // Copy C0 transposed in C1
+                // Copy C0 transposed in CR
                 for (size_t Ia = 0; Ia < maxIa; ++Ia)
                     for (size_t Ib = 0; Ib < maxIb; ++Ib)
                         Ch[Ib][Ia] = C0h[Ia][Ib];
@@ -158,7 +158,7 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
                 size_t maxIb = beta_address_->strpi(beta_sym);
 
                 double** HC = result.C_[alfa_sym]->pointer();
-                // Add Y1 transposed to Y
+                // Add CL transposed to Y
                 for (size_t Ia = 0; Ia < maxIa; ++Ia)
                     for (size_t Ib = 0; Ib < maxIb; ++Ib)
                         HC[Ia][Ib] += Yh[Ib][Ia];
@@ -179,8 +179,8 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
     for (int ha = 0; ha < nirrep_; ++ha) {
         int hb = ha ^ symmetry_;
         if (detpi_[ha] > 0) {
-            auto C = alfa ? C_[ha] : C1;
-            auto Y = alfa ? result.C_[ha] : Y1;
+            auto C = alfa ? C_[ha] : CR;
+            auto Y = alfa ? result.C_[ha] : CL;
             double** Ch = C->pointer();
             double** Yh = Y->pointer();
 
@@ -192,7 +192,7 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
 
                 double** C0h = C_[ha]->pointer();
 
-                // Copy C0 transposed in C1
+                // Copy C0 transposed in CR
                 for (size_t Ia = 0; Ia < maxIa; ++Ia)
                     for (size_t Ib = 0; Ib < maxIb; ++Ib)
                         Ch[Ib][Ia] = C0h[Ia][Ib];
@@ -265,7 +265,7 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
 
                 double** HC = result.C_[ha]->pointer();
 
-                // Add Y1 transposed to Y
+                // Add CL transposed to Y
                 for (size_t Ia = 0; Ia < maxIa; ++Ia)
                     for (size_t Ib = 0; Ib < maxIb; ++Ib)
                         HC[Ia][Ib] += Yh[Ib][Ia];
@@ -310,13 +310,13 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                             lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
                         size_t maxSSb = vo_beta.size();
 
-                        C1->zero();
-                        Y1->zero();
+                        CR->zero();
+                        CL->zero();
 
-                        // Gather cols of C into C1
+                        // Gather cols of C into CR
                         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
                             if (maxSSb > 0) {
-                                double* c1 = &(C1->pointer()[Ia][0]); //&C1[Ia][0];
+                                double* c1 = &(CR->pointer()[Ia][0]); //&CR[Ia][0];
                                 double* c = &(C[Ia][0]);
                                 for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
                                     c1[SSb] =
@@ -345,24 +345,24 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
 #if CAPRICCIO_USE_DAXPY
                                         C_DAXPY(maxSSb,
                                                 integral * static_cast<double>(vo_alfa[SSa].sign),
-                                                &(C1->pointer()[vo_alfa[SSa].I][0]), 1,
-                                                &(Y1->pointer()[vo_alfa[SSa].J][0]), 1);
+                                                &(CR->pointer()[vo_alfa[SSa].I][0]), 1,
+                                                &(CL->pointer()[vo_alfa[SSa].J][0]), 1);
 #else
                                         double V =
                                             integral * static_cast<double>(vo_alfa[SSa].sign);
                                         for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                            Y1[vo_alfa[SSa].J][SSb] += C1[vo_alfa[SSa].I][SSb] * V;
+                                            CL[vo_alfa[SSa].J][SSb] += CR[vo_alfa[SSa].I][SSb] * V;
                                         }
 #endif
                                     }
                                 }
                             }
                         } // End loop over p,q
-                        // Scatter cols of Y1 into Y
+                        // Scatter cols of CL into Y
                         for (size_t Ja = 0; Ja < maxJa; ++Ja) {
                             if (maxSSb > 0) {
                                 double* y = &Y[Ja][0];
-                                double* y1 = &(Y1->pointer()[Ja][0]);
+                                double* y1 = &(CL->pointer()[Ja][0]);
                                 for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
                                     y[vo_beta[SSb].J] += y1[SSb];
                                 }

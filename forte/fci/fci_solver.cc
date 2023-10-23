@@ -303,14 +303,14 @@ void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> 
         }
         C_->copy(b);
         std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
-            C_->max_abs_elements(guess_size);
+            C_->max_abs_elements(100);
 
         for (auto& det_config : dets_config) {
             double ci_abs, ci;
             size_t h, add_Ia, add_Ib;
             std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
 
-            if (ci_abs < 0.1)
+            if (ci_abs < 0.001)
                 continue;
 
             auto Ia_v = lists_->alfa_str(h, add_Ia);
@@ -355,8 +355,9 @@ void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::V
         std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
         print_h2(title_rdm);
     }
-    auto rdms = C_->compute_rdms(*C_, *C_, 3, RDMsType::spin_dependent);
-    C_->rdm_test(*C_, *C_, RDMsType::spin_dependent, rdms);
+    int max_rdm_level = 3;
+    auto rdms = C_->compute_rdms(*C_, *C_, max_rdm_level, RDMsType::spin_dependent);
+    C_->test_rdms(*C_, *C_, max_rdm_level, RDMsType::spin_dependent, rdms);
 }
 
 std::shared_ptr<psi::Matrix> FCISolver::ci_wave_functions() {

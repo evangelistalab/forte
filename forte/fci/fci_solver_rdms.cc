@@ -39,7 +39,7 @@ namespace forte {
 
 std::vector<std::shared_ptr<RDMs>>
 FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
-                RDMsType type) {
+                RDMsType rdm_type) {
     if (not C_) {
         throw std::runtime_error("FCIVector is not assigned. Cannot compute RDMs.");
     }
@@ -47,7 +47,7 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
     // handle the case of no RDMs
     if (max_rdm_level <= 0) {
         auto nroots = root_list.size();
-        if (type == RDMsType::spin_dependent) {
+        if (rdm_type == RDMsType::spin_dependent) {
             return std::vector<std::shared_ptr<RDMs>>(nroots,
                                                       std::make_shared<RDMsSpinDependent>());
         } else {
@@ -58,7 +58,7 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
     std::vector<std::shared_ptr<RDMs>> refs;
     // loop over all the pairs of states
     for (const auto& [root1, root2] : root_list) {
-        refs.push_back(compute_rdms_root(root1, root2, max_rdm_level, type));
+        refs.push_back(compute_rdms_root(root1, root2, max_rdm_level, rdm_type));
     }
     return refs;
 }

@@ -241,6 +241,10 @@ class FCISolver : public ActiveSpaceMethod {
     std::shared_ptr<RDMs> compute_rdms_root(size_t root_left, size_t root_right, int max_rdm_level,
                                             RDMsType type);
 
+    std::shared_ptr<RDMs> compute_transition_rdms_root(size_t root_left, size_t root_right,
+                                                       std::shared_ptr<ActiveSpaceMethod> method2,
+                                                       int max_rdm_level, RDMsType type);
+
     /// @brief Test the RDMs
     void test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
                    std::shared_ptr<DavidsonLiuSolver> dls);
