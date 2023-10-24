@@ -30,10 +30,10 @@
 
 #include "base_classes/active_space_method.h"
 #include "psi4/libmints/dimension.h"
+#include "string_lists.h"
 
 namespace forte {
 class FCIVector;
-class StringLists;
 class SpinAdapter;
 class DavidsonLiuSolver;
 

@@ -34,6 +34,7 @@
 #include "ambit/tensor.h"
 
 #include "base_classes/rdms.h"
+#include "string_lists.h"
 
 #define CAPRICCIO_USE_DAXPY 1
 
@@ -46,7 +47,6 @@ namespace forte {
 class ActiveSpaceIntegrals;
 class BinaryGraph;
 class MOSpaceInfo;
-class StringLists;
 class StringAddress;
 class RDMs;
 
