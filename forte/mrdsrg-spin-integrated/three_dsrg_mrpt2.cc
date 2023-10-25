@@ -297,12 +297,14 @@ void THREE_DSRG_MRPT2::startup() {
 
 void THREE_DSRG_MRPT2::print_options_summary() {
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info_int;
+    table_printer printer;
 
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Flow parameter", s_},
-        {"Taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
-        {"Cholesky tolerance", foptions_->get_double("CHOLESKY_TOLERANCE")}};
+    printer.add_double_data(
+        {{"Flow parameter", s_},
+         {"Taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
+         {"Cholesky tolerance", foptions_->get_double("CHOLESKY_TOLERANCE")}});
+
+    printer.add_bool_data({{"form Hbar3", foptions_->get_bool("FORM_HBAR3")}});
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Psi4 ref_type", ref_type_},
@@ -323,13 +325,11 @@ void THREE_DSRG_MRPT2::print_options_summary() {
         calculation_info_string.push_back({"Internal_amp", foptions_->get_str("INTERNAL_AMP")});
         calculation_info_string.push_back({"Internal_amp_select", internal_amp_select_});
     }
-
-    std::vector<std::pair<std::string, bool>> calculation_info_bool{
-        {"form Hbar3", foptions_->get_bool("FORM_HBAR3")}};
+    printer.add_string_data(calculation_info_string);
 
     // print information
-    print_selected_options("Calculation Information", calculation_info_string,
-                           calculation_info_bool, calculation_info_double, calculation_info_int);
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 void THREE_DSRG_MRPT2::cleanup() {}

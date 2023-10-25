@@ -69,9 +69,9 @@ std::vector<StringSubstitution>& StringLists::get_beta_vo_list(size_t p, size_t 
 
 void StringLists::make_vo_list(std::shared_ptr<StringAddress> addresser, VOList& list) {
     // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         // Loop over irreps of p
-        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
             int q_sym = pq_sym ^ p_sym;
             for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                 for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {

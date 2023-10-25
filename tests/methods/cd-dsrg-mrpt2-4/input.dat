@@ -33,8 +33,6 @@ set forte{
    semi_canonical         true
    int_type               cholesky
    cholesky_tolerance     1e-12
-   ntrial_per_root        100
-   fci_maxiter            100
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

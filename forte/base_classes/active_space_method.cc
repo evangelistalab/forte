@@ -75,6 +75,8 @@ void ActiveSpaceMethod::set_e_convergence(double value) { e_convergence_ = value
 
 void ActiveSpaceMethod::set_r_convergence(double value) { r_convergence_ = value; }
 
+void ActiveSpaceMethod::set_maxiter(size_t value) { maxiter_ = value; }
+
 void ActiveSpaceMethod::set_read_wfn_guess(bool read) { read_wfn_guess_ = read; }
 
 void ActiveSpaceMethod::set_dump_wfn(bool dump) { dump_wfn_ = dump; }

@@ -297,13 +297,8 @@ std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
 
     SparseCISolver sparse_solver;
-    sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_options(options_);
     sparse_solver.set_spin_project_full(true);
-    sparse_solver.set_print_details(true);
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
     DeterminantHashVec detmap(dets);

@@ -275,13 +275,17 @@ void AdaptiveCI::find_q_space() {
             PQ_space_.add(det);
         }
     }
-    // Add missing determinants
 
-    if (add_aimed_degenerate_) {
+    if (add_aimed_degenerate_ and last_excluded < F_space.size()) {
+        // Add missing determinants that have the same weight as the last one
+        const double first_included_energy = F_space[last_excluded + 1].first;
+        double degeneracy_threshold = 1.0e-9;
         size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
-            if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
+            const double f = F_space[J].first;
+            if ((std::fabs(f) > degeneracy_threshold) and
+                (std::fabs(first_included_energy - f) < degeneracy_threshold)) {
                 PQ_space_.add(F_space[J].second);
                 num_extra++;
             } else {
@@ -612,19 +616,11 @@ void AdaptiveCI::pre_iter_preparation() {
         P_space_.add(detb);
     }
 
+    sparse_solver_->set_options(options_);
+
     if (quiet_mode_) {
         sparse_solver_->set_print_details(false);
     }
-    sparse_solver_->set_parallel(true);
-    sparse_solver_->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_->set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
-    sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_->set_spin_project(project_out_spin_contaminants_);
-    sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
-    sparse_solver_->set_ncollapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
-    sparse_solver_->set_nsubspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
     sparse_solver_->set_spin_project_full(
         (gas_iteration_ and sigma_ == 0.0) ? true : options_->get_bool("SPIN_PROJECT_FULL"));
 }
@@ -663,7 +659,7 @@ void AdaptiveCI::diagonalize_P_space() {
         sparse_solver_->add_bad_states(bad_roots_);
     }
 
-    sparse_solver_->manual_guess(false);
+    sparse_solver_->reset_initial_guess();
     local_timer diag;
 
     auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);

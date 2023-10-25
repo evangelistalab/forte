@@ -113,18 +113,11 @@ class DETCI : public ActiveSpaceMethod {
     /// Max iteration of Davidson-Liu
     int maxiter_;
 
-    /// Number of guess basis for Davidson-Liu
-    int dl_guess_size_;
     /// Initial guess vector
     std::vector<std::vector<std::pair<size_t, double>>> initial_guess_;
 
     /// Roots to be projected out in the diagonalization
     std::vector<std::vector<std::pair<size_t, double>>> projected_roots_;
-
-    /// Number of trial vector to keep after collapsing of Davidson-Liu
-    int ncollapse_per_root_;
-    /// Number of trial vectors per root for Davidson-Liu
-    int nsubspace_per_root_;
 
     /// Diagonalize the Hamiltonian
     void diagonalize_hamiltonian();

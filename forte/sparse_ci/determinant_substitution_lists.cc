@@ -188,13 +188,13 @@ void DeterminantSubstitutionLists::lists_1a(const DeterminantHashVec& wfn) {
             }
         }
     }
-    outfile->Printf("\n  (N-1) a lists size counts");
-    outfile->Printf("\n      Size      Count");
-    for (const auto& p : vec_size) {
-        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
-    }
 
     if (!quiet_) {
+        outfile->Printf("\n  (N-1) a lists size counts");
+        outfile->Printf("\n      Size      Count");
+        for (const auto& p : vec_size) {
+            outfile->Printf("\n  %8zu %10zu", p.first, p.second);
+        }
         outfile->Printf("\n        α          %.3e seconds", ann.stop());
     }
 }
@@ -307,13 +307,13 @@ void DeterminantSubstitutionLists::lists_2aa(const DeterminantHashVec& wfn) {
             }
         }
     }
-    outfile->Printf("\n  (N-2) aa lists size counts");
-    outfile->Printf("\n      Size      Count");
-    for (const auto& p : vec_size) {
-        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
-    }
 
     if (!quiet_) {
+        outfile->Printf("\n  (N-2) aa lists size counts");
+        outfile->Printf("\n      Size      Count");
+        for (const auto& p : vec_size) {
+            outfile->Printf("\n  %8zu %10zu", p.first, p.second);
+        }
         outfile->Printf("\n        αα         %.3e seconds", timer_aa.stop());
     }
 }
@@ -368,13 +368,13 @@ void DeterminantSubstitutionLists::lists_2ab(const DeterminantHashVec& wfn) {
             }
         }
     }
-    outfile->Printf("\n  (N-2) ab lists size counts");
-    outfile->Printf("\n      Size      Count");
-    for (const auto& p : vec_size) {
-        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
-    }
 
     if (!quiet_) {
+        outfile->Printf("\n  (N-2) ab lists size counts");
+        outfile->Printf("\n      Size      Count");
+        for (const auto& p : vec_size) {
+            outfile->Printf("\n  %8zu %10zu", p.first, p.second);
+        }
         outfile->Printf("\n        αβ         %.3e seconds", timer_ab.stop());
     }
 }
@@ -523,13 +523,12 @@ void DeterminantSubstitutionLists::lists_3aaa(const DeterminantHashVec& wfn) {
             }
         }
     }
-    outfile->Printf("\n  (N-3) aaa lists size counts");
-    outfile->Printf("\n      Size      Count");
-    for (const auto& p : vec_size) {
-        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
-    }
-
     if (!quiet_) {
+        outfile->Printf("\n  (N-3) aaa lists size counts");
+        outfile->Printf("\n      Size      Count");
+        for (const auto& p : vec_size) {
+            outfile->Printf("\n  %8zu %10zu", p.first, p.second);
+        }
         outfile->Printf("\n        ααα        %.3e seconds", aaa.stop());
     }
 }
@@ -623,14 +622,15 @@ void DeterminantSubstitutionLists::lists_3aab(const DeterminantHashVec& wfn) {
             }
         }
     }
-    outfile->Printf("\n  (N-3) aab lists size counts");
-    outfile->Printf("\n      Size      Count");
-    for (const auto& p : vec_size) {
-        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
-    }
 
-    if (!quiet_)
+    if (!quiet_) {
+        outfile->Printf("\n  (N-3) aab lists size counts");
+        outfile->Printf("\n      Size      Count");
+        for (const auto& p : vec_size) {
+            outfile->Printf("\n  %8zu %10zu", p.first, p.second);
+        }
         outfile->Printf("\n        ααβ        %.3e seconds", aab.stop());
+    }
 }
 
 void DeterminantSubstitutionLists::lists_3abb(const DeterminantHashVec& wfn) {
