@@ -265,11 +265,12 @@ gasci:
    medium:
       - gasci-2
       - gasci-3
-      # - gasaci-2 # disabled because of issues with reference
+      - gasaci-2 
       - gasaci-3
    long:
       - gasaci-5
       - gasaci-6
+      - gasaci-7
 gasscf:
    short:
       - gasscf-1
