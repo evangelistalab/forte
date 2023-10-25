@@ -1,0 +1,1079 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.9a1.dev6 
+
+                         Git: Rev {master} c6e4e0e 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Friday, 02 June 2023 11:34AM
+
+    Process ID: 19045
+    Host:       MacBook-Pro.local
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+# Test Spin adaptation for DETCI transition dipole and oscillator strengths
+import forte
+
+r_scf = -154.80914322697598
+r_0ag = -154.84695193645672
+r_1ag = -154.59019912152513
+r_2ag = -154.45363253270600
+r_0bu = -154.54629332287075
+rosc_0ag_0bu = 1.086716030595
+rosc_1ag_0bu = 0.013542791095
+rosc_2ag_0bu = 0.041762051475
+
+molecule butadiene{
+0 1
+H  1.080977 -2.558832  0.000000
+H -1.080977  2.558832  0.000000
+H  2.103773 -1.017723  0.000000
+H -2.103773  1.017723  0.000000
+H -0.973565 -1.219040  0.000000
+H  0.973565  1.219040  0.000000
+C  0.000000  0.728881  0.000000
+C  0.000000 -0.728881  0.000000
+C  1.117962 -1.474815  0.000000
+C -1.117962  1.474815  0.000000
+}
+
+set {
+  reference      rhf
+  scf_type       df
+  basis          def2-svp
+  df_basis_scf   def2-universal-jkfit
+  df_basis_mp2   def2-universal-jkfit
+  e_convergence  10
+  d_convergence  12
+  maxiter        100
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(r_scf, Escf, 8, 'SCF energy')
+
+set forte{
+  int_type            df
+  active_space_solver detci
+  ci_spin_adapt       true
+  force_diag_method   true
+  e_convergence       10
+  frozen_docc         [2,0,0,2]
+  restricted_docc     [5,0,0,4]
+  active              [0,2,2,0]
+  avg_state           [[0,1,3], [3,1,1]]
+  transition_dipoles  true
+}
+
+energy('forte', ref_wfn=wfn)
+compare_values(r_0ag, variable('ENERGY ROOT 0 1AG'), 8, 'CASCI(4,4) singlet Ag energy 0')
+compare_values(r_1ag, variable('ENERGY ROOT 1 1AG'), 8, 'CASCI(4,4) singlet Ag energy 1')
+compare_values(r_2ag, variable('ENERGY ROOT 2 1AG'), 8, 'CASCI(4,4) singlet Ag energy 2')
+compare_values(r_0bu, variable('ENERGY ROOT 0 1BU'), 8, 'CASCI(4,4) singlet Bu energy 0')
+compare_values(rosc_0ag_0bu, variable('OSC. SINGLET 0AG -> 0BU'), 6, 'Oscillator strength singlet 0Ag -> 0Bu')
+compare_values(rosc_1ag_0bu, variable('OSC. SINGLET 1AG -> 0BU'), 6, 'Oscillator strength singlet 1Ag -> 0Bu')
+compare_values(rosc_2ag_0bu, variable('OSC. SINGLET 2AG -> 0BU'), 6, 'Oscillator strength singlet 2Ag -> 0Bu') 
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  5, 4, 3
+    Auxiliary basis highest AM E, G, H:  6, 5, 4
+    Onebody   basis highest AM E, G, H:  6, 5, 4
+    Solid Harmonics ordering:            gaussian
+
+*** tstart() called on MacBook-Pro.local
+*** at Fri Jun  2 11:34:54 2023
+
+   => Loading Basis Set <=
+
+    Name: DEF2-SVP
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-6  entry H          line    15 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-svp.gbs 
+    atoms 7-10 entry C          line    90 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-svp.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2h
+    Full point group: C2h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         H            1.080977000000    -2.558832000000     0.000000000000     1.007825032230
+         H           -1.080977000000     2.558832000000     0.000000000000     1.007825032230
+         H            2.103773000000    -1.017723000000     0.000000000000     1.007825032230
+         H           -2.103773000000     1.017723000000     0.000000000000     1.007825032230
+         H           -0.973565000000    -1.219040000000     0.000000000000     1.007825032230
+         H            0.973565000000     1.219040000000     0.000000000000     1.007825032230
+         C           -0.000000000000     0.728881000000     0.000000000000    12.000000000000
+         C            0.000000000000    -0.728881000000     0.000000000000    12.000000000000
+         C            1.117962000000    -1.474815000000     0.000000000000    12.000000000000
+         C           -1.117962000000     1.474815000000     0.000000000000    12.000000000000
+
+  Running in c2h symmetry.
+
+  Rotational constants: A =      1.39831  B =      0.14741  C =      0.13335 [cm^-1]
+  Rotational constants: A =  41920.28303  B =   4419.18036  C =   3997.74357 [MHz]
+  Nuclear repulsion =  103.516094180281002
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 30
+  Nalpha       = 15
+  Nbeta        = 15
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-12
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: DEF2-SVP
+    Blend: DEF2-SVP
+    Number of shells: 42
+    Number of basis functions: 86
+    Number of Cartesian functions: 90
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: DEF2-UNIVERSAL-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-6  entry H          line    18 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+    atoms 7-10 entry C          line   198 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.025 GiB; user supplied 0.366 GiB. 
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               375
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       2.0011
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: DEF2-UNIVERSAL-JKFIT
+    Blend: DEF2-UNIVERSAL-JKFIT
+    Number of shells: 136
+    Number of basis functions: 408
+    Number of Cartesian functions: 476
+    Spherical Harmonics?: true
+    Max angular momentum: 4
+
+  Minimum eigenvalue in the overlap matrix is 2.5253557606E-03.
+  Reciprocal condition number of the overlap matrix is 5.2110279239E-04.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     Ag        32      32 
+     Bg        11      11 
+     Au        11      11 
+     Bu        32      32 
+   -------------------------
+    Total      86      86
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:  -153.91732540261111   -1.53917e+02   0.00000e+00 
+   @DF-RHF iter   1:  -154.72066245588550   -8.03337e-01   7.29610e-03 ADIIS/DIIS
+   @DF-RHF iter   2:  -154.79935571743280   -7.86933e-02   2.57893e-03 ADIIS/DIIS
+   @DF-RHF iter   3:  -154.80829634074911   -8.94062e-03   6.27903e-04 ADIIS/DIIS
+   @DF-RHF iter   4:  -154.80907709519596   -7.80754e-04   2.22539e-04 ADIIS/DIIS
+   @DF-RHF iter   5:  -154.80914051435784   -6.34192e-05   2.95112e-05 DIIS
+   @DF-RHF iter   6:  -154.80914313587803   -2.62152e-06   4.56143e-06 DIIS
+   @DF-RHF iter   7:  -154.80914322224160   -8.63636e-08   1.10535e-06 DIIS
+   @DF-RHF iter   8:  -154.80914322696196   -4.72036e-09   2.75838e-07 DIIS
+   @DF-RHF iter   9:  -154.80914322719494   -2.32973e-10   7.26409e-08 DIIS
+   @DF-RHF iter  10:  -154.80914322721213   -1.71951e-11   1.70103e-08 DIIS
+   @DF-RHF iter  11:  -154.80914322721287   -7.38964e-13   2.60464e-09 DIIS
+   @DF-RHF iter  12:  -154.80914322721304   -1.70530e-13   2.58646e-10 DIIS
+   @DF-RHF iter  13:  -154.80914322721310   -5.68434e-14   3.97591e-11 DIIS
+   @DF-RHF iter  14:  -154.80914322721310    0.00000e+00   7.18444e-12 DIIS
+   @DF-RHF iter  15:  -154.80914322721321   -1.13687e-13   1.44832e-12 DIIS
+   @DF-RHF iter  16:  -154.80914322721293    2.84217e-13   2.97768e-13 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag   -11.243124     1Bu   -11.242410     2Ag   -11.236541  
+       2Bu   -11.236517     3Ag    -1.078940     3Bu    -0.987463  
+       4Ag    -0.818072     4Bu    -0.748134     5Bu    -0.643712  
+       5Ag    -0.634701     6Ag    -0.558610     6Bu    -0.544131  
+       7Ag    -0.495371     1Au    -0.443869     1Bg    -0.322197  
+
+    Virtual:                                                              
+
+       2Au     0.114629     7Bu     0.202433     8Ag     0.208235  
+       8Bu     0.218310     2Bg     0.237852     9Ag     0.269047  
+      10Ag     0.279223     9Bu     0.295480    10Bu     0.444634  
+      11Ag     0.459581    11Bu     0.535262    12Ag     0.555507  
+      12Bu     0.580960    13Ag     0.603007    13Bu     0.625213  
+       3Au     0.687012    14Ag     0.724716     3Bg     0.746432  
+      14Bu     0.756774     4Bg     0.828193     4Au     0.847118  
+      15Bu     0.874292    15Ag     0.881581    16Bu     0.900989  
+      16Ag     0.905649    17Ag     0.918990    17Bu     0.950894  
+      18Bu     1.023073    18Ag     1.088217    19Bu     1.090570  
+      19Ag     1.227617    20Bu     1.364444    20Ag     1.392961  
+       5Au     1.430889     5Bg     1.458290     6Bg     1.494105  
+       6Au     1.526952     7Au     1.556506    21Ag     1.865903  
+      21Bu     1.872584    22Ag     1.900788    22Bu     1.926718  
+       7Bg     1.929852    23Ag     1.997455     8Au     2.040900  
+      24Ag     2.049705    23Bu     2.079608    24Bu     2.085309  
+       8Bg     2.177192    25Ag     2.186570     9Au     2.318316  
+      25Bu     2.321201    26Bu     2.361986     9Bg     2.368748  
+      26Ag     2.439444    10Au     2.574755    27Bu     2.622984  
+      27Ag     2.625815    10Bg     2.668916    28Ag     2.738715  
+      11Au     2.859951    11Bg     2.863134    28Bu     2.914187  
+      29Ag     3.058024    29Bu     3.102155    30Ag     3.172627  
+      30Bu     3.174698    31Bu     3.319895    31Ag     3.382123  
+      32Bu     3.714631    32Ag     3.735700  
+
+    Final Occupation by Irrep:
+             Ag    Bg    Au    Bu 
+    DOCC [     7,    1,    1,    6 ]
+    NA   [     7,    1,    1,    6 ]
+    NB   [     7,    1,    1,    6 ]
+
+  @DF-RHF Final Energy:  -154.80914322721293
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =            103.5160941802810015
+    One-Electron Energy =                -412.1828948563540962
+    Two-Electron Energy =                 153.8576574488601523
+    Total Energy =                       -154.8091432272129282
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :          0.0000000            0.0000000            0.0000000
+ Magnitude           :                                                    0.0000000
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on MacBook-Pro.local at Fri Jun  2 11:34:54 2023
+Module time:
+	user time   =       0.91 seconds =       0.02 minutes
+	system time =       1.70 seconds =       0.03 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.91 seconds =       0.02 minutes
+	system time =       1.70 seconds =       0.03 minutes
+	total time  =          0 seconds =       0.00 minutes
+    SCF energy............................................................................PASSED
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: ci-update-2 - git commit: bb0465ff
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       Ag    Bg    Au    Bu   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     2     4
+    RESTRICTED_DOCC     5     0     0     4     9
+    GAS1                0     2     2     0     4
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC    25     9     9    26    69
+    FROZEN_UOCC         0     0     0     0     0
+    Total              32    11    11    32    86
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: DEF2-SVP
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-6  entry H          line    15 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-svp.gbs 
+    atoms 7-10 entry C          line    90 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-svp.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: DEF2-UNIVERSAL-JKFIT
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-6  entry H          line    18 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+    atoms 7-10 entry C          line   198 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-6  entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 7-10 entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: DEF2-SVP
+    Blend: DEF2-SVP
+    Number of shells: 42
+    Number of basis functions: 86
+    Number of Cartesian functions: 90
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.025 GiB; user supplied 0.391 GiB. 
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               400
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       2.0011
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: DEF2-UNIVERSAL-JKFIT
+    Blend: DEF2-UNIVERSAL-JKFIT
+    Number of shells: 136
+    Number of basis functions: 408
+    Number of Cartesian functions: 476
+    Spherical Harmonics?: true
+    Max angular momentum: 4
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         86
+  Number of correlated molecular orbitals:              82
+  Number of frozen occupied orbitals:                    4
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  408
+  Need 24.14 MB to store DF integrals
+  DFHelper Memory: AOs need 0.025 GiB; user supplied 0.415 GiB. 
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                              86
+    NAux:                            408
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                 2
+    DFH Avail. Memory [GiB]:       0.415
+    OpenMP threads:                    1
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                       9
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.021 s.
+
+  Frozen-core energy        -176.777117606361912 a.u.
+  Timing for frozen one-body operator:                        0.003 s.
+  Resorting integrals after freezing core.
+  Timing for resorting DF integrals:                          0.033 s.
+  Timing for freezing core and virtual orbitals:              0.036 s.
+  Timing for computing density-fitted integrals:              0.178 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      3
+       Bu      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   4
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 4
+  Number of active alpha electrons: 2
+  Number of active beta electrons: 2
+  Number of determinants (CAS): 20
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) Ag <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          8.192e-05 seconds
+        β          5.471e-05 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+         2          2
+         4          4
+        αα         5.975e-05 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         5         16
+        αβ         8.942e-05 seconds
+        ββ         3.083e-05 seconds
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  ==> Spin Adapter <==
+
+    Number of CSFs:                                12
+    Number of couplings:                           24
+
+    Timing for identifying configurations:     0.0000
+    Timing for finding the CSFs:               0.0000
+
+
+  ==> FCI Initial Guess <==
+
+  Selected 6 CSF
+  ---------------------------------------------
+    CSF             Energy     <S^2>   Spin
+  ---------------------------------------------
+       1    -154.809143227121  0.000  singlet
+       8    -154.495010285249  0.000  singlet
+       6    -154.488215881698  0.000  singlet
+       5    -154.375182252863  0.000  singlet
+      11    -154.216144416427  0.000  singlet
+      10    -154.185549707254  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-10
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -179.817407833937  -1.798e+02  +1.225e-01
+      2     -179.849650439431  -3.224e-02  +3.240e-02
+      3     -179.851701071476  -2.051e-03  +9.389e-14
+      4     -179.851701071476  +0.000e+00  +9.389e-14
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 5 iterations.
+  Davidson-Liu procedure took  0.000915 s
+
+  Done diagonalizing Hamiltonian, 1.384e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.962e-05 seconds
+        β          5.363e-05 seconds
+  Time spent building 1-rdm: 3.208e-05 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.550e-05 seconds
+        β          5.046e-05 seconds
+  Time spent building 1-rdm: 3.062e-05 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.254e-05 seconds
+        β          5.029e-05 seconds
+  Time spent building 1-rdm: 3.004e-05 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) Ag <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+     Bg Au    Coefficients
+    ----------------------
+     20 20    0.9652001628
+     00 22   -0.1697889587
+     ba ab   -0.0889311928
+     ab ba   -0.0889311928
+     20 02   -0.0726225810
+     bb aa    0.0661504995
+     aa bb    0.0661504995
+     22 00   -0.0659068838
+     02 20   -0.0583642502
+    ----------------------
+
+    Occupation Numbers:
+        1Au   1.95333850    1Bg   1.90818091    2Au   0.09563064    2Bg   0.04284995
+
+    Total Energy:  -154.846951936267544
+
+  ---- Root No. 1 ----
+
+     Bg Au    Coefficients
+    ----------------------
+     00 22    0.5481513554
+     20 ba    0.3529078946
+     20 ab    0.3529078946
+     ba 20   -0.3252505620
+     ab 20   -0.3252505620
+     20 02   -0.2977671020
+     02 20   -0.2301198471
+     ba ba    0.1512299999
+     ab ab    0.1512299999
+     22 00    0.1192354832
+     bb aa    0.1176420008
+     aa bb    0.1176420008
+     20 20    0.0670964175
+    ----------------------
+
+    Occupation Numbers:
+        1Au   1.46490088    2Au   1.10760474    1Bg   1.00190079    2Bg   0.42559359
+
+    Total Energy:  -154.590199121336070
+
+  ---- Root No. 2 ----
+
+     Bg Au    Coefficients
+    ----------------------
+     ba 20    0.5423399212
+     ab 20    0.5423399212
+     20 ba    0.4141337280
+     20 ab    0.4141337280
+     00 22    0.1089774835
+     ba 02   -0.1013052564
+     ab 02   -0.1013052564
+     20 02   -0.1010884851
+     02 20    0.0867955954
+     02 ba   -0.0794420430
+     02 ab   -0.0794420430
+    ----------------------
+
+    Occupation Numbers:
+        1Au   1.57775973    1Bg   1.32205484    2Bg   0.65421771    2Au   0.44596771
+
+    Total Energy:  -154.453632532519663
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 4
+  Number of active alpha electrons: 2
+  Number of active beta electrons: 2
+  Number of determinants (CAS): 16
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) Bu <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1         16
+         2          8
+        α          5.721e-05 seconds
+        β          4.871e-05 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+         2          4
+         4          2
+        αα         3.679e-05 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         4         16
+        αβ         7.179e-05 seconds
+        ββ         2.483e-05 seconds
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  ==> Spin Adapter <==
+
+    Number of CSFs:                                 8
+    Number of couplings:                           16
+
+    Timing for identifying configurations:     0.0000
+    Timing for finding the CSFs:               0.0000
+
+
+  ==> FCI Initial Guess <==
+
+  Selected 2 CSF
+  ---------------------------------------------
+    CSF             Energy     <S^2>   Spin
+  ---------------------------------------------
+       5    -154.600376558202  0.000  singlet
+       2    -154.386660506812  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-10
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -179.751830005180  -1.798e+02  +9.384e-02
+      2     -179.764879187304  -1.305e-02  +3.765e-02
+      3     -179.767588694892  -2.710e-03  +8.182e-03
+      4     -179.767731971543  -1.433e-04  +7.903e-04
+      5     -179.767733090195  -1.119e-06  +2.154e-04
+      6     -179.767733181328  -9.113e-08  +7.278e-05
+      7     -179.767733195526  -1.420e-08  +3.749e-05
+      8     -179.767733197176  -1.650e-09  +9.483e-06
+      9     -179.767733197411  -2.353e-10  +3.916e-06
+     10     -179.767733197443  -3.189e-11  +1.329e-06
+     11     -179.767733197446  -3.126e-12  +4.200e-07
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 12 iterations.
+  Davidson-Liu procedure took  0.000583 s
+
+  Done diagonalizing Hamiltonian, 9.204e-04 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1         16
+         2          8
+        α          5.638e-05 seconds
+        β          4.367e-05 seconds
+  Time spent building 1-rdm: 2.450e-05 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) Bu <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+     Bg Au    Coefficients
+    ----------------------
+     b0 2a   -0.6946063975
+     a0 2b   -0.6946063975
+     b0 a2   -0.0974007335
+     a0 b2   -0.0974007335
+     0b 2a    0.0616493112
+     0a 2b    0.0616493112
+    ----------------------
+
+    Occupation Numbers:
+        1Au   1.96875751    2Au   1.02085318    1Bg   0.99056990    2Bg   0.01981941
+
+    Total Energy:  -154.546293322677514
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    Ag     0     -154.846951936268  -0.000000
+       1  (  0)    Ag     1     -154.590199121336   0.000000
+       1  (  0)    Ag     2     -154.453632532520   0.000000
+    --------------------------------------------------------
+       1  (  0)    Bu     0     -154.546293322678   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.304e-05 seconds
+        β          5.058e-05 seconds
+  Time spent building 1-rdm: 3.092e-05 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.129e-05 seconds
+        β          5.054e-05 seconds
+  Time spent building 1-rdm: 3.196e-05 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.129e-05 seconds
+        β          4.979e-05 seconds
+  Time spent building 1-rdm: 3.067e-05 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000     0.00000000     0.00000000     0.00000000
+         1AG    -0.00000000     0.00000000     0.00000000     0.00000000
+         2AG    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Bu <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1         16
+         2          8
+        α          5.496e-05 seconds
+        β          4.300e-05 seconds
+  Time spent building 1-rdm: 2.462e-05 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0BU    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.092e-05 seconds
+        β          4.929e-05 seconds
+  Time spent building 1-rdm: 3.029e-05 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.450e-05 seconds
+        β          5.167e-05 seconds
+  Time spent building 1-rdm: 3.146e-05 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+        α          6.404e-05 seconds
+        β          5.188e-05 seconds
+  Time spent building 1-rdm: 3.125e-05 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -17.22869087     0.10107551     0.00000000   -17.47554318     0.00000000   -21.74180214
+         1AG   -19.42543031     1.26659561     0.00000000   -18.21742587     0.00000000   -22.37274711
+         2AG   -19.29868273     1.19108357     0.00000000   -18.72308859     0.00000000   -22.30847990
+    --------------------------------------------------------------------------------------------------
+     Nuclear   100.28432179   -97.22584527     0.00000000   180.74959352     0.00000000     0.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Bu <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1         16
+         2          8
+        α          6.392e-05 seconds
+        β          4.475e-05 seconds
+  Time spent building 1-rdm: 2.375e-05 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0BU   -18.56171200     1.20532495     0.00000000   -18.27747355     0.00000000   -21.99474585
+    --------------------------------------------------------------------------------------------------
+     Nuclear   100.28432179   -97.22584527     0.00000000   180.74959352     0.00000000     0.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) Ag <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+  (N-1) a lists size counts
+      Size      Count
+         1          8
+         2         16
+       Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
+    -------------------------------------------------------------------------
+       0AG    1AG    -0.00000000    -0.00000000     0.00000000     0.00000000
+       0AG    2AG     0.00000000     0.00000000     0.00000000     0.00000000
+       1AG    2AG    -0.00000000    -0.00000000     0.00000000     0.00000000
+    -------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) Ag <==
+
+    Transition from State  0AG  to State  1AG :
+      Component  1 with value of W = 0.6947
+        Init. Orbital: 0.9578 Orb.  2
+        Final Orbital: 0.9978 Orb.  3
+      Component  2 with value of W = 0.6474
+        Init. Orbital: 0.9985 Orb.  0
+        Final Orbital: 0.9408 Orb.  1
+
+    Transition from State  0AG  to State  2AG :
+      Component  1 with value of W = 1.0811
+        Init. Orbital: 0.9992 Orb.  0
+        Final Orbital: 0.9966 Orb.  1
+      Component  2 with value of W = 0.8329
+        Init. Orbital: 0.9977 Orb.  2
+        Final Orbital: 0.9999 Orb.  3
+      Component  3 with value of W = 0.1861
+        Init. Orbital: 0.9977 Orb.  3
+        Final Orbital: 0.9999 Orb.  2
+      Component  4 with value of W = 0.1616
+        Init. Orbital: 0.9992 Orb.  1
+        Final Orbital: 0.9966 Orb.  0
+
+    Transition from State  1AG  to State  2AG :
+      Component  1 with value of W = 0.4562
+        Init. Orbital: 0.9966 Orb.  3
+        Final Orbital: 0.9998 Orb.  3
+      Component  2 with value of W = 0.4528
+        Init. Orbital: 0.1932 Orb.  0 0.8068 Orb.  1
+        Final Orbital: 0.2664 Orb.  0 0.7336 Orb.  1
+      Component  3 with value of W = 0.3358
+        Init. Orbital: 0.9966 Orb.  2
+        Final Orbital: 0.9998 Orb.  2
+      Component  4 with value of W = 0.2310
+        Init. Orbital: 0.8068 Orb.  0 0.1932 Orb.  1
+        Final Orbital: 0.7336 Orb.  0 0.2664 Orb.  1
+
+
+  ==> Transitions for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) Ag <==
+
+     Init.  Final  Energy [a.u.]    Energy [eV]    Osc. [a.u.]
+    ----------------------------------------------------------
+       0AG    1AG     0.25675281     6.98659996     0.00000000
+       0AG    2AG     0.39331940    10.70276612     0.00000000
+       1AG    2AG     0.13656659     3.71616617     0.00000000
+    ----------------------------------------------------------
+
+  ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) Bu <==
+
+  (N-1) a lists size counts
+      Size      Count
+         3         24
+  (N-1) a lists size counts
+      Size      Count
+         3         24
+  (N-1) a lists size counts
+      Size      Count
+         3         24
+       Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
+    -------------------------------------------------------------------------
+       0AG    0BU    -1.62897796     1.66376341     0.00000000     2.32844968
+       1AG    0BU     0.02556452    -0.67972281     0.00000000     0.68020338
+       2AG    0BU    -0.52078875     0.63625665     0.00000000     0.82221861
+    -------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) Bu <==
+
+    Transition from State  0AG  to State  0BU :
+      Component  1 with value of W = 1.3496
+        Init. Orbital: 0.9997 Orb.  0
+        Final Orbital: 1.0000 Orb.  3
+      Component  2 with value of W = 0.2436
+        Init. Orbital: 0.9828 Orb.  3
+        Final Orbital: 0.9965 Orb.  0
+
+    Transition from State  1AG  to State  0BU :
+      Component  1 with value of W = 0.7552
+        Init. Orbital: 0.9853 Orb.  3
+        Final Orbital: 0.9951 Orb.  0
+      Component  2 with value of W = 0.6114
+        Init. Orbital: 0.2309 Orb.  0 0.7691 Orb.  1
+        Final Orbital: 0.7870 Orb.  2 0.2130 Orb.  3
+      Component  3 with value of W = 0.4491
+        Init. Orbital: 0.7691 Orb.  0 0.2309 Orb.  1
+        Final Orbital: 0.2130 Orb.  2 0.7870 Orb.  3
+
+    Transition from State  2AG  to State  0BU :
+      Component  1 with value of W = 0.7531
+        Init. Orbital: 1.0000 Orb.  1
+        Final Orbital: 0.9911 Orb.  3
+      Component  2 with value of W = 0.5417
+        Init. Orbital: 1.0000 Orb.  0
+        Final Orbital: 0.9911 Orb.  2
+      Component  3 with value of W = 0.1604
+        Init. Orbital: 0.9371 Orb.  3
+        Final Orbital: 0.9998 Orb.  0
+
+
+  ==> Transitions for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) Bu <==
+
+     Init.  Final  Energy [a.u.]    Energy [eV]    Osc. [a.u.]
+    ----------------------------------------------------------
+       0AG    0BU     0.30065861     8.18133759     1.08671611
+       1AG    0BU     0.04390580     1.19473764     0.01354279
+       2AG    0BU    -0.09266079    -2.52142853     0.04176181
+    ----------------------------------------------------------
+
+  Time to prepare integrals:        0.290 seconds
+  Time to run job          :        0.012 seconds
+  Total                    :        0.302 seconds
+    CASCI(4,4) singlet Ag energy 0........................................................PASSED
+    CASCI(4,4) singlet Ag energy 1........................................................PASSED
+    CASCI(4,4) singlet Ag energy 2........................................................PASSED
+    CASCI(4,4) singlet Bu energy 0........................................................PASSED
+    Oscillator strength singlet 0Ag -> 0Bu................................................PASSED
+    Oscillator strength singlet 1Ag -> 0Bu................................................PASSED
+    Oscillator strength singlet 2Ag -> 0Bu................................................PASSED
+
+    Psi4 stopped on: Friday, 02 June 2023 11:34AM
+    Psi4 wall time for execution: 0:00:01.23
+
+*** Psi4 exiting successfully. Buy a developer a beer!

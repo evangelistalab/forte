@@ -32,6 +32,8 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "helpers/printing.h"
+
 #include "string_lists.h"
 #include "string_address.h"
 
@@ -166,27 +168,23 @@ void StringLists::startup() {
                         vvoo_list_timer + vovo_list_timer;
 
     if (print_) {
-        outfile->Printf("\n\n  ==> String Lists <==\n");
-        outfile->Printf("\n  Number of alpha electrons     = %zu", na_);
-        outfile->Printf("\n  Number of beta electrons      = %zu", nb_);
-        outfile->Printf("\n  Number of alpha strings       = %zu", nas_);
-        outfile->Printf("\n  Number of beta strings        = %zu", nbs_);
-        // if (na_ >= 3) {
-        //     outfile->Printf("\n  Number of alpha strings (N-3) = %zu", alfa_address_3h_->nstr());
-        // }
-        // if (nb_ >= 3) {
-        //     outfile->Printf("\n  Number of beta strings (N-3)  = %zu", beta_address_3h_->nstr());
-        // }
-        outfile->Printf("\n  Timing for strings        = %10.3f s", str_list_timer);
-        outfile->Printf("\n  Timing for NN strings     = %10.3f s", nn_list_timer);
-        outfile->Printf("\n  Timing for VO strings     = %10.3f s", vo_list_timer);
-        outfile->Printf("\n  Timing for OO strings     = %10.3f s", oo_list_timer);
-        outfile->Printf("\n  Timing for VVOO strings   = %10.3f s", vvoo_list_timer);
-        // outfile->Printf("\n  Timing for VOVO strings   = %10.3f s", vovo_list_timer);
-        outfile->Printf("\n  Timing for 1-hole strings = %10.3f s", h1_list_timer);
-        outfile->Printf("\n  Timing for 2-hole strings = %10.3f s", h2_list_timer);
-        outfile->Printf("\n  Timing for 3-hole strings = %10.3f s", h3_list_timer);
-        outfile->Printf("\n  Total timing              = %10.3f s", total_time);
+        table_printer printer;
+        printer.add_int_data({{"number of alpha electrons", na_},
+                              {"number of beta electrons", nb_},
+                              {"number of alpha strings", nas_},
+                              {"number of beta strings", nbs_}});
+        printer.add_timing_data({{"timing for strings", str_list_timer},
+                                 {"timing for NN strings", nn_list_timer},
+                                 {"timing for VO strings", vo_list_timer},
+                                 {"timing for OO strings", oo_list_timer},
+                                 {"timing for VVOO strings", vvoo_list_timer},
+                                 {"timing for 1-hole strings", h1_list_timer},
+                                 {"timing for 2-hole strings", h2_list_timer},
+                                 {"timing for 3-hole strings", h3_list_timer},
+                                 {"total timing", total_time}});
+
+        std::string table = printer.get_table("String Lists");
+        outfile->Printf("%s", table.c_str());
     }
 }
 
@@ -300,6 +298,42 @@ std::vector<Determinant> StringLists::make_determinants(int symmetry) const {
         }
     }
     return dets;
+}
+
+size_t StringLists::determinant_address(const Determinant& d) const {
+    const auto Ia = d.get_alfa_bits();
+    const auto Ib = d.get_beta_bits();
+    const size_t ha = alfa_address_->sym(Ia);
+    const size_t hb = beta_address_->sym(Ib);
+    const auto symmetry = ha ^ hb;
+    const size_t addIa = alfa_address_->add(Ia);
+    const size_t addIb = beta_address_->add(Ib);
+    size_t addI = addIa * beta_address_->strpi(hb) + addIb;
+    for (size_t h = 0; h < ha; h++) {
+        addI += alfa_address_->strpi(h) * beta_address_->strpi(symmetry ^ h);
+    }
+    return addI;
+}
+
+Determinant StringLists::determinant(size_t address, size_t symmetry) const {
+    // find the irreps of alpha and beta strings
+    size_t h = 0;
+    size_t addI = 0;
+    // keep adding the number of determinants in each irrep until we reach the right one
+    for (; h < nirrep_; h++) {
+        size_t address_offset = alfa_address_->strpi(h) * beta_address_->strpi(symmetry ^ h);
+        if (address_offset + addI > address) {
+            break;
+        }
+        addI += address_offset;
+    }
+    const size_t shift = address - addI;
+    const size_t beta_size = beta_address_->strpi(symmetry ^ h);
+    const size_t addIa = shift / beta_size;
+    const size_t addIb = shift % beta_size;
+    String Ia = alfa_str(h, addIa);
+    String Ib = beta_str(symmetry ^ h, addIb);
+    return Determinant(Ia, Ib);
 }
 
 } // namespace forte

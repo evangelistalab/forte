@@ -32,6 +32,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 
+#include "helpers/printing.h"
 #include "base_classes/mo_space_info.h"
 
 #include "helpers/timer.h"
@@ -131,8 +132,6 @@ std::vector<double> SelectedCIMethod::get_PQ_spin2() { return std::vector<double
 void SelectedCIMethod::print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs,
                                  int nroot, size_t max_dets_to_print) {
     std::string state_label;
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
-                                        "sextet", "septet", "octet", "nonet", "decatet"});
 
     for (int n = 0; n < nroot; ++n) {
         DeterminantHashVec tmp;
@@ -151,7 +150,7 @@ void SelectedCIMethod::print_wfn(DeterminantHashVec& space, std::shared_ptr<psi:
         auto spin = sparse_solver_->spin();
         double S2 = spin[n];
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * std::fabs(S2)) - 1.0));
-        state_label = s2_labels[std::round(S * 2.0)];
+        state_label = s2_label(std::round(S * 2.0));
         psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n, S2, S,
                              state_label.c_str());
     }

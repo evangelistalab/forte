@@ -294,6 +294,10 @@ class ActiveSpaceMethod {
     /// @param value the convergence criterion in a.u.
     void set_r_convergence(double value);
 
+    /// Set the maximum number of iterations
+    /// @param value the maximum number of iterations
+    void set_maxiter(size_t value);
+
     /// Set if we dump the wave function to disk
     void set_read_wfn_guess(bool read);
 
@@ -357,6 +361,9 @@ class ActiveSpaceMethod {
 
     /// The residual 2-norm convergence criterion
     double r_convergence_ = 1.0e-6;
+
+    /// The maximum number of iterations
+    size_t maxiter_ = 100;
 
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;

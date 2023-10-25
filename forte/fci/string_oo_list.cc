@@ -58,7 +58,7 @@ std::vector<StringSubstitution>& StringLists::get_beta_oo_list(int pq_sym, size_
 
 void StringLists::make_oo_list(std::shared_ptr<StringAddress> addresser, OOList& list) {
     // Loop over irreps of the pair pq
-    for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         size_t max_pq = pairpi_[pq_sym];
         for (size_t pq = 0; pq < max_pq; ++pq) {
             make_oo(addresser, list, pq_sym, pq);

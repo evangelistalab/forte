@@ -269,15 +269,7 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
 void FCIVector::normalize() {
     double factor = norm(2.0);
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_address_->strpi(alfa_sym);
-        size_t maxIb = beta_address_->strpi(beta_sym);
-        double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-            for (size_t Ib = 0; Ib < maxIb; ++Ib) {
-                C_ha[Ia][Ib] /= factor;
-            }
-        }
+        C_[alfa_sym]->scale(1.0 / factor);
     }
 }
 
@@ -309,8 +301,9 @@ void FCIVector::zero() {
 }
 
 void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    print_h2("NATURAL ORBITALS");
+    print_h2("Natural Orbitals");
     psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
+    auto nfdocc = mo_space_info->size("FROZEN_DOCC");
 
     size_t na = alfa_address_->nones();
     size_t nb = beta_address_->nones();
@@ -351,7 +344,7 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     size_t count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
                         mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf("\n    ");
@@ -393,9 +386,6 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
 //  }
 //}
 
-/**
- * Compute the 2-norm of the wave function
- */
 double FCIVector::norm(double power) {
     double norm = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {

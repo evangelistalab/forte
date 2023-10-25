@@ -109,8 +109,6 @@ class CINO : public OrbitalTransform {
     std::shared_ptr<psi::Matrix> Ub_;
 
     // ==> CINO Options <==
-    /// Add missing degenerate determinants excluded from the aimed selection?
-    bool project_out_spin_contaminants_ = true;
     /// The multiplicity of the reference
     int wavefunction_multiplicity_ = 0;
     // The number of correlated mos

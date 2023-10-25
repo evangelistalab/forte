@@ -91,6 +91,8 @@ std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t);
  */
 std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
+std::vector<double> Vector_to_vector_double(const psi::Vector& v);
+
 // /**
 //  * @brief view_modified_orbitals Write orbitals using molden
 //  * @param Ca  The Ca matrix to be viewed with MOLDEN
@@ -197,6 +199,11 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
 void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const size_t n);
 
 void push_to_psi4_env_globals(double value, const std::string& label);
+
+bool is_near_integer(double value, double toll = 1.0e-12);
+
+std::vector<std::tuple<int, size_t, size_t>> find_integer_groups(const std::vector<double>& vec,
+                                                                 double toll = 1.0e-12);
 
 namespace math {
 /// Return the number of combinations of n identical objects
