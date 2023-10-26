@@ -33,6 +33,7 @@
 #include <unordered_map>
 
 #include "sparse_ci/determinant.h"
+#include "base_classes/state_info.h"
 
 namespace forte {
 /**
@@ -80,18 +81,19 @@ class StringAddress {
     int nones_; // number of 1s
 };
 
-enum class StringClassType { FCI, GASCI };
-
 class StringClass {
   public:
-    StringClass(std::vector<int> mopi, StringClassType type);
+    StringClass(std::vector<int> mopi, const std::vector<std::array<int, 6>>& alfa_occupation,
+                const std::vector<std::array<int, 6>>& beta_occupation);
 
     size_t symmetry(const String& s) const;
+
+    /// @brief Return the class of a string
+    size_t string_class(const String& s) const;
 
     size_t nclasses() const;
 
   private:
-    StringClassType type_;
     size_t nirrep_;
     std::vector<int> mo_sym_;
 };

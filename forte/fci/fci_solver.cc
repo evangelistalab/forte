@@ -103,7 +103,27 @@ int FCISolver::symmetry() { return symmetry_; }
 
 void FCISolver::startup() {
     // Create the string lists
+
+#if USE_GAS_LISTS
+    std::vector<int> gas_size;
+    std::vector<int> gas_min;
+    std::vector<int> gas_max;
+    for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+        std::string space = "GAS" + std::to_string(gas_count + 1);
+        int orbital_maximum = mo_space_info_->size(space);
+        gas_size.push_back(orbital_maximum);
+    }
+    for (auto n : state_.gas_min()) {
+        gas_min.push_back(n);
+    }
+    for (auto n : state_.gas_max()) {
+        gas_max.push_back(n);
+    }
+    lists_ = std::make_shared<StringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_,
+                                           gas_size, gas_min, gas_max);
+#else
     lists_ = std::make_shared<StringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
+#endif
 
     nfci_dets_ = 0;
     for (int h = 0; h < nirrep_; ++h) {
@@ -249,7 +269,8 @@ double FCISolver::compute_energy() {
     if (not converged) {
         throw std::runtime_error(
             "Davidson-Liu solver did not converge.\nPlease try to increase the number of "
-            "Davidson-Liu iterations (DL_MAXITER). You can also try to increase:\n - the maximum "
+            "Davidson-Liu iterations (DL_MAXITER). You can also try to increase:\n - the "
+            "maximum "
             "size of the subspace (DL_SUBSPACE_PER_ROOT)"
             "\n - the number of guess states (DL_GUESS_PER_ROOT)");
         return false;

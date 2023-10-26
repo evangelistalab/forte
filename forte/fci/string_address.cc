@@ -55,24 +55,22 @@ int StringAddress::sym(const String& s) const { return address_.at(s).second; }
 
 size_t StringAddress::strpi(int h) const { return strpi_[h]; }
 
-StringClass::StringClass(std::vector<int> mopi, StringClassType type)
-    : type_(type), nirrep_(mopi.size()) {
+StringClass::StringClass(std::vector<int> mopi,
+                         const std::vector<std::array<int, 6>>& alfa_occupation,
+                         const std::vector<std::array<int, 6>>& beta_occupation)
+    : nirrep_(mopi.size()) {
     for (size_t h = 0; h < nirrep_; h++) {
         fill_n(back_inserter(mo_sym_), mopi[h], h); // insert h for mopi[h] times
     }
 }
 
 size_t StringClass::symmetry(const String& s) const {
-    if (type_ == StringClassType::FCI) {
-        return s.symmetry(mo_sym_);
-    }
+    return s.symmetry(mo_sym_);
     return 0;
 }
 
 size_t StringClass::nclasses() const {
-    if (type_ == StringClassType::FCI) {
-        return nirrep_;
-    }
+    return nirrep_;
     throw std::runtime_error("StringClass::nclasses() not implemented for types other than FCI");
     return 0;
 }
