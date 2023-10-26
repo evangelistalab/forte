@@ -83,22 +83,23 @@ std::shared_ptr<RDMs> FCISolver::compute_rdms_root(size_t root_left, size_t root
     }
 
     if (print_) {
-        std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + "| ... |" +
-                                std::to_string(root_right) + ">";
+        std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + " " +
+                                state().str_minimum() + "| ... |" + std::to_string(root_right) +
+                                " " + state().str_minimum() + ">";
         print_h2(title_rdm);
     }
 
     auto rdms = FCIVector::compute_rdms(*C_, *T_, max_rdm_level, type);
 
     // Optionally, test the RDMs
-    // if (test_rdms_) {
-    // C_->rdm_test(*C_, *T_, max_rdm_level, type, rdms);
-    // }
+    if (test_rdms_) {
+        C_->test_rdms(*C_, *T_, max_rdm_level, type, rdms);
+    }
 
-    // // Print the NO if energy converged
-    // if (print_no_ || print_ > 0) {
-    //     C_->print_natural_orbitals(mo_space_info_);
-    // }
+    // Print the NO if energy converged
+    if (print_no_ || print_ > 0) {
+        C_->print_natural_orbitals(mo_space_info_, rdms);
+    }
     return rdms;
 }
 

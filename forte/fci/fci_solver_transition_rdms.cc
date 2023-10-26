@@ -86,8 +86,9 @@ FCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
     method2_fcisolver->copy_state_into_fci_vector(root_right, method2_fcisolver->C_);
 
     if (print_) {
-        std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + "| ... |" +
-                                std::to_string(root_right) + ">";
+        std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + " " +
+                                state().str_minimum() + "| ... |" + std::to_string(root_right) +
+                                " " + method2->state().str_minimum() + ">";
         print_h2(title_rdm);
     }
 

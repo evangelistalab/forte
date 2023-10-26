@@ -310,7 +310,7 @@ void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> 
             size_t h, add_Ia, add_Ib;
             std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
 
-            if (ci_abs < 0.001)
+            if (ci_abs < 0.01)
                 continue;
 
             auto Ia_v = lists_->alfa_str(h, add_Ia);
