@@ -552,7 +552,6 @@ ambit::Tensor FCIVector::compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVecto
                                                 Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
                                             rdm[six_index(p, q, r, s, t, a, ncmo)] +=
                                                 sign * C_I_p[I][M] * C_J_p[J][N];
-                                            //}//End of if statement
                                         }
                                     }
                                 }

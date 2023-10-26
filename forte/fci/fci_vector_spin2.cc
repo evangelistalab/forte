@@ -40,13 +40,13 @@ double FCIVector::compute_spin2() {
     // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
         const int Ib_sym = Ia_sym ^ symmetry_;
-        double** C = C_[Ia_sym]->pointer();
+        auto Cr = C_[Ia_sym]->pointer();
 
         // Loop over all r,s
         for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
             const int Jb_sym = Ib_sym ^ rs_sym;
             const int Ja_sym = Jb_sym ^ symmetry_;
-            double** Y = C_[Ja_sym]->pointer();
+            auto Cl = C_[Ja_sym]->pointer();
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;
 
@@ -62,11 +62,9 @@ double FCIVector::compute_spin2() {
                         const size_t maxSSa = vo_alfa.size();
                         const size_t maxSSb = vo_beta.size();
 
-                        for (size_t SSa = 0; SSa < maxSSa; ++SSa) {
-                            for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                spin2 += Y[vo_alfa[SSa].J][vo_beta[SSb].J] *
-                                         C[vo_alfa[SSa].I][vo_beta[SSb].I] *
-                                         static_cast<double>(vo_alfa[SSa].sign * vo_beta[SSb].sign);
+                        for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
+                            for (const auto& [sign_b, Ib, Jb] : vo_beta) {
+                                spin2 += Cl[Ja][Jb] * Cr[Ia][Ib] * sign_a * sign_b;
                             }
                         }
                     }
