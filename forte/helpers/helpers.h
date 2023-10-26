@@ -209,6 +209,11 @@ namespace math {
 /// Return the number of combinations of n identical objects
 size_t combinations(size_t n, size_t k);
 
+template <typename Container> auto sum(const Container& c) -> typename Container::value_type {
+    using T = typename Container::value_type;
+    return std::accumulate(std::begin(c), std::end(c), T(0));
+}
+
 /// Return the Cartesian product of the input vector<vector<T>>
 /// https://stackoverflow.com/a/17050528/4101036
 template <typename T>

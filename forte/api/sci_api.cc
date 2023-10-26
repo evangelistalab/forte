@@ -251,12 +251,12 @@ void export_Determinant(py::module& m) {
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
     py::class_<StringAddress>(m, "StringAddress", "A class to compute the address of a string")
-        .def(py::init<int, int, const std::vector<std::vector<String>>&>(),
-             "Construct a StringAddress object from a list of lists of strings", "nmo"_a, "ne"_a,
-             "strings"_a)
+        .def(py::init<const std::vector<int>&, const std::vector<std::array<int, 6>>&, int,
+                      const std::vector<std::vector<String>>&>(),
+             "Construct a StringAddress object from a list of lists of strings")
         .def("add", &StringAddress::add, "Return the address of a string")
         .def("sym", &StringAddress::sym, "Return the symmetry of a string")
-        .def("strpi", &StringAddress::strpi, "Return the number of strings per irrep");
+        .def("strpcls", &StringAddress::strpcls, "Return the number of strings per class");
 
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
         .def(py::init<bool>(), "antihermitian"_a = false)

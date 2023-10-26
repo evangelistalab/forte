@@ -177,7 +177,7 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
             fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, h_Ia, h_Ib);
             fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, h_Ia, h_Ib);
 
-            const size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_Ia);
+            const size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
             for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
                 for (int p_rel = 0; p_rel < cmopi[p_sym]; ++p_rel) {
@@ -235,7 +235,7 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
             fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, ha, hb);
             fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, ha, hb);
 
-            size_t maxL = alfa ? beta_address->strpi(hb) : alfa_address->strpi(ha);
+            size_t maxL = alfa ? beta_address->strpcls(hb) : alfa_address->strpcls(ha);
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
                 size_t max_pq = lists->pairpi(pq_sym);
@@ -416,14 +416,14 @@ ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVecto
 
     for (int h_K = 0; h_K < nirrep; ++h_K) {
         size_t maxK =
-            alfa ? lists->alfa_address_3h()->strpi(h_K) : lists->beta_address_3h()->strpi(h_K);
+            alfa ? lists->alfa_address_3h()->strpcls(h_K) : lists->beta_address_3h()->strpcls(h_K);
         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
             int h_Ib = h_Ia ^ symmetry;
             // int h_Ja = h_Ia;
             fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, h_Ia, h_Ib);
             fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, h_Ia, h_Ib);
 
-            size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_Ia);
+            size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
             if (maxL > 0) {
                 for (size_t K = 0; K < maxK; ++K) {
                     std::vector<H3StringSubstitution>& Klist =
@@ -453,9 +453,9 @@ ambit::Tensor FCIVector::compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVecto
     auto& rdm = g3.data();
 
     for (int h_K = 0; h_K < nirrep; ++h_K) {
-        size_t maxK = lists->alfa_address_2h()->strpi(h_K);
+        size_t maxK = lists->alfa_address_2h()->strpcls(h_K);
         for (int h_L = 0; h_L < nirrep; ++h_L) {
-            size_t maxL = lists->beta_address_1h()->strpi(h_L);
+            size_t maxL = lists->beta_address_1h()->strpcls(h_L);
             // I and J refer to the 2h part of the operator
             for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
                 int h_Mb = h_Ia ^ symmetry;
@@ -514,9 +514,9 @@ ambit::Tensor FCIVector::compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVecto
     auto& rdm = g3.data();
 
     for (int h_K = 0; h_K < nirrep; ++h_K) {
-        size_t maxK = lists->alfa_address_1h()->strpi(h_K);
+        size_t maxK = lists->alfa_address_1h()->strpcls(h_K);
         for (int h_L = 0; h_L < nirrep; ++h_L) {
-            size_t maxL = lists->beta_address_2h()->strpi(h_L);
+            size_t maxL = lists->beta_address_2h()->strpcls(h_L);
             // I and J refer to the 1h part of the operator
             for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
                 int h_Mb = h_Ia ^ symmetry;

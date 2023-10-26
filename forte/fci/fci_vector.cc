@@ -61,10 +61,10 @@ void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_, int pri
     // Find the largest size of the symmetry blocks
     size_t max_size = 0;
     for (size_t Ia_sym = 0; Ia_sym < nirreps; ++Ia_sym) {
-        max_size = std::max(max_size, lists_->alfa_address()->strpi(Ia_sym));
+        max_size = std::max(max_size, lists_->alfa_address()->strpcls(Ia_sym));
     }
     for (size_t Ib_sym = 0; Ib_sym < nirreps; ++Ib_sym) {
-        max_size = std::max(max_size, lists_->beta_address()->strpi(Ib_sym));
+        max_size = std::max(max_size, lists_->beta_address()->strpcls(Ib_sym));
     }
 
     // Allocate the temporary arrays CR and CL with the largest block size
@@ -100,7 +100,7 @@ void FCIVector::startup() {
     ndet_ = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
-        size_t detpi = alfa_address_->strpi(alfa_sym) * beta_address_->strpi(beta_sym);
+        size_t detpi = alfa_address_->strpcls(alfa_sym) * beta_address_->strpcls(beta_sym);
         ndet_ += detpi;
         detpi_.push_back(detpi);
     }
@@ -109,9 +109,9 @@ void FCIVector::startup() {
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
         //    outfile->Printf("\n\n  Block %d: allocate %d *
-        //    %d",alfa_sym,(int)alfa_address_->strpi(alfa_sym),(int)beta_address_->strpi(beta_sym));
-        C_.push_back(std::make_shared<psi::Matrix>("C", alfa_address_->strpi(alfa_sym),
-                                                   beta_address_->strpi(beta_sym)));
+        //    %d",alfa_sym,(int)alfa_address_->strpcls(alfa_sym),(int)beta_address_->strpcls(beta_sym));
+        C_.push_back(std::make_shared<psi::Matrix>("C", alfa_address_->strpcls(alfa_sym),
+                                                   beta_address_->strpcls(beta_sym)));
     }
 }
 
@@ -141,8 +141,8 @@ void FCIVector::copy(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_address_->strpi(alfa_sym);
-        size_t maxIb = beta_address_->strpi(beta_sym);
+        size_t maxIa = alfa_address_->strpcls(alfa_sym);
+        size_t maxIb = beta_address_->strpcls(beta_sym);
         double** C_ha = C_[alfa_sym]->pointer();
         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
             for (size_t Ib = 0; Ib < maxIb; ++Ib) {
@@ -157,8 +157,8 @@ void FCIVector::copy_to(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_address_->strpi(alfa_sym);
-        size_t maxIb = beta_address_->strpi(beta_sym);
+        size_t maxIa = alfa_address_->strpcls(alfa_sym);
+        size_t maxIb = beta_address_->strpcls(beta_sym);
         double** C_ha = C_[alfa_sym]->pointer();
         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
             for (size_t Ib = 0; Ib < maxIb; ++Ib) {
@@ -184,8 +184,8 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
 //  int k = 0;
 //  for(int h = 0; h < nirrep_; ++h){
 //    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(h);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(h);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        if(k == n){
@@ -208,8 +208,8 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
 //  double c = 0.0;
 //  for(int h = 0; h < nirrep_; ++h){
 //    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(h);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(h);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        if(k == n){
@@ -231,8 +231,8 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
 //  std::vector<int> list;
 //  for(int h = 0; h < nirrep_; ++h){
 //    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(h);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(h);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        if(std::fabs(coefficients[h][Ia][Ib]) >= alpha){
@@ -253,8 +253,8 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
 ////  std::vector<pair<double,int> > list;
 ////  for(int h = 0; h < nirrep_; ++h){
 ////    int beta_sym = h ^ symmetry_;
-////    size_t maxIa = alfa_address_->strpi(h);
-////    size_t maxIb = beta_address_->strpi(beta_sym);
+////    size_t maxIa = alfa_address_->strpcls(h);
+////    size_t maxIb = beta_address_->strpcls(beta_sym);
 ////    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 ////      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 ////        list.push_back(std::make_pair(std::fabs(coefficients[h][Ia][Ib]),k));
@@ -283,8 +283,8 @@ void FCIVector::normalize() {
 //{
 //  for(int h = 0; h < nirrep_; ++h){
 //    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(h);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(h);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        coefficients[h][Ia][Ib] += 0.001 * static_cast<double>(std::rand()) /
@@ -359,8 +359,8 @@ void fill_C_block(FCIVector& C, double** m, bool alfa, std::shared_ptr<StringAdd
                   std::shared_ptr<StringAddress> beta_address, int ha, int hb) {
     // if alfa is true just copy the block
     double** c = C.C(ha)->pointer();
-    size_t maxIa = alfa_address->strpi(ha);
-    size_t maxIb = beta_address->strpi(hb);
+    size_t maxIa = alfa_address->strpcls(ha);
+    size_t maxIb = beta_address->strpcls(hb);
     if (alfa) {
         for (size_t Ia = 0; Ia < maxIa; ++Ia)
             for (size_t Ib = 0; Ib < maxIb; ++Ib)
@@ -381,7 +381,7 @@ void fill_C_block(FCIVector& C, double** m, bool alfa, std::shared_ptr<StringAdd
 // void FCIVector::zero_block(int h)
 //{
 //  int beta_sym = h ^ symmetry_;
-//  size_t size = alfa_address_->strpi(h) * beta_address_->strpi(beta_sym) *
+//  size_t size = alfa_address_->strpcls(h) * beta_address_->strpcls(beta_sym) *
 //  static_cast<size_t> (sizeof(double));
 //  if(size > 0)
 //    memset(&(coefficients[h][0][0]), 0, size);
@@ -394,8 +394,8 @@ void fill_C_block(FCIVector& C, double** m, bool alfa, std::shared_ptr<StringAdd
 // void FCIVector::transpose_block(int h)
 //{
 //  int beta_sym = h ^ symmetry_;
-//  size_t maxIa = alfa_address_->strpi(h);
-//  size_t maxIb = beta_address_->strpi(beta_sym);
+//  size_t maxIa = alfa_address_->strpcls(h);
+//  size_t maxIb = beta_address_->strpcls(beta_sym);
 //  size_t size = maxIa * maxIb * static_cast<size_t> (sizeof(double));
 //  if(size > 0){
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
@@ -412,8 +412,8 @@ double FCIVector::norm(double power) {
     double norm = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_address_->strpi(alfa_sym);
-        size_t maxIb = beta_address_->strpi(beta_sym);
+        size_t maxIa = alfa_address_->strpcls(alfa_sym);
+        size_t maxIb = beta_address_->strpcls(beta_sym);
         double** C_ha = C_[alfa_sym]->pointer();
         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
             for (size_t Ib = 0; Ib < maxIb; ++Ib) {
@@ -435,8 +435,8 @@ double FCIVector::dot(FCIVector& wfn) {
     return (dot);
 
     //        int beta_sym = alfa_sym ^ symmetry_;
-    //        size_t maxIa = alfa_address_->strpi(alfa_sym);
-    //        size_t maxIb = beta_address_->strpi(beta_sym);
+    //        size_t maxIa = alfa_address_->strpcls(alfa_sym);
+    //        size_t maxIb = beta_address_->strpcls(beta_sym);
 
     //        double** Ca = C_[alfa_sym]->pointer();
     //        double** Cb = wfn.C_[alfa_sym]->pointer();
@@ -463,8 +463,8 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 //  double maxelement = 0.0;
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(alfa_sym);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        if (std::abs(coefficients[alfa_sym][Ia][Ib]) > std::abs(maxelement)){
@@ -484,8 +484,8 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 //  double min_element = 0.0;
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(alfa_sym);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        min_element = std::min(min_element,coefficients[alfa_sym][Ia][Ib]);
@@ -502,8 +502,8 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(alfa_sym);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        double r = R.coefficients[alfa_sym][Ia][Ib];
@@ -523,8 +523,8 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(alfa_sym);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        double r = R.coefficients[alfa_sym][Ia][Ib];
@@ -544,8 +544,8 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(alfa_sym);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        double r = R.coefficients[alfa_sym][Ia][Ib];
@@ -569,8 +569,8 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(alfa_sym);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        coefficients[alfa_sym][Ia][Ib] += factor *
@@ -587,8 +587,8 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(alfa_sym);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
+//    size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//    size_t maxIb = beta_address_->strpcls(beta_sym);
 //    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 //      for(size_t Ib = 0; Ib < maxIb; ++Ib){
 //        coefficients[alfa_sym][Ia][Ib] *= factor;
@@ -606,8 +606,8 @@ void FCIVector::print() {
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
         double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < alfa_address_->strpi(alfa_sym); ++Ia) {
-            for (size_t Ib = 0; Ib < beta_address_->strpi(beta_sym); ++Ib) {
+        for (size_t Ia = 0; Ia < alfa_address_->strpcls(alfa_sym); ++Ia) {
+            for (size_t Ib = 0; Ib < beta_address_->strpcls(beta_sym); ++Ib) {
                 if (std::fabs(C_ha[Ia][Ib]) > 1.0e-9) {
                     outfile->Printf("\n  %15.9f [%1d][%2d][%2d] (%d)", C_ha[Ia][Ib], alfa_sym,
                                     static_cast<int>(Ia), static_cast<int>(Ib),
@@ -633,16 +633,16 @@ void FCIVector::print() {
 //      if(!alfa){
 //        memset(&(C[0][0]), 0, size_Ctemp);
 //        memset(&(Y[0][0]), 0, size_Ctemp);
-//        size_t maxIa = alfa_address_->strpi(alfa_sym);
-//        size_t maxIb = beta_address_->strpi(beta_sym);
+//        size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//        size_t maxIb = beta_address_->strpcls(beta_sym);
 //        // Copy C transposed in CR
 //        for(size_t Ia = 0; Ia < maxIa; ++Ia)
 //          for(size_t Ib = 0; Ib < maxIb; ++Ib)
 //            C[Ib][Ia] = coefficients[alfa_sym][Ia][Ib];
 //      }
 
-//      size_t maxL = alfa ? beta_address_->strpi(beta_sym) :
-//      alfa_address_->strpi(alfa_sym);
+//      size_t maxL = alfa ? beta_address_->strpcls(beta_sym) :
+//      alfa_address_->strpcls(alfa_sym);
 //      // Loop over (p>q) == (p>q)
 //      for(int pq_sym = 0; pq_sym < nirreps; ++pq_sym){
 //        size_t max_pq = lists->get_pairpi(pq_sym);
@@ -712,8 +712,8 @@ void FCIVector::print() {
 //        }
 //      }
 //      if(!alfa){
-//        size_t maxIa = alfa_address_->strpi(alfa_sym);
-//        size_t maxIb = beta_address_->strpi(beta_sym);
+//        size_t maxIa = alfa_address_->strpcls(alfa_sym);
+//        size_t maxIb = beta_address_->strpcls(beta_sym);
 //        // Add CL transposed to Y
 //        for(size_t Ia = 0; Ia < maxIa; ++Ia)
 //          for(size_t Ib = 0; Ib < maxIb; ++Ib)

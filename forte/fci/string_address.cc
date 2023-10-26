@@ -29,12 +29,16 @@
 #include "string_address.h"
 
 #include "base_classes/mo_space_info.h"
+#include "helpers/helpers.h"
 
 namespace forte {
 
-StringAddress::StringAddress(int nmo, int ne, const std::vector<std::vector<String>>& strings)
-    : nirrep_(strings.size()), nstr_(0), strpi_(strings.size(), 0), nbits_(nmo), nones_(ne) {
-    for (int h = 0; h < nirrep_; h++) {
+StringAddress::StringAddress(const std::vector<int>& gas_size,
+                             const std::vector<std::array<int, 6>>& gas_occupations, int ne,
+                             const std::vector<std::vector<String>>& strings)
+    : nclasses_(strings.size()), nstr_(0), strpcls_(strings.size(), 0), nones_(ne),
+      gas_size_(gas_size), gas_occupations_(gas_occupations) {
+    for (int h = 0; h < nclasses_; h++) {
         const auto& strings_h = strings[h];
         for (const auto& s : strings_h) {
             push_back(s, h);
@@ -42,18 +46,22 @@ StringAddress::StringAddress(int nmo, int ne, const std::vector<std::vector<Stri
     }
 }
 
-void StringAddress::push_back(const String& s, int irrep) {
-    size_t add = strpi_[irrep];
-    address_[s] = std::pair(add, irrep);
-    strpi_[irrep] += 1;
+void StringAddress::push_back(const String& s, int string_class) {
+    size_t add = strpcls_[string_class];
+    address_[s] = std::pair(add, string_class);
+    strpcls_[string_class] += 1;
     nstr_++;
 }
+
+int StringAddress::nones() const { return nones_; }
+
+int StringAddress::nbits() const { return math::sum(gas_size_); }
 
 size_t StringAddress::add(const String& s) const { return address_.at(s).first; }
 
 int StringAddress::sym(const String& s) const { return address_.at(s).second; }
 
-size_t StringAddress::strpi(int h) const { return strpi_[h]; }
+size_t StringAddress::strpcls(int h) const { return strpcls_[h]; }
 
 StringClass::StringClass(std::vector<int> mopi,
                          const std::vector<std::array<int, 6>>& alfa_occupation,

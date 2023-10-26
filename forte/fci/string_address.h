@@ -46,7 +46,9 @@ class StringAddress {
     /// @brief Default constructor
     /// @param strings a vector of vectors of strings.
     /// Each vector collects the strings of a given symmetry
-    StringAddress(int nmo, int ne, const std::vector<std::vector<String>>& strings);
+    StringAddress(const std::vector<int>& gas_size,
+                  const std::vector<std::array<int, 6>>& gas_occupations, int ne,
+                  const std::vector<std::vector<String>>& strings);
 
     /// @brief Default destructor
     ~StringAddress() = default;
@@ -61,30 +63,32 @@ class StringAddress {
     /// @brief Return the address and irrep of a string
     std::pair<size_t, int> add_sym(const String& s) const { return address_.at(s); }
     /// @brief Return the number of strings in an irrep
-    size_t strpi(int h) const;
+    size_t strpcls(int h) const;
     /// @brief Return the number of bits in the string
-    int nbits() const { return nbits_; }
+    int nbits() const;
     /// @brief Return the number of 1s in the string
-    int nones() const { return nones_; }
+    int nones() const;
 
   private:
     // ==> Class Data <==
-    /// number of irreps
-    int nirrep_;
+    /// number of string classes
+    int nclasses_;
     /// number of strings
     size_t nstr_;
-    /// number of strings in each irrep
-    std::vector<size_t> strpi_;
-    /// Map from string to address and irrep
+    /// number of strings in each class
+    std::vector<size_t> strpcls_;
+    /// Map from string to address and class
     std::unordered_map<String, std::pair<uint32_t, uint32_t>, String::Hash> address_;
-    int nbits_; // number of digits
     int nones_; // number of 1s
+
+    const std::vector<int> gas_size_;
+    const std::vector<std::array<int, 6>>& gas_occupations_;
 };
 
 class StringClass {
   public:
-    StringClass(std::vector<int> mopi, const std::vector<std::array<int, 6>>& alfa_occupation,
-                const std::vector<std::array<int, 6>>& beta_occupation);
+    StringClass(std::vector<int> mopi, const std::vector<std::array<int, 6>>& alfa_occupation = {},
+                const std::vector<std::array<int, 6>>& beta_occupation = {});
 
     size_t symmetry(const String& s) const;
 

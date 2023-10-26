@@ -127,8 +127,8 @@ void FCISolver::startup() {
 
     nfci_dets_ = 0;
     for (int h = 0; h < nirrep_; ++h) {
-        size_t nastr = lists_->alfa_address()->strpi(h);
-        size_t nbstr = lists_->beta_address()->strpi(h ^ symmetry_);
+        size_t nastr = lists_->alfa_address()->strpcls(h);
+        size_t nbstr = lists_->beta_address()->strpcls(h ^ symmetry_);
         nfci_dets_ += nastr * nbstr;
     }
 
