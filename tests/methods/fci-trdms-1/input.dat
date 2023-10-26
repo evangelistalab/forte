@@ -27,8 +27,9 @@ set forte {
 
 energy('scf')
 energy('forte')
-print_variables()
+
 compare_values(0.0, variable("SF 1-RDM ERROR"),12, "SF 1-RDM")
+
 refvals = [
     ("SINGLET <0AG|DM_X|0AG>"         ,      0.000000000000),
     ("SINGLET <0AG|DM_Y|0AG>"         ,      0.000000000000),

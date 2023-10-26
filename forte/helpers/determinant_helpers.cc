@@ -67,8 +67,6 @@ make_hamiltonian_matrix(const std::vector<Determinant>& dets,
                         std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     const size_t n = dets.size();
     auto H = std::make_shared<psi::Matrix>("H", n, n);
-    auto E0 = as_ints->ints()->nuclear_repulsion_energy() + as_ints->frozen_core_energy() +
-              as_ints->scalar_energy();
 
     // If we are running DiskDF then we need to revert to a single thread loop
     auto threads = (as_ints->get_integral_type() == DiskDF) ? 1 : omp_get_max_threads();
@@ -78,7 +76,7 @@ make_hamiltonian_matrix(const std::vector<Determinant>& dets,
         const Determinant& detI = dets[I];
         for (size_t J = I; J < n; J++) {
             const Determinant& detJ = dets[J];
-            double HIJ = as_ints->slater_rules(detI, detJ) + (I == J ? E0 : 0.0);
+            double HIJ = as_ints->slater_rules(detI, detJ);
             H->set(I, J, HIJ);
             H->set(J, I, HIJ);
         }

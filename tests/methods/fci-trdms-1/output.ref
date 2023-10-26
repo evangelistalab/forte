@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 23 October 2023 10:28AM
+    Psi4 started on: Thursday, 26 October 2023 03:02PM
 
-    Process ID: 81273
+    Process ID: 73428
     Host:       macbook-pro-158.wireless.emory.edu
     PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
@@ -71,8 +71,9 @@ set forte {
 
 energy('scf')
 energy('forte')
-print_variables()
+
 compare_values(0.0, variable("SF 1-RDM ERROR"),12, "SF 1-RDM")
+
 refvals = [
     ("SINGLET <0AG|DM_X|0AG>"         ,      0.000000000000),
     ("SINGLET <0AG|DM_Y|0AG>"         ,      0.000000000000),
@@ -116,7 +117,7 @@ Scratch directory: /tmp/
     Solid Harmonics ordering:            gaussian
 
 *** tstart() called on macbook-pro-158.wireless.emory.edu
-*** at Mon Oct 23 10:28:24 2023
+*** at Thu Oct 26 15:02:43 2023
 
    => Loading Basis Set <=
 
@@ -290,7 +291,7 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon Oct 23 10:28:24 2023
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Thu Oct 26 15:02:43 2023
 Module time:
 	user time   =       0.05 seconds =       0.00 minutes
 	system time =       0.00 seconds =       0.00 minutes
@@ -306,7 +307,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: trdm - git commit: 954a3ee4
+    git branch: trdm - git commit: 0eeef785
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -326,7 +327,7 @@ Scratch directory: /tmp/
     Solid Harmonics ordering:            gaussian
 
 *** tstart() called on macbook-pro-158.wireless.emory.edu
-*** at Mon Oct 23 10:28:24 2023
+*** at Thu Oct 26 15:02:43 2023
 
    => Loading Basis Set <=
 
@@ -500,7 +501,7 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon Oct 23 10:28:24 2023
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Thu Oct 26 15:02:43 2023
 Module time:
 	user time   =       0.05 seconds =       0.00 minutes
 	system time =       0.00 seconds =       0.00 minutes
@@ -595,12 +596,12 @@ Total time:
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00213900 s
+  Integral transformation done. 0.00245421 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000000 GB
-  Timing for conventional integral transformation:            0.004 s.
+  Timing for conventional integral transformation:            0.005 s.
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing conventional integrals:                0.004 s.
+  Timing for computing conventional integrals:                0.005 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -656,7 +657,7 @@ Total time:
 
     Spin    Root           Energy        <S^2>    Status
   -------------------------------------------------------
-   singlet    0       -1.088496308147  +0.000000  added
+   singlet    0       -1.588496308147  +0.000000  added
   -------------------------------------------------------
 
   ==> Davidson-Liu Solver <==
@@ -747,8 +748,8 @@ Total time:
 
     Spin    Root           Energy        <S^2>    Status
   -------------------------------------------------------
-   triplet    0       -0.774967219037  +2.000000  removed
-   singlet    0       -0.373922279624  +0.000000  added
+   triplet    0       -1.274967219037  +2.000000  removed
+   singlet    0       -0.873922279624  +0.000000  added
   -------------------------------------------------------
 
   ==> Davidson-Liu Solver <==
@@ -891,69 +892,9 @@ Total time:
        0AG   0B1U     0.71457403    19.44454973     0.75448668
     ----------------------------------------------------------
 
-  Time to prepare integrals:        0.006 seconds
+  Time to prepare integrals:        0.007 seconds
   Time to run job          :        0.002 seconds
-  Total                    :        0.008 seconds
-
-
-  Variable Map:
-  ----------------------------------------------------------------------------
-  "AA 1-RDM ERROR"                  =>       0.000000000000
-  "AAAA 2-RDM ERROR"                =>       0.000000000000
-  "AAAAAA 3-RDM ERROR"              =>       0.000000000000
-  "AABAAB 3-RDM ERROR"              =>       0.000000000000
-  "ABAB 2-RDM ERROR"                =>       0.000000000000
-  "ABBABB 3-RDM ERROR"              =>       0.000000000000
-  "BB 1-RDM ERROR"                  =>       0.000000000000
-  "BBBB 2-RDM ERROR"                =>       0.000000000000
-  "BBBBBB 3-RDM ERROR"              =>       0.000000000000
-  "CURRENT ENERGY"                  =>      -0.731209293886
-  "CURRENT REFERENCE ENERGY"        =>      -1.049170901986
-  "DD SOLVATION ENERGY"             =>       0.000000000000
-  "ENERGY ROOT 0 1AG"               =>      -1.088496308147
-  "ENERGY ROOT 0 1B1U"              =>      -0.373922279624
-  "FCI ENERGY"                      =>      -0.373922279624
-  "HF KINETIC ENERGY"               =>       1.163682671338
-  "HF POTENTIAL ENERGY"             =>      -2.212853573324
-  "HF TOTAL ENERGY"                 =>      -1.049170901986
-  "HF VIRIAL RATIO"                 =>       1.901595364293
-  "NUCLEAR REPULSION ENERGY"        =>       0.500000000000
-  "ONE-ELECTRON ENERGY"             =>      -2.165390736219
-  "OSC. SINGLET 0AG -> 0B1U"        =>       0.754486683665
-  "PCM POLARIZATION ENERGY"         =>       0.000000000000
-  "PE ENERGY"                       =>       0.000000000000
-  "SCF ITERATION ENERGY"            =>      -1.049170901986
-  "SCF ITERATIONS"                  =>       2.000000000000
-  "SCF TOTAL ENERGY"                =>      -1.049170901986
-  "SF 1-RDM ERROR"                  =>       0.000000000000
-  "SINGLET <0AG|DM_X|0AG>"          =>       0.000000000000
-  "SINGLET <0AG|DM_Y|0AG>"          =>       0.000000000000
-  "SINGLET <0AG|DM_Z|0AG>"          =>      -0.000000000000
-  "SINGLET <0AG|QM_XX|0AG>"         =>      -1.388900805473
-  "SINGLET <0AG|QM_XY|0AG>"         =>       0.000000000000
-  "SINGLET <0AG|QM_XZ|0AG>"         =>       0.000000000000
-  "SINGLET <0AG|QM_YY|0AG>"         =>      -1.388900805473
-  "SINGLET <0AG|QM_YZ|0AG>"         =>       0.000000000000
-  "SINGLET <0AG|QM_ZZ|0AG>"         =>      -0.950051546021
-  "SINGLET <0B1U|DM_X|0B1U>"        =>       0.000000000000
-  "SINGLET <0B1U|DM_Y|0B1U>"        =>       0.000000000000
-  "SINGLET <0B1U|DM_Z|0B1U>"        =>       0.000000000000
-  "SINGLET <0B1U|QM_XX|0B1U>"       =>      -1.209268224995
-  "SINGLET <0B1U|QM_XY|0B1U>"       =>       0.000000000000
-  "SINGLET <0B1U|QM_XZ|0B1U>"       =>       0.000000000000
-  "SINGLET <0B1U|QM_YY|0B1U>"       =>      -1.209268224995
-  "SINGLET <0B1U|QM_YZ|0B1U>"       =>       0.000000000000
-  "SINGLET <0B1U|QM_ZZ|0B1U>"       =>      -1.647765408484
-  "SINGLET |<0AG|DM|0AG>|"          =>       0.000000000000
-  "SINGLET |<0B1U|DM|0B1U>|"        =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_X|0B1U>"   =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Y|0B1U>"   =>       0.000000000000
-  "TRANS SINGLET <0AG|DM_Z|0B1U>"   =>      -1.258484309688
-  "TRANS SINGLET S_MAX 0AG -> 0B1U" =>       1.387777706267
-  "TRANS SINGLET |<0AG|DM|0B1U>|"   =>       1.258484309688
-  "TWO-ELECTRON ENERGY"             =>       0.616219834233
-
-
+  Total                    :        0.009 seconds
     SF 1-RDM..............................................................................PASSED
     SINGLET <0AG|DM_X|0AG>................................................................PASSED
     SINGLET <0AG|DM_Y|0AG>................................................................PASSED
@@ -982,7 +923,7 @@ Total time:
     OSC. SINGLET 0AG -> 0B1U..............................................................PASSED
     TRANS SINGLET |<0AG|DM_Z|0B1U>|.......................................................PASSED
 
-    Psi4 stopped on: Monday, 23 October 2023 10:28AM
+    Psi4 stopped on: Thursday, 26 October 2023 03:02PM
     Psi4 wall time for execution: 0:00:00.19
 
 *** Psi4 exiting successfully. Buy a developer a beer!
