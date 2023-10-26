@@ -140,7 +140,9 @@ class FCIVector {
     static std::shared_ptr<RDMs> compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order,
                                               RDMsType type);
 
+    /// Return the temporary matrix CR
     static std::shared_ptr<psi::Matrix> get_CR();
+    /// Return the temporary matrix CL
     static std::shared_ptr<psi::Matrix> get_CL();
 
   private:

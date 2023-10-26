@@ -129,26 +129,14 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
                         int p_abs = p_rel + cmopi_offset_[p_sym];
                         int q_abs = q_rel + cmopi_offset_[q_sym];
 
-                        double Hpq = alfa ? fci_ints->oei_a(p_abs, q_abs)
-                                          : fci_ints->oei_b(p_abs,
-                                                            q_abs); // Grab the integral
-                        std::vector<StringSubstitution>& vo =
+                        const double Hpq =
+                            alfa ? fci_ints->oei_a(p_abs, q_abs) : fci_ints->oei_b(p_abs, q_abs);
+                        const auto& vo_list =
                             alfa ? lists_->get_alfa_vo_list(p_abs, q_abs, alfa_sym)
                                  : lists_->get_beta_vo_list(p_abs, q_abs, beta_sym);
-                        // TODO loop in a differen way
-                        int maxss = vo.size();
 
-                        for (int ss = 0; ss < maxss; ++ss) {
-#if CAPRICCIO_USE_DAXPY
-                            C_DAXPY(maxL, static_cast<double>(vo[ss].sign) * Hpq,
-                                    &(Ch[vo[ss].I][0]), 1, &(Yh[vo[ss].J][0]), 1);
-#else
-                            double H = static_cast<double>(vo[ss].sign) * Hpq;
-                            double* y = &Y[vo[ss].J][0];
-                            double* c = &C[vo[ss].I][0];
-                            for (size_t L = 0; L < maxL; ++L)
-                                y[L] += c[L] * H;
-#endif
+                        for (const auto& [sign, I, J] : vo_list) {
+                            C_DAXPY(maxL, sign * Hpq, Ch[I], 1, Yh[J], 1);
                         }
                     }
                 }
@@ -203,21 +191,17 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
                 for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
-                    int p_abs = pq_pair.first;
-                    int q_abs = pq_pair.second;
+                    const auto& [p_abs, q_abs] = lists_->get_pair_list(pq_sym, pq);
 
-                    double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, p_abs, q_abs)
-                                           : fci_ints->tei_bb(p_abs, q_abs, p_abs, q_abs);
+                    const double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, p_abs, q_abs)
+                                                 : fci_ints->tei_bb(p_abs, q_abs, p_abs, q_abs);
 
-                    std::vector<StringSubstitution>& OO =
-                        alfa ? lists_->get_alfa_oo_list(pq_sym, pq, ha)
-                             : lists_->get_beta_oo_list(pq_sym, pq, hb);
+                    const auto& OO_list = alfa ? lists_->get_alfa_oo_list(pq_sym, pq, ha)
+                                               : lists_->get_beta_oo_list(pq_sym, pq, hb);
 
-                    size_t maxss = OO.size();
-                    for (size_t ss = 0; ss < maxss; ++ss)
-                        C_DAXPY(maxL, static_cast<double>(OO[ss].sign) * integral,
-                                &(C->pointer()[OO[ss].I][0]), 1, &(Y->pointer()[OO[ss].J][0]), 1);
+                    for (const auto& [sign, I, J] : OO_list) {
+                        C_DAXPY(maxL, sign * integral, C->pointer()[I], 1, Y->pointer()[J], 1);
+                    }
                 }
             }
             // Loop over (p>q) > (r>s)
@@ -228,33 +212,29 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
                     for (size_t rs = 0; rs < pq; ++rs) {
-                        const Pair& rs_pair = lists_->get_pair_list(pq_sym, rs);
-                        int r_abs = rs_pair.first;
-                        int s_abs = rs_pair.second;
-                        double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, r_abs, s_abs)
-                                               : fci_ints->tei_bb(p_abs, q_abs, r_abs, s_abs);
+                        const auto& [r_abs, s_abs] = lists_->get_pair_list(pq_sym, rs);
+                        const double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, r_abs, s_abs)
+                                                     : fci_ints->tei_bb(p_abs, q_abs, r_abs, s_abs);
 
                         {
-                            std::vector<StringSubstitution>& VVOO =
+                            const auto& VVOO_list =
                                 alfa ? lists_->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, ha)
                                      : lists_->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, hb);
-                            // TODO loop in a differen way
-                            size_t maxss = VVOO.size();
-                            for (size_t ss = 0; ss < maxss; ++ss)
-                                C_DAXPY(maxL, static_cast<double>(VVOO[ss].sign) * integral,
-                                        &(C->pointer()[VVOO[ss].I][0]), 1,
-                                        &(Y->pointer()[VVOO[ss].J][0]), 1);
-                        }
-                        {
-                            std::vector<StringSubstitution>& VVOO =
-                                alfa ? lists_->get_alfa_vvoo_list(r_abs, s_abs, p_abs, q_abs, ha)
-                                     : lists_->get_beta_vvoo_list(r_abs, s_abs, p_abs, q_abs, hb);
-                            // TODO loop in a differen way
-                            size_t maxss = VVOO.size();
-                            for (size_t ss = 0; ss < maxss; ++ss)
-                                C_DAXPY(maxL, static_cast<double>(VVOO[ss].sign) * integral,
-                                        &(C->pointer()[VVOO[ss].I][0]), 1,
-                                        &(Y->pointer()[VVOO[ss].J][0]), 1);
+                            for (const auto& [sign, I, J] : VVOO_list) {
+                                C_DAXPY(maxL, sign * integral, C->pointer()[I], 1, Y->pointer()[J],
+                                        1);
+                            }
+                            {
+                                const auto& VVOO_list =
+                                    alfa
+                                        ? lists_->get_alfa_vvoo_list(r_abs, s_abs, p_abs, q_abs, ha)
+                                        : lists_->get_beta_vvoo_list(r_abs, s_abs, p_abs, q_abs,
+                                                                     hb);
+                                for (const auto& [sign, I, J] : VVOO_list) {
+                                    C_DAXPY(maxL, sign * integral, C->pointer()[I], 1,
+                                            Y->pointer()[J], 1);
+                                }
+                            }
                         }
                     }
                 }
@@ -306,8 +286,7 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                         int s_abs = s_rel + cmopi_offset_[s_sym];
 
                         // Grab list (r,s,Ib_sym)
-                        std::vector<StringSubstitution>& vo_beta =
-                            lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
+                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
                         size_t maxSSb = vo_beta.size();
 
                         CR->zero();
@@ -316,11 +295,10 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                         // Gather cols of C into CR
                         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
                             if (maxSSb > 0) {
-                                double* c1 = &(CR->pointer()[Ia][0]); //&CR[Ia][0];
-                                double* c = &(C[Ia][0]);
+                                double* c1 = CR->pointer()[Ia];
+                                double* c = C[Ia];
                                 for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                    c1[SSb] =
-                                        c[vo_beta[SSb].I] * static_cast<double>(vo_beta[SSb].sign);
+                                    c1[SSb] = c[vo_beta[SSb].I] * vo_beta[SSb].sign;
                                 }
                             }
                         }
@@ -334,26 +312,15 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                                 for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
                                     int q_abs = q_rel + cmopi_offset_[q_sym];
                                     // Grab the integral
-                                    double integral = fci_ints->tei_ab(p_abs, r_abs, q_abs, s_abs);
+                                    const double integral =
+                                        fci_ints->tei_ab(p_abs, r_abs, q_abs, s_abs);
 
-                                    std::vector<StringSubstitution>& vo_alfa =
+                                    const auto& vo_alfa =
                                         lists_->get_alfa_vo_list(p_abs, q_abs, Ia_sym);
 
-                                    // ORIGINAL CODE
-                                    size_t maxSSa = vo_alfa.size();
-                                    for (size_t SSa = 0; SSa < maxSSa; ++SSa) {
-#if CAPRICCIO_USE_DAXPY
-                                        C_DAXPY(maxSSb,
-                                                integral * static_cast<double>(vo_alfa[SSa].sign),
-                                                &(CR->pointer()[vo_alfa[SSa].I][0]), 1,
-                                                &(CL->pointer()[vo_alfa[SSa].J][0]), 1);
-#else
-                                        double V =
-                                            integral * static_cast<double>(vo_alfa[SSa].sign);
-                                        for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                            CL[vo_alfa[SSa].J][SSb] += CR[vo_alfa[SSa].I][SSb] * V;
-                                        }
-#endif
+                                    for (const auto& [sign, I, J] : vo_alfa) {
+                                        C_DAXPY(maxSSb, integral * sign, CR->pointer()[I], 1,
+                                                CL->pointer()[J], 1);
                                     }
                                 }
                             }

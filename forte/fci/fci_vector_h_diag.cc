@@ -25,17 +25,12 @@
  *
  * @END LICENSE
  */
-#include <algorithm>
-#include <cmath>
 
-#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 
-#include "helpers/timer.h"
-#include "integrals/active_space_integrals.h"
-#include "fci_vector.h"
-#include "string_lists.h"
 #include "string_address.h"
+
+#include "fci_vector.h"
 
 namespace forte {
 
