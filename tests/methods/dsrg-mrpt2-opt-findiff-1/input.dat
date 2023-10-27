@@ -2,21 +2,23 @@
 
 import forte
 
-refEdsrg = -100.217376047838
-refRe    =    1.73424009457  # in Bohr
+refEdsrg = -100.224425668263
+refRe    =    1.748792 # bohr
 
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 0.918
+  H  1 0.918
 }
 
-set globals{
+set {
   basis                    cc-pvdz
-  reference                twocon
-  d_convergence            12
-  e_convergence            15
+  reference                rhf
+  restricted_docc          [2,0,1,1]
+  active                   [2,0,0,0]
+  d_convergence            8
+  e_convergence            13
+  maxiter                  100
   rms_disp_g_convergence   1.0e-6
   max_disp_g_convergence   2.0e-6
   rms_force_g_convergence  1.0e-8
@@ -24,25 +26,19 @@ set globals{
   max_energy_g_convergence 1.0e-10
 }
 
-set mcscf{
-  docc                     [2,0,1,1]
-  socc                     [2,0,0,0]
-  maxiter                  1000
-  level_shift              1.0
-}
-
 set forte{
-  job_type                 dsrg-mrpt2
+  active_space_solver      fci
+  correlation_solver       dsrg-mrpt2
+  ref_type                 casscf
   frozen_docc              [1,0,0,0]
   restricted_docc          [1,0,1,1]
   active                   [2,0,0,0]
   root_sym                 0
   nroot                    1
   dsrg_s                   0.5
-  active_space_solver                 cas
 }
 
-Eopt = optimize('forte_mcscf',dertype=0)
+Eopt = optimize('forte',dertype=0)
 mol  = psi4.get_active_molecule()
 bond = abs(mol.z(0) - mol.z(1))
 compare_values(refEdsrg,Eopt,10,"DSRG-MRPT2 energy at Re")

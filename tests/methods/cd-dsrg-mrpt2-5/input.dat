@@ -1,10 +1,8 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 memory 500 mb
 refmcscf =   -226.575081996603
-refdsrgpt2 = -226.883026728662060 
+refdsrgpt2 = -226.883026729743
 
 molecule mbenzyne{
   0 1
@@ -23,38 +21,36 @@ molecule mbenzyne{
 }
 
 set globals{
-   basis                   sto-3g
-   reference               twocon
-   scf_type                pk
-   cholesky_tolerance      1e-14
-   d_convergence           10
-   e_convergence           12
-}
-
-set mcscf{
-   docc                   [5, 3, 1, 1, 0, 1, 4, 4]
-   socc                   [1, 0, 0, 0, 0, 0, 1, 0]
-   maxiter                500
-#   level_shift            1.0
+  basis                   sto-3g
+  scf_type                pk
 }
 
 set forte{
-   active_space_solver    fci
-   correlation_solver     three-dsrg-mrpt2
-   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
-   active                 [1, 0, 0, 0, 0, 0, 1, 0]
-   root_sym               0
-   nroot                  1
-#   dsrgpt                 false
-   dsrg_s                 0.5
-   int_type               cholesky
-   cholesky_tolerance     1e-11
-   PRINT_DENOM2           true
+  job_type                mcscf_two_step
+  active_space_solver     fci
+  restricted_docc         [5, 3, 1, 1, 0, 1, 4, 4]
+  active                  [1, 0, 0, 0, 0, 0, 1, 0]
+  casscf_e_convergence    12
+  casscf_g_convergence    8
 }
 
-scf, wfn = energy('mcscf', return_wfn=True)
+Emcscf, wfn = energy('forte', return_wfn=True)
 compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
+
+set forte{
+  job_type               newdriver
+  active_space_solver    fci
+  correlation_solver     three-dsrg-mrpt2
+  frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
+  restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
+  active                 [1, 0, 0, 0, 0, 0, 1, 0]
+  root_sym               0
+  nroot                  1
+  dsrg_s                 0.5
+  int_type               cholesky
+  cholesky_tolerance     1e-11
+  print_denom2           true
+}
 
 energy('forte', ref_wfn = wfn)
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

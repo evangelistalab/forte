@@ -1,0 +1,14 @@
+#! Test running a computation using integrals read from a file
+
+import forte
+
+reffci = -1.134690658798176
+
+set forte {
+  active_space_solver fci
+  int_type            fcidump
+  e_convergence       12
+}
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),9, "FCI energy") #TEST

@@ -6,7 +6,7 @@ A brief description of the goals accomplished by this PR
 - [ ] Changes to compilation (if any)
 
 ## Checklist
-- [ ] Added tests of new features
+- [ ] Added/updated tests of new features and included a reference `output.ref` file
 - [ ] Removed comments in code and input files
 - [ ] Documented source code
 - [ ] Checked for redundant headers

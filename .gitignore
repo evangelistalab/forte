@@ -2,11 +2,17 @@
 *.d
 *.so
 *.pyc
+*.log
+*.dat
+*.clean
 Makefile.*
 Makefile
 timer.dat
 *~
-src/version.h
+forte/version.h
+forte.egg-info
+docs/build
+
 
 # Qt Creator project files
 *.config
@@ -14,6 +20,9 @@ src/version.h
 *.creator.user
 *.files
 *.includes
+
+forte_tests
+forte_benchmarks
 
 # All outputs and clean files in test cases
 /tests/*/output.dat
@@ -33,7 +42,13 @@ doc/doxygen/html
 doc/doxygen/latex
 docs/sphinx/_*
 
+forte.egg-info/*
+
+*.html
+*/*/*.html
+
 CMakeCache.txt
 CMakeFiles/
+forte/CMakeFiles
 cmake_install.cmake
 *.DS_Store

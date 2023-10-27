@@ -1,0 +1,77 @@
+#! Generated using commit GITCOMMIT
+ref_casscf = -109.090719613198587
+ref_udsrg2 = -109.272783048380816
+ref_rdsrg2 = -109.273402997206404
+
+import forte
+
+molecule N2{
+0 1
+N
+N 1 1.12
+}
+
+set {
+  basis                  cc-pvdz
+  reference              rhf
+  scf_type               pk
+  maxiter                300
+  e_convergence          10
+  d_convergence          8
+  docc                   [3,0,0,0,0,2,1,1]
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  mcscf_maxiter          100
+  mcscf_r_convergence    8
+  mcscf_e_convergence    10
+  mcscf_diis_start       6
+}
+
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(ref_casscf, Ecas, 9, "CASSCF energy")
+
+# fix orbital phase
+Ca = wfn.Ca().clone()
+nirrep = wfn.nirrep()
+coldim = Ca.coldim()
+rowdim = Ca.rowdim()
+for h in range(nirrep):
+    for i in range(coldim[h]):
+        v = Ca.get(h, 0, i)
+        if v < 0:
+            for j in range(rowdim[h]):
+                Ca.set(h, j, i, -1.0 * Ca.get(h, j, i))
+wfn.Ca().copy(Ca)
+
+set forte {
+  active_space_solver detci
+  correlation_solver  sa-mrdsrg
+  corr_level          ldsrg2
+  frozen_docc         [1,0,0,0,0,1,0,0]
+  restricted_docc     [1,0,0,0,0,1,0,0]
+  active              [1,0,1,1,0,1,1,1]
+  dsrg_s              0.5
+  e_convergence       6
+  r_convergence       4
+  dsrg_dump_amps      true
+}
+
+Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+
+set forte {
+  e_convergence       8
+  r_convergence       6
+  relax_ref           twice
+  dsrg_read_amps      true
+  dsrg_dump_amps      false  # don't dump to current directory for every relaxation step
+  dsrg_restart_amps   false  # always read the amps in current directory
+}
+
+Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(ref_udsrg2, variable("UNRELAXED ENERGY"), 8, "MR-LDSRG(2) unrelaxed energy")
+compare_values(ref_rdsrg2, variable("RELAXED ENERGY"), 8, "MR-LDSRG(2) relaxed energy")
+
+# remove amplitudes files
+import glob, os
+for f in glob.glob("forte.mrdsrg.*"):
+    os.remove(f)

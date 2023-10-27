@@ -32,7 +32,7 @@ set {
 
 Escf, wfnSCF = energy('scf', return_wfn=True)
 Ecasscf, wfn = energy('casscf', ref_wfn=wfnSCF, return_wfn=True)
-compare_values(refcasscf,variable("CURRENT ENERGY"),10,"PSI4 CASSCF energy")
+compare_values(refcasscf, Ecasscf, 9, "PSI4 CASSCF energy")
 
 set forte {
   job_type             casscf
@@ -40,28 +40,31 @@ set forte {
   frozen_uocc          [0,0,0,0,0,0,0,0]
   restricted_docc      [2,0,0,0,0,2,0,0]
   active               [1,0,1,1,0,1,1,1]
-  active_space_solver             cas
+  active_space_solver  detci
   casscf_max_rotation  0.2
   casscf_g_convergence 1.0e-8
   casscf_e_convergence 1.0e-10
+  r_convergence        1.0e-8
+  e_convergence        1.0e-10
   casscf_diis_start    5
   casscf_diis_freq     4
 }
 Ecasscf, wfn = energy('forte', ref_wfn=wfnSCF, return_wfn=True)
-compare_values(refcasscf,variable("CURRENT ENERGY"),10,"FORTE CASSCF energy")
+compare_values(refcasscf, Ecasscf, 9, "FORTE CASSCF energy")
 
 set forte {
-  job_type           dsrg-mrpt2
-  frozen_docc        [1,0,0,0,0,1,0,0]
-  frozen_uocc        [0,0,0,0,0,0,0,0]
-  restricted_docc    [1,0,0,0,0,1,0,0]
-  active             [1,0,1,1,0,1,1,1]
-  root_sym           0
-  nroot              1
-  dsrg_s             0.5
-  relax_ref          once
-  active_space_solver cas
+  job_type            newdriver
+  active_space_solver detci
+  correlation_solver  dsrg-mrpt2
+  frozen_docc         [1,0,0,0,0,1,0,0]
+  frozen_uocc         [0,0,0,0,0,0,0,0]
+  restricted_docc     [1,0,0,0,0,1,0,0]
+  active              [1,0,1,1,0,1,1,1]
+  root_sym            0
+  nroot               1
+  dsrg_s              0.5
+  relax_ref           once
 }
 
 Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(refpt2_relax,variable("CURRENT ENERGY"),8,"DSRG-MRPT2 relaxed energy")
+compare_values(refpt2_relax, Eforte, 8, "DSRG-MRPT2 relaxed energy")

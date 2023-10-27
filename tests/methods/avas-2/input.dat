@@ -26,7 +26,7 @@ set forte {
   subspace ["C(2px)","O(2px)"]
   avas true
   avas_diagonalize true
-  avas_sigma 0.99
+  avas_sigma 0.98
   active_space_solver fci
   print 1
   restricted_docc [7]
@@ -36,8 +36,8 @@ set forte {
   ms 0.0
 }
 
-energy('scf')
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
 
-energy('forte')
-compare_values(reffci, variable("CURRENT ENERGY"),9, "FCI energy") #TEST
+energy('forte', ref_wfn=wfn)
+compare_values(reffci, variable("CURRENT ENERGY"), 9, "FCI energy")

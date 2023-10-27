@@ -1,0 +1,41 @@
+# Test read_orbitals keyword in C1 symmetry with user provided ref_wfn
+
+import forte
+
+refscf     =  -99.87285247449552
+refdsrgpt2 = -100.10085804081345
+
+memory 500 mb
+
+molecule HF{
+0 1
+F
+H  1 R
+R = 1.50
+symmetry c1
+}
+
+set {
+  basis                cc-pvdz
+  scf_type             pk
+  d_convergence        8
+  e_convergence        12
+}
+
+set forte{
+  active_space_solver  detci
+  correlation_solver   dsrg-mrpt2
+  frozen_docc          [1]
+  restricted_docc      [3]
+  active               [2]
+  root_sym             0
+  nroot                1
+  dsrg_s               1.0
+  read_orbitals        true
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 10, "SCF energy")
+
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt2, variable("CURRENT ENERGY"), 10, "DSRG-MRPT2 energy")

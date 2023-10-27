@@ -71,20 +71,20 @@ set globals{
 }
 
 set forte{
-  active_space_solver     cas    
-  correlation_solver      dsrg-mrpt3
-  frozen_docc        [3,0,0,0]
-  restricted_docc    [0,0,1,1]
-  active             [2,0,0,0]
-  root_sym           0
-  nroot              2
-  root               0
-  dsrg_s             1.0
-  maxiter            50
-  relax_ref          once
-  e_convergence      12
-  avg_state          [[0,1,2]]
-  dsrg_multi_state   sa_full
+  active_space_solver    detci
+  correlation_solver     dsrg-mrpt3
+  frozen_docc            [3,0,0,0]
+  restricted_docc        [0,0,1,1]
+  active                 [2,0,0,0]
+  root_sym               0
+  nroot                  2
+  root                   0
+  dsrg_s                 1.0
+  maxiter                50
+  relax_ref              once
+  e_convergence          12
+  avg_state              [[0,1,2]]
+  dsrg_multi_state       sa_full
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)

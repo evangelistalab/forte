@@ -1,0 +1,4023 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.8a1.dev5 
+
+                         Git: Rev {master} 4d94910 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Thursday, 02 February 2023 02:34PM
+
+    Process ID: 43482
+    Host:       Yorks-Mac.local
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+# GASSCF-DSRG-MRPT2 for core-excited singlet A1 state of H2O
+# at most one electron occupies the core orbital
+
+import forte
+
+refscf     = -76.0172965561
+refgasscf  = -56.291988402563831
+refdsrg    = -56.462802951195542
+refdsrg_sa = -56.462938181921245
+
+memory 1000mb
+molecule h2o{
+   O
+   H  1 1.00
+   H  1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+  scf_type pk
+  reference rhf
+}
+
+set scf_type direct
+set forte {
+  active_space_solver detci
+  ms 0.0
+  multiplicity 1
+  root_sym 0
+  charge 0
+  active_ref_type gas
+  GAS1 [1,0,0,0]
+  GAS2 [3,0,1,2]
+  GAS1MAX [1]
+  GAS1MIN [0]
+  job_type mcscf_two_step
+  casscf_ci_solver detci
+  casscf_maxiter 100
+  casscf_e_convergence 10
+  casscf_g_convergence 8
+  casscf_micro_maxiter 4
+  casscf_active_frozen_orbital [0]
+}
+
+escf, wfn = energy('scf', return_wfn=True)
+egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refgasscf, egasscf, 9, "GASSCF energy")
+
+# In spin-integrated implementation, the zeroth-order Hamiltonian is the
+# diagonal elements of the Fock matrix. Internal excitations are ignored
+# by default. As such, the off-digonal blocks between GAS spaces in Fock
+# matrix are ignored.
+set forte {
+  job_type newdriver
+  correlation_solver dsrg-mrpt2
+  dsrg_s 1.0
+}
+edsrg = energy('forte', ref_wfn=wfn_gasscf)
+compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 (SI) energy")
+
+# In spin-adapted implementation, the zeroth-order Hamiltonian is the
+# core, active, virtual blocks of the Fock matrix. Internal excitations
+# are ignored by default as well. In this way, the off-diagonal blocks
+# between GAS spaces in Fock matrix are considered as zeroth order.
+set forte {
+  correlation_solver sa-mrdsrg
+  corr_level pt2
+}
+edsrg_sa = energy('forte', ref_wfn=wfn_gasscf)
+compare_values(refdsrg_sa, edsrg_sa, 9, "GASSCF-DSRG-MRPT2 (SA) energy")
+--------------------------------------------------------------------------
+
+  Memory set to 953.674 MiB by Python driver.
+
+Scratch directory: /Users/york/scratch/psi4/
+
+*** tstart() called on Yorks-Mac.local
+*** at Thu Feb  2 14:34:24 2023
+
+   => Loading Basis Set <=
+
+    Name: 6-31G**
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry O          line   149 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31gss.gbs 
+    atoms 2-3 entry H          line    44 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31gss.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    953 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C2v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         O            0.000000000000     0.000000000000    -0.069592187400    15.994914619570
+         H            0.000000000000    -0.783151105291     0.552239257834     1.007825032230
+         H            0.000000000000     0.783151105291     0.552239257834     1.007825032230
+
+  Running in c2v symmetry.
+
+  Rotational constants: A =     24.35462  B =     13.63610  C =      8.74166 [cm^-1]
+  Rotational constants: A = 730133.21529  B = 408800.04239  C = 262068.46393 [MHz]
+  Nuclear repulsion =    8.804686653247025
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 10
+  Nalpha       = 5
+  Nbeta        = 5
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DIRECT.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is GWH.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-10
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: 6-31G**
+    Blend: 6-31G**
+    Number of shells: 12
+    Number of basis functions: 25
+    Number of Cartesian functions: 25
+    Spherical Harmonics?: false
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (6-31G** AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1   entry O          line   221 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2-3 entry H          line    51 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  Starting with a DF guess...
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.001 GiB; user supplied 0.698 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               715
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (6-31G** AUX)
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 42
+    Number of basis functions: 131
+    Number of Cartesian functions: 131
+    Spherical Harmonics?: false
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 2.2571686435E-02.
+  Reciprocal condition number of the overlap matrix is 5.1514795888E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Generalized Wolfsberg-Helmholtz applied to core Hamiltonian.
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     A1        12      12       3       3       3       0
+     A2         2       2       0       0       0       0
+     B1         4       4       1       1       1       0
+     B2         7       7       1       1       1       0
+   -------------------------------------------------------
+    Total      25      25       5       5       5       0
+   -------------------------------------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter   1:   -74.69502194332146   -7.46950e+01   1.19380e-01 ADIIS
+   @DF-RHF iter   2:   -75.63883488360644   -9.43813e-01   7.21524e-02 ADIIS/DIIS
+   @DF-RHF iter   3:   -75.93342927300104   -2.94594e-01   3.35851e-02 ADIIS/DIIS
+   @DF-RHF iter   4:   -76.01430516301708   -8.08759e-02   6.34354e-03 ADIIS/DIIS
+   @DF-RHF iter   5:   -76.01724291942227   -2.93776e-03   2.66323e-04 ADIIS/DIIS
+   @DF-RHF iter   6:   -76.01725899680233   -1.60774e-05   5.79129e-05 DIIS
+   @DF-RHF iter   7:   -76.01725995997279   -9.63170e-07   9.69416e-06 DIIS
+   @DF-RHF iter   8:   -76.01725998251541   -2.25426e-08   2.06478e-06 DIIS
+   @DF-RHF iter   9:   -76.01725998413457   -1.61916e-09   5.25388e-07 DIIS
+   @DF-RHF iter  10:   -76.01725998416646   -3.18892e-11   3.67583e-08 DIIS
+   @DF-RHF iter  11:   -76.01725998416669   -2.27374e-13   3.41540e-09 DIIS
+   @DF-RHF iter  12:   -76.01725998416669    0.00000e+00   5.26149e-10 DIIS
+   @DF-RHF iter  13:   -76.01725998416667    1.42109e-14   4.86460e-11 DIIS
+
+  DF guess converged.
+
+  ==> DirectJK: Integral-Direct J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Integrals threads:           1
+    Screening Type:           CSAM
+    Screening Cutoff:        1E-12
+    Incremental Fock:           No
+
+   @RHF iter  14:   -76.01729654450091   -7.60173e+01   1.19915e-05 DIIS
+   @RHF iter  15:   -76.01729655577873   -1.12778e-08   1.64017e-06 DIIS
+   @RHF iter  16:   -76.01729655606725   -2.88523e-10   4.89637e-07 DIIS
+   @RHF iter  17:   -76.01729655608827   -2.10179e-11   1.68506e-07 DIIS
+   @RHF iter  18:   -76.01729655609128   -3.01270e-12   4.58642e-08 DIIS
+   @RHF iter  19:   -76.01729655609149   -2.13163e-13   5.21058e-09 DIIS
+   @RHF iter  20:   -76.01729655609151   -1.42109e-14   7.84807e-10 DIIS
+   @RHF iter  21:   -76.01729655609149    1.42109e-14   1.27027e-10 DIIS
+   @RHF iter  22:   -76.01729655609148    1.42109e-14   2.82297e-11 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -20.569000     2A1    -1.320609     1B2    -0.678724  
+       3A1    -0.563930     1B1    -0.495004  
+
+    Virtual:                                                              
+
+       4A1     0.202466     2B2     0.292719     3B2     0.981164  
+       5A1     1.056318     6A1     1.129179     2B1     1.168639  
+       4B2     1.294985     7A1     1.413596     1A2     1.802875  
+       8A1     1.806916     3B1     1.918871     9A1     2.513249  
+       5B2     2.537822     6B2     2.713577     2A2     2.921065  
+       4B1     2.947486    10A1     3.291755    11A1     3.620730  
+       7B2     3.874917    12A1     4.077740  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     3,    0,    1,    1 ]
+    NA   [     3,    0,    1,    1 ]
+    NB   [     3,    0,    1,    1 ]
+
+  @RHF Final Energy:   -76.01729655609148
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              8.8046866532470247
+    One-Electron Energy =                -122.3894315645717228
+    Two-Electron Energy =                  37.5674483552332035
+    Total Energy =                        -76.0172965560914804
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.1532271            1.0350805            0.8818534
+ Magnitude           :                                                    0.8818534
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on Yorks-Mac.local at Thu Feb  2 14:34:25 2023
+Module time:
+	user time   =       1.07 seconds =       0.02 minutes
+	system time =       0.06 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       1.07 seconds =       0.02 minutes
+	system time =       0.06 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: upt2-1rdm - git commit: d85bd947
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space GAS1
+  Read options for space GAS2
+  Read options for space GAS1
+  Read options for space GAS2
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0
+    GAS1                1     0     0     0     1
+    GAS2                3     0     1     2     6
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     8     2     3     5    18
+    FROZEN_UOCC         0     0     0     0     0
+    Total              12     2     4     7    25
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: 6-31G**
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry O          line   149 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31gss.gbs 
+    atoms 2-3 entry H          line    44 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31gss.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1   entry O          line    81 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: 6-31G**
+    Blend: 6-31G**
+    Number of shells: 12
+    Number of basis functions: 25
+    Number of Cartesian functions: 25
+    Spherical Harmonics?: false
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:              12
+      Number of primitives:             25
+      Number of atomic orbitals:        25
+      Number of basis functions:        25
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 105950 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              762
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         25
+  Number of correlated molecular orbitals:              25
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Skip integral allocation and transformation for AO-driven CASSCF.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> Calculation Information <==
+
+    Integral type                               CONVENTIONAL
+    CI solver type                                     DETCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-10
+    Gradient convergence                           1.000e-08
+    Max value for rotation                         2.000e-01
+    Printing level                                         1
+    Max number of macro iterations                       100
+    Max number of micro iterations                         4
+    Min number of micro iterations                         4
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+               GAS1 /            GAS2      0      0      0      0
+             ACTIVE / RESTRICTED_DOCC      0      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     24      0      3     10
+    RESTRICTED_UOCC / RESTRICTED_DOCC      0      0      0      0
+    -------------------------------------------------------------
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.419e-04
+         2              27  1.806e-04
+         3              14  1.457e-04
+    ---------------------------------
+    Total:              68  6.398e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 4.698e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.574e-04 seconds
+        β          4.403e-04 seconds
+  Time spent building 1-rdm: 1.848e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6580403739
+     b22a  2 20    0.6580403739
+     b22a  2 ab    0.1614177704
+     a22b  2 ba    0.1614177704
+     b22a  2 ba    0.1366517340
+     a22b  2 ab    0.1366517340
+     a2b2  2 20   -0.1074224714
+     b2a2  2 20   -0.1074224714
+     ab22  2 20   -0.0879376122
+     ba22  2 20   -0.0879376122
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99999597    2A1   1.98327666    3A1   1.97442492    1B2   1.90417155
+        4A1   1.04115993    1A1   0.99995265    2B2   0.09701833
+
+    Total Energy:  -55.841944166822877
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -55.841944166823   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.679e-04 seconds
+        β          4.447e-04 seconds
+  Time spent building 1-rdm: 1.899e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.09659764     0.09659764
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.516e-04 seconds
+        β          6.863e-04 seconds
+  Time spent building 1-rdm: 1.867e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -6.91245284     0.00000000     0.00000000    -7.03120450    -0.00000000    -7.54238257
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.440e-04 seconds
+        β          4.831e-04 seconds
+  Time spent building 1-rdm: 1.848e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.453e-04 seconds
+        ββ         7.506e-04 seconds
+        αβ         1.874e-03 seconds
+  Time spent building 2-rdm: 3.906e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.136583224777517; g_norm = 1.747990e+00; step = 2.546e-01
+    L-BFGS Iter:  2; fx =  -56.266207216466455; g_norm = 1.959122e-01; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.267919054294680; g_norm = 1.344003e-01; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.268701851271175; g_norm = 1.344003e-01; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 1 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -55.841944166823 (-5.5842e+01)    -56.268701851271 (-5.6269e+01)   -4.2676e-01    5.2272e-01    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.253e-04
+         2              27  1.851e-04
+         3              14  2.222e-04
+    ---------------------------------
+    Total:              68  6.798e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess:
+  DETCI Error: Failed to open wave function file! Failed!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.051e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.558e-04 seconds
+        β          4.496e-04 seconds
+  Time spent building 1-rdm: 1.891e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20   -0.6684022331
+     b22a  2 20   -0.6684022331
+     b22a  2 ab   -0.1493607630
+     a22b  2 ba   -0.1493607630
+     a2b2  2 20    0.0999273190
+     b2a2  2 20    0.0999273190
+     a22b  2 ab   -0.0918734293
+     b22a  2 ba   -0.0918734293
+     ab22  2 20    0.0801629184
+     ba22  2 20    0.0801629184
+     b22b  2 aa    0.0574873337
+     a22a  2 bb    0.0574873337
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99994278    2A1   1.98611151    3A1   1.97662855    1B2   1.92640474
+        4A1   1.03319348    1A1   0.99994308    2B2   0.07777587
+
+    Total Energy:  -56.282849262159907
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.282849262160   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.573e-04 seconds
+        β          4.976e-04 seconds
+  Time spent building 1-rdm: 2.308e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.07150681     0.07150681
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.524e-04 seconds
+        β          4.522e-04 seconds
+  Time spent building 1-rdm: 1.894e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.71779133     0.00000000     0.00000000    -5.80519373    -0.00000000    -6.20335367
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.791e-04 seconds
+        β          5.558e-04 seconds
+  Time spent building 1-rdm: 2.167e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         1.002e-03 seconds
+        ββ         7.541e-04 seconds
+        αβ         1.874e-03 seconds
+  Time spent building 2-rdm: 3.922e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.286183023842113; g_norm = 1.636205e-01; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.287967255288024; g_norm = 8.709260e-02; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.290381316548078; g_norm = 3.779266e-02; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.290765502845069; g_norm = 3.779266e-02; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 2 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.282849262160 (-4.4091e-01)    -56.290765502845 (-2.2064e-02)   -7.9162e-03    2.2502e-02    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.209e-04
+         2              27  1.844e-04
+         3              14  1.492e-04
+    ---------------------------------
+    Total:              68  6.011e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.220e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.547e-04 seconds
+        β          4.501e-04 seconds
+  Time spent building 1-rdm: 1.902e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     b22a  2 20    0.6692410178
+     a22b  2 20    0.6692410178
+     b22a  2 ab    0.1453485394
+     a22b  2 ba    0.1453485394
+     a2b2  2 20   -0.0991942639
+     b2a2  2 20   -0.0991942639
+     a22b  2 ab    0.0880931762
+     b22a  2 ba    0.0880931762
+     ab22  2 20   -0.0799138895
+     ba22  2 20   -0.0799138895
+     b22b  2 aa   -0.0572553632
+     a22a  2 bb   -0.0572553632
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99989490    2A1   1.98593775    3A1   1.97708147    1B2   1.92577177
+        4A1   1.03364182    1A1   0.99994023    2B2   0.07773205
+
+    Total Energy:  -56.291711185520221
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291711185520   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.527e-04 seconds
+        β          4.527e-04 seconds
+  Time spent building 1-rdm: 1.902e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.05292826     0.05292826
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.518e-04 seconds
+        β          4.499e-04 seconds
+  Time spent building 1-rdm: 1.909e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.62020388     0.00000000     0.00000000    -5.69538076     0.00000000    -6.07149149
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.519e-04 seconds
+        β          4.508e-04 seconds
+  Time spent building 1-rdm: 1.890e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.472e-04 seconds
+        ββ         7.511e-04 seconds
+        αβ         1.915e-03 seconds
+  Time spent building 2-rdm: 4.048e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291886816220710; g_norm = 2.719537e-02; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291929170795285; g_norm = 1.006051e-02; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291939471984449; g_norm = 5.154425e-03; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291949241823829; g_norm = 5.154425e-03; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 3 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291711185520 (-8.8619e-03)    -56.291949241824 (-1.1837e-03)   -2.3806e-04    6.0365e-03    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.163e-04
+         2              27  1.827e-04
+         3              14  1.455e-04
+    ---------------------------------
+    Total:              68  5.893e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.008e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.472e-04 seconds
+        β          4.415e-04 seconds
+  Time spent building 1-rdm: 1.851e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20   -0.6700577553
+     b22a  2 20   -0.6700577553
+     b22a  2 ab   -0.1430801480
+     a22b  2 ba   -0.1430801480
+     a2b2  2 20    0.0989067806
+     b2a2  2 20    0.0989067806
+     a22b  2 ab   -0.0865560977
+     b22a  2 ba   -0.0865560977
+     ab22  2 20    0.0796197443
+     ba22  2 20    0.0796197443
+     b22b  2 aa    0.0565240503
+     a22a  2 bb    0.0565240503
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988872    2A1   1.98605027    3A1   1.97734516    1B2   1.92745555
+        4A1   1.03349752    1A1   0.99994004    2B2   0.07582273
+
+    Total Energy:  -56.291976731381048
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291976731381   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.424e-04 seconds
+        β          4.894e-04 seconds
+  Time spent building 1-rdm: 2.654e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000    -0.00000000    -0.06323061     0.06323061
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.735e-04 seconds
+        β          4.619e-04 seconds
+  Time spent building 1-rdm: 1.948e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61510983     0.00000000     0.00000000    -5.70113438    -0.00000000    -6.07666549
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.950e-04 seconds
+        β          4.849e-04 seconds
+  Time spent building 1-rdm: 2.036e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         8.592e-04 seconds
+        ββ         8.609e-04 seconds
+        αβ         2.268e-03 seconds
+  Time spent building 2-rdm: 4.837e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291984428988279; g_norm = 5.635332e-03; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291986005126248; g_norm = 1.307107e-03; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291986198201599; g_norm = 6.642899e-04; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291986422328101; g_norm = 6.642899e-04; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 4 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291976731381 (-2.6555e-04)    -56.291986422328 (-3.7181e-05)   -9.6909e-06    7.5576e-04    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  3.002e-04
+         2              27  2.519e-04
+         3              14  2.035e-04
+    ---------------------------------
+    Total:              68  8.206e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 6.792e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          6.030e-04 seconds
+        β          6.280e-04 seconds
+  Time spent building 1-rdm: 2.490e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20   -0.6702383337
+     b22a  2 20   -0.6702383337
+     b22a  2 ab   -0.1425702264
+     a22b  2 ba   -0.1425702264
+     a2b2  2 20    0.0988338859
+     b2a2  2 20    0.0988338859
+     a22b  2 ab   -0.0860998699
+     b22a  2 ba   -0.0860998699
+     ab22  2 20    0.0795724786
+     ba22  2 20    0.0795724786
+     b22b  2 aa    0.0564703565
+     a22a  2 bb    0.0564703565
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988756    2A1   1.98606658    3A1   1.97739709    1B2   1.92783445
+        4A1   1.03346759    1A1   0.99993989    2B2   0.07540685
+
+    Total Energy:  -56.291987879545125
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291987879545   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          6.045e-04 seconds
+        β          5.825e-04 seconds
+  Time spent building 1-rdm: 2.381e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.06395988     0.06395988
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          5.650e-04 seconds
+        β          5.635e-04 seconds
+  Time spent building 1-rdm: 2.348e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61083849     0.00000000     0.00000000    -5.70032629     0.00000000    -6.07220356
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          5.626e-04 seconds
+        β          5.594e-04 seconds
+  Time spent building 1-rdm: 2.426e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         9.300e-04 seconds
+        ββ         9.297e-04 seconds
+        αβ         2.408e-03 seconds
+  Time spent building 2-rdm: 4.887e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988235413541; g_norm = 1.087154e-03; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988294735539; g_norm = 1.145701e-04; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988296589977; g_norm = 8.101327e-05; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988297914855; g_norm = 8.101327e-05; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 5 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291987879545 (-1.1148e-05)    -56.291988297915 (-1.8756e-06)   -4.1837e-07    1.0027e-04    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.307e-04
+         2              27  1.899e-04
+         3              14  1.533e-04
+    ---------------------------------
+    Total:              68  6.420e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.157e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.862e-04 seconds
+        β          4.618e-04 seconds
+  Time spent building 1-rdm: 1.949e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702808680
+     b22a  2 20    0.6702808680
+     b22a  2 ab    0.1424502383
+     a22b  2 ba    0.1424502383
+     a2b2  2 20   -0.0988149659
+     b2a2  2 20   -0.0988149659
+     a22b  2 ab    0.0859875897
+     b22a  2 ba    0.0859875897
+     ab22  2 20   -0.0795601099
+     ba22  2 20   -0.0795601099
+     b22b  2 aa   -0.0564626487
+     a22a  2 bb   -0.0564626487
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988735    2A1   1.98607086    3A1   1.97740862    1B2   1.92792367
+        4A1   1.03345826    1A1   0.99993988    2B2   0.07531136
+
+    Total Energy:  -56.291988377879782
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988377880   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.718e-04 seconds
+        β          4.642e-04 seconds
+  Time spent building 1-rdm: 1.955e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000    -0.00000000    -0.06431424     0.06431424
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          5.097e-04 seconds
+        β          4.620e-04 seconds
+  Time spent building 1-rdm: 1.952e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61032905     0.00000000     0.00000000    -5.70062525     0.00000000    -6.07204836
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.639e-04 seconds
+        β          4.614e-04 seconds
+  Time spent building 1-rdm: 1.936e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.665e-04 seconds
+        ββ         7.624e-04 seconds
+        αβ         1.923e-03 seconds
+  Time spent building 2-rdm: 3.948e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988393680796; g_norm = 2.117100e-04; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988396222521; g_norm = 2.501183e-05; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988396435407; g_norm = 2.939842e-05; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988396710920; g_norm = 2.939842e-05; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 6 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988377880 (-4.9833e-07)    -56.291988396711 (-9.8796e-08)   -1.8831e-08    1.2016e-05    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.415e-04
+         2              27  1.853e-04
+         3              14  1.543e-04
+    ---------------------------------
+    Total:              68  6.292e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.260e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.645e-04 seconds
+        β          4.766e-04 seconds
+  Time spent building 1-rdm: 1.900e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702894304
+     b22a  2 20    0.6702894304
+     b22a  2 ab    0.1424258762
+     a22b  2 ba    0.1424258762
+     a2b2  2 20   -0.0988106479
+     b2a2  2 20   -0.0988106479
+     b22a  2 ba    0.0859589930
+     a22b  2 ab    0.0859589930
+     ab22  2 20   -0.0795582759
+     ba22  2 20   -0.0795582759
+     b22b  2 aa   -0.0564668832
+     a22a  2 bb   -0.0564668832
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988730    2A1   1.98607143    3A1   1.97741080    1B2   1.92794138
+        4A1   1.03345640    1A1   0.99993987    2B2   0.07529282
+
+    Total Energy:  -56.291988400772048
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988400772   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.561e-04 seconds
+        β          4.740e-04 seconds
+  Time spent building 1-rdm: 1.922e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.06435176     0.06435176
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.547e-04 seconds
+        β          5.220e-04 seconds
+  Time spent building 1-rdm: 1.905e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61017709     0.00000000     0.00000000    -5.70069979    -0.00000000    -6.07191413
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.563e-04 seconds
+        β          4.743e-04 seconds
+  Time spent building 1-rdm: 1.887e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.753e-04 seconds
+        ββ         7.729e-04 seconds
+        αβ         1.916e-03 seconds
+  Time spent building 2-rdm: 3.859e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988401753436; g_norm = 4.567380e-05; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988401941822; g_norm = 1.533880e-05; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988402011292; g_norm = 1.763345e-05; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988402084741; g_norm = 1.763345e-05; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 7 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988400772 (-2.2892e-08)    -56.291988402085 (-5.3738e-09)   -1.3127e-09    3.3293e-06    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.215e-04
+         2              27  2.042e-04
+         3              14  1.499e-04
+    ---------------------------------
+    Total:              68  6.231e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.036e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.773e-04 seconds
+        β          4.535e-04 seconds
+  Time spent building 1-rdm: 1.901e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702913329
+     b22a  2 20    0.6702913329
+     b22a  2 ab    0.1424203166
+     a22b  2 ba    0.1424203166
+     a2b2  2 20   -0.0988095920
+     b2a2  2 20   -0.0988095920
+     a22b  2 ab    0.0859506913
+     b22a  2 ba    0.0859506913
+     ab22  2 20   -0.0795579750
+     ba22  2 20   -0.0795579750
+     b22b  2 aa   -0.0564696253
+     a22a  2 bb   -0.0564696253
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.98607149    3A1   1.97741112    1B2   1.92794528
+        4A1   1.03345594    1A1   0.99993987    2B2   0.07528900
+
+    Total Energy:  -56.291988402380490
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402380   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.552e-04 seconds
+        β          4.726e-04 seconds
+  Time spent building 1-rdm: 1.912e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000    -0.00000000    -0.06436647     0.06436647
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.771e-04 seconds
+        β          4.566e-04 seconds
+  Time spent building 1-rdm: 1.909e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61014801     0.00000000     0.00000000    -5.70073260    -0.00000000    -6.07189832
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.538e-04 seconds
+        β          4.506e-04 seconds
+  Time spent building 1-rdm: 1.895e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.476e-04 seconds
+        ββ         8.016e-04 seconds
+        αβ         1.868e-03 seconds
+  Time spent building 2-rdm: 3.845e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988402475425; g_norm = 1.495597e-05; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988402497289; g_norm = 5.814487e-06; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988402507180; g_norm = 6.583835e-06; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988402515891; g_norm = 6.583835e-06; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 8 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988402380 (-1.6084e-09)    -56.291988402516 (-4.3115e-10)   -1.3540e-10    1.8550e-06    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.217e-04
+         2              27  1.847e-04
+         3              14  2.434e-04
+    ---------------------------------
+    Total:              68  7.692e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 4.921e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.563e-04 seconds
+        β          4.573e-04 seconds
+  Time spent building 1-rdm: 1.886e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702918998
+     b22a  2 20    0.6702918998
+     b22a  2 ab    0.1424186439
+     a22b  2 ba    0.1424186439
+     a2b2  2 20   -0.0988092283
+     b2a2  2 20   -0.0988092283
+     a22b  2 ab    0.0859479405
+     b22a  2 ba    0.0859479405
+     ab22  2 20   -0.0795578892
+     ba22  2 20   -0.0795578892
+     b22b  2 aa   -0.0564707034
+     a22a  2 bb   -0.0564707034
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.98607150    3A1   1.97741120    1B2   1.92794642
+        4A1   1.03345578    1A1   0.99993987    2B2   0.07528794
+
+    Total Energy:  -56.291988402547780
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402548   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.528e-04 seconds
+        β          4.506e-04 seconds
+  Time spent building 1-rdm: 1.896e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.06437209     0.06437209
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.511e-04 seconds
+        β          4.521e-04 seconds
+  Time spent building 1-rdm: 1.906e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013686     0.00000000     0.00000000    -5.70074111    -0.00000000    -6.07189092
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.528e-04 seconds
+        β          4.509e-04 seconds
+  Time spent building 1-rdm: 1.891e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.527e-04 seconds
+        ββ         7.477e-04 seconds
+        αβ         1.870e-03 seconds
+  Time spent building 2-rdm: 3.837e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988402557990; g_norm = 4.878973e-06; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988402560598; g_norm = 2.135412e-06; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988402562062; g_norm = 2.447306e-06; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988402563135; g_norm = 2.447306e-06; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 9 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988402548 (-1.6729e-10)    -56.291988402563 (-4.7244e-11)   -1.5355e-11    6.8310e-07    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.222e-04
+         2              27  1.855e-04
+         3              14  1.497e-04
+    ---------------------------------
+    Total:              68  6.044e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.091e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.574e-04 seconds
+        β          4.998e-04 seconds
+  Time spent building 1-rdm: 1.895e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702920789
+     b22a  2 20    0.6702920789
+     b22a  2 ab    0.1424181126
+     a22b  2 ba    0.1424181126
+     a2b2  2 20   -0.0988091073
+     b2a2  2 20   -0.0988091073
+     a22b  2 ab    0.0859470205
+     b22a  2 ba    0.0859470205
+     ab22  2 20   -0.0795578591
+     ba22  2 20   -0.0795578591
+     b22b  2 aa   -0.0564710922
+     a22a  2 bb   -0.0564710922
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.98607150    3A1   1.97741122    1B2   1.92794678
+        4A1   1.03345572    1A1   0.99993987    2B2   0.07528762
+
+    Total Energy:  -56.291988402566481
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402566   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.579e-04 seconds
+        β          6.119e-04 seconds
+  Time spent building 1-rdm: 2.143e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000    -0.00000000    -0.06437435     0.06437435
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.767e-04 seconds
+        β          4.545e-04 seconds
+  Time spent building 1-rdm: 2.177e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013351     0.00000000     0.00000000    -5.70074415    -0.00000000    -6.07188932
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.721e-04 seconds
+        β          4.509e-04 seconds
+  Time spent building 1-rdm: 1.891e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.563e-04 seconds
+        ββ         7.695e-04 seconds
+        αβ         1.906e-03 seconds
+  Time spent building 2-rdm: 3.862e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988402567746; g_norm = 1.652982e-06; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988402568073; g_norm = 7.413286e-07; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988402568272; g_norm = 8.438661e-07; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988402568364; g_norm = 8.438661e-07; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 10 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988402566 (-1.8701e-11)    -56.291988402568 (-5.2296e-12)   -1.8829e-12    2.6379e-07    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.209e-04
+         2              27  1.841e-04
+         3              14  1.484e-04
+    ---------------------------------
+    Total:              68  5.990e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 4.906e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.553e-04 seconds
+        β          4.502e-04 seconds
+  Time spent building 1-rdm: 1.898e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702921376
+     b22a  2 20    0.6702921376
+     b22a  2 ab    0.1424179378
+     a22b  2 ba    0.1424179378
+     a2b2  2 20   -0.0988090657
+     b2a2  2 20   -0.0988090657
+     a22b  2 ab    0.0859467075
+     b22a  2 ba    0.0859467075
+     ab22  2 20   -0.0795578499
+     ba22  2 20   -0.0795578499
+     b22b  2 aa   -0.0564712303
+     a22a  2 bb   -0.0564712303
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.98607150    3A1   1.97741122    1B2   1.92794690
+        4A1   1.03345570    1A1   0.99993987    2B2   0.07528751
+
+    Total Energy:  -56.291988402568684
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402569   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.992e-04 seconds
+        β          4.515e-04 seconds
+  Time spent building 1-rdm: 1.891e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.06437510     0.06437510
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.522e-04 seconds
+        β          4.508e-04 seconds
+  Time spent building 1-rdm: 1.893e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013229     0.00000000     0.00000000    -5.70074510     0.00000000    -6.07188860
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.521e-04 seconds
+        β          4.500e-04 seconds
+  Time spent building 1-rdm: 1.888e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.496e-04 seconds
+        ββ         7.440e-04 seconds
+        αβ         1.861e-03 seconds
+  Time spent building 2-rdm: 3.884e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988402568848; g_norm = 5.537580e-07; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988402568897; g_norm = 2.575322e-07; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988402568911; g_norm = 2.934239e-07; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988402568933; g_norm = 2.934239e-07; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 11 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988402569 (-2.2027e-12)    -56.291988402569 (-5.6843e-13)   -2.4869e-13    9.0520e-08    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.211e-04
+         2              27  1.842e-04
+         3              14  1.489e-04
+    ---------------------------------
+    Total:              68  6.000e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 4.936e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.572e-04 seconds
+        β          4.511e-04 seconds
+  Time spent building 1-rdm: 1.895e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702921572
+     b22a  2 20    0.6702921572
+     b22a  2 ab    0.1424178795
+     a22b  2 ba    0.1424178795
+     a2b2  2 20   -0.0988090516
+     b2a2  2 20   -0.0988090516
+     a22b  2 ab    0.0859466018
+     b22a  2 ba    0.0859466018
+     ab22  2 20   -0.0795578466
+     ba22  2 20   -0.0795578466
+     b22b  2 aa   -0.0564712777
+     a22a  2 bb   -0.0564712777
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.98607150    3A1   1.97741122    1B2   1.92794694
+        4A1   1.03345570    1A1   0.99993987    2B2   0.07528748
+
+    Total Energy:  -56.291988402568926
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402569   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.532e-04 seconds
+        β          4.522e-04 seconds
+  Time spent building 1-rdm: 1.889e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.06437537     0.06437537
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.522e-04 seconds
+        β          4.512e-04 seconds
+  Time spent building 1-rdm: 1.894e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013190     0.00000000     0.00000000    -5.70074543    -0.00000000    -6.07188841
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.529e-04 seconds
+        β          4.515e-04 seconds
+  Time spent building 1-rdm: 1.895e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.515e-04 seconds
+        ββ         7.465e-04 seconds
+        αβ         2.040e-03 seconds
+  Time spent building 2-rdm: 3.877e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988402569061; g_norm = 1.877031e-07; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988402569061; g_norm = 8.720446e-08; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988402569061; g_norm = 9.895273e-08; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988402569068; g_norm = 9.895273e-08; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 12 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988402569 (-2.4158e-13)    -56.291988402569 (-1.3500e-13)   -1.4211e-13    3.1973e-08    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.220e-04
+         2              27  1.848e-04
+         3              14  1.493e-04
+    ---------------------------------
+    Total:              68  6.025e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.415e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.550e-04 seconds
+        β          4.701e-04 seconds
+  Time spent building 1-rdm: 1.895e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702921637
+     b22a  2 20    0.6702921637
+     b22a  2 ab    0.1424178599
+     a22b  2 ba    0.1424178599
+     a2b2  2 20   -0.0988090469
+     b2a2  2 20   -0.0988090469
+     a22b  2 ab    0.0859465660
+     b22a  2 ba    0.0859465660
+     ab22  2 20   -0.0795578455
+     ba22  2 20   -0.0795578455
+     b22b  2 aa   -0.0564712939
+     a22a  2 bb   -0.0564712939
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.98607150    3A1   1.97741122    1B2   1.92794695
+        4A1   1.03345569    1A1   0.99993987    2B2   0.07528747
+
+    Total Energy:  -56.291988402569054
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402569   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.754e-04 seconds
+        β          4.542e-04 seconds
+  Time spent building 1-rdm: 2.109e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000    -0.00000000    -0.06437546     0.06437546
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.744e-04 seconds
+        β          4.535e-04 seconds
+  Time spent building 1-rdm: 1.911e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013176     0.00000000     0.00000000    -5.70074554    -0.00000000    -6.07188834
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.723e-04 seconds
+        β          4.508e-04 seconds
+  Time spent building 1-rdm: 1.887e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.513e-04 seconds
+        ββ         7.652e-04 seconds
+        αβ         1.904e-03 seconds
+  Time spent building 2-rdm: 3.862e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988402569110; g_norm = 6.308024e-08; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988402569089; g_norm = 2.974828e-08; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988402569125; g_norm = 3.378900e-08; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988402569125; g_norm = 3.378900e-08; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 13 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988402569 (-1.2790e-13)    -56.291988402569 (-5.6843e-14)   -7.1054e-14    1.0713e-08    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.203e-04
+         2              27  1.847e-04
+         3              14  1.494e-04
+    ---------------------------------
+    Total:              68  6.012e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+  Reading wave function from disk as initial guess: Success!
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 4.947e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.559e-04 seconds
+        β          4.515e-04 seconds
+  Time spent building 1-rdm: 1.894e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702921659
+     b22a  2 20    0.6702921659
+     b22a  2 ab    0.1424178533
+     a22b  2 ba    0.1424178533
+     a2b2  2 20   -0.0988090452
+     b2a2  2 20   -0.0988090452
+     a22b  2 ab    0.0859465539
+     b22a  2 ba    0.0859465539
+     ab22  2 20   -0.0795578452
+     ba22  2 20   -0.0795578452
+     b22b  2 aa   -0.0564712994
+     a22a  2 bb   -0.0564712994
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.98607150    3A1   1.97741122    1B2   1.92794696
+        4A1   1.03345569    1A1   0.99993987    2B2   0.07528746
+
+    Total Energy:  -56.291988402568997
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402569   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.529e-04 seconds
+        β          4.513e-04 seconds
+  Time spent building 1-rdm: 1.889e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.06437549     0.06437549
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.525e-04 seconds
+        β          4.511e-04 seconds
+  Time spent building 1-rdm: 1.891e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013172     0.00000000     0.00000000    -5.70074558     0.00000000    -6.07188831
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.525e-04 seconds
+        β          4.537e-04 seconds
+  Time spent building 1-rdm: 1.890e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         7.473e-04 seconds
+        ββ         7.501e-04 seconds
+        αβ         1.869e-03 seconds
+  Time spent building 2-rdm: 3.898e-04 seconds
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+    L-BFGS Iter:  1; fx =  -56.291988402569046; g_norm = 2.135434e-08; step = 1.000e+00
+    L-BFGS Iter:  2; fx =  -56.291988402569025; g_norm = 1.002072e-08; step = 1.000e+00
+    L-BFGS Iter:  3; fx =  -56.291988402569068; g_norm = 1.135858e-08; step = 1.000e+00
+    L-BFGS Iter:  4; fx =  -56.291988402569046; g_norm = 1.135858e-08; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 14 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -56.291988402569 ( 5.6843e-14)    -56.291988402569 ( 7.8160e-14)   -4.9738e-14    3.6876e-09    4/N
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  ==> MCSCF Iteration Summary <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1     -55.841944166823  0.0000e+00    -56.268701851271  0.0000e+00  5.2272e-01     4
+       2     -56.282849262160 -4.4091e-01    -56.290765502845 -2.2064e-02  2.2502e-02     4
+       3     -56.291711185520 -8.8619e-03    -56.291949241824 -1.1837e-03  6.0365e-03     4
+       4     -56.291976731381 -2.6555e-04    -56.291986422328 -3.7181e-05  7.5576e-04     4
+       5     -56.291987879545 -1.1148e-05    -56.291988297915 -1.8756e-06  1.0027e-04     4
+       6     -56.291988377880 -4.9833e-07    -56.291988396711 -9.8796e-08  1.2016e-05     4
+       7     -56.291988400772 -2.2892e-08    -56.291988402085 -5.3738e-09  3.3293e-06     4
+       8     -56.291988402380 -1.6084e-09    -56.291988402516 -4.3115e-10  1.8550e-06     4
+       9     -56.291988402548 -1.6729e-10    -56.291988402563 -4.7244e-11  6.8310e-07     4
+      10     -56.291988402566 -1.8701e-11    -56.291988402568 -5.2296e-12  2.6379e-07     4
+      11     -56.291988402569 -2.2027e-12    -56.291988402569 -5.6843e-13  9.0520e-08     4
+      12     -56.291988402569 -2.4158e-13    -56.291988402569 -1.3500e-13  3.1973e-08     4
+      13     -56.291988402569 -1.2790e-13    -56.291988402569 -5.6843e-14  1.0713e-08     4
+      14     -56.291988402569  5.6843e-14    -56.291988402569  7.8160e-14  3.6876e-09     4
+    ----------------------------------------------------------------------------------------
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.239e-04
+         2              27  1.851e-04
+         3              14  1.493e-04
+    ---------------------------------
+    Total:              68  6.255e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 4.873e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.827e-04 seconds
+        β          4.966e-04 seconds
+  Time spent building 1-rdm: 1.994e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20    0.6702921667
+     b22a  2 20    0.6702921667
+     b22a  2 ab    0.1424178511
+     a22b  2 ba    0.1424178511
+     a2b2  2 20   -0.0988090447
+     b2a2  2 20   -0.0988090447
+     a22b  2 ab    0.0859465498
+     b22a  2 ba    0.0859465498
+     ab22  2 20   -0.0795578451
+     ba22  2 20   -0.0795578451
+     b22b  2 aa   -0.0564713013
+     a22a  2 bb   -0.0564713013
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.98607150    3A1   1.97741122    1B2   1.92794696
+        4A1   1.03345569    1A1   0.99993987    2B2   0.07528746
+
+    Total Energy:  -56.291988402568997
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402569   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          5.035e-04 seconds
+        β          4.764e-04 seconds
+  Time spent building 1-rdm: 2.201e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000    -0.00000000    -0.06437550     0.06437550
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.992e-04 seconds
+        β          4.772e-04 seconds
+  Time spent building 1-rdm: 2.011e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013170     0.00000000     0.00000000    -5.70074559    -0.00000000    -6.07188831
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.925e-04 seconds
+        β          4.741e-04 seconds
+  Time spent building 1-rdm: 1.988e-04 seconds
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    GAS1            ...  CANONICAL
+    GAS2            ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0000000000   0.0000000000
+    GAS2                 0.2163073411   0.3988335449
+    RESTRICTED_UOCC      0.2058452883   0.5154617479
+    ------------------------------------------------
+  Timing for orbital canonicalization:                        0.000 s.
+
+  Time to prepare integrals:        0.054 seconds
+  Time to run job          :        1.795 seconds
+  Total                    :        1.849 seconds
+    GASSCF energy.........................................................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: upt2-1rdm - git commit: d85bd947
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space GAS1
+  Read options for space GAS2
+  Read options for space GAS1
+  Read options for space GAS2
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0
+    GAS1                1     0     0     0     1
+    GAS2                3     0     1     2     6
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     8     2     3     5    18
+    FROZEN_UOCC         0     0     0     0     0
+    Total              12     2     4     7    25
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: 6-31G**
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry O          line   149 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31gss.gbs 
+    atoms 2-3 entry H          line    44 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31gss.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1   entry O          line    81 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: 6-31G**
+    Blend: 6-31G**
+    Number of shells: 12
+    Number of basis functions: 25
+    Number of Cartesian functions: 25
+    Spherical Harmonics?: false
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:              12
+      Number of primitives:             25
+      Number of atomic orbitals:        25
+      Number of basis functions:        25
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 105950 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              762
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         25
+  Number of correlated molecular orbitals:              25
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.02467534 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.008731 GB
+  Timing for conventional integral transformation:            0.090 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.090 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.983e-04
+         2              27  2.512e-04
+         3              14  2.041e-04
+    ---------------------------------
+    Total:              68  8.172e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 6.339e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          6.211e-04 seconds
+        β          6.144e-04 seconds
+  Time spent building 1-rdm: 2.588e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20   -0.6990121080
+     b22a  2 20   -0.6990121080
+     b22a  2 02    0.0629104054
+     a22b  2 02    0.0629104054
+     b22b  2 aa    0.0590913232
+     a22a  2 bb    0.0590913232
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.99846297    3A1   1.99702060    1B2   1.97135491
+        4A1   1.00145485    1A1   0.99993987    2B2   0.03187951
+
+    Total Energy:  -56.291988402568968
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402569   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          6.602e-04 seconds
+        β          6.536e-04 seconds
+  Time spent building 1-rdm: 2.623e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.06437550     0.06437550
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          6.188e-04 seconds
+        β          6.366e-04 seconds
+  Time spent building 1-rdm: 2.581e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013170     0.00000000     0.00000000    -5.70074559     0.00000000    -6.07188831
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         1.053e-03 seconds
+        ββ         1.046e-03 seconds
+        αβ         2.587e-03 seconds
+  Time spent building 2-rdm: 5.811e-04 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+        ααα        9.805e-04 seconds
+        ααβ        4.246e-03 seconds
+        αββ        3.996e-03 seconds
+        βββ        9.697e-04 seconds
+  Time spent building 3-rdm: 4.339e-03 seconds
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    GAS1            ...  CANONICAL
+    GAS2            ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0000000000   0.0000000000
+    GAS2                 0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0000000000   0.0000000000
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
+  Timing for orbital canonicalization:                        0.003 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Computing Fock matrix and cleaning JK ........... Done
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Filling Fock matrix from ForteIntegrals ......... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                STATE-SPECIFIC
+    form Hbar3                                         FALSE
+    flow parameter                                 1.000e+00
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    ntamp                                                 15
+
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Block             Fa Max         Fa Mean           Fb Max         Fb Mean
+    -------------------------------------------------------------------------
+    CORE        0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    VIRTUAL     0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    GAS1        0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    GAS2        0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    -------------------------------------------------------------------------
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.006930 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.000984 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.006086 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.001215 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.000539 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.001558 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.001417 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.011222 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.002465 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.003004 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.011624 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.015185 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    0    1    2    3   14   18   19 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 19      24    ]-0.086640 [ 19      20    ]-0.085074 [ 19      21    ]-0.058709 
+    [ 19      23    ]-0.056714 [ 19      22    ] 0.017379 [  3       4    ]-0.013060 
+    [  3       5    ] 0.012418 [  3      10    ] 0.010161 [  0      10    ] 0.006695 
+    [  0      11    ] 0.006623 [  3       8    ]-0.006090 [  3       6    ]-0.005923 
+    [ 18      20    ]-0.005367 [  3      11    ] 0.005237 [ 18      21    ]-0.004921 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 45)                    0.149741198306157.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 19      24    ]-0.086640 [ 19      20    ]-0.085074 [ 19      21    ]-0.058709 
+    [ 19      23    ]-0.056714 [ 19      22    ] 0.017379 [  3       4    ]-0.013060 
+    [  3       5    ] 0.012418 [  3      10    ] 0.010161 [  0      10    ] 0.006695 
+    [  0      11    ] 0.006623 [  3       8    ]-0.006090 [  3       6    ]-0.005923 
+    [ 18      20    ]-0.005367 [  3      11    ] 0.005237 [ 18      21    ]-0.004921 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 45)                    0.149741198306157.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  0  14   0  15]-0.241694 [  0   2   0   4] 0.210704 [  2  14   2  15]-0.095337 
+    [  0   3   0   4]-0.093835 [  2  14   4  14] 0.089735 [ 14  18  15  18]-0.085036 
+    [  1  14   1  15]-0.084130 [  0  18   0  21]-0.082899 [  0   3   0   5] 0.078042 
+    [  2  18   4  18] 0.074516 [  0   1   0   5] 0.072611 [  0   3   0   6] 0.072486 
+    [  1   2   1   4] 0.072396 [  0  19   0  21]-0.063391 [  0  19   0  23]-0.062571 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 6452)                 1.067221259414586.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  0  14   0  15]-0.263035 [  0   2   0   4] 0.228671 [ 14  14  14  15]-0.124285 
+    [  2   2   2   4] 0.106769 [  1  14   1  15]-0.104627 [  2  14   2  15]-0.103291 
+    [  0   3   0   4]-0.099887 [  2  14   4  14] 0.095908 [  0  18   0  21]-0.091298 
+    [ 14  18  15  18]-0.090006 [  1   2   1   4] 0.089875 [  0   1   0   5] 0.083559 
+    [  0   3   0   5] 0.083023 [  0   3   0   6] 0.078707 [  2  18   4  18] 0.076096 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 8048)                 0.977770790586168.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  0  14   0  15]-0.241694 [  0   2   0   4] 0.210704 [  2  14   2  15]-0.095337 
+    [  0   3   0   4]-0.093835 [  2  14   4  14] 0.089735 [ 14  18  15  18]-0.085036 
+    [  1  14   1  15]-0.084130 [  0  18   0  21]-0.082899 [  0   3   0   5] 0.078042 
+    [  2  18   4  18] 0.074516 [  0   1   0   5] 0.072611 [  0   3   0   6] 0.072486 
+    [  1   2   1   4] 0.072396 [  0  19   0  21]-0.063391 [  0  19   0  23]-0.062571 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 6452)                 1.067221259414586.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA:
+        Amplitude         Value                               Denominator                           
+    ------------------------------------------------------------------------------------------------
+    [  0  14   0  15]   -0.24169400 (-21.252783 +  -0.778421 - -21.252783 -   0.916562 =  -1.694983)
+    [  0   2   0   4]    0.21070401 (-21.252783 +  -0.839286 - -21.252783 -   0.865439 =  -1.704725)
+    ------------------------------------------------------------------------------------------------
+    T2 amplitudes larger than 0.1000 for spin case AB:
+        Amplitude         Value                               Denominator                           
+    ------------------------------------------------------------------------------------------------
+    [  0  14   0  15]   -0.26303523 (-21.252783 +  -0.778421 - -21.252783 -   0.916562 =  -1.694983)
+    [  0   2   0   4]    0.22867144 (-21.252783 +  -0.839286 - -21.252783 -   0.865439 =  -1.704725)
+    [ 14  14  14  15]   -0.12428537 ( -0.778421 +  -0.778421 -  -0.778421 -   0.916562 =  -1.694983)
+    [  2   2   2   4]    0.10676940 ( -0.839286 +  -0.839286 -  -0.839286 -   0.865439 =  -1.704725)
+    [  1  14   1  15]   -0.10462652 ( -1.581581 +  -0.778421 -  -1.581581 -   0.916562 =  -1.694983)
+    [  2  14   2  15]   -0.10329074 ( -0.839286 +  -0.778421 -  -0.839286 -   0.916562 =  -1.694983)
+    ------------------------------------------------------------------------------------------------
+    T2 amplitudes larger than 0.1000 for spin case BB:
+        Amplitude         Value                               Denominator                           
+    ------------------------------------------------------------------------------------------------
+    [  0  14   0  15]   -0.24169400 (-21.252783 +  -0.778421 - -21.252783 -   0.916562 =  -1.694983)
+    [  0   2   0   4]    0.21070401 (-21.252783 +  -0.839286 - -21.252783 -   0.865439 =  -1.704725)
+    ------------------------------------------------------------------------------------------------
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =    -56.291988402569132
+    <[F, T1]>                      =     -0.007386884279087
+    <[F, T2]>                      =      0.001453877824135
+    <[V, T1]>                      =      0.001073230268666
+    <[V, T2]> (C_2)^4              =     -0.515363767893814
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000000000000000
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.006802759289598
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.342702340693012
+    <[V, T2]> C_6 C_2              =     -0.000096104698128
+    <[V, T2]>                      =     -0.165954772609332
+    DSRG-MRPT2 correlation energy  =     -0.170814548795619
+    DSRG-MRPT2 total energy        =    -56.462802951364750
+    max(T1)                        =      0.086640147952790
+    max(T2)                        =      0.263035233684698
+    ||T1||                         =      0.211766033490567
+    ||T2||                         =      2.470235881203840
+
+  Energy took      0.088 s
+
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.001       0.002       0.001       0.044
+    -> C1       0.000       0.000       0.000       0.000
+    -> C2                   0.000       0.000       0.000
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        0.157 seconds
+  Time to run job          :        0.178 seconds
+  Total                    :        0.335 seconds
+    GASSCF-DSRG-MRPT2 (SI) energy.........................................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: upt2-1rdm - git commit: d85bd947
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space GAS1
+  Read options for space GAS2
+  Read options for space GAS1
+  Read options for space GAS2
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0
+    GAS1                1     0     0     0     1
+    GAS2                3     0     1     2     6
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     8     2     3     5    18
+    FROZEN_UOCC         0     0     0     0     0
+    Total              12     2     4     7    25
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: 6-31G**
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry O          line   149 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31gss.gbs 
+    atoms 2-3 entry H          line    44 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31gss.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1   entry O          line    81 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: 6-31G**
+    Blend: 6-31G**
+    Number of shells: 12
+    Number of basis functions: 25
+    Number of Cartesian functions: 25
+    Spherical Harmonics?: false
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:              12
+      Number of primitives:             25
+      Number of atomic orbitals:        25
+      Number of basis functions:        25
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 105950 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              762
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         25
+  Number of correlated molecular orbitals:              25
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01654122 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.008731 GB
+  Timing for conventional integral transformation:            0.071 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.071 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 7
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.56899957      0
+     2    -1.32060927      1
+     2    -0.56393045      2
+     2     0.20246590      3
+     2    -0.49500394      4
+     2    -0.67872419      5
+     2     0.29271934      6
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   10    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    4    5
+         2     0    1    5    4
+         3     0    0    5    5
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1              27  2.274e-04
+         2              27  1.898e-04
+         3              14  1.527e-04
+    ---------------------------------
+    Total:              68  6.180e-04
+    ---------------------------------
+  Number of determinants (GAS): 68
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) A1 <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 33 roots with 2S+1 = 1 *
+  Found 31 roots with 2S+1 = 3
+  Found 4 roots with 2S+1 = 5
+
+  Done diagonalizing Hamiltonian, 5.115e-03 seconds.
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.869e-04 seconds
+        β          4.940e-04 seconds
+  Time spent building 1-rdm: 2.000e-04 seconds
+
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) A1 <==
+
+  Important determinants with coefficients |C| >= 5.000e-02
+
+  ---- Root No. 0 ----
+
+       A1 B1 B2    Coefficients
+    ---------------------------
+     a22b  2 20   -0.6990121080
+     b22a  2 20   -0.6990121080
+     b22a  2 02    0.0629104054
+     a22b  2 02    0.0629104054
+     b22b  2 aa    0.0590913232
+     a22a  2 bb    0.0590913232
+    ---------------------------
+
+    Occupation Numbers:
+        1B1   1.99988729    2A1   1.99846297    3A1   1.99702060    1B2   1.97135491
+        4A1   1.00145485    1A1   0.99993987    2B2   0.03187951
+
+    Total Energy:  -56.291988402568968
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -56.291988402569   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.842e-04 seconds
+        β          4.676e-04 seconds
+  Time spent building 1-rdm: 2.024e-04 seconds
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000    -0.06437550     0.06437550
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.821e-04 seconds
+        β          4.988e-04 seconds
+  Time spent building 1-rdm: 1.983e-04 seconds
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -5.61013170     0.00000000     0.00000000    -5.70074559     0.00000000    -6.07188831
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+        α          4.782e-04 seconds
+        β          4.954e-04 seconds
+  Time spent building 1-rdm: 2.012e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+        αα         8.192e-04 seconds
+        ββ         7.817e-04 seconds
+        αβ         2.019e-03 seconds
+  Time spent building 2-rdm: 4.339e-04 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+        ααα        7.911e-04 seconds
+        ααβ        3.435e-03 seconds
+        αββ        3.213e-03 seconds
+        βββ        8.013e-04 seconds
+  Time spent building 3-rdm: 3.799e-03 seconds
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    GAS1            ...  CANONICAL
+    GAS2            ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0000000000   0.0000000000
+    GAS2                 0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0000000000   0.0000000000
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
+  Timing for orbital canonicalization:                        0.003 s.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.002 s
+    Reading DSRG options ........................ Done. Timing      0.000 s
+    Setting ambit MO space ...................... Done. Timing      0.000 s
+    Initializing density cumulants .............. Done. Timing      0.008 s
+    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.000 s
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        1.473499     0.112971
+    2-norm     2.253879     0.744199
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Block                Max            Mean
+    ----------------------------------------
+    CORE        0.0000000000    0.0000000000
+    VIRTUAL     0.0000000000    0.0000000000
+    GAS1        0.0000000000    0.0000000000
+    GAS2        0.0000000000    0.0000000000
+    ----------------------------------------
+    Orbitals are semi-canonicalized.
+
+                  --------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                  --------------------------------------------
+
+
+  ==> Computation Information <==
+
+    Integral type                               CONVENTIONAL
+    Source operator                                 STANDARD
+    Core-Virtual source type                          NORMAL
+    Reference relaxation                                NONE
+    3RDM algorithm                                  EXPLICIT
+    Internal amplitudes                                 NONE
+    State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+
+
+  ==> DSRG-MRPT2 Memory Information <==
+
+    Memory assigned by the user                      1.00 GB
+    Memory available for MR-DSRG                   892.79 MB
+    Generalized Fock matrix                          5.20 KB
+    1-, 2-, and 3-density cumulants                  0.96 MB
+    2-electron (4-index) integrals                 245.00 KB
+    T2 cluster amplitudes                          245.00 KB
+    T1 cluster amplitudes                            1.40 KB
+    Local 1- and 2-body intermediates               19.60 KB
+    Max memory for local intermediates              19.60 KB
+    Memory currently available                     891.33 MB
+
+
+  ==> Prepare Integrals & Amplitudes <==
+
+    Initializing integrals ...................... Done. Timing      0.002 s
+    Allocating amplitudes ....................... Done. Timing      0.000 s
+    Computing T2 amplitudes ..................... Done. Timing      0.016 s
+    Computing T1 amplitudes ..................... Done. Timing      0.001 s
+
+  ==> First-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    0    1    2    3   14   18   19
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  19   24] 0.0865804 [  19   20] 0.0850337 [  19   21] 0.0586039
+    [  19   23] 0.0566651 [  19   22] 0.0173853 [   3    4] 0.0129580
+    [   3    5] 0.0124084 [   3   10] 0.0101937 [   0   10] 0.0067953
+    [   0   11] 0.0067184 [   3    8] 0.0061045 [   3    6] 0.0059708
+    [  18   20] 0.0052837 [   3   11] 0.0052392 [  18   21] 0.0048085
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.149631637083988
+    Number of nonzero elements:                                    45
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [   0   14    0   15] 0.2630352 [   0    2    0    4] 0.2286714 [  14   14   14   15] 0.1242854
+    [   2    2    2    4] 0.1067694 [   1   14    1   15] 0.1046265 [   2   14    2   15] 0.1032907
+    [   0    3    0    4] 0.0998866 [  14    2   14    4] 0.0959078 [   0   18    0   21] 0.0912981
+    [  18   14   18   15] 0.0900055 [   1    2    1    4] 0.0898746 [   0    1    0    5] 0.0835586
+    [   0    3    0    5] 0.0830232 [   0    3    0    6] 0.0787069 [  18    2   18    4] 0.0760963
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.977770790586168
+    Number of nonzero elements:                                                                8048
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------------------------------------------
+    [   0   14    0   15]  -0.263035234 (-21.252783 +  -0.778421 - -21.252783 -   0.916562 =  -1.694983)
+    [   0    2    0    4]   0.228671437 (-21.252783 +  -0.839286 - -21.252783 -   0.865439 =  -1.704725)
+    [  14   14   14   15]  -0.124285373 ( -0.778421 +  -0.778421 -  -0.778421 -   0.916562 =  -1.694983)
+    [   2    2    2    4]   0.106769397 ( -0.839286 +  -0.839286 -  -0.839286 -   0.865439 =  -1.704725)
+    [   1   14    1   15]  -0.104626515 ( -1.581581 +  -0.778421 -  -1.581581 -   0.916562 =  -1.694983)
+    [   2   14    2   15]  -0.103290735 ( -0.839286 +  -0.778421 -  -0.839286 -   0.916562 =  -1.694983)
+    ----------------------------------------------------------------------------------------------------
+    Renormalizing 2-body integrals .............. Done. Timing      0.015 s
+    Renormalizing 1-body integrals .............. Done. Timing      0.001 s
+    Computing <0|[Fr, T1]|0> .................... Done. Timing      0.000 s
+    Computing <0|[Fr, T2]|0> .................... Done. Timing      0.000 s
+    Computing <0|[Vr, T1]|0> .................... Done. Timing      0.000 s
+    Computing <0|[Vr, T2]|0> .................... Done. Timing      0.006 s
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =    -56.291988402569118
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.007435505677989
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.001452501177378
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.000987997757817
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.165954772609335
+      - [Vr, T2] L1 contribution   =     -0.515363767893815
+      - [Vr, T2] L2 contribution   =      0.349505099982611
+      - [Vr, T2] L3 contribution   =     -0.000096104698131
+    DSRG-MRPT2 correlation energy  =     -0.170949779352128
+    DSRG-MRPT2 total energy        =    -56.462938181921245
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.000       0.000       0.000       0.006
+    -> C1       0.000       0.000       0.000       0.000
+    -> C2                   0.000       0.000       0.000
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        0.146 seconds
+  Time to run job          :        0.098 seconds
+  Total                    :        0.243 seconds
+    GASSCF-DSRG-MRPT2 (SA) energy.........................................................PASSED
+
+    Psi4 stopped on: Thursday, 02 February 2023 02:34PM
+    Psi4 wall time for execution: 0:00:04.86
+
+*** Psi4 exiting successfully. Buy a developer a beer!

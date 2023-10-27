@@ -1,0 +1,60 @@
+import forte
+
+refmcscf =   -115.698779193811518
+refdsrgpt2 = -115.778915313387614
+
+molecule {
+-1 1
+C       -2.2314881720      2.3523969887      0.1565319638                 
+C       -1.1287322054      1.6651786288     -0.1651010551                 
+H       -3.2159664855      1.9109197306      0.0351701750                 
+H       -2.1807424354      3.3645292222      0.5457999612                 
+H       -1.2085033449      0.7043108616     -0.5330598833                 
+--
+1 1
+C        0.2601218384      2.1970946692     -0.0290628762                 
+H        0.7545456004      2.2023392001     -1.0052240245                 
+H        0.8387453665      1.5599644558      0.6466877402                 
+H        0.2749376338      3.2174213526      0.3670138598                 
+
+     units angstrom
+     no_reorient
+     symmetry c1
+}
+
+set {
+  basis                  sto-3g
+  reference              rhf
+  scf_type               pk
+  maxiter                200
+  e_convergence          10
+  d_convergence          7
+  docc                   [12]
+  restricted_docc        [11]
+  active                 [2]
+  mcscf_maxiter          100
+  mcscf_r_convergence    10
+  mcscf_e_convergence    10
+  mcscf_diis_start       5
+}
+
+E, wfn_cas = energy('casscf', return_wfn = True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy")
+
+set forte {
+  embedding true
+  embedding_reference casscf
+  embedding_cutoff_method threshold
+  embedding_threshold 0.1
+  embedding_semicanonicalize_active true
+  active_space_solver  fci
+  correlation_solver   dsrg-mrpt2
+  root_sym           0
+  nroot              1
+  root               0
+  d_convergence      10
+  dsrg_s             0.5
+}
+
+energy('forte', ref_wfn = wfn_cas, return_wfn=True)
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy")

@@ -16,26 +16,24 @@ molecule {
 }
 
 set globals{
-   reference    ROHF
-   scf_type     df
-   docc         [2,0,0,1]
-   d_convergence           12
-   e_convergence           15
-   df_basis_mp2            cc-pvdz-ri
+  reference            ROHF
+  scf_type             df
+  docc                 [2,0,0,1]
+  d_convergence        10
+  e_convergence        12
+  df_basis_mp2         cc-pvdz-ri
 }
 
 set forte{
-   restricted_docc      [2,0,0,0]
-   active               [1,0,0,1]
-   root_sym              0
-   nroot                 1
-   dsrg_s                0.5
-   dsrgpt                true
-   int_type              diskdf
-   correlation_solver    three-dsrg-mrpt2
-   active_space_solver   cas
-   print                 0
-
+  restricted_docc      [2,0,0,0]
+  active               [1,0,0,1]
+  root_sym             0
+  nroot                1
+  dsrg_s               0.5
+  int_type             diskdf
+  correlation_solver   three-dsrg-mrpt2
+  active_space_solver  detci
+  print                0
 }
 
 basis {

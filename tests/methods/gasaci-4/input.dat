@@ -1,0 +1,50 @@
+#! Generated using commit GITCOMMIT 
+# GAS ACI calculation for core excited state of CO using MULTI_GAS algorithm
+
+import forte
+
+memory 6000mb
+
+exaci = -92.6912453842 #TEST
+exacipt2 = -92.6922386459 #TEST
+aveaci = -102.7436033287 #TEST
+
+molecule CO{
+0 1
+   C
+   O 1 1.123708
+}
+
+set {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+  scf_type pk
+  reference rohf
+}
+
+
+set forte {
+  active_space_solver aci
+  ms 0.0
+  sigma 0.001
+  nroot 1
+  root_sym 0
+  charge 0
+  sci_enforce_spin_complete true
+  active_ref_type gas_single
+  charge 0
+  GAS1 [1,0,0,0]
+  GAS2 [5,0,2,2]
+  AVG_STATE [[0,1,1],[2,3,1]]
+  GAS1MAX [2,1]
+}
+
+escf ,wfn = energy('scf',return_wfn = True)
+
+ave_e = energy('forte')
+compare_values(exaci, variable("ACI ENERGY"),9, "ACI energy") #TEST     
+compare_values(exacipt2, variable("ACI+PT2 ENERGY"), 9, "ACI+PT2 energy") #TEST
+compare_values(aveaci, ave_e, 9, "AVERAGE ACI ENERGY") #TEST

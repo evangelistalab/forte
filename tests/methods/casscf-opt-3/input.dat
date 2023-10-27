@@ -1,0 +1,39 @@
+# CASCI gradient using MCSCF with frozen-core orbitals
+import forte
+
+ref_fci = -99.5868529738388
+ref_xyz = {'F': [0.0, 0.0, -0.048528132604],
+           'H': [0.0, 0.0,  0.914798698650]}
+
+molecule HF{
+0 1
+F
+H 1 0.95
+}
+
+set globals{
+  basis                   3-21g
+  reference               rhf
+  scf_type                pk
+  d_convergence           8
+  e_convergence           12
+}
+
+set forte{
+  job_type                mcscf_two_step
+  active_ref_type         cas
+  casscf_ci_solver        fci
+  frozen_docc             [1,0,0,0]
+}
+
+Eopt = optimize('forte')
+
+mol = psi4.core.get_active_molecule()
+mol_str = mol.to_string(dtype='xyz').splitlines()
+xyz = {}
+for line in mol_str[2:]:
+    atom, x, y, z = line.split()
+    xyz[atom] = [float(i) for i in [x, y, z]]
+bond = abs(xyz['H'][2] - xyz['F'][2])
+ref_bond = abs(ref_xyz['H'][2] - ref_xyz['F'][2])
+compare_values(ref_bond, bond, 6, "FCI/3-21G (Frozen-Core) optimized bond length")

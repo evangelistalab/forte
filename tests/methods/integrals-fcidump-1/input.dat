@@ -1,0 +1,17 @@
+#! Test disk density-fitted integrals with frozen core and virtuals
+
+import forte
+
+reffci = -112.74446815362198
+
+set forte {
+  active_space_solver fci
+  int_type            fcidump
+  frozen_docc         [2 ,0 ,0 ,0]
+  restricted_docc     [2 ,0 ,0 ,0]
+  active              [2 ,2 ,2 ,2]
+  e_convergence       12
+}
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),9, "FCI energy") #TEST

@@ -14,11 +14,11 @@ molecule {
   no_reorient
 }
 
-basis { 
+basis {
 cartesian
 ****
 Be 0
-S 6 1.00 
+S 6 1.00
  1267.07000 0.001940
   190.35600 0.014786
    43.29590 0.071795
@@ -37,15 +37,15 @@ P 2 1.0
     1.55563  0.144045
     0.171855 0.949692
 ****
-H 0 
-S 3 1.00 
-   19.24060  0.032828   
-    2.899200 0.231208   
+H 0
+S 3 1.00
+   19.24060  0.032828
+    2.899200 0.231208
     0.653400 0.817238
-S 1 1.0   
+S 1 1.0
     0.177600  1.00000
 ****
-} 
+}
 
 set {
   docc               [2,0,0,0]
@@ -58,20 +58,19 @@ set {
 }
 
 set forte {
-  #job_type           mrdsrg
-  active_space_solver cas
-  correlation_solver mrdsrg
-  frozen_docc        [1,0,0,0]
-  restricted_docc    [1,0,0,0]
-  active             [1,0,0,1]
-  multiplicity       1
-  root_sym           0
-  nroot              1
-  root               0
-  dsrg_s             1.0
-  maxiter            100
-  relax_ref          once
-  maxiter_relax_ref  15
+  active_space_solver detci
+  correlation_solver  mrdsrg
+  frozen_docc         [1,0,0,0]
+  restricted_docc     [1,0,0,0]
+  active              [1,0,0,1]
+  multiplicity        1
+  root_sym            0
+  nroot               1
+  root                0
+  dsrg_s              1.0
+  maxiter             100
+  relax_ref           once
+  maxiter_relax_ref   15
 }
 
 energy('scf')

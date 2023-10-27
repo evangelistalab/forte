@@ -1,0 +1,46 @@
+#! Generated using commit GITCOMMIT
+# Tests mp2_nos with spin projected system for multiple roots
+
+
+import forte
+
+refscf = -108.833091086934
+reffci = -108.936796473574
+
+molecule N2{
+N 
+N 1 1.3
+units angstrom
+symmetry c1
+}
+
+set {
+  basis 6-31g* 
+  scf_type pk
+  freeze_core true
+  reference rhf 
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+}
+
+
+
+set forte {
+  active_space_solver aci
+  multiplicity 1
+  frozen_docc     [2]
+  restricted_docc [3]
+  active          [4]
+  sigma 0.0
+  charge 0
+  diag_algorithm dynamic
+}
+
+energy('scf')
+
+compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(reffci, variable("ACI ENERGY"),11, "ACI energy") #TEST

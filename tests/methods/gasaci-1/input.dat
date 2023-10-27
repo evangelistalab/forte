@@ -1,0 +1,55 @@
+# GAS ACI calculation 
+# Failed gas-aci will lead to correct aci energy but incorrect acipt2 energy
+
+import forte
+
+refscf = -14.839846512738
+refaci = -14.88916699373 
+refacipt2 = -14.8901638599
+
+molecule li2{
+0 1
+   Li
+   Li 1 2.0000
+}
+
+set {
+  basis DZ
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+}
+
+set scf {
+  scf_type pk
+  reference rhf
+}
+
+set forte {
+  active_space_solver aci
+  multiplicity 1
+  ms 0.0
+  sigma 0.001
+  nroot 1
+  root_sym 0
+  charge 0
+  sci_enforce_spin_complete false
+  active_ref_type gas_single
+  dl_guess_per_root 2
+  dl_dets_per_guess 25
+  GAS1 [6,0,2,2,0,6,0,0]
+  GAS2 [0,0,0,0,0,0,2,2]
+  GAS2MAX [2]
+  GAS2MIN [0]
+  GAS1MIN [4]
+  GAS1MAX [6]
+}
+
+energy('scf')
+
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+
+energy('forte')
+compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

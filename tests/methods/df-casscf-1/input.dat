@@ -1,11 +1,9 @@
-#! Generated using commit GITCOMMIT
+# Test DF-CASSCF with Pople basis set and reading orbitals from nearby geometry
 
 import forte
 
-#refmcscf     =  -99.972055826365903 # cc-pVTZ
-#refdsrgpt2   = -100.200752137944022 # cc-pVTZ
-psi4_casscf     = -99.9393092418
-forte_casscf    = -99.9393092425
+psi4_casscf_1 = -99.927778470824194  # @1.5
+psi4_casscf_2 = -99.912645717934794  # @1.6
 
 memory 500 mb
 
@@ -13,40 +11,55 @@ molecule HF{
   0 1
   F
   H  1 R
-  R = 1.50
 }
 
 set globals{
-#   basis                   cc-pvtz
-   basis                   cc-pvdz
-   reference               ROHF
-   d_convergence           12
-   e_convergence           15
-   frozen_docc             [1, 0, 0, 0]
-   restricted_docc         [1,0,1,1]
-   active                  [2,0,0,0]
-   scf_type                df
-   df_basis_mp2            cc-pvdz-ri
-   df_basis_scf            cc-pvdz-jkfit
-   mcscf_type              df
+  basis                   6-31g*
+  reference               rhf
+  d_convergence           8
+  e_convergence           9
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  scf_type                df
+  df_basis_scf            cc-pvdz-jkfit
+  mcscf_type              df
 }
-psi4_casscf_computed = energy('casscf')
-compare_values(psi4_casscf_computed,psi4_casscf,6,"PSI4 CASSCF energy")
 
+HF.R = 1.5
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(Ecas, psi4_casscf_1, 8, "PSI4 CASSCF energy @ 1.5")
 
-set scf_type df
 set forte{
-   job_type                casscf
-   frozen_docc             [1,0,0,0]
-   restricted_docc         [1,0,1,1]
-   active                  [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   active_space_solver                fci
-   casscf_reference        true
-   int_type                df
-   casscf_iterations       25
-   print                   0
+  job_type                casscf
+  int_type                df
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  casscf_ci_solver        fci
+  casscf_maxiter          25
+  casscf_e_convergence    7
+  casscf_g_convergence    7
+  print                   0
 }
-casscf = energy('forte')
-compare_values(forte_casscf,casscf,6,"FORTE CASSCF energy")
+Ecas_1 = energy('forte')
+compare_values(psi4_casscf_1, Ecas_1, 6, "FORTE CASSCF energy @ 1.5")
+
+HF.R = 1.6
+set forte {
+  job_type                mcscf_two_step
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+}
+Ecas_2, wfn2 = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(psi4_casscf_2, Ecas_2, 6, "FORTE 2-step MCSCF energy @ 1.6")
+
+set forte {
+  job_type                newdriver
+  df_basis_mp2            cc-pvdz-jkfit
+  active_space_solver     detci
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+}
+Ecas_2 = energy('forte', ref_wfn=wfn2)
+compare_values(psi4_casscf_2, Ecas_2, 6, "FORTE CASCI (MCSCF) energy @ 1.6")

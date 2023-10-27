@@ -1,0 +1,52 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refcasscf = -100.038625208209481
+
+molecule HF{
+  0 1
+  H
+  F  1 R
+
+  R = 1.0
+}
+
+set {
+  basis                  cc-pvdz
+  df_basis_scf           cc-pvdz-jkfit
+  reference              rhf
+  scf_type               df
+  maxiter                300
+  e_convergence          10
+  d_convergence          7
+  docc                   [3,0,1,1]
+  restricted_docc        [0,0,0,0]
+  active                 [4,0,1,1]
+  mcscf_maxiter          100
+  mcscf_type             df
+  mcscf_r_convergence    5
+  mcscf_e_convergence    10
+  mcscf_diis_start       6
+}
+
+Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
+compare_values(refcasscf, Ecasscf, 8, "CASSCF energy")
+
+set forte {
+  job_type             casscf
+  active_space_solver  detci
+  int_type             df
+  multiplicity         1
+  restricted_docc      [0,0,0,0]
+  active               [4,0,1,1]
+  root_sym             0
+  nroot                1
+  e_convergence        10
+  r_convergence        8
+  casscf_e_convergence 10
+  casscf_g_convergence 8
+}
+
+Eforte = energy('forte')
+compare_values(Eforte, Ecasscf, 8, "CASSCF Forte vs Psi4")

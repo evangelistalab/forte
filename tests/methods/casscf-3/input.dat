@@ -32,11 +32,10 @@ set forte {
     frozen_docc           [1, 0, 0, 0]
     active                [3, 0, 1, 2]
     int_type              conventional
-    fci_maxiter           40
     CASSCF_E_CONVERGENCE  1e-10
     CASSCF_G_CONVERGENCE  1e-6
     CASSCF_CI_SOLVER      FCI
-    CASSCF_ITERATIONS     25
+    CASSCF_MAXITER     25
     print                 0
     CASSCF_DO_DIIS        true
 }

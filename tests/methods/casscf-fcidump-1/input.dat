@@ -1,0 +1,38 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refcasscf = -112.871834862959
+
+molecule CO{
+  0 1
+  C
+  O  1 1.128
+}
+
+set {
+  basis                  cc-pcvdz
+  reference              rhf
+  scf_type               out_of_core
+  maxiter                300
+  e_convergence          10
+  d_convergence          8
+  docc                   [5,0,1,1]
+}
+
+#Ecasscf, wfn_cas = energy('scf', return_wfn=True)
+#fcidump(wfn_cas,oe_ints=['EIGENVALUES'],write_pntgrp=True)
+
+set forte {
+  job_type           mcscf_two_step
+  int_type           fcidump
+  frozen_docc        [2,0,0,0]
+  frozen_uocc        [0,0,0,0]
+  restricted_docc    [2,0,0,0]
+  active             [2,0,2,2]
+  e_convergence      8
+  r_convergence      8
+}
+
+Eforte = energy('forte')
+compare_values(refcasscf, Eforte, 7, "CASSCF energy")

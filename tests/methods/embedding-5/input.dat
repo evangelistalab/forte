@@ -1,0 +1,66 @@
+import forte
+
+refmcscf = -155.258496830757849
+refdsrgpt2 = -155.400196650103709
+
+molecule {
+  -1 1
+    C            0.736149969259     0.199718340898    -0.207219947401
+    C            1.894302493759    -0.319955293970     0.296207387267
+    H            0.861933668943     1.105847110317    -0.832928585892
+    H            1.842233711006    -1.252567898836     0.893040798768
+    H            2.864162955272     0.173377115363     0.186731686072
+--
+  1 1
+    C           -1.777918019119     0.526955710902     0.239774606960
+    C           -0.669802211906    -0.436809943125    -0.347092635549
+    H           -1.538823490089     0.918192642365     1.253716032316
+    H           -2.797322479987     0.052951758306     0.328948031715
+    H           -1.899218748385     1.428566644507    -0.416125458480
+    H           -0.863484663283    -0.665562244675    -1.411954335033
+    H           -0.645242334465    -1.402514539204     0.216831010104
+
+     units angstrom
+     no_reorient
+     symmetry c1
+}
+
+set {
+  basis                  3-21g
+  reference              rhf
+  maxiter                500
+  scf_type               pk
+  e_convergence          11
+  d_convergence          11
+  docc                   [16]
+  restricted_docc        [15]
+  active                 [2]
+  mcscf_maxiter          400
+  mcscf_algorithm        ts
+  mcscf_r_convergence    8
+  mcscf_e_convergence    9
+  mcscf_max_rot          0.1
+}
+
+E, wfn_cas = energy('casscf', return_wfn = True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),8,"CASSCF energy")
+
+set forte {
+  embedding true
+  embedding_reference casscf
+  embedding_cutoff_method threshold
+  embedding_threshold 0.5
+  EMBEDDING_VIRTUAL_SPACE PAO
+  PAO_THRESHOLD  0.01
+  EMBEDDING_SEMICANONICALIZE_FROZEN False
+  active_space_solver  fci
+  correlation_solver   dsrg-mrpt2
+  root_sym           0
+  nroot              1
+  root               0
+  d_convergence      10
+  dsrg_s             0.5
+}
+
+Eforte, wfn_emb = energy('forte', ref_wfn = wfn_cas, return_wfn=True)
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy")

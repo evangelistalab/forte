@@ -1,0 +1,1879 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.4a2.dev313 
+
+                         Git: Rev {master} 65c0921 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Saturday, 21 March 2020 12:38AM
+
+    Process ID: 45831
+    Host:       Yorks-Mac.local
+    PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+
+Ecas_psi4 = -108.789661409534418
+Eldsrg2   = -108.971703002972987
+
+molecule {
+0 1
+N
+N 1 2.0
+}
+
+set globals{
+  basis                  cc-pvdz
+  reference              rhf
+  scf_type               pk
+  e_convergence          12
+  d_convergence          8
+  mcscf_e_convergence    12
+  mcscf_r_convergence    8
+  mcscf_diis_start       10
+  mcscf_max_rot          0.1
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+}
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ energy")
+
+set forte{
+  active_space_solver    fci
+  correlation_solver     sa-mrdsrg
+  corr_level             ldsrg2
+  frozen_docc            [1,0,0,0,0,1,0,0]
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  dsrg_s                 1.0
+  e_convergence          8
+  r_convergence          7
+  print                  3
+  semi_canonical         false
+  ccvv_source            zero
+  int_type               cholesky
+  cholesky_tolerance     1e-12
+  dsrg_rsc_ncomm         4
+}
+energy('forte', ref_wfn=wfn)
+Eu = variable("UNRELAXED ENERGY")
+compare_values(Eldsrg2, Eu, 7, "MR-LDSRG(2) (NCOMM=4) unrelaxed energy")
+--------------------------------------------------------------------------
+
+  Memory set to 476.837 MiB by Python driver.
+
+Scratch directory: /Users/york/scratch/psi4/
+
+*** tstart() called on Yorks-Mac.local
+*** at Sat Mar 21 00:38:42 2020
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry N          line   168 file /Users/york/src/psi4group/psi4/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    476 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         N            0.000000000000     0.000000000000    -1.000000000000    14.003074004430
+         N            0.000000000000     0.000000000000     1.000000000000    14.003074004430
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      0.60193  C =      0.60193 [cm^-1]
+  Rotational constants: A = ************  B =  18045.28808  C =  18045.28808 [MHz]
+  Nuclear repulsion =   12.964841661414994
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-08
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 12
+    Number of basis function: 28
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         7       7       0       0       0       0
+     B1g        1       1       0       0       0       0
+     B2g        3       3       0       0       0       0
+     B3g        3       3       0       0       0       0
+     Au         1       1       0       0       0       0
+     B1u        7       7       0       0       0       0
+     B2u        3       3       0       0       0       0
+     B3u        3       3       0       0       0       0
+   -------------------------------------------------------
+    Total      28      28       7       7       7       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             44
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 165242 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              357
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 9.4420120516E-02.
+  Reciprocal condition number of the overlap matrix is 4.4399311922E-02.
+    Using symmetric orthogonalization.
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -106.81450976732773   -1.06815e+02   0.00000e+00 
+   @RHF iter   1:  -108.32107528879213   -1.50657e+00   1.13581e-02 DIIS
+   @RHF iter   2:  -108.33006082518077   -8.98554e-03   2.22427e-03 DIIS
+   @RHF iter   3:  -108.33055091206072   -4.90087e-04   6.12962e-04 DIIS
+   @RHF iter   4:  -108.33058243963470   -3.15276e-05   5.90758e-05 DIIS
+   @RHF iter   5:  -108.33058271678088   -2.77146e-07   1.61921e-05 DIIS
+   @RHF iter   6:  -108.33058275231147   -3.55306e-08   2.31902e-06 DIIS
+   @RHF iter   7:  -108.33058275314085   -8.29374e-10   2.26713e-07 DIIS
+   @RHF iter   8:  -108.33058275314713   -6.28120e-12   1.42929e-08 DIIS
+   @RHF iter   9:  -108.33058275314714   -1.42109e-14   1.15485e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag   -15.825404     1B1u  -15.825114     2Ag    -1.096660  
+       2B1u   -0.965744     3Ag    -0.477196     1B2u   -0.400541  
+       1B3u   -0.400541  
+
+    Virtual:                                                              
+
+       1B2g   -0.083332     1B3g   -0.083332     3B1u    0.039530  
+       2B3u    0.878195     2B2u    0.878195     4B1u    0.895961  
+       4Ag     0.950937     2B3g    0.990302     2B2g    0.990302  
+       5Ag     1.087967     5B1u    1.329344     6Ag     1.793671  
+       3B3u    1.887539     3B2u    1.887539     1B1g    1.972674  
+       7Ag     1.972674     1Au     2.008888     6B1u    2.008888  
+       3B2g    2.141040     3B3g    2.141040     7B1u    2.641581  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     3,    0,    0,    0,    0,    2,    1,    1 ]
+
+  @RHF Final Energy:  -108.33058275314714
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             12.9648416614149937
+    One-Electron Energy =                -172.6084511344055556
+    Two-Electron Energy =                  51.3130267198434211
+    Total Energy =                       -108.3305827531471408
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:38:42 2020
+Module time:
+	user time   =       0.57 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.57 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+ MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of threads:                 1
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of SO shells:               6
+      Number of primitives:             44
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Number of irreps:                  8
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [   7    1    3    3    1    7    3    3 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 10381 non-zero two-electron integrals.
+        Stored in file 33.
+
+ MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of threads:                 1
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of SO shells:               6
+      Number of primitives:             44
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Number of irreps:                  8
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [   7    1    3    3    1    7    3    3 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 10381 non-zero two-electron integrals.
+        Stored in file 33.
+
+
+         ---------------------------------------------------------
+                Multi-Configurational Self-Consistent Field
+                            (a 'D E T C I' module)
+
+                 Daniel G. A. Smith, C. David Sherrill, and
+                              Matt L. Leininger
+         ---------------------------------------------------------
+
+
+   ==> Parameters <==
+
+    EX LEVEL       =        6      H0 BLOCKSIZE  =     1000
+    VAL EX LEVEL   =        0      H0 GUESS SIZE =     1000
+    H0COUPLINGSIZE =        0      H0 COUPLING   =       NO
+    MAXITER        =       12      NUM PRINT     =       20
+    NUM ROOTS      =        1      ICORE         =        1
+    PRINT LVL      =        1      FCI           =      YES
+    R CONV         = 1.00e-07      MIXED         =      YES
+    E CONV         = 1.00e-12      MIXED4        =      YES
+    R4S            =       NO      REPL OTF      =       NO
+    DIAG METHOD    =      SEM      FOLLOW ROOT   =        0
+    PRECONDITIONER = DAVIDSON      UPDATE        = DAVIDSON
+    S              =   0.0000      Ms0           =      YES
+    GUESS VECTOR   =  H0BLOCK      OPENTYPE      =     NONE
+    COLLAPSE SIZE  =        1      HD AVG        = EVANGELISTI
+    MAX NUM VECS   =       13      REF SYM       =     AUTO
+    IOPEN        =       NO
+
+    EX ALLOW       =  1  1  1  1  1  1 
+    STATE AVERAGE  =  0(1.00) 
+
+   ==> CI Orbital and Space information <==
+
+   ------------------------------------------------------------------------------
+               Space    Total    Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u
+   ------------------------------------------------------------------------------
+                 Nso       28     7     1     3     3     1     7     3     3
+                 Nmo       28     7     1     3     3     1     7     3     3
+               Ndocc        7     3     0     0     0     0     2     1     1
+               Nsocc        0     0     0     0     0     0     0     0     0
+   ------------------------------------------------------------------------------
+                                    MCSCF Spaces
+   ------------------------------------------------------------------------------
+         Frozen DOCC        0     0     0     0     0     0     0     0     0
+     Restricted DOCC        4     2     0     0     0     0     2     0     0
+              Active        6     1     0     1     1     0     1     1     1
+     Restricted UOCC       18     4     1     2     2     1     4     2     2
+         Frozen UOCC        0     0     0     0     0     0     0     0     0
+   ------------------------------------------------------------------------------
+
+   ==> Setting up CI strings <==
+
+    There are 20 alpha and 20 beta strings
+    The CI space requires 56 (5.60E+01) determinants and 8 blocks
+
+   ==> Setting up MCSCF integrals <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             44
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 165242 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              381
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+   ==> Starting MCSCF iterations <==
+
+        Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
+   @MCSCF  1:   -108.741133569928   -4.1055e-01  6.87e-02  1.49e-13    1    1  Initial CI
+      Warning! Maxstep = 0.12, scaling to 0.10
+   @MCSCF  2:   -108.784328511476   -4.3195e-02  2.65e-02  1.60e-05    8    1  TS
+   @MCSCF  3:   -108.789086038646   -4.7575e-03  9.05e-03  2.22e-05    6    1  TS
+   @MCSCF  4:   -108.789534365254   -4.4833e-04  3.31e-03  4.30e-06    6    1  TS
+   @MCSCF  5:   -108.789616083640   -8.1718e-05  1.57e-03  2.75e-06    6    1  TS
+   @MCSCF  6:   -108.789641434104   -2.5350e-05  9.30e-04  7.04e-07    7    1  TS
+   @MCSCF  7:   -108.789652027667   -1.0594e-05  6.13e-04  4.87e-07    7    1  TS
+   @MCSCF  8:   -108.789656926300   -4.8986e-06  4.19e-04  3.52e-07    7    1  TS
+   @MCSCF  9:   -108.789659256837   -2.3305e-06  2.89e-04  2.53e-07    7    1  TS
+   @MCSCF 10:   -108.789660374410   -1.1176e-06  2.00e-04  1.80e-07    7    1  TS
+   @MCSCF 11:   -108.789660911570   -5.3716e-07  1.39e-04  1.27e-07    7    1  TS, DIIS
+   @MCSCF 12:   -108.789661169943   -2.5837e-07  9.61e-05  8.89e-08    7    1  TS, DIIS
+   @MCSCF 13:   -108.789661325435   -1.5549e-07  5.71e-05  5.80e-08    8    1  TS, DIIS
+   @MCSCF 14:   -108.789661406270   -8.0836e-08  1.13e-05  2.53e-08    8    1  TS, DIIS
+   @MCSCF 15:   -108.789661405425    8.4528e-10  1.26e-05  6.53e-09    6    1  TS, DIIS
+   @MCSCF 16:   -108.789661409145   -3.7200e-09  3.89e-06  3.27e-09    8    1  TS, DIIS
+   @MCSCF 17:   -108.789661409534   -3.8875e-10  1.63e-07  1.41e-09    8    1  TS, DIIS
+   @MCSCF 18:   -108.789661409534   -7.1054e-13  2.40e-08  5.90e-11    8    1  TS, DIIS
+   @MCSCF 19:   -108.789661409534   -1.4211e-14  6.00e-11  9.49e-12    8    1  TS, DIIS
+
+          @MCSCF has converged!
+
+   @MCSCF Final Energy: -108.789661409534432
+
+   Computing CI Semicanonical Orbitals
+
+   ==> Energetics <==
+
+    SCF energy =         -108.330582753147141
+    Total MCSCF energy = -108.789661409534432
+
+   ==> MCSCF root 0 information <==
+
+    MCSCF Root 0 energy =  -108.789661409534418
+
+   Active Space Natural occupation numbers:
+
+        Ag   1.641660       B3u   1.289768       B2u   1.289768
+       B3g   0.710231       B2g   0.710231       B1u   0.358343
+
+   The 20 most important determinants:
+
+    *   1    0.559040  (    5,    5)  3AgX 1B2uX 1B3uX 
+    *   2   -0.347126  (   12,   12)  3AgX 1B3gX 1B3uX 
+    *   3   -0.347126  (   11,   11)  3AgX 1B2gX 1B2uX 
+    *   4    0.241081  (    2,    2)  3AgX 1B2gX 1B3gX 
+    *   5    0.214287  (   14,   15)  3AgX 1B2gB 1B3gA 1B2uA 1B3uB 
+    *   6    0.214287  (   15,   14)  3AgX 1B2gA 1B3gB 1B2uB 1B3uA 
+    *   7   -0.176035  (   13,   13)  3B1uX 1B2uX 1B3uX 
+    *   8    0.140153  (    3,    3)  1B2gX 3B1uX 1B2uX 
+    *   9    0.140153  (    4,    4)  1B3gX 3B1uX 1B3uX 
+    *  10   -0.127270  (   10,   10)  1B2gX 1B3gX 3B1uX 
+    *  11    0.123433  (   11,   12)  3AgX 1B2gA 1B3gB 1B2uA 1B3uB 
+    *  12    0.123433  (   12,   11)  3AgX 1B2gB 1B3gA 1B2uB 1B3uA 
+    *  13    0.119031  (    6,    7)  3AgA 1B3gB 3B1uA 1B2uB 1B3uX 
+    *  14    0.119031  (    7,    6)  3AgB 1B3gA 3B1uB 1B2uA 1B3uX 
+    *  15   -0.119031  (    8,    9)  3AgA 1B2gB 3B1uA 1B2uX 1B3uB 
+    *  16   -0.119031  (    9,    8)  3AgB 1B2gA 3B1uB 1B2uX 1B3uA 
+    *  17   -0.090854  (    2,    5)  3AgX 1B2gA 1B3gA 1B2uB 1B3uB 
+    *  18   -0.090854  (    5,    2)  3AgX 1B2gB 1B3gB 1B2uA 1B3uA 
+    *  19    0.087663  (   18,   19)  3AgA 1B2gX 1B3gB 3B1uA 1B2uB 
+    *  20    0.087663  (   19,   18)  3AgB 1B2gX 1B3gA 3B1uB 1B2uA 
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the CASSCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+    CASSCF(6,6)/cc-pVDZ energy........................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry N          line    71 file /Users/york/src/psi4group/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: spin-adapted-dsrg - git commit: f405f75d
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     0     1     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     0     1     0     0     2
+    ACTIVE              1     0     1     1     0     1     1     1     6
+    RESTRICTED_UOCC     4     1     2     2     1     4     2     2    18
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               7     1     3     3     1     7     3     3    28
+  -------------------------------------------------------------------------
+  State: Singlet Ag (Ms = 0)
+      1.000000000000
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    28
+  Number of correlated molecular orbitals:         26
+  Number of frozen occupied orbitals:               2
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Cholesky decomposition
+
+
+  Computing the Cholesky Vectors 
+
+  Computing CD Integrals               ......Done.
+  Timing for cholesky transformation:                         0.525 s.
+  Need 1.99 MB to store CD integrals in core
+
+  Number of Cholesky vectors required for 1.000e-12 tolerance: 317
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             44
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 165242 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+
+  Frozen-core energy            -95.815327602251 a.u.
+  Timing for frozen one-body operator:                        0.166 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.172 s.
+  Timing for computing Cholesky integrals:                    0.804 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 3
+  Number of beta electrons      = 3
+  Number of alpha strings       = 20
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 1
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.001 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.002 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          56
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+  Initial guess space is incomplete.
+  Adding 17 determinant(s).
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -108.701214569149  6.000  quintet
+      1     -108.644037440308  0.000  singlet
+      2     -108.624254322055  6.000  quintet
+      3     -108.605653074956  6.000  quintet
+      4     -108.597344297393  2.000  triplet
+      5     -108.596253621878  2.000  triplet
+      6     -108.563175064553  0.000  singlet
+      7     -108.512605023540  0.000  singlet
+      8     -108.508193881909  2.000  triplet
+      9     -108.491292464423  2.000  triplet
+     10     -108.489434487915  2.000  triplet
+     11     -108.487512181537  0.000  singlet
+     12     -108.437064249137  0.000  singlet
+     13     -108.435338763413  0.000  singlet
+     14     -108.431437760763  2.000  triplet
+     15     -108.301728582367  0.000  singlet
+     16     -108.257229059915  0.000  singlet
+     17     -108.216059195462  0.000  singlet
+     18     -108.189508246723  2.000  triplet
+     19     -108.176039751768  0.000  singlet
+     20     -108.158237329376  6.000  quintet
+     21     -108.154835719732  6.000  quintet
+     22     -108.134215005630  2.000  triplet
+     23     -108.118845805252  2.000  triplet
+     24     -108.108356978644  2.000  triplet
+     25     -108.079366172233  2.000  triplet
+     26     -108.075912852538  2.000  triplet
+     27     -108.039287801079  0.000  singlet
+     28     -108.037085320169  0.000  singlet
+     29     -108.005151890984  0.000  singlet
+     30     -107.989877053298  0.000  singlet
+     31     -107.673231766408  0.000  singlet
+     32     -107.520745200837  0.000  singlet
+     33     -107.363929469127  2.000  triplet
+     34     -107.361728839249  2.000  triplet
+     35     -106.927700430019  2.000  triplet
+     36     -106.057800613076  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.020 s
+
+  Projecting out root 0
+  Projecting out root 2
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 8
+  Projecting out root 9
+  Projecting out root 10
+  Projecting out root 14
+  Projecting out root 18
+  Projecting out root 20
+  Projecting out root 21
+  Projecting out root 22
+  Projecting out root 23
+  Projecting out root 24
+  Projecting out root 25
+  Projecting out root 26
+  Projecting out root 33
+  Projecting out root 34
+  Projecting out root 35
+
+  ==> Diagonalizing Hamiltonian <==
+
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.64403744030827 1.086e+02      N
+
+      1     -108.644037440308  -1.086e+02  +2.117e-01
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.72809242316896 8.405e-02      N
+
+      2     -108.728092423169  -8.405e-02  +1.959e-01
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.75414930380083 2.606e-02      N
+
+      3     -108.754149303801  -2.606e-02  +1.702e-01
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.77446692508640 2.032e-02      N
+
+      4     -108.774466925086  -2.032e-02  +1.104e-01
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78693060115052 1.246e-02      N
+
+      5     -108.786930601151  -1.246e-02  +3.512e-02
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78937696657619 2.446e-03      N
+
+      6     -108.789376966576  -2.446e-03  +1.286e-02
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78960766856549 2.307e-04      N
+
+      7     -108.789607668565  -2.307e-04  +5.713e-03
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78965331164109 4.564e-05      N
+
+      8     -108.789653311641  -4.564e-05  +2.392e-03
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78965898072661 5.669e-06      N
+
+Subspace too large: max subspace size = 10, basis size = 10
+Collapsing eigenvectors.
+
+      9     -108.789658980727  -5.669e-06  +1.305e-03
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966047092456 1.490e-06      N
+
+     10     -108.789660470925  -1.490e-06  +7.053e-04
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966123450806 7.636e-07      N
+
+     11     -108.789661234508  -7.636e-07  +3.073e-04
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966138118554 1.467e-07      N
+
+     12     -108.789661381186  -1.467e-07  +1.533e-04
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966139612000 1.493e-08      N
+
+     13     -108.789661396120  -1.493e-08  +1.224e-04
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140782671 1.171e-08      N
+
+     14     -108.789661407827  -1.171e-08  +2.879e-05
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140919722 1.371e-09      N
+
+     15     -108.789661409197  -1.371e-09  +1.501e-05
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140948906 2.918e-10      N
+
+     16     -108.789661409489  -2.918e-10  +5.949e-06
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140952249 3.344e-11      N
+
+Subspace too large: max subspace size = 10, basis size = 10
+Collapsing eigenvectors.
+
+     17     -108.789661409523  -3.345e-11  +2.958e-06
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140953095 8.455e-12      N
+
+     18     -108.789661409531  -8.441e-12  +1.525e-06
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140953368 2.728e-12      N
+
+     19     -108.789661409534  -2.728e-12  +5.503e-07
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140953403 3.553e-13      N
+
+     20     -108.789661409534  -3.553e-13  +1.998e-07
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140953412 8.527e-14      N
+
+     21     -108.789661409534  -8.527e-14  +1.269e-07
+  Root      Eigenvalue        Delta   Converged?
+  ---- -------------------- --------- ----------
+    0   -108.78966140953411 1.421e-14      Y
+
+     22     -108.789661409534  +1.421e-14  +5.664e-08
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 23 iterations.
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2      0.55904026
+    2 2 0 0 2 0     -0.34712612
+    2 0 2 0 0 2     -0.34712612
+    2 2 2 0 0 0      0.24108063
+    2 a b 0 b a      0.21428727
+    2 b a 0 a b      0.21428727
+    0 0 0 2 2 2     -0.17603527
+    0 0 2 2 0 2      0.14015328
+    0 2 0 2 2 0      0.14015328
+    0 2 2 2 0 0     -0.12727044
+    2 b a 0 b a      0.12343324
+    2 a b 0 a b      0.12343324
+    a 0 b a b 2      0.11903054
+    b a 0 b 2 a     -0.11903054
+    b 0 a b a 2      0.11903054
+    a b 0 a 2 b     -0.11903054
+
+    Total Energy:      -108.789661409534105
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -108.789661409534
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.002 s
+    Timing for 3-RDM: 0.036 s
+
+  ==> NATURAL ORBITALS <==
+
+        1Ag     1.641660      1B2u    1.289768      1B3u    1.289768  
+        1B2g    0.710231      1B3g    0.710231      1B1u    0.358343  
+
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.707607     0.197308
+    norm       3.443143     1.781538
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Fock core, active, virtual blocks (Fij, i != j)
+                      core          active         virtual
+    ------------------------------------------------------
+       max    0.0000000000    0.0000000000    0.0000000002
+    1-norm    0.0000000000    0.0000000000    0.0000000014
+    ------------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Semicanonical Orbital Energy <==
+
+    F[   0] =      -1.009672679275
+    F[   1] =      -0.379482878548
+    F[   2] =       1.002789285584
+    F[   3] =       1.127101389543
+    F[   4] =       1.843043186976
+    F[   5] =       2.026782882500
+    F[   6] =       2.026782882500
+    F[   7] =      -0.111206848517
+    F[   8] =       1.018845777206
+    F[   9] =       2.183823738612
+    F[  10] =      -0.111206848517
+    F[  11] =       1.018845777206
+    F[  12] =       2.183823738612
+    F[  13] =       2.055586137910
+    F[  14] =      -0.906791118537
+    F[  15] =       0.059741871889
+    F[  16] =       0.927736739291
+    F[  17] =       1.360393212095
+    F[  18] =       2.055586137910
+    F[  19] =       2.684995299877
+    F[  20] =      -0.260157228251
+    F[  21] =       0.912398596246
+    F[  22] =       1.940462733673
+    F[  23] =      -0.260157228251
+    F[  24] =       0.912398596246
+    F[  25] =       1.940462733673
+
+  ==> Computation Information <==
+
+    Correlation level                                 LDSRG2
+    Integral type                                   CHOLESKY
+    Source operator                                 STANDARD
+    Reference relaxation                                NONE
+    Core-Virtual source type                            ZERO
+    Sequential DSRG transformation                     FALSE
+    Omit blocks of >= 3 virtual indices                FALSE
+    Flow parameter                                 1.000e+00
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-07
+    Recursive single commutator threshold          1.000e-12
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Max number of iterations                             100
+    Max nested commutators                                 4
+    DIIS start                                             2
+    Min DIIS vectors                                       2
+    Max DIIS vectors                                       6
+    DIIS extrapolating freq                                1
+    Number of amplitudes for printing                     15
+
+
+  ==> MR-DSRG (LDSRG2) Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   487.90 MB
+    Generalized Fock matrix                          5.62 KB
+    1-, 2-, and 3-density cumulants                384.19 KB
+    1-electron and 3-index integrals                 1.72 MB
+    T1 cluster amplitudes and residuals              3.07 KB
+    T2 cluster amplitudes and residuals            884.74 KB
+    1- and 2-body Hbar                               3.66 MB
+    1-body intermediates                            10.82 KB
+    2-body intermediates                             7.31 MB
+    Local intermediates for commutators              1.23 MB
+    Max memory for local intermediates               1.23 MB
+    Memory currently available                     473.92 MB
+
+
+  ==> Build Initial Amplitude from DSRG-MRPT2 <==
+
+    Computing T2 amplitudes ...          Done. Timing      0.040 s
+    Computing T1 amplitudes ...          Done. Timing      0.012 s
+
+  ==> First-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    1    7   10   15   20   23
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  15   16] 0.0790674 [  10   11] 0.0716756 [   7    8] 0.0716756
+    [  20   21] 0.0571404 [  23   24] 0.0571404 [   0    1] 0.0490487
+    [   1    3] 0.0365113 [  15   17] 0.0335318 [   1    2] 0.0080986
+    [  15   19] 0.0076154 [   1    4] 0.0062763 [  14   15] 0.0040625
+    [   7    9] 0.0036578 [  10   12] 0.0036578 [  20   22] 0.0010113
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.167714002678952
+    Number of nonzero elements:                                    22
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [   1   15   15    3] 0.0743267 [  20   10   10   21] 0.0686363 [  23    7    7   24] 0.0686363
+    [  15    7   15    8] 0.0676194 [  15   10   15   11] 0.0676194 [  20   15   10    3] 0.0669760
+    [  23   15    7    3] 0.0669760 [   7    7   23   24] 0.0658482 [  10   10   20   21] 0.0658482
+    [  10   15   20    3] 0.0654477 [   7   15   23    3] 0.0654477 [  10   20   10   21] 0.0649506
+    [   7   23    7   24] 0.0649506 [  15   15    1    3] 0.0648182 [   7    7    7    8] 0.0643053
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.840155034731216
+    Number of nonzero elements:                                                                3476
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Computing MR-LDSRG(2) Energy <==
+
+    Reference:
+      J. Chem. Phys. 2016, 144, 164114.
+
+                  Energy (a.u.)           Non-Diagonal Norm        Amplitude RMS         Timings (s)
+           ---------------------------  ---------------------  ---------------------  -----------------
+    Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
+    ---------------------------------------------------------------------------------------------------------
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.002
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.023
+    Time for [H2, T1] -> C1 :        0.051
+    Time for [H2, T2] -> C1 :        0.236
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.364
+    Time for [H2, T2] -> C2 :        1.730
+    --------------------------------------
+
+  n:   1, C0:   -0.350033840324306, C1 max:    0.171054736723878, C2 max:    0.239519038573012
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.066
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.304
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.177
+    Time for [H2, T2] -> C2 :        0.745
+    --------------------------------------
+
+  n:   2, C0:    0.169688032724296, C1 max:    0.085612649861113, C2 max:    0.123601578152068
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.068
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.304
+    Time for [H1, T2] -> C2 :        0.073
+    Time for [H2, T1] -> C2 :        0.193
+    Time for [H2, T2] -> C2 :        0.728
+    --------------------------------------
+
+  n:   3, C0:    0.004495262944983, C1 max:    0.009076040378586, C2 max:    0.008534721458042
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.067
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.303
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.176
+    Time for [H2, T2] -> C2 :        0.727
+    --------------------------------------
+
+  n:   4, C0:   -0.000922257766571, C1 max:    0.002011128144669, C2 max:    0.003530663060829
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       1    -0.176772802422 -1.768e-01   1.081e-01  4.434e-01   3.827e-02  2.204e-01     7.006    0.068
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.002
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.065
+    Time for [H1, T1] -> C1 :        0.005
+    Time for [H1, T2] -> C1 :        0.024
+    Time for [H2, T1] -> C1 :        0.052
+    Time for [H2, T2] -> C1 :        0.234
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.356
+    Time for [H2, T2] -> C2 :        1.677
+    --------------------------------------
+
+  n:   1, C0:   -0.357156483590193, C1 max:    0.124779032231993, C2 max:    0.179002975896570
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.057
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.274
+    Time for [H1, T2] -> C2 :        0.074
+    Time for [H2, T1] -> C2 :        0.176
+    Time for [H2, T2] -> C2 :        0.719
+    --------------------------------------
+
+  n:   2, C0:    0.173188576090489, C1 max:    0.046830317240493, C2 max:    0.074065948785359
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.066
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.033
+    Time for [H2, T2] -> C1 :        0.293
+    Time for [H1, T2] -> C2 :        0.072
+    Time for [H2, T1] -> C2 :        0.174
+    Time for [H2, T2] -> C2 :        0.737
+    --------------------------------------
+
+  n:   3, C0:    0.003829826476952, C1 max:    0.004077680064138, C2 max:    0.003272601479434
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.066
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.287
+    Time for [H1, T2] -> C2 :        0.072
+    Time for [H2, T1] -> C2 :        0.173
+    Time for [H2, T2] -> C2 :        0.719
+    --------------------------------------
+
+  n:   4, C0:   -0.000479324363789, C1 max:    0.000670295930565, C2 max:    0.001054713744070
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       2    -0.180617405387 -3.845e-03   1.544e-01  4.726e-01   1.366e-02  5.217e-02     6.809    0.069  S
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.051
+    Time for [H2, T2] -> C1 :        0.235
+    Time for [H1, T2] -> C2 :        0.071
+    Time for [H2, T1] -> C2 :        0.348
+    Time for [H2, T2] -> C2 :        1.729
+    --------------------------------------
+
+  n:   1, C0:   -0.364474591982125, C1 max:    0.135251911446767, C2 max:    0.196386957663992
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.067
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.304
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.178
+    Time for [H2, T2] -> C2 :        0.722
+    --------------------------------------
+
+  n:   2, C0:    0.178448131463998, C1 max:    0.054075866122959, C2 max:    0.084267323285363
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.067
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.031
+    Time for [H2, T2] -> C1 :        0.296
+    Time for [H1, T2] -> C2 :        0.074
+    Time for [H2, T1] -> C2 :        0.179
+    Time for [H2, T2] -> C2 :        0.730
+    --------------------------------------
+
+  n:   3, C0:    0.004001561225189, C1 max:    0.005173658653435, C2 max:    0.004477719814204
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.065
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.021
+    Time for [H2, T1] -> C1 :        0.033
+    Time for [H2, T2] -> C1 :        0.311
+    Time for [H1, T2] -> C2 :        0.087
+    Time for [H2, T1] -> C2 :        0.194
+    Time for [H2, T2] -> C2 :        0.677
+    --------------------------------------
+
+  n:   4, C0:   -0.000552360297476, C1 max:    0.000917613897572, C2 max:    0.001448160229412
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       3    -0.182577259590 -1.960e-03   1.374e-01  4.017e-01   3.562e-03  1.539e-02     6.910    0.057  SDIIS coefficients:  0.126  0.874 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.047
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.041
+    Time for [H2, T2] -> C1 :        0.198
+    Time for [H1, T2] -> C2 :        0.062
+    Time for [H2, T1] -> C2 :        0.299
+    Time for [H2, T2] -> C2 :        1.482
+    --------------------------------------
+
+  n:   1, C0:   -0.365394941501440, C1 max:    0.132179705323916, C2 max:    0.192618263421819
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.059
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.267
+    Time for [H1, T2] -> C2 :        0.078
+    Time for [H2, T1] -> C2 :        0.181
+    Time for [H2, T2] -> C2 :        0.646
+    --------------------------------------
+
+  n:   2, C0:    0.179795244970940, C1 max:    0.051608647568544, C2 max:    0.082103030424619
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.269
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.152
+    Time for [H2, T2] -> C2 :        0.624
+    --------------------------------------
+
+  n:   3, C0:    0.004074264034272, C1 max:    0.004984183433463, C2 max:    0.004152082210605
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.265
+    Time for [H1, T2] -> C2 :        0.062
+    Time for [H2, T1] -> C2 :        0.150
+    Time for [H2, T2] -> C2 :        0.638
+    --------------------------------------
+
+  n:   4, C0:   -0.000551870172391, C1 max:    0.000859857790693, C2 max:    0.001339272548890
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       4    -0.182077302669  5.000e-04   1.401e-01  4.095e-01   9.484e-04  5.117e-03     6.028    0.056  SDIIS coefficients:  -0.095  -0.216  1.311 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.046
+    Time for [H1, T1] -> C1 :        0.005
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.042
+    Time for [H2, T2] -> C1 :        0.193
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.311
+    Time for [H2, T2] -> C2 :        1.452
+    --------------------------------------
+
+  n:   1, C0:   -0.365777416667626, C1 max:    0.131804123066797, C2 max:    0.193362847088872
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.253
+    Time for [H1, T2] -> C2 :        0.065
+    Time for [H2, T1] -> C2 :        0.154
+    Time for [H2, T2] -> C2 :        0.652
+    --------------------------------------
+
+  n:   2, C0:    0.180194587091922, C1 max:    0.051173442476711, C2 max:    0.082371671769321
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.064
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.030
+    Time for [H2, T2] -> C1 :        0.313
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.173
+    Time for [H2, T2] -> C2 :        0.712
+    --------------------------------------
+
+  n:   3, C0:    0.004046766807185, C1 max:    0.005029623237074, C2 max:    0.004192434395598
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.059
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.265
+    Time for [H1, T2] -> C2 :        0.066
+    Time for [H2, T1] -> C2 :        0.154
+    Time for [H2, T2] -> C2 :        0.636
+    --------------------------------------
+
+  n:   4, C0:   -0.000549210282911, C1 max:    0.000859689681128, C2 max:    0.001341751759500
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       5    -0.182085273051 -7.970e-06   1.402e-01  4.082e-01   3.333e-04  9.485e-04     6.155    0.058  SDIIS coefficients:  -0.022  -0.073  0.180  0.915 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.048
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.045
+    Time for [H2, T2] -> C1 :        0.206
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.316
+    Time for [H2, T2] -> C2 :        1.511
+    --------------------------------------
+
+  n:   1, C0:   -0.365899005226805, C1 max:    0.131841476256946, C2 max:    0.193353595556421
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.057
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.262
+    Time for [H1, T2] -> C2 :        0.065
+    Time for [H2, T1] -> C2 :        0.156
+    Time for [H2, T2] -> C2 :        0.628
+    --------------------------------------
+
+  n:   2, C0:    0.180344159320716, C1 max:    0.051201017643628, C2 max:    0.082452170367588
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.062
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.261
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.640
+    --------------------------------------
+
+  n:   3, C0:    0.004060212408419, C1 max:    0.005030993042422, C2 max:    0.004191425762211
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.057
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.260
+    Time for [H1, T2] -> C2 :        0.065
+    Time for [H2, T1] -> C2 :        0.171
+    Time for [H2, T2] -> C2 :        0.643
+    --------------------------------------
+
+  n:   4, C0:   -0.000551150986434, C1 max:    0.000861561949645, C2 max:    0.001343483138069
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       6    -0.182045784484  3.949e-05   1.400e-01  4.077e-01   4.613e-05  1.823e-04     6.085    0.060  SDIIS coefficients:  0.009  0.023  -0.074  -0.238  1.280 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.048
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.044
+    Time for [H2, T2] -> C1 :        0.202
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.311
+    Time for [H2, T2] -> C2 :        1.483
+    --------------------------------------
+
+  n:   1, C0:   -0.365871633825493, C1 max:    0.131832752387637, C2 max:    0.193341028342303
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.260
+    Time for [H1, T2] -> C2 :        0.062
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.628
+    --------------------------------------
+
+  n:   2, C0:    0.180320944564371, C1 max:    0.051195920721325, C2 max:    0.082437284514158
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.266
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.152
+    Time for [H2, T2] -> C2 :        0.620
+    --------------------------------------
+
+  n:   3, C0:    0.004058433511719, C1 max:    0.005029590400799, C2 max:    0.004190524325332
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.258
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.151
+    Time for [H2, T2] -> C2 :        0.628
+    --------------------------------------
+
+  n:   4, C0:   -0.000550998033337, C1 max:    0.000861192271163, C2 max:    0.001343335288146
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       7    -0.182043253783  2.531e-06   1.401e-01  4.077e-01   1.375e-05  4.878e-05     5.969    0.056  SDIIS coefficients:  -0.001  -0.000  0.003  0.003  -0.236  1.231 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.046
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.044
+    Time for [H2, T2] -> C1 :        0.196
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.304
+    Time for [H2, T2] -> C2 :        1.470
+    --------------------------------------
+
+  n:   1, C0:   -0.365870372345081, C1 max:    0.131837220257592, C2 max:    0.193338320067510
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.059
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.255
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.148
+    Time for [H2, T2] -> C2 :        0.640
+    --------------------------------------
+
+  n:   2, C0:    0.180321117986175, C1 max:    0.051199727758286, C2 max:    0.082435488754489
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.261
+    Time for [H1, T2] -> C2 :        0.065
+    Time for [H2, T1] -> C2 :        0.150
+    Time for [H2, T2] -> C2 :        0.667
+    --------------------------------------
+
+  n:   3, C0:    0.004058287061214, C1 max:    0.005029708379213, C2 max:    0.004190566083746
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.061
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.020
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.269
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.626
+    --------------------------------------
+
+  n:   4, C0:   -0.000551033622054, C1 max:    0.000861210673604, C2 max:    0.001343434004289
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       8    -0.182042000920  1.253e-06   1.400e-01  4.077e-01   3.076e-06  1.283e-05     6.006    0.056  SDIIS coefficients:  1.109  0.000  -0.000  0.000  -0.021  -0.088 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.047
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.044
+    Time for [H2, T2] -> C1 :        0.202
+    Time for [H1, T2] -> C2 :        0.066
+    Time for [H2, T1] -> C2 :        0.303
+    Time for [H2, T2] -> C2 :        1.487
+    --------------------------------------
+
+  n:   1, C0:   -0.365870589944622, C1 max:    0.131836833197377, C2 max:    0.193337584018075
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.061
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.275
+    Time for [H1, T2] -> C2 :        0.069
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.629
+    --------------------------------------
+
+  n:   2, C0:    0.180321643020490, C1 max:    0.051199534627532, C2 max:    0.082435146039143
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.257
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.639
+    --------------------------------------
+
+  n:   3, C0:    0.004058250479384, C1 max:    0.005029685526849, C2 max:    0.004190540546541
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.070
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.269
+    Time for [H1, T2] -> C2 :        0.067
+    Time for [H2, T1] -> C2 :        0.160
+    Time for [H2, T2] -> C2 :        0.628
+    --------------------------------------
+
+  n:   4, C0:   -0.000551047139532, C1 max:    0.000861189630605, C2 max:    0.001343436716091
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       9    -0.182041743584  2.573e-07   1.400e-01  4.077e-01   9.839e-07  3.612e-06     6.041    0.057  SDIIS coefficients:  -0.016  1.075  -0.000  0.000  0.010  -0.070 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.046
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.041
+    Time for [H2, T2] -> C1 :        0.196
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.304
+    Time for [H2, T2] -> C2 :        1.466
+    --------------------------------------
+
+  n:   1, C0:   -0.365870667247297, C1 max:    0.131837064440848, C2 max:    0.193337815880016
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.060
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.282
+    Time for [H1, T2] -> C2 :        0.073
+    Time for [H2, T1] -> C2 :        0.156
+    Time for [H2, T2] -> C2 :        0.645
+    --------------------------------------
+
+  n:   2, C0:    0.180321857060485, C1 max:    0.051199746613583, C2 max:    0.082435170542562
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.056
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.026
+    Time for [H2, T2] -> C1 :        0.253
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.148
+    Time for [H2, T2] -> C2 :        0.633
+    --------------------------------------
+
+  n:   3, C0:    0.004058236076797, C1 max:    0.005029704967599, C2 max:    0.004190556141128
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.056
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.260
+    Time for [H1, T2] -> C2 :        0.069
+    Time for [H2, T1] -> C2 :        0.159
+    Time for [H2, T2] -> C2 :        0.627
+    --------------------------------------
+
+  n:   4, C0:   -0.000551048323684, C1 max:    0.000861189669396, C2 max:    0.001343443157765
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+      10    -0.182041622434  1.212e-07   1.400e-01  4.077e-01   1.985e-07  8.932e-07     6.010    0.082  SDIIS coefficients:  -0.065  0.024  1.038  -0.000  0.002  0.001 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.002
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.005
+    Time for [H2, T2] -> C0 :        0.064
+    Time for [H1, T1] -> C1 :        0.005
+    Time for [H1, T2] -> C1 :        0.023
+    Time for [H2, T1] -> C1 :        0.058
+    Time for [H2, T2] -> C1 :        0.233
+    Time for [H1, T2] -> C2 :        0.077
+    Time for [H2, T1] -> C2 :        0.356
+    Time for [H2, T2] -> C2 :        1.758
+    --------------------------------------
+
+  n:   1, C0:   -0.365870679405887, C1 max:    0.131836987899003, C2 max:    0.193337831211255
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.256
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.149
+    Time for [H2, T2] -> C2 :        0.639
+    --------------------------------------
+
+  n:   2, C0:    0.180321882883694, C1 max:    0.051199682089361, C2 max:    0.082435184688453
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.270
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.149
+    Time for [H2, T2] -> C2 :        0.655
+    --------------------------------------
+
+  n:   3, C0:    0.004058228746500, C1 max:    0.005029709373896, C2 max:    0.004190553341962
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.030
+    Time for [H2, T2] -> C1 :        0.269
+    Time for [H1, T2] -> C2 :        0.067
+    Time for [H2, T1] -> C2 :        0.155
+    Time for [H2, T2] -> C2 :        0.625
+    --------------------------------------
+
+  n:   4, C0:   -0.000551048290683, C1 max:    0.000861188261700, C2 max:    0.001343442464972
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+      11    -0.182041616066  6.367e-09   1.400e-01  4.077e-01   4.260e-08  1.928e-07     6.440    0.057  SDIIS coefficients:  0.009  -0.042  -0.109  1.141  -0.001  0.003 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.048
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.041
+    Time for [H2, T2] -> C1 :        0.199
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.299
+    Time for [H2, T2] -> C2 :        1.922
+    --------------------------------------
+
+  n:   1, C0:   -0.365870671046198, C1 max:    0.131836992492048, C2 max:    0.193337839610448
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.056
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.260
+    Time for [H1, T2] -> C2 :        0.067
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.639
+    --------------------------------------
+
+  n:   2, C0:    0.180321882567061, C1 max:    0.051199687171842, C2 max:    0.082435189209630
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.261
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.151
+    Time for [H2, T2] -> C2 :        0.803
+    --------------------------------------
+
+  n:   3, C0:    0.004058229447112, C1 max:    0.005029708426861, C2 max:    0.004190553654675
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.002
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.084
+    Time for [H1, T1] -> C1 :        0.005
+    Time for [H1, T2] -> C1 :        0.028
+    Time for [H2, T1] -> C1 :        0.041
+    Time for [H2, T2] -> C1 :        0.387
+    Time for [H1, T2] -> C2 :        0.084
+    Time for [H2, T1] -> C2 :        0.171
+    Time for [H2, T2] -> C2 :        0.722
+    --------------------------------------
+
+  n:   4, C0:   -0.000551048383245, C1 max:    0.000861188484414, C2 max:    0.001343442740979
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+      12    -0.182041607415  8.651e-09   1.400e-01  4.077e-01   1.340e-08  5.030e-08     6.910    0.070  SDIIS coefficients:  0.002  0.001  -0.031  0.018  1.011  -0.000 
+/E
+    ---------------------------------------------------------------------------------------------------------
+
+  ==> MR-LDSRG(2) Energy Summary <==
+
+    E0 (reference)                 =    -108.789661394491148
+    MR-LDSRG(2) correlation energy =      -0.182041607415270
+    MR-LDSRG(2) total energy       =    -108.971703001906420
+
+  ==> Final Excitation Amplitudes Summary <==
+
+    Active Indices:    1    7   10   15   20   23
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  15   16] 0.0661856 [  10   11] 0.0574658 [   7    8] 0.0574658
+    [   0    1] 0.0546988 [  20   21] 0.0516998 [  23   24] 0.0516998
+    [   1    3] 0.0332808 [  15   17] 0.0223764 [  15   19] 0.0099638
+    [   1    4] 0.0080171 [  14   15] 0.0065097 [   7    9] 0.0046711
+    [  10   12] 0.0046711 [   1    2] 0.0038250 [  14   17] 0.0035982
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.145662603466549
+    Number of nonzero elements:                                    22
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [  14   14   10   10] 0.0637491 [  14   14    7    7] 0.0637491 [   1   15   15    3] 0.0612153
+    [   0    0    1    1] 0.0574479 [   0   14   20   10] 0.0569840 [   0   14   23    7] 0.0569840
+    [  14   14   15   15] 0.0567994 [  23    7    7   24] 0.0542454 [  20   10   10   21] 0.0542454
+    [   0   14    1   15] 0.0540182 [   0    0   20   20] 0.0529969 [   0    0   23   23] 0.0529969
+    [  15    7   15    8] 0.0525366 [  15   10   15   11] 0.0525366 [   0   14   10   20] 0.0523338
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.748907215489004
+    Number of nonzero elements:                                                                3464
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.064       0.083       0.138       2.808
+    -> C1       0.186       0.948       1.609      12.491
+    -> C2                   3.284       9.703      43.184
+    -----------------------------------------------------
+
+
+  Time to prepare integrals: 0.8112199306488037 seconds
+  Time to run job          : 77.60860705375671 seconds
+  Total                    : 77.60860705375671 seconds    MR-LDSRG(2) (NCOMM=4) unrelaxed energy............................PASSED
+
+    Psi4 stopped on: Saturday, 21 March 2020 12:40AM
+    Psi4 wall time for execution: 0:01:20.16
+
+*** Psi4 exiting successfully. Buy a developer a beer!

@@ -5,7 +5,7 @@ import forte
 #nucenergy =   23.253113522963400  #TEST
 nucenergy =   23.2531136143627961
 #refenergy =  -96.68319147222      #TEST
-refenergy =  -96.683191472300308
+refenergy = -96.683191504310784
 
 molecule arwater {
     Ar  0.000000000000     0.000000000000     3.000000000000

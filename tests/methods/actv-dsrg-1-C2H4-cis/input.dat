@@ -31,7 +31,7 @@ set forte{
   restricted_docc      [1,0,0,1,0,1,1,0]
   active               [1,0,1,1,0,1,1,1]
   dsrg_s               0.5
-  active_space_solver  cas
+  active_space_solver  detci
   fcimo_actv_type      cis
   nrootpi              [1,0,0,0,0,1,0,0]
   d_convergence        10

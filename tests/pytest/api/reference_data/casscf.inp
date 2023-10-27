@@ -1,0 +1,11 @@
+molecule {
+    H 0.0 0.0 0.0
+    H 0.0 0.0 1.0
+}
+
+set scf_type pk
+set basis cc-pVDZ
+
+set active [1,0,0,0,0,1,0,0] 
+
+energy('casscf')

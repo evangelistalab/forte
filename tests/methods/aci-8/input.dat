@@ -1,13 +1,12 @@
 #! This tests the Adaptive-CI procedure using energy selection
 #! Generated using commit GITCOMMIT
 #
-
-
 import forte 
 
 refscf = -2.0310813811962447 #TEST
-refaci = -2.115402994945 #TEST
-refacipt2 = -2.116267624645 #TEST
+refaci = -2.115357375325 #TEST 
+refacipt2 = -2.116357232307 #TEST
+spin_val = 0.028996090 #TEST
 
 molecule li2{
 0 1
@@ -28,21 +27,24 @@ set {
 
 set forte {
   active_space_solver aci
-  aci_SELECT_TYPE amp
-  aci_add_aimed_degenerate false
-  sci_project_out_spin_contaminants false
-  aci_enforce_spin_complete false
-  gamma  8.0
-  sigma 0.000500
+  sci_enforce_spin_complete false
+  sigma 0.001
   nroot 1
   charge 0
-  diag_algorithm full
+  diag_algorithm sparse
+  spin_analysis true
+  spin_basis NO
+  spin_test true
+  sci_project_out_spin_contaminants false
+  r_convergence 6
+  e_convergence 12
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+compare_values(spin_val, variable("SPIN CORRELATION TEST"),7, "Spin Correlation") #TEST

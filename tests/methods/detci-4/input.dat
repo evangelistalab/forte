@@ -1,0 +1,32 @@
+# CASCI test of Forte DETCI using
+# SparseList algorithm for building sigma vector
+import forte
+
+ref_scf =  -99.977636678461636
+ref_fci = -100.113732484560970
+
+molecule HF{
+0 1
+F
+H 1 1.0
+}
+
+set globals{
+  basis                   6-31g
+  reference               rhf
+  scf_type                pk
+  d_convergence           8
+  e_convergence           12
+}
+
+set forte{
+  active_space_solver     detci
+  active_ref_type         cas
+  frozen_docc             [1,0,0,0]
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(ref_scf, variable("CURRENT ENERGY"), 10, "SCF energy")
+
+energy('forte', ref_wfn=wfn)
+compare_values(ref_fci, variable("CURRENT ENERGY"), 8, "CASCI energy")

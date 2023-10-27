@@ -1,0 +1,19 @@
+molecule {
+-1 2
+H 0.0 0.0 0.0
+H 0.0 0.0 1.0
+H 0.0 2.0 0.0
+H 0.0 2.0 1.0
+units bohr
+symmetry c1
+}
+
+set {
+  reference rohf
+  basis sto-3g
+  scf_type pk
+  e_convergence 14
+}
+
+e, wfn = energy('fci',return_wfn=True)
+fcidump(wfn)

@@ -1,5 +1,3 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refmcscf   = -99.406065222746975
@@ -12,31 +10,34 @@ memory 500 mb
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.5
 }
 
 set globals{
    basis                  3-21g
-   reference              twocon
    scf_type               cd
    cholesky_tolerance     1e-4
-   e_convergence          8
-   maxiter                100
    docc                   [3,0,1,1]
 }
 
-set mcscf{
-   docc                   [2,0,1,1]
-   socc                   [2,0,0,0]
-   maxiter                1000
-   level_shift            0.5
-   d_convergence          10
-   e_convergence          12
+set forte{
+   job_type                mcscf_two_step
+   active_space_solver     fci
+   restricted_docc         [2,0,1,1]
+   active                  [2,0,0,0]
+   root_sym                0
+   nroot                   1
+   casscf_e_convergence    12
+   casscf_g_convergence    8
 }
 
+Emcscf, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy")
+
 set forte{
-   job_type               mrdsrg
+   job_type               newdriver
+   correlation_solver     mrdsrg
+   active_space_solver    fci
    int_type               cholesky
    cholesky_tolerance     1e-4
    corr_level             ldsrg2
@@ -50,9 +51,6 @@ set forte{
    e_convergence          8
    relax_ref              twice
 }
-
-Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 energy('forte', ref_wfn=wfn)
 compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")

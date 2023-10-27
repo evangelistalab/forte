@@ -29,15 +29,6 @@ set forte {
   e_convergence 12
 }
 
-set forte {
-  active_space_solver fci
-  int_type conventional
-  frozen_docc      [2 ,0 ,0 ,0]
-  restricted_docc  [2 ,0 ,0 ,0]
-  active           [2 ,2 ,2 ,2]
-  e_convergence 12
-}
-
 energy('forte')
 compare_values(refscf, variable("SCF TOTAL ENERGY"),10, "SCF energy") #TEST
 compare_values(reffci, variable("CURRENT ENERGY"),10, "FCI energy") #TEST

@@ -1,13 +1,10 @@
-#! Generated using commit GITCOMMIT
-#! Perform a DF-DSRG-MRPT2 on benzyne 
+#! Perform a DF-DSRG-MRPT2 on benzyne
 
 import forte
 
-
 memory 500 mb
 
-refmcscf   =  -225.76764656871
-refdsrgpt2 =  -226.880956506423786
+refdsrgpt2 = -226.882966114441
 
 molecule mbenzyne{
   0 3
@@ -26,34 +23,32 @@ molecule mbenzyne{
 }
 
 set globals{
-   basis                   sto-3g
-   df_basis_mp2            cc-pvdz-ri
-   df_basis_scf            cc-pvdz-jkfit
-   scf_type                pk
-   reference               rohf
-   d_convergence           10
-   e_convergence           12
-   docc                   [5, 3, 1, 1, 0, 1, 4, 4]
-   socc                   [1, 0, 0, 0, 0, 0, 1, 0]
-   maxiter                 500
+   basis                sto-3g
+   df_basis_mp2         cc-pvdz-ri
+   df_basis_scf         cc-pvdz-jkfit
+   scf_type             df
+   reference            rohf
+   d_convergence        10
+   e_convergence        12
+   docc                 [5, 3, 1, 1, 0, 1, 4, 4]
+   socc                 [1, 0, 0, 0, 0, 0, 1, 0]
+   maxiter              500
 }
 
 set forte {
-   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
-   active                 [1, 0, 0, 0, 0, 0, 1, 0]
-   root_sym                0
-   nroot                   1
-   multiplicity            1
-#   dsrgpt                  false
-   dsrg_s                  0.5
-   int_type                DISKDF
-   correlation_solver      three-dsrg-mrpt2
-   active_space_solver     fci
+   frozen_docc          [2, 1, 0, 0, 0, 0, 2, 1]
+   restricted_docc      [3, 2, 1, 1, 0, 1, 2, 3]
+   active               [1, 0, 0, 0, 0, 0, 1, 0]
+   root_sym             0
+   nroot                1
+   multiplicity         1
+   dsrg_s               0.5
+   int_type             diskdf
+   correlation_solver   three-dsrg-mrpt2
+   active_space_solver  fci
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
-#compare_values(refmcscf, scf,10,"SCF Energy")
 
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt2, variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

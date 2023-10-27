@@ -25,8 +25,8 @@ set {
   reference      rhf
   scf_type       df
   basis          def2-tzvp
-  df_basis_scf   def2-tzvp-jkfit
-  df_basis_mp2   def2-tzvp-jkfit
+  df_basis_scf   def2-universal-jkfit
+  df_basis_mp2   def2-universal-jkfit
   e_convergence  10
   d_convergence  12
   maxiter        100

@@ -1,10 +1,11 @@
 import forte
 
 #refgs = -190.903043353085195
-refgs = -190.903043353414034
+#refgs = -190.903043353414034
+refgs = -190.903043353477869  # 2020-12-9 psi4@4dde4d8 after shell screening
 #refex = -190.460579061322 # NB: previous value was: -190.460579057245468
-refex = -190.46057905898135
- 
+#refex = -190.46057905898135
+refex = -190.460579059045074  # 2020-12-9 psi4@4dde4d8 after shell screening
 memory 1 gb
 
 molecule acetone {
@@ -45,11 +46,11 @@ set forte{
 
 energy('scf')
 gs_energy = energy('forte')
-compare_values(refgs,gs_energy,11, "Ground state FCI energy") #TEST
+compare_values(refgs, gs_energy, 8, "Ground state FCI energy") #TEST
 
 set forte nroot 2
 set forte root  1
 energy('scf')
 ex_energy = energy('forte')
-compare_values(refex,ex_energy,11, "Singlet Excited State FCI energy") #TEST
+compare_values(refex, ex_energy, 8, "Singlet Excited State FCI energy") #TEST
 

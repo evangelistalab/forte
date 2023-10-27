@@ -1,0 +1,31 @@
+# This test case uses external RDMs from rdms.json to compute unrelaxed DSRG-MRPT2 energy
+
+import forte
+
+refe = -1.155656745568920
+
+molecule {
+0 1
+H
+H 1 0.7
+}
+
+set {
+  basis                cc-pvdz
+  scf_type             pk
+  e_convergence        12
+}
+
+set forte {
+  job_type             newdriver
+  active_space_solver  external    # read rdms.json, generate as_ints.json
+  read_wfn             true        # read coeff.json
+  correlation_solver   dsrg-mrpt2
+  dsrg_s               0.5
+  active               [1, 0, 0, 0, 0, 1, 0, 0]
+  restricted_docc      [0, 0, 0, 0, 0, 0, 0, 0]
+
+}
+
+energy('forte')
+compare_values(refe, variable("CURRENT ENERGY"),10, "DSRG-MRPT2 unrelaxed energy (external RDM)")

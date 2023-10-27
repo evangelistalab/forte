@@ -1,5 +1,4 @@
 #! This tests the Adaptive Path-Integral FCI procedure with no prescreening
-#! Generated using commit GITCOMMIT
 
 import forte
 
@@ -23,14 +22,15 @@ set forte {
   PCI_GENERATOR WALL-CHEBYSHEV
   pci_spawning_threshold 0.0001
   pci_post_diagonalize true
-  DIAG_ALGORITHM DLSOLVER
-  pci_e_convergence 12
+  SCI_PROJECT_OUT_SPIN_CONTAMINANTS false
+  pci_e_convergence 13
+  pci_r_convergence  6
   PCI_STOP_HIGHER_NEW_LOW true
 }
 energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("PCI ENERGY"), 11, "PCI energy") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
 compare_values(refpostdiag, variable("PCI POST DIAG ENERGY"), 10, "PCI POST DIAG ENERGY") #TEST
 

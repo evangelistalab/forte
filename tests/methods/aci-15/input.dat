@@ -4,13 +4,13 @@
 
 import forte
 
-refscf = -75.0525898286472426 
-refaci = -75.394396759752 
-refacipt2 = -75.437282606142
+refscf = -75.0525898286472852
+refaci = -75.354835591518
+refacipt2 = -75.374833674568
 
-molecule N2{
+molecule C2{
 0 1
-C 
+C
 C 1 2.6
 units angstrom
 }
@@ -19,7 +19,7 @@ set {
   basis DZ
   scf_type pk
   freeze_core true
-  reference rohf 
+  reference rohf
   e_convergence 10
   d_convergence 10
   r_convergence 10
@@ -27,28 +27,24 @@ set {
   guess gwh
 }
 
-
-
 set forte {
   active_space_solver aci
   multiplicity 1
-  aci_select_type amp
-  frozen_docc [1,0,0,0,0,0,0,0]
-  restricted_docc [0,0,0,0,0,1,0,0]
+  m_s 0.0
+  frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
-  sigma 0.01
+  sigma 0.02
   nroot 1
   charge 0
-  aci_enforce_spin_complete true
-  aci_prescreen_threshold 0.0
+  sci_enforce_spin_complete true
   diag_algorithm sparse
   active_ref_type hf
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #TEST

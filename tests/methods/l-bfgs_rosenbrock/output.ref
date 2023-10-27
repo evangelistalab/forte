@@ -1,0 +1,229 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.4a2.dev546 
+
+                         Git: Rev {HEAD} 9701d60 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 17 August 2020 04:20PM
+
+    Process ID: 5587
+    Host:       Yorks-Mac.local
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte
+
+fx1 = forte.test_lbfgs_rosenbrock(10, 0)
+fx2 = forte.test_lbfgs_rosenbrock(10, 1)
+fx3 = forte.test_lbfgs_rosenbrock(10, -1)
+
+compare_values(0.0, fx1, 10, "Rosenbrock n = 10 with exact initial diagonal Hessian")
+compare_values(0.0, fx2, 10, "Rosenbrock n = 10 with updated exact diagonal Hessian")
+compare_values(0.0, fx3, 10, "Rosenbrock n = 10 with adaptive inverse Hessian scalar")
+
+try:
+    import numpy as np
+    from scipy.optimize import minimize
+
+
+    def rosenbrock(x):
+        # f(x) = sum_{i=0}^{n/2 - 1} [ 100 * (x_{2i}^2 - x_{2i + 1})^2 + (x_{2i} - 1)^2 ]
+        x_even = x[::2]
+        x_odd = x[1::2]
+        return sum(100.0 * (x_even ** 2 - x_odd) ** 2 + (x_even - 1) ** 2)
+
+
+    def rosenbrock_grad(x):
+        x_even = x[::2]
+        x_odd = x[1::2]
+        t1 = x_even - 1
+        t2 = 10 * (x_even ** 2 - x_odd)
+
+        g = np.zeros(x.shape)
+        g[1::2] = -20 * t2
+        g[::2] = 2.0 * (t1 - g[1::2] * x_even)
+        return g
+
+
+    x0 = np.zeros(10)
+    res = minimize(rosenbrock, x0, method='BFGS', jac=rosenbrock_grad,
+                   options={'gtol': 1e-6, 'disp': True})
+
+    print_out("\n  ==> NumPy/SciPy BFGS Results <==\n")
+    print_out(f"\n    Numpy solution x")
+    for i, v in enumerate(res.x):
+        print_out(f"\n      {i:2d}: {v:20.15f}")
+    print_out(f"\n    Numpy value: {res.fun:.15f}")
+    print_out(f"\n    Numpy converged in {res.nit} iterations.\n")
+
+except:
+    pass
+--------------------------------------------------------------------------
+
+  Iter:   1; step =    0.1250000000; fx =    3.950195312500000; g_norm =    7.315771170047626
+  Iter:   2; step =    0.5000000000; fx =    3.673378481823523; g_norm =   17.339313292061668
+  Iter:   3; step =    1.0000000000; fx =    3.028751052501287; g_norm =    7.267671845811170
+  Iter:   4; step =    1.0000000000; fx =    2.204858918019191; g_norm =    5.831424165887721
+  Iter:   5; step =    1.0000000000; fx =    1.766165021670995; g_norm =   15.966729356486585
+  Iter:   6; step =    1.0000000000; fx =    1.118313053859637; g_norm =    1.752032478499908
+  Iter:   7; step =    0.5000000000; fx =    0.849032495853881; g_norm =    6.650813666150393
+  Iter:   8; step =    1.0000000000; fx =    0.731966648333970; g_norm =   17.067908618460883
+  Iter:   9; step =    1.0000000000; fx =    0.468775838269667; g_norm =    3.451359134101852
+  Iter:  10; step =    1.0000000000; fx =    0.292231653334401; g_norm =    2.325780507520813
+  Iter:  11; step =    0.5000000000; fx =    0.203579874406899; g_norm =    6.389302890904903
+  Iter:  12; step =    1.0000000000; fx =    0.105436308719889; g_norm =    6.387747526239134
+  Iter:  13; step =    1.0000000000; fx =    0.051860660353227; g_norm =    3.497841311672539
+  Iter:  14; step =    0.5000000000; fx =    0.017140571521256; g_norm =    0.612868164499383
+  Iter:  15; step =    0.5000000000; fx =    0.010121123375446; g_norm =    2.515142939423379
+  Iter:  16; step =    1.0000000000; fx =    0.004968152683729; g_norm =    1.901593246528615
+  Iter:  17; step =    1.0000000000; fx =    0.000545956196200; g_norm =    0.053703356360262
+  Iter:  18; step =    1.0000000000; fx =    0.000070021902653; g_norm =    0.371013756689151
+  Iter:  19; step =    1.0000000000; fx =    0.000000652975511; g_norm =    0.012765633548028
+  Iter:  20; step =    1.0000000000; fx =    0.000000001074848; g_norm =    0.000201102801967
+  Iter:  21; step =    1.0000000000; fx =    0.000000000000015; g_norm =    0.000002561070546
+
+  L-BFGS converged in 21 iterations.
+  Final function value f(x) = 0.000000000000015
+  Optimized vector x:
+
+ # x #
+ Irrep: 1
+      1:  1.0000000
+      2:  0.9999999
+      3:  1.0000000
+      4:  0.9999999
+      5:  1.0000000
+      6:  0.9999999
+      7:  1.0000000
+      8:  0.9999999
+      9:  1.0000000
+     10:  0.9999999
+
+
+  Iter:   1; step =    0.1250000000; fx =    3.950195312500000; g_norm =    7.315771170047626
+  Iter:   2; step =    0.5000000000; fx =    3.673378481823523; g_norm =   17.339313292061668
+  Iter:   3; step =    1.0000000000; fx =    3.028751052501287; g_norm =    7.267671845811170
+  Iter:   4; step =    1.0000000000; fx =    2.204858918019191; g_norm =    5.831424165887721
+  Iter:   5; step =    1.0000000000; fx =    1.766165021670995; g_norm =   15.966729356486585
+  Iter:   6; step =    1.0000000000; fx =    1.118313053859637; g_norm =    1.752032478499908
+  Iter:   7; step =    0.5000000000; fx =    0.849032495853881; g_norm =    6.650813666150393
+  Iter:   8; step =    1.0000000000; fx =    0.731988177541337; g_norm =   17.063967265728742
+  Iter:   9; step =    1.0000000000; fx =    0.469299299329490; g_norm =    3.474141905959069
+  Iter:  10; step =    1.0000000000; fx =    0.293090211866917; g_norm =    2.291012381828283
+  Iter:  11; step =    0.5000000000; fx =    0.204047458512277; g_norm =    6.402444753580836
+  Iter:  12; step =    1.0000000000; fx =    0.107175806032179; g_norm =    6.452467525864183
+  Iter:  13; step =    1.0000000000; fx =    0.049337320375526; g_norm =    2.670905382954195
+  Iter:  14; step =    0.5000000000; fx =    0.019477478059886; g_norm =    0.683725774202713
+  Iter:  15; step =    0.5000000000; fx =    0.010985561610538; g_norm =    2.538590247850803
+  Iter:  16; step =    1.0000000000; fx =    0.005113824508346; g_norm =    1.987950726067709
+  Iter:  17; step =    1.0000000000; fx =    0.000583094313423; g_norm =    0.023417307228471
+  Iter:  18; step =    1.0000000000; fx =    0.000062443935774; g_norm =    0.346576956580438
+  Iter:  19; step =    1.0000000000; fx =    0.000000697798995; g_norm =    0.002870974144876
+  Iter:  20; step =    1.0000000000; fx =    0.000000000565027; g_norm =    0.000170118503352
+  Iter:  21; step =    1.0000000000; fx =    0.000000000000008; g_norm =    0.000003720703047
+  Iter:  22; step =    1.0000000000; fx =    0.000000000000000; g_norm =    0.000000008435109
+
+  L-BFGS converged in 22 iterations.
+  Final function value f(x) = 0.000000000000000
+  Optimized vector x:
+
+ # x #
+ Irrep: 1
+      1:  1.0000000
+      2:  1.0000000
+      3:  1.0000000
+      4:  1.0000000
+      5:  1.0000000
+      6:  1.0000000
+      7:  1.0000000
+      8:  1.0000000
+      9:  1.0000000
+     10:  1.0000000
+
+
+  Iter:   1; step =    0.0625000000; fx =    3.950195312500000; g_norm =    7.315771170047626
+  Iter:   2; step =    0.2500000000; fx =    3.457269684350219; g_norm =   11.539495225161843
+  Iter:   3; step =    1.0000000000; fx =    2.447599092964182; g_norm =    9.850922447268474
+  Iter:   4; step =    1.0000000000; fx =    1.972558162665404; g_norm =    9.950923068752902
+  Iter:   5; step =    0.5000000000; fx =    1.273426358735537; g_norm =    7.624347828579748
+  Iter:   6; step =    1.0000000000; fx =    1.150914716743789; g_norm =   13.139671803303694
+  Iter:   7; step =    1.0000000000; fx =    0.719962302463670; g_norm =    5.639079806194765
+  Iter:   8; step =    1.0000000000; fx =    0.498561717276005; g_norm =    9.762083341814018
+  Iter:   9; step =    1.0000000000; fx =    0.232329754591284; g_norm =    1.792316208256584
+  Iter:  10; step =    0.5000000000; fx =    0.178084037817162; g_norm =   10.509451749188502
+  Iter:  11; step =    1.0000000000; fx =    0.116022619033021; g_norm =    2.190689115980542
+  Iter:  12; step =    1.0000000000; fx =    0.063357732307026; g_norm =    1.030330323614653
+  Iter:  13; step =    1.0000000000; fx =    0.039447887469804; g_norm =    7.554277880934542
+  Iter:  14; step =    1.0000000000; fx =    0.014638539288977; g_norm =    0.166881200495487
+  Iter:  15; step =    1.0000000000; fx =    0.005896602335364; g_norm =    0.312065645759773
+  Iter:  16; step =    1.0000000000; fx =    0.001247982861748; g_norm =    1.526150511877324
+  Iter:  17; step =    1.0000000000; fx =    0.000124211171004; g_norm =    0.069514316007112
+  Iter:  18; step =    1.0000000000; fx =    0.000006401903316; g_norm =    0.009732206404842
+  Iter:  19; step =    1.0000000000; fx =    0.000000016111786; g_norm =    0.005361811466962
+  Iter:  20; step =    1.0000000000; fx =    0.000000000003671; g_norm =    0.000054238617846
+  Iter:  21; step =    1.0000000000; fx =    0.000000000000000; g_norm =    0.000000168142976
+
+  L-BFGS converged in 21 iterations.
+  Final function value f(x) = 0.000000000000000
+  Optimized vector x:
+
+ # x #
+ Irrep: 1
+      1:  1.0000000
+      2:  1.0000000
+      3:  1.0000000
+      4:  1.0000000
+      5:  1.0000000
+      6:  1.0000000
+      7:  1.0000000
+      8:  1.0000000
+      9:  1.0000000
+     10:  1.0000000
+
+    Rosenbrock n = 10 with exact initial diagonal Hessian.............PASSED
+    Rosenbrock n = 10 with updated exact diagonal Hessian.............PASSED
+    Rosenbrock n = 10 with adaptive inverse Hessian scalar............PASSED
+
+  ==> NumPy/SciPy BFGS Results <==
+
+    Numpy solution x
+       0:    1.000000052158607
+       1:    1.000000105295688
+       2:    0.999999958831185
+       3:    0.999999917051085
+       4:    1.000000040796039
+       5:    1.000000082327717
+       6:    1.000000000770408
+       7:    1.000000001559152
+       8:    0.999999954755803
+       9:    0.999999908742013
+    Numpy value: 0.000000000000008
+    Numpy converged in 63 iterations.
+
+    Psi4 stopped on: Monday, 17 August 2020 04:20PM
+    Psi4 wall time for execution: 0:00:00.01
+
+*** Psi4 exiting successfully. Buy a developer a beer!

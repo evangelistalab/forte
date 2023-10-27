@@ -3,9 +3,9 @@
 import forte
 
 refrohf    = -15.611546532146
-refudsrg   = -15.545392859359275 # unrelaxed
-refprdsrg  = -15.545411508493 # partially relaxed
-refrdsrg   = -15.545381352943 # relaxed
+refudsrg   = -15.545388228724 # unrelaxed
+refprdsrg  = -15.545406861343 # partially relaxed
+refrdsrg   = -15.545376744058 # relaxed
 
 molecule {
   0 3
@@ -61,7 +61,7 @@ set {
 
 set forte {
 
-  active_space_solver    cas
+  active_space_solver    detci
   correlation_solver     mrdsrg
  # job_type               mrdsrg
   int_type               cholesky

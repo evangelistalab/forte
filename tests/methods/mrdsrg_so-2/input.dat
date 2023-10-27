@@ -1,0 +1,43 @@
+#! Generated using commit GITCOMMIT
+# Test for spin-orbital DSRG code
+
+import forte
+
+Ecas0  = -1.049725718950583
+Edsrg0 = -1.049825487798135
+
+molecule {
+  0 1
+  H
+  H 1 1.5
+}
+
+set {
+  basis              3-21g
+  docc               [1,0,0,0,0,0,0,0]
+  restricted_docc    [0,0,0,0,0,0,0,0]
+  active             [1,0,0,0,0,1,0,0]
+  reference          rhf
+  scf_type           pk
+  maxiter            300
+  e_convergence      8
+  d_convergence      10
+}
+
+set forte {
+  active_space_solver    detci
+  correlation_solver     somrdsrg
+  corr_level             ldsrg2
+  frozen_docc            [0,0,0,0,0,0,0,0]
+  restricted_docc        [0,0,0,0,0,0,0,0]
+  active                 [1,0,0,0,0,1,0,0]
+  dsrg_s                 0.5
+  maxiter                100
+  e_convergence          8
+}
+
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(Ecas0, variable("CURRENT ENERGY"), 7, "CASSCF energy")
+
+E_spin_orbital = energy('forte', ref_wfn=wfn)
+compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital Francesco")

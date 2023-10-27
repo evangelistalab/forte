@@ -1,0 +1,1210 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.4a2.dev1024 
+
+                         Git: Rev {master} b603cfc dirty
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, and M. H. Lechner
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Saturday, 14 November 2020 08:25PM
+
+    Process ID: 75644
+    Host:       Yorks-Mac.local
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refcasscf = -112.871834862959
+
+molecule CO{
+  0 1
+  C
+  O  1 1.128
+}
+
+set {
+  basis                  cc-pcvdz
+  reference              rhf
+  scf_type               out_of_core
+  maxiter                300
+  e_convergence          10
+  d_convergence          8
+  docc                   [5,0,1,1]
+}
+
+#Ecasscf, wfn_cas = energy('scf', return_wfn=True)
+#fcidump(wfn_cas,oe_ints=['EIGENVALUES'],write_pntgrp=True)
+
+set forte {
+  job_type           mcscf_two_step
+  int_type           fcidump
+  frozen_docc        [2,0,0,0]
+  frozen_uocc        [0,0,0,0]
+  restricted_docc    [2,0,0,0]
+  active             [2,0,2,2]
+  e_convergence      8
+  r_convergence      8
+  casscf_e_convergence 8
+  casscf_g_convergence 6
+  casscf_micro_maxiter 4
+}
+
+Eforte = energy('forte')
+compare_values(refcasscf, Eforte, 7, "CASSCF energy")
+--------------------------------------------------------------------------
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: cas_hessian - git commit: 636b3162
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 256 bits
+  Preparing forte objects from a custom source
+  Reading integral information from FCIDUMP file INTDUMP
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space FROZEN_UOCC
+  Read options for space ACTIVE
+  Read options for space FROZEN_DOCC
+  Read options for space FROZEN_UOCC
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     2     0     0     0     2
+    GAS1                2     0     2     2     6
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC    12     2     6     6    26
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     2     8     8    36
+  -------------------------------------------------
+  Forte will use custom integrals
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         36
+  Number of correlated molecular orbitals:              34
+  Number of frozen occupied orbitals:                    2
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                       Custom
+
+
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Timing for preparing custom (FCIDUMP) integrals:            0.019 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> Calculation Information <==
+
+    Integral type                                    FCIDUMP
+    CI solver type                                       CAS
+    Final orbital type                             CANONICAL
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-06
+    Max value for rotation                         5.000e-01
+    Printing level                                         1
+    Max number of macro iterations                       100
+    Max number of micro iterations                         4
+    Min number of micro iterations                         4
+    DIIS start                                             2
+    Min DIIS vectors                                       2
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                       A1    A2    B1    B2
+    ---------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC     4     0     0     0
+    RESTRICTED_UOCC /          ACTIVE    24     0    12    12
+    RESTRICTED_UOCC / RESTRICTED_DOCC    24     0     0     0
+    ---------------------------------------------------------
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     2     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     2     8     8 ]
+    CORE                          [    2     0     0     0 ]
+    ACTIVE                        [    2     0     2     2 ]
+    VIRTUAL                       [   12     2     6     6 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000045 s
+  Forming determinants                ...  Done. Timing        0.000010 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   112
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000194 s
+        β          0.000197 s
+        αα         0.000166 s
+        ββ         0.000167 s
+        αβ         0.000405 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 55 roots with 2S+1 = 1 *
+  Found 45 roots with 2S+1 = 3
+  Found 11 roots with 2S+1 = 5
+  Found 1 roots with 2S+1 = 7  Done. Timing        0.006465 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    20 20 20          0.9774675584
+    20 20 02         -0.0859070562
+    20 02 20         -0.0859070562
+    00 20 22         -0.0685776293
+    00 22 20         -0.0685776293
+    20 ba ab         -0.0655166990
+    20 ab ba         -0.0655166990
+    20 ab ab         -0.0531488352
+    20 ba ba         -0.0531488352
+
+    Total Energy:   -112.799334478816803
+
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -112.799334478817
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000427 s
+ Computing  2RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000682 s
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.167 s.
+  L-BFGS Iter:  1; fx = -112.823466002042238; g_norm = 9.008684e-02; step = 5.555e-01
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+  L-BFGS Iter:  2; fx = -112.835252531438130; g_norm = 4.376967e-02; step = 6.303e-01
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.012 s.
+  Integrals update took     0.157 s.
+  L-BFGS Iter:  3; fx = -112.835818989885354; g_norm = 1.707020e-02; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.012 s.
+  Integrals update took     0.158 s.
+  L-BFGS Iter:  4; fx = -112.835855509518467; g_norm = 1.707020e-02; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 1 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -112.799334478817 (-1.1280e+02)   -112.835855509518 (-1.1284e+02)   -3.6521e-02    1.9581e-03    4/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     2     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     2     8     8 ]
+    CORE                          [    2     0     0     0 ]
+    ACTIVE                        [    2     0     2     2 ]
+    VIRTUAL                       [   12     2     6     6 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000036 s
+  Forming determinants                ...  Done. Timing        0.000009 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   112
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000194 s
+        β          0.000193 s
+        αα         0.000164 s
+        ββ         0.000191 s
+        αβ         0.000408 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 55 roots with 2S+1 = 1 *
+  Found 45 roots with 2S+1 = 3
+  Found 11 roots with 2S+1 = 5
+  Found 1 roots with 2S+1 = 7  Done. Timing        0.005386 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    20 20 20          0.9690460091
+    20 20 02         -0.1065505118
+    20 02 20         -0.1065505118
+    20 ba ab         -0.0754335684
+    20 ab ba         -0.0754335684
+    00 20 22         -0.0571006133
+    00 22 20         -0.0571006133
+    20 ab ab         -0.0564508303
+    20 ba ba         -0.0564508303
+
+    Total Energy:   -112.843709831147294
+
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -112.843709831147
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000436 s
+ Computing  2RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000756 s
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.156 s.
+  L-BFGS Iter:  1; fx = -112.846046211285739; g_norm = 3.819423e-02; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.156 s.
+  L-BFGS Iter:  2; fx = -112.847036190445053; g_norm = 2.643303e-02; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.157 s.
+  L-BFGS Iter:  3; fx = -112.849208021321559; g_norm = 4.775750e-02; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.154 s.
+  L-BFGS Iter:  4; fx = -112.849267918029682; g_norm = 4.775750e-02; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 2 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -112.843709831147 (-4.4375e-02)   -112.849267918030 (-1.3412e-02)   -5.5581e-03    5.8096e-03    4/N   S
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     2     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     2     8     8 ]
+    CORE                          [    2     0     0     0 ]
+    ACTIVE                        [    2     0     2     2 ]
+    VIRTUAL                       [   12     2     6     6 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000029 s
+  Forming determinants                ...  Done. Timing        0.000014 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   112
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000143 s
+        β          0.000143 s
+        αα         0.000123 s
+        ββ         0.000115 s
+        αβ         0.000359 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 55 roots with 2S+1 = 1 *
+  Found 45 roots with 2S+1 = 3
+  Found 11 roots with 2S+1 = 5
+  Found 1 roots with 2S+1 = 7  Done. Timing        0.005052 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    20 20 20         -0.9720930997
+    20 20 02          0.1016087290
+    20 02 20          0.1016087290
+    20 ba ab          0.0681438749
+    20 ab ba          0.0681438749
+
+    Total Energy:   -112.867656057838673
+
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -112.867656057839
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000423 s
+ Computing  2RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000677 s
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.153 s.
+  L-BFGS Iter:  1; fx = -112.871211003798848; g_norm = 4.214021e-02; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.157 s.
+  L-BFGS Iter:  2; fx = -112.871545080420503; g_norm = 2.030074e-02; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+  L-BFGS Iter:  3; fx = -112.871616301157005; g_norm = 9.153559e-03; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.156 s.
+  L-BFGS Iter:  4; fx = -112.871626476541721; g_norm = 9.153559e-03; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 3 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -112.867656057839 (-2.3946e-02)   -112.871626476542 (-2.2359e-02)   -3.9704e-03    5.4580e-03    4/N   S
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     2     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     2     8     8 ]
+    CORE                          [    2     0     0     0 ]
+    ACTIVE                        [    2     0     2     2 ]
+    VIRTUAL                       [   12     2     6     6 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000029 s
+  Forming determinants                ...  Done. Timing        0.000010 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   112
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000194 s
+        β          0.000198 s
+        αα         0.000165 s
+        ββ         0.000163 s
+        αβ         0.000396 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 55 roots with 2S+1 = 1 *
+  Found 45 roots with 2S+1 = 3
+  Found 11 roots with 2S+1 = 5
+  Found 1 roots with 2S+1 = 7  Done. Timing        0.004889 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    20 20 20         -0.9729007783
+    20 20 02          0.0994080281
+    20 02 20          0.0994080281
+    20 ba ab          0.0666997125
+    20 ab ba          0.0666997125
+
+    Total Energy:   -112.871805690190484
+
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -112.871805690190
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000391 s
+ Computing  2RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000629 s
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.012 s.
+  Integrals update took     0.156 s.
+  L-BFGS Iter:  1; fx = -112.871825234904577; g_norm = 5.139007e-03; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.152 s.
+  L-BFGS Iter:  2; fx = -112.871828317644372; g_norm = 2.184386e-03; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.158 s.
+  L-BFGS Iter:  3; fx = -112.871828905494240; g_norm = 1.051169e-03; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.157 s.
+  L-BFGS Iter:  4; fx = -112.871829079776333; g_norm = 1.051169e-03; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 4 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -112.871805690190 (-4.1496e-03)   -112.871829079776 (-2.0260e-04)   -2.3390e-05    9.6326e-04    4/N   S/E
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     2     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     2     8     8 ]
+    CORE                          [    2     0     0     0 ]
+    ACTIVE                        [    2     0     2     2 ]
+    VIRTUAL                       [   12     2     6     6 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000029 s
+  Forming determinants                ...  Done. Timing        0.000009 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   112
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000142 s
+        β          0.000145 s
+        αα         0.000119 s
+        ββ         0.000127 s
+        αβ         0.000293 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 55 roots with 2S+1 = 1 *
+  Found 45 roots with 2S+1 = 3
+  Found 11 roots with 2S+1 = 5
+  Found 1 roots with 2S+1 = 7  Done. Timing        0.005131 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    20 20 20          0.9731287481
+    20 20 02         -0.0989511827
+    20 02 20         -0.0989511827
+    20 ba ab         -0.0664244442
+    20 ab ba         -0.0664244442
+
+    Total Energy:   -112.871833833468202
+
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -112.871833833468
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000421 s
+ Computing  2RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000683 s
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.154 s.
+  L-BFGS Iter:  1; fx = -112.871834522489209; g_norm = 7.018746e-04; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+  L-BFGS Iter:  2; fx = -112.871834583333637; g_norm = 2.798352e-04; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.157 s.
+  L-BFGS Iter:  3; fx = -112.871834593186094; g_norm = 1.309910e-04; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+  L-BFGS Iter:  4; fx = -112.871834596898353; g_norm = 1.309910e-04; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 5 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -112.871833833468 (-2.8143e-05)   -112.871834596898 (-5.5171e-06)   -7.6343e-07    1.0716e-04    4/N   S/E
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     2     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     2     8     8 ]
+    CORE                          [    2     0     0     0 ]
+    ACTIVE                        [    2     0     2     2 ]
+    VIRTUAL                       [   12     2     6     6 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000036 s
+  Forming determinants                ...  Done. Timing        0.000010 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   112
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000196 s
+        β          0.000197 s
+        αα         0.000166 s
+        ββ         0.000166 s
+        αβ         0.000394 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 55 roots with 2S+1 = 1 *
+  Found 45 roots with 2S+1 = 3
+  Found 11 roots with 2S+1 = 5
+  Found 1 roots with 2S+1 = 7  Done. Timing        0.005253 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    20 20 20          0.9731935211
+    20 20 02         -0.0988289117
+    20 02 20         -0.0988289117
+    20 ba ab         -0.0663512791
+    20 ab ba         -0.0663512791
+
+    Total Energy:   -112.871834848100178
+
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -112.871834848100
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000418 s
+ Computing  2RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000668 s
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.156 s.
+  L-BFGS Iter:  1; fx = -112.871834857887919; g_norm = 7.861685e-05; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+  L-BFGS Iter:  2; fx = -112.871834858620261; g_norm = 2.327400e-05; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+  L-BFGS Iter:  3; fx = -112.871834858749395; g_norm = 1.019752e-05; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.157 s.
+  L-BFGS Iter:  4; fx = -112.871834858812448; g_norm = 1.019752e-05; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 6 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -112.871834848100 (-1.0146e-06)   -112.871834858812 (-2.6191e-07)   -1.0712e-08    1.4395e-05    4/N   S/E
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.158 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     2     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     2     8     8 ]
+    CORE                          [    2     0     0     0 ]
+    ACTIVE                        [    2     0     2     2 ]
+    VIRTUAL                       [   12     2     6     6 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000037 s
+  Forming determinants                ...  Done. Timing        0.000010 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   112
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000197 s
+        β          0.000202 s
+        αα         0.000165 s
+        ββ         0.000165 s
+        αβ         0.000389 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 55 roots with 2S+1 = 1 *
+  Found 45 roots with 2S+1 = 3
+  Found 11 roots with 2S+1 = 5
+  Found 1 roots with 2S+1 = 7  Done. Timing        0.005229 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    20 20 20          0.9732023477
+    20 20 02         -0.0988134527
+    20 02 20         -0.0988134527
+    20 ba ab         -0.0663422612
+    20 ab ba         -0.0663422612
+
+    Total Energy:   -112.871834862834930
+
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -112.871834862835
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000410 s
+ Computing  2RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000654 s
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.012 s.
+  Integrals update took     0.158 s.
+  L-BFGS Iter:  1; fx = -112.871834862924885; g_norm = 1.121733e-05; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.013 s.
+  Integrals update took     0.165 s.
+  L-BFGS Iter:  2; fx = -112.871834862934122; g_norm = 3.682482e-06; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.166 s.
+  L-BFGS Iter:  3; fx = -112.871834862935572; g_norm = 1.664759e-06; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 7 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -112.871834862835 (-1.4735e-08)   -112.871834862936 (-4.1231e-09)   -1.0064e-10    1.1799e-06    3/Y   S/E
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.154 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     2     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     2     8     8 ]
+    CORE                          [    2     0     0     0 ]
+    ACTIVE                        [    2     0     2     2 ]
+    VIRTUAL                       [   12     2     6     6 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000035 s
+  Forming determinants                ...  Done. Timing        0.000010 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   112
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000189 s
+        β          0.000198 s
+        αα         0.000172 s
+        ββ         0.000161 s
+        αβ         0.000400 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 55 roots with 2S+1 = 1 *
+  Found 45 roots with 2S+1 = 3
+  Found 11 roots with 2S+1 = 5
+  Found 1 roots with 2S+1 = 7  Done. Timing        0.005266 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    20 20 20          0.9732025578
+    20 20 02         -0.0988132395
+    20 02 20         -0.0988132395
+    20 ba ab         -0.0663421746
+    20 ab ba         -0.0663421746
+
+    Total Energy:   -112.871834862954330
+
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -112.871834862954
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000413 s
+ Computing  2RDMs (0 Singlet  - 0 Singlet ) ... Done. Timing        0.000676 s
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Integrals update took     0.155 s.
+  L-BFGS Iter:  1; fx = -112.871834862957542; g_norm = 2.430521e-06; step = 1.000e+00
+  Integrals are about to be updated.
+  Frozen-core energy        -102.725337720921814 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.010 s.
+  Integrals update took     0.171 s.
+  L-BFGS Iter:  2; fx = -112.871834862958011; g_norm = 9.163634e-07; step = 1.000e+00
+
+  ==> MCSCF Macro Iter. 8 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -112.871834862954 (-1.1940e-10)   -112.871834862958 (-2.2439e-11)   -3.6806e-12    1.4635e-07    2/Y
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  ==> MCSCF Iteration Summary <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1    -112.799334478817  0.0000e+00   -112.835855509518  0.0000e+00  1.9581e-03     4
+       2    -112.843709831147 -4.4375e-02   -112.849267918030 -1.3412e-02  5.8096e-03     4
+       3    -112.867656057839 -2.3946e-02   -112.871626476542 -2.2359e-02  5.4580e-03     4
+       4    -112.871805690190 -4.1496e-03   -112.871829079776 -2.0260e-04  9.6326e-04     4
+       5    -112.871833833468 -2.8143e-05   -112.871834596898 -5.5171e-06  1.0716e-04     4
+       6    -112.871834848100 -1.0146e-06   -112.871834858812 -2.6191e-07  1.4395e-05     4
+       7    -112.871834862835 -1.4735e-08   -112.871834862936 -4.1231e-09  1.1799e-06     3
+       8    -112.871834862954 -1.1940e-10   -112.871834862958 -2.2439e-11  1.4635e-07     2
+    ----------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        0.457 seconds
+  Time to run job          :        5.307 seconds
+  Total                    :        5.307 seconds    CASSCF energy.........................................................................PASSED
+
+    Psi4 stopped on: Saturday, 14 November 2020 08:25PM
+    Psi4 wall time for execution: 0:00:06.22
+
+*** Psi4 exiting successfully. Buy a developer a beer!

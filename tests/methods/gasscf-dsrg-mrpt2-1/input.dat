@@ -1,0 +1,75 @@
+#! Generated using commit GITCOMMIT
+# GASSCF-DSRG-MRPT2 for core-excited singlet A1 state of H2O
+# at most one electron occupies the core orbital
+
+import forte
+
+refscf     = -76.0172965561
+refgasscf  = -56.291988402563831
+refdsrg    = -56.462802951195542
+refdsrg_sa = -56.462938181921245
+
+memory 1000mb
+molecule h2o{
+   O
+   H  1 1.00
+   H  1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+  scf_type pk
+  reference rhf
+}
+
+set scf_type direct
+set forte {
+  active_space_solver detci
+  ms 0.0
+  multiplicity 1
+  root_sym 0
+  charge 0
+  active_ref_type gas
+  GAS1 [1,0,0,0]
+  GAS2 [3,0,1,2]
+  GAS1MAX [1]
+  GAS1MIN [0]
+  job_type mcscf_two_step
+  casscf_ci_solver detci
+  casscf_maxiter 100
+  casscf_e_convergence 10
+  casscf_g_convergence 8
+  casscf_micro_maxiter 4
+  casscf_active_frozen_orbital [0]
+}
+
+escf, wfn = energy('scf', return_wfn=True)
+egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refgasscf, egasscf, 9, "GASSCF energy")
+
+# In spin-integrated implementation, the zeroth-order Hamiltonian is the
+# diagonal elements of the Fock matrix. Internal excitations are ignored
+# by default. As such, the off-digonal blocks between GAS spaces in Fock
+# matrix are ignored.
+set forte {
+  job_type newdriver
+  correlation_solver dsrg-mrpt2
+  dsrg_s 1.0
+}
+edsrg = energy('forte', ref_wfn=wfn_gasscf)
+compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 (SI) energy")
+
+# In spin-adapted implementation, the zeroth-order Hamiltonian is the
+# core, active, virtual blocks of the Fock matrix. Internal excitations
+# are ignored by default as well. In this way, the off-diagonal blocks
+# between GAS spaces in Fock matrix are considered as zeroth order.
+set forte {
+  correlation_solver sa-mrdsrg
+  corr_level pt2
+}
+edsrg_sa = energy('forte', ref_wfn=wfn_gasscf)
+compare_values(refdsrg_sa, edsrg_sa, 9, "GASSCF-DSRG-MRPT2 (SA) energy")

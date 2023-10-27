@@ -1,0 +1,56 @@
+# Generated using commit GITCOMMIT
+# A test of CASSCF gradient on BeH2 with c2v symmetry
+
+import forte
+
+ref_grad = psi4.Matrix.from_list([
+      [ 0.000000000000,  0.000000000000, -0.026176792678],
+      [-0.000000000000,  0.017373105060,  0.013088396339],
+      [ 0.000000000000, -0.017373105060,  0.013088396339]
+      ])
+
+molecule {
+  0 1
+  Be        0.000000000000     0.000000000000     0.000000000000
+  H         0.000000000000     1.390000000000     0.300000000000
+  H         0.000000000000    -1.390000000000     0.300000000000 
+  symmetry c2v
+  no_reorient
+}
+
+set globals {
+  scf_type             pk
+  MCSCF_E_CONVERGENCE  8
+  MCSCF_R_CONVERGENCE  6
+  basis                3-21g
+  restricted_docc      [2,0,0,0]
+  active               [1,0,0,1]
+  maxiter              100
+  reference            RHF
+  mcscf_type           conv
+  mcscf_maxiter        100
+  mcscf_diis_start     20
+}
+
+set scf_type direct
+
+set forte{
+  job_type             casscf
+  CASSCF_REFERENCE     true
+  CASSCF_MAXITER       100
+  CASSCF_G_CONVERGENCE 1e-6
+  CASSCF_E_CONVERGENCE 1e-8
+  restricted_docc      [2,0,0,0]
+  active               [1,0,0,1]
+  int_type             conventional
+  casscf_ci_solver     FCI
+  CASSCF_DO_DIIS       true
+  dertype              first
+}
+
+set findif{
+  points 5
+}
+
+grad = gradient('forte')
+compare_matrices(ref_grad, grad, 6, "CASSCF gradient on BeH2 with c2v symmetry")

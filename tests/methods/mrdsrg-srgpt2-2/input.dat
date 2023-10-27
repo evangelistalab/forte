@@ -70,7 +70,7 @@ set forte {
   root               0
   dsrg_s             0.1
   maxiter            100
-  h0th               fdiag_vactv
+  dsrg_pt2_h0th      fdiag_vactv
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

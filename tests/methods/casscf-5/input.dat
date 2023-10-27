@@ -53,7 +53,7 @@ set forte {
    int_type                conventional
    casscf_ci_solver        FCI
    casscf_reference        true
-   CASSCF_ITERATIONS       50
+   CASSCF_MAXITER       50
    print                    0
 }
 

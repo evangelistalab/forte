@@ -1,0 +1,58 @@
+# MR-LDSRG(2) test on reading previous amplitudes files
+# The number of commutators in the BCH expansion
+# is truncated to speed up the test.
+import forte
+
+refrhf  = -108.867618373021401
+refdsrg = -109.100877299246122 # default dsrg_rsc_ncomm
+refdsrg = -109.100837616506638 # keep only 4-nested commutator
+
+memory 500 mb
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+  R = 1.1
+}
+
+set globals{
+  basis                   6-31g
+  reference               rhf
+  scf_type                pk
+  d_convergence           8
+  e_convergence           12
+}
+
+set forte{
+  active_space_solver    fci
+  correlation_solver     mrdsrg
+  corr_level             ldsrg2
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  dsrg_s                 1.0
+  e_convergence          8
+  r_convergence          7
+  dsrg_read_amps         true
+  dsrg_diis_start        1
+  dsrg_rsc_ncomm         4
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refrhf, Escf, 10, "SCF energy")
+
+# fix orbital phase
+Ca = wfn.Ca().clone()
+nirrep = wfn.nirrep()
+coldim = Ca.coldim()
+rowdim = Ca.rowdim()
+for h in range(nirrep):
+    for i in range(coldim[h]):
+        v = Ca.get(h, 0, i)
+        if v < 0:
+            for j in range(rowdim[h]):
+                Ca.set(h, j, i, -1.0 * Ca.get(h, j, i))
+wfn.Ca().copy(Ca)
+
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrg, variable("CURRENT ENERGY"), 8, "MR-LDSRG(2) unrelaxed energy")

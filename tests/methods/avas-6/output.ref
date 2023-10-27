@@ -1,0 +1,1099 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.8a1.dev5 
+
+                         Git: Rev {master} 4d94910 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Sunday, 15 January 2023 11:25PM
+
+    Process ID: 99981
+    Host:       CHE-FEVANGE-01i
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Test AO Subspace regular expression on 3d orbitals
+
+refscf = -1646.62615747649124 
+ref_occ = {
+    'RESTRICTED_DOCC': np.array([14, 6, 8, 11]),
+    'ACTIVE': np.array([7, 3, 4, 4]),
+    'RESTRICTED_UOCC': np.array([33, 19, 23, 27])
+}
+reffci = -1646.6659910518
+
+import forte
+memory 2 gb
+
+molecule FeCp2 {
+Fe 0.000000  0.000000  0.000000
+C -0.713500 -0.982049 -1.648000
+C  0.713500 -0.982049 -1.648000
+C  1.154467  0.375109 -1.648000
+C  0.000000  1.213879 -1.648000
+C -1.154467  0.375109 -1.648000
+H -1.347694 -1.854942 -1.638208
+H  1.347694 -1.854942 -1.638208
+H  2.180615  0.708525 -1.638208
+H  0.000000  2.292835 -1.638208
+H -2.180615  0.708525 -1.638208
+C -0.713500 -0.982049  1.648000
+C -1.154467  0.375109  1.648000
+C -0.000000  1.213879  1.648000
+C  1.154467  0.375109  1.648000
+C  0.713500 -0.982049  1.648000
+H -1.347694 -1.854942  1.638208
+H -2.180615  0.708525  1.638208
+H  0.000000  2.292835  1.638208
+H  2.180615  0.708525  1.638208
+H  1.347694 -1.854942  1.638208
+noreorient  # very important for subspace orbitals orientations
+}
+
+basis {
+assign 6-31g
+assign Fe cc-pvdz
+}
+
+set {
+scf_type             df
+reference            rhf
+docc                 [18,7,10,13]
+e_convergence        8
+d_convergence        8
+df_fitting_condition 1.0e-15
+ints_tolerance       1.0e-15
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, Escf, 8, "SCF energy")
+
+set forte {
+job_type            none
+avas                true
+avas_diagonalize    true
+# the hard way
+subspace            ["Fe(3dxy)","Fe(3dxz)","Fe(3dyz)","Fe(3dz2)","Fe(3dx2-y2)",
+                     "C1(2pz)","C2(2pz)","C3(2pz)","C4(2pz)","C5(2pz)",
+                     "C6(2pz)","C7(2pz)","C8(2pz)","C9(2pz)","C10(2pz)"]
+# the easier way
+#subspace            ["Fe(3d)","C1-10(2pz)"]
+# the easiest way
+#subspace            ["Fe(3d)","C(2pz)"]
+}
+Ezero, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+
+# check AVAS suggested orbital dimensions
+for space_name, occ_array in ref_occ.items():
+    array = variable('AVAS ' + space_name).np.reshape((4,))
+    compare_values(occ_array, array, 6, 'AVAS ' + space_name)
+
+set forte {
+job_type            newdriver
+subspace            ["Fe(3d)"]
+avas                true
+avas_cutoff         0.15
+int_type            df
+active_space_solver fci
+restricted_docc     [16,6,9,12]
+active              [2,2,1,2]
+}
+Ecasci, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(reffci, Ecasci, 8, "CASCI(10e,7o) energy")
+--------------------------------------------------------------------------
+
+  Memory set to   1.863 GiB by Python driver.
+
+Scratch directory: /tmp/
+
+*** tstart() called on CHE-FEVANGE-01i
+*** at Sun Jan 15 23:25:18 2023
+
+   => Loading Basis Set <=
+
+    Name: ANONYMOUS147464B8
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1           entry FE         line  1835 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2-6, 12-16  entry C          line    87 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 7-11, 17-21 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,   1907 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C2v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         FE           0.000000000000     0.000000118187     0.000000000000    55.934936330000
+         C           -0.713500000000    -0.982048881813    -1.648000000000    12.000000000000
+         C            0.713500000000    -0.982048881813    -1.648000000000    12.000000000000
+         C            1.154467000000     0.375109118187    -1.648000000000    12.000000000000
+         C            0.000000000000     1.213879118187    -1.648000000000    12.000000000000
+         C           -1.154467000000     0.375109118187    -1.648000000000    12.000000000000
+         H           -1.347694000000    -1.854941881813    -1.638208000000     1.007825032230
+         H            1.347694000000    -1.854941881813    -1.638208000000     1.007825032230
+         H            2.180615000000     0.708525118187    -1.638208000000     1.007825032230
+         H            0.000000000000     2.292835118187    -1.638208000000     1.007825032230
+         H           -2.180615000000     0.708525118187    -1.638208000000     1.007825032230
+         C           -0.713500000000    -0.982048881813     1.648000000000    12.000000000000
+         C           -1.154467000000     0.375109118187     1.648000000000    12.000000000000
+         C            0.000000000000     1.213879118187     1.648000000000    12.000000000000
+         C            1.154467000000     0.375109118187     1.648000000000    12.000000000000
+         C            0.713500000000    -0.982048881813     1.648000000000    12.000000000000
+         H           -1.347694000000    -1.854941881813     1.638208000000     1.007825032230
+         H           -2.180615000000     0.708525118187     1.638208000000     1.007825032230
+         H            0.000000000000     2.292835118187     1.638208000000     1.007825032230
+         H            2.180615000000     0.708525118187     1.638208000000     1.007825032230
+         H            1.347694000000    -1.854941881813     1.638208000000     1.007825032230
+
+  Running in c2v symmetry.
+
+  Rotational constants: A =      0.07336  B =      0.03603  C =      0.03603 [cm^-1]
+  Rotational constants: A =   2199.18867  B =   1080.19991  C =   1080.19968 [MHz]
+  Nuclear repulsion =  919.050833436524272
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 96
+  Nalpha       = 48
+  Nbeta        = 48
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-08
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-15
+
+  ==> Primary Basis <==
+
+  Basis Set: ANONYMOUS147464B8
+    Blend: 6-31G + CC-PVDZ
+    Number of shells: 85
+    Number of basis functions: 159
+    Number of Cartesian functions: 159
+    Spherical Harmonics?: false
+    Max angular momentum: 3
+
+   => Loading Basis Set <=
+
+    Name: (ANONYMOUS147464B8 AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1           entry FE         line  1978 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+    atoms 2-6, 12-16  entry C          line   121 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 7-11, 17-21 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.301 GiB; user supplied 1.397 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:              1430
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-15
+    Mask sparsity (%):       0.3560
+    Fitting Condition:        1E-15
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (ANONYMOUS147464B8 AUX)
+    Blend: CC-PVDZ-JKFIT + DEF2-UNIVERSAL-JKFIT
+    Number of shells: 388
+    Number of basis functions: 1437
+    Number of Cartesian functions: 1437
+    Spherical Harmonics?: false
+    Max angular momentum: 6
+
+  Minimum eigenvalue in the overlap matrix is 2.8301068994E-05.
+  Reciprocal condition number of the overlap matrix is 3.9895014893E-06.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        54      54 
+     A2        28      28 
+     B1        35      35 
+     B2        42      42 
+   -------------------------
+    Total     159     159
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD: -1647.26163780699335   -1.64726e+03   0.00000e+00 
+   @DF-RHF iter   1: -1640.83009006466750    6.43155e+00   5.54633e-02 ADIIS/DIIS
+   @DF-RHF iter   2: -1621.93413624348659    1.88960e+01   9.60300e-02 ADIIS/DIIS
+   @DF-RHF iter   3: -1644.60092770332380   -2.26668e+01   3.54632e-02 ADIIS/DIIS
+   @DF-RHF iter   4: -1646.53730770708012   -1.93638e+00   2.85669e-03 ADIIS/DIIS
+   @DF-RHF iter   5: -1646.59683559885116   -5.95279e-02   1.38168e-03 ADIIS/DIIS
+   @DF-RHF iter   6: -1646.61732195053219   -2.04864e-02   8.34024e-04 ADIIS/DIIS
+   @DF-RHF iter   7: -1646.62597436830106   -8.65242e-03   2.50032e-04 ADIIS/DIIS
+   @DF-RHF iter   8: -1646.62613959758414   -1.65229e-04   3.62967e-05 DIIS
+   @DF-RHF iter   9: -1646.62615647522534   -1.68776e-05   1.32417e-05 DIIS
+   @DF-RHF iter  10: -1646.62615738802924   -9.12804e-07   3.43310e-06 DIIS
+   @DF-RHF iter  11: -1646.62615746642678   -7.83975e-08   2.11472e-06 DIIS
+   @DF-RHF iter  12: -1646.62615747561131   -9.18453e-09   4.91987e-07 DIIS
+   @DF-RHF iter  13: -1646.62615747647874   -8.67431e-10   5.43351e-08 DIIS
+   @DF-RHF iter  14: -1646.62615747649124   -1.25056e-11   5.55379e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1  -261.312471     2A1   -31.883631     1B2   -27.379029  
+       3A1   -27.354846     1B1   -27.354846     4A1   -11.234895  
+       2B2   -11.234882     5A1   -11.234230     2B1   -11.234230  
+       3B2   -11.234229     1A2   -11.234229     4B2   -11.233038  
+       2A2   -11.233038     6A1   -11.233030     3B1   -11.233030  
+       7A1    -4.094751     5B2    -2.701793     8A1    -2.664020  
+       4B1    -2.664020     9A1    -1.200286     6B2    -1.177838  
+       7B2    -0.969323     3A2    -0.969323    10A1    -0.968943  
+       5B1    -0.968942     6B1    -0.747001    11A1    -0.747001  
+       4A2    -0.733569     8B2    -0.733568    12A1    -0.733465  
+       9B2    -0.706792    13A1    -0.568290    10B2    -0.563489  
+       5A2    -0.563489    14A1    -0.557662     7B1    -0.557662  
+       8B1    -0.528217    15A1    -0.528217     6A2    -0.518956  
+      11B2    -0.518956    16A1    -0.513742    12B2    -0.496249  
+       9B1    -0.423380    17A1    -0.423380    18A1    -0.340806  
+      10B1    -0.340806    13B2    -0.338837     7A2    -0.338837  
+
+    Virtual:                                                              
+
+      19A1     0.094509    20A1     0.127890    11B1     0.127890  
+      14B2     0.162856    12B1     0.210233    21A1     0.210233  
+      15B2     0.235847     8A2     0.235847    16B2     0.271059  
+       9A2     0.271059    22A1     0.292823    13B1     0.292823  
+      17B2     0.295884    23A1     0.310920    18B2     0.334697  
+      10A2     0.334697    19B2     0.338453    11A2     0.338453  
+      24A1     0.338546    25A1     0.365476    14B1     0.365476  
+      12A2     0.423876    20B2     0.423876    26A1     0.437503  
+      15B1     0.437503    27A1     0.439638    16B1     0.439638  
+      28A1     0.484159    29A1     0.494838    17B1     0.494838  
+      21B2     0.529173    13A2     0.529174    30A1     0.579382  
+      18B1     0.579382    19B1     0.634821    22B2     0.649606  
+      23B2     0.651024    14A2     0.651024    15A2     0.652993  
+      31A1     0.658526    32A1     0.759541    20B1     0.759541  
+      16A2     0.851536    24B2     0.851536    33A1     0.875924  
+      21B1     0.875924    25B2     0.927912    34A1     0.945762  
+      17A2     1.005147    26B2     1.005147    27B2     1.025740  
+      18A2     1.025740    35A1     1.070879    22B1     1.070879  
+      36A1     1.074414    23B1     1.074414    37A1     1.093577  
+      24B1     1.093577    38A1     1.095021    39A1     1.135916  
+      25B1     1.135916    19A2     1.138769    28B2     1.138769  
+      29B2     1.159617    20A2     1.159617    21A2     1.161172  
+      30B2     1.161172    31B2     1.161944    26B1     1.165009  
+      22A2     1.189397    27B1     1.227468    40A1     1.227468  
+      32B2     1.282679    33B2     1.344002    41A1     1.399027  
+      28B1     1.432332    42A1     1.432332    43A1     1.523144  
+      29B1     1.523145    34B2     1.551240    23A2     1.551241  
+      24A2     1.566294    35B2     1.566294    44A1     1.616841  
+      30B1     1.616842    45A1     1.782512    36B2     1.863419  
+      25A2     1.863420    37B2     2.026456    26A2     2.026456  
+      46A1     2.186974    31B1     2.186975    38B2     2.188077  
+      47A1     2.266692    48A1     2.409218    32B1     2.409218  
+      49A1     2.433426    39B2     2.562775    27A2     2.562776  
+      50A1     3.314362    40B2     3.461163    51A1     3.487911  
+      33B1     3.487911    52A1     3.639983    34B1     3.639983  
+      41B2     3.724901    28A2     3.724901    53A1     5.882055  
+      35B1     5.882056    42B2     8.931144    54A1    38.507944  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [    18,    7,   10,   13 ]
+    NA   [    18,    7,   10,   13 ]
+    NB   [    18,    7,   10,   13 ]
+
+  @DF-RHF Final Energy: -1646.62615747649124
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =            919.0508334365242717
+    One-Electron Energy =               -4094.3034538777192211
+    Two-Electron Energy =                1528.6264629647039328
+    Total Energy =                      -1646.6261574764912439
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :         -0.0000033            0.0000025           -0.0000007
+ Dipole Z            :          0.0000000            0.0000000            0.0000000
+ Magnitude           :                                                    0.0000007
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on CHE-FEVANGE-01i at Sun Jan 15 23:25:26 2023
+Module time:
+	user time   =       8.57 seconds =       0.14 minutes
+	system time =       0.82 seconds =       0.01 minutes
+	total time  =          8 seconds =       0.13 minutes
+Total time:
+	user time   =       8.57 seconds =       0.14 minutes
+	system time =       0.82 seconds =       0.01 minutes
+	total time  =          8 seconds =       0.13 minutes
+    SCF energy............................................................................PASSED
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 4225e1f0
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0
+    GAS1               54    28    35    42   159
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     0     0     0     0     0
+    FROZEN_UOCC         0     0     0     0     0
+    Total              54    28    35    42   159
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: ANONYMOUS147464B8
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1           entry FE         line  1835 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2-6, 12-16  entry C          line    87 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 7-11, 17-21 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1           entry FE         line   369 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-6, 12-16  entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 7-11, 17-21 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+
+  ==> List of Subspace Orbitals Requested <==
+      FE(3DXY)      FE(3DXZ)      FE(3DYZ)      FE(3DZ2)   FE(3DX2-Y2)
+         C1(2PZ)       C2(2PZ)       C3(2PZ)       C4(2PZ)       C5(2PZ)
+         C6(2PZ)       C7(2PZ)       C8(2PZ)       C9(2PZ)      C10(2PZ)
+
+
+  ==> AO Basis Set Selected By Subspace <==
+
+    =======================================
+      AO  Atom  Label     Type  Coefficient
+    ---------------------------------------
+      17     1    FE1     3DXY   1.0000E+00
+      14     1    FE1     3DXZ   1.0000E+00
+      15     1    FE1     3DYZ   1.0000E+00
+      13     1    FE1     3DZ2   1.0000E+00
+      16     1    FE1  3DX2-Y2   1.0000E+00
+      20     2     C1      2PZ   1.0000E+00
+      25     3     C2      2PZ   1.0000E+00
+      30     4     C3      2PZ   1.0000E+00
+      35     5     C4      2PZ   1.0000E+00
+      40     6     C5      2PZ   1.0000E+00
+      50    12     C6      2PZ   1.0000E+00
+      55    13     C7      2PZ   1.0000E+00
+      60    14     C8      2PZ   1.0000E+00
+      65    15     C9      2PZ   1.0000E+00
+      70    16    C10      2PZ   1.0000E+00
+    ---------------------------------------
+    Number of subspace orbitals:         15
+    =======================================
+
+  ==> Orbital Overlap with AO Subspace (> 1.00e-03) <==
+
+    =======================
+    Irrep   MO  <phi|P|phi>
+    -----------------------
+      A1     7    0.016252
+      A1     8    0.009359
+      A1     9    0.020559
+      A1    10    0.003561
+      A1    11    0.024168
+      A1    12    0.096837
+      A1    13    0.928614
+      A1    15    0.045237
+      A1    16    0.815811
+      A1    17    0.843504
+      A1    18    0.913389
+      A1    20    0.003018
+      A1    21    0.785447
+      A1    22    0.028460
+      A1    23    0.025540
+      A1    24    0.013964
+      A1    25    0.002222
+      A1    26    0.031445
+      A1    27    0.023864
+      A1    28    0.003451
+      A1    29    0.006203
+      A1    30    0.073033
+      A1    31    0.029243
+      A1    32    0.021033
+      A1    33    0.081226
+      A1    36    0.024153
+      A1    37    0.012051
+      A1    38    0.011365
+      A1    39    0.008173
+      A1    41    0.003655
+      A1    42    0.002337
+      A1    44    0.018930
+      A1    47    0.006745
+      A1    48    0.004376
+      A2     3    0.016961
+      A2     5    0.034397
+      A2     7    0.931424
+      A2     8    0.858350
+      A2     9    0.755684
+      A2    10    0.031653
+      A2    11    0.029806
+      A2    12    0.057112
+      A2    13    0.003223
+      A2    14    0.079082
+      A2    16    0.018535
+      A2    17    0.021631
+      A2    18    0.082222
+      A2    19    0.001348
+      A2    20    0.002045
+      A2    23    0.002696
+      A2    24    0.001767
+      A2    26    0.030447
+      A2    27    0.008694
+      B1     4    0.009359
+      B1     5    0.003561
+      B1     6    0.024168
+      B1     8    0.045237
+      B1     9    0.843504
+      B1    10    0.913389
+      B1    11    0.003018
+      B1    12    0.785447
+      B1    13    0.028460
+      B1    14    0.002222
+      B1    15    0.031445
+      B1    16    0.023864
+      B1    17    0.006203
+      B1    18    0.073033
+      B1    20    0.021033
+      B1    21    0.081226
+      B1    23    0.024153
+      B1    24    0.012051
+      B1    25    0.008173
+      B1    28    0.002337
+      B1    30    0.018930
+      B1    32    0.004376
+      B2     5    0.014196
+      B2     7    0.016961
+      B2     9    0.001371
+      B2    10    0.034397
+      B2    12    0.963418
+      B2    13    0.931424
+      B2    14    0.004239
+      B2    15    0.858350
+      B2    16    0.755684
+      B2    17    0.001040
+      B2    18    0.031654
+      B2    19    0.029806
+      B2    20    0.057112
+      B2    21    0.003223
+      B2    23    0.079082
+      B2    24    0.018535
+      B2    26    0.021631
+      B2    27    0.082222
+      B2    28    0.001348
+      B2    29    0.002045
+      B2    31    0.012996
+      B2    34    0.002696
+      B2    35    0.001767
+      B2    37    0.030447
+      B2    39    0.008694
+    ========================
+
+                     --------------------------------------
+                       Atomic Valence Active Space (AVAS)
+                           Chenxi Cai and Chenyang Li
+                     --------------------------------------
+
+
+  ==> AVAS Options <==
+
+    AVAS selection scheme                              SIGMA
+    Diagonalize projected overlap matrices              TRUE
+    AVAS sigma threshold (cumulative)              9.800e-01
+    AVAS sigma direct cutoff                       1.000e+00
+    Nonzero eigenvalue threshold                   1.000e-06
+    Number of doubly occupied MOs                         48
+    Number of singly occupied MOs                          0
+    Number of unoccupied MOs                             111
+    # Active AVAS MOs requested                            0
+    # Active occupied AVAS MOs requested                   0
+    # Active virtual AVAS MOs requested                    0
+
+  Diagonalizing the doubly occupied projected overlap matrix ... Done
+  Diagonalizing the unoccupied projected overlap matrix ........ Done
+  Sum of eigenvalues: 14.84610566
+  AVAS covers 98.15% of the subspace.
+
+  ==> AVAS MOs Information <==
+
+    ---------------------------------------
+                       A1    A2    B1    B2
+    ---------------------------------------
+    DOCC INACTIVE      14     6     8    11
+    DOCC ACTIVE         4     1     2     2
+    SOCC ACTIVE         0     0     0     0
+    UOCC ACTIVE         3     2     2     2
+    UOCC INACTIVE      33    19    23    27
+    ---------------------------------------
+    RESTRICTED_DOCC    14     6     8    11
+    ACTIVE              7     3     4     4
+    RESTRICTED_UOCC    33    19    23    27
+    ---------------------------------------
+
+  ==> Atomic Valence MOs (Active Marked by *) <==
+
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *  A1      0    2      0.972178
+    *  A1      1    2      0.926867
+    *  A1      2    2      0.912257
+    *  A1      3    2      0.906335
+       A1      4    2      0.000652
+    *  A1     18    0      0.994272
+    *  A1     19    0      0.074451
+    *  A1     20    0      0.070744
+       A1     21    0      0.063348
+       A1     22    0      0.020599
+    *  A2      0    2      0.962510
+       A2      1    2      0.020273
+       A2      2    2      0.000091
+    *  A2      7    0      0.996802
+    *  A2      8    0      0.956244
+       A2      9    0      0.032992
+    *  B1      0    2      0.926867
+    *  B1      1    2      0.912257
+       B1      2    2      0.000652
+    *  B1     10    0      0.994272
+    *  B1     11    0      0.070744
+       B1     12    0      0.063348
+    *  B2      0    2      0.979239
+    *  B2      1    2      0.962510
+       B2      2    2      0.020273
+       B2      3    2      0.000091
+    *  B2     13    0      0.996802
+    *  B2     14    0      0.956244
+       B2     15    0      0.032992
+       B2     16    0      0.019197
+    ===============================
+
+  ==> Semicanonicalize Subsets of Orbitals <==
+
+  Canonicalizing orbital block INACTIVE DOCC ....... Done
+  Canonicalizing orbital block ACTIVE DOCC ......... Done
+  Canonicalizing orbital block ACTIVE UOCC ......... Done
+  Canonicalizing orbital block INACTIVE UOCC ....... Done    AVAS RESTRICTED_DOCC..................................................................PASSED
+    AVAS ACTIVE...........................................................................PASSED
+    AVAS RESTRICTED_UOCC..................................................................PASSED
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 4225e1f0
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC    16     6     9    12    43
+    GAS1                2     2     1     2     7
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC    36    20    25    28   109
+    FROZEN_UOCC         0     0     0     0     0
+    Total              54    28    35    42   159
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: ANONYMOUS147464B8
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1           entry FE         line  1835 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2-6, 12-16  entry C          line    87 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 7-11, 17-21 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: (ANONYMOUS147464B8 AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1           entry FE         line  2102 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-qzvpp-ri.gbs 
+    atoms 2-6, 12-16  entry C          line   159 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 7-11, 17-21 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1           entry FE         line   369 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-6, 12-16  entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 7-11, 17-21 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+
+  ==> List of Subspace Orbitals Requested <==
+        FE(3D)
+
+
+  ==> AO Basis Set Selected By Subspace <==
+
+    =======================================
+      AO  Atom  Label     Type  Coefficient
+    ---------------------------------------
+      13     1    FE1     3DZ2   1.0000E+00
+      14     1    FE1     3DXZ   1.0000E+00
+      15     1    FE1     3DYZ   1.0000E+00
+      16     1    FE1  3DX2-Y2   1.0000E+00
+      17     1    FE1     3DXY   1.0000E+00
+    ---------------------------------------
+    Number of subspace orbitals:          5
+    =======================================
+
+  ==> Orbital Overlap with AO Subspace (> 1.00e-03) <==
+
+    =======================
+    Irrep   MO  <phi|P|phi>
+    -----------------------
+      A1    15    0.077771
+      A1    16    0.840882
+      A1    17    0.860919
+      A1    19    0.052704
+      A1    20    0.049423
+      A1    27    0.007038
+      A1    31    0.027539
+      A1    38    0.003765
+      A1    42    0.001890
+      A1    44    0.017906
+      A1    46    0.001061
+      A1    48    0.004069
+      A2     3    0.008456
+      A2     5    0.008641
+      A2     7    0.150742
+      A2     9    0.801530
+      A2    18    0.002797
+      A2    26    0.001172
+      B1     9    0.860919
+      B1    11    0.052704
+      B1    16    0.007038
+      B1    18    0.027539
+      B1    28    0.001890
+      B1    30    0.017906
+      B1    32    0.004069
+      B2     7    0.008456
+      B2    10    0.008641
+      B2    13    0.150741
+      B2    15    0.801530
+      B2    27    0.002797
+      B2    37    0.001172
+    ========================
+
+                     --------------------------------------
+                       Atomic Valence Active Space (AVAS)
+                           Chenxi Cai and Chenyang Li
+                     --------------------------------------
+
+
+  ==> AVAS Options <==
+
+    AVAS selection scheme                             CUTOFF
+    Diagonalize projected overlap matrices              TRUE
+    AVAS sigma threshold (cumulative)              9.800e-01
+    AVAS sigma direct cutoff                       1.500e-01
+    Nonzero eigenvalue threshold                   1.000e-06
+    Number of doubly occupied MOs                         48
+    Number of singly occupied MOs                          0
+    Number of unoccupied MOs                             111
+    # Active AVAS MOs requested                            0
+    # Active occupied AVAS MOs requested                   0
+    # Active virtual AVAS MOs requested                    0
+
+  Diagonalizing the doubly occupied projected overlap matrix ... Done
+  Diagonalizing the unoccupied projected overlap matrix ........ Done
+  Sum of eigenvalues: 4.87171546
+  AVAS covers 94.22% of the subspace.
+
+  ==> AVAS MOs Information <==
+
+    ---------------------------------------
+                       A1    A2    B1    B2
+    ---------------------------------------
+    DOCC INACTIVE      16     6     9    12
+    DOCC ACTIVE         2     1     1     1
+    SOCC ACTIVE         0     0     0     0
+    UOCC ACTIVE         0     1     0     1
+    UOCC INACTIVE      36    20    25    28
+    ---------------------------------------
+    RESTRICTED_DOCC    16     6     9    12
+    ACTIVE              2     2     1     2
+    RESTRICTED_UOCC    36    20    25    28
+    ---------------------------------------
+
+  ==> Atomic Valence MOs (Active Marked by *) <==
+
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *  A1      0    2      0.918653
+    *  A1      1    2      0.860955
+       A1     18    0      0.112695
+       A1     19    0      0.056348
+    *  A2      0    2      0.167839
+    *  A2      7    0      0.806868
+    *  B1      0    2      0.860955
+       B1     10    0      0.112695
+    *  B2      0    2      0.167839
+    *  B2     13    0      0.806868
+    ===============================
+
+  ==> Semicanonicalize Subsets of Orbitals <==
+
+  Canonicalizing orbital block INACTIVE DOCC ....... Done
+  Canonicalizing orbital block ACTIVE DOCC ......... Done
+  Canonicalizing orbital block ACTIVE UOCC ......... Done
+  Canonicalizing orbital block INACTIVE UOCC ....... Done
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: ANONYMOUS147464B8
+    Blend: 6-31G + CC-PVDZ
+    Number of shells: 85
+    Number of basis functions: 159
+    Number of Cartesian functions: 159
+    Spherical Harmonics?: false
+    Max angular momentum: 3
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.268 GiB; user supplied 1.490 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:              1525
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-15
+    Mask sparsity (%):       0.3560
+    Fitting Condition:        1E-15
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (ANONYMOUS147464B8 AUX)
+    Blend: CC-PVDZ-RI + DEF2-QZVPP-RI
+    Number of shells: 301
+    Number of basis functions: 1276
+    Number of Cartesian functions: 1276
+    Spherical Harmonics?: false
+    Max angular momentum: 6
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                        159
+  Number of correlated molecular orbitals:             159
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  1276
+  Need 258.07 MB to store DF integrals
+  DFHelper Memory: AOs need 0.268 GiB; user supplied 1.409 GiB. Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             159
+    NAux:                           1276
+    Schwarz Cutoff:                1E-15
+    Mask sparsity (%):                 0
+    DFH Avail. Memory [GiB]:       1.409
+    OpenMP threads:                    1
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-15
+    Q Shell Max:                      28
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  1.532 s.
+
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing density-fitted integrals:              6.378 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 5
+  Number of alpha strings       = 21
+  Number of beta strings        = 21
+  Number of alpha strings (N-3) = 21
+  Number of beta strings (N-3)  = 21
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         117
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 6 x 6.   Memory: 0.000001 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0    -1646.645011652517  0.000  singlet
+      1    -1646.546188168347  6.000  quintet
+      2    -1646.519128128182  6.000  quintet
+      3    -1646.446723622111  2.000  triplet
+      4    -1646.443352541112  2.000  triplet
+      5    -1646.429774607879  2.000  triplet
+      6    -1646.421190573482  2.000  triplet
+      7    -1646.418742689032  2.000  triplet
+      8    -1646.403069897302  2.000  triplet
+      9    -1646.398067402368  0.000  singlet
+     10    -1646.392111401938  0.000  singlet
+     11    -1646.387179504760  2.000  triplet
+     12    -1646.380635751745  0.000  singlet
+     13    -1646.369640366691  0.000  singlet
+     14    -1646.355459591323  0.000  singlet
+     15    -1646.330168597309  0.000  singlet
+     16    -1646.320002866743  2.000  triplet
+     17    -1646.293684301316  0.000  singlet
+     18    -1646.234233711961  0.000  singlet
+     19    -1646.204486000027  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 5
+  Projecting out root 6
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 16
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-08
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1    -1646.645011652519  -1.647e+03  +1.663e-01
+      2    -1646.661993861590  -1.698e-02  +8.085e-02
+      3    -1646.665779056970  -3.785e-03  +1.983e-02
+      4    -1646.665975600141  -1.965e-04  +5.137e-03
+      5    -1646.665990338296  -1.474e-05  +8.286e-04
+      6    -1646.665990998442  -6.601e-07  +2.212e-04
+      7    -1646.665991049867  -5.143e-08  +3.997e-05
+      8    -1646.665991051769  -1.902e-09  +8.509e-06
+      9    -1646.665991051844  -7.503e-11  +1.866e-06
+     10    -1646.665991051847  -2.274e-12  +3.492e-07
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 11 iterations.
+
+  ==> Root No. 0 <==
+
+    22 20 2 20      0.97638181
+
+    Total Energy:   -1646.665991051847, <S^2>: -0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0    -1646.665991051847  -0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1A1     1.993380      1B2     1.985910      1A2     1.985910  
+        1B1     1.971496      2A1     1.971496      2A2     0.045904  
+        2B2     0.045904  
+
+
+  ==> Permanent Dipole Moments [e a0] for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000    -0.00000074     0.00000000     0.00000074
+    --------------------------------------------------------------------
+
+  Time to prepare integrals:       11.029 seconds
+  Time to run job          :        0.786 seconds
+  Total                    :       11.815 seconds
+    CASCI(10e,7o) energy..................................................................PASSED
+
+    Psi4 stopped on: Sunday, 15 January 2023 11:25PM
+    Psi4 wall time for execution: 0:00:20.60
+
+*** Psi4 exiting successfully. Buy a developer a beer!

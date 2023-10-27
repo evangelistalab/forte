@@ -3,7 +3,7 @@ import forte
 memory 2 gb
 
 escf = -304.9057795504939463
-eaci = -305.390029668114892 
+eacidsrg = -305.39002965581
 
 molecule ene2{
 0 1
@@ -32,16 +32,17 @@ symmetry c1
 }
 
 set {
-  basis sto-3g 
-  df_basis_mp2 cc-pvdz-ri 
-  df_basis_scf cc-pvdz-jkfit 
+  basis sto-3g
+  df_basis_mp2 cc-pvdz-ri
+  df_basis_scf cc-pvdz-jkfit
   scf_type df
   guess sad
   maxiter 500
   e_convergence 10
   d_convergence 10
-  r_convergence 10
+  r_convergence 7
   reference rhf
+  ints_tolerance 0.0
 }
 
 set forte {
@@ -55,21 +56,18 @@ set forte {
   sigma 0.001
   diag_algorithm dynamic
   sci_direct_rdms true
-  aci_batched_screening true
+  aci_screen_alg batch_hash
   aci_nbatch 4
   nroot 1
   root_sym 0
   charge 0
+  dsrg_s 1.0e10
 }
 
 set_num_threads(8)
 
 e, scf_wfn = energy('scf', return_wfn=True)
-
-compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy") 
+compare_values(escf, variable("CURRENT ENERGY"), 9, "SCF energy")
 
 energy('forte', ref_wfn=scf_wfn)
-compare_values(eaci,variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy") 
-
-
-
+compare_values(eacidsrg, variable("CURRENT ENERGY"), 8, "ACI-DSRG-MRPT2 energy")

@@ -1,0 +1,47 @@
+import forte
+
+fx1 = forte.test_lbfgs_rosenbrock(10, 0)
+fx2 = forte.test_lbfgs_rosenbrock(10, 1)
+fx3 = forte.test_lbfgs_rosenbrock(10, -1)
+
+compare_values(0.0, fx1, 10, "Rosenbrock n = 10 with exact initial diagonal Hessian")
+compare_values(0.0, fx2, 10, "Rosenbrock n = 10 with updated exact diagonal Hessian")
+compare_values(0.0, fx3, 10, "Rosenbrock n = 10 with adaptive inverse Hessian scalar")
+
+try:
+    import numpy as np
+    from scipy.optimize import minimize
+
+
+    def rosenbrock(x):
+        # f(x) = sum_{i=0}^{n/2 - 1} [ 100 * (x_{2i}^2 - x_{2i + 1})^2 + (x_{2i} - 1)^2 ]
+        x_even = x[::2]
+        x_odd = x[1::2]
+        return sum(100.0 * (x_even ** 2 - x_odd) ** 2 + (x_even - 1) ** 2)
+
+
+    def rosenbrock_grad(x):
+        x_even = x[::2]
+        x_odd = x[1::2]
+        t1 = x_even - 1
+        t2 = 10 * (x_even ** 2 - x_odd)
+
+        g = np.zeros(x.shape)
+        g[1::2] = -20 * t2
+        g[::2] = 2.0 * (t1 - g[1::2] * x_even)
+        return g
+
+
+    x0 = np.zeros(10)
+    res = minimize(rosenbrock, x0, method='BFGS', jac=rosenbrock_grad,
+                   options={'gtol': 1e-6, 'disp': True})
+
+    print_out("\n  ==> NumPy/SciPy BFGS Results <==\n")
+    print_out(f"\n    Numpy solution x")
+    for i, v in enumerate(res.x):
+        print_out(f"\n      {i:2d}: {v:20.15f}")
+    print_out(f"\n    Numpy value: {res.fun:.15f}")
+    print_out(f"\n    Numpy converged in {res.nit} iterations.\n")
+
+except:
+    pass

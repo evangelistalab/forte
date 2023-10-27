@@ -1,0 +1,231 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 undefined 
+
+                         Git: Rev {fcidump_sym} 63eae05 dirty
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Thursday, 09 July 2020 08:46PM
+
+    Process ID: 80734
+    Host:       CHE-FEVANGE-01I (2)
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Test disk density-fitted integrals with frozen core and virtuals
+
+import forte
+
+reffci = -112.181397694724
+
+set forte {
+  active_space_solver fci
+  int_type            fcidump
+  nel                 13
+  multiplicity        2
+  frozen_docc         [2 ,0 ,0 ,0]
+  restricted_docc     [2 ,0 ,0 ,0]
+  active              [2 ,2 ,2 ,2]
+  e_convergence       12
+}
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),9, "FCI energy") #TEST
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: fcidump - git commit: ed9910ce
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 256 bits
+  Preparing forte objects from a custom source
+  Reading integral information from FCIDUMP file INTDUMP
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       Ag   B1g   B2g   B3g   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     2     0     0     0     2
+    ACTIVE              2     2     2     2     8
+    RESTRICTED_UOCC     8     0     4     4    16
+    FROZEN_UOCC         0     0     0     0     0
+    Total              14     2     6     6    28
+  -------------------------------------------------
+  Forte will use custom integrals
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    28
+  Number of correlated molecular orbitals:         26
+  Number of frozen occupied orbitals:               2
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:                  Custom
+
+
+  Using Custom integrals
+
+
+  Frozen-core energy           -101.065511033576 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.080 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      2  (  1)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 3
+  Number of beta electrons      = 2
+  Number of alpha strings       = 56
+  Number of beta strings        = 28
+  Number of alpha strings (N-3) = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.003 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.003 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.001 s
+  Total timing              =      0.006 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                         392
+    Symmetry                                         0
+    Multiplicity                                     2
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 14 x 14.   Memory: 0.000003 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -130.634451419042  0.750  doublet
+      1     -130.469369801093  3.750  quartet
+      2     -130.450346969665  3.750  quartet
+      3     -130.380959533433  0.750  doublet
+      4     -130.377457024682  0.750  doublet
+      5     -130.323624879359  0.750  doublet
+      6     -130.138664704795  8.750  sextet
+      7     -130.087319681399  0.750  doublet
+      8     -130.041748853906  3.750  quartet
+      9     -129.994330883590  3.750  quartet
+     10     -129.980913100732  0.750  doublet
+     11     -129.956721625380  0.750  doublet
+     12     -129.866009115013  0.750  doublet
+     13     -129.865314311540  0.750  doublet
+     14     -129.830884797571  3.750  quartet
+     15     -129.814902466376  0.750  doublet
+     16     -129.805717887198  3.750  quartet
+     17     -129.750455301989  0.750  doublet
+     18     -129.707481044687  0.750  doublet
+     19     -129.494009737935  0.750  doublet
+  ---------------------------------------------
+  Timing for initial guess  =      0.017 s
+
+  Projecting out root 1
+  Projecting out root 2
+  Projecting out root 6
+  Projecting out root 8
+  Projecting out root 9
+  Projecting out root 14
+  Projecting out root 16
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -112.149555757785  -1.121e+02  +2.072e-01
+      2     -112.179413013035  -2.986e-02  +5.719e-02
+      3     -112.181018851629  -1.606e-03  +2.867e-02
+      4     -112.181380380652  -3.615e-04  +6.241e-03
+      5     -112.181396744803  -1.636e-05  +1.575e-03
+      6     -112.181397650762  -9.060e-07  +3.072e-04
+      7     -112.181397692511  -4.175e-08  +6.734e-05
+      8     -112.181397694728  -2.217e-09  +1.709e-05
+      9     -112.181397694846  -1.181e-10  +4.379e-06
+     10     -112.181397694856  -1.009e-11  +1.592e-06
+     11     -112.181397694858  -1.506e-12  +5.663e-07
+     12     -112.181397694858  -1.705e-13  +2.285e-07
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 13 iterations.
+
+  ==> Root No. 0 <==
+
+    a0 00 20 20     -0.95789552
+    a0 00 02 20      0.11802694
+    a0 00 20 02      0.11802694
+
+    Total Energy:      -112.181397694857793
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       2  (  1)    Ag     0     -112.181397694858
+    ---------------------------------------------
+
+  Time to prepare integrals:        0.641 seconds
+  Time to run job          :        0.129 seconds
+  Total                    :        0.129 seconds    FCI energy........................................................PASSED
+
+    Psi4 stopped on: Thursday, 09 July 2020 08:46PM
+    Psi4 wall time for execution: 0:00:01.16
+
+*** Psi4 exiting successfully. Buy a developer a beer!

@@ -32,7 +32,7 @@ set forte {
     e_convergence         1e-7
     CASSCF_E_CONVERGENCE  1e-8
     CAS_TYPE             FCI
-    CASSCF_ITERATIONS    1
+    CASSCF_MAXITER    1
     print                0
 }
 

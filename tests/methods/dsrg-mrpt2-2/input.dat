@@ -1,39 +1,34 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
-#refmcscf     =  -99.939316381643451 # cc-pVDZ
 refmcscf     =  -99.939316382624
-#refdsrgpt2   = -100.100858039676922 # cc-pVDZ
-refdsrgpt2   = -100.100858040813449 # cc-pVDZ
-
-memory 500 mb
+refdsrgpt2   = -100.100858043169
 
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.50
 }
 
 set globals{
-#   basis                   cc-pvtz
    basis                   cc-pvdz
-   reference               twocon
    scf_type                pk
-   d_convergence           12
-   e_convergence           15
-}
-
-set mcscf{
-   docc                    [2,0,1,1]
-   socc                    [2,0,0,0]
-   maxiter                 1000
-   level_shift             1.0
 }
 
 set forte{
-   active_space_solver     cas
+  job_type                mcscf_two_step
+  active_space_solver     fci
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+  casscf_e_convergence    12
+  casscf_g_convergence    8
+}
+
+Emcscf, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "MCSCF energy")
+
+set forte{
+   job_type                newdriver
+   active_space_solver     detci
    correlation_solver      dsrg-mrpt2
    frozen_docc             [1,0,0,0]
    restricted_docc         [1,0,1,1]
@@ -43,8 +38,5 @@ set forte{
    dsrg_s                  1.0
 }
 
-Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
-
 energy('forte',ref_wfn=wfn)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")

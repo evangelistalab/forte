@@ -1,0 +1,59 @@
+import forte
+
+refmcscf   = -99.406065223640
+refudsrg   = -99.498870943028  # use default dsrg_rsc_ncomm
+refprdsrg  = -99.500372786457  # use default dsrg_rsc_ncomm
+refrdsrg   = -99.500190629197  # use default dsrg_rsc_ncomm
+refudsrg   = -99.498863733468  # truncate dsrg_rsc_ncomm to 4
+refprdsrg  = -99.500365370010  # truncate dsrg_rsc_ncomm to 4
+refrdsrg   = -99.500183053364  # truncate dsrg_rsc_ncomm to 4
+
+molecule HF{
+0 1
+F
+H 1 1.5
+}
+
+set globals{
+  basis                   3-21g
+  docc                    [3,0,1,1]
+}
+
+set forte{
+   job_type                mcscf_two_step
+   active_space_solver     fci
+   restricted_docc         [2,0,1,1]
+   active                  [2,0,0,0]
+   root_sym                0
+   nroot                   1
+   casscf_e_convergence    12
+   casscf_g_convergence    8
+}
+
+Emcscf, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+
+set forte{
+  job_type               newdriver
+  active_space_solver    fci
+  correlation_solver     sa-mrdsrg
+  int_type               cholesky
+  cholesky_tolerance     1e-4
+  corr_level             ldsrg2
+  frozen_docc            [1,0,0,0]
+  restricted_docc        [1,0,1,1]
+  active                 [2,0,0,0]
+  dsrg_s                 1.0
+  maxiter                100
+  e_convergence          8
+  dsrg_hbar_seq          true
+  dsrg_nivo              true
+  relax_ref              twice
+  dsrg_read_amps         true
+  dsrg_rsc_ncomm         4
+}
+
+energy('forte', ref_wfn=wfn)
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
+compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
+compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")

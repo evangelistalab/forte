@@ -2,8 +2,8 @@
 
 import forte
 
-refmcscf     = -15.569761360883527 #TEST
-refdsrgpt2   = -15.627184888920119 #TEST
+refmcscf   = -15.56976136088
+refdsrgpt2 = -15.62904156665
 
 molecule {
   0 1
@@ -12,32 +12,6 @@ molecule {
   H         0.000000000000    -1.390000000000     2.500000000000
   units bohr
   no_reorient
-}
-
-set globals{
-   scf_type             pk
-   d_convergence        12
-   e_convergence        15
-}
-
-set mcscf{
-   reference            twocon
-   docc                 [2,0,0,0]
-   socc                 [1,0,0,1]
-   maxiter              1000
-}
-
-set forte{
-   active_space_solver  fci
-   correlation_solver   dsrg-mrpt2
-   restricted_docc      [2,0,0,0]
-   active               [1,0,0,1]
-   root_sym             0
-   nroot                1
-   dsrg_s               1.0e10
-   dsrgpt               true
-   print_denom2         true
-   multiplicity         1
 }
 
 basis {
@@ -73,8 +47,34 @@ S   1   1.00
 ****
 }
 
-scf_energy, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+set forte{
+   job_type             mcscf_two_step
+   casscf_e_convergence 12
+   casscf_g_convergence 8
+   active_space_solver  fci
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
+   root_sym             0
+   nroot                1
+   multiplicity         1
+}
+
+mcscf_energy, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf,mcscf_energy,10,"MCSCF energy")
+
+set forte{
+   job_type             newdriver
+   active_space_solver  fci
+   correlation_solver   dsrg-mrpt2
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
+   root_sym             0
+   nroot                1
+   dsrg_s               1.0e10
+   dsrgpt               true
+   multiplicity         1
+   threepdc             zero
+}
 
 energy('forte',ref_wfn=wfn)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy") #TEST
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")

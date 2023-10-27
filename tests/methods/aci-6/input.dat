@@ -19,7 +19,6 @@ symmetry c2v
 set {
   basis DZ
   scf_type pk
-  reference rohf
   e_convergence 11
   d_convergence 11
   r_convergence 11
@@ -31,20 +30,19 @@ set {
 set forte {
   active_space_solver aci
   multiplicity 1
-  aci_SELECT_TYPE aimed_energy
   sigma 0.07
   nroot 1
   charge 0
-  aci_enforce_spin_complete true
+  sci_enforce_spin_complete true
   aci_add_aimed_degenerate true
   sci_project_out_spin_contaminants true
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy")
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),7, "ACI energy")
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy")
 

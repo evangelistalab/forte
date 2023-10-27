@@ -1,0 +1,534 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "helpers/timer.h"
+#include "helpers/printing.h"
+#include "sa_mrpt3.h"
+
+using namespace psi;
+
+namespace forte {
+
+SA_MRPT3::SA_MRPT3(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+                   std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : SA_DSRGPT(rdms, scf_info, options, ints, mo_space_info) {
+
+    print_method_banner({"MR-DSRG Third-Order Perturbation Theory"});
+    read_options();
+    print_options();
+    check_memory();
+    startup();
+}
+
+void SA_MRPT3::startup() {
+    // test semi-canonical
+    if (!semi_canonical_) {
+        outfile->Printf("\n  Orbital invariant formalism will be employed for DSRG-MRPT3.");
+        U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"cc", "aa", "vv"});
+        Fdiag_ = diagonalize_Fock_diagblocks(U_);
+    }
+
+    // prepare integrals
+    build_ints();
+
+    // initialize tensors for amplitudes
+    init_amps();
+}
+
+void SA_MRPT3::build_ints() {
+    timer t("Initialize integrals");
+    print_contents("Initializing integrals");
+
+    // prepare two-electron integrals or three-index B
+    V_ = BTF_->build(tensor_type_, "V", {"pphh"});
+    if (eri_df_) {
+        B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg"});
+        fill_three_index_ints(B_);
+        V_["pqrs"] = B_["gpr"] * B_["gqs"];
+    } else {
+        for (const std::string& block : V_.block_labels()) {
+            auto mo_to_index = BTF_->get_mo_to_index();
+            std::vector<size_t> i0 = mo_to_index[block.substr(0, 1)];
+            std::vector<size_t> i1 = mo_to_index[block.substr(1, 1)];
+            std::vector<size_t> i2 = mo_to_index[block.substr(2, 1)];
+            std::vector<size_t> i3 = mo_to_index[block.substr(3, 1)];
+            auto Vblock = ints_->aptei_ab_block(i0, i1, i2, i3);
+            V_.block(block).copy(Vblock);
+        }
+    }
+
+    // prepare Hbar
+    if (form_Hbar_) {
+        Hbar1_ = BTF_->build(tensor_type_, "1-body Hbar", {"aa"});
+        Hbar2_ = BTF_->build(tensor_type_, "2-body Hbar", {"aaaa"});
+        Hbar1_["uv"] = F_["uv"];
+        Hbar2_["uvxy"] = V_["uvxy"];
+    }
+
+    print_done(t.stop());
+}
+
+void SA_MRPT3::init_amps() {
+    timer t("Initialize T1 and T2");
+    print_contents("Allocating amplitudes");
+    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+    T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
+    S2_ = BTF_->build(tensor_type_, "S2 Amplitudes", {"hhpp"});
+    print_done(t.stop());
+}
+
+void SA_MRPT3::check_memory() {
+    dsrg_mem_.add_entry("2-electron (4-index) integrals", {"pphh"});
+    if (eri_df_) {
+        dsrg_mem_.add_entry("3-index integrals", {"Lgg"});
+    }
+
+    dsrg_mem_.add_entry("T1 and T2 cluster amplitudes", {"hp", "hhpp", "hhpp"});
+
+    if (form_Hbar_) {
+        dsrg_mem_.add_entry("1- and 2-body Hbar", {"aa", "aaaa"});
+    }
+
+    dsrg_mem_.add_entry("Global 1- and 2-body intermediates", {"hp", "hhpp", "hhpp"});
+
+    auto local1 = dsrg_mem_.compute_memory({"hp", "hhpp"}, 3);
+    dsrg_mem_.add_entry("Local intermediates (energy part 1)", local1, false);
+
+    auto local2 = dsrg_mem_.compute_memory({"ph", "pphh"});
+    if (!eri_df_) {
+        local2 += dsrg_mem_.compute_memory({"gggg"});
+    }
+    dsrg_mem_.add_entry("Local intermediates (energy part 2)", local2, false);
+
+    auto local_comm = dsrg_mem_.compute_memory({"pphh"});
+    dsrg_mem_.add_entry("Local intermediates for commutators", local_comm, false);
+
+    dsrg_mem_.print("DSRG-MRPT3");
+}
+
+double SA_MRPT3::compute_energy() {
+    // build amplitudes
+    compute_t2_full();
+    compute_t1();
+    analyze_amplitudes("First-Order", T1_, T2_);
+
+    // compute energy, order matters!!!
+    double Ept3_1 = compute_energy_pt3_1();
+    double Ept2 = compute_energy_pt2();
+    double Ept3_2 = compute_energy_pt3_2(); // put 2nd-order amps to T_
+    double Ept3_3 = compute_energy_pt3_3();
+    double Ept3 = Ept3_1 + Ept3_2 + Ept3_3;
+    Hbar0_ = Ept3 + Ept2;
+    double Etotal = Hbar0_ + Eref_;
+
+    // printing
+    std::vector<std::pair<std::string, double>> energy;
+    energy.push_back({"Reference energy", Eref_});
+    energy.push_back({"2nd-order correlation energy", Ept2});
+    energy.push_back({"3rd-order correlation energy part 1", Ept3_1});
+    energy.push_back({"3rd-order correlation energy part 2", Ept3_2});
+    energy.push_back({"3rd-order correlation energy part 3", Ept3_3});
+    energy.push_back({"3rd-order correlation energy", Ept3});
+    energy.push_back({"DSRG-MRPT3 correlation energy", Hbar0_});
+    energy.push_back({"DSRG-MRPT3 total energy", Etotal});
+
+    print_h2("DSRG-MRPT3 Energy Summary");
+    for (const auto& str_dim : energy) {
+        outfile->Printf("\n    %-40s = %22.15f", str_dim.first.c_str(), str_dim.second);
+    }
+    outfile->Printf("\n\n    Notes:");
+    outfile->Printf("\n      3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, "
+                    "A1st], A1st], A1st]");
+    outfile->Printf("\n      3rd-order energy part 2: 0.5 * [H1st + Hbar1st, A2nd]");
+    outfile->Printf("\n      3rd-order energy part 3: 0.5 * [Hbar2nd, A1st]");
+    outfile->Printf("\n      Hbar1st = H1st + [H0th, A1st]");
+    outfile->Printf("\n      Hbar2nd = 0.5 * [H1st + Hbar1st, A1st] + [H0th, A2nd]");
+
+    return Etotal;
+}
+
+double SA_MRPT3::compute_energy_pt2() {
+    print_h2("Computing 2nd-Order Correlation Energy");
+
+    // Compute effective integrals
+    renormalize_integrals(true);
+
+    // Compute DSRG-MRPT2 correlation energy
+    double Ept2 = 0.0;
+    local_timer t1;
+    print_contents("Computing 2nd-order energy");
+    H1_T1_C0(F_, T1_, 1.0, Ept2);
+    H1_T2_C0(F_, T2_, 1.0, Ept2);
+    H2_T1_C0(V_, T1_, 1.0, Ept2);
+    H2_T2_C0(V_, T2_, S2_, 1.0, Ept2);
+    print_done(t1.get());
+
+    // relax reference
+    if (form_Hbar_) {
+        local_timer t2;
+        print_contents("Computing integrals for ref. relaxation");
+        H_A_Ca(F_, V_, T1_, T2_, S2_, 0.5, Hbar1_, Hbar2_);
+        print_done(t2.get());
+    }
+
+    return Ept2;
+}
+
+double SA_MRPT3::compute_energy_pt3_1() {
+    print_h2("Computing 3rd-Order Energy Contribution (1/3)");
+
+    local_timer t1;
+    print_contents("Computing 3rd-order energy (1/3)");
+
+    // 1- and 2-body -[[H0th,A1st],A1st]
+    O1_ = BTF_->build(tensor_type_, "O1 PT3 1/3", od_one_labels_ph());
+    O2_ = BTF_->build(tensor_type_, "O2 PT3 1/3", od_two_labels_pphh());
+
+    // declare other tensors
+    BlockedTensor C1, C2, temp1, temp2;
+
+    // compute -[H0th,A1st] = Delta * T and save to C1 and C2
+    C1 = BTF_->build(tensor_type_, "C1", od_one_labels());
+    C2 = BTF_->build(tensor_type_, "C2", od_two_labels());
+    H1_T1_C1(F0th_, T1_, -1.0, C1);
+    H1_T2_C1(F0th_, T2_, -1.0, C1);
+    H1_T2_C2(F0th_, T2_, -1.0, C2);
+
+    C1["ai"] += C1["ia"];
+    C2["abij"] += C2["ijab"];
+
+    // compute -[[H0th,A1st],A1st]
+    // - Step 1: ph and pphh part
+    H1_T1_C1(C1, T1_, 1.0, O1_);
+    H1_T2_C1(C1, T2_, 1.0, O1_);
+    H2_T1_C1(C2, T1_, 1.0, O1_);
+    H2_T2_C1(C2, T2_, S2_, 1.0, O1_);
+    H1_T2_C2(C1, T2_, 1.0, O2_);
+    H2_T1_C2(C2, T1_, 1.0, O2_);
+    H2_T2_C2(C2, T2_, S2_, 1.0, O2_);
+
+    // - Step 2: hp and hhpp part
+    temp1 = BTF_->build(tensor_type_, "temp1 pt3 1/3", od_one_labels_hp());
+    temp2 = BTF_->build(tensor_type_, "temp2 pt3 1/3", od_two_labels_hhpp());
+    H1_T1_C1(C1, T1_, 1.0, temp1);
+    H1_T2_C1(C1, T2_, 1.0, temp1);
+    H2_T1_C1(C2, T1_, 1.0, temp1);
+    H2_T2_C1(C2, T2_, S2_, 1.0, temp1);
+    H1_T2_C2(C1, T2_, 1.0, temp2);
+    H2_T1_C2(C2, T1_, 1.0, temp2);
+    H2_T2_C2(C2, T2_, S2_, 1.0, temp2);
+
+    // - Step 3: add hp and hhpp to O1 and O2
+    O1_["ai"] += temp1["ia"];
+    O2_["abij"] += temp2["ijab"];
+
+    // compute -1.0 / 12.0 * [[[H0th,A1st],A1st],A1st]
+    double Ereturn = 0.0;
+    double factor = 1.0 / 6.0;
+    H1_T1_C0(O1_, T1_, factor, Ereturn);
+    H1_T2_C0(O1_, T2_, factor, Ereturn);
+    H2_T1_C0(O2_, T1_, factor, Ereturn);
+    H2_T2_C0(O2_, T2_, S2_, factor, Ereturn);
+
+    print_done(t1.get());
+
+    if (form_Hbar_) {
+        local_timer t2;
+        print_contents("Computing integrals for ref. relaxation");
+        factor = 1.0 / 12.0;
+        H_A_Ca(O1_, O2_, T1_, T2_, S2_, factor, Hbar1_, Hbar2_);
+        print_done(t2.get());
+    }
+
+    return Ereturn;
+}
+
+double SA_MRPT3::compute_energy_pt3_2() {
+    print_h2("Computing 3rd-Order Energy Contribution (2/3)");
+
+    local_timer t1;
+    print_contents("Preparing 2nd-order amplitudes");
+
+    // compute 2nd-order amplitudes
+    // Step 1: compute 0.5 * [H1st + Hbar1st, A1st] = [H1st, A1st] + 0.5 * [[H0th, A1st], A1st]
+    //     a) keep a copy of H1st + Hbar1st
+    auto X1 = BTF_->build(tensor_type_, "O1 pt3 2/3", od_one_labels_ph());
+    auto X2 = BTF_->build(tensor_type_, "O2 pt3 2/3", od_two_labels_pphh());
+    X1["ai"] = F_["ai"];
+    X2["abij"] = V_["abij"];
+
+    //     b) scale -[[H0th, A1st], A1st] by -0.5, computed in compute_energy_pt3_1
+    O1_.scale(-0.5);
+    O2_.scale(-0.5);
+
+    //     c) prepare V and F
+    F_.zero();
+    V_.zero();
+    F_["ai"] = O1_["ai"];
+    V_["abij"] = O2_["abij"];
+
+    //     d) compute contraction from one-body term (first-order bare Fock)
+    H1_T1_C1(F1st_, T1_, 1.0, F_);
+    H1_T2_C1(F1st_, T2_, 1.0, F_);
+    H1_T2_C2(F1st_, T2_, 1.0, V_);
+
+    O1_ = BTF_->build(tensor_type_, "HP2 pt3 2/3", od_one_labels_hp());
+    O2_ = BTF_->build(tensor_type_, "HP2 pt3 2/3", od_two_labels_hhpp());
+    H1_T1_C1(F1st_, T1_, 1.0, O1_);
+    H1_T2_C1(F1st_, T2_, 1.0, O1_);
+    H1_T2_C2(F1st_, T2_, 1.0, O2_);
+
+    F_["ai"] += O1_["ia"];
+    V_["abij"] += O2_["ijab"];
+
+    //     e) compute contraction from two-body term
+    if (eri_df_) {
+        // pphh part
+        V_T1_C1_DF(B_, T1_, 1.0, F_);
+        V_T2_C1_DF(B_, T2_, S2_, 1.0, F_);
+        V_T1_C2_DF(B_, T1_, 1.0, V_);
+        V_T2_C2_DF(B_, T2_, S2_, 1.0, V_);
+
+        // hhpp part
+        O1_.zero();
+        O2_.zero();
+        V_T1_C1_DF(B_, T1_, 1.0, O1_);
+        V_T2_C1_DF(B_, T2_, S2_, 1.0, O1_);
+        V_T1_C2_DF(B_, T1_, 1.0, O2_);
+        V_T2_C2_DF(B_, T2_, S2_, 1.0, O2_);
+    } else {
+        auto C2 = BTF_->build(tensor_type_, "C2 pt3 2/3", {"gggg"});
+        for (const std::string& block : C2.block_labels()) {
+            auto mo_to_index = BTF_->get_mo_to_index();
+            std::vector<size_t> i0 = mo_to_index[block.substr(0, 1)];
+            std::vector<size_t> i1 = mo_to_index[block.substr(1, 1)];
+            std::vector<size_t> i2 = mo_to_index[block.substr(2, 1)];
+            std::vector<size_t> i3 = mo_to_index[block.substr(3, 1)];
+            auto Vblock = ints_->aptei_ab_block(i0, i1, i2, i3);
+            C2.block(block).copy(Vblock);
+        }
+
+        // pphh part
+        H2_T1_C1(C2, T1_, 1.0, F_);
+        H2_T2_C1(C2, T2_, S2_, 1.0, F_);
+        H2_T1_C2(C2, T1_, 1.0, V_);
+        H2_T2_C2(C2, T2_, S2_, 1.0, V_);
+
+        // hhpp part
+        O1_.zero();
+        O2_.zero();
+        H2_T1_C1(C2, T1_, 1.0, O1_);
+        H2_T2_C1(C2, T2_, S2_, 1.0, O1_);
+        H2_T1_C2(C2, T1_, 1.0, O2_);
+        H2_T2_C2(C2, T2_, S2_, 1.0, O2_);
+    }
+    F_["ai"] += O1_["ia"];
+    V_["abij"] += O2_["ijab"];
+    print_done(t1.get());
+
+    // Step 2: compute amplitdes
+    //     a) save 1st-order amplitudes for later use
+    O1_.set_name("T1 1st");
+    O2_.set_name("T2 1st");
+    O1_["ia"] = T1_["ia"];
+    O2_["ijab"] = T2_["ijab"];
+
+    //     b) compute 2nd-order amplitdes
+    compute_t2_full();
+    compute_t1();
+
+    // compute energy from 0.5 * [[H1st + Hbar1st, A1st], A2nd]
+    local_timer t2;
+    print_contents("Computing 3rd-order energy (2/3)");
+    double Ereturn = 0.0;
+    H1_T1_C0(X1, T1_, 1.0, Ereturn);
+    H1_T2_C0(X1, T2_, 1.0, Ereturn);
+    H2_T1_C0(X2, T1_, 1.0, Ereturn);
+    H2_T2_C0(X2, T2_, S2_, 1.0, Ereturn);
+    print_done(t2.get());
+
+    if (form_Hbar_) {
+        local_timer t3;
+        print_contents("Computing integrals for ref. relaxation");
+        H_A_Ca(X1, X2, T1_, T2_, S2_, 0.5, Hbar1_, Hbar2_);
+        print_done(t3.get());
+    }
+
+    // analyze amplitudes
+    analyze_amplitudes("Second-Order", T1_, T2_);
+
+    return Ereturn;
+}
+
+double SA_MRPT3::compute_energy_pt3_3() {
+    print_h2("Computing 3rd-Order Energy Contribution (3/3)");
+
+    // scale F and V by exponential delta
+    renormalize_integrals(false);
+
+    // reset S2 to first order
+    S2_["ijab"] = 2.0 * O2_["ijab"] - O2_["ijba"];
+
+    // compute energy of 0.5 * [Hbar2nd, A1st]
+    double Ereturn = 0.0;
+    local_timer t1;
+    print_contents("Computing 3rd-order energy (3/3)");
+    H1_T1_C0(F_, O1_, 1.0, Ereturn);
+    H1_T2_C0(F_, O2_, 1.0, Ereturn);
+    H2_T1_C0(V_, O1_, 1.0, Ereturn);
+    H2_T2_C0(V_, O2_, S2_, 1.0, Ereturn);
+    print_done(t1.get());
+
+    // relax reference
+    if (form_Hbar_) {
+        local_timer t2;
+        print_contents("Computing integrals for ref. relaxation");
+        H_A_Ca(F_, V_, O1_, O2_, S2_, 0.5, Hbar1_, Hbar2_);
+        print_done(t2.get());
+    }
+
+    return Ereturn;
+}
+
+void SA_MRPT3::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                                  const std::vector<int>& max_levels) {
+    /**
+     * Transform one-body integrals based on DSRG-PT3.
+     * The diagonal blocks of the one-body integrals are considered 0th order.
+     *
+     * @param oetens: a vector of bare multipole integrals
+     * @param max_body: the max body kept in recursive linear commutator approximation
+     *
+     * This function should be called after compute_energy(),
+     * as 1st- and 2nd-order amps. are stored in O1_/O2_ and T1_/T2_, respectively.
+     */
+    print_h2("Transform One-Electron Operators");
+
+    auto max_body = *std::max_element(max_levels.begin(), max_levels.end());
+    if (max_body > 1)
+        throw std::runtime_error("Multipole level > 1 currently not available for MRPT3!");
+
+    int n_tensors = oetens.size();
+    Mbar0_ = std::vector<double>(n_tensors, 0.0);
+
+    // compute Mref and add to Mbar0_
+    for (int i = 0; i < n_tensors; ++i) {
+        auto& M1c = oetens[i].block("cc").data();
+        for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+            Mbar0_[i] += 2.0 * M1c[m * ncore + m];
+        }
+        Mbar0_[i] += oetens[i]["uv"] * L1_["vu"];
+    }
+
+    Mbar1_.resize(n_tensors);
+    Mbar2_.resize(n_tensors);
+    for (int i = 0; i < n_tensors; ++i) {
+        Mbar1_[i] = BTF_->build(tensor_type_, oetens[i].name() + "1", {"aa"});
+        Mbar1_[i]["uv"] += oetens[i]["uv"]; // add bare one-electron integrals
+        if (max_levels[i] > 1)
+            Mbar2_[i] = BTF_->build(tensor_type_, oetens[i].name() + "2", {"aaaa"});
+    }
+
+    auto Md = BTF_->build(tensor_type_, "M_D", {"cc", "aa", "vv"});
+    auto Mod = BTF_->build(tensor_type_, "M_OD", od_one_labels());
+
+    auto O1 = BTF_->build(tensor_type_, "O1", od_one_labels_ph());
+    auto temp1 = BTF_->build(tensor_type_, "temp1M", {"aa"});
+    auto C1 = BTF_->build(tensor_type_, "C1", {"gg"});
+    auto H1 = BTF_->build(tensor_type_, "H1", {"gg"});
+
+    // transform each tensor
+    for (int i = 0; i < n_tensors; ++i) {
+        local_timer t_local;
+        auto M = oetens[i];
+        print_contents("Transforming " + M.name());
+
+        // separate M to diagonal and off-diagonal components
+        Md["pq"] = M["pq"];
+        Mod["pq"] = M["pq"];
+
+        // initialize Mbar
+        auto& Mbar0 = Mbar0_[i];
+        auto& Mbar1 = Mbar1_[i];
+        temp1.zero();
+
+        // [M, A2nd] + 0.5 * [[M^{d}, A1st], A2nd]
+        // - prepare O1 = M^{od} + 0.5 * [M^{d}, A1st]^{od}
+        O1["pq"] = Mod["pq"];
+        S2_["ijab"] = 2.0 * O2_["ijab"] - O2_["jiab"];
+        H1d_A1_C1ph(Md, O1_, 0.5, O1);
+        H1d_A2_C1ph(Md, S2_, 0.5, O1);
+
+        // - compute Mbar_{0,1}
+        S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["jiab"];
+        H1_T1_C0(O1, T1_, 2.0, Mbar0);
+        H1_T2_C0(O1, T2_, 2.0, Mbar0);
+        H1_T_C1a_smallS(O1, T1_, S2_, temp1);
+
+        // [M, A1st] + 0.5 * [[M^{d}, A2nd], A1st] + 0.5 * [[M, A1st], A1st]
+        // + 1/6 * [[[M^{d}, A1st], A1st], A1st]
+
+        // - O1 <- M^{od}
+        O1["pq"] = Mod["pq"];
+
+        // - O1 <- 0.5 * [M^{d}, A2nd]^{od}
+        H1d_A1_C1ph(Md, T1_, 0.5, O1);
+        H1d_A2_C1ph(Md, S2_, 0.5, O1);
+
+        // - O1 <- 0.5 * [M, A1st]^{od}
+        S2_["ijab"] = 2.0 * O2_["ijab"] - O2_["jiab"];
+        H1_A1_C1ph(M, O1_, 0.5, O1);
+        H1_A2_C1ph(M, S2_, 0.5, O1);
+
+        // - O1 <- 1/6 * [[M^{d}, A1st], A1st]^{od}
+        C1.zero();
+        H1_T1_C1(Md, O1_, 1.0, C1);
+        H1_T2_C1(Md, O2_, 1.0, C1);
+        H1["pq"] = C1["pq"];
+        H1["pq"] += C1["qp"];
+
+        H1_A1_C1ph(H1, O1_, 1.0 / 6.0, O1);
+        H1_A2_C1ph(H1, S2_, 1.0 / 6.0, O1);
+
+        // - compute Mbar_{0,1}
+        H1_T1_C0(O1, O1_, 2.0, Mbar0);
+        H1_T2_C0(O1, O2_, 2.0, Mbar0);
+        H1_T_C1a_smallS(O1, O1_, S2_, temp1);
+
+        // add 1-body results
+        Mbar1["uv"] += temp1["uv"];
+        Mbar1["vu"] += temp1["uv"];
+
+        print_done(t_local.get());
+    }
+}
+} // namespace forte

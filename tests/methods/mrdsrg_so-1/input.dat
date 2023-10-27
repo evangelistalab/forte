@@ -1,0 +1,67 @@
+#! Generated using commit GITCOMMIT
+# Test for spin-orbital DSRG code
+
+import forte
+
+Ecas0  = -1.049725718950583
+Edsrg0 = -1.049825487798135
+
+molecule {
+  0 1
+  H
+  H 1 1.5
+}
+
+set {
+  basis              3-21g
+  docc               [1,0,0,0,0,0,0,0]
+  restricted_docc    [0,0,0,0,0,0,0,0]
+  active             [1,0,0,0,0,1,0,0]
+  reference          rhf
+  scf_type           direct
+  maxiter            300
+  e_convergence      8
+  d_convergence      10
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+
+set forte {
+  job_type               casscf
+  restricted_docc        [0,0,0,0,0,0,0,0]
+  active                 [1,0,0,0,0,1,0,0]
+  e_convergence          8
+}
+
+Ecas0,wfn = energy('forte', ref_wfn=wfn,return_wfn=True)
+compare_values(Ecas0, variable("CURRENT ENERGY"), 8, "CASSCF energy")
+
+set forte {
+  job_type               newdriver
+  active_space_solver    detci
+  correlation_solver     mrdsrg_so
+  corr_level             ldsrg2
+  frozen_docc            [0,0,0,0,0,0,0,0]
+  restricted_docc        [0,0,0,0,0,0,0,0]
+  active                 [1,0,0,0,0,1,0,0]
+  dsrg_s                 0.5
+  maxiter                100
+  e_convergence          8
+  r_convergence          4  # will not affect CI because Ndet = 2
+}
+
+E_spin_orbital = energy('forte', ref_wfn=wfn)
+compare_values(Edsrg0, E_spin_orbital, 8, "MR-LDSRG(2) energy spin-orbital York")
+
+#set forte {
+#correlation_solver     somrdsrg
+#}
+#E_spin_orbital = energy('forte', ref_wfn=wfn)
+#compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital Francesco")
+
+#set forte {
+#correlation_solver     mrdsrg
+#job_type newdriver
+#}
+#E_spin_integrated = energy('forte', ref_wfn=wfn)
+#compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-integrated")

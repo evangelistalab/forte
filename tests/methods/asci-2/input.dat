@@ -1,43 +1,44 @@
 import forte                              
 
-# This test reproduces the ASCI energy of C2 reported in the Table 2 of the following paper:
+# This test is similar to the ASCI energy of C2 reported in the Table 2 of the following paper:
 #   Tubman, N. M., Lee, J., Takeshita, T. Y., Head-Gordon, M., & Whaley, K. B. (2016). 
 #   J. Chem. Phys., 145 (4), 044112. http://doi.org/doi: 10.1063/1.4955109
+#
+#   In this test we use a smaller basis (6-31G)
 
-refscf = -75.34896498316222 
-refasci = -75.625005495823 
-                                         
-molecule CH2{                            
+refscf = -75.34896498316222
+refasci = -75.625013576139
+
+molecule C2{
 0 1
 C
 C 1 1.27273
+}
 
-}                                        
-                                         
-set {                                    
-  scf_type pk                            
-  #multiplicity 1                         
-  basis 6-31g                      
-  reference rohf
+set {
+  scf_type pk
+  basis 6-31g
   e_convergence 10
-}                                        
-                                         
-set forte {                              
+}
+
+set forte {
   multiplicity 1
-  active_space_solver asci                          
+  active_space_solver asci
   frozen_docc [1,0,0,0,0,1,0,0]
   multiplicity 1
-  charge 0                               
+  charge 0
   root_sym 0
   nroot 1
   active_ref_type hf
   dl_maxiter 500
   asci_cdet 100
   asci_tdet 1000
-  asci_max_cycle 8   
+  sci_max_cycle 8
   asci_e_convergence 1e-5
-}                                        
-                                         
+  sci_project_out_spin_contaminants false
+  spin_project_full false
+}
+
 Escf, scf_wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy")
 energy('forte', ref_wfn = scf_wfn) 

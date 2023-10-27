@@ -90,7 +90,7 @@ set forte {
   cholesky_tolerance    1e-14
   relax_ref             once
   semi_canonical        true
-  print 1
+  print                 1
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

@@ -1,0 +1,56 @@
+import forte
+
+refmcscf =  -99.939316382624014
+refpt2   = -100.102891138343
+
+molecule HF{
+  0 1
+  F
+  H 1 1.5
+}
+
+set globals{
+  basis                   cc-pvdz
+  scf_type                pk
+}
+
+set forte{
+  job_type                mcscf_two_step
+  active_space_solver     fci
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+  casscf_e_convergence    12
+  casscf_g_convergence    8
+}
+
+Emcscf, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "CASSCF(2,2) energy")
+
+set forte{
+  job_type                newdriver
+  active_space_solver     detci
+  correlation_solver      sa-mrdsrg
+  corr_level              pt2
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+  dsrg_s                  1.0
+  e_convergence           10
+  ccvv_source             zero
+  semi_canonical          false
+}
+
+Ept2 = energy('forte', ref_wfn=wfn)
+compare_values(refpt2, Ept2, 8, "DSRG-MRPT2 (CCVV=ZERO, SEMI=FALSE) energy")
+
+set forte{
+  int_type           cholesky
+  cholesky_tolerance 1e-12
+  print              2
+}
+Ept2_cholesky = energy('forte', ref_wfn=wfn)
+compare_values(refpt2, Ept2_cholesky, 8, "DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=FALSE) energy")
+
+set forte semi_canonical true
+Ept2_cholesky = energy('forte', ref_wfn=wfn)
+compare_values(refpt2, Ept2_cholesky, 8, "DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=TRUE) energy")

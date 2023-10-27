@@ -1,0 +1,51 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+
+Ecas_psi4 = -108.789661409534418
+Eldsrg2   = -108.971703002972987
+
+molecule {
+0 1
+N
+N 1 2.0
+}
+
+set globals{
+  basis                  cc-pvdz
+  reference              rhf
+  scf_type               pk
+  e_convergence          12
+  d_convergence          8
+  mcscf_e_convergence    12
+  mcscf_r_convergence    8
+  mcscf_diis_start       10
+  mcscf_max_rot          0.1
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+}
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ energy")
+
+set forte{
+  active_space_solver    fci
+  correlation_solver     sa-mrdsrg
+  corr_level             ldsrg2
+  frozen_docc            [1,0,0,0,0,1,0,0]
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  dsrg_s                 1.0
+  e_convergence          8
+  r_convergence          7
+  print                  3
+  semi_canonical         false
+  ccvv_source            zero
+  int_type               cholesky
+  cholesky_tolerance     1e-12
+  dsrg_rsc_ncomm         4
+}
+energy('forte', ref_wfn=wfn)
+Eu = variable("UNRELAXED ENERGY")
+compare_values(Eldsrg2, Eu, 7, "MR-LDSRG(2) (NCOMM=4) unrelaxed energy")

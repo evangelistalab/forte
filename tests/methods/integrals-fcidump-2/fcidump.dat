@@ -1,0 +1,17 @@
+molecule {
+0 1
+H
+H 1 R
+R = 1.5
+units bohr
+symmetry c1
+}
+
+set {
+  basis cc-pVDZ
+  scf_type pk
+  e_convergence 14
+}
+
+e, wfn = energy('fci',return_wfn=True)
+fcidump(wfn,oe_ints=['EIGENVALUES'])

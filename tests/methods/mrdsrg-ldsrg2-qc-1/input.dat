@@ -1,56 +1,54 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refmcscf   = -99.406065223640
-refdsrg    = -99.497356556031 # no relaxation
-refdsrg    = -99.498401703623 # relax once
-refdsrg    = -99.498194735718 # relax iterative
-
-memory 500 mb
+refdsrg_u  = -99.497356556031 # no relaxation
+refdsrg_pr = -99.498401703623 # relax once
+refdsrg_r  = -99.498199175524 # relax
+refdsrg_fr = -99.498194735718 # relax iterative
 
 molecule HF{
   0 1
   F
-  H  1 R
-  R = 1.50
+  H 1 1.5
 }
 
 set globals{
-   basis                   3-21g
-   reference               twocon
-   scf_type                pk
-   e_convergence           8
-   maxiter                 100
-   docc                   [3,0,1,1]
-}
-
-set mcscf{
-   docc                   [2,0,1,1]
-   socc                   [2,0,0,0]
-   maxiter                 1000
-   level_shift             0.5
-   d_convergence           10
-   e_convergence           12
+  basis                  3-21g
+  scf_type               pk
+  docc                   [3,0,1,1]
 }
 
 set forte{
-   correlation_solver        mrdsrg
-   active_space_solver    fci 
-   corr_level              ldsrg2_qc
-   frozen_docc            [1,0,0,0]
-   restricted_docc        [1,0,1,1]
+   job_type               mcscf_two_step
+   active_space_solver    fci
+   restricted_docc        [2,0,1,1]
    active                 [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   relax_ref               iterate
-   maxiter                 100
-   e_convergence           8
+   root_sym               0
+   nroot                  1
+   casscf_e_convergence   12
+   casscf_g_convergence   8
 }
 
-Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+Emcscf, wfn = energy('forte', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
+
+set forte{
+  job_type               newdriver
+  correlation_solver     mrdsrg
+  active_space_solver    fci
+  corr_level             ldsrg2_qc
+  frozen_docc            [1,0,0,0]
+  restricted_docc        [1,0,1,1]
+  active                 [2,0,0,0]
+  dsrg_s                 1.0
+  relax_ref              iterate
+  maxiter                100
+  e_convergence          8
+  relax_e_convergence    6
+}
 
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrg,variable("CURRENT ENERGY"),8,"MRDSRG fully relaxed energy") #TEST
+compare_values(refdsrg_u, variable("UNRELAXED ENERGY"), 8, "MRDSRG unrelaxed energy")
+compare_values(refdsrg_pr, variable("PARTIALLY RELAXED ENERGY"), 8, "MRDSRG partially relaxed energy")
+compare_values(refdsrg_r, variable("RELAXED ENERGY"), 8, "MRDSRG relaxed energy")
+compare_values(refdsrg_fr, variable("CURRENT ENERGY"), 6, "MRDSRG fully relaxed energy")
