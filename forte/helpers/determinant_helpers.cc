@@ -81,7 +81,6 @@ make_hamiltonian_matrix(const std::vector<Determinant>& dets,
             H->set(J, I, HIJ);
         }
     }
-
     return H;
 }
 } // namespace forte
