@@ -384,12 +384,12 @@ pci:
       - pci-3
       - pci-4
    medium:
-      #   - pci-2
-      #   - pci-5
+      #- pci-2
+      #- pci-5
       - pci-6
-      #   - pci-7
+      #- pci-7
       - pci-8
-#   - pci-9
+      #- pci-9
 read-orbitals:
    short:
       - read-orbitals-1

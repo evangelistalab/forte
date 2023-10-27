@@ -24,7 +24,7 @@ set forte {
   PCI_GENERATOR DL
   pci_spawning_threshold 0.0001
   pci_USE_INTER_NORM true
-  orbital_type MP2_NOS
+  orbital_type MP2NO
   sci_max_cycle 100000.00
   pci_e_convergence 1.0e-10
   PCI_STOP_HIGHER_NEW_LOW true
