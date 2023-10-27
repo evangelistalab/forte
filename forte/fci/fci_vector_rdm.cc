@@ -235,11 +235,7 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
             auto Cr =
                 gather_C_block(C_right, CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
 
-<<<<<<< HEAD
-            size_t maxL = alfa ? beta_address->strpcls(hb) : alfa_address->strpcls(ha);
-=======
             size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_Ia);
->>>>>>> trdm
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
                 size_t max_pq = lists->pairpi(pq_sym);

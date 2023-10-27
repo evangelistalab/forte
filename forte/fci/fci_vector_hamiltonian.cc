@@ -99,26 +99,7 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
             auto Cl =
                 gather_C_block(result, CL, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, !alfa);
 
-<<<<<<< HEAD
-            if (!alfa) {
-                C->zero();
-                Y->zero();
-                size_t maxIa = alfa_address_->strpcls(alfa_sym);
-                size_t maxIb = beta_address_->strpcls(beta_sym);
-
-                double** C0h = C_[alfa_sym]->pointer();
-
-                // Copy C0 transposed in CR
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Ch[Ib][Ia] = C0h[Ia][Ib];
-            }
-
-            size_t maxL =
-                alfa ? beta_address_->strpcls(beta_sym) : alfa_address_->strpcls(alfa_sym);
-=======
             size_t maxL = alfa ? beta_address_->strpi(h_Ib) : alfa_address_->strpi(h_Ia);
->>>>>>> trdm
 
             for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
@@ -136,20 +117,7 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
                     }
                 }
             }
-<<<<<<< HEAD
-            if (!alfa) {
-                size_t maxIa = alfa_address_->strpcls(alfa_sym);
-                size_t maxIb = beta_address_->strpcls(beta_sym);
-
-                double** HC = result.C_[alfa_sym]->pointer();
-                // Add CL transposed to Y
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        HC[Ia][Ib] += Yh[Ib][Ia];
-            }
-=======
             scatter_C_block(result, Cl, alfa, alfa_address_, beta_address_, h_Ia, h_Ib);
->>>>>>> trdm
         }
     } // End loop over h
 }
@@ -167,25 +135,7 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
             auto Cl =
                 gather_C_block(result, CL, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, !alfa);
 
-<<<<<<< HEAD
-            if (!alfa) {
-                C->zero();
-                Y->zero();
-                size_t maxIa = alfa_address_->strpcls(ha);
-                size_t maxIb = beta_address_->strpcls(hb);
-
-                double** C0h = C_[ha]->pointer();
-
-                // Copy C0 transposed in CR
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Ch[Ib][Ia] = C0h[Ia][Ib];
-            }
-
-            size_t maxL = alfa ? beta_address_->strpcls(hb) : alfa_address_->strpcls(ha);
-=======
             size_t maxL = alfa ? beta_address_->strpi(h_Ib) : alfa_address_->strpi(h_Ia);
->>>>>>> trdm
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
@@ -236,51 +186,25 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
                     }
                 }
             }
-<<<<<<< HEAD
-            if (!alfa) {
-                size_t maxIa = alfa_address_->strpcls(ha);
-                size_t maxIb = beta_address_->strpcls(hb);
-
-                double** HC = result.C_[ha]->pointer();
-
-                // Add CL transposed to Y
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        HC[Ia][Ib] += Yh[Ib][Ia];
-            }
-=======
             scatter_C_block(result, Cl, alfa, alfa_address_, beta_address_, h_Ia, h_Ib);
->>>>>>> trdm
         }
     } // End loop over h
 }
 
 void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Loop over blocks of matrix C
-<<<<<<< HEAD
-    for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
-        size_t maxIa = alfa_address_->strpcls(Ia_sym);
-        int Ib_sym = Ia_sym ^ symmetry_;
-        double** C = C_[Ia_sym]->pointer();
-=======
     for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
         const size_t maxIa = alfa_address_->strpi(h_Ia);
         const int h_Ib = h_Ia ^ symmetry_;
         const auto C = C_[h_Ia]->pointer();
->>>>>>> trdm
 
         // Loop over all r,s
         for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
             const int h_Jb = h_Ib ^ rs_sym;
             const int h_Ja = h_Jb ^ symmetry_;
 
-<<<<<<< HEAD
-            size_t maxJa = alfa_address_->strpcls(Ja_sym);
-            double** Y = result.C_[Ja_sym]->pointer();
-=======
             const size_t maxJa = alfa_address_->strpi(h_Ja);
             auto HC = result.C_[h_Ja]->pointer();
->>>>>>> trdm
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 const int s_sym = rs_sym ^ r_sym;
 
