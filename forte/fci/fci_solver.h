@@ -230,7 +230,7 @@ class FCISolver : public ActiveSpaceMethod {
                                                 std::shared_ptr<SpinAdapter> spin_adapter);
 
     /// @brief Print a summary of the FCI calculation
-    void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
+    void print_solutions(size_t sample_size, std::shared_ptr<psi::Vector> b,
                          std::shared_ptr<psi::Vector> b_basis,
                          std::shared_ptr<DavidsonLiuSolver> dls);
 

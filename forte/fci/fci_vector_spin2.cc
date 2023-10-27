@@ -59,9 +59,6 @@ double FCIVector::compute_spin2() {
                         const auto& vo_alfa = lists_->get_alfa_vo_list(s_abs, r_abs, Ia_sym);
                         const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
 
-                        const size_t maxSSa = vo_alfa.size();
-                        const size_t maxSSb = vo_beta.size();
-
                         for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
                             for (const auto& [sign_b, Ib, Jb] : vo_beta) {
                                 spin2 += Cl[Ja][Jb] * Cr[Ia][Ib] * sign_a * sign_b;

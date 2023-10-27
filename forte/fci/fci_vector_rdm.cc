@@ -54,8 +54,8 @@ std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_ri
 
     if (max_rdm_level >= 1) {
         local_timer t;
-        g1a = FCIVector::compute_1rdm_same_irrep(C_left, C_right, true);
-        g1b = FCIVector::compute_1rdm_same_irrep(C_left, C_right, false);
+        g1a = compute_1rdm_same_irrep(C_left, C_right, true);
+        g1b = compute_1rdm_same_irrep(C_left, C_right, false);
         rdm_timing.push_back(t.get());
     }
 
@@ -158,8 +158,6 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
     const auto& cmopi = C_left.cmopi_;
     const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
-    auto Cl = CL->pointer();
-    auto Cr = CR->pointer();
 
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo, ncmo});
 
@@ -173,9 +171,11 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
     for (size_t h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
         int h_Ib = h_Ia ^ symmetry;
         if (detpi[h_Ia] > 0) {
-            // Fill CR and CL with the correct block
-            fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, h_Ia, h_Ib);
-            fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, h_Ia, h_Ib);
+            // Get a pointer to the correct block of matrix C
+            auto Cl =
+                gather_C_block(C_left, CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+            auto Cr =
+                gather_C_block(C_right, CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
 
             const size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_Ia);
             for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {
@@ -212,8 +212,6 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
     const auto& lists = C_left.lists_;
-    auto Cl = CL->pointer();
-    auto Cr = CR->pointer();
 
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "2RDM_AA" : "2RDM_BB",
                                     {ncmo, ncmo, ncmo, ncmo});
@@ -226,16 +224,18 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
     auto& rdm_data = rdm.data();
 
     // Notation
-    // ha - symmetry of alpha strings
-    // hb - symmetry of beta strings
-    for (int ha = 0; ha < nirrep; ++ha) {
-        int hb = ha ^ symmetry;
-        if (detpi[ha] > 0) {
-            // Fill CR and CL with the correct block
-            fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, ha, hb);
-            fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, ha, hb);
+    // h_Ia - symmetry of alpha strings
+    // h_Ib - symmetry of beta strings
+    for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
+        int h_Ib = h_Ia ^ symmetry;
+        if (detpi[h_Ia] > 0) {
+            // Get a pointer to the correct block of matrix C
+            auto Cl =
+                gather_C_block(C_left, CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+            auto Cr =
+                gather_C_block(C_right, CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
 
-            size_t maxL = alfa ? beta_address->strpi(hb) : alfa_address->strpi(ha);
+            size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_Ia);
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
                 size_t max_pq = lists->pairpi(pq_sym);
@@ -243,8 +243,8 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
                     const auto& [p_abs, q_abs] = lists->get_pair_list(pq_sym, pq);
 
                     std::vector<StringSubstitution>& OO =
-                        alfa ? lists->get_alfa_oo_list(pq_sym, pq, ha)
-                             : lists->get_beta_oo_list(pq_sym, pq, hb);
+                        alfa ? lists->get_alfa_oo_list(pq_sym, pq, h_Ia)
+                             : lists->get_beta_oo_list(pq_sym, pq, h_Ib);
 
                     double rdm_element = 0.0;
                     for (const auto& [sign, I, J] : OO) {
@@ -266,8 +266,8 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
                         const auto& [r_abs, s_abs] = lists->get_pair_list(pq_sym, rs);
 
                         const auto& VVOO =
-                            alfa ? lists->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, ha)
-                                 : lists->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, hb);
+                            alfa ? lists->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia)
+                                 : lists->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ib);
 
                         double rdm_element = 0.0;
                         for (const auto& [sign, I, J] : VVOO) {
@@ -401,9 +401,6 @@ ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVecto
     const auto& beta_address = C_left.beta_address_;
     const auto& lists = C_left.lists_;
 
-    auto Cl = CL->pointer();
-    auto Cr = CR->pointer();
-
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "3RDM_AAA" : "3RDM_BBB",
                                     {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
 
@@ -419,9 +416,11 @@ ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVecto
             alfa ? lists->alfa_address_3h()->strpi(h_K) : lists->beta_address_3h()->strpi(h_K);
         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
             int h_Ib = h_Ia ^ symmetry;
-            // int h_Ja = h_Ia;
-            fill_C_block(C_left, Cl, alfa, alfa_address, beta_address, h_Ia, h_Ib);
-            fill_C_block(C_right, Cr, alfa, alfa_address, beta_address, h_Ia, h_Ib);
+            // Get a pointer to the correct block of matrix C
+            auto Cl =
+                gather_C_block(C_left, CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+            auto Cr =
+                gather_C_block(C_right, CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
 
             size_t maxL = alfa ? beta_address->strpi(h_Ib) : alfa_address->strpi(h_Ia);
             if (maxL > 0) {

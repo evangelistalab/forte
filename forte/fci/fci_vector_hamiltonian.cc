@@ -81,9 +81,6 @@ void FCIVector::Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegr
     }
 }
 
-/**
- * Apply the scalar part of the Hamiltonian to the wave function
- */
 void FCIVector::H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     double core_energy = fci_ints->scalar_energy() + fci_ints->frozen_core_energy() +
                          fci_ints->nuclear_repulsion_energy();
@@ -93,100 +90,52 @@ void FCIVector::H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
     }
 }
 
-/**
- * Apply the one-particle Hamiltonian to the wave function
- * @param alfa flag for alfa or beta component, true = alfa, false = beta
- */
 void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa) {
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        if (detpi_[alfa_sym] > 0) {
-            auto C = alfa ? C_[alfa_sym] : CR;
-            auto Y = alfa ? result.C_[alfa_sym] : CL;
-            double** Ch = C->pointer();
-            double** Yh = Y->pointer();
+    for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
+        int h_Ib = h_Ia ^ symmetry_;
+        if (detpi_[h_Ia] > 0) {
+            auto Cr =
+                gather_C_block(*this, CR, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, false);
+            auto Cl =
+                gather_C_block(result, CL, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, !alfa);
 
-            if (!alfa) {
-                C->zero();
-                Y->zero();
-                size_t maxIa = alfa_address_->strpi(alfa_sym);
-                size_t maxIb = beta_address_->strpi(beta_sym);
-
-                double** C0h = C_[alfa_sym]->pointer();
-
-                // Copy C0 transposed in CR
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Ch[Ib][Ia] = C0h[Ia][Ib];
-            }
-
-            size_t maxL = alfa ? beta_address_->strpi(beta_sym) : alfa_address_->strpi(alfa_sym);
+            size_t maxL = alfa ? beta_address_->strpi(h_Ib) : alfa_address_->strpi(h_Ia);
 
             for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
                 for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                     for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                        int p_abs = p_rel + cmopi_offset_[p_sym];
-                        int q_abs = q_rel + cmopi_offset_[q_sym];
-
+                        const int p_abs = p_rel + cmopi_offset_[p_sym];
+                        const int q_abs = q_rel + cmopi_offset_[q_sym];
                         const double Hpq =
                             alfa ? fci_ints->oei_a(p_abs, q_abs) : fci_ints->oei_b(p_abs, q_abs);
-                        const auto& vo_list =
-                            alfa ? lists_->get_alfa_vo_list(p_abs, q_abs, alfa_sym)
-                                 : lists_->get_beta_vo_list(p_abs, q_abs, beta_sym);
-
+                        const auto& vo_list = alfa ? lists_->get_alfa_vo_list(p_abs, q_abs, h_Ia)
+                                                   : lists_->get_beta_vo_list(p_abs, q_abs, h_Ib);
                         for (const auto& [sign, I, J] : vo_list) {
-                            C_DAXPY(maxL, sign * Hpq, Ch[I], 1, Yh[J], 1);
+                            C_DAXPY(maxL, sign * Hpq, Cr[I], 1, Cl[J], 1);
                         }
                     }
                 }
             }
-            if (!alfa) {
-                size_t maxIa = alfa_address_->strpi(alfa_sym);
-                size_t maxIb = beta_address_->strpi(beta_sym);
-
-                double** HC = result.C_[alfa_sym]->pointer();
-                // Add CL transposed to Y
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        HC[Ia][Ib] += Yh[Ib][Ia];
-            }
+            scatter_C_block(result, Cl, alfa, alfa_address_, beta_address_, h_Ia, h_Ib);
         }
     } // End loop over h
 }
 
-/**
- * Apply the same-spin two-particle Hamiltonian to the wave function
- * @param alfa flag for alfa or beta component, true = alfa, false = beta
- */
 void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                          bool alfa) {
     // Notation
-    // ha - symmetry of alpha strings
-    // hb - symmetry of beta strings
-    for (int ha = 0; ha < nirrep_; ++ha) {
-        int hb = ha ^ symmetry_;
-        if (detpi_[ha] > 0) {
-            auto C = alfa ? C_[ha] : CR;
-            auto Y = alfa ? result.C_[ha] : CL;
-            double** Ch = C->pointer();
-            double** Yh = Y->pointer();
+    // h_Ia - symmetry of alpha strings
+    // h_Ib - symmetry of beta strings
+    for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
+        int h_Ib = h_Ia ^ symmetry_;
+        if (detpi_[h_Ia] > 0) {
+            auto Cr =
+                gather_C_block(*this, CR, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, false);
+            auto Cl =
+                gather_C_block(result, CL, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, !alfa);
 
-            if (!alfa) {
-                C->zero();
-                Y->zero();
-                size_t maxIa = alfa_address_->strpi(ha);
-                size_t maxIb = beta_address_->strpi(hb);
-
-                double** C0h = C_[ha]->pointer();
-
-                // Copy C0 transposed in CR
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        Ch[Ib][Ia] = C0h[Ia][Ib];
-            }
-
-            size_t maxL = alfa ? beta_address_->strpi(hb) : alfa_address_->strpi(ha);
+            size_t maxL = alfa ? beta_address_->strpi(h_Ib) : alfa_address_->strpi(h_Ia);
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
@@ -196,11 +145,11 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
                     const double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, p_abs, q_abs)
                                                  : fci_ints->tei_bb(p_abs, q_abs, p_abs, q_abs);
 
-                    const auto& OO_list = alfa ? lists_->get_alfa_oo_list(pq_sym, pq, ha)
-                                               : lists_->get_beta_oo_list(pq_sym, pq, hb);
+                    const auto& OO_list = alfa ? lists_->get_alfa_oo_list(pq_sym, pq, h_Ia)
+                                               : lists_->get_beta_oo_list(pq_sym, pq, h_Ib);
 
                     for (const auto& [sign, I, J] : OO_list) {
-                        C_DAXPY(maxL, sign * integral, C->pointer()[I], 1, Y->pointer()[J], 1);
+                        C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
                     }
                 }
             }
@@ -218,88 +167,70 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
 
                         {
                             const auto& VVOO_list =
-                                alfa ? lists_->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, ha)
-                                     : lists_->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, hb);
+                                alfa ? lists_->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia)
+                                     : lists_->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ib);
                             for (const auto& [sign, I, J] : VVOO_list) {
-                                C_DAXPY(maxL, sign * integral, C->pointer()[I], 1, Y->pointer()[J],
-                                        1);
+                                C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
                             }
                             {
                                 const auto& VVOO_list =
-                                    alfa
-                                        ? lists_->get_alfa_vvoo_list(r_abs, s_abs, p_abs, q_abs, ha)
-                                        : lists_->get_beta_vvoo_list(r_abs, s_abs, p_abs, q_abs,
-                                                                     hb);
+                                    alfa ? lists_->get_alfa_vvoo_list(r_abs, s_abs, p_abs, q_abs,
+                                                                      h_Ia)
+                                         : lists_->get_beta_vvoo_list(r_abs, s_abs, p_abs, q_abs,
+                                                                      h_Ib);
                                 for (const auto& [sign, I, J] : VVOO_list) {
-                                    C_DAXPY(maxL, sign * integral, C->pointer()[I], 1,
-                                            Y->pointer()[J], 1);
+                                    C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
                                 }
                             }
                         }
                     }
                 }
             }
-            if (!alfa) {
-                size_t maxIa = alfa_address_->strpi(ha);
-                size_t maxIb = beta_address_->strpi(hb);
-
-                double** HC = result.C_[ha]->pointer();
-
-                // Add CL transposed to Y
-                for (size_t Ia = 0; Ia < maxIa; ++Ia)
-                    for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                        HC[Ia][Ib] += Yh[Ib][Ia];
-            }
+            scatter_C_block(result, Cl, alfa, alfa_address_, beta_address_, h_Ia, h_Ib);
         }
     } // End loop over h
 }
 
-/**
- * Apply the different-spin component of two-particle Hamiltonian to the wave
- * function
- */
 void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Loop over blocks of matrix C
-    for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
-        size_t maxIa = alfa_address_->strpi(Ia_sym);
-        int Ib_sym = Ia_sym ^ symmetry_;
-        double** C = C_[Ia_sym]->pointer();
+    for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
+        const size_t maxIa = alfa_address_->strpi(h_Ia);
+        const int h_Ib = h_Ia ^ symmetry_;
+        const auto C = C_[h_Ia]->pointer();
 
         // Loop over all r,s
         for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
-            int Jb_sym = Ib_sym ^ rs_sym;    // <- Looks like it should fail for
-                                             // states with symmetry != A1  URGENT
-            int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for
-                                             // states with symmetry != A1
-                                             // URGENT
-            //            int Ja_sym = Ia_sym ^ rs_sym; // <- Looks like it
-            //            should fail for states with symmetry != A1  URGENT
+            const int h_Jb = h_Ib ^ rs_sym;
+            const int h_Ja = h_Jb ^ symmetry_;
 
-            size_t maxJa = alfa_address_->strpi(Ja_sym);
-            double** Y = result.C_[Ja_sym]->pointer();
+            const size_t maxJa = alfa_address_->strpi(h_Ja);
+            auto HC = result.C_[h_Ja]->pointer();
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
-                int s_sym = rs_sym ^ r_sym;
+                const int s_sym = rs_sym ^ r_sym;
 
                 for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
                     for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
-                        int r_abs = r_rel + cmopi_offset_[r_sym];
-                        int s_abs = s_rel + cmopi_offset_[s_sym];
+                        const int r_abs = r_rel + cmopi_offset_[r_sym];
+                        const int s_abs = s_rel + cmopi_offset_[s_sym];
 
-                        // Grab list (r,s,Ib_sym)
-                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
-                        size_t maxSSb = vo_beta.size();
+                        // Grab list (r,s,h_Ib)
+                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, h_Ib);
+                        const size_t maxSSb = vo_beta.size();
+
+                        if (maxSSb == 0)
+                            continue;
 
                         CR->zero();
                         CL->zero();
+                        auto Cr = CR->pointer();
+                        auto Cl = CL->pointer();
 
                         // Gather cols of C into CR
                         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-                            if (maxSSb > 0) {
-                                double* c1 = CR->pointer()[Ia];
-                                double* c = C[Ia];
-                                for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                    c1[SSb] = c[vo_beta[SSb].I] * vo_beta[SSb].sign;
-                                }
+                            const auto c = C[Ia];
+                            auto cr = Cr[Ia];
+                            for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
+                                cr[SSb] = c[vo_beta[SSb].I] * vo_beta[SSb].sign;
                             }
                         }
 
@@ -316,23 +247,21 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                                         fci_ints->tei_ab(p_abs, r_abs, q_abs, s_abs);
 
                                     const auto& vo_alfa =
-                                        lists_->get_alfa_vo_list(p_abs, q_abs, Ia_sym);
+                                        lists_->get_alfa_vo_list(p_abs, q_abs, h_Ia);
 
                                     for (const auto& [sign, I, J] : vo_alfa) {
-                                        C_DAXPY(maxSSb, integral * sign, CR->pointer()[I], 1,
-                                                CL->pointer()[J], 1);
+                                        C_DAXPY(maxSSb, integral * sign, Cr[I], 1, Cl[J], 1);
                                     }
                                 }
                             }
                         } // End loop over p,q
-                        // Scatter cols of CL into Y
+
+                        // Scatter cols of CL into HC
                         for (size_t Ja = 0; Ja < maxJa; ++Ja) {
-                            if (maxSSb > 0) {
-                                double* y = &Y[Ja][0];
-                                double* y1 = &(CL->pointer()[Ja][0]);
-                                for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                    y[vo_beta[SSb].J] += y1[SSb];
-                                }
+                            const auto hc = HC[Ja];
+                            auto cl = Cl[Ja];
+                            for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
+                                hc[vo_beta[SSb].J] += cl[SSb];
                             }
                         }
                     }

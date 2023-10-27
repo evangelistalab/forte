@@ -106,9 +106,6 @@ ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right
 
     const auto& lists_right = C_right.lists();
 
-    auto Cl = FCIVector::get_CL()->pointer();
-    auto Cr = FCIVector::get_CR()->pointer();
-
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo, ncmo});
 
     // here we assume that the two wave functions have the same number of alpha and beta electrons
@@ -135,9 +132,10 @@ ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right
 
         if ((detpi_left[h_Ja] > 0) and (detpi_right[h_Ia] > 0)) {
             // Fill CR with the correct block
-            fill_C_block(C_left, Cl, alfa, alfa_address_left, beta_address_left, h_Ja, h_Jb);
-            fill_C_block(C_right, Cr, alfa, alfa_address_right, beta_address_right, h_Ia, h_Ib);
-
+            auto Cl = gather_C_block(C_left, FCIVector::get_CL(), alfa, alfa_address_left,
+                                     beta_address_left, h_Ja, h_Jb, false);
+            auto Cr = gather_C_block(C_right, FCIVector::get_CR(), alfa, alfa_address_right,
+                                     beta_address_right, h_Ia, h_Ib, false);
             const size_t maxL =
                 alfa ? beta_address_right->strpi(h_Ib) : alfa_address_right->strpi(h_Ia);
             for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {

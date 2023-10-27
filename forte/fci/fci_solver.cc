@@ -274,7 +274,7 @@ double FCISolver::compute_energy() {
 
     // Print determinants
     if (print_) {
-        print_solutions(num_guess_states, b, b_basis, dl_solver_);
+        print_solutions(100, b, b_basis, dl_solver_);
     }
 
     // Optionally, test the RDMs
@@ -289,7 +289,7 @@ double FCISolver::compute_energy() {
     return energy_;
 }
 
-void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
+void FCISolver::print_solutions(size_t sample_size, std::shared_ptr<psi::Vector> b,
                                 std::shared_ptr<psi::Vector> b_basis,
                                 std::shared_ptr<DavidsonLiuSolver> dls) {
     for (size_t r = 0; r < nroot_; ++r) {
@@ -303,7 +303,7 @@ void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> 
         }
         C_->copy(b);
         std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
-            C_->max_abs_elements(100);
+            C_->max_abs_elements(sample_size);
 
         for (auto& det_config : dets_config) {
             double ci_abs, ci;
