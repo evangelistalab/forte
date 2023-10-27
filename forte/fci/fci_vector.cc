@@ -71,12 +71,11 @@ void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_, int pri
     if (max_size > current_size) {
         CR = std::make_shared<psi::Matrix>("CR", max_size, max_size);
         CL = std::make_shared<psi::Matrix>("CL", max_size, max_size);
+        if (print_)
+            outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
+                            "Size: 2 x %zu x %zu.   Memory: %8.6f GB",
+                            max_size, max_size, to_gb(2 * max_size * max_size));
     }
-
-    if (print_)
-        outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
-                        "Size: 2 x %zu x %zu.   Memory: %8.6f GB",
-                        max_size, max_size, to_gb(2 * max_size * max_size));
 }
 
 void FCIVector::release_temp_space() {}
@@ -176,99 +175,6 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
     }
 }
 
-///**
-// * Set the wave function to the nth determinant in the list
-// */
-// void FCIVector::set_to(int n)
-//{
-//  int k = 0;
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpcls(h);
-//    size_t maxIb = beta_address_->strpcls(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        if(k == n){
-//          coefficients[h][Ia][Ib] = 1.0;
-//        }else{
-//          coefficients[h][Ia][Ib] = 0.0;
-//        }
-//        k++;
-//      }
-//    }
-//  }
-//}
-
-///**
-// * Get the coefficient of the nth determinant in the list
-// */
-// double FCIVector::get(int n)
-//{
-//  int k = 0;
-//  double c = 0.0;
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpcls(h);
-//    size_t maxIb = beta_address_->strpcls(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        if(k == n){
-//          c = coefficients[h][Ia][Ib];
-//        }
-//        k++;
-//      }
-//    }
-//  }
-//  return c;
-//}
-
-///**
-// * Get a vector of the determinants with weight greather than alpha
-// */
-// std::vector<int> FCIVector::get_important(double alpha)
-//{
-//  int k = 0;
-//  std::vector<int> list;
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpcls(h);
-//    size_t maxIb = beta_address_->strpcls(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        if(std::fabs(coefficients[h][Ia][Ib]) >= alpha){
-//          list.push_back(k);
-//        }
-//        k++;
-//      }
-//    }
-//  }
-//  return list;
-//}
-
-/////**
-//// * Get a vector of the determinants with weight greather than alpha
-//// */
-////vector<int> FCIVector::get_sorted_important()
-////{
-////  std::vector<pair<double,int> > list;
-////  for(int h = 0; h < nirrep_; ++h){
-////    int beta_sym = h ^ symmetry_;
-////    size_t maxIa = alfa_address_->strpcls(h);
-////    size_t maxIb = beta_address_->strpcls(beta_sym);
-////    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-////      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-////        list.push_back(std::make_pair(std::fabs(coefficients[h][Ia][Ib]),k));
-////        k++;
-////      }
-////    }
-////  }
-////  sort(list.begin(),list.end(),std::greater<pair<double,int> >());
-////  return list;
-////}
-
-/**
- * Normalize the wave function without changing the phase
- */
 void FCIVector::normalize() {
     double factor = norm(2.0);
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
@@ -276,101 +182,97 @@ void FCIVector::normalize() {
     }
 }
 
-///**
-// * Normalize the wave function wrt to a single Slater determinant
-// */
-// void FCIVector::randomize()
-//{
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpcls(h);
-//    size_t maxIb = beta_address_->strpcls(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        coefficients[h][Ia][Ib] += 0.001 * static_cast<double>(std::rand()) /
-//        static_cast<double>(RAND_MAX);
-//      }
-//    }
-//  }
-//}
-
-/**
- * Zero the wave function
- */
 void FCIVector::zero() {
     for (auto C_h : C_) {
         C_h->zero();
     }
 }
 
-void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    // print_h2("Natural Orbitals");
-    // psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
-    // auto nfdocc = mo_space_info->size("FROZEN_DOCC");
+void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                       std::shared_ptr<RDMs> rdms) {
+    print_h2("Natural Orbitals");
+    psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
+    auto nfdocc = mo_space_info->size("FROZEN_DOCC");
 
-    // size_t na = alfa_address_->nones();
-    // size_t nb = beta_address_->nones();
+    auto G1 = rdms->SF_G1();
+    auto& G1_data = G1.data();
 
-    // auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
+    auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
 
-    // int offset = 0;
-    // for (int h = 0; h < nirrep_; h++) {
-    //     for (int u = 0; u < active_dim[h]; u++) {
-    //         for (int v = 0; v < active_dim[h]; v++) {
-    //             double gamma_uv = 0.0;
-    //             if (na > 0) {
-    //                 gamma_uv += opdm_a_[(u + offset) * ncmo_ + v + offset];
-    //             }
-    //             if (nb > 0) {
-    //                 gamma_uv += opdm_b_[(u + offset) * ncmo_ + v + offset];
-    //             }
-    //             opdm->set(h, u, v, gamma_uv);
-    //         }
-    //     }
-    //     offset += active_dim[h];
-    // }
+    int offset = 0;
+    for (int h = 0; h < nirrep_; h++) {
+        for (int u = 0; u < active_dim[h]; u++) {
+            for (int v = 0; v < active_dim[h]; v++) {
+                double gamma_uv = G1_data[(u + offset) * ncmo_ + v + offset];
+                opdm->set(h, u, v, gamma_uv);
+            }
+        }
+        offset += active_dim[h];
+    }
 
-    // auto OCC = std::make_shared<psi::Vector>("Occupation numbers", active_dim);
-    // auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim, active_dim);
+    auto OCC = std::make_shared<psi::Vector>("Occupation numbers", active_dim);
+    auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim, active_dim);
 
-    // opdm->diagonalize(NO, OCC, descending);
-    // std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
-    // for (int h = 0; h < nirrep_; h++) {
-    //     for (int u = 0; u < active_dim[h]; u++) {
-    //         auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
-    //         vec_irrep_occupation.push_back(irrep_occ);
-    //     }
-    // }
-    // std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
-    //           std::greater<std::pair<double, std::pair<int, int>>>());
+    opdm->diagonalize(NO, OCC, descending);
+    std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
+    for (int h = 0; h < nirrep_; h++) {
+        for (int u = 0; u < active_dim[h]; u++) {
+            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
+            vec_irrep_occupation.push_back(irrep_occ);
+        }
+    }
+    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
+              std::greater<std::pair<double, std::pair<int, int>>>());
 
-    // size_t count = 0;
-    // outfile->Printf("\n    ");
-    // for (auto vec : vec_irrep_occupation) {
-    //     outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
-    //                     mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
-    //     if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
-    //         outfile->Printf("\n    ");
-    // }
-    // outfile->Printf("\n");
+    size_t count = 0;
+    outfile->Printf("\n    ");
+    for (auto vec : vec_irrep_occupation) {
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
+                        mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
+        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+            outfile->Printf("\n    ");
+    }
+    outfile->Printf("\n");
 }
 
-void fill_C_block(FCIVector& C, double** m, bool alfa, std::shared_ptr<StringAddress> alfa_address,
-                  std::shared_ptr<StringAddress> beta_address, int ha, int hb) {
-    // if alfa is true just copy the block
-    double** c = C.C(ha)->pointer();
-    size_t maxIa = alfa_address->strpcls(ha);
-    size_t maxIb = beta_address->strpcls(hb);
+double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
+                        std::shared_ptr<StringAddress> alfa_address,
+                        std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero) {
+    // if alfa is true just return the pointer to the block
+    auto c = C.C(ha)->pointer();
     if (alfa) {
-        for (size_t Ia = 0; Ia < maxIa; ++Ia)
-            for (size_t Ib = 0; Ib < maxIb; ++Ib)
-                m[Ia][Ib] = c[Ia][Ib];
+        if (zero)
+            C.C(ha)->zero();
+        return c;
+    }
+    // if alfa is false
+    size_t maxIa = alfa_address->strpi(ha);
+    size_t maxIb = beta_address->strpi(hb);
+    auto m = M->pointer();
+    if (zero) {
+        for (size_t Ib = 0; Ib < maxIb; ++Ib)
+            for (size_t Ia = 0; Ia < maxIa; ++Ia)
+                m[Ib][Ia] = 0.0;
     } else {
-        // if alfa is false, transpose the block
-        // Copy C0 transposed in CR
         for (size_t Ia = 0; Ia < maxIa; ++Ia)
             for (size_t Ib = 0; Ib < maxIb; ++Ib)
                 m[Ib][Ia] = c[Ia][Ib];
+    }
+    return m;
+}
+
+void scatter_C_block(FCIVector& C, double** m, bool alfa,
+                     std::shared_ptr<StringAddress> alfa_address,
+                     std::shared_ptr<StringAddress> beta_address, int ha, int hb) {
+    if (!alfa) {
+        size_t maxIa = alfa_address->strpi(ha);
+        size_t maxIb = beta_address->strpi(hb);
+
+        double** c = C.C(ha)->pointer();
+        // Add m transposed to C
+        for (size_t Ia = 0; Ia < maxIa; ++Ia)
+            for (size_t Ib = 0; Ib < maxIb; ++Ib)
+                c[Ia][Ib] += m[Ib][Ia];
     }
 }
 

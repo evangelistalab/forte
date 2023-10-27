@@ -45,7 +45,6 @@ class Vector;
 
 namespace forte {
 class ActiveSpaceIntegrals;
-class BinaryGraph;
 class MOSpaceInfo;
 class StringAddress;
 class RDMs;
@@ -125,7 +124,8 @@ class FCIVector {
 
     /// Print the natural_orbitals from FCIWFN
     /// Assume user specified active space
-    void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
+    void print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mospace_info,
+                                std::shared_ptr<RDMs> rdms);
 
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
@@ -141,7 +141,9 @@ class FCIVector {
     static std::shared_ptr<RDMs> compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order,
                                               RDMsType type);
 
+    /// Return the temporary matrix CR
     static std::shared_ptr<psi::Matrix> get_CR();
+    /// Return the temporary matrix CL
     static std::shared_ptr<psi::Matrix> get_CL();
 
   private:
@@ -207,10 +209,28 @@ class FCIVector {
                 ncmo * ncmo * ncmo * r + ncmo * ncmo * s + ncmo * t + u);
     }
 
+    /// @brief Apply the scalar part of the Hamiltonian to this vector and add it to the result
+    /// @param result The wave function to add the result to
+    /// @param fci_ints The integrals object
     void H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+
+    /// @brief Apply the one-particle Hamiltonian to this vector and add it to the result
+    /// @param result The wave function to add the result to
+    /// @param fci_ints The integrals object
+    /// @param alfa flag for alfa or beta component, true = alfa, false = beta
     void H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
-    void H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+
+    /// @brief Apply the same-spin two-particle Hamiltonian to this vector and add it to the result
+    /// @param result The wave function to add the result to
+    /// @param fci_ints The integrals object
+    /// @param alfa flag for alfa or beta component, true = alfa, false = beta
     void H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
+
+    /// @brief Apply the different-spin component of two-particle Hamiltonian to this vector and add
+    /// it to the result
+    /// @param result The wave function to add the result to
+    /// @param fci_ints The integrals object/
+    void H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     // 1-RDM elements are stored in the format
     // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]
@@ -243,12 +263,45 @@ class FCIVector {
     static ambit::Tensor compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVector& C_right);
 };
 
-void fill_C_block(FCIVector& C, double** m, bool alfa, std::shared_ptr<StringAddress> alfa_address,
-                  std::shared_ptr<StringAddress> beta_address, int ha, int hb);
+/// @brief Provide a pointer to the a block of the coefficient matrix in such a way that we can use
+/// its content in several algorithms (sigma vector, RDMs, etc.)
+/// @param C The fci vector
+/// @param M The matrix that might hold the data it if is transposed
+/// @param alfa flag for alfa or beta component, true = alfa, false = beta. This affects
+/// transposition
+/// @param alfa_address The addressing object for the alfa component
+/// @param beta_address The addressing object for the beta component
+/// @param ha The string class of the alfa component (a generalization of the irrep)
+/// @param hb The string class of the beta component (a generalization of the irrep)
+/// @param zero If true, zero the matrix before returning it
+/// @return A pointer to the block of the coefficient matrix
+double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
+                        std::shared_ptr<StringAddress> alfa_address,
+                        std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero);
+
+/// @brief Scatter the data from a matrix to the coefficient matrix. This is used in the sigma
+/// vector algorithm
+/// @param C The fci vector
+/// @param m The matrix that holds the data
+/// @param alfa flag for alfa or beta component, true = alfa, false = beta. If true, the data is
+/// already in place and this function does nothing. If false, the data is transposed before being
+/// added.
+/// @param alfa_address The addressing object for the alfa component
+/// @param beta_address The addressing object for the beta component
+/// @param ha The string class of the alfa component (a generalization of the irrep)
+/// @param hb The string class of the beta component (a generalization of the irrep)
+void scatter_C_block(FCIVector& C, double** m, bool alfa,
+                     std::shared_ptr<StringAddress> alfa_address,
+                     std::shared_ptr<StringAddress> beta_address, int ha, int hb);
 
 std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_right,
                                               int max_rdm_level, RDMsType type);
 
+/// @brief Compute the one-particle density matrix for a given wave function
+/// @param C_left The left wave function
+/// @param C_right The right wave function
+/// @param alfa flag for alfa or beta component, true = alfa, false = beta
+/// @return The one-particle density matrix as a tensor
 ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa);
 
 } // namespace forte

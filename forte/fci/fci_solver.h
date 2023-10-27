@@ -111,9 +111,6 @@ class FCISolver : public ActiveSpaceMethod {
     /// Print the Natural Orbitals
     void set_print_no(bool value);
 
-    // /// Return a FCIVector
-    // std::shared_ptr<FCIVector> fci_vector(int root);
-
     /// Return eigen vectors (n_DL_guesses x ndets)
     std::shared_ptr<psi::Matrix> evecs();
 
@@ -230,7 +227,7 @@ class FCISolver : public ActiveSpaceMethod {
                                                 std::shared_ptr<SpinAdapter> spin_adapter);
 
     /// @brief Print a summary of the FCI calculation
-    void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
+    void print_solutions(size_t sample_size, std::shared_ptr<psi::Vector> b,
                          std::shared_ptr<psi::Vector> b_basis,
                          std::shared_ptr<DavidsonLiuSolver> dls);
 
