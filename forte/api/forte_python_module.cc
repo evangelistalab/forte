@@ -114,10 +114,12 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Set the active space integrals manually")
         .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
              "Set unitary matrices for changing orbital basis in RDMs when computing dipoles")
-        .def("compute_dipole_moment", &ActiveSpaceSolver::compute_dipole_moment,
-             "Compute transition dipole moment")
-        .def("compute_quadrupole_moment", &ActiveSpaceSolver::compute_quadrupole_moment,
-             "Compute transition quadrupole moment")
+        //    .def("compute_dipole_moment", &ActiveSpaceSolver::compute_dipole_moment,
+        //         "Compute transition dipole moment")
+        //    .def("compute_quadrupole_moment", &ActiveSpaceSolver::compute_quadrupole_moment,
+        //         "Compute transition quadrupole moment")
+        .def("compute_multipole_moment", &ActiveSpaceSolver::compute_multipole_moment,
+             "Compute dipole or quadrupole moment")
         .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs,
              "Compute the oscillator strength assuming using same orbitals")
         .def("state_ci_wfn_map", &ActiveSpaceSolver::state_ci_wfn_map,

@@ -91,11 +91,11 @@ class ActiveSpaceSolver {
     /// Compute permanent dipole and quadrupole moments
     void compute_multipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints, int level = 1);
 
-    /// Compute permanent dipole moments
-    void compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+    // /// Compute permanent dipole moments
+    // void compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
-    /// Compute permanent quadrupole moments
-    void compute_quadrupole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+    // /// Compute permanent quadrupole moments
+    // void compute_quadrupole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
     // /// Compute transition dipole moments
     // void compute_transition_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints);

@@ -41,7 +41,6 @@ set forte {
   casscf_g_convergence 1e-8
   casscf_active_frozen_orbital [0]
   casscf_micro_maxiter 2
-  transition_dipoles true
 }
 
 escf, wfn = energy('scf', return_wfn=True)

@@ -287,9 +287,10 @@ class ProcedureDSRG:
 
             if self.Meff_implemented:
                 if self.max_dipole_level > 0:
-                    self.active_space_solver.compute_dipole_moment(asmpints)
+                    mp_level = 1
                 if self.max_quadrupole_level > 0:
-                    self.active_space_solver.compute_quadrupole_moment(asmpints);
+                    mp_level = 2
+                self.active_space_solver.compute_multipole_moment(asmpints, mp_level)
                 if self.max_dipole_level > 0:
                     self.active_space_solver.compute_fosc_same_orbs(asmpints)
 

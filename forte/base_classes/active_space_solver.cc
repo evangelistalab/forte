@@ -225,9 +225,11 @@ void ActiveSpaceSolver::print_energies() {
 void ActiveSpaceSolver::compute_multipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
                                                  int level) {
     int max_rdm_level = ampints->dp_many_body_level();
-    if (level != 1 and max_rdm_level < ampints->qp_many_body_level()) {
+    if (level > 1 and max_rdm_level < ampints->qp_many_body_level()) {
         max_rdm_level = ampints->qp_many_body_level();
     }
+    if (level < 1)
+        return;
 
     // compute RDMs
     psi::outfile->Printf("\n  Computing RDMs for dipole/quadrupole moments ...");
@@ -323,37 +325,6 @@ void ActiveSpaceSolver::compute_multipole_moment(std::shared_ptr<ActiveMultipole
     }
 }
 
-void ActiveSpaceSolver::compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints) {
-    for (const auto& state_nroots : state_nroots_map_) {
-        const auto& [state, nroots] = state_nroots;
-        const auto& method = state_method_map_[state];
-
-        // prepare root list
-        std::vector<std::pair<size_t, size_t>> root_list;
-        for (size_t i = 0; i < nroots; ++i) {
-            root_list.emplace_back(i, i);
-        }
-
-        method->compute_permanent_dipole(ampints, root_list);
-    }
-}
-
-void ActiveSpaceSolver::compute_quadrupole_moment(
-    std::shared_ptr<ActiveMultipoleIntegrals> ampints) {
-    for (const auto& state_nroots : state_nroots_map_) {
-        const auto& [state, nroots] = state_nroots;
-        const auto& method = state_method_map_[state];
-
-        // prepare root list
-        std::vector<std::pair<size_t, size_t>> root_list;
-        for (size_t i = 0; i < nroots; ++i) {
-            root_list.emplace_back(i, i);
-        }
-
-        method->compute_permanent_quadrupole(ampints, root_list);
-    }
-}
-
 void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints) {
     // assume SAME set of orbitals!!!
 
@@ -390,7 +361,8 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
                     state_ids.emplace_back(i, j);
                 }
             }
-            root_lists_map[{state1, state1}] = state_ids;
+            if (not state_ids.empty())
+                root_lists_map[{state1, state1}] = state_ids;
 
             for (size_t N = M + 1; N < n_entries; ++N) {
                 const auto& state2 = states[N];
@@ -420,7 +392,8 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
             for (size_t j = 1; j < nroot1; ++j) {
                 state_ids.emplace_back(0, j);
             }
-            root_lists_map[{state1, state1}] = state_ids;
+            if (not state_ids.empty())
+                root_lists_map[{state1, state1}] = state_ids;
 
             for (const auto& [state2, nroot2] : state_nroots_map_) {
                 if (state1 == state2 or state1.multiplicity() != state2.multiplicity())
