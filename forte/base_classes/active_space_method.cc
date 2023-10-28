@@ -31,6 +31,8 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
+#include "psi4/libcubeprop/csg.h"
+#include "psi4/libqt/qt.h"
 #include "psi4/physconst.h"
 
 #include "base_classes/active_space_method.h"
@@ -77,7 +79,7 @@ void ActiveSpaceMethod::set_r_convergence(double value) { r_convergence_ = value
 
 void ActiveSpaceMethod::set_maxiter(size_t value) { maxiter_ = value; }
 
-void ActiveSpaceMethod::set_die_if_not_converged(bool value) {die_if_not_converged_ = value;}
+void ActiveSpaceMethod::set_die_if_not_converged(bool value) { die_if_not_converged_ = value; }
 
 void ActiveSpaceMethod::set_read_wfn_guess(bool read) { read_wfn_guess_ = read; }
 
@@ -259,7 +261,7 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
     std::string title = state_.str_minimum() + " -> " + state2.str_minimum();
     print_h2("Transitions for " + title);
     psi::outfile->Printf("\n    %6s %6s %14s %14s %14s", "Init.", "Final", "Energy [a.u.]",
-                         "Energy [eV]", "Osc. [a.u.]");
+                         "Energy [eV]", "Osc. Str.");
     std::string dash(58, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
 
@@ -334,7 +336,7 @@ std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_transition_
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
 
-    // Doing SVD for transition reduced density matrix
+    // do SVD for transition reduced density matrix if transitions is from the ground state
     auto nactv = mo_space_info_->size("ACTIVE");
     auto U = std::make_shared<psi::Matrix>("U", nactv, nactv);
     auto VT = std::make_shared<psi::Matrix>("VT", nactv, nactv);
@@ -358,7 +360,128 @@ std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_transition_
             Dt_matrix->save(dt_filename, false, false, true);
         }
 
+        auto g1a = rdms[i]->g1a();
+        auto Da = tensor_to_matrix(g1a);
+        auto M = psi::linalg::doublet(Da, Da, false, true);
+        M->diagonalize(U, S, psi::descending);
+        U->eivprint(S);
+        auto ssum = 0.0;
+        for (auto i = 0; i < nactv; ++i) {
+            ssum += S->get(i);
+        }
+        psi::outfile->Printf("\n ssum hole = %15.8f", ssum);
+        for (auto i = 0; i < nactv; ++i) {
+            auto s = S->get(i);
+            auto p = s / ssum * 100.0;
+            psi::outfile->Printf("\n i = %zu, s = %15.8f, p = %10.4f", i, s, p);
+        }
+
+        auto N = psi::linalg::doublet(Dt_matrix, Dt_matrix, true, false);
+        N->diagonalize(VT, S, psi::descending);
+        VT->eivprint(S);
+        ssum = 0.0;
+        for (auto i = 0; i < nactv; ++i) {
+            ssum += S->get(i);
+        }
+        psi::outfile->Printf("\n ssum part = %15.8f", ssum);
+        for (auto i = 0; i < nactv; ++i) {
+            auto s = S->get(i);
+            auto p = s / ssum * 100.0;
+            psi::outfile->Printf("\n i = %zu, s = %15.8f, p = %10.4f", i, s, p);
+        }
+
         Dt_matrix->svd_a(U, S, VT);
+        U->print();
+        VT->print();
+
+        if (i == 0) {
+            psi::outfile->Printf("\n  XXXX DEBUG!!!!! Transform active orbitals");
+
+            auto dim0 = mo_space_info_->dimension("INACTIVE_DOCC");
+            auto dim1 = mo_space_info_->dimension("ACTIVE");
+            psi::Slice slice(dim0, dim0 + dim1);
+            auto dim00 = psi::Dimension(mo_space_info_->nirrep());
+            auto dim11 = mo_space_info_->dimension("ALL");
+            psi::Slice slice_so(dim00, dim11);
+
+            auto wfn = as_ints_->ints()->wfn();
+            auto aotoso = wfn->aotoso();
+            auto nsopi = wfn->nsopi();
+            auto nao = nsopi.sum();
+            auto Cactv = as_ints_->ints()->Ca()->get_block(slice_so, slice);
+            auto Cactv_ao = std::make_shared<psi::Matrix>("Cactv_AO", nao, nactv);
+
+            auto nirrep = mo_space_info_->nirrep();
+            for (int h = 0, index = 0; h < nirrep; ++h) {
+                auto nso = nsopi[h];
+                if (nso == 0)
+                    continue;
+
+                for (int i = 0, nmo_this = dim1[h]; i < nmo_this; ++i) {
+                    // notes: LDA value is nso (not nao, see libqt/blas_intfc23.cc)
+                    psi::C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Cactv->pointer(h)[0][i],
+                            nmo_this, 0.0, &Cactv_ao->pointer()[0][index++], nactv);
+                }
+            }
+
+
+            // auto Dt_matrix = rdms[i]->SF_G1mat(dim1);
+            // Dt_matrix->print();
+
+            // auto U = std::make_shared<psi::Matrix>("U", dim1, dim1);
+            // auto VT = std::make_shared<psi::Matrix>("VT", dim1, dim1);
+            // auto S = std::make_shared<psi::Vector>("S", dim1);
+            // Dt_matrix->svd_a(U, S, VT);
+            // U->print();
+            // VT->print();
+            // S->print();
+
+            
+            auto Chole_ao = psi::linalg::doublet(Cactv_ao, U, false, false);
+            auto Cpart_ao = psi::linalg::doublet(Cactv_ao, VT, false, true);
+
+            // auto wfn = as_ints_->ints()->wfn();
+            // auto aotoso = wfn->aotoso();
+            // auto nsopi = wfn->nsopi();
+            // auto nao = nsopi.sum();
+            // auto Chole_ao = std::make_shared<psi::Matrix>("Chole_AO", nao, nactv);
+            // auto Cpart_ao = std::make_shared<psi::Matrix>("Cpart_AO", nao, nactv);
+
+            // // Transform from the SO to the AO basis
+            // auto nirrep = mo_space_info_->nirrep();
+            // for (int h = 0, index = 0; h < nirrep; ++h) {
+            //     auto nso = nsopi[h];
+            //     if (nso == 0)
+            //         continue;
+
+            //     for (int i = 0, nmo_this = dim1[h]; i < nmo_this; ++i) {
+            //         // notes: LDA value is nso (not nao, see libqt/blas_intfc23.cc)
+            //         psi::C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Chole->pointer(h)[0][i],
+            //                 nmo_this, 0.0, &Chole_ao->pointer()[0][index], nactv);
+            //         psi::C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Cpart->pointer(h)[0][i],
+            //                 nmo_this, 0.0, &Cpart_ao->pointer()[0][index], nactv);
+            //         index++;
+            //     }
+            // }
+
+            psi::CubicScalarGrid grid(wfn->basisset(), wfn->options());
+            grid.set_filepath("./");
+            if (wfn->basisset_exists("DF_BASIS_SCF"))
+                grid.set_auxiliary_basis(wfn->get_basisset("DF_BASIS_SCF"));
+
+            std::vector<std::string> labels_hole;
+            std::vector<std::string> labels_part;
+            std::vector<int> indices;
+            for (int k = 0; k < nactv; ++k) {
+                indices.push_back(k);
+                labels_hole.push_back(std::to_string(k));
+                labels_part.push_back(std::to_string(k));
+            }
+            grid.compute_orbitals(Chole_ao, indices, labels_hole, "hole");
+            grid.compute_orbitals(Cpart_ao, indices, labels_part, "part");
+
+            wfn->molecule()->save_xyz_file("geom.xyz");
+        }
 
         // Print the major components of transitions and major components to
         // the natural transition orbitals in active space

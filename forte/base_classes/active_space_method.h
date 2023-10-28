@@ -208,10 +208,10 @@ class ActiveSpaceMethod {
         throw std::runtime_error(
             "ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
     }
-    /// Compute permanent dipole moments
-    std::vector<std::vector<double>>
-    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
-                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+    // /// Compute permanent dipole moments
+    // std::vector<std::vector<double>>
+    // compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
+    //                          const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
     /// Compute permanent dipole moments (electronic + nuclear)
     std::vector<std::shared_ptr<psi::Vector>>
@@ -394,6 +394,8 @@ class ActiveSpaceMethod {
     bool read_wfn_guess_ = false;
     /// Dump transition density matrix to disk?
     bool dump_trdm_ = false;
+    /// Dump natural transition orbitals to disk?
+    // bool dump
     /// Dump wave function to disk?
     bool dump_wfn_ = false;
     /// The file name for storing wave function (determinants, CI coefficients)

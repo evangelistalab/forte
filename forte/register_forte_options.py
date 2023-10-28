@@ -268,7 +268,14 @@ def register_active_space_solver_options(options):
 
     options.add_bool("READ_ACTIVE_WFN_GUESS", False, "Read CI wave function of ActiveSpaceSolver from disk")
 
+    options.add_int("MULTIPOLE_MOMENT_LEVEL", 1, "Permanent dipole (= 1) and quadrupole (= 2) moments of ActiveSpaceSolver")
+
     options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole moments and oscillator strengths")
+
+    options.add_bool("TRANSITION_DIPOLES_ALL", False, "Compute the transition dipole moments for all state pairs. "
+                     "By default, only transitions from the ground state is computed.")
+
+    options.add_bool("DO_ACTIVE_NTO", False, "Build natural transition orbitals and save to disk")
 
     options.add_bool(
         "PRINT_DIFFERENT_GAS_ONLY", False,

@@ -42,6 +42,10 @@ void export_ForteIntegrals(py::module& m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
         .def("wfn", &ForteIntegrals::wfn, "Psi4 Wavefunction")
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
+        .def("update_mo_space_info", &ForteIntegrals::update_mo_space_info,
+             "Update MOSpaceInfo and orbital countings")
+        .def("update_orbitals", &ForteIntegrals::update_orbitals,
+             "Update orbitals for given orbital coefficients")
         .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
         .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
         .def("frozen_core_energy", &ForteIntegrals::frozen_core_energy,

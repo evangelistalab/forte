@@ -37,6 +37,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/process.h"
+#include "psi4/physconst.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
@@ -160,9 +161,10 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
 
     if (as_ints_->ints()->integral_type() != Custom and
         options_->get_str("ACTIVE_SPACE_SOLVER") != "EXTERNAL") {
-        compute_dipole_moment(as_mp_ints_);
-        compute_quadrupole_moment(as_mp_ints_);
-        if (options_->get_bool("TRANSITION_DIPOLES")) {
+        compute_multipole_moment(as_mp_ints_, options_->get_int("MULTIPOLE_MOMENT_LEVEL"));
+        // compute_dipole_moment(as_mp_ints_);
+        // compute_quadrupole_moment(as_mp_ints_);
+        if (options_->get_bool("TRANSITION_DIPOLES") or options_->get_bool("DO_ACTIVE_NTO")) {
             compute_fosc_same_orbs(as_mp_ints_);
         }
     }
@@ -220,6 +222,107 @@ void ActiveSpaceSolver::print_energies() {
     }
 }
 
+void ActiveSpaceSolver::compute_multipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
+                                                 int level) {
+    int max_rdm_level = ampints->dp_many_body_level();
+    if (level != 1 and max_rdm_level < ampints->qp_many_body_level()) {
+        max_rdm_level = ampints->qp_many_body_level();
+    }
+
+    // compute RDMs
+    psi::outfile->Printf("\n  Computing RDMs for dipole/quadrupole moments ...");
+    std::map<StateInfo, std::vector<std::shared_ptr<RDMs>>> state_rdms_map;
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& [state, nroots] = state_nroots;
+        const auto& method = state_method_map_[state];
+
+        std::vector<std::pair<size_t, size_t>> root_list;
+        for (size_t i = 0; i < nroots; ++i)
+            root_list.emplace_back(i, i);
+
+        method->set_print(0);
+        state_rdms_map[state] = method->rdms(root_list, max_rdm_level, RDMsType::spin_free);
+        method->set_print(print_);
+    }
+    psi::outfile->Printf(" Done");
+
+    // compute dipole moments
+    auto dipole_nuc = ampints->nuclear_dipole();
+    std::string prefix = ampints->dp_name().empty() ? "" : ampints->dp_name() + " ";
+    print_h2("Summary of " + prefix + "Dipole Moments [e a0] (Nuclear + Electronic)");
+
+    psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
+    std::string dash(68, '-');
+    psi::outfile->Printf("\n    %s", dash.c_str());
+
+    for (const auto& state_nroot : state_nroots_map_) {
+        const auto& [state, nroots] = state_nroot;
+        auto irrep_label = state.irrep_label();
+        auto multi_label = upper_string(state.multiplicity_label());
+
+        for (size_t i = 0; i < nroots; ++i) {
+            std::string name = std::to_string(i) + upper_string(irrep_label);
+            auto dipole = ampints->compute_electronic_dipole(state_rdms_map[state][i]);
+            dipole->add(*dipole_nuc);
+
+            auto dx = dipole->get(0);
+            auto dy = dipole->get(1);
+            auto dz = dipole->get(2);
+            auto dm = dipole->norm();
+            psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dx, dy, dz, dm);
+
+            push_to_psi4_env_globals(dx, multi_label + " <" + name + "|DM_X|" + name + ">");
+            push_to_psi4_env_globals(dy, multi_label + " <" + name + "|DM_Y|" + name + ">");
+            push_to_psi4_env_globals(dz, multi_label + " <" + name + "|DM_Z|" + name + ">");
+            push_to_psi4_env_globals(dm, multi_label + " |<" + name + "|DM|" + name + ">|");
+        }
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
+    psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", "Nuclear", dipole_nuc->get(0),
+                         dipole_nuc->get(1), dipole_nuc->get(2), dipole_nuc->norm());
+    psi::outfile->Printf("\n    %s", dash.c_str());
+
+    // compute quadrupole moments
+    if (level != 1) {
+        auto quadrupole_nuc = ampints->nuclear_quadrupole();
+        std::string prefix = ampints->qp_name().empty() ? "" : ampints->qp_name() + " ";
+        print_h2("Summary of " + prefix + "Quadrupole Moments [e a0^2] (Nuclear + Electronic)");
+
+        std::vector<std::string> qm_dirs{"QM_XX", "QM_XY", "QM_XZ", "QM_YY", "QM_YZ", "QM_ZZ"};
+        psi::outfile->Printf("\n    %8s", "State");
+        for (int z = 0; z < 6; ++z)
+            psi::outfile->Printf(" %14s", qm_dirs[z].c_str());
+        std::string dash(98, '-');
+        psi::outfile->Printf("\n    %s", dash.c_str());
+
+        for (const auto& state_nroot : state_nroots_map_) {
+            const auto& [state, nroots] = state_nroot;
+            auto irrep_label = state.irrep_label();
+            auto multi_label = upper_string(state.multiplicity_label());
+
+            for (size_t i = 0; i < nroots; ++i) {
+                auto quadrupole = ampints->compute_electronic_quadrupole(state_rdms_map[state][i]);
+                quadrupole->add(*quadrupole_nuc);
+
+                std::string name = std::to_string(i) + upper_string(irrep_label);
+                psi::outfile->Printf("\n    %8s", name.c_str());
+
+                for (int z = 0; z < 6; ++z) {
+                    auto value = quadrupole->get(z);
+                    psi::outfile->Printf("%15.8f", value);
+                    std::string dir = "|" + qm_dirs[z] + "|";
+                    push_to_psi4_env_globals(value, multi_label + " <" + name + dir + name + ">");
+                }
+            }
+            psi::outfile->Printf("\n    %s", dash.c_str());
+        }
+        psi::outfile->Printf("\n    %8s", "Nuclear");
+        for (int z = 0; z < 6; ++z)
+            psi::outfile->Printf("%15.8f", quadrupole_nuc->get(z));
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
+}
+
 void ActiveSpaceSolver::compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints) {
     for (const auto& state_nroots : state_nroots_map_) {
         const auto& [state, nroots] = state_nroots;
@@ -254,59 +357,252 @@ void ActiveSpaceSolver::compute_quadrupole_moment(
 void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints) {
     // assume SAME set of orbitals!!!
 
-    std::vector<StateInfo> states;
-    for (const auto& state_nroot : state_nroots_map_) {
-        states.push_back(state_nroot.first);
+    // figure out ground state for a given multiplicity
+    std::map<int, StateInfo> ground_states;
+    for (const auto& [state, _] : state_nroots_map_) {
+        auto multi = state.multiplicity();
+        if (ground_states.find(multi) == ground_states.end())
+            ground_states[multi] = state;
+        else {
+            const auto& state2 = ground_states.at(multi);
+            ground_states[multi] =
+                (state_energies_map_[state][0] < state_energies_map_[state2][0]) ? state : state2;
+        }
     }
 
-    for (size_t M = 0, n_entries = states.size(); M < n_entries; ++M) {
-        const auto& state1 = states[M];
-        size_t nroot1 = state_nroots_map_[state1];
-        const auto& method1 = state_method_map_[state1];
+    // vector of states
+    std::vector<StateInfo> states;
+    for (const auto& state_nroot : state_nroots_map_) {
+        const auto& [state, nroot] = state_nroot;
+        states.push_back(state);
+    }
 
-        // Dump transition reduced density matrix if neceessary
-        if (options_->get_bool("DUMP_TRANSITION_RDM")) {
-            method1->set_dump_trdm(true);
-        }
-
-        for (size_t N = M; N < n_entries; ++N) {
-            const auto& state2 = states[N];
-            size_t nroot2 = state_nroots_map_[state2];
-            const auto& method2 = state_method_map_[state2];
-
-            // skip different multiplicity (no spin-orbit coupling)
-            if (state1.multiplicity() != state2.multiplicity())
-                continue;
-
-            // Only calculate the oscillator strengths between states that differ in GAS occupation
-            // Generally used for core-excited state
-            if (gas_diff_only_) {
-                if (state1.gas_max() == state2.gas_max() && state1.gas_min() == state2.gas_min())
-                    continue;
-            }
-
-            // prepare list of root pairs
+    // generate root list
+    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>
+        root_lists_map;
+    if (options_->get_bool("TRANSITION_DIPOLES_ALL")) {
+        for (size_t M = 0, n_entries = states.size(); M < n_entries; ++M) {
+            const auto& state1 = states[M];
+            auto nroot1 = state_nroots_map_[state1];
             std::vector<std::pair<size_t, size_t>> state_ids;
-            if (M == N) {
-                for (size_t i = 0; i < nroot1; ++i) {
-                    for (size_t j = i + 1; j < nroot2; ++j) {
-                        state_ids.emplace_back(i, j);
-                    }
+            for (size_t i = 0; i < nroot1; ++i) {
+                for (size_t j = i + 1; j < nroot1; ++j) {
+                    state_ids.emplace_back(i, j);
                 }
-            } else {
+            }
+            root_lists_map[{state1, state1}] = state_ids;
+
+            for (size_t N = M + 1; N < n_entries; ++N) {
+                const auto& state2 = states[N];
+                size_t nroot2 = state_nroots_map_[state2];
+
+                if (state1.multiplicity() != state2.multiplicity())
+                    continue;
+                if (gas_diff_only_) {
+                    if (state1.gas_max() == state2.gas_max() &&
+                        state1.gas_min() == state2.gas_min())
+                        continue;
+                }
+
+                std::vector<std::pair<size_t, size_t>> state_ids;
                 for (size_t i = 0; i < nroot1; ++i) {
                     for (size_t j = 0; j < nroot2; ++j) {
                         state_ids.emplace_back(i, j);
                     }
                 }
+                root_lists_map[{state1, state2}] = state_ids;
             }
-            if (state_ids.empty())
-                continue;
+        }
+    } else {
+        for (const auto& [multi, state1] : ground_states) {
+            auto nroot1 = state_nroots_map_[state1];
+            std::vector<std::pair<size_t, size_t>> state_ids;
+            for (size_t j = 1; j < nroot1; ++j) {
+                state_ids.emplace_back(0, j);
+            }
+            root_lists_map[{state1, state1}] = state_ids;
 
-            // compute oscillator strength
-            method1->compute_oscillator_strength_same_orbs(ampints, state_ids, method2);
+            for (const auto& [state2, nroot2] : state_nroots_map_) {
+                if (state1 == state2 or state1.multiplicity() != state2.multiplicity())
+                    continue;
+                if (gas_diff_only_) {
+                    if (state1.gas_max() == state2.gas_max() &&
+                        state1.gas_min() == state2.gas_min())
+                        continue;
+                }
+
+                std::vector<std::pair<size_t, size_t>> state_ids;
+                for (size_t j = 0; j < nroot2; ++j) {
+                    state_ids.emplace_back(0, j);
+                }
+                root_lists_map[{state1, state2}] = state_ids;
+            }
         }
     }
+
+    // compute transition reduced density matrices
+    auto rdm_level = ampints->dp_many_body_level();
+    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::shared_ptr<RDMs>>> rdms_map;
+    for (const auto& [states, root_list] : root_lists_map) {
+        const auto& [bra, ket] = states;
+        const auto& method1 = state_method_map_[bra];
+        const auto& method2 = state_method_map_[ket];
+        rdms_map[{bra, ket}] =
+            method1->transition_rdms(root_list, method2, rdm_level, RDMsType::spin_free);
+    }
+
+    // TODO: analyze transition reduced density matrices
+
+    // compute transition dipole moments
+    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::shared_ptr<psi::Vector>>> tdp_map;
+    std::string prefix = ampints->dp_name().empty() ? "" : ampints->dp_name() + " ";
+    print_h2(prefix + "Transition Dipole Moments [e a0]");
+    psi::outfile->Printf("\n    %10s %10s %14s %14s %14s %14s", "Bra", "Ket", "DM_X", "DM_Y",
+                         "DM_Z", "|DM|");
+    std::string dash(81, '-');
+    psi::outfile->Printf("\n    %s", dash.c_str());
+
+    for (const auto& [states, root_list] : root_lists_map) {
+        const auto& [state1, state2] = states;
+        auto multi = state1.multiplicity();
+        auto multi_label = state1.multiplicity_label();
+        for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+            auto td = ampints->compute_electronic_dipole(rdms_map[states][i], true);
+            tdp_map[{state1, state2}].push_back(td);
+
+            auto& [root1, root2] = root_list[i];
+            std::string name1 = std::to_string(multi) + upper_string(state1.irrep_label());
+            std::string name2 = std::to_string(multi) + upper_string(state2.irrep_label());
+            psi::outfile->Printf("\n    %5zu %4s %5zu %4s", root1, name1.c_str(), root2,
+                                 name2.c_str());
+
+            auto dx = td->get(0);
+            auto dy = td->get(1);
+            auto dz = td->get(2);
+            auto dm = td->norm();
+            psi::outfile->Printf("%15.8f%15.8f%15.8f%15.8f", dx, dy, dz, dm);
+
+            std::string prefix = "TRANS " + upper_string(multi_label);
+            push_to_psi4_env_globals(dx, prefix + " <" + name1 + "|DM_X|" + name2 + ">");
+            push_to_psi4_env_globals(dy, prefix + " <" + name1 + "|DM_Y|" + name2 + ">");
+            push_to_psi4_env_globals(dz, prefix + " <" + name1 + "|DM_Z|" + name2 + ">");
+            push_to_psi4_env_globals(dm, prefix + " |<" + name1 + "|DM|" + name2 + ">|");
+        }
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
+
+    // compute oscillator strengths
+    print_h2("Summary for Vertical Transition Energy (in eV)");
+    psi::outfile->Printf("\n    %10s %10s %14s %14s", "Init.", "Final", "Energy [eV]", "Osc. Str.");
+    dash = std::string(51, '-');
+    psi::outfile->Printf("\n    %s", dash.c_str());
+    for (const auto& [states, root_list] : root_lists_map) {
+        const auto& [state1, state2] = states;
+        const auto& energies1 = state_energies_map_[state1];
+        const auto& energies2 = state_energies_map_[state2];
+        auto multi = state1.multiplicity();
+        auto multi_label = upper_string(state1.multiplicity_label());
+        for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+            auto& [root1, root2] = root_list[i];
+            double e_diff = energies2[root2] - energies1[root1];
+            double dm2 = tdp_map[states][i]->sum_of_squares();
+            auto osc = 2.0 / 3.0 * std::fabs(e_diff) * dm2;
+
+            std::string name1 = std::to_string(multi) + upper_string(state1.irrep_label());
+            std::string name2 = std::to_string(multi) + upper_string(state2.irrep_label());
+            psi::outfile->Printf("\n    %5zu %4s %5zu %4s", root1, name1.c_str(), root2,
+                                 name2.c_str());
+            psi::outfile->Printf("%15.8f%15.8f", e_diff * pc_hartree2ev, osc);
+
+            name1 = std::to_string(root1) + upper_string(state1.irrep_label());
+            name2 = std::to_string(root2) + upper_string(state2.irrep_label());
+            std::string name_env = "OSC. " + multi_label + " " + name1 + " -> " + name2;
+            push_to_psi4_env_globals(osc, name_env);
+        }
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
+
+    // // skip TRDMs
+    // auto skip = [](const StateInfo& state1, const StateInfo& state2) {
+    //     // skip different multiplicity (no spin-orbit coupling)
+    //     skip = (state1.multiplicity() != state2.multiplicity());
+
+    //     // Only calculate the oscillator strengths between states that differ in GAS occupation
+    //     // Generally used for core-excited state
+    //     if (gas_diff_only_) {
+    //         if (state1.gas_max() == state2.gas_max() && state1.gas_min() == state2.gas_min())
+    //             skip = true;
+    //     }
+    //     return skip;
+    // };
+
+    // if (options_->get_bool("TRANSITION_DIPOLES_ALL")) {
+    //     for (size_t M = 0, n_entries = states.size(); M < n_entries; ++M) {
+    //         const auto& state1 = states[M];
+    //         size_t nroot1 = state_nroots_map_[state1];
+    //         const auto& method1 = state_method_map_[state1];
+    //         method1->set_dump_trdm(options_->get_bool("DUMP_TRANSITION_RDM"));
+
+    //         for (size_t N = M; N < n_entries; ++N) {
+    //             const auto& state2 = states[N];
+    //             size_t nroot2 = state_nroots_map_[state2];
+    //             const auto& method2 = state_method_map_[state2];
+
+    //             // directly filter some unnecessary stuff
+    //             if (skip(state1, state2))
+    //                 continue;
+
+    //             // prepare list of root pairs
+    //             std::vector<std::pair<size_t, size_t>> state_ids;
+    //             if (M == N) {
+    //                 for (size_t i = 0; i < nroot1; ++i) {
+    //                     for (size_t j = i + 1; j < nroot2; ++j) {
+    //                         state_ids.emplace_back(i, j);
+    //                     }
+    //                 }
+    //             } else {
+    //                 for (size_t i = 0; i < nroot1; ++i) {
+    //                     for (size_t j = 0; j < nroot2; ++j) {
+    //                         state_ids.emplace_back(i, j);
+    //                     }
+    //                 }
+    //             }
+    //             if (state_ids.empty())
+    //                 continue;
+
+    //             // compute oscillator strength
+    //             method1->compute_oscillator_strength_same_orbs(ampints, state_ids, method2);
+    //         }
+    //     }
+    // } else {
+    //     const auto& method1 = state_method_map_[state0];
+    //     method1->set_dump_trdm(options_->get_bool("DUMP_TRANSITION_RDM"));
+
+    //     for (size_t M = 0, n_entries = states.size(); M < n_entries; ++M) {
+    //         const auto& state2 = states[M];
+    //         size_t nroot2 = state_nroots_map_[state2];
+    //         const auto& method2 = state_method_map_[state2];
+
+    //         // directly filter some unnecessary stuff
+    //         if (skip(state0, state2))
+    //             continue;
+
+    //         // prepare list of root pairs
+    //         std::vector<std::pair<size_t, size_t>> state_ids;
+    //         if (state2 == state0) {
+    //             for (size_t i = 0; i < nroot2; ++i)
+    //                 state_ids.emplace_back(0, j);
+    //         } else {
+    //             for (size_t i = 0; i < nroot2; ++i)
+    //                 state_ids.emplace_back(0, i);
+    //         }
+    //         if (state_ids.empty())
+    //             continue;
+
+    //         // compute oscillator strength
+    //         method1->compute_oscillator_strength_same_orbs(ampints, state_ids, method2);
+    //     }
+    // }
 }
 
 std::vector<std::shared_ptr<RDMs>> ActiveSpaceSolver::rdms(

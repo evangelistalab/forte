@@ -67,7 +67,8 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
     # transform integrals to FNO semicanonical basis
     Ca = ints.wfn().Ca()
     Ca.copy(psi4.core.doublet(Ca, Va, False, False))
-    ints = forte.make_ints_from_psi4(ints.wfn(), options, mo_space_info)
+    ints.update_mo_space_info(mo_space_info)
+    ints.update_orbitals(Ca, Ca, True)
 
     # run DSRG-MRPT2 in truncated basis
     if pt2_correction:

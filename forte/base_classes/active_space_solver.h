@@ -88,14 +88,17 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
+    /// Compute permanent dipole and quadrupole moments
+    void compute_multipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints, int level = 1);
+
     /// Compute permanent dipole moments
     void compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
     /// Compute permanent quadrupole moments
     void compute_quadrupole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
-    /// Compute transition dipole moments
-    void compute_transition_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+    // /// Compute transition dipole moments
+    // void compute_transition_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
 
     /// Compute the oscillator strengths assuming same orbitals
     void compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
@@ -237,8 +240,14 @@ class ActiveSpaceSolver {
     /// Make sure that the values of <S^2> are consistent with the multiplicity
     void validate_spin(const std::vector<double>& spin2, const StateInfo& state);
 
-    /// Prints a summary of the energies with State info
+    /// Print a summary of the energies with State info
     void print_energies();
+
+    /// Print a summary of dipole and quadrupole moments
+    void print_multipole_moments();
+
+    /// Print a summary of oscillator strengths and transition energies
+    void print_oscillator_strengths();
 
     /// A map of state symmetries to vectors of computed energies under given state symmetry
     std::map<StateInfo, std::vector<double>> state_energies_map_;

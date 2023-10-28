@@ -35,6 +35,7 @@
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
+#include "base_classes/mo_space_info.h"
 
 class Tensor;
 
@@ -50,7 +51,6 @@ class BasisSet;
 namespace forte {
 
 class ForteOptions;
-class MOSpaceInfo;
 
 /**
  * @brief The IntegralSpinRestriction enum
@@ -355,6 +355,10 @@ class ForteIntegrals {
     virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
                                  bool re_transform = true);
 
+    /// Update the MOSpaceInfo and re-initialize the size of orbital spaces
+    /// @param mo_space_info the MOSpaceInfo object
+    void update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info);
+
     /// Make the orbital phase consistent when updating orbitals
     /// @param U the unitary transformation matrix so that C_new = C_old * U
     /// @param is_alpha target Ca if true else Cb
@@ -378,7 +382,7 @@ class ForteIntegrals {
     /// Print the one- and two-electron integrals to the output
     void print_ints();
 
-    /// Orbital coefficients in AO x MO basis where MO is Pitzer order
+    /// Orbital coefficients in AO x MO basis where MO is in Pitzer order
     virtual std::shared_ptr<psi::Matrix> Ca_AO() const = 0;
 
     /// Obtain AO dipole integrals [X, Y, Z]

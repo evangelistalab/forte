@@ -103,6 +103,7 @@ void ForteIntegrals::read_information() {
     ncmo_ = ncmopi_.sum();
 
     // Create an array that maps the CMOs to the MOs (cmotomo_).
+    cmotomo_.clear();
     for (int h = 0, q = 0; h < nirrep_; ++h) {
         q += frzcpi_[h]; // skip the frozen core
         for (int r = 0; r < ncmopi_[h]; ++r) {
@@ -487,6 +488,11 @@ void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
     auto Cb_rotated = psi::linalg::doublet(Cb_, Ub);
 
     update_orbitals(Ca_rotated, Cb_rotated, re_transform);
+}
+
+void ForteIntegrals::update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    mo_space_info_ = mo_space_info;
+    common_initialize();
 }
 
 // The following functions throw an error by default
