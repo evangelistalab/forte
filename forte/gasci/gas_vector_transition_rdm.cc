@@ -29,10 +29,10 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/matrix.h"
 
-#include "fci_string_lists.h"
-#include "fci_string_address.h"
+#include "gas_string_lists.h"
+#include "gas_string_address.h"
 
-#include "fci_vector.h"
+#include "gas_vector.h"
 
 namespace forte {
 
@@ -40,7 +40,7 @@ namespace forte {
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_right,
+std::shared_ptr<RDMs> compute_transition_rdms(GASVector& C_left, GASVector& C_right,
                                               int max_rdm_level, RDMsType type) {
     size_t na_left = C_left.alfa_address()->nones();
     size_t nb_left = C_left.beta_address()->nones();
@@ -78,7 +78,7 @@ std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_ri
 
     if (max_rdm_level >= 2) {
         throw std::runtime_error(
-            "Transition RDMs of order 2 or higher are not implemented in FCISolver (and "
+            "Transition RDMs of order 2 or higher are not implemented in GASCISolver (and "
             "more generally in Forte).");
     }
     return std::make_shared<RDMsSpinDependent>();
@@ -88,7 +88,7 @@ std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_ri
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa) {
+ambit::Tensor compute_1rdm_different_irrep(GASVector& C_left, GASVector& C_right, bool alfa) {
     size_t ncmo = C_left.ncmo();
     size_t nirrep = C_left.nirrep();
     const auto& cmopi = C_left.cmopi();
@@ -132,9 +132,9 @@ ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right
 
         if ((detpi_left[h_Ja] > 0) and (detpi_right[h_Ia] > 0)) {
             // Fill CR with the correct block
-            auto Cl = gather_C_block(C_left, FCIVector::get_CL(), alfa, alfa_address_left,
+            auto Cl = gather_C_block(C_left, GASVector::get_CL(), alfa, alfa_address_left,
                                      beta_address_left, h_Ja, h_Jb, false);
-            auto Cr = gather_C_block(C_right, FCIVector::get_CR(), alfa, alfa_address_right,
+            auto Cr = gather_C_block(C_right, GASVector::get_CR(), alfa, alfa_address_right,
                                      beta_address_right, h_Ia, h_Ib, false);
             const size_t maxL =
                 alfa ? beta_address_right->strpcls(h_Ib) : alfa_address_right->strpcls(h_Ia);
@@ -147,8 +147,9 @@ ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right
                         int p_abs = p_rel + cmopi_offset[p_sym];
                         int q_abs = q_rel + cmopi_offset[q_sym];
 
-                        const auto& vo = alfa ? lists_right->get_alfa_vo_list(p_abs, q_abs, h_Ia)
-                                              : lists_right->get_beta_vo_list(p_abs, q_abs, h_Ib);
+                        const auto& vo =
+                            alfa ? lists_right->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja)
+                                 : lists_right->get_beta_vo_list(p_abs, q_abs, h_Ib, h_Jb);
                         double rdm_element = 0.0;
                         for (const auto& [sign, I, J] : vo) {
                             rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);

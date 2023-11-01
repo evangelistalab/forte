@@ -30,19 +30,19 @@
 #include "sparse_ci/determinant_functions.hpp"
 #include "sparse_ci/ci_spin_adaptation.h"
 
-#include "fci_solver.h"
-#include "fci_vector.h"
-#include "fci_string_lists.h"
+#include "gas_solver.h"
+#include "gas_vector.h"
+#include "gas_string_lists.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
-#include "fci_string_address.h"
+#include "gas_string_address.h"
 
 #include "sparse_ci/sparse_initial_guess.h"
 
 namespace forte {
 
-std::vector<Determinant> FCISolver::initial_guess_generate_dets(std::shared_ptr<psi::Vector> diag,
-                                                                size_t num_guess_states) {
+std::vector<Determinant> GASCISolver::initial_guess_generate_dets(std::shared_ptr<psi::Vector> diag,
+                                                                  size_t num_guess_states) {
     size_t ndets = diag->dim();
     // number of guess to be used must be at most as large as the number of determinants
     size_t num_guess_dets = std::min(num_guess_states * ndets_per_guess_, ndets);
@@ -86,8 +86,8 @@ std::vector<Determinant> FCISolver::initial_guess_generate_dets(std::shared_ptr<
 }
 
 std::pair<sparse_mat, sparse_mat>
-FCISolver::initial_guess_det(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
-                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+GASCISolver::initial_guess_det(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                               std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     auto guess_dets = initial_guess_generate_dets(diag, num_guess_states);
     size_t num_guess_dets = guess_dets.size();
 
@@ -102,14 +102,14 @@ FCISolver::initial_guess_det(std::shared_ptr<psi::Vector> diag, size_t num_guess
                                   std::vector<std::vector<std::pair<size_t, double>>>());
 }
 
-sparse_mat FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag,
-                                        size_t num_guess_states) {
+sparse_mat GASCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag,
+                                          size_t num_guess_states) {
     return find_initial_guess_csf(diag, num_guess_states, state().multiplicity(), print_);
 }
 
 std::shared_ptr<psi::Vector>
-FCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                          std::shared_ptr<SpinAdapter> spin_adapter) {
+GASCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                            std::shared_ptr<SpinAdapter> spin_adapter) {
     auto Hdiag_csf = std::make_shared<psi::Vector>(spin_adapter->ncsf());
     // Compute the diagonal elements of the Hamiltonian in the CSF basis
     double E0 = fci_ints->nuclear_repulsion_energy() + fci_ints->scalar_energy();
@@ -148,7 +148,7 @@ FCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
 }
 
 std::shared_ptr<psi::Vector>
-FCISolver::form_Hdiag_det(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+GASCISolver::form_Hdiag_det(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     auto Hdiag_det = std::make_shared<psi::Vector>(nfci_dets_);
 
     Determinant I;

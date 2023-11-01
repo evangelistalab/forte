@@ -93,11 +93,6 @@ class SemiCanonical {
     /// Print level
     int print_;
 
-    /// Mix the frozen and restricted orbitals together
-    bool inactive_mix_;
-    /// Mix all GAS orbitals together
-    bool active_mix_;
-
     /// Dimension for all orbitals (number of MOs per irrep)
     psi::Dimension nmopi_;
 

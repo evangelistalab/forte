@@ -31,9 +31,9 @@
 
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
-#include "fci_vector.h"
-#include "fci_string_lists.h"
-#include "fci_string_address.h"
+#include "gas_vector.h"
+#include "gas_string_lists.h"
+#include "gas_string_address.h"
 
 using namespace psi;
 
@@ -43,7 +43,7 @@ namespace forte {
  * Apply the Hamiltonian to the wave function
  * @param result Wave function object which stores the resulting vector
  */
-void FCIVector::Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+void GASVector::Hamiltonian(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     //    check_temp_space();
     result.zero();
 
@@ -81,7 +81,7 @@ void FCIVector::Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegr
     }
 }
 
-void FCIVector::H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+void GASVector::H0(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     double core_energy = fci_ints->scalar_energy() + fci_ints->frozen_core_energy() +
                          fci_ints->nuclear_repulsion_energy();
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
@@ -90,9 +90,12 @@ void FCIVector::H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
     }
 }
 
-void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa) {
+void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa) {
     for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
         int h_Ib = h_Ia ^ symmetry_;
+        // The pq product is totally symmetric
+        const int h_Ja = h_Ia;
+        const int h_Jb = h_Ib;
         if (detpi_[h_Ia] > 0) {
             auto Cr =
                 gather_C_block(*this, CR, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, false);
@@ -109,8 +112,9 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
                         const int q_abs = q_rel + cmopi_offset_[q_sym];
                         const double Hpq =
                             alfa ? fci_ints->oei_a(p_abs, q_abs) : fci_ints->oei_b(p_abs, q_abs);
-                        const auto& vo_list = alfa ? lists_->get_alfa_vo_list(p_abs, q_abs, h_Ia)
-                                                   : lists_->get_beta_vo_list(p_abs, q_abs, h_Ib);
+                        const auto& vo_list =
+                            alfa ? lists_->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja)
+                                 : lists_->get_beta_vo_list(p_abs, q_abs, h_Ib, h_Jb);
                         for (const auto& [sign, I, J] : vo_list) {
                             C_DAXPY(maxL, sign * Hpq, Cr[I], 1, Cl[J], 1);
                         }
@@ -122,7 +126,7 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
     } // End loop over h
 }
 
-void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                          bool alfa) {
     // Notation
     // h_Ia - symmetry of alpha strings
@@ -191,7 +195,7 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
     } // End loop over h
 }
 
-void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Loop over blocks of matrix C
     for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
         const size_t maxIa = alfa_address_->strpcls(h_Ia);
@@ -214,7 +218,7 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                         const int s_abs = s_rel + cmopi_offset_[s_sym];
 
                         // Grab list (r,s,h_Ib)
-                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, h_Ib);
+                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, h_Ib, h_Jb);
                         const size_t maxSSb = vo_beta.size();
 
                         if (maxSSb == 0)
@@ -247,7 +251,7 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                                         fci_ints->tei_ab(p_abs, r_abs, q_abs, s_abs);
 
                                     const auto& vo_alfa =
-                                        lists_->get_alfa_vo_list(p_abs, q_abs, h_Ia);
+                                        lists_->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja);
 
                                     for (const auto& [sign, I, J] : vo_alfa) {
                                         C_DAXPY(maxSSb, integral * sign, Cr[I], 1, Cl[J], 1);

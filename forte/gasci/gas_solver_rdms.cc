@@ -30,18 +30,18 @@
 
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/ci_spin_adaptation.h"
-#include "fci_string_lists.h"
-#include "fci_vector.h"
+#include "gas_string_lists.h"
+#include "gas_vector.h"
 
-#include "fci_solver.h"
+#include "gas_solver.h"
 
 namespace forte {
 
 std::vector<std::shared_ptr<RDMs>>
-FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
-                RDMsType rdm_type) {
+GASCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+                  RDMsType rdm_type) {
     if (not C_) {
-        throw std::runtime_error("FCIVector is not assigned. Cannot compute RDMs.");
+        throw std::runtime_error("GASVector is not assigned. Cannot compute RDMs.");
     }
 
     // handle the case of no RDMs
@@ -63,8 +63,8 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
     return refs;
 }
 
-std::shared_ptr<RDMs> FCISolver::compute_rdms_root(size_t root_left, size_t root_right,
-                                                   int max_rdm_level, RDMsType type) {
+std::shared_ptr<RDMs> GASCISolver::compute_rdms_root(size_t root_left, size_t root_right,
+                                                     int max_rdm_level, RDMsType type) {
     // make sure the root is valid
     if (std::max(root_left, root_right) >= nroot_) {
         std::string error = "Cannot compute RDMs <" + std::to_string(root_left) + "| ... |" +
@@ -89,7 +89,7 @@ std::shared_ptr<RDMs> FCISolver::compute_rdms_root(size_t root_left, size_t root
         print_h2(title_rdm);
     }
 
-    auto rdms = FCIVector::compute_rdms(*C_, *T_, max_rdm_level, type);
+    auto rdms = GASVector::compute_rdms(*C_, *T_, max_rdm_level, type);
 
     // Optionally, test the RDMs
     if (test_rdms_) {

@@ -34,12 +34,12 @@
 #include "sparse_ci/ci_spin_adaptation.h"
 #include "helpers/davidson_liu_solver.h"
 
-#include "fci_string_lists.h"
+#include "gas_solver.h"
+#include "gas_string_lists.h"
 #include "helpers/printing.h"
-#include "fci_string_address.h"
-#include "fci_vector.h"
+#include "gas_string_address.h"
 
-#include "fci_solver.h"
+#include "gas_vector.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -52,8 +52,8 @@ namespace forte {
 
 class MOSpaceInfo;
 
-FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                     std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+GASCISolver::GASCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                         std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
       active_dim_(mo_space_info->dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()) {
@@ -62,28 +62,28 @@ FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo>
     nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
 }
 
-void FCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
+void GASCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
 
-void FCISolver::set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
+void GASCISolver::set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
 
-void FCISolver::set_guess_per_root(int value) { guess_per_root_ = value; }
+void GASCISolver::set_guess_per_root(int value) { guess_per_root_ = value; }
 
-void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
+void GASCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
-void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
+void GASCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
-void FCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
+void GASCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
 
-void FCISolver::set_spin_adapt_full_preconditioner(bool value) {
+void GASCISolver::set_spin_adapt_full_preconditioner(bool value) {
     spin_adapt_full_preconditioner_ = value;
 }
 
-void FCISolver::set_test_rdms(bool value) { test_rdms_ = value; }
+void GASCISolver::set_test_rdms(bool value) { test_rdms_ = value; }
 
-void FCISolver::set_print_no(bool value) { print_no_ = value; }
+void GASCISolver::set_print_no(bool value) { print_no_ = value; }
 
-void FCISolver::copy_state_into_fci_vector(int root, std::shared_ptr<FCIVector> C) {
-    // grab a row of the eigenvector matrix and put it into the FCIVector
+void GASCISolver::copy_state_into_fci_vector(int root, std::shared_ptr<GASVector> C) {
+    // grab a row of the eigenvector matrix and put it into the GASVector
     std::shared_ptr<psi::Vector> psi_vector;
     if (spin_adapt_) {
         auto eig = eigen_vecs_->get_row(0, root);
@@ -95,16 +95,15 @@ void FCISolver::copy_state_into_fci_vector(int root, std::shared_ptr<FCIVector> 
     C->copy(psi_vector);
 }
 
-std::shared_ptr<psi::Matrix> FCISolver::evecs() { return eigen_vecs_; }
+std::shared_ptr<psi::Matrix> GASCISolver::evecs() { return eigen_vecs_; }
 
-std::shared_ptr<FCIStringLists> FCISolver::lists() { return lists_; }
+std::shared_ptr<GASStringLists> GASCISolver::lists() { return lists_; }
 
-int FCISolver::symmetry() { return symmetry_; }
+int GASCISolver::symmetry() { return symmetry_; }
 
-void FCISolver::startup() {
+void GASCISolver::startup() {
     // Create the string lists
 
-#if USE_GAS_LISTS
     std::vector<int> gas_size;
     std::vector<int> gas_min;
     std::vector<int> gas_max;
@@ -119,11 +118,8 @@ void FCISolver::startup() {
     for (auto n : state_.gas_max()) {
         gas_max.push_back(n);
     }
-    lists_ = std::make_shared<FCIStringLists>(mo_space_info_, na_, nb_, print_, gas_size, gas_min,
+    lists_ = std::make_shared<GASStringLists>(mo_space_info_, na_, nb_, print_, gas_size, gas_min,
                                               gas_max);
-#else
-    lists_ = std::make_shared<FCIStringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
-#endif
 
     nfci_dets_ = 0;
     for (int h = 0; h < nirrep_; ++h) {
@@ -148,12 +144,12 @@ void FCISolver::startup() {
                               {"Number of roots", nroot_},
                               {"Target root", root_}});
         printer.add_bool_data({{"Spin adapt", spin_adapt_}});
-        std::string table = printer.get_table("FCI Solver");
+        std::string table = printer.get_table("GASCI Solver");
         psi::outfile->Printf("%s", table.c_str());
     }
 }
 
-void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
+void GASCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_e_convergence(options->get_double("E_CONVERGENCE"));
     set_r_convergence(options->get_double("R_CONVERGENCE"));
     set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
@@ -174,14 +170,14 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
 /*
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
  */
-double FCISolver::compute_energy() {
+double GASCISolver::compute_energy() {
     local_timer t;
     startup();
 
-    FCIVector::allocate_temp_space(lists_, print_);
+    GASVector::allocate_temp_space(lists_, print_);
 
-    C_ = std::make_shared<FCIVector>(lists_, symmetry_);
-    T_ = std::make_shared<FCIVector>(lists_, symmetry_);
+    C_ = std::make_shared<GASVector>(lists_, symmetry_);
+    T_ = std::make_shared<GASVector>(lists_, symmetry_);
     C_->set_print(print_);
 
     // Compute the size of the determinant space and the basis used by the Davidson solver
@@ -310,9 +306,9 @@ double FCISolver::compute_energy() {
     return energy_;
 }
 
-void FCISolver::print_solutions(size_t sample_size, std::shared_ptr<psi::Vector> b,
-                                std::shared_ptr<psi::Vector> b_basis,
-                                std::shared_ptr<DavidsonLiuSolver> dls) {
+void GASCISolver::print_solutions(size_t sample_size, std::shared_ptr<psi::Vector> b,
+                                  std::shared_ptr<psi::Vector> b_basis,
+                                  std::shared_ptr<DavidsonLiuSolver> dls) {
     for (size_t r = 0; r < nroot_; ++r) {
         psi::outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
@@ -363,8 +359,8 @@ void FCISolver::print_solutions(size_t sample_size, std::shared_ptr<psi::Vector>
     }
 }
 
-void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
-                          std::shared_ptr<DavidsonLiuSolver> dls) {
+void GASCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
+                            std::shared_ptr<DavidsonLiuSolver> dls) {
     b_basis = dls->eigenvector(root_);
     if (spin_adapt_) {
         spin_adapter_->csf_C_to_det_C(b_basis, b);
@@ -381,7 +377,7 @@ void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::V
     C_->test_rdms(*C_, *C_, max_rdm_level, RDMsType::spin_dependent, rdms);
 }
 
-std::shared_ptr<psi::Matrix> FCISolver::ci_wave_functions() {
+std::shared_ptr<psi::Matrix> GASCISolver::ci_wave_functions() {
     if (eigen_vecs_ == nullptr)
         return std::make_shared<psi::Matrix>();
 

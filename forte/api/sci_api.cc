@@ -38,7 +38,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
 
-#include "fci/string_address.h"
+#include "fci/fci_string_address.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_state_vector.h"
@@ -250,13 +250,12 @@ void export_Determinant(py::module& m) {
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
-    py::class_<StringAddress>(m, "StringAddress", "A class to compute the address of a string")
-        .def(py::init<const std::vector<int>&, const std::vector<std::array<int, 6>>&, int,
-                      const std::vector<std::vector<String>>&>(),
+    py::class_<FCIStringAddress>(m, "StringAddress", "A class to compute the address of a string")
+        .def(py::init<int, int, const std::vector<std::vector<String>>&>(),
              "Construct a StringAddress object from a list of lists of strings")
-        .def("add", &StringAddress::add, "Return the address of a string")
-        .def("sym", &StringAddress::sym, "Return the symmetry of a string")
-        .def("strpcls", &StringAddress::strpcls, "Return the number of strings per class");
+        .def("add", &FCIStringAddress::add, "Return the address of a string")
+        .def("sym", &FCIStringAddress::sym, "Return the symmetry of a string")
+        .def("strpcls", &FCIStringAddress::strpcls, "Return the number of strings per class");
 
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
         .def(py::init<bool>(), "antihermitian"_a = false)

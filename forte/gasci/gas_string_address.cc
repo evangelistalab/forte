@@ -26,18 +26,17 @@
  * @END LICENSE
  */
 
-#include "string_address.h"
+#include "gas_string_address.h"
 
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 
 namespace forte {
 
-StringAddress::StringAddress(const std::vector<int>& gas_size,
-                             const std::vector<std::array<int, 6>>& gas_occupations, int ne,
+StringAddress::StringAddress(const std::vector<int>& gas_size, int ne,
                              const std::vector<std::vector<String>>& strings)
     : nclasses_(strings.size()), nstr_(0), strpcls_(strings.size(), 0), nones_(ne),
-      gas_size_(gas_size), gas_occupations_(gas_occupations) {
+      gas_size_(gas_size) {
     for (int h = 0; h < nclasses_; h++) {
         const auto& strings_h = strings[h];
         for (const auto& s : strings_h) {
@@ -61,26 +60,56 @@ size_t StringAddress::add(const String& s) const { return address_.at(s).first; 
 
 int StringAddress::sym(const String& s) const { return address_.at(s).second; }
 
+const std::pair<uint32_t, uint32_t>& StringAddress::address_and_class(const String& s) const {
+    return address_.at(s);
+}
+
 size_t StringAddress::strpcls(int h) const { return strpcls_[h]; }
 
-StringClass::StringClass(std::vector<int> mopi,
+StringClass::StringClass(const std::vector<int>& mopi,
+                         const std::vector<std::vector<size_t>>& gas_mos,
                          const std::vector<std::array<int, 6>>& alfa_occupation,
-                         const std::vector<std::array<int, 6>>& beta_occupation)
+                         const std::vector<std::array<int, 6>>& beta_occupation,
+                         const std::vector<std::pair<size_t, size_t>>& occupations)
     : nirrep_(mopi.size()) {
     for (size_t h = 0; h < nirrep_; h++) {
         fill_n(back_inserter(mo_sym_), mopi[h], h); // insert h for mopi[h] times
     }
+    for (size_t i = 0; i < alfa_occupation.size(); i++) {
+        alfa_occupation_group_[alfa_occupation[i]] = i;
+    }
+    for (size_t i = 0; i < beta_occupation.size(); i++) {
+        beta_occupation_group_[beta_occupation[i]] = i;
+    }
+    for (size_t n = 0; n < gas_mos.size(); n++) {
+        gas_masks_[n].zero();
+        for (const auto& mo : gas_mos[n]) {
+            gas_masks_[n].set_bit(mo, true);
+        }
+    }
+    occupations_ = occupations;
 }
 
-size_t StringClass::symmetry(const String& s) const {
-    return s.symmetry(mo_sym_);
-    return 0;
+size_t StringClass::num_alfa_classes() const { return nirrep_ * alfa_occupation_group_.size(); }
+
+size_t StringClass::num_beta_classes() const { return nirrep_ * beta_occupation_group_.size(); }
+
+size_t StringClass::symmetry(const String& s) const { return s.symmetry(mo_sym_); }
+
+size_t StringClass::alfa_string_class(const String& s) const {
+    std::array<int, 6> occupation;
+    for (size_t n = 0; n < gas_masks_.size(); n++) {
+        occupation[n] = s.fast_a_and_b_count(gas_masks_[n]);
+    }
+    return alfa_occupation_group_.at(occupation) * nirrep_ + symmetry(s);
 }
 
-size_t StringClass::nclasses() const {
-    return nirrep_;
-    throw std::runtime_error("StringClass::nclasses() not implemented for types other than FCI");
-    return 0;
+size_t StringClass::beta_string_class(const String& s) const {
+    std::array<int, 6> occupation;
+    for (size_t n = 0; n < gas_masks_.size(); n++) {
+        occupation[n] = s.fast_a_and_b_count(gas_masks_[n]);
+    }
+    return beta_occupation_group_.at(occupation) * nirrep_ + symmetry(s);
 }
 
 } // namespace forte

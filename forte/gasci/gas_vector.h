@@ -34,8 +34,7 @@
 #include "ambit/tensor.h"
 
 #include "base_classes/rdms.h"
-#include "fci_string_lists.h"
-#include "fci_string_address.h"
+#include "gas_string_lists.h"
 
 #define CAPRICCIO_USE_DAXPY 1
 
@@ -50,9 +49,9 @@ class MOSpaceInfo;
 class StringAddress;
 class RDMs;
 
-class FCIVector {
+class GASVector {
   public:
-    FCIVector(std::shared_ptr<FCIStringLists> lists, size_t symmetry);
+    GASVector(std::shared_ptr<GASStringLists> lists, size_t symmetry);
 
     /// @brief return the number of irreps
     size_t nirrep() const;
@@ -69,7 +68,7 @@ class FCIVector {
     psi::Dimension cmopi() const;
     /// @brief return the offset array for cmopi
     const std::vector<size_t>& cmopi_offset() const;
-    const std::shared_ptr<FCIStringLists>& lists() const;
+    const std::shared_ptr<GASStringLists>& lists() const;
 
     /// @brief zero the vector
     void zero();
@@ -77,7 +76,7 @@ class FCIVector {
     void print();
 
     /// copy the wave function object
-    void copy(FCIVector& wfn);
+    void copy(GASVector& wfn);
     /// copy the coefficient from a Vector object
     void copy(std::shared_ptr<psi::Vector> vec);
     /// copy the wave function object
@@ -96,18 +95,18 @@ class FCIVector {
     /// @brief Compute the dot product of this wave functions with another
     /// @param wfn The wave function to dot with
     /// @return The dot product
-    double dot(FCIVector& wfn);
-    double dot(std::shared_ptr<FCIVector>& wfn);
+    double dot(GASVector& wfn);
+    double dot(std::shared_ptr<GASVector>& wfn);
 
     // return alfa_address_
-    std::shared_ptr<FCIStringAddress> alfa_address() { return alfa_address_; }
+    std::shared_ptr<StringAddress> alfa_address() { return alfa_address_; }
     // return beta_address_
-    std::shared_ptr<FCIStringAddress> beta_address() { return beta_address_; }
+    std::shared_ptr<StringAddress> beta_address() { return beta_address_; }
 
     std::shared_ptr<psi::Matrix>& C(int irrep) { return C_[irrep]; }
 
     // Operations on the wave function
-    void Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    void Hamiltonian(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     double energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
@@ -117,7 +116,7 @@ class FCIVector {
     /// @param type the type of RDMs to test
     /// @param rdms the RDMs object to test
     /// @param max_rdm_level the maximum RDM level to test
-    static void test_rdms(FCIVector& Cl, FCIVector& Cr, int max_rdm_level, RDMsType type,
+    static void test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsType type,
                           std::shared_ptr<RDMs> rdms);
 
     /// Compute the expectation value of the S^2 operator
@@ -134,12 +133,12 @@ class FCIVector {
     max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, int print_);
+    static void allocate_temp_space(std::shared_ptr<GASStringLists> lists_, int print_);
     static void release_temp_space();
     void set_print(int print) { print_ = print; }
 
     // ==> Class Static Functions <==
-    static std::shared_ptr<RDMs> compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order,
+    static std::shared_ptr<RDMs> compute_rdms(GASVector& C_left, GASVector& C_right, int max_order,
                                               RDMsType type);
 
     /// Return the temporary matrix CR
@@ -168,11 +167,11 @@ class FCIVector {
     int print_ = 0;
 
     /// The string list
-    std::shared_ptr<FCIStringLists> lists_;
+    std::shared_ptr<GASStringLists> lists_;
     /// The alpha string addressing object
-    std::shared_ptr<FCIStringAddress> alfa_address_;
+    std::shared_ptr<StringAddress> alfa_address_;
     /// The beta string addressing object
-    std::shared_ptr<FCIStringAddress> beta_address_;
+    std::shared_ptr<StringAddress> beta_address_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
 
@@ -213,55 +212,55 @@ class FCIVector {
     /// @brief Apply the scalar part of the Hamiltonian to this vector and add it to the result
     /// @param result The wave function to add the result to
     /// @param fci_ints The integrals object
-    void H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    void H0(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// @brief Apply the one-particle Hamiltonian to this vector and add it to the result
     /// @param result The wave function to add the result to
     /// @param fci_ints The integrals object
     /// @param alfa flag for alfa or beta component, true = alfa, false = beta
-    void H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
+    void H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
 
     /// @brief Apply the same-spin two-particle Hamiltonian to this vector and add it to the result
     /// @param result The wave function to add the result to
     /// @param fci_ints The integrals object
     /// @param alfa flag for alfa or beta component, true = alfa, false = beta
-    void H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
+    void H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
 
     /// @brief Apply the different-spin component of two-particle Hamiltonian to this vector and add
     /// it to the result
     /// @param result The wave function to add the result to
     /// @param fci_ints The integrals object/
-    void H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    void H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     // 1-RDM elements are stored in the format
     // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]
 
     /// Compute the matrix elements of the same 1-RDM <a^+_{p} a_{q}>
-    static ambit::Tensor compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa);
+    static ambit::Tensor compute_1rdm_same_irrep(GASVector& C_left, GASVector& C_right, bool alfa);
 
     // 2-RDM elements are stored in the format
     // <a^+_{p} a^+_{q} a_{s} a_r> -> rdm[tei_index(p,q,r,s)]
 
     /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all
     /// indices alpha or beta)
-    static ambit::Tensor compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+    static ambit::Tensor compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector& C_right,
                                                     bool alfa);
     /// Compute the matrix elements of the alpha-beta 2-RDM <a^+_{pa} a^+_{qb} a_{sb} a_{ra}>
-    static ambit::Tensor compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector& C_right);
+    static ambit::Tensor compute_2rdm_ab_same_irrep(GASVector& C_left, GASVector& C_right);
 
     // 3-RDM elements are stored in the format
     // <a^+_p a^+_q a^+_r a_u a_t a_s> -> rdm[six_index(p,q,r,s,t,u)]
 
     /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a_s a_r> (with all indices
     /// alpha or beta)
-    static ambit::Tensor compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+    static ambit::Tensor compute_3rdm_aaa_same_irrep(GASVector& C_left, GASVector& C_right,
                                                      bool alfa);
     /// Compute the matrix elements of the alpha-alpha-beta 3-RDM <a^+_{pa} a^+_{qa} a^+_{rb} a_{ub}
     /// a_{ta} a_{sa}>
-    static ambit::Tensor compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVector& C_right);
+    static ambit::Tensor compute_3rdm_aab_same_irrep(GASVector& C_left, GASVector& C_right);
     /// Compute the matrix elements of the alpha-beta-beta 3-RDM <a^+_{pa} a^+_{qb} a^+_{rb} a_{ub}
     /// a_{tb} a_{sa}>
-    static ambit::Tensor compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVector& C_right);
+    static ambit::Tensor compute_3rdm_abb_same_irrep(GASVector& C_left, GASVector& C_right);
 };
 
 /// @brief Provide a pointer to the a block of the coefficient matrix in such a way that we can use
@@ -276,9 +275,9 @@ class FCIVector {
 /// @param hb The string class of the beta component (a generalization of the irrep)
 /// @param zero If true, zero the matrix before returning it
 /// @return A pointer to the block of the coefficient matrix
-double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
-                        std::shared_ptr<FCIStringAddress> alfa_address,
-                        std::shared_ptr<FCIStringAddress> beta_address, int ha, int hb, bool zero);
+double** gather_C_block(GASVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
+                        std::shared_ptr<StringAddress> alfa_address,
+                        std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero);
 
 /// @brief Scatter the data from a matrix to the coefficient matrix. This is used in the sigma
 /// vector algorithm
@@ -291,11 +290,11 @@ double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
 /// @param beta_address The addressing object for the beta component
 /// @param ha The string class of the alfa component (a generalization of the irrep)
 /// @param hb The string class of the beta component (a generalization of the irrep)
-void scatter_C_block(FCIVector& C, double** m, bool alfa,
-                     std::shared_ptr<FCIStringAddress> alfa_address,
-                     std::shared_ptr<FCIStringAddress> beta_address, int ha, int hb);
+void scatter_C_block(GASVector& C, double** m, bool alfa,
+                     std::shared_ptr<StringAddress> alfa_address,
+                     std::shared_ptr<StringAddress> beta_address, int ha, int hb);
 
-std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_right,
+std::shared_ptr<RDMs> compute_transition_rdms(GASVector& C_left, GASVector& C_right,
                                               int max_rdm_level, RDMsType type);
 
 /// @brief Compute the one-particle density matrix for a given wave function
@@ -303,6 +302,6 @@ std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_ri
 /// @param C_right The right wave function
 /// @param alfa flag for alfa or beta component, true = alfa, false = beta
 /// @return The one-particle density matrix as a tensor
-ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa);
+ambit::Tensor compute_1rdm_different_irrep(GASVector& C_left, GASVector& C_right, bool alfa);
 
 } // namespace forte

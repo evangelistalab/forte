@@ -29,10 +29,10 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/matrix.h"
 
-#include "fci_string_lists.h"
-#include "fci_string_address.h"
+#include "gas_string_lists.h"
+#include "gas_string_address.h"
 
-#include "fci_vector.h"
+#include "gas_vector.h"
 
 namespace forte {
 
@@ -40,7 +40,7 @@ namespace forte {
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_right,
+std::shared_ptr<RDMs> GASVector::compute_rdms(GASVector& C_left, GASVector& C_right,
                                               int max_rdm_level, RDMsType type) {
     std::vector<double> rdm_timing;
 
@@ -138,8 +138,9 @@ std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_ri
     }
 
     if (max_rdm_level >= 4) {
-        throw std::runtime_error("RDMs of order 4 or higher are not implemented in FCISolver (and "
-                                 "more generally in Forte).");
+        throw std::runtime_error(
+            "RDMs of order 4 or higher are not implemented in GASCISolver (and "
+            "more generally in Forte).");
     }
     return std::make_shared<RDMsSpinDependent>();
 }
@@ -148,7 +149,7 @@ std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_ri
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa) {
+ambit::Tensor GASVector::compute_1rdm_same_irrep(GASVector& C_left, GASVector& C_right, bool alfa) {
     size_t ncmo = C_left.ncmo_;
     size_t nirrep = C_left.nirrep_;
     size_t symmetry = C_left.symmetry_;
@@ -170,6 +171,10 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
 
     for (size_t h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
         int h_Ib = h_Ia ^ symmetry;
+        // The pq product is totally symmetric
+        const int h_Ja = h_Ia;
+        const int h_Jb = h_Ib;
+
         if (detpi[h_Ia] > 0) {
             // Get a pointer to the correct block of matrix C
             auto Cl =
@@ -184,8 +189,8 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
                     for (int q_rel = 0; q_rel < cmopi[q_sym]; ++q_rel) {
                         int p_abs = p_rel + cmopi_offset[p_sym];
                         int q_abs = q_rel + cmopi_offset[q_sym];
-                        const auto& vo = alfa ? lists->get_alfa_vo_list(p_abs, q_abs, h_Ia)
-                                              : lists->get_beta_vo_list(p_abs, q_abs, h_Ib);
+                        const auto& vo = alfa ? lists->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja)
+                                              : lists->get_beta_vo_list(p_abs, q_abs, h_Ib, h_Jb);
                         double rdm_element = 0.0;
                         for (const auto& [sign, I, J] : vo) {
                             rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
@@ -203,7 +208,7 @@ ambit::Tensor FCIVector::compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C
  * Compute the aa/bb two-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = aa, false = bb
  */
-ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector& C_right,
                                                     bool alfa) {
     int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
@@ -305,7 +310,7 @@ ambit::Tensor FCIVector::compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector
     return rdm;
 }
 
-ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+ambit::Tensor GASVector::compute_2rdm_ab_same_irrep(GASVector& C_left, GASVector& C_right) {
     int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
     size_t symmetry = C_left.symmetry_;
@@ -343,7 +348,7 @@ ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector
                         int s_abs = s_rel + cmopi_offset[s_sym];
 
                         // Grab list (r,s,Ib_sym)
-                        const auto& vo_beta = lists->get_beta_vo_list(r_abs, s_abs, Ib_sym);
+                        const auto& vo_beta = lists->get_beta_vo_list(r_abs, s_abs, Ib_sym, Jb_sym);
 
                         // Loop over all p,q
                         int pq_sym = rs_sym;
@@ -355,7 +360,7 @@ ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector
                                     int q_abs = q_rel + cmopi_offset[q_sym];
 
                                     const auto& vo_alfa =
-                                        lists->get_alfa_vo_list(p_abs, q_abs, Ia_sym);
+                                        lists->get_alfa_vo_list(p_abs, q_abs, Ia_sym, Ja_sym);
 
                                     double rdm_element = 0.0;
                                     for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
@@ -392,7 +397,7 @@ ambit::Tensor FCIVector::compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector
     return rdm;
 }
 
-ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+ambit::Tensor GASVector::compute_3rdm_aaa_same_irrep(GASVector& C_left, GASVector& C_right,
                                                      bool alfa) {
     int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
@@ -441,7 +446,7 @@ ambit::Tensor FCIVector::compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVecto
     return rdm;
 }
 
-ambit::Tensor FCIVector::compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+ambit::Tensor GASVector::compute_3rdm_aab_same_irrep(GASVector& C_left, GASVector& C_right) {
     int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
     size_t symmetry = C_left.symmetry_;
@@ -502,7 +507,7 @@ ambit::Tensor FCIVector::compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVecto
     return g3;
 }
 
-ambit::Tensor FCIVector::compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVector& C_right) {
+ambit::Tensor GASVector::compute_3rdm_abb_same_irrep(GASVector& C_left, GASVector& C_right) {
     int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
     size_t symmetry = C_left.symmetry_;
@@ -564,7 +569,7 @@ ambit::Tensor FCIVector::compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVecto
     return g3;
 }
 
-void FCIVector::test_rdms(FCIVector& Cl, FCIVector& Cr, int max_rdm_level, RDMsType type,
+void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsType type,
                           std::shared_ptr<RDMs> rdms) {
 
     String Ia, Ib;

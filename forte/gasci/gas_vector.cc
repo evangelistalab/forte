@@ -33,25 +33,25 @@
 #include "helpers/printing.h"
 
 #include "base_classes/mo_space_info.h"
-#include "fci_vector.h"
-#include "fci_string_lists.h"
-#include "fci_string_address.h"
+#include "gas_vector.h"
+#include "gas_string_lists.h"
+#include "gas_string_address.h"
 
 using namespace psi;
 
 namespace forte {
 
-std::shared_ptr<psi::Matrix> FCIVector::CR;
-std::shared_ptr<psi::Matrix> FCIVector::CL;
+std::shared_ptr<psi::Matrix> GASVector::CR;
+std::shared_ptr<psi::Matrix> GASVector::CL;
 
-double FCIVector::hdiag_timer = 0.0;
-double FCIVector::h1_aa_timer = 0.0;
-double FCIVector::h1_bb_timer = 0.0;
-double FCIVector::h2_aaaa_timer = 0.0;
-double FCIVector::h2_aabb_timer = 0.0;
-double FCIVector::h2_bbbb_timer = 0.0;
+double GASVector::hdiag_timer = 0.0;
+double GASVector::h1_aa_timer = 0.0;
+double GASVector::h1_bb_timer = 0.0;
+double GASVector::h2_aaaa_timer = 0.0;
+double GASVector::h2_aabb_timer = 0.0;
+double GASVector::h2_bbbb_timer = 0.0;
 
-void FCIVector::allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, int print_) {
+void GASVector::allocate_temp_space(std::shared_ptr<GASStringLists> lists_, int print_) {
     size_t nirreps = lists_->nirrep();
 
     // if CR is already allocated (e.g., because we computed several roots) make sure
@@ -78,18 +78,18 @@ void FCIVector::allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, int 
     }
 }
 
-void FCIVector::release_temp_space() {}
+void GASVector::release_temp_space() {}
 
-std::shared_ptr<psi::Matrix> FCIVector::get_CR() { return CR; }
-std::shared_ptr<psi::Matrix> FCIVector::get_CL() { return CL; }
+std::shared_ptr<psi::Matrix> GASVector::get_CR() { return CR; }
+std::shared_ptr<psi::Matrix> GASVector::get_CL() { return CL; }
 
-FCIVector::FCIVector(std::shared_ptr<FCIStringLists> lists, size_t symmetry)
+GASVector::GASVector(std::shared_ptr<GASStringLists> lists, size_t symmetry)
     : symmetry_(symmetry), lists_(lists), alfa_address_(lists_->alfa_address()),
       beta_address_(lists_->beta_address()) {
     startup();
 }
 
-void FCIVector::startup() {
+void GASVector::startup() {
 
     nirrep_ = lists_->nirrep();
     ncmo_ = lists_->ncmo();
@@ -114,29 +114,29 @@ void FCIVector::startup() {
     }
 }
 
-size_t FCIVector::symmetry() const { return symmetry_; }
+size_t GASVector::symmetry() const { return symmetry_; }
 
-size_t FCIVector::nirrep() const { return nirrep_; }
+size_t GASVector::nirrep() const { return nirrep_; }
 
-size_t FCIVector::ncmo() const { return ncmo_; }
+size_t GASVector::ncmo() const { return ncmo_; }
 
-size_t FCIVector::size() const { return ndet_; }
+size_t GASVector::size() const { return ndet_; }
 
-const std::vector<size_t>& FCIVector::detpi() const { return detpi_; }
+const std::vector<size_t>& GASVector::detpi() const { return detpi_; }
 
-psi::Dimension FCIVector::cmopi() const { return cmopi_; }
+psi::Dimension GASVector::cmopi() const { return cmopi_; }
 
-const std::vector<size_t>& FCIVector::cmopi_offset() const { return cmopi_offset_; }
+const std::vector<size_t>& GASVector::cmopi_offset() const { return cmopi_offset_; }
 
-const std::shared_ptr<FCIStringLists>& FCIVector::lists() const { return lists_; }
+const std::shared_ptr<GASStringLists>& GASVector::lists() const { return lists_; }
 
-void FCIVector::copy(FCIVector& wfn) {
+void GASVector::copy(GASVector& wfn) {
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         C_[alfa_sym]->copy(wfn.C_[alfa_sym]);
     }
 }
 
-void FCIVector::copy(std::shared_ptr<psi::Vector> vec) {
+void GASVector::copy(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -152,7 +152,7 @@ void FCIVector::copy(std::shared_ptr<psi::Vector> vec) {
     }
 }
 
-void FCIVector::copy_to(std::shared_ptr<psi::Vector> vec) {
+void GASVector::copy_to(std::shared_ptr<psi::Vector> vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -168,27 +168,27 @@ void FCIVector::copy_to(std::shared_ptr<psi::Vector> vec) {
     }
 }
 
-void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
+void GASVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
     zero();
     for (const auto& [h, Ia, Ib, C] : sparse_vec) {
         C_[h]->set(Ia, Ib, C);
     }
 }
 
-void FCIVector::normalize() {
+void GASVector::normalize() {
     double factor = norm(2.0);
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         C_[alfa_sym]->scale(1.0 / factor);
     }
 }
 
-void FCIVector::zero() {
+void GASVector::zero() {
     for (auto C_h : C_) {
         C_h->zero();
     }
 }
 
-void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
+void GASVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
                                        std::shared_ptr<RDMs> rdms) {
     print_h2("Natural Orbitals");
     psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
@@ -235,9 +235,9 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     outfile->Printf("\n");
 }
 
-double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
-                        std::shared_ptr<FCIStringAddress> alfa_address,
-                        std::shared_ptr<FCIStringAddress> beta_address, int ha, int hb, bool zero) {
+double** gather_C_block(GASVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
+                        std::shared_ptr<StringAddress> alfa_address,
+                        std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero) {
     // if alfa is true just return the pointer to the block
     auto c = C.C(ha)->pointer();
     if (alfa) {
@@ -261,9 +261,9 @@ double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
     return m;
 }
 
-void scatter_C_block(FCIVector& C, double** m, bool alfa,
-                     std::shared_ptr<FCIStringAddress> alfa_address,
-                     std::shared_ptr<FCIStringAddress> beta_address, int ha, int hb) {
+void scatter_C_block(GASVector& C, double** m, bool alfa,
+                     std::shared_ptr<StringAddress> alfa_address,
+                     std::shared_ptr<StringAddress> beta_address, int ha, int hb) {
     if (!alfa) {
         size_t maxIa = alfa_address->strpcls(ha);
         size_t maxIb = beta_address->strpcls(hb);
@@ -280,7 +280,7 @@ void scatter_C_block(FCIVector& C, double** m, bool alfa,
 // * Zero a symmetry block of the wave function
 // * @param h symmetry of the alpha strings of the block to zero
 // */
-// void FCIVector::zero_block(int h)
+// void GASVector::zero_block(int h)
 //{
 //  int beta_sym = h ^ symmetry_;
 //  size_t size = alfa_address_->strpcls(h) * beta_address_->strpcls(beta_sym) *
@@ -293,7 +293,7 @@ void scatter_C_block(FCIVector& C, double** m, bool alfa,
 // * Transpose a block of the matrix (Works only for total symmetric wfns!)
 // * @param h symmetry of the alpha strings of the block to zero
 // */
-// void FCIVector::transpose_block(int h)
+// void GASVector::transpose_block(int h)
 //{
 //  int beta_sym = h ^ symmetry_;
 //  size_t maxIa = alfa_address_->strpcls(h);
@@ -310,7 +310,7 @@ void scatter_C_block(FCIVector& C, double** m, bool alfa,
 //  }
 //}
 
-double FCIVector::norm(double power) {
+double GASVector::norm(double power) {
     double norm = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -329,7 +329,7 @@ double FCIVector::norm(double power) {
 /**
  * Compute the dot product with another wave function
  */
-double FCIVector::dot(FCIVector& wfn) {
+double GASVector::dot(GASVector& wfn) {
     double dot = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         dot += C_[alfa_sym]->vector_dot(wfn.C_[alfa_sym]);
@@ -349,7 +349,7 @@ double FCIVector::dot(FCIVector& wfn) {
     //            }
     //        }
 }
-double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
+double GASVector::dot(std::shared_ptr<GASVector>& wfn) {
     double dot = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         dot += C_[alfa_sym]->vector_dot(wfn->C_[alfa_sym]);
@@ -360,7 +360,7 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 ///**
 // * Find the largest element in the wave function
 // */
-// double FCIVector::max_element()
+// double GASVector::max_element()
 //{
 //  double maxelement = 0.0;
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
@@ -381,7 +381,7 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 ///**
 // * Find the smallest element in the wave function
 // */
-// double FCIVector::min_element()
+// double GASVector::min_element()
 //{
 //  double min_element = 0.0;
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
@@ -400,7 +400,7 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 ///**
 // * Implements the update method of Bendazzoli and Evangelisti modified
 // */
-// void FCIVector::two_update(double alpha,double E,FCIVector& H,FCIVector& R)
+// void GASVector::two_update(double alpha,double E,GASVector& H,GASVector& R)
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
@@ -421,7 +421,7 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 ///**
 // * Implements the update method of Bendazzoli and Evangelisti
 // */
-// void FCIVector::bendazzoli_update(double alpha,double E,FCIVector& H,FCIVector& R)
+// void GASVector::bendazzoli_update(double alpha,double E,GASVector& H,GASVector& R)
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
@@ -442,7 +442,7 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 ///**
 // * Implements the update method of Davidson and Liu
 // */
-// void FCIVector::davidson_update(double E,FCIVector& H,FCIVector& R)
+// void GASVector::davidson_update(double E,GASVector& H,GASVector& R)
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
@@ -467,7 +467,7 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 ///**
 // * Add a scaled amount of another wave function
 // */
-// void FCIVector::plus_equal(double factor,FCIVector& wfn)
+// void GASVector::plus_equal(double factor,GASVector& wfn)
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
@@ -485,7 +485,7 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 ///**
 // * Add a scaled amount of another wave function
 // */
-// void FCIVector::scale(double factor)
+// void GASVector::scale(double factor)
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
@@ -502,7 +502,7 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
 /**
  * Print the non-zero contributions to the wave function
  */
-void FCIVector::print() {
+void GASVector::print() {
     // print the non-zero elements of the wave function
     size_t det = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
@@ -525,7 +525,7 @@ void FCIVector::print() {
 // * Apply the same-spin two-particle Hamiltonian to the wave function
 // * @param alfa flag for alfa or beta component, true = alfa, false = beta
 // */
-// void FCIVector::H2_aaaa2(FCIVector& result, bool alfa)
+// void GASVector::H2_aaaa2(GASVector& result, bool alfa)
 //{
 //  for(int alfa_sym = 0; alfa_sym < nirreps; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;

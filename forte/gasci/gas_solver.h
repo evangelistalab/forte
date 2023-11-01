@@ -30,15 +30,14 @@
 
 #include "base_classes/active_space_method.h"
 #include "psi4/libmints/dimension.h"
-#include "fci_string_lists.h"
-#include "fci_string_address.h"
+#include "gas_string_lists.h"
 
 namespace forte {
-class FCIVector;
+class GASVector;
 class SpinAdapter;
 class DavidsonLiuSolver;
 
-/// @brief The FCISolver class
+/// @brief The GASCISolver class
 /// This class performs Full CI calculations in the active space.
 /// The active space is defined by a set of orbitals and a number of electrons.
 /// The class uses the Davidson-Liu algorithm to compute the FCI energy and the RDMs.
@@ -48,22 +47,22 @@ class DavidsonLiuSolver;
 /// This class uses a determinant-based approach to compute the sigma vectors.
 /// It can also run spin-adapted computations using a basis of configuration state functions (CSFs)
 /// instead of determinants.
-class FCISolver : public ActiveSpaceMethod {
+class GASCISolver : public ActiveSpaceMethod {
     using sparse_vec = std::vector<std::pair<size_t, double>>;
     using sparse_mat = std::vector<std::vector<std::pair<size_t, double>>>;
 
   public:
     // ==> Class Constructor and Destructor <==
 
-    /// @brief Construct a FCISolver object
+    /// @brief Construct a GASCISolver object
     /// @param state the electronic state to compute
     /// @param nroot the number of roots
     /// @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
     /// @param as_ints molecular integrals defined only for the active space orbitals
-    FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    GASCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    ~FCISolver() = default;
+    ~GASCISolver() = default;
 
     // ==> Class Interface <==
 
@@ -119,7 +118,7 @@ class FCISolver : public ActiveSpaceMethod {
     std::shared_ptr<psi::Matrix> ci_wave_functions() override;
 
     /// Return string lists
-    std::shared_ptr<FCIStringLists> lists();
+    std::shared_ptr<GASStringLists> lists();
 
     /// Return symmetry
     int symmetry();
@@ -131,7 +130,7 @@ class FCISolver : public ActiveSpaceMethod {
     psi::Dimension active_dim_;
 
     /// A object that stores string information
-    std::shared_ptr<FCIStringLists> lists_;
+    std::shared_ptr<GASStringLists> lists_;
 
     /// A object that handles spin adaptation
     std::shared_ptr<SpinAdapter> spin_adapter_;
@@ -140,10 +139,10 @@ class FCISolver : public ActiveSpaceMethod {
     double energy_;
 
     /// The FCI wave function
-    std::shared_ptr<FCIVector> C_;
+    std::shared_ptr<GASVector> C_;
 
     /// A temporary wave function
-    std::shared_ptr<FCIVector> T_;
+    std::shared_ptr<GASVector> T_;
 
     /// The FCI determinant list
     std::vector<Determinant> dets_;
@@ -247,6 +246,6 @@ class FCISolver : public ActiveSpaceMethod {
     void test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
                    std::shared_ptr<DavidsonLiuSolver> dls);
 
-    void copy_state_into_fci_vector(int root, std::shared_ptr<FCIVector> C);
+    void copy_state_into_fci_vector(int root, std::shared_ptr<GASVector> C);
 };
 } // namespace forte

@@ -31,6 +31,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <map>
 
 #include "sparse_ci/determinant.h"
 #include "base_classes/state_info.h"
@@ -46,8 +47,7 @@ class StringAddress {
     /// @brief Default constructor
     /// @param strings a vector of vectors of strings.
     /// Each vector collects the strings of a given symmetry
-    StringAddress(const std::vector<int>& gas_size,
-                  const std::vector<std::array<int, 6>>& gas_occupations, int ne,
+    StringAddress(const std::vector<int>& gas_size, int ne,
                   const std::vector<std::vector<String>>& strings);
 
     /// @brief Default destructor
@@ -61,7 +61,7 @@ class StringAddress {
     /// @brief Return the irrep of a string
     int sym(const String& s) const;
     /// @brief Return the address and irrep of a string
-    std::pair<size_t, int> add_sym(const String& s) const { return address_.at(s); }
+    const std::pair<uint32_t, uint32_t>& address_and_class(const String& s) const;
     /// @brief Return the number of strings in an irrep
     size_t strpcls(int h) const;
     /// @brief Return the number of bits in the string
@@ -80,26 +80,41 @@ class StringAddress {
     /// Map from string to address and class
     std::unordered_map<String, std::pair<uint32_t, uint32_t>, String::Hash> address_;
     int nones_; // number of 1s
-
+    /// the number of orbitals in each gas space
     const std::vector<int> gas_size_;
-    const std::vector<std::array<int, 6>>& gas_occupations_;
 };
 
 class StringClass {
   public:
-    StringClass(std::vector<int> mopi, const std::vector<std::array<int, 6>>& alfa_occupation = {},
-                const std::vector<std::array<int, 6>>& beta_occupation = {});
+    StringClass(const std::vector<int>& mopi, const std::vector<std::vector<size_t>>& gas_mos,
+                const std::vector<std::array<int, 6>>& alfa_occupation = {},
+                const std::vector<std::array<int, 6>>& beta_occupation = {},
+                const std::vector<std::pair<size_t, size_t>>& occupations = {});
 
+    /// @brief Return the symmetry of a string
     size_t symmetry(const String& s) const;
-
-    /// @brief Return the class of a string
-    size_t string_class(const String& s) const;
-
-    size_t nclasses() const;
+    /// @brief Return the class of an alpha string
+    size_t alfa_string_class(const String& s) const;
+    /// @brief Return the class of a beta string
+    size_t beta_string_class(const String& s) const;
+    /// @brief Return the number of alpha strings classes
+    size_t num_alfa_classes() const;
+    /// @brief Return the number of beta strings classes
+    size_t num_beta_classes() const;
 
   private:
+    /// The number of irreps
     size_t nirrep_;
+    /// The symmetry of each MO
     std::vector<int> mo_sym_;
+    /// A map from the occupation of each GAS space to the class for the alpha strings
+    std::map<std::array<int, 6>, size_t> alfa_occupation_group_;
+    /// A map from the occupation of each GAS space to the class for the beta strings
+    std::map<std::array<int, 6>, size_t> beta_occupation_group_;
+    /// A list of all possible occupations of the alpha and beta GAS spaces
+    std::vector<std::pair<size_t, size_t>> occupations_;
+    /// A mask used to count the number of 1s in a string that belongs to a given GAS space
+    std::array<String, 6> gas_masks_;
 };
 
 } // namespace forte

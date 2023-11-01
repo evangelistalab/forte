@@ -47,7 +47,7 @@ def register_driver_options(options):
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG', 'EXTERNAL'], 'Active space solver type'
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'GASCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG', 'EXTERNAL'], 'Active space solver type'
     )
     options.add_str(
         'CORRELATION_SOLVER', 'NONE',
@@ -981,10 +981,10 @@ def register_old_options(options):
 
     #    /*- Semicanonicalize orbitals -*/
     options.add_bool("SEMI_CANONICAL", True, "Semicanonicalize orbitals for each elementary orbital space")
-    options.add_bool(
-        "SEMI_CANONICAL_MIX_INACTIVE", False, "Treat frozen and restricted orbitals together for semi-canonicalization"
-    )
-    options.add_bool("SEMI_CANONICAL_MIX_ACTIVE", False, "Treat all GAS orbitals together for semi-canonicalization")
+    # options.add_bool(
+    #     "SEMI_CANONICAL_MIX_INACTIVE", False, "Treat frozen and restricted orbitals together for semi-canonicalization"
+    # )
+    # options.add_bool("SEMI_CANONICAL_MIX_ACTIVE", False, "Treat all GAS orbitals together for semi-canonicalization")
 
     #    /*- Two-particle density cumulant -*/
     options.add_str("TWOPDC", "MK", ["MK", "ZERO"], "The form of the two-particle density cumulant")

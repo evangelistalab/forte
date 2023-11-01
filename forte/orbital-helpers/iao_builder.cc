@@ -27,17 +27,17 @@
 
 #include <algorithm>
 
-#include "boost/format.hpp"
-
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libcubeprop/cubeprop.h"
+
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 
 #include "base_classes/forte_options.h"
 
@@ -361,10 +361,11 @@ std::vector<std::string> IAOBuilder::print_IAO(std::shared_ptr<psi::Matrix> A_, 
                 auto& ifn_primary = atom_am_to_f_primary[k];
                 for (auto& nbf_primary : ifn_primary) {
                     int num = iao;
-                    std::string outstr_primary = boost::str(
-                        boost::format("%d%s%s%s_%d") % (std::get<0>(k) + 1) %
-                        mol->symbol(std::get<0>(k)).c_str() % l_to_symbol[std::get<1>(k)].c_str() %
-                        m_to_symbol[std::get<1>(k)][std::get<4>(k)].c_str() % num);
+                    std::string outstr_primary =
+                        fmt::format("{}{}{}{}_{}", std::get<0>(k) + 1, mol->symbol(std::get<0>(k)),
+                                    l_to_symbol[std::get<1>(k)],
+                                    m_to_symbol[std::get<1>(k)][std::get<4>(k)], num);
+
                     // iao_labs.push_back(outstr);
                     double a = 0.0;
                     a = A_nbf->get(nbf_primary, iao);
@@ -377,10 +378,10 @@ std::vector<std::string> IAOBuilder::print_IAO(std::shared_ptr<psi::Matrix> A_, 
                     all_iao_contributions.push_back(iao_cont);
                 }
 
-                std::string outstr = boost::str(
-                    boost::format("%d%s%s%s_%d") % (std::get<0>(i) + 1) %
-                    mol->symbol(std::get<0>(i)).c_str() % l_to_symbol[std::get<1>(i)].c_str() %
-                    m_to_symbol[std::get<1>(i)][std::get<4>(i)].c_str() % iao);
+                std::string outstr = fmt::format(
+                    "{}{}{}{}_{}", std::get<0>(i) + 1, mol->symbol(std::get<0>(i)),
+                    l_to_symbol[std::get<1>(i)], m_to_symbol[std::get<1>(i)][std::get<4>(i)], iao);
+
                 std::string istring = outstr;
                 if (std::find(duplicates_iao.begin(), duplicates_iao.end(), istring.c_str()) !=
                     duplicates_iao.end()) {

@@ -28,14 +28,14 @@
 
 #include "psi4/libmints/matrix.h"
 
-#include "fci_string_address.h"
+#include "gas_string_address.h"
 
-#include "fci_vector.h"
+#include "gas_vector.h"
 
 namespace forte {
 
 std::vector<std::tuple<double, double, size_t, size_t, size_t>>
-FCIVector::max_abs_elements(size_t num_dets) {
+GASVector::max_abs_elements(size_t num_dets) {
     num_dets = std::min(num_dets, ndet_);
 
     std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets(num_dets);

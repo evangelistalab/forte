@@ -28,20 +28,22 @@
 
 #include "helpers/printing.h"
 
-#include "sparse_ci/determinant.h"
-#include "sparse_ci/ci_spin_adaptation.h"
-#include "fci_string_lists.h"
-#include "fci_vector.h"
-
-#include "fci_solver.h"
+#include "gas_string_lists.h"
+#include "gas_vector.h"
+#include "gas_solver.h"
 
 namespace forte {
 
 std::vector<std::shared_ptr<RDMs>>
-FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
-                RDMsType rdm_type) {
+GASCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                             RDMsType rdm_type) {
+
     if (not C_) {
-        throw std::runtime_error("FCIVector is not assigned. Cannot compute RDMs.");
+        throw std::runtime_error("GASVector is not assigned. Cannot compute RDMs.");
+    }
+    if (max_rdm_level > 3 || max_rdm_level < 1) {
+        throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
 
     // handle the case of no RDMs
@@ -58,13 +60,16 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
     std::vector<std::shared_ptr<RDMs>> refs;
     // loop over all the pairs of states
     for (const auto& [root1, root2] : root_list) {
-        refs.push_back(compute_rdms_root(root1, root2, max_rdm_level, rdm_type));
+        refs.push_back(
+            compute_transition_rdms_root(root1, root2, method2, max_rdm_level, rdm_type));
     }
     return refs;
 }
 
-std::shared_ptr<RDMs> FCISolver::compute_rdms_root(size_t root_left, size_t root_right,
-                                                   int max_rdm_level, RDMsType type) {
+std::shared_ptr<RDMs>
+GASCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
+                                          std::shared_ptr<ActiveSpaceMethod> method2,
+                                          int max_rdm_level, RDMsType type) {
     // make sure the root is valid
     if (std::max(root_left, root_right) >= nroot_) {
         std::string error = "Cannot compute RDMs <" + std::to_string(root_left) + "| ... |" +
@@ -75,31 +80,30 @@ std::shared_ptr<RDMs> FCISolver::compute_rdms_root(size_t root_left, size_t root
 
     // here we will use C_ for the left wave function and T_ for the right wave function
 
-    copy_state_into_fci_vector(root_left, C_);
-    if (root_left != root_right) {
-        copy_state_into_fci_vector(root_right, T_);
-    } else {
-        T_->copy(*C_);
-    }
+    this->copy_state_into_fci_vector(root_left, C_);
+    // cast method2 to GASCISolver
+    auto method2_fcisolver = std::dynamic_pointer_cast<GASCISolver>(method2);
+    // copy the right root onto the temporary vector C_
+    method2_fcisolver->copy_state_into_fci_vector(root_right, method2_fcisolver->C_);
 
     if (print_) {
         std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + " " +
                                 state().str_minimum() + "| ... |" + std::to_string(root_right) +
-                                " " + state().str_minimum() + ">";
+                                " " + method2->state().str_minimum() + ">";
         print_h2(title_rdm);
     }
 
-    auto rdms = FCIVector::compute_rdms(*C_, *T_, max_rdm_level, type);
+    auto rdms = compute_transition_rdms(*C_, *method2_fcisolver->C_, max_rdm_level, type);
 
     // Optionally, test the RDMs
     if (test_rdms_) {
-        C_->test_rdms(*C_, *T_, max_rdm_level, type, rdms);
+        GASVector::test_rdms(*C_, *method2_fcisolver->C_, 1, type, rdms);
     }
 
-    // Print the NO if energy converged
-    if (print_no_ || print_ > 0) {
-        C_->print_natural_orbitals(mo_space_info_, rdms);
-    }
+    // // Print the NO if energy converged
+    // if (print_no_ || print_ > 0) {
+    //     C_->print_natural_orbitals(mo_space_info_);
+    // }
     return rdms;
 }
 

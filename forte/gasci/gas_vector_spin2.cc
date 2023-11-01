@@ -28,14 +28,14 @@
 
 #include "psi4/libmints/matrix.h"
 
-#include "fci_string_lists.h"
-#include "fci_string_address.h"
+#include "gas_string_lists.h"
+#include "gas_string_address.h"
 
-#include "fci_vector.h"
+#include "gas_vector.h"
 
 namespace forte {
 
-double FCIVector::compute_spin2() {
+double GASVector::compute_spin2() {
     double spin2 = 0.0;
     // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
@@ -49,15 +49,16 @@ double FCIVector::compute_spin2() {
             auto Cl = C_[Ja_sym]->pointer();
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;
-
                 for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
                     const int r_abs = r_rel + cmopi_offset_[r_sym];
                     for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
                         const int s_abs = s_rel + cmopi_offset_[s_sym];
 
                         // Grab list (r,s,Ib_sym)
-                        const auto& vo_alfa = lists_->get_alfa_vo_list(s_abs, r_abs, Ia_sym);
-                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
+                        const auto& vo_alfa =
+                            lists_->get_alfa_vo_list(s_abs, r_abs, Ia_sym, Ja_sym);
+                        const auto& vo_beta =
+                            lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym, Jb_sym);
 
                         for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
                             for (const auto& [sign_b, Ib, Jb] : vo_beta) {
