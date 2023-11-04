@@ -77,6 +77,7 @@ void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
 void export_RDMs(py::module& m);
 void export_Determinant(py::module& m);
+void export_GAS(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
@@ -281,6 +282,8 @@ PYBIND11_MODULE(_forte, m) {
     export_SemiCanonical(m);
 
     export_Determinant(m);
+
+    export_GAS(m);
 
     export_RDMs(m);
 

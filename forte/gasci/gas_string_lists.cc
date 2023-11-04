@@ -46,28 +46,30 @@ using namespace psi;
 
 namespace forte {
 
+// Global debug flag
+bool debug_gas_strings = true;
+
+// Wrapper function
+template <typename Func> void debug(Func func) {
+    if (debug_gas_strings) {
+        func();
+    }
+}
+
 GASStringLists::GASStringLists(std::shared_ptr<MOSpaceInfo> mo_space_info, size_t na, size_t nb,
-                               int print, const std::vector<int> gas_size,
-                               const std::vector<int> gas_min, const std::vector<int> gas_max)
-    : nirrep_(mo_space_info->nirrep()), ncmo_(mo_space_info->size("ACTIVE")), na_(na), nb_(nb),
-      print_(print), gas_size_(gas_size), gas_min_(gas_min), gas_max_(gas_max) {
+                               int symmetry, int print, const std::vector<int> gas_min,
+                               const std::vector<int> gas_max)
+    : symmetry_(symmetry), nirrep_(mo_space_info->nirrep()), ncmo_(mo_space_info->size("ACTIVE")),
+      na_(na), nb_(nb), print_(print), gas_min_(gas_min), gas_max_(gas_max) {
     startup(mo_space_info);
 }
 
 void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    // find the number of GAS spaces
-    for (int i{0}; i < 6; ++i) {
-        if (gas_size_[i] > 0) {
-            ngas_spaces_ = i + 1;
-        }
-    }
+
     // Get the number of correlated molecular orbitals in each irrep
     cmopi_ = mo_space_info->dimension("ACTIVE");
     // Get the number of orbitals in each irrep
     cmo_sym_ = mo_space_info->symmetry("ACTIVE");
-
-    psi::outfile->Printf("\n    Number of orbitals in each irrep: %s",
-                         container_to_string(cmo_sym_).c_str());
 
     cmopi_offset_.push_back(0);
     for (size_t h = 1; h < nirrep_; ++h) {
@@ -85,7 +87,23 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         const std::string& space = gas_space_names[n];
         auto pos = mo_space_info->pos_in_space(space, "ACTIVE");
         gas_mos_.push_back(pos);
+        gas_size_.push_back(mo_space_info->size(space));
     }
+
+    // find the number of GAS spaces
+    for (int i{0}; i < 6; ++i) {
+        if (gas_size_[i] > 0) {
+            ngas_spaces_ = i + 1;
+        }
+    }
+
+    debug([&]() {
+        psi::outfile->Printf("\n    GAS space sizes: %s", container_to_string(gas_size_).c_str());
+        for (size_t n = 0; n < ngas_spaces_; ++n) {
+            psi::outfile->Printf("\n    GAS%d MOs: %s", n + 1,
+                                 container_to_string(gas_mos_[n]).c_str());
+        }
+    });
 
     get_gas_occupation();
 
@@ -101,8 +119,9 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     double vvoo_list_timer = 0.0;
 
     // this object is used to compute the class of a string (a generalization of the irrep)
-    string_class_ = std::make_shared<StringClass>(cmopi_int, gas_mos_, gas_alfa_occupations_,
-                                                  gas_beta_occupations_);
+    string_class_ =
+        std::make_shared<StringClass>(symmetry_, cmopi_int, gas_mos_, gas_alfa_occupations_,
+                                      gas_beta_occupations_, gas_occupations_);
 
     // Build the string lists and the addresser
     {
@@ -142,7 +161,6 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         auto beta_2h_strings = make_gas_strings(gas_size_, gas_beta_2h_occupations_);
         beta_address_2h_ = std::make_shared<StringAddress>(gas_size_, nb_ - 2, beta_2h_strings);
     }
-
     if (na_ >= 3) {
         auto alfa_3h_strings = make_gas_strings(gas_size_, gas_alfa_3h_occupations_);
         alfa_address_3h_ = std::make_shared<StringAddress>(gas_size_, na_ - 3, alfa_3h_strings);
@@ -154,10 +172,14 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
 
     nas_ = 0;
     nbs_ = 0;
-    for (size_t h = 0; h < nirrep_; ++h) {
-        nas_ += alfa_address_->strpcls(h);
-        nbs_ += beta_address_->strpcls(h);
+
+    for (int class_Ia = 0; class_Ia < alfa_address_->nclasses(); ++class_Ia) {
+        nas_ += alfa_address_->strpcls(class_Ia);
     }
+    for (int class_Ib = 0; class_Ib < beta_address_->nclasses(); ++class_Ib) {
+        nbs_ += beta_address_->strpcls(class_Ib);
+    }
+    psi::outfile->Printf("\n    Top");
 
     {
         local_timer t;
@@ -170,18 +192,21 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         make_vo_list(beta_strings_, beta_address_, beta_vo_list);
         vo_list_timer += t.get();
     }
+    psi::outfile->Printf("\n    Middle");
     {
         local_timer t;
-        make_oo_list(alfa_address_, alfa_oo_list);
-        make_oo_list(beta_address_, beta_oo_list);
+        make_oo_list(alfa_strings_, alfa_address_, alfa_oo_list);
+        make_oo_list(alfa_strings_, beta_address_, beta_oo_list);
         oo_list_timer += t.get();
     }
+    psi::outfile->Printf("\n    Bottom");
     {
         local_timer t;
         make_1h_list(alfa_address_, alfa_address_1h_, alfa_1h_list);
         make_1h_list(beta_address_, beta_address_1h_, beta_1h_list);
         h1_list_timer += t.get();
     }
+
     {
         local_timer t;
         make_2h_list(alfa_address_, alfa_address_2h_, alfa_2h_list);
@@ -282,8 +307,8 @@ void GASStringLists::get_gas_occupation() {
             int max_e_number = std::min(gasn_size * 2, na_ + nb_);
             // but if we can read its value, do so
             if (gas_max_.size() > gas_count) {
-                // If the defined maximum number of electrons exceed number of orbitals, redefine
-                // the maximum number of electrons
+                // If the defined maximum number of electrons exceed number of orbitals,
+                // redefine the maximum number of electrons
                 max_e_number = std::min(gas_max_[gas_count], max_e_number);
             }
             gas_maxe.push_back(max_e_number);
@@ -349,8 +374,8 @@ void GASStringLists::get_gas_occupation() {
                                                                                gas3_nb, gas4_nb,
                                                                                gas5_nb, gas6_nb};
                                                 // check if alfa_occ is contained in
-                                                // gas_alfa_occupations_, if not, add it and grab
-                                                // its index, otherwise grab its index
+                                                // gas_alfa_occupations_, if not, add it and
+                                                // grab its index, otherwise grab its index
                                                 size_t alfa_index;
                                                 if (auto alfa_it = std::find(
                                                         gas_alfa_occupations_.begin(),
@@ -363,8 +388,8 @@ void GASStringLists::get_gas_occupation() {
                                                         gas_alfa_occupations_.begin(), alfa_it);
                                                 }
                                                 // check if beta_occ is contained in
-                                                // gas_beta_occupations_, if not, add it and grab
-                                                // its index, otherwise grab its index
+                                                // gas_beta_occupations_, if not, add it and
+                                                // grab its index, otherwise grab its index
                                                 size_t beta_index;
                                                 if (auto beta_it = std::find(
                                                         gas_beta_occupations_.begin(),
@@ -390,9 +415,38 @@ void GASStringLists::get_gas_occupation() {
         }
     }
 
+    print_h2("Possible Electron Occupations of alpha/beta strings in GAS");
+
+    outfile->Printf("\n    Alfa Occ.");
+    int ndash = 7;
+    std::vector<std::string> gas_alfa_name = {"GAS1_A", "GAS2_A", "GAS3_A",
+                                              "GAS4_A", "GAS5_A", "GAS6_A"};
+    for (size_t i = 0; i < gas_num_; i++) {
+        std::string name = gas_alfa_name.at(i).substr(3, 3);
+        outfile->Printf("  %s", name.c_str());
+        ndash += 5;
+    }
+    for (int n{0}; const auto& aocc : gas_alfa_occupations_) {
+        outfile->Printf("\n    %6d ", ++n);
+        for (size_t i = 0; i < gas_num_; i++) {
+            outfile->Printf(" %4d", aocc[i]);
+        }
+    }
+    outfile->Printf("\n    Beta Occ.");
+    for (size_t i = 0; i < gas_num_; i++) {
+        std::string name = gas_alfa_name.at(i).substr(3, 3);
+        outfile->Printf("  %s", name.c_str());
+        ndash += 5;
+    }
+    for (int n{0}; const auto& bocc : gas_beta_occupations_) {
+        outfile->Printf("\n    %6d ", ++n);
+        for (size_t i = 0; i < gas_num_; i++) {
+            outfile->Printf(" %4d", bocc[i]);
+        }
+    }
+
     print_h2("Possible Electron Occupations in GAS");
     outfile->Printf("\n    Config.");
-    int ndash = 7;
     std::vector<std::string> gas_electron_name = {"GAS1_A", "GAS1_B", "GAS2_A", "GAS2_B",
                                                   "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",
                                                   "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
@@ -401,6 +455,7 @@ void GASStringLists::get_gas_occupation() {
         outfile->Printf("  %s", name.c_str());
         ndash += 5;
     }
+    outfile->Printf("  Alfa Conf.  Beta Conf.");
 
     std::string dash(ndash, '-');
     outfile->Printf("\n    %s", dash.c_str());
@@ -408,13 +463,14 @@ void GASStringLists::get_gas_occupation() {
     int n_config = 0;
     n_config = 0;
     for (const auto& [aocc_idx, bocc_idx] : gas_occupations_) {
-        const auto aocc = gas_alfa_occupations_[aocc_idx];
-        const auto bocc = gas_beta_occupations_[bocc_idx];
+        const auto& aocc = gas_alfa_occupations_[aocc_idx];
+        const auto& bocc = gas_beta_occupations_[bocc_idx];
         outfile->Printf("\n    %6d ", ++n_config);
         for (size_t i = 0; i < gas_num_; i++) {
             outfile->Printf(" %4d", aocc[i]);
             outfile->Printf(" %4d", bocc[i]);
         }
+        outfile->Printf(" %4d %4d", aocc_idx, bocc_idx);
     }
 }
 
@@ -502,20 +558,18 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
                                                       const std::vector<int>& gas_size,
                                                       const std::array<int, 6>& gas_occupation) {
 
-    // Something to keep in mind: Here we use ACTIVE as a composite index, which means that we will
-    // group the orbitals first by symmetry and then by space.
-    // For example, if we have the following GAS:
-    // GAS1 = [A1 A1 A1 | A2 | B1 | B2 B2]
-    // GAS2 = [A1 | | B1 | B2 ]
-    // then the composite space ACTIVE = GAS1 + GAS2 will be:
-    // ACTIVE = [A1 A1 A1 A1 | A2 | B1 B1 | B2 B2 B2]
+    // Something to keep in mind: Here we use ACTIVE as a composite index, which means that we
+    // will group the orbitals first by symmetry and then by space. For example, if we have the
+    // following GAS: GAS1 = [A1 A1 A1 | A2 | B1 | B2 B2] GAS2 = [A1 | | B1 | B2 ] then the
+    // composite space ACTIVE = GAS1 + GAS2 will be: ACTIVE = [A1 A1 A1 A1 | A2 | B1 B1 | B2 B2
+    // B2]
     //           G1 G1 G1 G2   G1   G1 G1   G1 G1 G2
 
     // container to store the strings that generate a give gas space
     std::vector<std::vector<String>> gas_space_string(ngas_spaces_, std::vector<String>{});
     std::vector<std::vector<String>> full_strings(nirrep_, std::vector<String>{});
     // print gas_occupation
-    psi::outfile->Printf("\n    GAS occupation: %s", container_to_string(gas_occupation).c_str());
+    psi::outfile->Printf("\n  GAS occupation: %s", container_to_string(gas_occupation).c_str());
 
     // enumerate all the possible strings in each GAS space
     for (size_t n = 0; n < ngas_spaces_; n++) {
@@ -546,7 +600,7 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
 
     auto product_strings = math::cartesian_product(gas_space_string);
     // print product_strings
-    psi::outfile->Printf("\n    GAS product strings (size = %d):", product_strings.size());
+    psi::outfile->Printf("\n\n  GAS product strings (size = %d):", product_strings.size());
     for (const auto& strings : product_strings) {
         String I;
         I.zero();
@@ -554,6 +608,7 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
             I |= J;
         }
         size_t sym_I = string_class_->symmetry(I);
+        psi::outfile->Printf("\n    %s", str(I, ncmo_).c_str());
         full_strings[sym_I].push_back(I);
     }
 

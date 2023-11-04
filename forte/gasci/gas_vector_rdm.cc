@@ -153,7 +153,7 @@ ambit::Tensor GASVector::compute_1rdm_same_irrep(GASVector& C_left, GASVector& C
     size_t ncmo = C_left.ncmo_;
     size_t nirrep = C_left.nirrep_;
     size_t symmetry = C_left.symmetry_;
-    const auto& detpi = C_left.detpi_;
+    const auto& detpi = C_left.detpcls_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
     const auto& cmopi = C_left.cmopi_;
@@ -213,7 +213,7 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
     int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
     size_t symmetry = C_left.symmetry_;
-    const auto& detpi = C_left.detpi_;
+    const auto& detpi = C_left.detpcls_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
     const auto& lists = C_left.lists_;
@@ -247,13 +247,12 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
                 for (size_t pq = 0; pq < max_pq; ++pq) {
                     const auto& [p_abs, q_abs] = lists->get_pair_list(pq_sym, pq);
 
-                    std::vector<StringSubstitution>& OO =
-                        alfa ? lists->get_alfa_oo_list(pq_sym, pq, h_Ia)
-                             : lists->get_beta_oo_list(pq_sym, pq, h_Ib);
+                    auto& OO = alfa ? lists->get_alfa_oo_list(pq_sym, pq, h_Ia)
+                                    : lists->get_beta_oo_list(pq_sym, pq, h_Ib);
 
                     double rdm_element = 0.0;
-                    for (const auto& [sign, I, J] : OO) {
-                        rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+                    for (const auto& I : OO) {
+                        rdm_element += psi::C_DDOT(maxL, Cl[I], 1, Cr[I], 1);
                     }
 
                     rdm_data[tei_index(p_abs, q_abs, p_abs, q_abs, ncmo)] += rdm_element;

@@ -96,7 +96,7 @@ void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
         // The pq product is totally symmetric
         const int h_Ja = h_Ia;
         const int h_Jb = h_Ib;
-        if (detpi_[h_Ia] > 0) {
+        if (detpcls_[h_Ia] > 0) {
             auto Cr =
                 gather_C_block(*this, CR, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, false);
             auto Cl =
@@ -133,7 +133,7 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
     // h_Ib - symmetry of beta strings
     for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
         int h_Ib = h_Ia ^ symmetry_;
-        if (detpi_[h_Ia] > 0) {
+        if (detpcls_[h_Ia] > 0) {
             auto Cr =
                 gather_C_block(*this, CR, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, false);
             auto Cl =
@@ -152,8 +152,8 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
                     const auto& OO_list = alfa ? lists_->get_alfa_oo_list(pq_sym, pq, h_Ia)
                                                : lists_->get_beta_oo_list(pq_sym, pq, h_Ib);
 
-                    for (const auto& [sign, I, J] : OO_list) {
-                        C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
+                    for (const auto& I : OO_list) {
+                        C_DAXPY(maxL, integral, Cr[I], 1, Cl[I], 1);
                     }
                 }
             }

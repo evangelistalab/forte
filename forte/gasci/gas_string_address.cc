@@ -37,11 +37,16 @@ StringAddress::StringAddress(const std::vector<int>& gas_size, int ne,
                              const std::vector<std::vector<String>>& strings)
     : nclasses_(strings.size()), nstr_(0), strpcls_(strings.size(), 0), nones_(ne),
       gas_size_(gas_size) {
+    psi::outfile->Printf("String classes: %d\n", nclasses_);
     for (int h = 0; h < nclasses_; h++) {
         const auto& strings_h = strings[h];
         for (const auto& s : strings_h) {
             push_back(s, h);
         }
+    }
+    // print strpcls_
+    for (int h = 0; h < nclasses_; h++) {
+        psi::outfile->Printf("String class %d: %zu\n", h, strpcls_[h]);
     }
 }
 
@@ -60,13 +65,25 @@ size_t StringAddress::add(const String& s) const { return address_.at(s).first; 
 
 int StringAddress::sym(const String& s) const { return address_.at(s).second; }
 
+std::unordered_map<String, std::pair<uint32_t, uint32_t>, String::Hash>::const_iterator
+StringAddress::find(const String& s) const {
+    return address_.find(s);
+}
+
+std::unordered_map<String, std::pair<uint32_t, uint32_t>, String::Hash>::const_iterator
+StringAddress::end() const {
+    return address_.end();
+}
+
 const std::pair<uint32_t, uint32_t>& StringAddress::address_and_class(const String& s) const {
     return address_.at(s);
 }
 
+int StringAddress::nclasses() const { return nclasses_; }
+
 size_t StringAddress::strpcls(int h) const { return strpcls_[h]; }
 
-StringClass::StringClass(const std::vector<int>& mopi,
+StringClass::StringClass(size_t symmetry, const std::vector<int>& mopi,
                          const std::vector<std::vector<size_t>>& gas_mos,
                          const std::vector<std::array<int, 6>>& alfa_occupation,
                          const std::vector<std::array<int, 6>>& beta_occupation,
@@ -88,6 +105,35 @@ StringClass::StringClass(const std::vector<int>& mopi,
         }
     }
     occupations_ = occupations;
+
+    // Build the alpha string classes as the cartesian product of the alpha occupation groups and
+    // the irreps. For each alpha occupation group, we have all the irreps next to each other.
+    for (size_t n = 0, j = 0; n < alfa_occupation.size(); n++) {
+        for (size_t h = 0; h < nirrep_; h++) {
+            alfa_string_classes_.emplace_back(n, h);
+            alfa_string_classes_map_[std::make_tuple(n, h)] = j;
+            j++;
+        }
+    }
+    // Build the beta string classes as the cartesian product of the alpha occupation groups and
+    // the irreps. For each alpha occupation group, we have all the irreps next to each other.
+    for (size_t n = 0, j = 0; n < beta_occupation.size(); n++) {
+        for (size_t h = 0; h < nirrep_; h++) {
+            beta_string_classes_.emplace_back(n, h);
+            beta_string_classes_map_[std::make_tuple(n, h)] = j;
+            j++;
+        }
+    }
+    // Build the product of alpha and beta string classes as the cartesian product of the alpha and
+    // beta string classes
+    for (const auto& [aocc_idx, bocc_idx] : occupations) {
+        for (size_t h_Ia = 0; h_Ia < nirrep_; h_Ia++) {
+            auto h_Ib = h_Ia ^ symmetry;
+            auto aocc_h_Ia = alfa_string_classes_map_.at(std::make_tuple(aocc_idx, h_Ia));
+            auto bocc_h_Ib = beta_string_classes_map_.at(std::make_tuple(bocc_idx, h_Ib));
+            string_classes_.emplace_back(string_classes_.size(), aocc_h_Ia, bocc_h_Ib);
+        }
+    }
 }
 
 size_t StringClass::num_alfa_classes() const { return nirrep_ * alfa_occupation_group_.size(); }
@@ -95,6 +141,18 @@ size_t StringClass::num_alfa_classes() const { return nirrep_ * alfa_occupation_
 size_t StringClass::num_beta_classes() const { return nirrep_ * beta_occupation_group_.size(); }
 
 size_t StringClass::symmetry(const String& s) const { return s.symmetry(mo_sym_); }
+
+const std::vector<std::pair<size_t, size_t>>& StringClass::alfa_string_classes() const {
+    return alfa_string_classes_;
+}
+
+const std::vector<std::pair<size_t, size_t>>& StringClass::beta_string_classes() const {
+    return beta_string_classes_;
+}
+
+const std::vector<std::tuple<size_t, size_t, size_t>>& StringClass::string_classes() const {
+    return string_classes_;
+}
 
 size_t StringClass::alfa_string_class(const String& s) const {
     std::array<int, 6> occupation;

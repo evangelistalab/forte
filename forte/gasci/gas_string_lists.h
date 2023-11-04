@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _gas_string_lists_
-#define _gas_string_lists_
+#pragma once
 
 #include "psi4/libmints/dimension.h"
 
@@ -38,11 +37,11 @@
 #include "helpers/timer.h"
 #include "sparse_ci/determinant.h"
 #include "fci/string_list_defs.h"
+#include "gas_string_address.h"
 
 namespace forte {
 
 class StringAddress;
-class StringClass;
 class MOSpaceInfo;
 
 /**
@@ -62,9 +61,8 @@ class GASStringLists {
     /// @param nb number of beta electrons
     /// @param print print level
     /// @param gas_size size of the GAS spaces
-    GASStringLists(std::shared_ptr<MOSpaceInfo> mo_space_info, size_t na, size_t nb, int print,
-                   const std::vector<int> gas_size, const std::vector<int> gas_min,
-                   const std::vector<int> gas_max);
+    GASStringLists(std::shared_ptr<MOSpaceInfo> mo_space_info, size_t na, size_t nb, int symmetry,
+                   int print, const std::vector<int> gas_min, const std::vector<int> gas_max);
 
     ~GASStringLists() {}
 
@@ -75,6 +73,9 @@ class GASStringLists {
 
     /// @return the number of beta electrons
     size_t nb() const { return nb_; }
+
+    /// @return the symmetry of the state
+    int symmetry() const { return symmetry_; }
 
     /// @return the number of irreps
     int nirrep() const { return nirrep_; }
@@ -122,6 +123,13 @@ class GASStringLists {
     /// @return the beta string in irrep h and index I
     String beta_str(size_t h, size_t I) const { return beta_strings_[h][I]; }
 
+    /// @return the alpha string classes
+    const auto& alfa_string_classes() const { return string_class_->alfa_string_classes(); }
+    /// @return the beta string classes
+    const auto& beta_string_classes() const { return string_class_->beta_string_classes(); }
+    /// @return the alpha/beta string classes
+    const auto& string_classes() const { return string_class_->string_classes(); }
+
     /// @return the list of determinants with a given symmetry
     std::vector<Determinant> make_determinants(int symmetry) const;
 
@@ -137,8 +145,8 @@ class GASStringLists {
     std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I, size_t add_I, int h_J);
     std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I, size_t add_I, int h_J);
 
-    std::vector<StringSubstitution>& get_alfa_oo_list(int pq_sym, size_t pq, int h);
-    std::vector<StringSubstitution>& get_beta_oo_list(int pq_sym, size_t pq, int h);
+    std::vector<u_int32_t>& get_alfa_oo_list(int pq_sym, size_t pq, int h);
+    std::vector<u_int32_t>& get_beta_oo_list(int pq_sym, size_t pq, int h);
 
     std::vector<StringSubstitution>& get_alfa_vvoo_list(size_t p, size_t q, size_t r, size_t s,
                                                         int h);
@@ -150,6 +158,8 @@ class GASStringLists {
   private:
     // ==> Class Data <==
 
+    /// The symmetry of the state
+    const int symmetry_;
     /// The number of irreps
     const size_t nirrep_;
     /// The total number of correlated molecular orbitals
@@ -219,8 +229,8 @@ class GASStringLists {
     VOList2 alfa_vo_list;
     VOList2 beta_vo_list;
     /// The OO string lists
-    OOList alfa_oo_list;
-    OOList beta_oo_list;
+    OOList2 alfa_oo_list;
+    OOList2 beta_oo_list;
     /// The VVOO string lists
     VVOOList alfa_vvoo_list;
     VVOOList beta_vvoo_list;
@@ -278,12 +288,14 @@ class GASStringLists {
                  int p, int q);
 
     /// @brief Make the list of strings connected by a^{+}_p a^{+}_q a_q a_p
-    void make_oo_list(std::shared_ptr<StringAddress> graph, OOList& list);
+    void make_oo_list(const StringList& strings, std::shared_ptr<StringAddress> graph,
+                      OOList2& list);
 
     /// @brief Make the list of strings connected by a^{+}_p a^{+}_q a_q a_p
     /// @param pq_sym symmetry of the pq pair
     /// @param pq relative pair index of the pq pair
-    void make_oo(std::shared_ptr<StringAddress> address, OOList& list, int pq_sym, size_t pq);
+    void make_oo(const StringList& strings, std::shared_ptr<StringAddress> address, OOList2& list,
+                 int pq_sym, size_t pq);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
     void make_1h_list(std::shared_ptr<StringAddress> graph, std::shared_ptr<StringAddress> graph_1h,
@@ -303,5 +315,3 @@ class GASStringLists {
     void get_gas_occupation();
 };
 } // namespace forte
-
-#endif // _string_lists_

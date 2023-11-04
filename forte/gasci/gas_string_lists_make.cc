@@ -28,8 +28,9 @@
 
 #include <algorithm>
 
-#include "gas_string_address.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "gas_string_address.h"
 #include "gas_string_lists.h"
 
 namespace forte {
@@ -40,7 +41,7 @@ namespace forte {
  * @param pq     relative PAIRINDEX of the pq pair
  * @param h      symmetry of the I strings in the list
  */
-std::vector<StringSubstitution>& GASStringLists::get_alfa_oo_list(int pq_sym, size_t pq, int h) {
+std::vector<u_int32_t>& GASStringLists::get_alfa_oo_list(int pq_sym, size_t pq, int h) {
     std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
     return alfa_oo_list[pq_pair];
 }
@@ -51,68 +52,79 @@ std::vector<StringSubstitution>& GASStringLists::get_alfa_oo_list(int pq_sym, si
  * @param pq     relative PAIRINDEX of the pq pair
  * @param h      symmetry of the I strings in the list
  */
-std::vector<StringSubstitution>& GASStringLists::get_beta_oo_list(int pq_sym, size_t pq, int h) {
+std::vector<u_int32_t>& GASStringLists::get_beta_oo_list(int pq_sym, size_t pq, int h) {
     std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
     return beta_oo_list[pq_pair];
 }
 
-void GASStringLists::make_oo_list(std::shared_ptr<StringAddress> addresser, OOList& list) {
+void GASStringLists::make_oo_list(const StringList& strings,
+                                  std::shared_ptr<StringAddress> addresser, OOList2& list) {
     // Loop over irreps of the pair pq
     for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         size_t max_pq = pairpi_[pq_sym];
         for (size_t pq = 0; pq < max_pq; ++pq) {
-            make_oo(addresser, list, pq_sym, pq);
+            make_oo(strings, addresser, list, pq_sym, pq);
         }
     }
 }
 
-void GASStringLists::make_oo(std::shared_ptr<StringAddress> addresser, OOList& list, int pq_sym,
-                             size_t pq) {
+void GASStringLists::make_oo(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                             OOList2& list, int pq_sym, size_t pq) {
     int k = addresser->nones() - 2;
     if (k >= 0) {
-        int p = pair_list_[pq_sym][pq].first;
-        int q = pair_list_[pq_sym][pq].second;
-
-        int n = addresser->nbits() - 2;
-        String b, I, J;
-        auto b_begin = b.begin();
-        auto b_end = b.begin() + n;
-        for (size_t h = 0; h < nirrep_; ++h) {
-            // Create the key to the map
-            std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
-
-            // Generate the strings 1111100000
-            //                      { k }{n-k}
-            for (int i = 0; i < n - k; ++i)
-                b[i] = false; // 0
-            for (int i = n - k; i < n; ++i)
-                b[i] = true; // 1
-            do {
-                int k = 0;
-                for (int i = 0; i < q; ++i) {
-                    J[i] = I[i] = b[k];
-                    k++;
+        auto [p, q] = pair_list_[pq_sym][pq];
+        for (int class_I{0}; const auto& string_class : strings) {
+            for (u_int32_t add_I{0}; const auto& I : string_class) {
+                // find the strings where both p and q are occupied
+                if (I[p] and I[q]) {
+                    std::tuple<int, size_t, int> pq_pair(pq_sym, pq, class_I);
+                    list[pq_pair].push_back(add_I);
                 }
-                for (int i = q + 1; i < p; ++i) {
-                    J[i] = I[i] = b[k];
-                    k++;
-                }
-                for (int i = p + 1; i < static_cast<int>(ncmo_); ++i) {
-                    J[i] = I[i] = b[k];
-                    k++;
-                }
-                I[p] = true;
-                I[q] = true;
-                J[p] = true;
-                J[q] = true;
-                // Add the sting only of irrep(I) is h
-                if (string_class_->symmetry(I) == h)
-                    list[pq_pair].push_back(
-                        StringSubstitution(1.0, addresser->add(I), addresser->add(J)));
-            } while (std::next_permutation(b_begin, b_end));
-        } // End loop over h
+                add_I++;
+            }
+            class_I++;
+        }
     }
 }
+
+// int n = addresser->nbits() - 2;
+// String b, I, J;
+// auto b_begin = b.begin();
+// auto b_end = b.begin() + n;
+// for (size_t h = 0; h < nirrep_; ++h) {
+//     // Create the key to the map
+//     std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
+
+//     // Generate the strings 1111100000
+//     //                      { k }{n-k}
+//     for (int i = 0; i < n - k; ++i)
+//         b[i] = false; // 0
+//     for (int i = n - k; i < n; ++i)
+//         b[i] = true; // 1
+//     do {
+//         int k = 0;
+//         for (int i = 0; i < q; ++i) {
+//             J[i] = I[i] = b[k];
+//             k++;
+//         }
+//         for (int i = q + 1; i < p; ++i) {
+//             J[i] = I[i] = b[k];
+//             k++;
+//         }
+//         for (int i = p + 1; i < static_cast<int>(ncmo_); ++i) {
+//             J[i] = I[i] = b[k];
+//             k++;
+//         }
+//         I[p] = true;
+//         I[q] = true;
+//         J[p] = true;
+//         J[q] = true;
+//         // Add the sting only of irrep(I) is h
+//         if (string_class_->symmetry(I) == h)
+//             list[pq_pair].push_back(
+//                 StringSubstitution(1.0, addresser->add(I), addresser->add(J)));
+//     } while (std::next_permutation(b_begin, b_end));
+// } // End loop over h
 
 /**
  * Returns a vector of tuples containing the sign, I, and J connected by a^{+}_p
@@ -160,69 +172,23 @@ void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAd
         for (const auto& I : string_class) {
             auto J = I;
             double sign = 1.0;
-            if (I[p]) {
-                sign *= I.slater_sign(p);
+            if (J[p]) {
+                sign *= J.slater_sign(p);
                 J[p] = false;
                 if (!J[q]) {
                     sign *= J.slater_sign(q);
                     J[q] = true;
-                    const auto& [add_I, class_I] = addresser->address_and_class(I);
-                    const auto& [add_J, class_J] = addresser->address_and_class(J);
+                    if (auto it = addresser->find(J); it != addresser->end()) {
+                        const auto& [add_I, class_I] = addresser->address_and_class(I);
+                        const auto& [add_J, class_J] = it->second;
 
-                    list[std::make_tuple(p, q, class_I, class_J)].push_back(
-                        StringSubstitution(sign, add_I, add_J));
+                        list[std::make_tuple(p, q, class_I, class_J)].push_back(
+                            StringSubstitution(sign, add_I, add_J));
+                    }
                 }
             }
         }
     }
-    // int n = addresser->nbits() - 1 - (p == q ? 0 : 1);
-    // int k = addresser->nones() - 1;
-    // std::vector<int8_t> b(n); // vector<int8_t> is fast to generate the permutations
-    // String I, J;
-    // auto b_begin = b.begin();
-    // auto b_end = b.begin() + n;
-    // if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-    //     for (size_t h = 0; h < nirrep_; ++h) {
-    //         // Create the key to the map
-    //         std::tuple<size_t, size_t, int> pq_pair(p, q, h);
-
-    //         // Generate the strings 1111100000
-    //         //                      { k }{n-k}
-    //         for (int i = 0; i < n - k; ++i)
-    //             b[i] = false; // 0
-    //         for (int i = std::max(0, n - k); i < n; ++i)
-    //             b[i] = true; // 1
-
-    //         do {
-    //             int k = 0;
-    //             short sign = 1;
-    //             for (int i = 0; i < std::min(p, q); ++i) {
-    //                 J[i] = I[i] = b[k];
-    //                 k++;
-    //             }
-    //             for (int i = std::min(p, q) + 1; i < std::max(p, q); ++i) {
-    //                 J[i] = I[i] = b[k];
-    //                 if (b[k])
-    //                     sign *= -1;
-    //                 k++;
-    //             }
-    //             for (int i = std::max(p, q) + 1; i < static_cast<int>(ncmo_); ++i) {
-    //                 J[i] = I[i] = b[k];
-    //                 k++;
-    //             }
-    //             I[p] = 0;
-    //             I[q] = 1;
-    //             J[q] = 0;
-    //             J[p] = 1;
-
-    //             // Add the string only of irrep(I) is h
-    //             if (string_class_->symmetry(I) == h)
-    //                 list[pq_pair].push_back(
-    //                     StringSubstitution(sign, addresser->add(I), addresser->add(J)));
-    //         } while (std::next_permutation(b_begin, b_end));
-
-    //     } // End loop over h
-    // }
 }
 
 /**

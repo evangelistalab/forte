@@ -74,6 +74,9 @@ void print_timing(const std::string& text, double seconds);
 
 /// @brief Print the content of a container to the output file
 template <typename Container> std::string container_to_string(const Container& c) {
+    if (c.empty()) {
+        return "[]";
+    }
     std::stringstream ss;
     ss << "[";
     for (const auto& item : c) {

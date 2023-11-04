@@ -35,6 +35,7 @@
 
 #include "base_classes/rdms.h"
 #include "gas_string_lists.h"
+#include "sparse_ci/sparse_state_vector.h"
 
 #define CAPRICCIO_USE_DAXPY 1
 
@@ -51,7 +52,7 @@ class RDMs;
 
 class GASVector {
   public:
-    GASVector(std::shared_ptr<GASStringLists> lists, size_t symmetry);
+    GASVector(std::shared_ptr<GASStringLists> lists);
 
     /// @brief return the number of irreps
     size_t nirrep() const;
@@ -68,12 +69,15 @@ class GASVector {
     psi::Dimension cmopi() const;
     /// @brief return the offset array for cmopi
     const std::vector<size_t>& cmopi_offset() const;
+    /// @brief return the string lists object
     const std::shared_ptr<GASStringLists>& lists() const;
 
     /// @brief zero the vector
     void zero();
     /// @brief print the vector
-    void print();
+    void print(double threshold = 1e-9) const;
+    /// @brief return the state as a StateVector object
+    std::shared_ptr<StateVector> as_state_vector() const;
 
     /// copy the wave function object
     void copy(GASVector& wfn);
@@ -84,6 +88,7 @@ class GASVector {
     /// @brief set the vector from a list of tuples
     /// @param sparse_vec a list of tuples (irrep, Ia, Ib, C)
     void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
+    void set_to(double value);
 
     /// @brief compute the norm of the wave function
     /// @param power The power of the norm (default 2 = Frobenius norm)
@@ -95,8 +100,7 @@ class GASVector {
     /// @brief Compute the dot product of this wave functions with another
     /// @param wfn The wave function to dot with
     /// @return The dot product
-    double dot(GASVector& wfn);
-    double dot(std::shared_ptr<GASVector>& wfn);
+    double dot(const GASVector& wfn) const;
 
     // return alfa_address_
     std::shared_ptr<StringAddress> alfa_address() { return alfa_address_; }
@@ -124,8 +128,8 @@ class GASVector {
 
     /// Print the natural_orbitals from FCIWFN
     /// Assume user specified active space
-    void print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mospace_info,
-                                std::shared_ptr<RDMs> rdms);
+    // void print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mospace_info,
+    //                             std::shared_ptr<RDMs> rdms);
 
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
@@ -152,7 +156,7 @@ class GASVector {
     /// The number of irreps
     int nirrep_;
     /// The symmetry of this vector
-    size_t symmetry_;
+    const int symmetry_;
     /// The total number of correlated molecular orbitals
     size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
@@ -161,8 +165,10 @@ class GASVector {
     std::vector<size_t> cmopi_offset_;
     /// The number of determinants
     size_t ndet_;
-    /// The number of determinants per irrep
-    std::vector<size_t> detpi_;
+    /// The number of determinants per class
+    std::vector<size_t> detpcls_;
+    /// The number of determinants per class
+    std::vector<size_t> detpi_; // TODO: remove this
     /// The print level
     int print_ = 0;
 

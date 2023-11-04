@@ -98,7 +98,7 @@ std::shared_ptr<RDMs> GASCISolver::compute_rdms_root(size_t root_left, size_t ro
 
     // Print the NO if energy converged
     if (print_no_ || print_ > 0) {
-        C_->print_natural_orbitals(mo_space_info_, rdms);
+        // C_->print_natural_orbitals(mo_space_info_, rdms);
     }
     return rdms;
 }

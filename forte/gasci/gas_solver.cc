@@ -118,7 +118,7 @@ void GASCISolver::startup() {
     for (auto n : state_.gas_max()) {
         gas_max.push_back(n);
     }
-    lists_ = std::make_shared<GASStringLists>(mo_space_info_, na_, nb_, print_, gas_size, gas_min,
+    lists_ = std::make_shared<GASStringLists>(mo_space_info_, na_, nb_, symmetry_, print_, gas_min,
                                               gas_max);
 
     nfci_dets_ = 0;
@@ -176,8 +176,8 @@ double GASCISolver::compute_energy() {
 
     GASVector::allocate_temp_space(lists_, print_);
 
-    C_ = std::make_shared<GASVector>(lists_, symmetry_);
-    T_ = std::make_shared<GASVector>(lists_, symmetry_);
+    C_ = std::make_shared<GASVector>(lists_);
+    T_ = std::make_shared<GASVector>(lists_);
     C_->set_print(print_);
 
     // Compute the size of the determinant space and the basis used by the Davidson solver

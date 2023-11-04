@@ -89,6 +89,7 @@ using VVOOList =
 /// Maps the integers (pq_sym, pq, h) to list of strings connected by a^{+}_p a^{+}_q a_q a_p where
 /// the string I belongs to the irrep h
 using OOList = std::map<std::tuple<int, size_t, int>, std::vector<StringSubstitution>>;
+using OOList2 = std::map<std::tuple<int, size_t, int>, std::vector<uint32_t>>;
 
 /// Maps the integers (h_J, add_J, h_I) to list of strings connected by a_p, where the string
 /// I belongs to the irrep h_I and J belongs to the irrep h_J and add_J is the address of J

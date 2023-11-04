@@ -39,6 +39,12 @@
 #include "integrals/active_space_integrals.h"
 
 #include "fci/fci_string_address.h"
+
+#include "gasci/gas_string_lists.h"
+#include "gasci/gas_vector.h"
+
+#include "base_classes/mo_space_info.h"
+
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_state_vector.h"
@@ -289,13 +295,15 @@ void export_Determinant(py::module& m) {
         .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
         .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
 
-    py::class_<StateVector>(m, "StateVector", "A class to represent a vector of determinants")
+    py::class_<StateVector, std::shared_ptr<StateVector>>(
+        m, "StateVector", "A class to represent a vector of determinants")
         .def(py::init<const det_hash<double>&>())
         .def(py::init<const StateVector&>())
         .def(
             "items", [](const StateVector& v) { return py::make_iterator(v.begin(), v.end()); },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def("str", &StateVector::str)
+        .def("__len__", &StateVector::size)
         .def("__eq__", &StateVector::operator==)
         .def("__repr__", [](const StateVector& v) { return v.str(); })
         .def("__str__", [](const StateVector& v) { return v.str(); })
@@ -394,4 +402,18 @@ void export_SparseCISolver(py::module& m) {
         "Diagonalize the Hamiltonian in a basis of determinants");
 }
 
+void export_GAS(py::module& m) {
+    py::class_<GASStringLists, std::shared_ptr<GASStringLists>>(
+        m, "GASStringLists", "A class to represent the strings of a GAS")
+        .def(py::init<std::shared_ptr<MOSpaceInfo>, size_t, size_t, int, int,
+                      const std::vector<int>, const std::vector<int>>());
+    py::class_<GASVector, std::shared_ptr<GASVector>>(m, "GASVector",
+                                                      "A class to represent a GAS vector")
+        .def(py::init<std::shared_ptr<GASStringLists>>())
+        .def("print", &GASVector::print, "Print the GAS vector")
+        .def("size", &GASVector::size, "Return the size of the GAS vector")
+        .def("__len__", &GASVector::size, "Return the size of the GAS vector")
+        .def("as_state_vector", &GASVector::as_state_vector, "Return a StateVector object")
+        .def("set_to", &GASVector::set_to, "Set the GAS vector to a given value");
+}
 } // namespace forte
