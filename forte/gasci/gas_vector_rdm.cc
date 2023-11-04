@@ -270,8 +270,9 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
                         const auto& [r_abs, s_abs] = lists->get_pair_list(pq_sym, rs);
 
                         const auto& VVOO =
-                            alfa ? lists->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia)
-                                 : lists->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ib);
+                            alfa
+                                ? lists->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia, h_Ia)
+                                : lists->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ib, h_Ia);
 
                         double rdm_element = 0.0;
                         for (const auto& [sign, I, J] : VVOO) {
@@ -570,82 +571,11 @@ ambit::Tensor GASVector::compute_3rdm_abb_same_irrep(GASVector& C_left, GASVecto
 
 void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsType type,
                           std::shared_ptr<RDMs> rdms) {
-
-    String Ia, Ib;
-    // Generate the strings 1111100000
-    //                      { k }{n-k}
-
     size_t ncmo = Cl.ncmo_;
+    auto state_vector_l = Cl.as_state_vector();
+    auto state_vector_r = Cr.as_state_vector();
 
-    std::vector<Determinant> left_dets, right_dets;
-    std::map<Determinant, size_t> left_dets_map, right_dets_map;
-    std::vector<double> left_C, right_C;
-
-    // left
-    {
-        int symmetry_left = Cl.symmetry_;
-        auto alfa_address_left = Cl.alfa_address_;
-        auto beta_address_left = Cl.beta_address_;
-        size_t left_na = Cl.lists_->na();
-        size_t left_nb = Cl.lists_->nb();
-        size_t num_det = 0;
-        for (size_t i = 0; i < ncmo - left_na; ++i)
-            Ia[i] = false; // 0
-        for (size_t i = ncmo - left_na; i < ncmo; ++i)
-            Ia[i] = true; // 1
-
-        for (size_t i = 0; i < ncmo - left_nb; ++i)
-            Ib[i] = false; // 0
-        for (size_t i = ncmo - left_nb; i < ncmo; ++i)
-            Ib[i] = true; // 1
-        do {
-            do {
-                if ((alfa_address_left->sym(Ia) ^ beta_address_left->sym(Ib)) == symmetry_left) {
-                    Determinant d(Ia, Ib);
-                    left_dets.push_back(d);
-                    double c = Cl.C(alfa_address_left->sym(Ia))
-                                   ->get(alfa_address_left->add(Ia), beta_address_left->add(Ib));
-                    left_C.push_back(c);
-                    left_dets_map[d] = num_det;
-                    num_det++;
-                }
-            } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo));
-        } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo));
-    }
-
-    // right
-    {
-        int symmetry_right = Cr.symmetry_;
-        auto alfa_address_right = Cr.alfa_address_;
-        auto beta_address_right = Cr.beta_address_;
-        size_t right_na = Cr.lists_->na();
-        size_t right_nb = Cr.lists_->nb();
-        size_t num_det = 0;
-        for (size_t i = 0; i < ncmo - right_na; ++i)
-            Ia[i] = false; // 0
-        for (size_t i = ncmo - right_na; i < ncmo; ++i)
-            Ia[i] = true; // 1
-
-        for (size_t i = 0; i < ncmo - right_nb; ++i)
-            Ib[i] = false; // 0
-        for (size_t i = ncmo - right_nb; i < ncmo; ++i)
-            Ib[i] = true; // 1
-        do {
-            do {
-                if ((alfa_address_right->sym(Ia) ^ beta_address_right->sym(Ib)) == symmetry_right) {
-                    Determinant d(Ia, Ib);
-                    right_dets.push_back(d);
-                    double c = Cr.C(alfa_address_right->sym(Ia))
-                                   ->get(alfa_address_right->add(Ia), beta_address_right->add(Ib));
-                    right_C.push_back(c);
-                    right_dets_map[d] = num_det;
-                    num_det++;
-                }
-            } while (std::next_permutation(Ib.begin(), Ib.begin() + ncmo));
-        } while (std::next_permutation(Ia.begin(), Ia.begin() + ncmo));
-    }
-
-    Determinant I; // <- xsize (no_);
+    Determinant J; // <- xsize (no_);
 
     psi::outfile->Printf("\n\n==> RDMs Test <==\n");
 
@@ -655,14 +585,14 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
         for (size_t p = 0; p < ncmo; p++) {
             for (size_t q = 0; q < ncmo; ++q) {
                 double rdm = 0.0;
-                for (size_t i = 0; i < right_dets.size(); ++i) {
-                    I = right_dets[i];
+                for (const auto& [I, c_I] : *state_vector_r) {
+                    J = I;
                     double sign = 1.0;
-                    sign *= I.destroy_alfa_bit(q);
-                    sign *= I.create_alfa_bit(p);
+                    sign *= J.destroy_alfa_bit(q);
+                    sign *= J.create_alfa_bit(p);
                     if (sign != 0) {
-                        if (left_dets_map.count(I) != 0) {
-                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                        if (state_vector_l->count(J) != 0) {
+                            rdm += sign * (*state_vector_l)[J] * c_I;
                         }
                     }
                 }
@@ -675,14 +605,14 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
         for (size_t p = 0; p < ncmo; p++) {
             for (size_t q = 0; q < ncmo; ++q) {
                 double rdm = 0.0;
-                for (size_t i = 0; i < right_dets.size(); ++i) {
-                    I = right_dets[i];
+                for (const auto& [I, c_I] : *state_vector_r) {
+                    J = I;
                     double sign = 1.0;
-                    sign *= I.destroy_beta_bit(q);
-                    sign *= I.create_beta_bit(p);
+                    sign *= J.destroy_beta_bit(q);
+                    sign *= J.create_beta_bit(p);
                     if (sign != 0) {
-                        if (left_dets_map.count(I) != 0) {
-                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                        if (state_vector_l->count(J) != 0) {
+                            rdm += sign * (*state_vector_l)[J] * c_I;
                         }
                     }
                 }
@@ -725,16 +655,16 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
                 for (size_t r = 0; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
-                        for (size_t i = 0; i < right_dets.size(); ++i) {
-                            I = right_dets[i];
+                        for (const auto& [I, c_I] : *state_vector_r) {
+                            J = I;
                             double sign = 1.0;
-                            sign *= I.destroy_alfa_bit(r);
-                            sign *= I.destroy_alfa_bit(s);
-                            sign *= I.create_alfa_bit(q);
-                            sign *= I.create_alfa_bit(p);
+                            sign *= J.destroy_alfa_bit(r);
+                            sign *= J.destroy_alfa_bit(s);
+                            sign *= J.create_alfa_bit(q);
+                            sign *= J.create_alfa_bit(p);
                             if (sign != 0) {
-                                if (left_dets_map.count(I) != 0) {
-                                    rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                if (state_vector_l->count(J) != 0) {
+                                    rdm += sign * (*state_vector_l)[J] * c_I;
                                 }
                             }
                         }
@@ -755,16 +685,16 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
                 for (size_t r = 0; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
-                        for (size_t i = 0; i < right_dets.size(); ++i) {
-                            I = right_dets[i];
+                        for (const auto& [I, c_I] : *state_vector_r) {
+                            J = I;
                             double sign = 1.0;
-                            sign *= I.destroy_beta_bit(r);
-                            sign *= I.destroy_beta_bit(s);
-                            sign *= I.create_beta_bit(q);
-                            sign *= I.create_beta_bit(p);
+                            sign *= J.destroy_beta_bit(r);
+                            sign *= J.destroy_beta_bit(s);
+                            sign *= J.create_beta_bit(q);
+                            sign *= J.create_beta_bit(p);
                             if (sign != 0) {
-                                if (left_dets_map.count(I) != 0) {
-                                    rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                if (state_vector_l->count(J) != 0) {
+                                    rdm += sign * (*state_vector_l)[J] * c_I;
                                 }
                             }
                         }
@@ -785,16 +715,16 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
                 for (size_t r = 0; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
-                        for (size_t i = 0; i < right_dets.size(); ++i) {
-                            I = right_dets[i];
+                        for (const auto& [I, c_I] : *state_vector_r) {
+                            J = I;
                             double sign = 1.0;
-                            sign *= I.destroy_alfa_bit(r);
-                            sign *= I.destroy_beta_bit(s);
-                            sign *= I.create_beta_bit(q);
-                            sign *= I.create_alfa_bit(p);
+                            sign *= J.destroy_alfa_bit(r);
+                            sign *= J.destroy_beta_bit(s);
+                            sign *= J.create_beta_bit(q);
+                            sign *= J.create_alfa_bit(p);
                             if (sign != 0) {
-                                if (left_dets_map.count(I) != 0) {
-                                    rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                if (state_vector_l->count(J) != 0) {
+                                    rdm += sign * (*state_vector_l)[J] * c_I;
                                 }
                             }
                         }
@@ -820,18 +750,18 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
                         for (size_t t = s + 1; t < ncmo; ++t) {
                             for (size_t a = t + 1; a < ncmo; ++a) {
                                 double rdm = 0.0;
-                                for (size_t i = 0; i < right_dets.size(); ++i) {
-                                    I = right_dets[i];
+                                for (const auto& [I, c_I] : *state_vector_r) {
+                                    J = I;
                                     double sign = 1.0;
-                                    sign *= I.destroy_alfa_bit(s);
-                                    sign *= I.destroy_alfa_bit(t);
-                                    sign *= I.destroy_alfa_bit(a);
-                                    sign *= I.create_alfa_bit(r);
-                                    sign *= I.create_alfa_bit(q);
-                                    sign *= I.create_alfa_bit(p);
+                                    sign *= J.destroy_alfa_bit(s);
+                                    sign *= J.destroy_alfa_bit(t);
+                                    sign *= J.destroy_alfa_bit(a);
+                                    sign *= J.create_alfa_bit(r);
+                                    sign *= J.create_alfa_bit(q);
+                                    sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (left_dets_map.count(I) != 0) {
-                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                        if (state_vector_l->count(J) != 0) {
+                                            rdm += sign * (*state_vector_l)[J] * c_I;
                                         }
                                     }
                                 }
@@ -857,18 +787,18 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
                         for (size_t t = s + 1; t < ncmo; ++t) {
                             for (size_t a = 0; a < ncmo; ++a) {
                                 double rdm = 0.0;
-                                for (size_t i = 0; i < right_dets.size(); ++i) {
-                                    I = right_dets[i];
+                                for (const auto& [I, c_I] : *state_vector_r) {
+                                    J = I;
                                     double sign = 1.0;
-                                    sign *= I.destroy_alfa_bit(s);
-                                    sign *= I.destroy_alfa_bit(t);
-                                    sign *= I.destroy_beta_bit(a);
-                                    sign *= I.create_beta_bit(r);
-                                    sign *= I.create_alfa_bit(q);
-                                    sign *= I.create_alfa_bit(p);
+                                    sign *= J.destroy_alfa_bit(s);
+                                    sign *= J.destroy_alfa_bit(t);
+                                    sign *= J.destroy_beta_bit(a);
+                                    sign *= J.create_beta_bit(r);
+                                    sign *= J.create_alfa_bit(q);
+                                    sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (left_dets_map.count(I) != 0) {
-                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                        if (state_vector_l->count(J) != 0) {
+                                            rdm += sign * (*state_vector_l)[J] * c_I;
                                         }
                                     }
                                 }
@@ -894,18 +824,18 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
                         for (size_t t = s + 1; t < ncmo; ++t) {
                             for (size_t a = 0; a < ncmo; ++a) {
                                 double rdm = 0.0;
-                                for (size_t i = 0; i < right_dets.size(); ++i) {
-                                    I = right_dets[i];
+                                for (const auto& [I, c_I] : *state_vector_r) {
+                                    J = I;
                                     double sign = 1.0;
-                                    sign *= I.destroy_alfa_bit(s);
-                                    sign *= I.destroy_beta_bit(t);
-                                    sign *= I.destroy_beta_bit(a);
-                                    sign *= I.create_beta_bit(r);
-                                    sign *= I.create_beta_bit(q);
-                                    sign *= I.create_alfa_bit(p);
+                                    sign *= J.destroy_alfa_bit(s);
+                                    sign *= J.destroy_beta_bit(t);
+                                    sign *= J.destroy_beta_bit(a);
+                                    sign *= J.create_beta_bit(r);
+                                    sign *= J.create_beta_bit(q);
+                                    sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (left_dets_map.count(I) != 0) {
-                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                        if (state_vector_l->count(J) != 0) {
+                                            rdm += sign * (*state_vector_l)[J] * c_I;
                                         }
                                     }
                                 }
@@ -932,18 +862,18 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
                         for (size_t t = s + 1; t < ncmo; ++t) {
                             for (size_t a = t + 1; a < ncmo; ++a) {
                                 double rdm = 0.0;
-                                for (size_t i = 0; i < right_dets.size(); ++i) {
-                                    I = right_dets[i];
+                                for (const auto& [I, c_I] : *state_vector_r) {
+                                    J = I;
                                     double sign = 1.0;
-                                    sign *= I.destroy_beta_bit(s);
-                                    sign *= I.destroy_beta_bit(t);
-                                    sign *= I.destroy_beta_bit(a);
-                                    sign *= I.create_beta_bit(r);
-                                    sign *= I.create_beta_bit(q);
-                                    sign *= I.create_beta_bit(p);
+                                    sign *= J.destroy_beta_bit(s);
+                                    sign *= J.destroy_beta_bit(t);
+                                    sign *= J.destroy_beta_bit(a);
+                                    sign *= J.create_beta_bit(r);
+                                    sign *= J.create_beta_bit(q);
+                                    sign *= J.create_beta_bit(p);
                                     if (sign != 0) {
-                                        if (left_dets_map.count(I) != 0) {
-                                            rdm += sign * left_C[left_dets_map[I]] * right_C[i];
+                                        if (state_vector_l->count(J) != 0) {
+                                            rdm += sign * (*state_vector_l)[J] * c_I;
                                         }
                                     }
                                 }

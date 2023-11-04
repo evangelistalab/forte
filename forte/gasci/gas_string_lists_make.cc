@@ -87,45 +87,6 @@ void GASStringLists::make_oo(const StringList& strings, std::shared_ptr<StringAd
     }
 }
 
-// int n = addresser->nbits() - 2;
-// String b, I, J;
-// auto b_begin = b.begin();
-// auto b_end = b.begin() + n;
-// for (size_t h = 0; h < nirrep_; ++h) {
-//     // Create the key to the map
-//     std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
-
-//     // Generate the strings 1111100000
-//     //                      { k }{n-k}
-//     for (int i = 0; i < n - k; ++i)
-//         b[i] = false; // 0
-//     for (int i = n - k; i < n; ++i)
-//         b[i] = true; // 1
-//     do {
-//         int k = 0;
-//         for (int i = 0; i < q; ++i) {
-//             J[i] = I[i] = b[k];
-//             k++;
-//         }
-//         for (int i = q + 1; i < p; ++i) {
-//             J[i] = I[i] = b[k];
-//             k++;
-//         }
-//         for (int i = p + 1; i < static_cast<int>(ncmo_); ++i) {
-//             J[i] = I[i] = b[k];
-//             k++;
-//         }
-//         I[p] = true;
-//         I[q] = true;
-//         J[p] = true;
-//         J[q] = true;
-//         // Add the sting only of irrep(I) is h
-//         if (string_class_->symmetry(I) == h)
-//             list[pq_pair].push_back(
-//                 StringSubstitution(1.0, addresser->add(I), addresser->add(J)));
-//     } while (std::next_permutation(b_begin, b_end));
-// } // End loop over h
-
 /**
  * Returns a vector of tuples containing the sign, I, and J connected by a^{+}_p
  * a_q
@@ -172,12 +133,12 @@ void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAd
         for (const auto& I : string_class) {
             auto J = I;
             double sign = 1.0;
-            if (J[p]) {
-                sign *= J.slater_sign(p);
-                J[p] = false;
-                if (!J[q]) {
-                    sign *= J.slater_sign(q);
-                    J[q] = true;
+            if (J[q]) {
+                sign *= J.slater_sign(q);
+                J[q] = false;
+                if (!J[p]) {
+                    sign *= J.slater_sign(p);
+                    J[p] = true;
                     if (auto it = addresser->find(J); it != addresser->end()) {
                         const auto& [add_I, class_I] = addresser->address_and_class(I);
                         const auto& [add_J, class_J] = it->second;
@@ -194,20 +155,23 @@ void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAd
 /**
  */
 std::vector<StringSubstitution>& GASStringLists::get_alfa_vvoo_list(size_t p, size_t q, size_t r,
-                                                                    size_t s, int h) {
-    std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
+                                                                    size_t s, int class_I,
+                                                                    int class_J) {
+    const auto pqrs_pair = std::make_tuple(p, q, r, s, class_I, class_J);
     return alfa_vvoo_list[pqrs_pair];
 }
 
 /**
  */
 std::vector<StringSubstitution>& GASStringLists::get_beta_vvoo_list(size_t p, size_t q, size_t r,
-                                                                    size_t s, int h) {
-    std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
+                                                                    size_t s, int class_I,
+                                                                    int class_J) {
+    const auto pqrs_pair = std::make_tuple(p, q, r, s, class_I, class_J);
     return beta_vvoo_list[pqrs_pair];
 }
 
-void GASStringLists::make_vvoo_list(std::shared_ptr<StringAddress> addresser, VVOOList& list) {
+void GASStringLists::make_vvoo_list(const StringList& strings,
+                                    std::shared_ptr<StringAddress> addresser, VVOOList2& list) {
     // Loop over irreps of the pair pq
     for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         int rs_sym = pq_sym;
@@ -227,7 +191,8 @@ void GASStringLists::make_vvoo_list(std::shared_ptr<StringAddress> addresser, VV
                                 if ((p_abs > q_abs) && (r_abs > s_abs)) {
                                     // Avoid
                                     if (not((p_abs == r_abs) and (q_abs == s_abs))) {
-                                        make_vvoo(addresser, list, p_abs, q_abs, r_abs, s_abs);
+                                        make_vvoo(strings, addresser, list, p_abs, q_abs, r_abs,
+                                                  s_abs);
                                     }
                                 }
                             }
@@ -239,104 +204,36 @@ void GASStringLists::make_vvoo_list(std::shared_ptr<StringAddress> addresser, VV
     }
 }
 
-void GASStringLists::make_vvoo(std::shared_ptr<StringAddress> addresser, VVOOList& list, int p,
-                               int q, int r, int s) {
-    // Sort pqrs
-    int a[4];
-    a[0] = s;
-    a[1] = r;
-    a[2] = q;
-    a[3] = p;
-
-    //  if (a[0] > a[1]) std::swap(a[0], a[1]);
-    if (a[1] > a[2])
-        std::swap(a[1], a[2]);
-    //  if (a[2] > a[3]) std::swap(a[2], a[3]);
-
-    if (a[0] > a[1])
-        std::swap(a[0], a[1]);
-    if (a[1] > a[2])
-        std::swap(a[1], a[2]);
-    if (a[2] > a[3])
-        std::swap(a[2], a[3]);
-
-    if (a[0] > a[1])
-        std::swap(a[0], a[1]);
-    if (a[1] > a[2])
-        std::swap(a[1], a[2]);
-    if (a[2] > a[3])
-        std::swap(a[2], a[3]);
-
-    bool overlap = false;
-    if ((a[0] == a[1]) || (a[1] == a[2]) || (a[2] == a[3]))
-        overlap = true;
-
-    int n = addresser->nbits() - 4 + (overlap ? 1 : 0);
-    int k = addresser->nones() - 2;
-
-    if (k >= 0 and n >= 0 and (n >= k)) {
-        std::vector<int8_t> b(n);
-        String I, J;
-
-        for (size_t h = 0; h < nirrep_; ++h) {
-            // Create the key to the map
-            std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
-
-            // Generate the strings 1111100000
-            //                      { k }{n-k}
-            for (int i = 0; i < n - k; ++i)
-                b[i] = false; // 0
-            for (int i = n - k; i < n; ++i)
-                b[i] = true; // 1
-            do {
-                I[p] = false;
-                I[q] = false;
-                I[s] = true;
-                I[r] = true;
-                // Form the string I with r and s true
-                int k = 0;
-                for (int i = 0; i < a[0]; ++i) {
-                    I[i] = b[k];
-                    k++;
-                }
-                for (int i = a[0] + 1; i < a[1]; ++i) {
-                    I[i] = b[k];
-                    k++;
-                }
-                for (int i = a[1] + 1; i < a[2]; ++i) {
-                    I[i] = b[k];
-                    k++;
-                }
-                for (int i = a[2] + 1; i < a[3]; ++i) {
-                    I[i] = b[k];
-                    k++;
-                }
-                for (int i = a[3] + 1; i < static_cast<int>(ncmo_); ++i) {
-                    I[i] = b[k];
-                    k++;
-                }
-                if (string_class_->symmetry(I) == h) {
-                    J = I;
-                    short sign = 1;
-                    // Apply a^{+}_p a^{+}_q a_s a_r to I
-                    for (int i = s; i < r; ++i)
-                        if (J[i])
-                            sign *= -1;
-                    J[r] = false;
+void GASStringLists::make_vvoo(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                               VVOOList2& list, int p, int q, int r, int s) {
+    for (const auto& string_class : strings) {
+        for (const auto& I : string_class) {
+            auto J = I;
+            double sign = 1.0;
+            // Apply a^{+}_p a^{+}_q a_s a_r to I
+            if (J[r]) {
+                sign *= J.slater_sign(r);
+                J[r] = false;
+                if (J[s]) {
+                    sign *= J.slater_sign(s);
                     J[s] = false;
-                    if (!J[q]) { // q = 0
-                        J[q] = true;
+                    if (!J[q]) {
                         sign *= J.slater_sign(q);
-                        if (!J[p]) { // p = 0
-                            J[p] = true;
+                        J[q] = true;
+                        if (!J[p]) {
                             sign *= J.slater_sign(p);
-                            list[pqrs_pair].push_back(
-                                StringSubstitution(sign, addresser->add(I), addresser->add(J)));
+                            J[p] = true;
+                            if (auto it = addresser->find(J); it != addresser->end()) {
+                                const auto& [add_I, class_I] = addresser->address_and_class(I);
+                                const auto& [add_J, class_J] = it->second;
+                                list[std::make_tuple(p, q, r, s, class_I, class_J)].push_back(
+                                    StringSubstitution(sign, add_I, add_J));
+                            }
                         }
                     }
                 }
-            } while (std::next_permutation(b.begin(), b.end()));
-        } // End loop over h
+            }
+        }
     }
 }
 
@@ -352,39 +249,30 @@ std::vector<H1StringSubstitution>& GASStringLists::get_beta_1h_list(int h_I, siz
     return beta_1h_list[I_tuple];
 }
 
-void GASStringLists::make_1h_list(std::shared_ptr<StringAddress> addresser,
+void GASStringLists::make_1h_list(const StringList& strings,
+                                  std::shared_ptr<StringAddress> addresser,
                                   std::shared_ptr<StringAddress> addresser_1h, H1List& list) {
     int n = addresser->nbits();
     int k = addresser->nones();
-    String I, J;
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
-            // Generate the strings 1111100000
-            //                      { k }{n-k}
-            for (int i = 0; i < n - k; ++i)
-                I[i] = false; // 0
-            for (int i = std::max(0, n - k); i < n; ++i)
-                I[i] = true; // 1
-            do {
-                if (string_class_->symmetry(I) == h_I) {
-                    size_t add_I = addresser->add(I);
-                    for (size_t p = 0; p < ncmo_; ++p) {
-                        if (I[p]) {
-                            J = I;
-                            J[p] = false;
-                            short sign = J.slater_sign(p);
-
-                            int h_J = addresser_1h->sym(J);
-                            size_t add_J = addresser_1h->add(J);
-
-                            std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+        for (const auto& string_class : strings) {
+            for (const auto& I : string_class) {
+                const auto& [add_I, class_I] = addresser->address_and_class(I);
+                for (size_t p = 0; p < ncmo_; ++p) {
+                    if (I[p]) {
+                        auto J = I;
+                        const auto sign = J.slater_sign(p);
+                        J[p] = false;
+                        if (auto it = addresser_1h->find(J); it != addresser_1h->end()) {
+                            const auto& [add_J, class_J] = it->second;
+                            std::tuple<int, size_t, int> I_tuple(class_J, add_J, class_I);
                             list[I_tuple].push_back(H1StringSubstitution(sign, p, add_I));
                         }
                     }
                 }
-            } while (std::next_permutation(I.begin(), I.begin() + n));
+            }
         }
-    } // End loop over h
+    }
 }
 
 std::vector<H2StringSubstitution>& GASStringLists::get_alfa_2h_list(int h_I, size_t add_I,
@@ -399,47 +287,36 @@ std::vector<H2StringSubstitution>& GASStringLists::get_beta_2h_list(int h_I, siz
     return beta_2h_list[I_tuple];
 }
 
-void GASStringLists::make_2h_list(std::shared_ptr<StringAddress> addresser,
+void GASStringLists::make_2h_list(const StringList& strings,
+                                  std::shared_ptr<StringAddress> addresser,
                                   std::shared_ptr<StringAddress> addresser_2h, H2List& list) {
     int n = addresser->nbits();
     int k = addresser->nones();
-    String I, J;
-
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
-            // Generate the strings 1111100000
-            //                      { k }{n-k}
-            for (int i = 0; i < n - k; ++i)
-                I[i] = false; // 0
-            for (int i = std::max(0, n - k); i < n; ++i)
-                I[i] = true; // 1
-            do {
-                if (string_class_->symmetry(I) == h_I) {
-                    size_t add_I = addresser->add(I);
-                    for (size_t q = 0; q < ncmo_; ++q) {
-                        for (size_t p = q + 1; p < ncmo_; ++p) {
-                            if (I[q] and I[p]) {
-                                J = I;
-                                J[q] = false;
-                                short q_sign = J.slater_sign(q);
-                                J[p] = false;
-                                short p_sign = J.slater_sign(p);
-
-                                short sign = p_sign * q_sign;
-
-                                int h_J = addresser_2h->sym(J);
-                                size_t add_J = addresser_2h->add(J);
-
-                                std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+        for (const auto& string_class : strings) {
+            for (const auto& I : string_class) {
+                const auto& [add_I, class_I] = addresser->address_and_class(I);
+                for (size_t q = 0; q < ncmo_; ++q) {
+                    for (size_t p = q + 1; p < ncmo_; ++p) {
+                        if (I[p] and I[q]) {
+                            auto J = I;
+                            J[q] = false;
+                            const auto q_sign = J.slater_sign(q);
+                            J[p] = false;
+                            const auto p_sign = J.slater_sign(p);
+                            if (auto it = addresser_2h->find(J); it != addresser_2h->end()) {
+                                const auto& [add_J, class_J] = it->second;
+                                auto sign = p_sign * q_sign;
+                                std::tuple<int, size_t, int> I_tuple(class_J, add_J, class_I);
                                 list[I_tuple].push_back(H2StringSubstitution(sign, p, q, add_I));
                                 list[I_tuple].push_back(H2StringSubstitution(-sign, q, p, add_I));
                             }
                         }
                     }
                 }
-            } while (std::next_permutation(I.begin(), I.begin() + n));
+            }
         }
-    } // End loop over h
+    }
 }
 
 std::vector<H3StringSubstitution>& GASStringLists::get_alfa_3h_list(int h_I, size_t add_I,
@@ -460,42 +337,31 @@ std::vector<H3StringSubstitution>& GASStringLists::get_beta_3h_list(int h_I, siz
  * that is: J = ± a^{+}_p a_q I. p and q are
  * absolute indices and I belongs to the irrep h.
  */
-void GASStringLists::make_3h_list(std::shared_ptr<StringAddress> addresser,
+void GASStringLists::make_3h_list(const StringList& strings,
+                                  std::shared_ptr<StringAddress> addresser,
                                   std::shared_ptr<StringAddress> addresser_3h, H3List& list) {
     int n = addresser->nbits();
     int k = addresser->nones();
-    String I, J;
-
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        for (size_t h_I = 0; h_I < nirrep_; ++h_I) {
-            // Generate the strings 1111100000
-            //                      { k }{n-k}
-            for (int i = 0; i < n - k; ++i)
-                I[i] = false; // 0
-            for (int i = std::max(0, n - k); i < n; ++i)
-                I[i] = true; // 1
-            do {
-                if (string_class_->symmetry(I) == h_I) {
-                    size_t add_I = addresser->add(I);
-
-                    // apply a_r I
-                    for (size_t r = 0; r < ncmo_; ++r) {
-                        for (size_t q = r + 1; q < ncmo_; ++q) {
-                            for (size_t p = q + 1; p < ncmo_; ++p) {
-                                if (I[r] and I[q] and I[p]) {
-                                    J = I;
-                                    J[r] = false;
-                                    short r_sign = J.slater_sign(r);
-                                    J[q] = false;
-                                    short q_sign = J.slater_sign(q);
-                                    J[p] = false;
-                                    short p_sign = J.slater_sign(p);
-                                    short sign = p_sign * q_sign * r_sign;
-
-                                    int h_J = addresser_3h->sym(J);
-                                    size_t add_J = addresser_3h->add(J);
-
-                                    std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+        for (const auto& string_class : strings) {
+            for (const auto& I : string_class) {
+                const auto& [add_I, class_I] = addresser->address_and_class(I);
+                for (size_t r = 0; r < ncmo_; ++r) {
+                    for (size_t q = r + 1; q < ncmo_; ++q) {
+                        for (size_t p = q + 1; p < ncmo_; ++p) {
+                            if (I[p] and I[q] and I[r]) {
+                                auto J = I;
+                                J[r] = false;
+                                const auto r_sign = J.slater_sign(r);
+                                J[q] = false;
+                                const auto q_sign = J.slater_sign(q);
+                                J[p] = false;
+                                const auto p_sign = J.slater_sign(p);
+                                const auto sign = p_sign * q_sign * r_sign;
+                                if (auto it = addresser_3h->find(J); it != addresser_3h->end()) {
+                                    const auto& [add_J, class_J] = it->second;
+                                    auto sign = p_sign * q_sign;
+                                    std::tuple<int, size_t, int> I_tuple(class_J, add_J, class_I);
                                     list[I_tuple].push_back(
                                         H3StringSubstitution(+sign, p, q, r, add_I));
                                     list[I_tuple].push_back(
@@ -513,8 +379,8 @@ void GASStringLists::make_3h_list(std::shared_ptr<StringAddress> addresser,
                         }
                     }
                 }
-            } while (std::next_permutation(I.begin(), I.begin() + n));
-        } // End loop over h
+            }
+        }
     }
 }
 } // namespace forte

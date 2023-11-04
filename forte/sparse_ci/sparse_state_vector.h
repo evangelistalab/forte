@@ -63,6 +63,7 @@ class StateVector {
     /// @param d the determinant to search for
     /// @return the element found
     auto find(const Determinant& d) const { return state_vec_.find(d); }
+    auto count(const Determinant& d) const { return state_vec_.count(d); }
 
     /// @return the beginning of the map
     auto begin() { return state_vec_.begin(); }

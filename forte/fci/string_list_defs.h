@@ -85,6 +85,8 @@ using VOList2 = std::map<std::tuple<size_t, size_t, int, int>, std::vector<Strin
 /// string I belongs to the irrep h
 using VVOOList =
     std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>;
+using VVOOList2 =
+    std::map<std::tuple<size_t, size_t, size_t, size_t, int, int>, std::vector<StringSubstitution>>;
 
 /// Maps the integers (pq_sym, pq, h) to list of strings connected by a^{+}_p a^{+}_q a_q a_p where
 /// the string I belongs to the irrep h

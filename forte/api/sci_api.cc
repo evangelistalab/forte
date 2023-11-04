@@ -406,7 +406,9 @@ void export_GAS(py::module& m) {
     py::class_<GASStringLists, std::shared_ptr<GASStringLists>>(
         m, "GASStringLists", "A class to represent the strings of a GAS")
         .def(py::init<std::shared_ptr<MOSpaceInfo>, size_t, size_t, int, int,
-                      const std::vector<int>, const std::vector<int>>());
+                      const std::vector<int>, const std::vector<int>>())
+        .def("make_determinants", &GASStringLists::make_determinants,
+             "Return a vector of Determinants");
     py::class_<GASVector, std::shared_ptr<GASVector>>(m, "GASVector",
                                                       "A class to represent a GAS vector")
         .def(py::init<std::shared_ptr<GASStringLists>>())

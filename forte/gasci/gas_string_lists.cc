@@ -179,7 +179,12 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     for (int class_Ib = 0; class_Ib < beta_address_->nclasses(); ++class_Ib) {
         nbs_ += beta_address_->strpcls(class_Ib);
     }
-    psi::outfile->Printf("\n    Top");
+
+    for (const auto& [n, class_Ia, class_Ib] : string_classes()) {
+        const auto nIa = alfa_address_->strpcls(class_Ia);
+        const auto nIb = beta_address_->strpcls(class_Ib);
+        ndet_ += nIa * nIb;
+    }
 
     {
         local_timer t;
@@ -192,37 +197,38 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         make_vo_list(beta_strings_, beta_address_, beta_vo_list);
         vo_list_timer += t.get();
     }
-    psi::outfile->Printf("\n    Middle");
+    psi::outfile->Printf("\n    Top");
     {
         local_timer t;
         make_oo_list(alfa_strings_, alfa_address_, alfa_oo_list);
-        make_oo_list(alfa_strings_, beta_address_, beta_oo_list);
+        make_oo_list(beta_strings_, beta_address_, beta_oo_list);
         oo_list_timer += t.get();
+    }
+    psi::outfile->Printf("\n    Middle");
+    {
+        local_timer t;
+        make_1h_list(alfa_strings_, alfa_address_, alfa_address_1h_, alfa_1h_list);
+        make_1h_list(beta_strings_, beta_address_, beta_address_1h_, beta_1h_list);
+        h1_list_timer += t.get();
     }
     psi::outfile->Printf("\n    Bottom");
     {
         local_timer t;
-        make_1h_list(alfa_address_, alfa_address_1h_, alfa_1h_list);
-        make_1h_list(beta_address_, beta_address_1h_, beta_1h_list);
-        h1_list_timer += t.get();
-    }
-
-    {
-        local_timer t;
-        make_2h_list(alfa_address_, alfa_address_2h_, alfa_2h_list);
-        make_2h_list(beta_address_, beta_address_2h_, beta_2h_list);
+        make_2h_list(alfa_strings_, alfa_address_, alfa_address_2h_, alfa_2h_list);
+        make_2h_list(beta_strings_, beta_address_, beta_address_2h_, beta_2h_list);
         h2_list_timer += t.get();
     }
     {
         local_timer t;
-        make_3h_list(alfa_address_, alfa_address_3h_, alfa_3h_list);
-        make_3h_list(beta_address_, beta_address_3h_, beta_3h_list);
+        make_3h_list(alfa_strings_, alfa_address_, alfa_address_3h_, alfa_3h_list);
+        make_3h_list(beta_strings_, beta_address_, beta_address_3h_, beta_3h_list);
         h3_list_timer += t.get();
     }
+
     {
         local_timer t;
-        make_vvoo_list(alfa_address_, alfa_vvoo_list);
-        make_vvoo_list(beta_address_, beta_vvoo_list);
+        make_vvoo_list(alfa_strings_, alfa_address_, alfa_vvoo_list);
+        make_vvoo_list(beta_strings_, beta_address_, beta_vvoo_list);
         vvoo_list_timer += t.get();
     }
 
@@ -517,33 +523,6 @@ PairList GASStringLists::make_pair_list() {
     return list;
 }
 
-void GASStringLists::make_strings(std::shared_ptr<StringAddress> addresser, StringList& list) {
-    for (size_t h = 0; h < nirrep_; ++h) {
-        list.push_back(std::vector<String>(addresser->strpcls(h)));
-    }
-
-    int n = addresser->nbits();
-    int k = addresser->nones();
-
-    if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-        String I;
-        const auto I_begin = I.begin();
-        const auto I_end =
-            I.begin() + n; // this is important, otherwise we would generate all permutations
-        // Generate the strings 1111100000
-        //                      { k }{n-k}
-        for (int i = 0; i < n - k; ++i)
-            I[i] = false; // 0
-        for (int i = std::max(0, n - k); i < n; ++i)
-            I[i] = true; // 1
-        do {
-            size_t sym_I = string_class_->symmetry(I);
-            size_t add_I = addresser->add(I);
-            list[sym_I][add_I] = I;
-        } while (std::next_permutation(I_begin, I_end));
-    }
-}
-
 StringList
 GASStringLists::make_gas_strings(const std::vector<int>& gas_size,
                                  const std::vector<std::array<int, 6>>& gas_occupations) {
@@ -617,23 +596,16 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
     }
 }
 
-std::vector<Determinant> GASStringLists::make_determinants(int symmetry) const {
-    size_t ndets = 0;
-    for (size_t ha = 0; ha < nirrep_; ha++) {
-        const int hb = symmetry ^ ha;
-        ndets += alfa_strings()[ha].size() * beta_strings()[hb].size();
-    }
-    std::vector<Determinant> dets(ndets);
-    size_t addI = 0;
-    // Loop over irreps of alpha
-    for (size_t ha = 0; ha < nirrep_; ha++) {
-        const int hb = symmetry ^ ha;
-        // Loop over alpha strings in this irrep
-        for (const auto& Ia : alfa_strings()[ha]) {
-            // Loop over beta strings in this irrep
-            for (const auto& Ib : beta_strings()[hb]) {
-                dets[addI] = Determinant(Ia, Ib);
-                addI++;
+std::vector<Determinant> GASStringLists::make_determinants() const {
+    std::vector<Determinant> dets(ndet_);
+    for (size_t add_I{0}; const auto& [n, class_Ia, class_Ib] : string_classes()) {
+        const auto nIa = alfa_address_->strpcls(class_Ia);
+        const auto nIb = beta_address_->strpcls(class_Ib);
+        for (size_t Ia = 0; Ia < nIa; ++Ia) {
+            for (size_t Ib = 0; Ib < nIb; ++Ib) {
+                Determinant I(alfa_str(class_Ia, Ia), beta_str(class_Ib, Ib));
+                dets[add_I] = I;
+                add_I++;
             }
         }
     }

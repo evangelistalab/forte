@@ -132,7 +132,7 @@ void GASCISolver::startup() {
     if (spin_adapt_) {
         spin_adapter_ = std::make_shared<SpinAdapter>(state().multiplicity() - 1,
                                                       state().twice_ms(), lists_->ncmo());
-        dets_ = lists_->make_determinants(symmetry_);
+        dets_ = lists_->make_determinants();
         spin_adapter_->prepare_couplings(dets_);
     }
 

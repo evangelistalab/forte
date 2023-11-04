@@ -171,17 +171,19 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
 
                         {
                             const auto& VVOO_list =
-                                alfa ? lists_->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia)
-                                     : lists_->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ib);
+                                alfa ? lists_->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia,
+                                                                  h_Ia)
+                                     : lists_->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ib,
+                                                                  h_Ib);
                             for (const auto& [sign, I, J] : VVOO_list) {
                                 C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
                             }
                             {
                                 const auto& VVOO_list =
                                     alfa ? lists_->get_alfa_vvoo_list(r_abs, s_abs, p_abs, q_abs,
-                                                                      h_Ia)
+                                                                      h_Ia, h_Ia)
                                          : lists_->get_beta_vvoo_list(r_abs, s_abs, p_abs, q_abs,
-                                                                      h_Ib);
+                                                                      h_Ib, h_Ib);
                                 for (const auto& [sign, I, J] : VVOO_list) {
                                     C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
                                 }
