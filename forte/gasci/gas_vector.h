@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include <functional>
 #include <vector>
 
 #include "psi4/libmints/dimension.h"
@@ -132,8 +133,8 @@ class GASVector {
     //                             std::shared_ptr<RDMs> rdms);
 
     /// Return the elements with the largest absolute value
-    /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
-    std::vector<std::tuple<double, double, size_t, size_t, size_t>>
+    /// This function returns the tuple (|C_I|,C_I,class_Ia, class_Ib,Ia,Ib)
+    std::vector<std::tuple<double, double, int, int, size_t, size_t>>
     max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
@@ -153,7 +154,6 @@ class GASVector {
   private:
     // ==> Class Data <==
 
-    /// The number of irreps
     int nirrep_;
     /// The symmetry of this vector
     const int symmetry_;
@@ -237,6 +237,74 @@ class GASVector {
     /// @param result The wave function to add the result to
     /// @param fci_ints The integrals object/
     void H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+
+    void for_each_element(std::function<void(const size_t&, const int&, const int&, const size_t&,
+                                             const size_t&, double&)>
+                              lambda) const {
+        for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
+            const auto c = C_[n]->pointer();
+            const auto& nIa = alfa_address_->strpcls(class_Ia);
+            const auto& nIb = beta_address_->strpcls(class_Ib);
+            if (nIa == 0 or nIb == 0)
+                continue;
+            for (size_t Ia = 0; Ia < nIa; ++Ia) {
+                for (size_t Ib = 0; Ib < nIb; ++Ib) {
+                    lambda(n, class_Ia, class_Ib, Ia, Ib, c[Ia][Ib]);
+                }
+            }
+        }
+    }
+
+    void const_for_each_element(std::function<void(const size_t&, const int&, const int&,
+                                                   const size_t&, const size_t&, const double&)>
+                                    lambda) const {
+        for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
+            const auto c = C_[n]->pointer();
+            const auto& nIa = alfa_address_->strpcls(class_Ia);
+            const auto& nIb = beta_address_->strpcls(class_Ib);
+            if (nIa == 0 or nIb == 0)
+                continue;
+            for (size_t Ia = 0; Ia < nIa; ++Ia) {
+                for (size_t Ib = 0; Ib < nIb; ++Ib) {
+                    lambda(n, class_Ia, class_Ib, Ia, Ib, c[Ia][Ib]);
+                }
+            }
+        }
+    }
+
+    void for_each_index_element(std::function<void(const size_t&, double&)> lambda) {
+        size_t I = 0;
+        for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
+            const auto c = C_[n]->pointer();
+            const auto& nIa = alfa_address_->strpcls(class_Ia);
+            const auto& nIb = beta_address_->strpcls(class_Ib);
+            if (nIa == 0 or nIb == 0)
+                continue;
+            for (size_t Ia = 0; Ia < nIa; ++Ia) {
+                for (size_t Ib = 0; Ib < nIb; ++Ib) {
+                    lambda(I, c[Ia][Ib]);
+                    I++;
+                }
+            }
+        }
+    }
+
+    void const_for_each_index_element(std::function<void(const size_t&, const double&)> lambda) {
+        size_t I = 0;
+        for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
+            const auto c = C_[n]->pointer();
+            const auto& nIa = alfa_address_->strpcls(class_Ia);
+            const auto& nIb = beta_address_->strpcls(class_Ib);
+            if (nIa == 0 or nIb == 0)
+                continue;
+            for (size_t Ia = 0; Ia < nIa; ++Ia) {
+                for (size_t Ib = 0; Ib < nIb; ++Ib) {
+                    lambda(I, c[Ia][Ib]);
+                    I++;
+                }
+            }
+        }
+    }
 
     // 1-RDM elements are stored in the format
     // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]

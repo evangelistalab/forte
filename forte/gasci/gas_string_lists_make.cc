@@ -87,15 +87,24 @@ void GASStringLists::make_oo(const StringList& strings, std::shared_ptr<StringAd
     }
 }
 
+std::vector<StringSubstitution>& GASStringLists::get_alfa_vo_list(size_t p, size_t q, int class_I,
+                                                                  int class_J) {
+    return alfa_vo_list[std::make_tuple(p, q, class_I, class_J)];
+}
+
+std::vector<StringSubstitution>& GASStringLists::get_beta_vo_list(size_t p, size_t q, int class_I,
+                                                                  int class_J) {
+    return beta_vo_list[std::make_tuple(p, q, class_I, class_J)];
+}
+
 /**
  * Returns a vector of tuples containing the sign, I, and J connected by a^{+}_p
  * a_q
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-std::vector<StringSubstitution>& GASStringLists::get_alfa_vo_list(size_t p, size_t q, int class_I,
-                                                                  int class_J) {
-    return alfa_vo_list[std::make_tuple(p, q, class_I, class_J)];
+const VOListElement& GASStringLists::get_alfa_vo_list3(int class_I, int class_J) const {
+    return alfa_vo_list3.at(std::make_tuple(class_I, class_J));
 }
 
 /**
@@ -104,9 +113,8 @@ std::vector<StringSubstitution>& GASStringLists::get_alfa_vo_list(size_t p, size
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-std::vector<StringSubstitution>& GASStringLists::get_beta_vo_list(size_t p, size_t q, int class_I,
-                                                                  int class_J) {
-    return beta_vo_list[std::make_tuple(p, q, class_I, class_J)];
+const VOListElement& GASStringLists::get_beta_vo_list3(int class_I, int class_J) const {
+    return beta_vo_list3.at(std::make_tuple(class_I, class_J));
 }
 
 void GASStringLists::make_vo_list(const StringList& strings,
@@ -142,8 +150,50 @@ void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAd
                     if (auto it = addresser->find(J); it != addresser->end()) {
                         const auto& [add_I, class_I] = addresser->address_and_class(I);
                         const auto& [add_J, class_J] = it->second;
-
                         list[std::make_tuple(p, q, class_I, class_J)].push_back(
+                            StringSubstitution(sign, add_I, add_J));
+                    }
+                }
+            }
+        }
+    }
+}
+
+void GASStringLists::make_vo_list3(const StringList& strings,
+                                   std::shared_ptr<StringAddress> addresser, VOList3& list) {
+    // Loop over irreps of the pair pq
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+        // Loop over irreps of p
+        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
+            int q_sym = pq_sym ^ p_sym;
+            for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
+                for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
+                    int p_abs = p_rel + cmopi_offset_[p_sym];
+                    int q_abs = q_rel + cmopi_offset_[q_sym];
+                    make_vo3(strings, addresser, list, p_abs, q_abs);
+                }
+            }
+        }
+    }
+}
+
+void GASStringLists::make_vo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                              VOList3& list, int p, int q) {
+    for (const auto& string_class : strings) {
+        for (const auto& I : string_class) {
+            auto J = I;
+            double sign = 1.0;
+            if (J[q]) {
+                sign *= J.slater_sign(q);
+                J[q] = false;
+                if (!J[p]) {
+                    sign *= J.slater_sign(p);
+                    J[p] = true;
+                    if (auto it = addresser->find(J); it != addresser->end()) {
+                        const auto& [add_I, class_I] = addresser->address_and_class(I);
+                        const auto& [add_J, class_J] = it->second;
+                        auto& list_IJ = list[std::make_tuple(class_I, class_J)];
+                        list_IJ[std::make_tuple(p, q)].push_back(
                             StringSubstitution(sign, add_I, add_J));
                     }
                 }
@@ -305,8 +355,8 @@ void GASStringLists::make_2h_list(const StringList& strings,
                             J[p] = false;
                             const auto p_sign = J.slater_sign(p);
                             if (auto it = addresser_2h->find(J); it != addresser_2h->end()) {
+                                const auto sign = p_sign * q_sign;
                                 const auto& [add_J, class_J] = it->second;
-                                auto sign = p_sign * q_sign;
                                 std::tuple<int, size_t, int> I_tuple(class_J, add_J, class_I);
                                 list[I_tuple].push_back(H2StringSubstitution(sign, p, q, add_I));
                                 list[I_tuple].push_back(H2StringSubstitution(-sign, q, p, add_I));
@@ -357,10 +407,9 @@ void GASStringLists::make_3h_list(const StringList& strings,
                                 const auto q_sign = J.slater_sign(q);
                                 J[p] = false;
                                 const auto p_sign = J.slater_sign(p);
-                                const auto sign = p_sign * q_sign * r_sign;
                                 if (auto it = addresser_3h->find(J); it != addresser_3h->end()) {
+                                    const auto sign = p_sign * q_sign * r_sign;
                                     const auto& [add_J, class_J] = it->second;
-                                    auto sign = p_sign * q_sign;
                                     std::tuple<int, size_t, int> I_tuple(class_J, add_J, class_I);
                                     list[I_tuple].push_back(
                                         H3StringSubstitution(+sign, p, q, r, add_I));

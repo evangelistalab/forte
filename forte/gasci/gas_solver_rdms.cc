@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include "psi4/libmints/matrix.h"
+
 #include "helpers/printing.h"
 
 #include "sparse_ci/determinant.h"

@@ -99,20 +99,17 @@ GASVector::GASVector(std::shared_ptr<GASStringLists> lists)
 }
 
 void GASVector::startup() {
-
     nirrep_ = lists_->nirrep();
     ncmo_ = lists_->ncmo();
     cmopi_ = lists_->cmopi();
     cmopi_offset_ = lists_->cmopi_offset();
-    // print symmetry_, nirrep_, ncmo_, cmopi_, cmopi_offset_;
-    // debug([&]() {
+
     psi::outfile->Printf("\n  symmetry: %d", symmetry_);
     psi::outfile->Printf("\n  nirrep: %d", nirrep_);
     psi::outfile->Printf("\n  ncmo: %d", ncmo_);
-    // });
 
     ndet_ = 0;
-    for (const auto& [_, class_Ia, class_Ib] : lists_->string_classes()) {
+    for (const auto& [_, class_Ia, class_Ib] : lists_->determinant_classes()) {
         auto size_alfa = alfa_address_->strpcls(class_Ia);
         auto size_beta = beta_address_->strpcls(class_Ib);
         auto detpcls = size_alfa * size_beta;
@@ -123,7 +120,7 @@ void GASVector::startup() {
     psi::outfile->Printf("\n\n  Number of determinants: %d", ndet_);
 
     // Allocate the wave function
-    for (const auto& [_, class_Ia, class_Ib] : lists_->string_classes()) {
+    for (const auto& [_, class_Ia, class_Ib] : lists_->determinant_classes()) {
         C_.push_back(std::make_shared<psi::Matrix>("C", alfa_address_->strpcls(class_Ia),
                                                    beta_address_->strpcls(class_Ib)));
     }
@@ -146,91 +143,45 @@ const std::vector<size_t>& GASVector::cmopi_offset() const { return cmopi_offset
 const std::shared_ptr<GASStringLists>& GASVector::lists() const { return lists_; }
 
 void GASVector::print(double threshold) const {
-    // print the non-zero elements of the wave function
-    for (const auto& [n, class_Ia, class_Ib] : lists_->string_classes()) {
-        const auto c = C_[n]->pointer();
-        const auto& nIa = alfa_address_->strpcls(class_Ia);
-        const auto& nIb = beta_address_->strpcls(class_Ib);
-        if (nIa == 0 or nIb == 0)
-            continue;
-        psi::outfile->Printf("\n  Block %zu (%zu x %zu)", n, nIa, nIb);
-        for (size_t Ia = 0; Ia < nIa; ++Ia) {
-            for (size_t Ib = 0; Ib < nIb; ++Ib) {
-                if (std::fabs(c[Ia][Ib]) < threshold)
-                    continue;
-                Determinant I(lists_->alfa_str(class_Ia, Ia), lists_->beta_str(class_Ib, Ib));
-                psi::outfile->Printf("\n  %+15.9f %s [%2d][%2d][%2d] (%d)", c[Ia][Ib],
-                                     str(I, lists_->ncmo()).c_str(), class_Ia, static_cast<int>(Ia),
-                                     static_cast<int>(Ib), static_cast<int>(n));
-            }
+    const_for_each_element([&](const size_t& n, const int& class_Ia, const int& class_Ib,
+                               const size_t& Ia, const size_t& Ib, const double& c) {
+        if (std::fabs(c) >= threshold) {
+            Determinant I(lists_->alfa_str(class_Ia, Ia), lists_->beta_str(class_Ib, Ib));
+            psi::outfile->Printf("\n  %+15.9f %s [%2d][%2d][%2d] (%d)", c,
+                                 str(I, lists_->ncmo()).c_str(), class_Ia, static_cast<int>(Ia),
+                                 static_cast<int>(Ib), static_cast<int>(n));
         }
-    }
+    });
 }
 
 std::shared_ptr<StateVector> GASVector::as_state_vector() const {
-    // print the non-zero elements of the wave function
     det_hash<double> state_vector;
-    for (const auto& [n, class_Ia, class_Ib] : lists_->string_classes()) {
-        const auto c = C_[n]->pointer();
-        const auto& nIa = alfa_address_->strpcls(class_Ia);
-        const auto& nIb = beta_address_->strpcls(class_Ib);
-        for (size_t Ia = 0; Ia < nIa; ++Ia) {
-            for (size_t Ib = 0; Ib < nIb; ++Ib) {
-                if (std::fabs(c[Ia][Ib]) > 1.0e-12) {
-                    Determinant I(lists_->alfa_str(class_Ia, Ia), lists_->beta_str(class_Ib, Ib));
-                    state_vector[I] = c[Ia][Ib];
-                }
-            }
+    const_for_each_element([&](const size_t& /*n*/, const int& class_Ia, const int& class_Ib,
+                               const size_t& Ia, const size_t& Ib, const double& c) {
+        if (std::fabs(c) > 1.0e-12) {
+            Determinant I(lists_->alfa_str(class_Ia, Ia), lists_->beta_str(class_Ib, Ib));
+            state_vector[I] = c;
         }
-    }
+    });
     return std::make_shared<StateVector>(state_vector);
 }
 
 void GASVector::copy(GASVector& wfn) {
-    for (const auto& [n, _1, _2] : lists_->string_classes()) {
+    for (const auto& [n, _1, _2] : lists_->determinant_classes()) {
         C_[n]->copy(wfn.C_[n]);
     }
 }
 
 void GASVector::copy(std::shared_ptr<psi::Vector> vec) {
-    for (size_t I{0}; const auto& [n, class_Ia, class_Ib] : lists_->string_classes()) {
-        auto c = C_[n]->pointer();
-        const auto& nIa = alfa_address_->strpcls(class_Ia);
-        const auto& nIb = beta_address_->strpcls(class_Ib);
-        for (size_t Ia = 0; Ia < nIa; ++Ia) {
-            for (size_t Ib = 0; Ib < nIb; ++Ib) {
-                c[Ia][Ib] = vec->get(I);
-                I++;
-            }
-        }
-    }
+    for_each_index_element([&](const size_t& I, double& c) { c = vec->get(I); });
 }
 
 void GASVector::copy_to(std::shared_ptr<psi::Vector> vec) {
-    for (size_t I{0}; const auto& [n, class_Ia, class_Ib] : lists_->string_classes()) {
-        auto c = C_[n]->pointer();
-        const auto& nIa = alfa_address_->strpcls(class_Ia);
-        const auto& nIb = beta_address_->strpcls(class_Ib);
-        for (size_t Ia = 0; Ia < nIa; ++Ia) {
-            for (size_t Ib = 0; Ib < nIb; ++Ib) {
-                vec->set(I, c[Ia][Ib]);
-                I++;
-            }
-        }
-    }
+    const_for_each_index_element([&](const size_t& I, const double& c) { vec->set(I, c); });
 }
 
 void GASVector::set_to(double value) {
-    for (const auto& [n, class_Ia, class_Ib] : lists_->string_classes()) {
-        auto c = C_[n]->pointer();
-        const auto& nIa = alfa_address_->strpcls(class_Ia);
-        const auto& nIb = beta_address_->strpcls(class_Ib);
-        for (size_t Ia = 0; Ia < nIa; ++Ia) {
-            for (size_t Ib = 0; Ib < nIb; ++Ib) {
-                c[Ia][Ib] = value;
-            }
-        }
-    }
+    for_each_index_element([&](const size_t& /*I*/, double& c) { c = value; });
 }
 
 void GASVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
@@ -242,7 +193,7 @@ void GASVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
 
 double GASVector::dot(const GASVector& wfn) const {
     double dot = 0.0;
-    for (const auto& [n, _1, _2] : lists_->string_classes()) {
+    for (const auto& [n, _1, _2] : lists_->determinant_classes()) {
         dot += C_[n]->vector_dot(wfn.C_[n]);
     }
     return (dot);
@@ -287,7 +238,8 @@ void GASVector::zero() {
 //     }
 
 //     auto OCC = std::make_shared<psi::Vector>("Occupation numbers", active_dim);
-//     auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim, active_dim);
+//     auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim,
+//     active_dim);
 
 //     opdm->diagonalize(NO, OCC, psi::descending);
 //     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
@@ -304,7 +256,8 @@ void GASVector::zero() {
 //     psi::outfile->Printf("\n    ");
 //     for (auto vec : vec_irrep_occupation) {
 //         psi::outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
-//                              mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
+//                              mo_space_info->irrep_label(vec.second.first).c_str(),
+//                              vec.first);
 //         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
 //             psi::outfile->Printf("\n    ");
 //     }
@@ -313,17 +266,18 @@ void GASVector::zero() {
 
 double** gather_C_block(GASVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
                         std::shared_ptr<StringAddress> alfa_address,
-                        std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero) {
+                        std::shared_ptr<StringAddress> beta_address, int class_Ia, int class_Ib,
+                        bool zero) {
     // if alfa is true just return the pointer to the block
-    auto c = C.C(ha)->pointer();
+    auto c = C.C(class_Ia)->pointer();
     if (alfa) {
         if (zero)
-            C.C(ha)->zero();
+            C.C(class_Ia)->zero();
         return c;
     }
     // if alfa is false
-    size_t maxIa = alfa_address->strpcls(ha);
-    size_t maxIb = beta_address->strpcls(hb);
+    size_t maxIa = alfa_address->strpcls(class_Ia);
+    size_t maxIb = beta_address->strpcls(class_Ib);
     auto m = M->pointer();
     if (zero) {
         for (size_t Ib = 0; Ib < maxIb; ++Ib)
@@ -339,12 +293,12 @@ double** gather_C_block(GASVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
 
 void scatter_C_block(GASVector& C, double** m, bool alfa,
                      std::shared_ptr<StringAddress> alfa_address,
-                     std::shared_ptr<StringAddress> beta_address, int ha, int hb) {
+                     std::shared_ptr<StringAddress> beta_address, int class_Ia, int class_Ib) {
     if (!alfa) {
-        size_t maxIa = alfa_address->strpcls(ha);
-        size_t maxIb = beta_address->strpcls(hb);
+        size_t maxIa = alfa_address->strpcls(class_Ia);
+        size_t maxIb = beta_address->strpcls(class_Ib);
 
-        double** c = C.C(ha)->pointer();
+        double** c = C.C(class_Ia)->pointer();
         // Add m transposed to C
         for (size_t Ia = 0; Ia < maxIa; ++Ia)
             for (size_t Ib = 0; Ib < maxIb; ++Ib)

@@ -90,6 +90,7 @@ std::shared_ptr<RDMs> compute_transition_rdms(GASVector& C_left, GASVector& C_ri
  */
 ambit::Tensor compute_1rdm_different_irrep(GASVector& C_left, GASVector& C_right, bool alfa) {
     size_t ncmo = C_left.ncmo();
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo, ncmo});
     size_t nirrep = C_left.nirrep();
     const auto& cmopi = C_left.cmopi();
     const auto& cmopi_offset = C_left.cmopi_offset();
@@ -106,11 +107,10 @@ ambit::Tensor compute_1rdm_different_irrep(GASVector& C_left, GASVector& C_right
 
     const auto& lists_right = C_right.lists();
 
-    auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo, ncmo});
-
-    // here we assume that the two wave functions have the same number of alpha and beta electrons
+    // here we assume that the two wave functions have the same number of alpha and beta
+    // electrons
     auto na = alfa_address_left->nones();
-    auto nb = alfa_address_left->nones();
+    auto nb = beta_address_left->nones();
 
     if ((alfa and (na < 1)) or ((!alfa) and (nb < 1)))
         return rdm;
@@ -124,7 +124,8 @@ ambit::Tensor compute_1rdm_different_irrep(GASVector& C_left, GASVector& C_right
     for (size_t h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
         // The beta right string symmetry is fixed by the symmetry of the right state
         int h_Ib = h_Ia ^ symmetry_right;
-        // the alpha right string symmetry depends on the operators, if they act on the alpha string
+        // the alpha right string symmetry depends on the operators, if they act on the alpha
+        // string
         // then the beta left/right strings have to be the same and so their symmetry.
         int h_Ja = alfa ? h_Ib ^ symmetry_left : h_Ia;
         // The beta left string symmetry is fixed by the symmetry of the left state

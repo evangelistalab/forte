@@ -131,7 +131,7 @@ StringClass::StringClass(size_t symmetry, const std::vector<int>& mopi,
             auto h_Ib = h_Ia ^ symmetry;
             auto aocc_h_Ia = alfa_string_classes_map_.at(std::make_tuple(aocc_idx, h_Ia));
             auto bocc_h_Ib = beta_string_classes_map_.at(std::make_tuple(bocc_idx, h_Ib));
-            string_classes_.emplace_back(string_classes_.size(), aocc_h_Ia, bocc_h_Ib);
+            determinant_classes_.emplace_back(determinant_classes_.size(), aocc_h_Ia, bocc_h_Ib);
         }
     }
 }
@@ -150,8 +150,8 @@ const std::vector<std::pair<size_t, size_t>>& StringClass::beta_string_classes()
     return beta_string_classes_;
 }
 
-const std::vector<std::tuple<size_t, size_t, size_t>>& StringClass::string_classes() const {
-    return string_classes_;
+const std::vector<std::tuple<size_t, size_t, size_t>>& StringClass::determinant_classes() const {
+    return determinant_classes_;
 }
 
 size_t StringClass::alfa_string_class(const String& s) const {

@@ -113,7 +113,9 @@ class StringClass {
     /// @brief Return the beta string classes
     const std::vector<std::pair<size_t, size_t>>& beta_string_classes() const;
     /// @brief Return a list of tuples of the form (class_idx, class_Ia, class_Ib)
-    const std::vector<std::tuple<size_t, size_t, size_t>>& string_classes() const;
+    const std::vector<std::tuple<size_t, size_t, size_t>>& determinant_classes() const;
+    /// @brief Return a class with same occupation pattern but different symmetry
+    int class_times_irrep(int class_I, int irrep) const;
 
   private:
     /// The number of irreps
@@ -140,7 +142,7 @@ class StringClass {
     std::map<std::pair<size_t, size_t>, size_t> beta_string_classes_map_;
     /// A list of the product of alpha and beta string classes stored as tuple
     /// (product class index, alfa class index, beta class index)
-    std::vector<std::tuple<size_t, size_t, size_t>> string_classes_;
+    std::vector<std::tuple<size_t, size_t, size_t>> determinant_classes_;
     /// A mask used to count the number of 1s in a string that belongs to a given GAS space
     std::array<String, 6> gas_masks_;
 };

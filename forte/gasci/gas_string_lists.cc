@@ -180,7 +180,7 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         nbs_ += beta_address_->strpcls(class_Ib);
     }
 
-    for (const auto& [n, class_Ia, class_Ib] : string_classes()) {
+    for (const auto& [n, class_Ia, class_Ib] : determinant_classes()) {
         const auto nIa = alfa_address_->strpcls(class_Ia);
         const auto nIb = beta_address_->strpcls(class_Ib);
         ndet_ += nIa * nIb;
@@ -195,6 +195,8 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         local_timer t;
         make_vo_list(alfa_strings_, alfa_address_, alfa_vo_list);
         make_vo_list(beta_strings_, beta_address_, beta_vo_list);
+        make_vo_list3(alfa_strings_, alfa_address_, alfa_vo_list3);
+        make_vo_list3(beta_strings_, beta_address_, beta_vo_list3);
         vo_list_timer += t.get();
     }
     psi::outfile->Printf("\n    Top");
@@ -598,7 +600,7 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
 
 std::vector<Determinant> GASStringLists::make_determinants() const {
     std::vector<Determinant> dets(ndet_);
-    for (size_t add_I{0}; const auto& [n, class_Ia, class_Ib] : string_classes()) {
+    for (size_t add_I{0}; const auto& [n, class_Ia, class_Ib] : determinant_classes()) {
         const auto nIa = alfa_address_->strpcls(class_Ia);
         const auto nIb = beta_address_->strpcls(class_Ib);
         for (size_t Ia = 0; Ia < nIa; ++Ia) {

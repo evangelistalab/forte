@@ -34,36 +34,29 @@
 
 namespace forte {
 
-std::vector<std::tuple<double, double, size_t, size_t, size_t>>
+std::vector<std::tuple<double, double, int, int, size_t, size_t>>
 GASVector::max_abs_elements(size_t num_dets) {
     num_dets = std::min(num_dets, ndet_);
 
-    std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets(num_dets);
+    std::vector<std::tuple<double, double, int, int, size_t, size_t>> dets(num_dets);
 
-    double emin = 0.0;
+    double abs_c_min = 0.0;
 
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_address_->strpcls(alfa_sym);
-        size_t maxIb = beta_address_->strpcls(beta_sym);
-        double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-            for (size_t Ib = 0; Ib < maxIb; ++Ib) {
-                double e = std::fabs(C_ha[Ia][Ib]);
-                if (e > emin) {
-                    // Find where to inser this determinant
-                    dets.pop_back();
-                    auto it = std::find_if(
-                        dets.begin(), dets.end(),
-                        [&e](const std::tuple<double, double, size_t, size_t, size_t>& t) {
-                            return e > std::get<0>(t);
-                        });
-                    dets.insert(it, std::make_tuple(e, C_ha[Ia][Ib], alfa_sym, Ia, Ib));
-                    emin = std::get<0>(dets.back());
-                }
-            }
+    const_for_each_element([&](const size_t& /*n*/, const int& class_Ia, const int& class_Ib,
+                               const size_t& Ia, const size_t& Ib, const double& c) {
+        auto abs_c = std::fabs(c);
+        if (abs_c > abs_c_min) {
+            // Find where to insert this determinant
+            dets.pop_back();
+            auto it =
+                std::find_if(dets.begin(), dets.end(),
+                             [&](const std::tuple<double, double, int, int, size_t, size_t>& t) {
+                                 return abs_c > std::get<0>(t);
+                             });
+            dets.insert(it, std::make_tuple(abs_c, c, class_Ia, class_Ib, Ia, Ib));
+            abs_c_min = std::get<0>(dets.back());
         }
-    }
+    });
     return dets;
 }
 

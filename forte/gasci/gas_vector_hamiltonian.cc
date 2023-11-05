@@ -84,47 +84,43 @@ void GASVector::Hamiltonian(GASVector& result, std::shared_ptr<ActiveSpaceIntegr
 void GASVector::H0(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     double core_energy = fci_ints->scalar_energy() + fci_ints->frozen_core_energy() +
                          fci_ints->nuclear_repulsion_energy();
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        result.C_[alfa_sym]->copy(C_[alfa_sym]);
-        result.C_[alfa_sym]->scale(core_energy);
+    for (const auto& [n, _1, _2] : lists_->determinant_classes()) {
+        result.C_[n]->copy(C_[n]);
+        result.C_[n]->scale(core_energy);
     }
 }
 
 void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa) {
-    for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
-        int h_Ib = h_Ia ^ symmetry_;
-        // The pq product is totally symmetric
-        const int h_Ja = h_Ia;
-        const int h_Jb = h_Ib;
-        if (detpcls_[h_Ia] > 0) {
-            auto Cr =
-                gather_C_block(*this, CR, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, false);
-            auto Cl =
-                gather_C_block(result, CL, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, !alfa);
+    // loop over blocks of matrix C
+    for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
+        // The pq product is totally symmetric so the classes if the result are the same as the
+        // classes of the input
+        const int class_Ja = class_Ia;
+        const int class_Jb = class_Ib;
+        size_t block_size = alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
+        if (block_size == 0)
+            continue;
 
-            size_t maxL = alfa ? beta_address_->strpcls(h_Ib) : alfa_address_->strpcls(h_Ia);
+        auto Cr = gather_C_block(*this, CR, alfa, alfa_address_, beta_address_, class_Ia, class_Ib,
+                                 false);
+        auto Cl = gather_C_block(result, CL, alfa, alfa_address_, beta_address_, class_Ja, class_Jb,
+                                 !alfa);
 
-            for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
-                int q_sym = p_sym; // Select the totat symmetric irrep
-                for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                    for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                        const int p_abs = p_rel + cmopi_offset_[p_sym];
-                        const int q_abs = q_rel + cmopi_offset_[q_sym];
-                        const double Hpq =
-                            alfa ? fci_ints->oei_a(p_abs, q_abs) : fci_ints->oei_b(p_abs, q_abs);
-                        const auto& vo_list =
-                            alfa ? lists_->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja)
-                                 : lists_->get_beta_vo_list(p_abs, q_abs, h_Ib, h_Jb);
-                        for (const auto& [sign, I, J] : vo_list) {
-                            C_DAXPY(maxL, sign * Hpq, Cr[I], 1, Cl[J], 1);
-                        }
-                    }
-                }
+        size_t maxL = alfa ? beta_address_->strpcls(class_Ib) : alfa_address_->strpcls(class_Ia);
+
+        const auto& pq_vo_list = alfa ? lists_->get_alfa_vo_list3(class_Ia, class_Ja)
+                                      : lists_->get_beta_vo_list3(class_Ib, class_Jb);
+
+        for (const auto& [pq, vo_list] : pq_vo_list) {
+            const auto& [p, q] = pq;
+            const double Hpq = alfa ? fci_ints->oei_a(p, q) : fci_ints->oei_b(p, q);
+            for (const auto& [sign, I, J] : vo_list) {
+                C_DAXPY(maxL, sign * Hpq, Cr[I], 1, Cl[J], 1);
             }
-            scatter_C_block(result, Cl, alfa, alfa_address_, beta_address_, h_Ia, h_Ib);
         }
-    } // End loop over h
-}
+        scatter_C_block(result, Cl, alfa, alfa_address_, beta_address_, class_Ja, class_Jb);
+    }
+} // End loop over h
 
 void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                          bool alfa) {

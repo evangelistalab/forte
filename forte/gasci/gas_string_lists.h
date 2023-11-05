@@ -93,9 +93,11 @@ class GASStringLists {
     size_t pairpi(int h) const { return pairpi_[h]; }
 
     /// @return the alpha string address object
-    auto alfa_address() { return alfa_address_; }
+    const auto& alfa_address() { return alfa_address_; }
     /// @return the beta string address object
-    auto beta_address() { return beta_address_; }
+    const auto& beta_address() { return beta_address_; }
+    /// @return the string class object
+    const auto& string_class() { return string_class_; }
     /// @return the alpha string address object for N - 1 electrons
     auto alfa_address_1h() { return alfa_address_1h_; }
     /// @return the beta string address object for N - 1 electrons
@@ -128,10 +130,13 @@ class GASStringLists {
     /// @return the beta string classes
     const auto& beta_string_classes() const { return string_class_->beta_string_classes(); }
     /// @return the alpha/beta string classes
-    const auto& string_classes() const { return string_class_->string_classes(); }
+    const auto& determinant_classes() const { return string_class_->determinant_classes(); }
 
     /// @return the list of determinants with a given symmetry
     std::vector<Determinant> make_determinants() const;
+
+    const VOListElement& get_alfa_vo_list3(int class_I, int class_J) const;
+    const VOListElement& get_beta_vo_list3(int class_I, int class_J) const;
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int class_I, int class_J);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q, int class_I, int class_J);
@@ -230,6 +235,9 @@ class GASStringLists {
     /// The VO string lists
     VOList2 alfa_vo_list;
     VOList2 beta_vo_list;
+    /// The VO string lists
+    VOList3 alfa_vo_list3;
+    VOList3 beta_vo_list3;
     /// The OO string lists
     OOList2 alfa_oo_list;
     OOList2 beta_oo_list;
@@ -284,6 +292,12 @@ class GASStringLists {
                       VOList2& list);
     void make_vo(const StringList& strings, std::shared_ptr<StringAddress> addresser, VOList2& list,
                  int p, int q);
+
+    /// Make the VO list
+    void make_vo_list3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                       VOList3& list);
+    void make_vo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                  VOList3& list, int p, int q);
 
     /// @brief Make the list of strings connected by a^{+}_p a^{+}_q a_q a_p
     void make_oo_list(const StringList& strings, std::shared_ptr<StringAddress> graph,

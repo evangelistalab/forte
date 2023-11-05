@@ -319,19 +319,15 @@ void GASCISolver::print_solutions(size_t sample_size, std::shared_ptr<psi::Vecto
             b = b_basis;
         }
         C_->copy(b);
-        std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
+        std::vector<std::tuple<double, double, int, int, size_t, size_t>> dets_config =
             C_->max_abs_elements(sample_size);
 
-        for (auto& det_config : dets_config) {
-            double ci_abs, ci;
-            size_t h, add_Ia, add_Ib;
-            std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
-
+        for (const auto& [ci_abs, ci, class_Ia, class_Ib, add_Ia, add_Ib] : dets_config) {
             if (ci_abs < 0.01)
                 continue;
 
-            auto Ia_v = lists_->alfa_str(h, add_Ia);
-            auto Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+            auto Ia_v = lists_->alfa_str(class_Ia, add_Ia);
+            auto Ib_v = lists_->beta_str(class_Ib, add_Ib);
 
             psi::outfile->Printf("\n    ");
             size_t offset = 0;

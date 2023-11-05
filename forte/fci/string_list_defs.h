@@ -79,7 +79,14 @@ using StringList = std::vector<std::vector<String>>;
 /// Maps the integers (p,q,h) to list of strings connected by a^{+}_p a_q, where the string
 /// I belongs to the irrep h
 using VOList = std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>>;
+
 using VOList2 = std::map<std::tuple<size_t, size_t, int, int>, std::vector<StringSubstitution>>;
+
+/// Maps the integers (class_I, class_J) to a map of orbital indices (p,q) and the corresponding
+/// list of strings connected by a^{+}_p a_q, where the string I belongs to class_I and J belongs to
+/// class_J
+using VOListElement = std::map<std::tuple<int, int>, std::vector<StringSubstitution>>;
+using VOList3 = std::map<std::pair<int, int>, VOListElement>;
 
 /// Maps the integers (p,q,r,s,h) to list of strings connected by a^{+}_p a^{+}_q a_s a_r, where the
 /// string I belongs to the irrep h

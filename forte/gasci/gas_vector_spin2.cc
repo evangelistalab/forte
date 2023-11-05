@@ -37,7 +37,6 @@ namespace forte {
 
 double GASVector::compute_spin2() {
     double spin2 = 0.0;
-    // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
         const int Ib_sym = Ia_sym ^ symmetry_;
         auto Cr = C_[Ia_sym]->pointer();
@@ -70,6 +69,7 @@ double GASVector::compute_spin2() {
             }
         }
     }
+
     double na = alfa_address_->nones();
     double nb = beta_address_->nones();
     return -spin2 + 0.25 * std::pow(na - nb, 2.0) + 0.5 * (na + nb);
