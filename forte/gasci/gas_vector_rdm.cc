@@ -178,9 +178,9 @@ ambit::Tensor GASVector::compute_1rdm_same_irrep(GASVector& C_left, GASVector& C
         if (detpi[h_Ia] > 0) {
             // Get a pointer to the correct block of matrix C
             auto Cl =
-                gather_C_block(C_left, CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+                C_left.gather_C_block(CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
             auto Cr =
-                gather_C_block(C_right, CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+                C_right.gather_C_block(CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
 
             const size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
             for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {
@@ -236,9 +236,9 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
         if (detpi[h_Ia] > 0) {
             // Get a pointer to the correct block of matrix C
             auto Cl =
-                gather_C_block(C_left, CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+                C_left.gather_C_block(CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
             auto Cr =
-                gather_C_block(C_right, CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+                C_right.gather_C_block(CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
 
             size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
             // Loop over (p>q) == (p>q)
@@ -423,9 +423,9 @@ ambit::Tensor GASVector::compute_3rdm_aaa_same_irrep(GASVector& C_left, GASVecto
             int h_Ib = h_Ia ^ symmetry;
             // Get a pointer to the correct block of matrix C
             auto Cl =
-                gather_C_block(C_left, CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+                C_left.gather_C_block(CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
             auto Cr =
-                gather_C_block(C_right, CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+                C_right.gather_C_block(CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
 
             size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
             if (maxL > 0) {

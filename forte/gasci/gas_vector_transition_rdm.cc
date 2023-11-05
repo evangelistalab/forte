@@ -133,10 +133,10 @@ ambit::Tensor compute_1rdm_different_irrep(GASVector& C_left, GASVector& C_right
 
         if ((detpi_left[h_Ja] > 0) and (detpi_right[h_Ia] > 0)) {
             // Fill CR with the correct block
-            auto Cl = gather_C_block(C_left, GASVector::get_CL(), alfa, alfa_address_left,
-                                     beta_address_left, h_Ja, h_Jb, false);
-            auto Cr = gather_C_block(C_right, GASVector::get_CR(), alfa, alfa_address_right,
-                                     beta_address_right, h_Ia, h_Ib, false);
+            auto Cl = C_left.gather_C_block(GASVector::get_CL(), alfa, alfa_address_left,
+                                            beta_address_left, h_Ja, h_Jb, false);
+            auto Cr = C_right.gather_C_block(GASVector::get_CR(), alfa, alfa_address_right,
+                                             beta_address_right, h_Ia, h_Ib, false);
             const size_t maxL =
                 alfa ? beta_address_right->strpcls(h_Ib) : alfa_address_right->strpcls(h_Ia);
             for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {

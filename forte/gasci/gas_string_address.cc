@@ -111,7 +111,7 @@ StringClass::StringClass(size_t symmetry, const std::vector<int>& mopi,
     for (size_t n = 0, j = 0; n < alfa_occupation.size(); n++) {
         for (size_t h = 0; h < nirrep_; h++) {
             alfa_string_classes_.emplace_back(n, h);
-            alfa_string_classes_map_[std::make_tuple(n, h)] = j;
+            alfa_string_classes_map_[std::make_pair(n, h)] = j;
             j++;
         }
     }
@@ -120,7 +120,7 @@ StringClass::StringClass(size_t symmetry, const std::vector<int>& mopi,
     for (size_t n = 0, j = 0; n < beta_occupation.size(); n++) {
         for (size_t h = 0; h < nirrep_; h++) {
             beta_string_classes_.emplace_back(n, h);
-            beta_string_classes_map_[std::make_tuple(n, h)] = j;
+            beta_string_classes_map_[std::make_pair(n, h)] = j;
             j++;
         }
     }
@@ -131,6 +131,7 @@ StringClass::StringClass(size_t symmetry, const std::vector<int>& mopi,
             auto h_Ib = h_Ia ^ symmetry;
             auto aocc_h_Ia = alfa_string_classes_map_.at(std::make_tuple(aocc_idx, h_Ia));
             auto bocc_h_Ib = beta_string_classes_map_.at(std::make_tuple(bocc_idx, h_Ib));
+            block_index_[std::make_pair(aocc_h_Ia, bocc_h_Ib)] = determinant_classes_.size();
             determinant_classes_.emplace_back(determinant_classes_.size(), aocc_h_Ia, bocc_h_Ib);
         }
     }
@@ -152,6 +153,14 @@ const std::vector<std::pair<size_t, size_t>>& StringClass::beta_string_classes()
 
 const std::vector<std::tuple<size_t, size_t, size_t>>& StringClass::determinant_classes() const {
     return determinant_classes_;
+}
+
+int StringClass::block_index(int class_Ia, int class_Ib) const {
+    // check if the block index exists. If not, throw an exception
+    if (block_index_.count(std::make_pair(class_Ia, class_Ib)) == 0) {
+        throw std::runtime_error("Block index not found");
+    }
+    return block_index_.at(std::make_pair(class_Ia, class_Ib));
 }
 
 size_t StringClass::alfa_string_class(const String& s) const {

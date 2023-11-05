@@ -335,38 +335,38 @@ class GASVector {
     /// Compute the matrix elements of the alpha-beta-beta 3-RDM <a^+_{pa} a^+_{qb} a^+_{rb} a_{ub}
     /// a_{tb} a_{sa}>
     static ambit::Tensor compute_3rdm_abb_same_irrep(GASVector& C_left, GASVector& C_right);
+
+  public:
+    /// @brief Provide a pointer to the a block of the coefficient matrix in such a way that we can
+    /// use its content in several algorithms (sigma vector, RDMs, etc.)
+    /// @param C The fci vector
+    /// @param M The matrix that might hold the data it if is transposed
+    /// @param alfa flag for alfa or beta component, true = alfa, false = beta. This affects
+    /// transposition
+    /// @param alfa_address The addressing object for the alfa component
+    /// @param beta_address The addressing object for the beta component
+    /// @param ha The string class of the alfa component (a generalization of the irrep)
+    /// @param hb The string class of the beta component (a generalization of the irrep)
+    /// @param zero If true, zero the matrix before returning it
+    /// @return A pointer to the block of the coefficient matrix
+    double** gather_C_block(std::shared_ptr<psi::Matrix> M, bool alfa,
+                            std::shared_ptr<StringAddress> alfa_address,
+                            std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero);
+
+    /// @brief Scatter the data from a matrix to the coefficient matrix. This is used in the sigma
+    /// vector algorithm
+    /// @param C The fci vector
+    /// @param m The matrix that holds the data
+    /// @param alfa flag for alfa or beta component, true = alfa, false = beta. If true, the data is
+    /// already in place and this function does nothing. If false, the data is transposed before
+    /// being added.
+    /// @param alfa_address The addressing object for the alfa component
+    /// @param beta_address The addressing object for the beta component
+    /// @param ha The string class of the alfa component (a generalization of the irrep)
+    /// @param hb The string class of the beta component (a generalization of the irrep)
+    void scatter_C_block(double** m, bool alfa, std::shared_ptr<StringAddress> alfa_address,
+                         std::shared_ptr<StringAddress> beta_address, int ha, int hb);
 };
-
-/// @brief Provide a pointer to the a block of the coefficient matrix in such a way that we can use
-/// its content in several algorithms (sigma vector, RDMs, etc.)
-/// @param C The fci vector
-/// @param M The matrix that might hold the data it if is transposed
-/// @param alfa flag for alfa or beta component, true = alfa, false = beta. This affects
-/// transposition
-/// @param alfa_address The addressing object for the alfa component
-/// @param beta_address The addressing object for the beta component
-/// @param ha The string class of the alfa component (a generalization of the irrep)
-/// @param hb The string class of the beta component (a generalization of the irrep)
-/// @param zero If true, zero the matrix before returning it
-/// @return A pointer to the block of the coefficient matrix
-double** gather_C_block(GASVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
-                        std::shared_ptr<StringAddress> alfa_address,
-                        std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero);
-
-/// @brief Scatter the data from a matrix to the coefficient matrix. This is used in the sigma
-/// vector algorithm
-/// @param C The fci vector
-/// @param m The matrix that holds the data
-/// @param alfa flag for alfa or beta component, true = alfa, false = beta. If true, the data is
-/// already in place and this function does nothing. If false, the data is transposed before being
-/// added.
-/// @param alfa_address The addressing object for the alfa component
-/// @param beta_address The addressing object for the beta component
-/// @param ha The string class of the alfa component (a generalization of the irrep)
-/// @param hb The string class of the beta component (a generalization of the irrep)
-void scatter_C_block(GASVector& C, double** m, bool alfa,
-                     std::shared_ptr<StringAddress> alfa_address,
-                     std::shared_ptr<StringAddress> beta_address, int ha, int hb);
 
 std::shared_ptr<RDMs> compute_transition_rdms(GASVector& C_left, GASVector& C_right,
                                               int max_rdm_level, RDMsType type);

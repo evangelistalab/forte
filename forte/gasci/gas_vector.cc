@@ -264,15 +264,16 @@ void GASVector::zero() {
 //     psi::outfile->Printf("\n");
 // }
 
-double** gather_C_block(GASVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
-                        std::shared_ptr<StringAddress> alfa_address,
-                        std::shared_ptr<StringAddress> beta_address, int class_Ia, int class_Ib,
-                        bool zero) {
+double** GASVector::gather_C_block(std::shared_ptr<psi::Matrix> M, bool alfa,
+                                   std::shared_ptr<StringAddress> alfa_address,
+                                   std::shared_ptr<StringAddress> beta_address, int class_Ia,
+                                   int class_Ib, bool zero) {
     // if alfa is true just return the pointer to the block
-    auto c = C.C(class_Ia)->pointer();
+    int block_idx = lists_->string_class()->block_index(class_Ia, class_Ib);
+    auto c = C(block_idx)->pointer();
     if (alfa) {
         if (zero)
-            C.C(class_Ia)->zero();
+            C(block_idx)->zero();
         return c;
     }
     // if alfa is false
@@ -291,14 +292,15 @@ double** gather_C_block(GASVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
     return m;
 }
 
-void scatter_C_block(GASVector& C, double** m, bool alfa,
-                     std::shared_ptr<StringAddress> alfa_address,
-                     std::shared_ptr<StringAddress> beta_address, int class_Ia, int class_Ib) {
+void GASVector::scatter_C_block(double** m, bool alfa, std::shared_ptr<StringAddress> alfa_address,
+                                std::shared_ptr<StringAddress> beta_address, int class_Ia,
+                                int class_Ib) {
     if (!alfa) {
         size_t maxIa = alfa_address->strpcls(class_Ia);
         size_t maxIb = beta_address->strpcls(class_Ib);
 
-        double** c = C.C(class_Ia)->pointer();
+        int block_idx = lists_->string_class()->block_index(class_Ia, class_Ib);
+        auto c = C(block_idx)->pointer();
         // Add m transposed to C
         for (size_t Ia = 0; Ia < maxIa; ++Ia)
             for (size_t Ib = 0; Ib < maxIb; ++Ib)

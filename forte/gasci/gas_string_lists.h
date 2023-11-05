@@ -125,6 +125,9 @@ class GASStringLists {
     /// @return the beta string in irrep h and index I
     String beta_str(size_t h, size_t I) const { return beta_strings_[h][I]; }
 
+    /// @return the string class object
+    const auto& string_class() const { return string_class_; }
+
     /// @return the alpha string classes
     const auto& alfa_string_classes() const { return string_class_->alfa_string_classes(); }
     /// @return the beta string classes
