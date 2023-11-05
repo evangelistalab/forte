@@ -57,6 +57,14 @@ std::vector<u_int32_t>& GASStringLists::get_beta_oo_list(int pq_sym, size_t pq, 
     return beta_oo_list[pq_pair];
 }
 
+const OOListElement& GASStringLists::get_alfa_oo_list3(int class_I) const {
+    return alfa_oo_list3.at(class_I);
+}
+
+const OOListElement& GASStringLists::get_beta_oo_list3(int class_I) const {
+    return beta_oo_list3.at(class_I);
+}
+
 void GASStringLists::make_oo_list(const StringList& strings,
                                   std::shared_ptr<StringAddress> addresser, OOList2& list) {
     // Loop over irreps of the pair pq
@@ -79,6 +87,34 @@ void GASStringLists::make_oo(const StringList& strings, std::shared_ptr<StringAd
                 if (I[p] and I[q]) {
                     std::tuple<int, size_t, int> pq_pair(pq_sym, pq, class_I);
                     list[pq_pair].push_back(add_I);
+                }
+                add_I++;
+            }
+            class_I++;
+        }
+    }
+}
+
+void GASStringLists::make_oo_list3(const StringList& strings,
+                                   std::shared_ptr<StringAddress> addresser, OOList3& list) {
+    // Loop over irreps of the pair pq
+    for (int p = 0; p < ncmo_; p++) {
+        for (int q = 0; q < p; q++) {
+            make_oo3(strings, addresser, list, p, q);
+        }
+    }
+}
+
+void GASStringLists::make_oo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                              OOList3& list, int p, int q) {
+    int k = addresser->nones() - 2;
+    if (k >= 0) {
+        for (int class_I{0}; const auto& string_class : strings) {
+            for (u_int32_t add_I{0}; const auto& I : string_class) {
+                // find the strings where both p and q are occupied
+                if (I[p] and I[q]) {
+                    auto& list_oo = list[class_I];
+                    list_oo[std::make_tuple(p, q)].push_back(add_I);
                 }
                 add_I++;
             }
@@ -220,6 +256,26 @@ std::vector<StringSubstitution>& GASStringLists::get_beta_vvoo_list(size_t p, si
     return beta_vvoo_list[pqrs_pair];
 }
 
+const VVOOListElement& GASStringLists::get_alfa_vvoo_list3(int class_I, int class_J) const {
+    // check if the key exists, if not return an empty list
+    if (auto it = alfa_vvoo_list3.find(std::make_pair(class_I, class_J));
+        it != alfa_vvoo_list3.end()) {
+        return it->second;
+    } else {
+        return empty_vvoo_list3;
+    }
+}
+
+const VVOOListElement& GASStringLists::get_beta_vvoo_list3(int class_I, int class_J) const {
+    // check if the key exists, if not return an empty list
+    if (auto it = beta_vvoo_list3.find(std::make_pair(class_I, class_J));
+        it != beta_vvoo_list3.end()) {
+        return it->second;
+    } else {
+        return empty_vvoo_list3;
+    }
+}
+
 void GASStringLists::make_vvoo_list(const StringList& strings,
                                     std::shared_ptr<StringAddress> addresser, VVOOList2& list) {
     // Loop over irreps of the pair pq
@@ -277,6 +333,74 @@ void GASStringLists::make_vvoo(const StringList& strings, std::shared_ptr<String
                                 const auto& [add_I, class_I] = addresser->address_and_class(I);
                                 const auto& [add_J, class_J] = it->second;
                                 list[std::make_tuple(p, q, r, s, class_I, class_J)].push_back(
+                                    StringSubstitution(sign, add_I, add_J));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void GASStringLists::make_vvoo_list3(const StringList& strings,
+                                     std::shared_ptr<StringAddress> addresser, VVOOList3& list) {
+    // Loop over irreps of the pair pq
+    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+        int rs_sym = pq_sym;
+        // Loop over irreps of p,r
+        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
+            int q_sym = pq_sym ^ p_sym;
+            for (size_t r_sym = 0; r_sym < nirrep_; ++r_sym) {
+                size_t s_sym = rs_sym ^ r_sym;
+                for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
+                    for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
+                        for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
+                            for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
+                                int p_abs = p_rel + cmopi_offset_[p_sym];
+                                int q_abs = q_rel + cmopi_offset_[q_sym];
+                                int r_abs = r_rel + cmopi_offset_[r_sym];
+                                int s_abs = s_rel + cmopi_offset_[s_sym];
+                                if ((p_abs > q_abs) && (r_abs > s_abs)) {
+                                    // Avoid
+                                    if (not((p_abs == r_abs) and (q_abs == s_abs))) {
+                                        make_vvoo3(strings, addresser, list, p_abs, q_abs, r_abs,
+                                                   s_abs);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void GASStringLists::make_vvoo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                                VVOOList3& list, int p, int q, int r, int s) {
+    for (const auto& string_class : strings) {
+        for (const auto& I : string_class) {
+            auto J = I;
+            double sign = 1.0;
+            // Apply a^{+}_p a^{+}_q a_s a_r to I
+            if (J[r]) {
+                sign *= J.slater_sign(r);
+                J[r] = false;
+                if (J[s]) {
+                    sign *= J.slater_sign(s);
+                    J[s] = false;
+                    if (!J[q]) {
+                        sign *= J.slater_sign(q);
+                        J[q] = true;
+                        if (!J[p]) {
+                            sign *= J.slater_sign(p);
+                            J[p] = true;
+                            if (auto it = addresser->find(J); it != addresser->end()) {
+                                const auto& [add_I, class_I] = addresser->address_and_class(I);
+                                const auto& [add_J, class_J] = it->second;
+                                auto& list_IJ = list[std::make_tuple(class_I, class_J)];
+                                list_IJ[std::make_tuple(p, q, r, s)].push_back(
                                     StringSubstitution(sign, add_I, add_J));
                             }
                         }

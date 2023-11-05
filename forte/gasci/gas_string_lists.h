@@ -156,10 +156,16 @@ class GASStringLists {
     std::vector<u_int32_t>& get_alfa_oo_list(int pq_sym, size_t pq, int h);
     std::vector<u_int32_t>& get_beta_oo_list(int pq_sym, size_t pq, int h);
 
+    const OOListElement& get_alfa_oo_list3(int class_I) const;
+    const OOListElement& get_beta_oo_list3(int class_I) const;
+
     std::vector<StringSubstitution>& get_alfa_vvoo_list(size_t p, size_t q, size_t r, size_t s,
                                                         int class_I, int class_J);
     std::vector<StringSubstitution>& get_beta_vvoo_list(size_t p, size_t q, size_t r, size_t s,
                                                         int class_I, int class_J);
+
+    const VVOOListElement& get_alfa_vvoo_list3(int class_I, int class_J) const;
+    const VVOOListElement& get_beta_vvoo_list3(int class_I, int class_J) const;
 
     Pair get_pair_list(int h, int n) const { return pair_list_[h][n]; }
 
@@ -244,9 +250,18 @@ class GASStringLists {
     /// The OO string lists
     OOList2 alfa_oo_list;
     OOList2 beta_oo_list;
+    OOList3 alfa_oo_list3;
+    OOList3 beta_oo_list3;
+
     /// The VVOO string lists
     VVOOList2 alfa_vvoo_list;
     VVOOList2 beta_vvoo_list;
+
+    VVOOList3 alfa_vvoo_list3;
+    VVOOList3 beta_vvoo_list3;
+
+    const VVOOListElement empty_vvoo_list3;
+
     /// The 1-hole lists
     H1List alfa_1h_list;
     H1List beta_1h_list;
@@ -312,6 +327,12 @@ class GASStringLists {
     void make_oo(const StringList& strings, std::shared_ptr<StringAddress> address, OOList2& list,
                  int pq_sym, size_t pq);
 
+    void make_oo_list3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                       OOList3& list);
+
+    void make_oo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                  OOList3& list, int p, int q);
+
     /// Make 1-hole lists (I -> a_p I = sgn J)
     void make_1h_list(const StringList& strings, std::shared_ptr<StringAddress> graph,
                       std::shared_ptr<StringAddress> graph_1h, H1List& list);
@@ -327,6 +348,11 @@ class GASStringLists {
                         VVOOList2& list);
     void make_vvoo(const StringList& strings, std::shared_ptr<StringAddress> graph, VVOOList2& list,
                    int p, int q, int r, int s);
+
+    void make_vvoo_list3(const StringList& strings, std::shared_ptr<StringAddress> graph,
+                         VVOOList3& list);
+    void make_vvoo3(const StringList& strings, std::shared_ptr<StringAddress> graph,
+                    VVOOList3& list, int p, int q, int r, int s);
 
     void get_gas_occupation();
 };
