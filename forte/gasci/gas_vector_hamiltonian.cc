@@ -124,73 +124,69 @@ void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
 
 void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                          bool alfa) {
-    // Notation
-    // h_Ia - symmetry of alpha strings
-    // h_Ib - symmetry of beta strings
-    for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
-        int h_Ib = h_Ia ^ symmetry_;
-        if (detpcls_[h_Ia] > 0) {
-            auto Cr =
-                this->gather_C_block(CR, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, false);
-            auto Cl =
-                result.gather_C_block(CL, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, !alfa);
+    // Loop over (p>q) == (p>q)
+    for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
+        // The pqqp product is totally symmetric so the classes if the result are the same as the
+        // classes of the input
+        const int class_Ja = class_Ia;
+        const int class_Jb = class_Ib;
+        size_t block_size = alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
+        if (block_size == 0)
+            continue;
 
-            size_t maxL = alfa ? beta_address_->strpcls(h_Ib) : alfa_address_->strpcls(h_Ia);
-            // Loop over (p>q) == (p>q)
-            for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
-                size_t max_pq = lists_->pairpi(pq_sym);
-                for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const auto& [p_abs, q_abs] = lists_->get_pair_list(pq_sym, pq);
+        auto Cr =
+            this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia, class_Ib, false);
+        auto Cl = result.gather_C_block(CL, alfa, alfa_address_, beta_address_, class_Ja, class_Jb,
+                                        !alfa);
 
-                    const double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, p_abs, q_abs)
-                                                 : fci_ints->tei_bb(p_abs, q_abs, p_abs, q_abs);
+        size_t maxL = alfa ? beta_address_->strpcls(class_Ib) : alfa_address_->strpcls(class_Ia);
+        for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+            size_t max_pq = lists_->pairpi(pq_sym);
+            for (size_t pq = 0; pq < max_pq; ++pq) {
+                const auto& [p, q] = lists_->get_pair_list(pq_sym, pq);
 
-                    const auto& OO_list = alfa ? lists_->get_alfa_oo_list(pq_sym, pq, h_Ia)
-                                               : lists_->get_beta_oo_list(pq_sym, pq, h_Ib);
+                const double integral =
+                    alfa ? fci_ints->tei_aa(p, q, p, q) : fci_ints->tei_bb(p, q, p, q);
 
-                    for (const auto& I : OO_list) {
-                        C_DAXPY(maxL, integral, Cr[I], 1, Cl[I], 1);
-                    }
+                const auto& OO_list = alfa ? lists_->get_alfa_oo_list(pq_sym, pq, class_Ia)
+                                           : lists_->get_beta_oo_list(pq_sym, pq, class_Ib);
+
+                for (const auto& I : OO_list) {
+                    C_DAXPY(maxL, integral, Cr[I], 1, Cl[I], 1);
                 }
             }
-            // Loop over (p>q) > (r>s)
-            for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
-                size_t max_pq = lists_->pairpi(pq_sym);
-                for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const Pair& pq_pair = lists_->get_pair_list(pq_sym, pq);
-                    int p_abs = pq_pair.first;
-                    int q_abs = pq_pair.second;
-                    for (size_t rs = 0; rs < pq; ++rs) {
-                        const auto& [r_abs, s_abs] = lists_->get_pair_list(pq_sym, rs);
-                        const double integral = alfa ? fci_ints->tei_aa(p_abs, q_abs, r_abs, s_abs)
-                                                     : fci_ints->tei_bb(p_abs, q_abs, r_abs, s_abs);
+        }
 
+        for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+            size_t max_pq = lists_->pairpi(pq_sym);
+            for (size_t pq = 0; pq < max_pq; ++pq) {
+                const auto& [p, q] = lists_->get_pair_list(pq_sym, pq);
+                for (size_t rs = 0; rs < pq; ++rs) {
+                    const auto& [r, s] = lists_->get_pair_list(pq_sym, rs);
+                    const double integral =
+                        alfa ? fci_ints->tei_aa(p, q, r, s) : fci_ints->tei_bb(p, q, r, s);
+
+                    {
+                        const auto& VVOO_list =
+                            alfa ? lists_->get_alfa_vvoo_list(p, q, r, s, class_Ia, class_Ia)
+                                 : lists_->get_beta_vvoo_list(p, q, r, s, class_Ib, class_Ib);
+                        for (const auto& [sign, I, J] : VVOO_list) {
+                            C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
+                        }
                         {
                             const auto& VVOO_list =
-                                alfa ? lists_->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia,
-                                                                  h_Ia)
-                                     : lists_->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ib,
-                                                                  h_Ib);
+                                alfa ? lists_->get_alfa_vvoo_list(r, s, p, q, class_Ia, class_Ia)
+                                     : lists_->get_beta_vvoo_list(r, s, p, q, class_Ib, class_Ib);
                             for (const auto& [sign, I, J] : VVOO_list) {
                                 C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
-                            }
-                            {
-                                const auto& VVOO_list =
-                                    alfa ? lists_->get_alfa_vvoo_list(r_abs, s_abs, p_abs, q_abs,
-                                                                      h_Ia, h_Ia)
-                                         : lists_->get_beta_vvoo_list(r_abs, s_abs, p_abs, q_abs,
-                                                                      h_Ib, h_Ib);
-                                for (const auto& [sign, I, J] : VVOO_list) {
-                                    C_DAXPY(maxL, sign * integral, Cr[I], 1, Cl[J], 1);
-                                }
                             }
                         }
                     }
                 }
             }
-            result.scatter_C_block(Cl, alfa, alfa_address_, beta_address_, h_Ia, h_Ib);
         }
-    } // End loop over h
+        result.scatter_C_block(Cl, alfa, alfa_address_, beta_address_, class_Ja, class_Jb);
+    }
 }
 
 void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
