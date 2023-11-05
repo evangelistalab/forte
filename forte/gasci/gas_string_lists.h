@@ -260,6 +260,8 @@ class GASStringLists {
     VVOOList3 alfa_vvoo_list3;
     VVOOList3 beta_vvoo_list3;
 
+    const VOListElement empty_vo_list;
+    const OOListElement empty_oo_list;
     const VVOOListElement empty_vvoo_list3;
 
     /// The 1-hole lists

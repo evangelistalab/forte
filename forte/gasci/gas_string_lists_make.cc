@@ -58,11 +58,19 @@ std::vector<u_int32_t>& GASStringLists::get_beta_oo_list(int pq_sym, size_t pq, 
 }
 
 const OOListElement& GASStringLists::get_alfa_oo_list3(int class_I) const {
-    return alfa_oo_list3.at(class_I);
+    // check if the key exists, if not return an empty list
+    if (auto it = alfa_oo_list3.find(class_I); it != alfa_oo_list3.end()) {
+        return it->second;
+    }
+    return empty_oo_list;
 }
 
 const OOListElement& GASStringLists::get_beta_oo_list3(int class_I) const {
-    return beta_oo_list3.at(class_I);
+    // check if the key exists, if not return an empty list
+    if (auto it = beta_oo_list3.find(class_I); it != beta_oo_list3.end()) {
+        return it->second;
+    }
+    return empty_oo_list;
 }
 
 void GASStringLists::make_oo_list(const StringList& strings,
@@ -140,7 +148,11 @@ std::vector<StringSubstitution>& GASStringLists::get_beta_vo_list(size_t p, size
  * the irrep h.
  */
 const VOListElement& GASStringLists::get_alfa_vo_list3(int class_I, int class_J) const {
-    return alfa_vo_list3.at(std::make_tuple(class_I, class_J));
+    // check if the key exists, if not return an empty list
+    if (auto it = alfa_vo_list3.find(std::make_pair(class_I, class_J)); it != alfa_vo_list3.end()) {
+        return it->second;
+    }
+    return empty_vo_list;
 }
 
 /**
@@ -150,7 +162,11 @@ const VOListElement& GASStringLists::get_alfa_vo_list3(int class_I, int class_J)
  * the irrep h.
  */
 const VOListElement& GASStringLists::get_beta_vo_list3(int class_I, int class_J) const {
-    return beta_vo_list3.at(std::make_tuple(class_I, class_J));
+    // check if the key exists, if not return an empty list
+    if (auto it = beta_vo_list3.find(std::make_pair(class_I, class_J)); it != beta_vo_list3.end()) {
+        return it->second;
+    }
+    return empty_vo_list;
 }
 
 void GASStringLists::make_vo_list(const StringList& strings,
@@ -261,9 +277,8 @@ const VVOOListElement& GASStringLists::get_alfa_vvoo_list3(int class_I, int clas
     if (auto it = alfa_vvoo_list3.find(std::make_pair(class_I, class_J));
         it != alfa_vvoo_list3.end()) {
         return it->second;
-    } else {
-        return empty_vvoo_list3;
     }
+    return empty_vvoo_list3;
 }
 
 const VVOOListElement& GASStringLists::get_beta_vvoo_list3(int class_I, int class_J) const {
@@ -271,9 +286,8 @@ const VVOOListElement& GASStringLists::get_beta_vvoo_list3(int class_I, int clas
     if (auto it = beta_vvoo_list3.find(std::make_pair(class_I, class_J));
         it != beta_vvoo_list3.end()) {
         return it->second;
-    } else {
-        return empty_vvoo_list3;
     }
+    return empty_vvoo_list3;
 }
 
 void GASStringLists::make_vvoo_list(const StringList& strings,
