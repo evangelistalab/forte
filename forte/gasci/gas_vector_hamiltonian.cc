@@ -170,90 +170,13 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
 }
 
 void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
-// Loop over blocks of matrix C
-#if 0
-    for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
-        const size_t maxIa = alfa_address_->strpcls(h_Ia);
-        const int h_Ib = h_Ia ^ symmetry_;
-        const auto C = C_[h_Ia]->pointer();
-
-        // Loop over all r,s
-        for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
-            const int h_Jb = h_Ib ^ rs_sym;
-            const int h_Ja = h_Jb ^ symmetry_;
-
-            const size_t maxJa = alfa_address_->strpcls(h_Ja);
-            auto HC = result.C_[h_Ja]->pointer();
-            for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
-                const int s_sym = rs_sym ^ r_sym;
-
-                for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                    for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
-                        const int r_abs = r_rel + cmopi_offset_[r_sym];
-                        const int s_abs = s_rel + cmopi_offset_[s_sym];
-
-                        // Grab list (r,s,h_Ib)
-                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, h_Ib, h_Jb);
-                        const size_t maxSSb = vo_beta.size();
-
-                        if (maxSSb == 0)
-                            continue;
-
-                        CR->zero();
-                        CL->zero();
-                        auto Cr = CR->pointer();
-                        auto Cl = CL->pointer();
-
-                        // Gather cols of C into CR
-                        for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-                            const auto c = C[Ia];
-                            auto cr = Cr[Ia];
-                            for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                cr[SSb] = c[vo_beta[SSb].I] * vo_beta[SSb].sign;
-                            }
-                        }
-
-                        // Loop over all p,q
-                        int pq_sym = rs_sym;
-                        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
-                            int q_sym = pq_sym ^ p_sym;
-                            for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                                int p_abs = p_rel + cmopi_offset_[p_sym];
-                                for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                                    int q_abs = q_rel + cmopi_offset_[q_sym];
-                                    // Grab the integral
-                                    const double integral =
-                                        fci_ints->tei_ab(p_abs, r_abs, q_abs, s_abs);
-
-                                    const auto& vo_alfa =
-                                        lists_->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja);
-
-                                    for (const auto& [sign, I, J] : vo_alfa) {
-                                        C_DAXPY(maxSSb, integral * sign, Cr[I], 1, Cl[J], 1);
-                                    }
-                                }
-                            }
-                        } // End loop over p,q
-
-                        // Scatter cols of CL into HC
-                        for (size_t Ja = 0; Ja < maxJa; ++Ja) {
-                            const auto hc = HC[Ja];
-                            auto cl = Cl[Ja];
-                            for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                hc[vo_beta[SSb].J] += cl[SSb];
-                            }
-                        }
-                    }
-                } // End loop over r_rel,s_rel
-            }
-        }
-    }
-#else
+    // Loop over blocks of matrix C
     for (const auto& [nI, class_Ia, class_Ib] : lists_->determinant_classes()) {
         // The pq product is totally symmetric so the classes if the result are the same as the
         // classes of the input
-        size_t block_size = alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
-        if (block_size == 0)
+        const size_t I_block_size =
+            alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
+        if (I_block_size == 0)
             continue;
 
         const size_t maxIa = alfa_address_->strpcls(class_Ia);
@@ -261,6 +184,11 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
         const auto C = C_[nI]->pointer();
 
         for (const auto& [nJ, class_Ja, class_Jb] : lists_->determinant_classes()) {
+
+            const size_t J_block_size =
+                alfa_address_->strpcls(class_Ja) * beta_address_->strpcls(class_Jb);
+            if (J_block_size == 0)
+                continue;
 
             auto HC = result.C_[nJ]->pointer();
 
@@ -271,14 +199,18 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
 
             for (const auto& [rs, vo_beta_list] : rs_vo_beta) {
                 const auto& [r, s] = rs;
-                const size_t maxSSb = vo_beta_list.size();
-
-                CR->zero();
-                CL->zero();
+                const size_t beta_list_size = vo_beta_list.size();
                 auto Cr = CR->pointer();
                 auto Cl = CL->pointer();
+                // Zero the block of CL used to store the result
+                // this should be faster than CL->zero(); when beta_list_size is smaller than the
+                // number of columns of CL
+                for (size_t Ja = 0; Ja < maxJa; ++Ja) {
+                    const auto cl = Cl[Ja];
+                    std::fill(cl, cl + beta_list_size, 0.0);
+                }
 
-                // Gather cols of C into CR
+                // Gather cols of C into CR with the correct sign
                 for (size_t Ia = 0; Ia < maxIa; ++Ia) {
                     const auto c = C[Ia];
                     auto cr = Cr[Ia];
@@ -296,15 +228,15 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                     const double integral = fci_ints->tei_ab(p, r, q, s);
 
                     for (const auto& [sign, I, J] : vo_alfa_list) {
-                        C_DAXPY(maxSSb, integral * sign, Cr[I], 1, Cl[J], 1);
+                        C_DAXPY(beta_list_size, integral * sign, Cr[I], 1, Cl[J], 1);
                     }
                 } // End loop over p,q
 
-                // Scatter cols of CL into HC
+                // Scatter cols of CL into HC (the sign was included before in the gathering)
                 for (size_t Ja = 0; Ja < maxJa; ++Ja) {
-                    const auto hc = HC[Ja];
-                    auto cl = Cl[Ja];
-                    for (size_t idx{0}; const auto& [sign, _, J] : vo_beta_list) {
+                    auto hc = HC[Ja];
+                    const auto cl = Cl[Ja];
+                    for (size_t idx{0}; const auto& [_1, _2, J] : vo_beta_list) {
                         hc[J] += cl[idx];
                         idx++;
                     }
@@ -312,6 +244,5 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
             }
         }
     }
-#endif
 }
 } // namespace forte
