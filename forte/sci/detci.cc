@@ -145,7 +145,7 @@ void DETCI::diagonalize_hamiltonian() {
 
     auto solver = prepare_ci_solver();
 
-    if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
+    if (p_space_.size() < 15 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
         sigma_vector_type_ = SigmaVectorType::Full;
     }
 

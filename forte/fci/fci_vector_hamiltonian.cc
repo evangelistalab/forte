@@ -239,8 +239,8 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                         for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                             int q_sym = pq_sym ^ p_sym;
                             for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                                int p_abs = p_rel + cmopi_offset_[p_sym];
                                 for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
+                                    int p_abs = p_rel + cmopi_offset_[p_sym];
                                     int q_abs = q_rel + cmopi_offset_[q_sym];
                                     // Grab the integral
                                     const double integral =

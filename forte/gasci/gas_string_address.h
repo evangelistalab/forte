@@ -98,6 +98,8 @@ class StringClass {
                 const std::vector<std::array<int, 6>>& beta_occupation,
                 const std::vector<std::pair<size_t, size_t>>& occupations);
 
+    /// @brief Return the symmetry of the MOs
+    const std::vector<int>& mo_sym() const;
     /// @brief Return the symmetry of a string
     size_t symmetry(const String& s) const;
     /// @brief Return the class of an alpha string

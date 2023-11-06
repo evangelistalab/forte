@@ -213,18 +213,23 @@ void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAd
 
 void GASStringLists::make_vo_list3(const StringList& strings,
                                    std::shared_ptr<StringAddress> addresser, VOList3& list) {
-    // Loop over irreps of the pair pq
-    for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
-        // Loop over irreps of p
-        for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
-            int q_sym = pq_sym ^ p_sym;
-            for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                    int p_abs = p_rel + cmopi_offset_[p_sym];
-                    int q_abs = q_rel + cmopi_offset_[q_sym];
-                    make_vo3(strings, addresser, list, p_abs, q_abs);
-                }
-            }
+    // // Loop over irreps of the pair pq
+    // for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
+    //     // Loop over irreps of p
+    //     for (size_t p_sym = 0; p_sym < nirrep_; ++p_sym) {
+    //         int q_sym = pq_sym ^ p_sym;
+    //         for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
+    //             for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
+    //                 int p_abs = p_rel + cmopi_offset_[p_sym];
+    //                 int q_abs = q_rel + cmopi_offset_[q_sym];
+    //                 make_vo3(strings, addresser, list, p_abs, q_abs);
+    //             }
+    //         }
+    //     }
+    // }
+    for (int p = 0; p < ncmo_; p++) {
+        for (int q = 0; q < ncmo_; q++) {
+            make_vo3(strings, addresser, list, p, q);
         }
     }
 }
@@ -247,6 +252,12 @@ void GASStringLists::make_vo3(const StringList& strings, std::shared_ptr<StringA
                         auto& list_IJ = list[std::make_tuple(class_I, class_J)];
                         list_IJ[std::make_tuple(p, q)].push_back(
                             StringSubstitution(sign, add_I, add_J));
+                        // if (p == 2 and q == 0) {
+                        //     psi::outfile->Printf("\nI = %s, class_I = %d, add_I = %zu, J = %s, "
+                        //                          "class_J = %d, add_J = %zu are connected by 2+
+                        //                          O-", str(I, 10).c_str(), class_I, add_I, str(J,
+                        //                          10).c_str(), class_J, add_J);
+                        // }
                     }
                 }
             }
@@ -377,7 +388,8 @@ void GASStringLists::make_vvoo_list3(const StringList& strings,
                                 int s_abs = s_rel + cmopi_offset_[s_sym];
                                 if ((p_abs > q_abs) && (r_abs > s_abs)) {
                                     // Avoid
-                                    if (not((p_abs == r_abs) and (q_abs == s_abs))) {
+                                    if ((not((p_abs == r_abs) and (q_abs == s_abs))) and
+                                        (not((p_abs == s_abs) and (q_abs == r_abs)))) {
                                         make_vvoo3(strings, addresser, list, p_abs, q_abs, r_abs,
                                                    s_abs);
                                     }

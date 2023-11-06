@@ -180,10 +180,14 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         nbs_ += beta_address_->strpcls(class_Ib);
     }
 
+    ndet_ = 0;
     for (const auto& [n, class_Ia, class_Ib] : determinant_classes()) {
         const auto nIa = alfa_address_->strpcls(class_Ia);
         const auto nIb = beta_address_->strpcls(class_Ib);
-        ndet_ += nIa * nIb;
+        const auto nI = nIa * nIb;
+        detpblk_.push_back(nI);
+        detpblk_offset_.push_back(ndet_);
+        ndet_ += nI;
     }
 
     {
@@ -199,7 +203,6 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         make_vo_list3(beta_strings_, beta_address_, beta_vo_list3);
         vo_list_timer += t.get();
     }
-    psi::outfile->Printf("\n    Top");
     {
         local_timer t;
         make_oo_list(alfa_strings_, alfa_address_, alfa_oo_list);
@@ -208,14 +211,12 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         make_oo_list3(beta_strings_, beta_address_, beta_oo_list3);
         oo_list_timer += t.get();
     }
-    psi::outfile->Printf("\n    Middle");
     {
         local_timer t;
         make_1h_list(alfa_strings_, alfa_address_, alfa_address_1h_, alfa_1h_list);
         make_1h_list(beta_strings_, beta_address_, beta_address_1h_, beta_1h_list);
         h1_list_timer += t.get();
     }
-    psi::outfile->Printf("\n    Bottom");
     {
         local_timer t;
         make_2h_list(alfa_strings_, alfa_address_, alfa_address_2h_, alfa_2h_list);
@@ -228,7 +229,6 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         make_3h_list(beta_strings_, beta_address_, beta_address_3h_, beta_3h_list);
         h3_list_timer += t.get();
     }
-
     {
         local_timer t;
         make_vvoo_list(alfa_strings_, alfa_address_, alfa_vvoo_list);
@@ -621,36 +621,33 @@ std::vector<Determinant> GASStringLists::make_determinants() const {
 size_t GASStringLists::determinant_address(const Determinant& d) const {
     const auto Ia = d.get_alfa_bits();
     const auto Ib = d.get_beta_bits();
-    const size_t ha = alfa_address_->sym(Ia);
-    const size_t hb = beta_address_->sym(Ib);
-    const auto symmetry = ha ^ hb;
-    const size_t addIa = alfa_address_->add(Ia);
-    const size_t addIb = beta_address_->add(Ib);
-    size_t addI = addIa * beta_address_->strpcls(hb) + addIb;
-    for (size_t h = 0; h < ha; h++) {
-        addI += alfa_address_->strpcls(h) * beta_address_->strpcls(symmetry ^ h);
-    }
+
+    const auto& [addIa, class_Ia] = alfa_address_->address_and_class(Ia);
+    const auto& [addIb, class_Ib] = beta_address_->address_and_class(Ib);
+    size_t addI = addIa * beta_address_->strpcls(class_Ib) + addIb;
+    int n = string_class_->block_index(class_Ia, class_Ib);
+    addI += detpblk_offset_[n];
     return addI;
 }
 
-Determinant GASStringLists::determinant(size_t address, size_t symmetry) const {
+Determinant GASStringLists::determinant(size_t address) const {
     // find the irreps of alpha and beta strings
-    size_t h = 0;
+    size_t n = 0;
     size_t addI = 0;
     // keep adding the number of determinants in each irrep until we reach the right one
-    for (; h < nirrep_; h++) {
-        size_t address_offset = alfa_address_->strpcls(h) * beta_address_->strpcls(symmetry ^ h);
-        if (address_offset + addI > address) {
+    for (size_t maxh = determinant_classes().size(); n < maxh; n++) {
+        if (addI + detpblk_[n] > address) {
             break;
         }
-        addI += address_offset;
+        addI += detpblk_[n];
     }
     const size_t shift = address - addI;
-    const size_t beta_size = beta_address_->strpcls(symmetry ^ h);
+    const auto& [_, class_Ia, class_Ib] = determinant_classes().at(n);
+    const size_t beta_size = beta_address_->strpcls(class_Ib);
     const size_t addIa = shift / beta_size;
     const size_t addIb = shift % beta_size;
-    String Ia = alfa_str(h, addIa);
-    String Ib = beta_str(symmetry ^ h, addIb);
+    String Ia = alfa_str(class_Ia, addIa);
+    String Ib = beta_str(class_Ib, addIb);
     return Determinant(Ia, Ib);
 }
 

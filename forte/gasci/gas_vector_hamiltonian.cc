@@ -28,6 +28,7 @@
 
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
@@ -93,32 +94,39 @@ void GASVector::H0(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
 void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa) {
     // loop over blocks of matrix C
     for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
-        // The pq product is totally symmetric so the classes if the result are the same as the
-        // classes of the input
-        const int class_Ja = class_Ia;
-        const int class_Jb = class_Ib;
         size_t block_size = alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
         if (block_size == 0)
             continue;
 
-        auto Cr =
-            this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia, class_Ib, false);
-        auto Cl = result.gather_C_block(CL, alfa, alfa_address_, beta_address_, class_Ja, class_Jb,
-                                        !alfa);
+        for (const auto& [nJ, class_Ja, class_Jb] : lists_->determinant_classes()) {
 
-        size_t maxL = alfa ? beta_address_->strpcls(class_Ib) : alfa_address_->strpcls(class_Ia);
+            // If we act on the alpha string, the beta string classes of the result must be the same
+            if (alfa and (class_Ib != class_Jb))
+                continue;
+            // If we act on the beta string, the alpha string classes of the result must be the same
+            if (not alfa and (class_Ia != class_Ja))
+                continue;
 
-        const auto& pq_vo_list = alfa ? lists_->get_alfa_vo_list3(class_Ia, class_Ja)
-                                      : lists_->get_beta_vo_list3(class_Ib, class_Jb);
+            auto Cr = this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia,
+                                           class_Ib, false);
+            auto Cl = result.gather_C_block(CL, alfa, alfa_address_, beta_address_, class_Ja,
+                                            class_Jb, !alfa);
 
-        for (const auto& [pq, vo_list] : pq_vo_list) {
-            const auto& [p, q] = pq;
-            const double Hpq = alfa ? fci_ints->oei_a(p, q) : fci_ints->oei_b(p, q);
-            for (const auto& [sign, I, J] : vo_list) {
-                C_DAXPY(maxL, sign * Hpq, Cr[I], 1, Cl[J], 1);
+            size_t maxL =
+                alfa ? beta_address_->strpcls(class_Ib) : alfa_address_->strpcls(class_Ia);
+
+            const auto& pq_vo_list = alfa ? lists_->get_alfa_vo_list3(class_Ia, class_Ja)
+                                          : lists_->get_beta_vo_list3(class_Ib, class_Jb);
+
+            for (const auto& [pq, vo_list] : pq_vo_list) {
+                const auto& [p, q] = pq;
+                const double Hpq = alfa ? fci_ints->oei_a(p, q) : fci_ints->oei_b(p, q);
+                for (const auto& [sign, I, J] : vo_list) {
+                    C_DAXPY(maxL, sign * Hpq, Cr[I], 1, Cl[J], 1);
+                }
             }
+            result.scatter_C_block(Cl, alfa, alfa_address_, beta_address_, class_Ja, class_Jb);
         }
-        result.scatter_C_block(Cl, alfa, alfa_address_, beta_address_, class_Ja, class_Jb);
     }
 } // End loop over h
 
@@ -126,50 +134,64 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
                          bool alfa) {
     // Loop over (p>q) == (p>q)
     for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
-        // The pqqp product acting on strings of either symmetry is totally symmetric, so the string
-        // classes of the result vector are the same as the classes of the input
-        const int class_Ja = class_Ia;
-        const int class_Jb = class_Ib;
         size_t block_size = alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
         if (block_size == 0)
             continue;
 
-        const auto Cr =
-            this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia, class_Ib, false);
-        auto Cl = result.gather_C_block(CL, alfa, alfa_address_, beta_address_, class_Ja, class_Jb,
-                                        !alfa);
+        for (const auto& [nJ, class_Ja, class_Jb] : lists_->determinant_classes()) {
+            // If we act on the alpha string, the beta string classes of the result must be the same
+            if (alfa and (class_Ib != class_Jb))
+                continue;
+            // If we act on the beta string, the alpha string classes of the result must be the same
+            if (not alfa and (class_Ia != class_Ja))
+                continue;
 
-        // get the size of the string of spin opposite to the one we are acting on
-        size_t maxL = alfa ? beta_address_->strpcls(class_Ib) : alfa_address_->strpcls(class_Ia);
+            const size_t J_block_size =
+                alfa_address_->strpcls(class_Ja) * beta_address_->strpcls(class_Jb);
+            if (J_block_size == 0)
+                continue;
 
-        // OO terms
-        const auto& pq_oo_list =
-            alfa ? lists_->get_alfa_oo_list3(class_Ia) : lists_->get_beta_oo_list3(class_Ib);
-        for (const auto& [pq, oo_list] : pq_oo_list) {
-            const auto& [p, q] = pq;
-            const double integral =
-                alfa ? fci_ints->tei_aa(p, q, p, q) : fci_ints->tei_bb(p, q, p, q);
-            for (const auto& I : oo_list) {
-                C_DAXPY(maxL, integral, Cr[I], 1, Cl[I], 1);
+            const auto Cr = this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia,
+                                                 class_Ib, false);
+            auto Cl = result.gather_C_block(CL, alfa, alfa_address_, beta_address_, class_Ja,
+                                            class_Jb, !alfa);
+
+            // get the size of the string of spin opposite to the one we are acting on
+            size_t maxL =
+                alfa ? beta_address_->strpcls(class_Ib) : alfa_address_->strpcls(class_Ia);
+
+            if ((class_Ia == class_Ja) and (class_Ib == class_Jb)) {
+                // OO terms
+                const auto& pq_oo_list = alfa ? lists_->get_alfa_oo_list3(class_Ia)
+                                              : lists_->get_beta_oo_list3(class_Ib);
+                for (const auto& [pq, oo_list] : pq_oo_list) {
+                    const auto& [p, q] = pq;
+                    const double integral =
+                        alfa ? fci_ints->tei_aa(p, q, p, q) : fci_ints->tei_bb(p, q, p, q);
+                    for (const auto& I : oo_list) {
+                        C_DAXPY(maxL, integral, Cr[I], 1, Cl[I], 1);
+                    }
+                }
             }
-        }
 
-        // VVOO terms
-        const auto& pqrs_vvoo_list = alfa ? lists_->get_alfa_vvoo_list3(class_Ia, class_Ia)
-                                          : lists_->get_beta_vvoo_list3(class_Ib, class_Ib);
-        for (const auto& [pqrs, vvoo_list] : pqrs_vvoo_list) {
-            const auto& [p, q, r, s] = pqrs;
-            const double integral1 =
-                alfa ? fci_ints->tei_aa(p, q, r, s) : fci_ints->tei_bb(p, q, r, s);
-            for (const auto& [sign, I, J] : vvoo_list) {
-                C_DAXPY(maxL, sign * integral1, Cr[I], 1, Cl[J], 1);
+            // VVOO terms
+            const auto& pqrs_vvoo_list = alfa ? lists_->get_alfa_vvoo_list3(class_Ia, class_Ja)
+                                              : lists_->get_beta_vvoo_list3(class_Ib, class_Jb);
+            for (const auto& [pqrs, vvoo_list] : pqrs_vvoo_list) {
+                const auto& [p, q, r, s] = pqrs;
+                const double integral1 =
+                    alfa ? fci_ints->tei_aa(p, q, r, s) : fci_ints->tei_bb(p, q, r, s);
+                for (const auto& [sign, I, J] : vvoo_list) {
+                    C_DAXPY(maxL, sign * integral1, Cr[I], 1, Cl[J], 1);
+                }
             }
+            result.scatter_C_block(Cl, alfa, alfa_address_, beta_address_, class_Ja, class_Jb);
         }
-        result.scatter_C_block(Cl, alfa, alfa_address_, beta_address_, class_Ja, class_Jb);
     }
 }
 
 void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+    const auto& mo_sym = lists_->string_class()->mo_sym();
     // Loop over blocks of matrix C
     for (const auto& [nI, class_Ia, class_Ib] : lists_->determinant_classes()) {
         // The pq product is totally symmetric so the classes if the result are the same as the
@@ -179,11 +201,17 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
         if (I_block_size == 0)
             continue;
 
+        auto h_Ia = lists_->string_class()->alfa_string_classes()[class_Ia].second;
+        auto h_Ib = lists_->string_class()->beta_string_classes()[class_Ib].second;
+
         const size_t maxIa = alfa_address_->strpcls(class_Ia);
 
         const auto C = C_[nI]->pointer();
 
         for (const auto& [nJ, class_Ja, class_Jb] : lists_->determinant_classes()) {
+
+            auto h_Ja = lists_->string_class()->alfa_string_classes()[class_Ja].second;
+            auto h_Jb = lists_->string_class()->beta_string_classes()[class_Jb].second;
 
             const size_t J_block_size =
                 alfa_address_->strpcls(class_Ja) * beta_address_->strpcls(class_Jb);
@@ -194,17 +222,26 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
 
             const size_t maxJa = alfa_address_->strpcls(class_Ja);
 
-            // Grab list (r,s,h_Ib)
             const auto& rs_vo_beta = lists_->get_beta_vo_list3(class_Ib, class_Jb);
 
             for (const auto& [rs, vo_beta_list] : rs_vo_beta) {
                 const auto& [r, s] = rs;
+                const auto rs_sym = mo_sym[r] ^ mo_sym[s];
+
+                // This seems to be useful
+                if (h_Jb != (h_Ib ^ rs_sym))
+                    continue;
+
                 const size_t beta_list_size = vo_beta_list.size();
+                if (beta_list_size == 0)
+                    continue;
+                CR->zero(); // TODO: remove
+                CL->zero(); // TODO: remove
                 auto Cr = CR->pointer();
                 auto Cl = CL->pointer();
                 // Zero the block of CL used to store the result
-                // this should be faster than CL->zero(); when beta_list_size is smaller than the
-                // number of columns of CL
+                // this should be faster than CL->zero(); when beta_list_size is smaller than
+                // the number of columns of CL
                 for (size_t Ja = 0; Ja < maxJa; ++Ja) {
                     const auto cl = Cl[Ja];
                     std::fill(cl, cl + beta_list_size, 0.0);
@@ -224,6 +261,11 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
 
                 for (const auto& [pq, vo_alfa_list] : pq_vo_alfa) {
                     const auto& [p, q] = pq;
+                    const auto pq_sym = mo_sym[p] ^ mo_sym[q];
+
+                    if (pq_sym != rs_sym)
+                        continue;
+
                     // Grab the integral
                     const double integral = fci_ints->tei_ab(p, r, q, s);
 

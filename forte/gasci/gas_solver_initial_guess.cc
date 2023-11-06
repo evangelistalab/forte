@@ -70,7 +70,7 @@ std::vector<Determinant> GASCISolver::initial_guess_generate_dets(std::shared_pt
 
     std::vector<Determinant> guess_dets;
     for (const auto& [e, I] : vec_e_I) {
-        guess_dets.push_back(lists_->determinant(I, symmetry_));
+        guess_dets.push_back(lists_->determinant(I));
     }
 
     // Make sure that the spin space is complete
@@ -149,24 +149,34 @@ GASCISolver::form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
 
 std::shared_ptr<psi::Vector>
 GASCISolver::form_Hdiag_det(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
-    auto Hdiag_det = std::make_shared<psi::Vector>(nfci_dets_);
-
-    Determinant I;
-    size_t Iadd = 0;
     const double E0 = fci_ints->nuclear_repulsion_energy() + fci_ints->scalar_energy();
-    // loop over all irreps of the alpha strings
-    for (int ha = 0; ha < nirrep_; ha++) {
-        const int hb = ha ^ symmetry_;
-        const auto& sa = lists_->alfa_strings()[ha];
-        const auto& sb = lists_->beta_strings()[hb];
-        for (const auto& Ia : sa) {
-            for (const auto& Ib : sb) {
-                I.set_str(Ia, Ib);
-                Hdiag_det->set(Iadd, E0 + fci_ints->energy(I));
-                Iadd += 1;
-            }
-        }
-    }
+    GASVector Hdiag(lists_);
+    Determinant I;
+    Hdiag.for_each_element([&](const size_t& /*n*/, const int& class_Ia, const int& class_Ib,
+                               const size_t& Ia, const size_t& Ib, double& c) {
+        I.set_str(lists_->alfa_str(class_Ia, Ia), lists_->beta_str(class_Ib, Ib));
+        c = E0 + fci_ints->energy(I);
+    });
+    Hdiag.size();
+
+    auto Hdiag_det = std::make_shared<psi::Vector>(nfci_dets_);
+    Hdiag.copy_to(Hdiag_det);
+
+    // Determinant I;
+    // size_t Iadd = 0;
+    // // loop over all irreps of the alpha strings
+    // for (int ha = 0; ha < nirrep_; ha++) {
+    //     const int hb = ha ^ symmetry_;
+    //     const auto& sa = lists_->alfa_strings()[ha];
+    //     const auto& sb = lists_->beta_strings()[hb];
+    //     for (const auto& Ia : sa) {
+    //         for (const auto& Ib : sb) {
+    //             I.set_str(Ia, Ib);
+    //             Hdiag_det->set(Iadd, E0 + fci_ints->energy(I));
+    //             Iadd += 1;
+    //         }
+    //     }
+    // }
     return Hdiag_det;
 }
 

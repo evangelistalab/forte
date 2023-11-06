@@ -61,19 +61,18 @@ double GASVector::h2_aabb_timer = 0.0;
 double GASVector::h2_bbbb_timer = 0.0;
 
 void GASVector::allocate_temp_space(std::shared_ptr<GASStringLists> lists_, int print_) {
-    size_t nirreps = lists_->nirrep();
-
     // if CR is already allocated (e.g., because we computed several roots) make sure
     // we do not allocate a matrix of smaller size. So let's find out the size of the current CR
     size_t current_size = CR ? CR->rowdim() : 0;
 
     // Find the largest size of the symmetry blocks
     size_t max_size = 0;
-    for (size_t Ia_sym = 0; Ia_sym < nirreps; ++Ia_sym) {
-        max_size = std::max(max_size, lists_->alfa_address()->strpcls(Ia_sym));
+
+    for (int class_Ia = 0; class_Ia < lists_->alfa_address()->nclasses(); ++class_Ia) {
+        max_size = std::max(max_size, lists_->alfa_address()->strpcls(class_Ia));
     }
-    for (size_t Ib_sym = 0; Ib_sym < nirreps; ++Ib_sym) {
-        max_size = std::max(max_size, lists_->beta_address()->strpcls(Ib_sym));
+    for (int class_Ib = 0; class_Ib < lists_->beta_address()->nclasses(); ++class_Ib) {
+        max_size = std::max(max_size, lists_->beta_address()->strpcls(class_Ib));
     }
 
     // Allocate the temporary arrays CR and CL with the largest block size
@@ -147,9 +146,9 @@ void GASVector::print(double threshold) const {
                                const size_t& Ia, const size_t& Ib, const double& c) {
         if (std::fabs(c) >= threshold) {
             Determinant I(lists_->alfa_str(class_Ia, Ia), lists_->beta_str(class_Ib, Ib));
-            psi::outfile->Printf("\n  %+15.9f %s [%2d][%2d][%2d] (%d)", c,
-                                 str(I, lists_->ncmo()).c_str(), class_Ia, static_cast<int>(Ia),
-                                 static_cast<int>(Ib), static_cast<int>(n));
+            psi::outfile->Printf("\n  %+15.9f %s [%2d](%2d,%2d) -> (%2d,%2d)", c,
+                                 str(I, lists_->ncmo()).c_str(), static_cast<int>(n), class_Ia,
+                                 class_Ib, static_cast<int>(Ia), static_cast<int>(Ib));
         }
     });
 }

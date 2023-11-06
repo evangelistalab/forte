@@ -114,7 +114,7 @@ class GASStringLists {
     /// @return the address of a determinant in the CI vector
     size_t determinant_address(const Determinant& d) const;
     /// @return the determinant corresponding to an address in the CI vector of a given symmetry
-    Determinant determinant(size_t address, size_t symmetry) const;
+    Determinant determinant(size_t address) const;
 
     /// @return the alpha string list
     const auto& alfa_strings() const { return alfa_strings_; }
@@ -225,6 +225,10 @@ class GASStringLists {
     std::vector<int> gas_min_;
     /// The maximum number of electrons in each GAS space
     std::vector<int> gas_max_;
+    /// @brief The number of determinants in each block
+    std::vector<size_t> detpblk_;
+    /// @brief The offset of each block
+    std::vector<size_t> detpblk_offset_;
 
     void recursive_gas_generation(const std::vector<int>& gas_mine,
                                   const std::vector<int>& gas_maxe, size_t gas_num, int& n_config,

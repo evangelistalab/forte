@@ -141,6 +141,8 @@ size_t StringClass::num_alfa_classes() const { return nirrep_ * alfa_occupation_
 
 size_t StringClass::num_beta_classes() const { return nirrep_ * beta_occupation_group_.size(); }
 
+const std::vector<int>& StringClass::mo_sym() const { return mo_sym_; }
+
 size_t StringClass::symmetry(const String& s) const { return s.symmetry(mo_sym_); }
 
 const std::vector<std::pair<size_t, size_t>>& StringClass::alfa_string_classes() const {
