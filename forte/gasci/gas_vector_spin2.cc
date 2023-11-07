@@ -46,8 +46,8 @@ double GASVector::compute_spin2() {
         const auto Cr = C_[nI]->pointer();
         for (const auto& [nJ, class_Ja, class_Jb] : lists_->determinant_classes()) {
             auto Cl = C_[nJ]->pointer();
-            const auto& pq_vo_alfa = lists_->get_alfa_vo_list3(class_Ia, class_Ja);
-            const auto& pq_vo_beta = lists_->get_beta_vo_list3(class_Ib, class_Jb);
+            const auto& pq_vo_alfa = lists_->get_alfa_vo_list(class_Ia, class_Ja);
+            const auto& pq_vo_beta = lists_->get_beta_vo_list(class_Ib, class_Jb);
             // loop over the alfa (p,q) pairs
             for (const auto& [pq, vo_alfa_list] : pq_vo_alfa) {
                 const auto& [p, q] = pq;

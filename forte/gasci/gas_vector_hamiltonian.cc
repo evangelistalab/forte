@@ -117,8 +117,8 @@ void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
             size_t maxL =
                 alfa ? beta_address_->strpcls(class_Ib) : alfa_address_->strpcls(class_Ia);
 
-            const auto& pq_vo_list = alfa ? lists_->get_alfa_vo_list3(class_Ia, class_Ja)
-                                          : lists_->get_beta_vo_list3(class_Ib, class_Jb);
+            const auto& pq_vo_list = alfa ? lists_->get_alfa_vo_list(class_Ia, class_Ja)
+                                          : lists_->get_beta_vo_list(class_Ib, class_Jb);
 
             for (const auto& [pq, vo_list] : pq_vo_list) {
                 const auto& [p, q] = pq;
@@ -158,8 +158,8 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
             if ((class_Ia == class_Ja) and (class_Ib == class_Jb)) {
                 // OO terms
                 // Loop over (p>q) == (p>q)
-                const auto& pq_oo_list = alfa ? lists_->get_alfa_oo_list3(class_Ia)
-                                              : lists_->get_beta_oo_list3(class_Ib);
+                const auto& pq_oo_list =
+                    alfa ? lists_->get_alfa_oo_list(class_Ia) : lists_->get_beta_oo_list(class_Ib);
                 for (const auto& [pq, oo_list] : pq_oo_list) {
                     const auto& [p, q] = pq;
                     const double integral =
@@ -171,8 +171,8 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
             }
 
             // VVOO terms
-            const auto& pqrs_vvoo_list = alfa ? lists_->get_alfa_vvoo_list3(class_Ia, class_Ja)
-                                              : lists_->get_beta_vvoo_list3(class_Ib, class_Jb);
+            const auto& pqrs_vvoo_list = alfa ? lists_->get_alfa_vvoo_list(class_Ia, class_Ja)
+                                              : lists_->get_beta_vvoo_list(class_Ib, class_Jb);
             for (const auto& [pqrs, vvoo_list] : pqrs_vvoo_list) {
                 const auto& [p, q, r, s] = pqrs;
                 const double integral1 =
@@ -207,8 +207,8 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
             const size_t maxJa = alfa_address_->strpcls(class_Ja);
             auto HC = result.C_[nJ]->pointer();
 
-            const auto& pq_vo_alfa = lists_->get_alfa_vo_list3(class_Ia, class_Ja);
-            const auto& rs_vo_beta = lists_->get_beta_vo_list3(class_Ib, class_Jb);
+            const auto& pq_vo_alfa = lists_->get_alfa_vo_list(class_Ia, class_Ja);
+            const auto& rs_vo_beta = lists_->get_beta_vo_list(class_Ib, class_Jb);
 
             for (const auto& [rs, vo_beta_list] : rs_vo_beta) {
                 const size_t beta_list_size = vo_beta_list.size();

@@ -184,8 +184,8 @@ ambit::Tensor GASVector::compute_1rdm_same_irrep(GASVector& C_left, GASVector& C
 
             size_t maxL = alfa ? beta_address->strpcls(class_Ib) : alfa_address->strpcls(class_Ia);
 
-            const auto& pq_vo_list = alfa ? lists->get_alfa_vo_list3(class_Ia, class_Ja)
-                                          : lists->get_beta_vo_list3(class_Ib, class_Jb);
+            const auto& pq_vo_list = alfa ? lists->get_alfa_vo_list(class_Ia, class_Ja)
+                                          : lists->get_beta_vo_list(class_Ib, class_Jb);
 
             for (const auto& [pq, vo_list] : pq_vo_list) {
                 const auto& [p, q] = pq;
@@ -303,7 +303,7 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
                 continue;
 
             const auto Cl = C_left.gather_C_block(CL, alfa, alfa_address, beta_address, class_Ja,
-                                                  class_Jb, !alfa);
+                                                  class_Jb, false);
 
             // get the size of the string of spin opposite to the one we are acting on
             size_t maxL = alfa ? beta_address->strpcls(class_Ib) : alfa_address->strpcls(class_Ia);
@@ -312,7 +312,7 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
                 // OO terms
                 // Loop over (p>q) == (p>q)
                 const auto& pq_oo_list =
-                    alfa ? lists->get_alfa_oo_list3(class_Ia) : lists->get_beta_oo_list3(class_Ib);
+                    alfa ? lists->get_alfa_oo_list(class_Ia) : lists->get_beta_oo_list(class_Ib);
                 for (const auto& [pq, oo_list] : pq_oo_list) {
                     const auto& [p, q] = pq;
                     double rdm_element = 0.0;
@@ -327,8 +327,8 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
             }
 
             // VVOO terms
-            const auto& pqrs_vvoo_list = alfa ? lists->get_alfa_vvoo_list3(class_Ia, class_Ja)
-                                              : lists->get_beta_vvoo_list3(class_Ib, class_Jb);
+            const auto& pqrs_vvoo_list = alfa ? lists->get_alfa_vvoo_list(class_Ia, class_Ja)
+                                              : lists->get_beta_vvoo_list(class_Ib, class_Jb);
             for (const auto& [pqrs, vvoo_list] : pqrs_vvoo_list) {
                 const auto& [p, q, r, s] = pqrs;
 
@@ -336,15 +336,10 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
                 for (const auto& [sign, I, J] : vvoo_list) {
                     rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                 }
-
                 rdm_data[tei_index(p, q, r, s, ncmo)] += rdm_element;
                 rdm_data[tei_index(q, p, r, s, ncmo)] -= rdm_element;
                 rdm_data[tei_index(p, q, s, r, ncmo)] -= rdm_element;
                 rdm_data[tei_index(q, p, s, r, ncmo)] += rdm_element;
-                rdm_data[tei_index(r, s, p, q, ncmo)] += rdm_element;
-                rdm_data[tei_index(r, s, q, p, ncmo)] -= rdm_element;
-                rdm_data[tei_index(s, r, p, q, ncmo)] -= rdm_element;
-                rdm_data[tei_index(s, r, q, p, ncmo)] += rdm_element;
             }
         }
     }
@@ -381,58 +376,6 @@ ambit::Tensor GASVector::compute_2rdm_ab_same_irrep(GASVector& C_left, GASVector
 
     auto& rdm_data = rdm.data();
 
-    // // Loop over blocks of matrix C
-    // for (int Ia_sym = 0; Ia_sym < nirrep; ++Ia_sym) {
-    //     int Ib_sym = Ia_sym ^ symmetry;
-    //     const auto Cr = C_right.C(Ia_sym)->pointer();
-
-    //     // Loop over all r,s
-    //     for (int rs_sym = 0; rs_sym < nirrep; ++rs_sym) {
-    //         int Jb_sym = Ib_sym ^ rs_sym;
-    //         int Ja_sym = Jb_sym ^ symmetry;
-    //         const auto Cl = C_left.C(Ja_sym)->pointer();
-    //         for (int r_sym = 0; r_sym < nirrep; ++r_sym) {
-    //             int s_sym = rs_sym ^ r_sym;
-
-    //             for (int r_rel = 0; r_rel < cmopi[r_sym]; ++r_rel) {
-    //                 for (int s_rel = 0; s_rel < cmopi[s_sym]; ++s_rel) {
-    //                     int r_abs = r_rel + cmopi_offset[r_sym];
-    //                     int s_abs = s_rel + cmopi_offset[s_sym];
-
-    //                     // Grab list (r,s,Ib_sym)
-    //                     const auto& vo_beta = lists->get_beta_vo_list(r_abs, s_abs, Ib_sym,
-    //                     Jb_sym);
-
-    //                     // Loop over all p,q
-    //                     int pq_sym = rs_sym;
-    //                     for (int p_sym = 0; p_sym < nirrep; ++p_sym) {
-    //                         int q_sym = pq_sym ^ p_sym;
-    //                         for (int p_rel = 0; p_rel < cmopi[p_sym]; ++p_rel) {
-    //                             int p_abs = p_rel + cmopi_offset[p_sym];
-    //                             for (int q_rel = 0; q_rel < cmopi[q_sym]; ++q_rel) {
-    //                                 int q_abs = q_rel + cmopi_offset[q_sym];
-
-    //                                 const auto& vo_alfa =
-    //                                     lists->get_alfa_vo_list(p_abs, q_abs, Ia_sym, Ja_sym);
-
-    //                                 double rdm_element = 0.0;
-    //                                 for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
-    //                                     for (const auto& [sign_b, Ib, Jb] : vo_beta) {
-    //                                         rdm_element +=
-    //                                             Cl[Ja][Jb] * Cr[Ia][Ib] * sign_a * sign_b;
-    //                                     }
-    //                                 }
-    //                                 rdm_data[tei_index(p_abs, r_abs, q_abs, s_abs, ncmo)] +=
-    //                                     rdm_element;
-    //                             }
-    //                         }
-    //                     } // End loop over p,q
-    //                 }
-    //             } // End loop over r_rel,s_rel
-    //         }
-    //     }
-    // }
-
     const auto& mo_sym = lists->string_class()->mo_sym();
     // Loop over blocks of matrix C
     for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
@@ -449,8 +392,8 @@ ambit::Tensor GASVector::compute_2rdm_ab_same_irrep(GASVector& C_left, GASVector
             auto h_Jb = lists->string_class()->beta_string_classes()[class_Jb].second;
             const auto Cl = C_left.C_[nJ]->pointer();
 
-            const auto& pq_vo_alfa = lists->get_alfa_vo_list3(class_Ia, class_Ja);
-            const auto& rs_vo_beta = lists->get_beta_vo_list3(class_Ib, class_Jb);
+            const auto& pq_vo_alfa = lists->get_alfa_vo_list(class_Ia, class_Ja);
+            const auto& rs_vo_beta = lists->get_beta_vo_list(class_Ib, class_Jb);
 
             for (const auto& [rs, vo_beta_list] : rs_vo_beta) {
                 const size_t beta_list_size = vo_beta_list.size();
@@ -503,9 +446,7 @@ ambit::Tensor GASVector::compute_2rdm_ab_same_irrep(GASVector& C_left, GASVector
 
 ambit::Tensor GASVector::compute_3rdm_aaa_same_irrep(GASVector& C_left, GASVector& C_right,
                                                      bool alfa) {
-    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t symmetry = C_left.symmetry_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
     const auto& lists = C_left.lists_;
@@ -520,27 +461,47 @@ ambit::Tensor GASVector::compute_3rdm_aaa_same_irrep(GASVector& C_left, GASVecto
 
     auto& rdm_data = rdm.data();
 
-    for (int h_K = 0; h_K < nirrep; ++h_K) {
-        size_t maxK =
-            alfa ? lists->alfa_address_3h()->strpcls(h_K) : lists->beta_address_3h()->strpcls(h_K);
-        for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-            int h_Ib = h_Ia ^ symmetry;
-            // Get a pointer to the correct block of matrix C
-            auto Cl =
-                C_left.gather_C_block(CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
-            auto Cr =
-                C_right.gather_C_block(CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+    int num_3h_classes =
+        alfa ? lists->alfa_address_3h()->nclasses() : lists->beta_address_3h()->nclasses();
 
-            size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
-            if (maxL > 0) {
-                for (size_t K = 0; K < maxK; ++K) {
-                    std::vector<H3StringSubstitution>& Klist =
-                        alfa ? lists->get_alfa_3h_list(h_K, K, h_Ia)
-                             : lists->get_beta_3h_list(h_K, K, h_Ib);
-                    for (const auto& [sign_K, p, q, r, I] : Klist) {
-                        for (const auto& [sign_L, s, t, u, J] : Klist) {
-                            rdm_data[six_index(p, q, r, s, t, u, ncmo)] +=
-                                sign_K * sign_L * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+    for (int class_K = 0; class_K < num_3h_classes; ++class_K) {
+        size_t maxK = alfa ? lists->alfa_address_3h()->strpcls(class_K)
+                           : lists->beta_address_3h()->strpcls(class_K);
+
+        // loop over blocks of matrix C
+        for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+            if (lists->detpblk(nI) == 0)
+                continue;
+
+            auto Cr = C_right.gather_C_block(CR, alfa, alfa_address, beta_address, class_Ia,
+                                             class_Ib, false);
+
+            for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+                // The string class on which we don't act must be the same for I and J
+                if ((alfa and (class_Ib != class_Jb)) or (not alfa and (class_Ia != class_Ja)))
+                    continue;
+                if (lists->detpblk(nJ) == 0)
+                    continue;
+
+                // Get a pointer to the correct block of matrix C
+                auto Cl = C_left.gather_C_block(CL, alfa, alfa_address, beta_address, class_Ja,
+                                                class_Jb, false);
+
+                size_t maxL =
+                    alfa ? beta_address->strpcls(class_Ib) : alfa_address->strpcls(class_Ia);
+                if (maxL > 0) {
+                    for (size_t K = 0; K < maxK; ++K) {
+                        std::vector<H3StringSubstitution>& Krlist =
+                            alfa ? lists->get_alfa_3h_list(class_K, K, class_Ia)
+                                 : lists->get_beta_3h_list(class_K, K, class_Ib);
+                        std::vector<H3StringSubstitution>& Kllist =
+                            alfa ? lists->get_alfa_3h_list(class_K, K, class_Ja)
+                                 : lists->get_beta_3h_list(class_K, K, class_Jb);
+                        for (const auto& [sign_K, p, q, r, I] : Krlist) {
+                            for (const auto& [sign_L, s, t, u, J] : Kllist) {
+                                rdm_data[six_index(p, q, r, s, t, u, ncmo)] +=
+                                    sign_K * sign_L * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+                            }
                         }
                     }
                 }
@@ -551,53 +512,50 @@ ambit::Tensor GASVector::compute_3rdm_aaa_same_irrep(GASVector& C_left, GASVecto
 }
 
 ambit::Tensor GASVector::compute_3rdm_aab_same_irrep(GASVector& C_left, GASVector& C_right) {
-    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t symmetry = C_left.symmetry_;
     const auto& lists = C_left.lists_;
 
-    auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g2", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
-    g3.zero();
-    auto& rdm = g3.data();
+    auto rdm =
+        ambit::Tensor::build(ambit::CoreTensor, "3RDM_AAB", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+    rdm.zero();
+    auto& rdm_data = rdm.data();
 
-    for (int h_K = 0; h_K < nirrep; ++h_K) {
-        size_t maxK = lists->alfa_address_2h()->strpcls(h_K);
-        for (int h_L = 0; h_L < nirrep; ++h_L) {
-            size_t maxL = lists->beta_address_1h()->strpcls(h_L);
-            // I and J refer to the 2h part of the operator
-            for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-                int h_Mb = h_Ia ^ symmetry;
-                double** C_I_p = C_right.C(h_Ia)->pointer();
-                for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
-                    int h_Nb = h_Ja ^ symmetry;
-                    double** C_J_p = C_left.C(h_Ja)->pointer();
+    int num_2h_class_K = lists->alfa_address_2h()->nclasses();
+    int num_1h_class_L = lists->beta_address_1h()->nclasses();
+
+    for (int class_K = 0; class_K < num_2h_class_K; ++class_K) {
+        size_t maxK = lists->alfa_address_2h()->strpcls(class_K);
+
+        for (int class_L = 0; class_L < num_1h_class_L; ++class_L) {
+            size_t maxL = lists->beta_address_1h()->strpcls(class_L);
+
+            // loop over blocks of matrix C
+            for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+                if (lists->detpblk(nI) == 0)
+                    continue;
+
+                const auto Cr = C_right.C_[nI]->pointer();
+
+                for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+                    if (lists->detpblk(nJ) == 0)
+                        continue;
+
+                    // Get a pointer to the correct block of matrix C
+                    const auto Cl = C_left.C_[nJ]->pointer();
+
                     for (size_t K = 0; K < maxK; ++K) {
-                        std::vector<H2StringSubstitution>& Ilist =
-                            lists->get_alfa_2h_list(h_K, K, h_Ia);
-                        std::vector<H2StringSubstitution>& Jlist =
-                            lists->get_alfa_2h_list(h_K, K, h_Ja);
+                        auto& Krlist = lists->get_alfa_2h_list(class_K, K, class_Ia);
+                        auto& Kllist = lists->get_alfa_2h_list(class_K, K, class_Ja);
                         for (size_t L = 0; L < maxL; ++L) {
-                            std::vector<H1StringSubstitution>& Mlist =
-                                lists->get_beta_1h_list(h_L, L, h_Mb);
-                            std::vector<H1StringSubstitution>& Nlist =
-                                lists->get_beta_1h_list(h_L, L, h_Nb);
-                            for (const auto& Iel : Ilist) {
-                                size_t q = Iel.p;
-                                size_t p = Iel.q;
-                                size_t I = Iel.J;
-                                for (const auto& Jel : Jlist) {
-                                    size_t t = Jel.p;
-                                    size_t s = Jel.q;
-                                    size_t J = Jel.J;
-                                    for (const auto& Mel : Mlist) {
-                                        size_t r = Mel.p;
-                                        size_t M = Mel.J;
-                                        for (const auto& Nel : Nlist) {
-                                            size_t a = Nel.p;
-                                            size_t N = Nel.J;
-                                            short sign = Iel.sign * Jel.sign * Mel.sign * Nel.sign;
-                                            rdm[six_index(p, q, r, s, t, a, ncmo)] +=
-                                                sign * C_I_p[I][M] * C_J_p[J][N];
+                            auto& Lrlist = lists->get_beta_1h_list(class_L, L, class_Ib);
+                            auto& Lllist = lists->get_beta_1h_list(class_L, L, class_Jb);
+                            for (const auto& [sign_pq, p, q, Ia] : Krlist) {
+                                for (const auto& [sign_st, s, t, Ja] : Kllist) {
+                                    for (const auto& [sign_r, r, Ib] : Lrlist) {
+                                        for (const auto& [sign_a, a, Jb] : Lllist) {
+                                            rdm_data[six_index(p, q, r, s, t, a, ncmo)] +=
+                                                sign_pq * sign_st * sign_r * sign_a * Cr[Ia][Ib] *
+                                                Cl[Ja][Jb];
                                         }
                                     }
                                 }
@@ -608,58 +566,104 @@ ambit::Tensor GASVector::compute_3rdm_aab_same_irrep(GASVector& C_left, GASVecto
             }
         }
     }
-    return g3;
+
+    // for (int h_K = 0; h_K < nirrep; ++h_K) {
+    //     size_t maxK = lists->alfa_address_2h()->strpcls(h_K);
+    //     for (int h_L = 0; h_L < nirrep; ++h_L) {
+    //         size_t maxL = lists->beta_address_1h()->strpcls(h_L);
+    //         // I and J refer to the 2h part of the operator
+    //         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
+    //             int h_Mb = h_Ia ^ symmetry;
+    //             double** C_I_p = C_right.C(h_Ia)->pointer();
+    //             for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
+    //                 int h_Nb = h_Ja ^ symmetry;
+    //                 double** C_J_p = C_left.C(h_Ja)->pointer();
+    //                 for (size_t K = 0; K < maxK; ++K) {
+    //                     std::vector<H2StringSubstitution>& Ilist =
+    //                         lists->get_alfa_2h_list(h_K, K, h_Ia);
+    //                     std::vector<H2StringSubstitution>& Jlist =
+    //                         lists->get_alfa_2h_list(h_K, K, h_Ja);
+    //                     for (size_t L = 0; L < maxL; ++L) {
+    //                         std::vector<H1StringSubstitution>& Mlist =
+    //                             lists->get_beta_1h_list(h_L, L, h_Mb);
+    //                         std::vector<H1StringSubstitution>& Nlist =
+    //                             lists->get_beta_1h_list(h_L, L, h_Nb);
+    //                         for (const auto& Iel : Ilist) {
+    //                             size_t q = Iel.p;
+    //                             size_t p = Iel.q;
+    //                             size_t I = Iel.J;
+    //                             for (const auto& Jel : Jlist) {
+    //                                 size_t t = Jel.p;
+    //                                 size_t s = Jel.q;
+    //                                 size_t J = Jel.J;
+    //                                 for (const auto& Mel : Mlist) {
+    //                                     size_t r = Mel.p;
+    //                                     size_t M = Mel.J;
+    //                                     for (const auto& Nel : Nlist) {
+    //                                         size_t a = Nel.p;
+    //                                         size_t N = Nel.J;
+    //                                         short sign = Iel.sign * Jel.sign *
+    //                                         Mel.sign * Nel.sign; rdm[six_index(p, q,
+    //                                         r, s, t, a, ncmo)] +=
+    //                                             sign * C_I_p[I][M] * C_J_p[J][N];
+    //                                     }
+    //                                 }
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    return rdm;
 }
 
 ambit::Tensor GASVector::compute_3rdm_abb_same_irrep(GASVector& C_left, GASVector& C_right) {
-    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t symmetry = C_left.symmetry_;
     const auto& lists = C_left.lists_;
 
-    auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g2", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
-    g3.zero();
-    auto& rdm = g3.data();
+    auto rdm =
+        ambit::Tensor::build(ambit::CoreTensor, "3RDM_ABB", {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+    rdm.zero();
+    auto& rdm_data = rdm.data();
 
-    for (int h_K = 0; h_K < nirrep; ++h_K) {
-        size_t maxK = lists->alfa_address_1h()->strpcls(h_K);
-        for (int h_L = 0; h_L < nirrep; ++h_L) {
-            size_t maxL = lists->beta_address_2h()->strpcls(h_L);
-            // I and J refer to the 1h part of the operator
-            for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-                int h_Mb = h_Ia ^ symmetry;
-                double** C_I_p = C_right.C(h_Ia)->pointer();
-                for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
-                    int h_Nb = h_Ja ^ symmetry;
-                    double** C_J_p = C_left.C(h_Ja)->pointer();
+    int num_1h_class_K = lists->alfa_address_1h()->nclasses();
+    int num_2h_class_L = lists->beta_address_2h()->nclasses();
+
+    for (int class_K = 0; class_K < num_1h_class_K; ++class_K) {
+        size_t maxK = lists->alfa_address_1h()->strpcls(class_K);
+
+        for (int class_L = 0; class_L < num_2h_class_L; ++class_L) {
+            size_t maxL = lists->beta_address_2h()->strpcls(class_L);
+
+            // loop over blocks of matrix C
+            for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+                if (lists->detpblk(nI) == 0)
+                    continue;
+
+                const auto Cr = C_right.C_[nI]->pointer();
+
+                for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+                    if (lists->detpblk(nJ) == 0)
+                        continue;
+
+                    // Get a pointer to the correct block of matrix C
+                    const auto Cl = C_left.C_[nJ]->pointer();
+
                     for (size_t K = 0; K < maxK; ++K) {
-                        std::vector<H1StringSubstitution>& Ilist =
-                            lists->get_alfa_1h_list(h_K, K, h_Ia);
-                        std::vector<H1StringSubstitution>& Jlist =
-                            lists->get_alfa_1h_list(h_K, K, h_Ja);
+                        auto& Krlist = lists->get_alfa_1h_list(class_K, K, class_Ia);
+                        auto& Kllist = lists->get_alfa_1h_list(class_K, K, class_Ja);
                         for (size_t L = 0; L < maxL; ++L) {
-                            std::vector<H2StringSubstitution>& Mlist =
-                                lists->get_beta_2h_list(h_L, L, h_Mb);
-                            std::vector<H2StringSubstitution>& Nlist =
-                                lists->get_beta_2h_list(h_L, L, h_Nb);
-                            for (size_t Iel = 0; Iel < Ilist.size(); Iel++) {
-                                size_t p = Ilist[Iel].p;
-                                size_t I = Ilist[Iel].J;
-                                for (const auto& Mel : Mlist) {
-                                    size_t q = Mel.p;
-                                    size_t r = Mel.q;
-                                    size_t M = Mel.J;
-                                    for (const auto& Jel : Jlist) {
-                                        size_t s = Jel.p;
-                                        size_t J = Jel.J;
-                                        for (const auto& Nel : Nlist) {
-                                            size_t t = Nel.p;
-                                            size_t a = Nel.q;
-                                            size_t N = Nel.J;
-                                            short sign =
-                                                Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
-                                            rdm[six_index(p, q, r, s, t, a, ncmo)] +=
-                                                sign * C_I_p[I][M] * C_J_p[J][N];
+                            auto& Lrlist = lists->get_beta_2h_list(class_L, L, class_Ib);
+                            auto& Lllist = lists->get_beta_2h_list(class_L, L, class_Jb);
+                            for (const auto& [sign_p, p, Ia] : Krlist) {
+                                for (const auto& [sign_s, s, Ja] : Kllist) {
+                                    for (const auto& [sign_qr, q, r, Ib] : Lrlist) {
+                                        for (const auto& [sign_ta, t, a, Jb] : Lllist) {
+                                            rdm_data[six_index(p, q, r, s, t, a, ncmo)] +=
+                                                sign_p * sign_s * sign_qr * sign_ta * Cr[Ia][Ib] *
+                                                Cl[Ja][Jb];
                                         }
                                     }
                                 }
@@ -670,7 +674,57 @@ ambit::Tensor GASVector::compute_3rdm_abb_same_irrep(GASVector& C_left, GASVecto
             }
         }
     }
-    return g3;
+
+    // for (int h_K = 0; h_K < nirrep; ++h_K) {
+    //     size_t maxK = lists->alfa_address_1h()->strpcls(h_K);
+    //     for (int h_L = 0; h_L < nirrep; ++h_L) {
+    //         size_t maxL = lists->beta_address_2h()->strpcls(h_L);
+    //         // I and J refer to the 1h part of the operator
+    //         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
+    //             int h_Mb = h_Ia ^ symmetry;
+    //             double** C_I_p = C_right.C(h_Ia)->pointer();
+    //             for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
+    //                 int h_Nb = h_Ja ^ symmetry;
+    //                 double** C_J_p = C_left.C(h_Ja)->pointer();
+    //                 for (size_t K = 0; K < maxK; ++K) {
+    //                     std::vector<H1StringSubstitution>& Ilist =
+    //                         lists->get_alfa_1h_list(h_K, K, h_Ia);
+    //                     std::vector<H1StringSubstitution>& Jlist =
+    //                         lists->get_alfa_1h_list(h_K, K, h_Ja);
+    //                     for (size_t L = 0; L < maxL; ++L) {
+    //                         std::vector<H2StringSubstitution>& Mlist =
+    //                             lists->get_beta_2h_list(h_L, L, h_Mb);
+    //                         std::vector<H2StringSubstitution>& Nlist =
+    //                             lists->get_beta_2h_list(h_L, L, h_Nb);
+    //                         for (size_t Iel = 0; Iel < Ilist.size(); Iel++) {
+    //                             size_t p = Ilist[Iel].p;
+    //                             size_t I = Ilist[Iel].J;
+    //                             for (const auto& Mel : Mlist) {
+    //                                 size_t q = Mel.p;
+    //                                 size_t r = Mel.q;
+    //                                 size_t M = Mel.J;
+    //                                 for (const auto& Jel : Jlist) {
+    //                                     size_t s = Jel.p;
+    //                                     size_t J = Jel.J;
+    //                                     for (const auto& Nel : Nlist) {
+    //                                         size_t t = Nel.p;
+    //                                         size_t a = Nel.q;
+    //                                         size_t N = Nel.J;
+    //                                         short sign =
+    //                                             Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
+    //                                         rdm[six_index(p, q, r, s, t, a, ncmo)] +=
+    //                                             sign * C_I_p[I][M] * C_J_p[J][N];
+    //                                     }
+    //                                 }
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    return rdm;
 }
 
 void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsType type,

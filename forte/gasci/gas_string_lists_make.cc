@@ -49,7 +49,7 @@ namespace forte {
  * @param h      symmetry of the I strings in the list
  */
 
-const OOListElement& GASStringLists::get_alfa_oo_list3(int class_I) const {
+const OOListElement& GASStringLists::get_alfa_oo_list(int class_I) const {
     // check if the key exists, if not return an empty list
     if (auto it = alfa_oo_list3.find(class_I); it != alfa_oo_list3.end()) {
         return it->second;
@@ -57,7 +57,7 @@ const OOListElement& GASStringLists::get_alfa_oo_list3(int class_I) const {
     return empty_oo_list;
 }
 
-const OOListElement& GASStringLists::get_beta_oo_list3(int class_I) const {
+const OOListElement& GASStringLists::get_beta_oo_list(int class_I) const {
     // check if the key exists, if not return an empty list
     if (auto it = beta_oo_list3.find(class_I); it != beta_oo_list3.end()) {
         return it->second;
@@ -65,18 +65,18 @@ const OOListElement& GASStringLists::get_beta_oo_list3(int class_I) const {
     return empty_oo_list;
 }
 
-void GASStringLists::make_oo_list3(const StringList& strings,
-                                   std::shared_ptr<StringAddress> addresser, OOListMap& list) {
+void GASStringLists::make_oo_list(const StringList& strings,
+                                  std::shared_ptr<StringAddress> addresser, OOListMap& list) {
     // Loop over irreps of the pair pq
     for (int p = 0; p < ncmo_; p++) {
         for (int q = 0; q < p; q++) {
-            make_oo3(strings, addresser, list, p, q);
+            make_oo(strings, addresser, list, p, q);
         }
     }
 }
 
-void GASStringLists::make_oo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                              OOListMap& list, int p, int q) {
+void GASStringLists::make_oo(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                             OOListMap& list, int p, int q) {
     int k = addresser->nones() - 2;
     if (k >= 0) {
         for (int class_I{0}; const auto& string_class : strings) {
@@ -99,7 +99,7 @@ void GASStringLists::make_oo3(const StringList& strings, std::shared_ptr<StringA
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-const VOListElement& GASStringLists::get_alfa_vo_list3(int class_I, int class_J) const {
+const VOListElement& GASStringLists::get_alfa_vo_list(int class_I, int class_J) const {
     // check if the key exists, if not return an empty list
     if (auto it = alfa_vo_list3.find(std::make_pair(class_I, class_J)); it != alfa_vo_list3.end()) {
         return it->second;
@@ -113,7 +113,7 @@ const VOListElement& GASStringLists::get_alfa_vo_list3(int class_I, int class_J)
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-const VOListElement& GASStringLists::get_beta_vo_list3(int class_I, int class_J) const {
+const VOListElement& GASStringLists::get_beta_vo_list(int class_I, int class_J) const {
     // check if the key exists, if not return an empty list
     if (auto it = beta_vo_list3.find(std::make_pair(class_I, class_J)); it != beta_vo_list3.end()) {
         return it->second;
@@ -121,17 +121,17 @@ const VOListElement& GASStringLists::get_beta_vo_list3(int class_I, int class_J)
     return empty_vo_list;
 }
 
-void GASStringLists::make_vo_list3(const StringList& strings,
-                                   std::shared_ptr<StringAddress> addresser, VOListMap& list) {
+void GASStringLists::make_vo_list(const StringList& strings,
+                                  std::shared_ptr<StringAddress> addresser, VOListMap& list) {
     for (int p = 0; p < ncmo_; p++) {
         for (int q = 0; q < ncmo_; q++) {
-            make_vo3(strings, addresser, list, p, q);
+            make_vo(strings, addresser, list, p, q);
         }
     }
 }
 
-void GASStringLists::make_vo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                              VOListMap& list, int p, int q) {
+void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                             VOListMap& list, int p, int q) {
     for (const auto& string_class : strings) {
         for (const auto& I : string_class) {
             auto J = I;
@@ -155,7 +155,7 @@ void GASStringLists::make_vo3(const StringList& strings, std::shared_ptr<StringA
     }
 }
 
-const VVOOListElement& GASStringLists::get_alfa_vvoo_list3(int class_I, int class_J) const {
+const VVOOListElement& GASStringLists::get_alfa_vvoo_list(int class_I, int class_J) const {
     // check if the key exists, if not return an empty list
     if (auto it = alfa_vvoo_list3.find(std::make_pair(class_I, class_J));
         it != alfa_vvoo_list3.end()) {
@@ -164,7 +164,7 @@ const VVOOListElement& GASStringLists::get_alfa_vvoo_list3(int class_I, int clas
     return empty_vvoo_list3;
 }
 
-const VVOOListElement& GASStringLists::get_beta_vvoo_list3(int class_I, int class_J) const {
+const VVOOListElement& GASStringLists::get_beta_vvoo_list(int class_I, int class_J) const {
     // check if the key exists, if not return an empty list
     if (auto it = beta_vvoo_list3.find(std::make_pair(class_I, class_J));
         it != beta_vvoo_list3.end()) {
@@ -173,8 +173,8 @@ const VVOOListElement& GASStringLists::get_beta_vvoo_list3(int class_I, int clas
     return empty_vvoo_list3;
 }
 
-void GASStringLists::make_vvoo_list3(const StringList& strings,
-                                     std::shared_ptr<StringAddress> addresser, VVOOListMap& list) {
+void GASStringLists::make_vvoo_list(const StringList& strings,
+                                    std::shared_ptr<StringAddress> addresser, VVOOListMap& list) {
     // Loop over irreps of the pair pq
     for (size_t pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
         int rs_sym = pq_sym;
@@ -195,8 +195,8 @@ void GASStringLists::make_vvoo_list3(const StringList& strings,
                                     // Avoid
                                     if ((not((p_abs == r_abs) and (q_abs == s_abs))) and
                                         (not((p_abs == s_abs) and (q_abs == r_abs)))) {
-                                        make_vvoo3(strings, addresser, list, p_abs, q_abs, r_abs,
-                                                   s_abs);
+                                        make_vvoo(strings, addresser, list, p_abs, q_abs, r_abs,
+                                                  s_abs);
                                     }
                                 }
                             }
@@ -208,8 +208,8 @@ void GASStringLists::make_vvoo_list3(const StringList& strings,
     }
 }
 
-void GASStringLists::make_vvoo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                                VVOOListMap& list, int p, int q, int r, int s) {
+void GASStringLists::make_vvoo(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                               VVOOListMap& list, int p, int q, int r, int s) {
     for (const auto& string_class : strings) {
         for (const auto& I : string_class) {
             auto J = I;
@@ -242,15 +242,15 @@ void GASStringLists::make_vvoo3(const StringList& strings, std::shared_ptr<Strin
     }
 }
 
-std::vector<H1StringSubstitution>& GASStringLists::get_alfa_1h_list(int h_I, size_t add_I,
-                                                                    int h_J) {
-    std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
+std::vector<H1StringSubstitution>& GASStringLists::get_alfa_1h_list(int class_I, size_t add_I,
+                                                                    int class_J) {
+    std::tuple<int, size_t, int> I_tuple(class_I, add_I, class_J);
     return alfa_1h_list[I_tuple];
 }
 
-std::vector<H1StringSubstitution>& GASStringLists::get_beta_1h_list(int h_I, size_t add_I,
-                                                                    int h_J) {
-    std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
+std::vector<H1StringSubstitution>& GASStringLists::get_beta_1h_list(int class_I, size_t add_I,
+                                                                    int class_J) {
+    std::tuple<int, size_t, int> I_tuple(class_I, add_I, class_J);
     return beta_1h_list[I_tuple];
 }
 
