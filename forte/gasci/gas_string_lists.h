@@ -135,14 +135,19 @@ class GASStringLists {
     /// @return the alpha/beta string classes
     const auto& determinant_classes() const { return string_class_->determinant_classes(); }
 
+    size_t detpblk(size_t block) const { return detpblk_[block]; }
+
     /// @return the list of determinants with a given symmetry
     std::vector<Determinant> make_determinants() const;
 
     const VOListElement& get_alfa_vo_list3(int class_I, int class_J) const;
     const VOListElement& get_beta_vo_list3(int class_I, int class_J) const;
 
-    std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int class_I, int class_J);
-    std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q, int class_I, int class_J);
+    const OOListElement& get_alfa_oo_list3(int class_I) const;
+    const OOListElement& get_beta_oo_list3(int class_I) const;
+
+    const VVOOListElement& get_alfa_vvoo_list3(int class_I, int class_J) const;
+    const VVOOListElement& get_beta_vvoo_list3(int class_I, int class_J) const;
 
     std::vector<H1StringSubstitution>& get_alfa_1h_list(int h_I, size_t add_I, int h_J);
     std::vector<H1StringSubstitution>& get_beta_1h_list(int h_I, size_t add_I, int h_J);
@@ -152,20 +157,6 @@ class GASStringLists {
 
     std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I, size_t add_I, int h_J);
     std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I, size_t add_I, int h_J);
-
-    std::vector<u_int32_t>& get_alfa_oo_list(int pq_sym, size_t pq, int h);
-    std::vector<u_int32_t>& get_beta_oo_list(int pq_sym, size_t pq, int h);
-
-    const OOListElement& get_alfa_oo_list3(int class_I) const;
-    const OOListElement& get_beta_oo_list3(int class_I) const;
-
-    std::vector<StringSubstitution>& get_alfa_vvoo_list(size_t p, size_t q, size_t r, size_t s,
-                                                        int class_I, int class_J);
-    std::vector<StringSubstitution>& get_beta_vvoo_list(size_t p, size_t q, size_t r, size_t s,
-                                                        int class_I, int class_J);
-
-    const VVOOListElement& get_alfa_vvoo_list3(int class_I, int class_J) const;
-    const VVOOListElement& get_beta_vvoo_list3(int class_I, int class_J) const;
 
     Pair get_pair_list(int h, int n) const { return pair_list_[h][n]; }
 
@@ -246,23 +237,15 @@ class GASStringLists {
     /// The pair string list
     PairList pair_list_;
     /// The VO string lists
-    VOList2 alfa_vo_list;
-    VOList2 beta_vo_list;
-    /// The VO string lists
-    VOList3 alfa_vo_list3;
-    VOList3 beta_vo_list3;
+    VOListMap alfa_vo_list3;
+    VOListMap beta_vo_list3;
     /// The OO string lists
-    OOList2 alfa_oo_list;
-    OOList2 beta_oo_list;
-    OOList3 alfa_oo_list3;
-    OOList3 beta_oo_list3;
+    OOListMap alfa_oo_list3;
+    OOListMap beta_oo_list3;
 
     /// The VVOO string lists
-    VVOOList2 alfa_vvoo_list;
-    VVOOList2 beta_vvoo_list;
-
-    VVOOList3 alfa_vvoo_list3;
-    VVOOList3 beta_vvoo_list3;
+    VVOOListMap alfa_vvoo_list3;
+    VVOOListMap beta_vvoo_list3;
 
     const VOListElement empty_vo_list;
     const OOListElement empty_oo_list;
@@ -312,32 +295,16 @@ class GASStringLists {
     PairList make_pair_list();
 
     /// Make the VO list
-    void make_vo_list(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                      VOList2& list);
-    void make_vo(const StringList& strings, std::shared_ptr<StringAddress> addresser, VOList2& list,
-                 int p, int q);
-
-    /// Make the VO list
     void make_vo_list3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                       VOList3& list);
+                       VOListMap& list);
     void make_vo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                  VOList3& list, int p, int q);
-
-    /// @brief Make the list of strings connected by a^{+}_p a^{+}_q a_q a_p
-    void make_oo_list(const StringList& strings, std::shared_ptr<StringAddress> graph,
-                      OOList2& list);
-
-    /// @brief Make the list of strings connected by a^{+}_p a^{+}_q a_q a_p
-    /// @param pq_sym symmetry of the pq pair
-    /// @param pq relative pair index of the pq pair
-    void make_oo(const StringList& strings, std::shared_ptr<StringAddress> address, OOList2& list,
-                 int pq_sym, size_t pq);
+                  VOListMap& list, int p, int q);
 
     void make_oo_list3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                       OOList3& list);
+                       OOListMap& list);
 
     void make_oo3(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                  OOList3& list, int p, int q);
+                  OOListMap& list, int p, int q);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
     void make_1h_list(const StringList& strings, std::shared_ptr<StringAddress> graph,
@@ -349,16 +316,10 @@ class GASStringLists {
     void make_3h_list(const StringList& strings, std::shared_ptr<StringAddress> graph,
                       std::shared_ptr<StringAddress> graph_3h, H3List& list);
 
-    /// Make the VVOO list
-    void make_vvoo_list(const StringList& strings, std::shared_ptr<StringAddress> graph,
-                        VVOOList2& list);
-    void make_vvoo(const StringList& strings, std::shared_ptr<StringAddress> graph, VVOOList2& list,
-                   int p, int q, int r, int s);
-
     void make_vvoo_list3(const StringList& strings, std::shared_ptr<StringAddress> graph,
-                         VVOOList3& list);
+                         VVOOListMap& list);
     void make_vvoo3(const StringList& strings, std::shared_ptr<StringAddress> graph,
-                    VVOOList3& list, int p, int q, int r, int s);
+                    VVOOListMap& list, int p, int q, int r, int s);
 
     void get_gas_occupation();
 };

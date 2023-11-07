@@ -151,13 +151,8 @@ std::shared_ptr<RDMs> GASVector::compute_rdms(GASVector& C_left, GASVector& C_ri
  */
 ambit::Tensor GASVector::compute_1rdm_same_irrep(GASVector& C_left, GASVector& C_right, bool alfa) {
     size_t ncmo = C_left.ncmo_;
-    size_t nirrep = C_left.nirrep_;
-    size_t symmetry = C_left.symmetry_;
-    const auto& detpi = C_left.detpcls_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
-    const auto& cmopi = C_left.cmopi_;
-    const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
 
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "1RDM_A" : "1RDM_B", {ncmo, ncmo});
@@ -169,38 +164,40 @@ ambit::Tensor GASVector::compute_1rdm_same_irrep(GASVector& C_left, GASVector& C
 
     auto& rdm_data = rdm.data();
 
-    for (size_t h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-        int h_Ib = h_Ia ^ symmetry;
-        // The pq product is totally symmetric
-        const int h_Ja = h_Ia;
-        const int h_Jb = h_Ib;
+    // loop over blocks of matrix C
+    for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+        if (lists->detpblk(nI) == 0)
+            continue;
 
-        if (detpi[h_Ia] > 0) {
-            // Get a pointer to the correct block of matrix C
-            auto Cl =
-                C_left.gather_C_block(CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
-            auto Cr =
-                C_right.gather_C_block(CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+        auto Cr =
+            C_right.gather_C_block(CR, alfa, alfa_address, beta_address, class_Ia, class_Ib, false);
 
-            const size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
-            for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {
-                int q_sym = p_sym; // Select the totat symmetric irrep
-                for (int p_rel = 0; p_rel < cmopi[p_sym]; ++p_rel) {
-                    for (int q_rel = 0; q_rel < cmopi[q_sym]; ++q_rel) {
-                        int p_abs = p_rel + cmopi_offset[p_sym];
-                        int q_abs = q_rel + cmopi_offset[q_sym];
-                        const auto& vo = alfa ? lists->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja)
-                                              : lists->get_beta_vo_list(p_abs, q_abs, h_Ib, h_Jb);
-                        double rdm_element = 0.0;
-                        for (const auto& [sign, I, J] : vo) {
-                            rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
-                        }
-                        rdm_data[p_abs * ncmo + q_abs] += rdm_element;
-                    }
+        for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+            // The string class on which we don't act must be the same for I and J
+            if ((alfa and (class_Ib != class_Jb)) or (not alfa and (class_Ia != class_Ja)))
+                continue;
+            if (lists->detpblk(nJ) == 0)
+                continue;
+
+            auto Cl = C_left.gather_C_block(CL, alfa, alfa_address, beta_address, class_Ja,
+                                            class_Jb, false);
+
+            size_t maxL = alfa ? beta_address->strpcls(class_Ib) : alfa_address->strpcls(class_Ia);
+
+            const auto& pq_vo_list = alfa ? lists->get_alfa_vo_list3(class_Ia, class_Ja)
+                                          : lists->get_beta_vo_list3(class_Ib, class_Jb);
+
+            for (const auto& [pq, vo_list] : pq_vo_list) {
+                const auto& [p, q] = pq;
+                double rdm_element = 0.0;
+                for (const auto& [sign, I, J] : vo_list) {
+                    rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                 }
+                rdm_data[p * ncmo + q] += rdm_element;
             }
         }
-    } // End loop over h
+    }
+
     return rdm;
 }
 
@@ -210,10 +207,7 @@ ambit::Tensor GASVector::compute_1rdm_same_irrep(GASVector& C_left, GASVector& C
  */
 ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector& C_right,
                                                     bool alfa) {
-    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t symmetry = C_left.symmetry_;
-    const auto& detpi = C_left.detpcls_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
     const auto& lists = C_left.lists_;
@@ -231,67 +225,129 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
     // Notation
     // h_Ia - symmetry of alpha strings
     // h_Ib - symmetry of beta strings
-    for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-        int h_Ib = h_Ia ^ symmetry;
-        if (detpi[h_Ia] > 0) {
-            // Get a pointer to the correct block of matrix C
-            auto Cl =
-                C_left.gather_C_block(CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
-            auto Cr =
-                C_right.gather_C_block(CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+    // for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
+    //     int h_Ib = h_Ia ^ symmetry;
+    //     if (detpi[h_Ia] > 0) {
+    //         // Get a pointer to the correct block of matrix C
+    //         auto Cl =
+    //             C_left.gather_C_block(CL, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
+    //         auto Cr =
+    //             C_right.gather_C_block(CR, alfa, alfa_address, beta_address, h_Ia, h_Ib, false);
 
-            size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
-            // Loop over (p>q) == (p>q)
-            for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
-                size_t max_pq = lists->pairpi(pq_sym);
-                for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const auto& [p_abs, q_abs] = lists->get_pair_list(pq_sym, pq);
+    //         size_t maxL = alfa ? beta_address->strpcls(h_Ib) : alfa_address->strpcls(h_Ia);
+    //         // Loop over (p>q) == (p>q)
+    //         for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
+    //             size_t max_pq = lists->pairpi(pq_sym);
+    //             for (size_t pq = 0; pq < max_pq; ++pq) {
+    //                 const auto& [p_abs, q_abs] = lists->get_pair_list(pq_sym, pq);
 
-                    auto& OO = alfa ? lists->get_alfa_oo_list(pq_sym, pq, h_Ia)
-                                    : lists->get_beta_oo_list(pq_sym, pq, h_Ib);
+    //                 auto& OO = alfa ? lists->get_alfa_oo_list(pq_sym, pq, h_Ia)
+    //                                 : lists->get_beta_oo_list(pq_sym, pq, h_Ib);
 
+    //                 double rdm_element = 0.0;
+    //                 for (const auto& I : OO) {
+    //                     rdm_element += psi::C_DDOT(maxL, Cl[I], 1, Cr[I], 1);
+    //                 }
+
+    //                 rdm_data[tei_index(p_abs, q_abs, p_abs, q_abs, ncmo)] += rdm_element;
+    //                 rdm_data[tei_index(p_abs, q_abs, q_abs, p_abs, ncmo)] -= rdm_element;
+    //                 rdm_data[tei_index(q_abs, p_abs, p_abs, q_abs, ncmo)] -= rdm_element;
+    //                 rdm_data[tei_index(q_abs, p_abs, q_abs, p_abs, ncmo)] += rdm_element;
+    //             }
+    //         }
+    //         // Loop over (p>q) > (r>s)
+    //         for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
+    //             size_t max_pq = lists->pairpi(pq_sym);
+    //             for (size_t pq = 0; pq < max_pq; ++pq) {
+    //                 const auto& [p_abs, q_abs] = lists->get_pair_list(pq_sym, pq);
+    //                 for (size_t rs = 0; rs < pq; ++rs) {
+    //                     const auto& [r_abs, s_abs] = lists->get_pair_list(pq_sym, rs);
+
+    //                     const auto& VVOO =
+    //                         alfa
+    //                             ? lists->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia,
+    //                             h_Ia) : lists->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs,
+    //                             h_Ib, h_Ia);
+
+    //                     double rdm_element = 0.0;
+    //                     for (const auto& [sign, I, J] : VVOO) {
+    //                         rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+    //                     }
+
+    //                     rdm_data[tei_index(p_abs, q_abs, r_abs, s_abs, ncmo)] += rdm_element;
+    //                     rdm_data[tei_index(q_abs, p_abs, r_abs, s_abs, ncmo)] -= rdm_element;
+    //                     rdm_data[tei_index(p_abs, q_abs, s_abs, r_abs, ncmo)] -= rdm_element;
+    //                     rdm_data[tei_index(q_abs, p_abs, s_abs, r_abs, ncmo)] += rdm_element;
+    //                     rdm_data[tei_index(r_abs, s_abs, p_abs, q_abs, ncmo)] += rdm_element;
+    //                     rdm_data[tei_index(r_abs, s_abs, q_abs, p_abs, ncmo)] -= rdm_element;
+    //                     rdm_data[tei_index(s_abs, r_abs, p_abs, q_abs, ncmo)] -= rdm_element;
+    //                     rdm_data[tei_index(s_abs, r_abs, q_abs, p_abs, ncmo)] += rdm_element;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // } // End loop over h
+
+    for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+        if (lists->detpblk(nI) == 0)
+            continue;
+
+        const auto Cr =
+            C_right.gather_C_block(CR, alfa, alfa_address, beta_address, class_Ia, class_Ib, false);
+
+        for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+            // The string class on which we don't act must be the same for I and J
+            if ((alfa and (class_Ib != class_Jb)) or (not alfa and (class_Ia != class_Ja)))
+                continue;
+            if (lists->detpblk(nJ) == 0)
+                continue;
+
+            const auto Cl = C_left.gather_C_block(CL, alfa, alfa_address, beta_address, class_Ja,
+                                                  class_Jb, !alfa);
+
+            // get the size of the string of spin opposite to the one we are acting on
+            size_t maxL = alfa ? beta_address->strpcls(class_Ib) : alfa_address->strpcls(class_Ia);
+
+            if ((class_Ia == class_Ja) and (class_Ib == class_Jb)) {
+                // OO terms
+                // Loop over (p>q) == (p>q)
+                const auto& pq_oo_list =
+                    alfa ? lists->get_alfa_oo_list3(class_Ia) : lists->get_beta_oo_list3(class_Ib);
+                for (const auto& [pq, oo_list] : pq_oo_list) {
+                    const auto& [p, q] = pq;
                     double rdm_element = 0.0;
-                    for (const auto& I : OO) {
+                    for (const auto& I : oo_list) {
                         rdm_element += psi::C_DDOT(maxL, Cl[I], 1, Cr[I], 1);
                     }
-
-                    rdm_data[tei_index(p_abs, q_abs, p_abs, q_abs, ncmo)] += rdm_element;
-                    rdm_data[tei_index(p_abs, q_abs, q_abs, p_abs, ncmo)] -= rdm_element;
-                    rdm_data[tei_index(q_abs, p_abs, p_abs, q_abs, ncmo)] -= rdm_element;
-                    rdm_data[tei_index(q_abs, p_abs, q_abs, p_abs, ncmo)] += rdm_element;
+                    rdm_data[tei_index(p, q, p, q, ncmo)] += rdm_element;
+                    rdm_data[tei_index(p, q, q, p, ncmo)] -= rdm_element;
+                    rdm_data[tei_index(q, p, p, q, ncmo)] -= rdm_element;
+                    rdm_data[tei_index(q, p, q, p, ncmo)] += rdm_element;
                 }
             }
-            // Loop over (p>q) > (r>s)
-            for (int pq_sym = 0; pq_sym < nirrep; ++pq_sym) {
-                size_t max_pq = lists->pairpi(pq_sym);
-                for (size_t pq = 0; pq < max_pq; ++pq) {
-                    const auto& [p_abs, q_abs] = lists->get_pair_list(pq_sym, pq);
-                    for (size_t rs = 0; rs < pq; ++rs) {
-                        const auto& [r_abs, s_abs] = lists->get_pair_list(pq_sym, rs);
 
-                        const auto& VVOO =
-                            alfa
-                                ? lists->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ia, h_Ia)
-                                : lists->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, h_Ib, h_Ia);
+            // VVOO terms
+            const auto& pqrs_vvoo_list = alfa ? lists->get_alfa_vvoo_list3(class_Ia, class_Ja)
+                                              : lists->get_beta_vvoo_list3(class_Ib, class_Jb);
+            for (const auto& [pqrs, vvoo_list] : pqrs_vvoo_list) {
+                const auto& [p, q, r, s] = pqrs;
 
-                        double rdm_element = 0.0;
-                        for (const auto& [sign, I, J] : VVOO) {
-                            rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
-                        }
-
-                        rdm_data[tei_index(p_abs, q_abs, r_abs, s_abs, ncmo)] += rdm_element;
-                        rdm_data[tei_index(q_abs, p_abs, r_abs, s_abs, ncmo)] -= rdm_element;
-                        rdm_data[tei_index(p_abs, q_abs, s_abs, r_abs, ncmo)] -= rdm_element;
-                        rdm_data[tei_index(q_abs, p_abs, s_abs, r_abs, ncmo)] += rdm_element;
-                        rdm_data[tei_index(r_abs, s_abs, p_abs, q_abs, ncmo)] += rdm_element;
-                        rdm_data[tei_index(r_abs, s_abs, q_abs, p_abs, ncmo)] -= rdm_element;
-                        rdm_data[tei_index(s_abs, r_abs, p_abs, q_abs, ncmo)] -= rdm_element;
-                        rdm_data[tei_index(s_abs, r_abs, q_abs, p_abs, ncmo)] += rdm_element;
-                    }
+                double rdm_element = 0.0;
+                for (const auto& [sign, I, J] : vvoo_list) {
+                    rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
                 }
+
+                rdm_data[tei_index(p, q, r, s, ncmo)] += rdm_element;
+                rdm_data[tei_index(q, p, r, s, ncmo)] -= rdm_element;
+                rdm_data[tei_index(p, q, s, r, ncmo)] -= rdm_element;
+                rdm_data[tei_index(q, p, s, r, ncmo)] += rdm_element;
+                rdm_data[tei_index(r, s, p, q, ncmo)] += rdm_element;
+                rdm_data[tei_index(r, s, q, p, ncmo)] -= rdm_element;
+                rdm_data[tei_index(s, r, p, q, ncmo)] -= rdm_element;
+                rdm_data[tei_index(s, r, q, p, ncmo)] += rdm_element;
             }
         }
-    } // End loop over h
+    }
 #if 0
     psi::outfile->Printf("\n TPDM:");
     for (int p = 0; p < no_; ++p) {
@@ -311,13 +367,9 @@ ambit::Tensor GASVector::compute_2rdm_aa_same_irrep(GASVector& C_left, GASVector
 }
 
 ambit::Tensor GASVector::compute_2rdm_ab_same_irrep(GASVector& C_left, GASVector& C_right) {
-    int nirrep = C_left.nirrep_;
     size_t ncmo = C_left.ncmo_;
-    size_t symmetry = C_left.symmetry_;
     const auto& alfa_address = C_left.alfa_address_;
     const auto& beta_address = C_left.beta_address_;
-    const auto& cmopi = C_left.cmopi_;
-    const auto& cmopi_offset = C_left.cmopi_offset_;
     const auto& lists = C_left.lists_;
 
     auto rdm = ambit::Tensor::build(ambit::CoreTensor, "2RDM_AB", {ncmo, ncmo, ncmo, ncmo});
@@ -329,53 +381,105 @@ ambit::Tensor GASVector::compute_2rdm_ab_same_irrep(GASVector& C_left, GASVector
 
     auto& rdm_data = rdm.data();
 
+    // // Loop over blocks of matrix C
+    // for (int Ia_sym = 0; Ia_sym < nirrep; ++Ia_sym) {
+    //     int Ib_sym = Ia_sym ^ symmetry;
+    //     const auto Cr = C_right.C(Ia_sym)->pointer();
+
+    //     // Loop over all r,s
+    //     for (int rs_sym = 0; rs_sym < nirrep; ++rs_sym) {
+    //         int Jb_sym = Ib_sym ^ rs_sym;
+    //         int Ja_sym = Jb_sym ^ symmetry;
+    //         const auto Cl = C_left.C(Ja_sym)->pointer();
+    //         for (int r_sym = 0; r_sym < nirrep; ++r_sym) {
+    //             int s_sym = rs_sym ^ r_sym;
+
+    //             for (int r_rel = 0; r_rel < cmopi[r_sym]; ++r_rel) {
+    //                 for (int s_rel = 0; s_rel < cmopi[s_sym]; ++s_rel) {
+    //                     int r_abs = r_rel + cmopi_offset[r_sym];
+    //                     int s_abs = s_rel + cmopi_offset[s_sym];
+
+    //                     // Grab list (r,s,Ib_sym)
+    //                     const auto& vo_beta = lists->get_beta_vo_list(r_abs, s_abs, Ib_sym,
+    //                     Jb_sym);
+
+    //                     // Loop over all p,q
+    //                     int pq_sym = rs_sym;
+    //                     for (int p_sym = 0; p_sym < nirrep; ++p_sym) {
+    //                         int q_sym = pq_sym ^ p_sym;
+    //                         for (int p_rel = 0; p_rel < cmopi[p_sym]; ++p_rel) {
+    //                             int p_abs = p_rel + cmopi_offset[p_sym];
+    //                             for (int q_rel = 0; q_rel < cmopi[q_sym]; ++q_rel) {
+    //                                 int q_abs = q_rel + cmopi_offset[q_sym];
+
+    //                                 const auto& vo_alfa =
+    //                                     lists->get_alfa_vo_list(p_abs, q_abs, Ia_sym, Ja_sym);
+
+    //                                 double rdm_element = 0.0;
+    //                                 for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
+    //                                     for (const auto& [sign_b, Ib, Jb] : vo_beta) {
+    //                                         rdm_element +=
+    //                                             Cl[Ja][Jb] * Cr[Ia][Ib] * sign_a * sign_b;
+    //                                     }
+    //                                 }
+    //                                 rdm_data[tei_index(p_abs, r_abs, q_abs, s_abs, ncmo)] +=
+    //                                     rdm_element;
+    //                             }
+    //                         }
+    //                     } // End loop over p,q
+    //                 }
+    //             } // End loop over r_rel,s_rel
+    //         }
+    //     }
+    // }
+
+    const auto& mo_sym = lists->string_class()->mo_sym();
     // Loop over blocks of matrix C
-    for (int Ia_sym = 0; Ia_sym < nirrep; ++Ia_sym) {
-        int Ib_sym = Ia_sym ^ symmetry;
-        const auto Cr = C_right.C(Ia_sym)->pointer();
+    for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+        if (lists->detpblk(nI) == 0)
+            continue;
 
-        // Loop over all r,s
-        for (int rs_sym = 0; rs_sym < nirrep; ++rs_sym) {
-            int Jb_sym = Ib_sym ^ rs_sym;
-            int Ja_sym = Jb_sym ^ symmetry;
-            const auto Cl = C_left.C(Ja_sym)->pointer();
-            for (int r_sym = 0; r_sym < nirrep; ++r_sym) {
-                int s_sym = rs_sym ^ r_sym;
+        auto h_Ib = lists->string_class()->beta_string_classes()[class_Ib].second;
+        const auto Cr = C_right.C_[nI]->pointer();
 
-                for (int r_rel = 0; r_rel < cmopi[r_sym]; ++r_rel) {
-                    for (int s_rel = 0; s_rel < cmopi[s_sym]; ++s_rel) {
-                        int r_abs = r_rel + cmopi_offset[r_sym];
-                        int s_abs = s_rel + cmopi_offset[s_sym];
+        for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+            if (lists->detpblk(nJ) == 0)
+                continue;
 
-                        // Grab list (r,s,Ib_sym)
-                        const auto& vo_beta = lists->get_beta_vo_list(r_abs, s_abs, Ib_sym, Jb_sym);
+            auto h_Jb = lists->string_class()->beta_string_classes()[class_Jb].second;
+            const auto Cl = C_left.C_[nJ]->pointer();
 
-                        // Loop over all p,q
-                        int pq_sym = rs_sym;
-                        for (int p_sym = 0; p_sym < nirrep; ++p_sym) {
-                            int q_sym = pq_sym ^ p_sym;
-                            for (int p_rel = 0; p_rel < cmopi[p_sym]; ++p_rel) {
-                                int p_abs = p_rel + cmopi_offset[p_sym];
-                                for (int q_rel = 0; q_rel < cmopi[q_sym]; ++q_rel) {
-                                    int q_abs = q_rel + cmopi_offset[q_sym];
+            const auto& pq_vo_alfa = lists->get_alfa_vo_list3(class_Ia, class_Ja);
+            const auto& rs_vo_beta = lists->get_beta_vo_list3(class_Ib, class_Jb);
 
-                                    const auto& vo_alfa =
-                                        lists->get_alfa_vo_list(p_abs, q_abs, Ia_sym, Ja_sym);
+            for (const auto& [rs, vo_beta_list] : rs_vo_beta) {
+                const size_t beta_list_size = vo_beta_list.size();
+                if (beta_list_size == 0)
+                    continue;
 
-                                    double rdm_element = 0.0;
-                                    for (const auto& [sign_a, Ia, Ja] : vo_alfa) {
-                                        for (const auto& [sign_b, Ib, Jb] : vo_beta) {
-                                            rdm_element +=
-                                                Cl[Ja][Jb] * Cr[Ia][Ib] * sign_a * sign_b;
-                                        }
-                                    }
-                                    rdm_data[tei_index(p_abs, r_abs, q_abs, s_abs, ncmo)] +=
-                                        rdm_element;
-                                }
-                            }
-                        } // End loop over p,q
+                const auto& [r, s] = rs;
+                const auto rs_sym = mo_sym[r] ^ mo_sym[s];
+
+                // Make sure that the symmetry of the J beta string is the same as the symmetry of
+                // the I beta string times the symmetry of the rs product
+                if (h_Jb != (h_Ib ^ rs_sym))
+                    continue;
+
+                for (const auto& [pq, vo_alfa_list] : pq_vo_alfa) {
+                    const auto& [p, q] = pq;
+                    const auto pq_sym = mo_sym[p] ^ mo_sym[q];
+                    // ensure that the product pqrs is totally symmetric
+                    if (pq_sym != rs_sym)
+                        continue;
+
+                    double rdm_element = 0.0;
+                    for (const auto& [sign_a, Ia, Ja] : vo_alfa_list) {
+                        for (const auto& [sign_b, Ib, Jb] : vo_beta_list) {
+                            rdm_element += Cl[Ja][Jb] * Cr[Ia][Ib] * sign_a * sign_b;
+                        }
                     }
-                } // End loop over r_rel,s_rel
+                    rdm_data[tei_index(p, r, q, s, ncmo)] += rdm_element;
+                } // End loop over p,q
             }
         }
     }

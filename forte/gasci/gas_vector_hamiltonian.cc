@@ -93,10 +93,11 @@ void GASVector::H0(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
 
 void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa) {
     // loop over blocks of matrix C
-    for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
-        size_t block_size = alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
-        if (block_size == 0)
+    for (const auto& [nI, class_Ia, class_Ib] : lists_->determinant_classes()) {
+        if (lists_->detpblk(nI) == 0)
             continue;
+        auto Cr =
+            this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia, class_Ib, false);
 
         for (const auto& [nJ, class_Ja, class_Jb] : lists_->determinant_classes()) {
 
@@ -107,8 +108,9 @@ void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
             if (not alfa and (class_Ia != class_Ja))
                 continue;
 
-            auto Cr = this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia,
-                                           class_Ib, false);
+            if (lists_->detpblk(nJ) == 0)
+                continue;
+
             auto Cl = result.gather_C_block(CL, alfa, alfa_address_, beta_address_, class_Ja,
                                             class_Jb, !alfa);
 
@@ -132,27 +134,20 @@ void GASVector::H1(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
 
 void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                          bool alfa) {
-    // Loop over (p>q) == (p>q)
-    for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
-        size_t block_size = alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
-        if (block_size == 0)
+    for (const auto& [nI, class_Ia, class_Ib] : lists_->determinant_classes()) {
+        if (lists_->detpblk(nI) == 0)
             continue;
 
+        const auto Cr =
+            this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia, class_Ib, false);
+
         for (const auto& [nJ, class_Ja, class_Jb] : lists_->determinant_classes()) {
-            // If we act on the alpha string, the beta string classes of the result must be the same
-            if (alfa and (class_Ib != class_Jb))
+            // The string class on which we don't act must be the same for I and J
+            if ((alfa and (class_Ib != class_Jb)) or (not alfa and (class_Ia != class_Ja)))
                 continue;
-            // If we act on the beta string, the alpha string classes of the result must be the same
-            if (not alfa and (class_Ia != class_Ja))
-                continue;
-
-            const size_t J_block_size =
-                alfa_address_->strpcls(class_Ja) * beta_address_->strpcls(class_Jb);
-            if (J_block_size == 0)
+            if (lists_->detpblk(nJ) == 0)
                 continue;
 
-            const auto Cr = this->gather_C_block(CR, alfa, alfa_address_, beta_address_, class_Ia,
-                                                 class_Ib, false);
             auto Cl = result.gather_C_block(CL, alfa, alfa_address_, beta_address_, class_Ja,
                                             class_Jb, !alfa);
 
@@ -162,6 +157,7 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
 
             if ((class_Ia == class_Ja) and (class_Ib == class_Jb)) {
                 // OO terms
+                // Loop over (p>q) == (p>q)
                 const auto& pq_oo_list = alfa ? lists_->get_alfa_oo_list3(class_Ia)
                                               : lists_->get_beta_oo_list3(class_Ib);
                 for (const auto& [pq, oo_list] : pq_oo_list) {
@@ -192,53 +188,41 @@ void GASVector::H2_aaaa2(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals
 
 void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     const auto& mo_sym = lists_->string_class()->mo_sym();
+    const auto Cr = CR->pointer();
+    auto Cl = CL->pointer();
     // Loop over blocks of matrix C
     for (const auto& [nI, class_Ia, class_Ib] : lists_->determinant_classes()) {
-        // The pq product is totally symmetric so the classes if the result are the same as the
-        // classes of the input
-        const size_t I_block_size =
-            alfa_address_->strpcls(class_Ia) * beta_address_->strpcls(class_Ib);
-        if (I_block_size == 0)
+        if (lists_->detpblk(nI) == 0)
             continue;
 
-        auto h_Ia = lists_->string_class()->alfa_string_classes()[class_Ia].second;
         auto h_Ib = lists_->string_class()->beta_string_classes()[class_Ib].second;
-
         const size_t maxIa = alfa_address_->strpcls(class_Ia);
-
         const auto C = C_[nI]->pointer();
 
         for (const auto& [nJ, class_Ja, class_Jb] : lists_->determinant_classes()) {
-
-            auto h_Ja = lists_->string_class()->alfa_string_classes()[class_Ja].second;
-            auto h_Jb = lists_->string_class()->beta_string_classes()[class_Jb].second;
-
-            const size_t J_block_size =
-                alfa_address_->strpcls(class_Ja) * beta_address_->strpcls(class_Jb);
-            if (J_block_size == 0)
+            if (lists_->detpblk(nJ) == 0)
                 continue;
 
+            auto h_Jb = lists_->string_class()->beta_string_classes()[class_Jb].second;
+            const size_t maxJa = alfa_address_->strpcls(class_Ja);
             auto HC = result.C_[nJ]->pointer();
 
-            const size_t maxJa = alfa_address_->strpcls(class_Ja);
-
+            const auto& pq_vo_alfa = lists_->get_alfa_vo_list3(class_Ia, class_Ja);
             const auto& rs_vo_beta = lists_->get_beta_vo_list3(class_Ib, class_Jb);
 
             for (const auto& [rs, vo_beta_list] : rs_vo_beta) {
-                const auto& [r, s] = rs;
-                const auto rs_sym = mo_sym[r] ^ mo_sym[s];
-
-                // This seems to be useful
-                if (h_Jb != (h_Ib ^ rs_sym))
-                    continue;
-
                 const size_t beta_list_size = vo_beta_list.size();
                 if (beta_list_size == 0)
                     continue;
-                CR->zero(); // TODO: remove
-                CL->zero(); // TODO: remove
-                auto Cr = CR->pointer();
-                auto Cl = CL->pointer();
+
+                const auto& [r, s] = rs;
+                const auto rs_sym = mo_sym[r] ^ mo_sym[s];
+
+                // Make sure that the symmetry of the J beta string is the same as the symmetry of
+                // the I beta string times the symmetry of the rs product
+                if (h_Jb != (h_Ib ^ rs_sym))
+                    continue;
+
                 // Zero the block of CL used to store the result
                 // this should be faster than CL->zero(); when beta_list_size is smaller than
                 // the number of columns of CL
@@ -257,12 +241,10 @@ void GASVector::H2_aabb(GASVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                     }
                 }
 
-                const auto& pq_vo_alfa = lists_->get_alfa_vo_list3(class_Ia, class_Ja);
-
                 for (const auto& [pq, vo_alfa_list] : pq_vo_alfa) {
                     const auto& [p, q] = pq;
                     const auto pq_sym = mo_sym[p] ^ mo_sym[q];
-
+                    // ensure that the product pqrs is totally symmetric
                     if (pq_sym != rs_sym)
                         continue;
 

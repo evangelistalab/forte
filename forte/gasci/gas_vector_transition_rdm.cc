@@ -148,14 +148,15 @@ ambit::Tensor compute_1rdm_different_irrep(GASVector& C_left, GASVector& C_right
                         int p_abs = p_rel + cmopi_offset[p_sym];
                         int q_abs = q_rel + cmopi_offset[q_sym];
 
-                        const auto& vo =
-                            alfa ? lists_right->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja)
-                                 : lists_right->get_beta_vo_list(p_abs, q_abs, h_Ib, h_Jb);
-                        double rdm_element = 0.0;
-                        for (const auto& [sign, I, J] : vo) {
-                            rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
-                        }
-                        rdm_data[p_abs * ncmo + q_abs] += rdm_element;
+                        // TODO: rewrite this
+                        // const auto& vo =
+                        //     alfa ? lists_right->get_alfa_vo_list(p_abs, q_abs, h_Ia, h_Ja)
+                        //          : lists_right->get_beta_vo_list(p_abs, q_abs, h_Ib, h_Jb);
+                        // double rdm_element = 0.0;
+                        // for (const auto& [sign, I, J] : vo) {
+                        //     rdm_element += sign * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+                        // }
+                        // rdm_data[p_abs * ncmo + q_abs] += rdm_element;
                     }
                 }
             }

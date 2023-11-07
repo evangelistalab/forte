@@ -80,29 +80,24 @@ using StringList = std::vector<std::vector<String>>;
 /// I belongs to the irrep h
 using VOList = std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>>;
 
-using VOList2 = std::map<std::tuple<size_t, size_t, int, int>, std::vector<StringSubstitution>>;
-
 /// Maps the integers (class_I, class_J) to a map of orbital indices (p,q) and the corresponding
 /// list of strings connected by a^{+}_p a_q, where the string I belongs to class_I and J belongs to
 /// class_J
 using VOListElement = std::map<std::tuple<int, int>, std::vector<StringSubstitution>>;
-using VOList3 = std::map<std::pair<int, int>, VOListElement>;
+using VOListMap = std::map<std::pair<int, int>, VOListElement>;
 
 /// Maps the integers (p,q,r,s,h) to list of strings connected by a^{+}_p a^{+}_q a_s a_r, where the
 /// string I belongs to the irrep h
 using VVOOList =
     std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>;
-using VVOOList2 =
-    std::map<std::tuple<size_t, size_t, size_t, size_t, int, int>, std::vector<StringSubstitution>>;
 using VVOOListElement = std::map<std::tuple<int, int, int, int>, std::vector<StringSubstitution>>;
-using VVOOList3 = std::map<std::pair<int, int>, VVOOListElement>;
+using VVOOListMap = std::map<std::pair<int, int>, VVOOListElement>;
 
 /// Maps the integers (pq_sym, pq, h) to list of strings connected by a^{+}_p a^{+}_q a_q a_p where
 /// the string I belongs to the irrep h
 using OOList = std::map<std::tuple<int, size_t, int>, std::vector<StringSubstitution>>;
-using OOList2 = std::map<std::tuple<int, size_t, int>, std::vector<uint32_t>>;
 using OOListElement = std::map<std::tuple<int, int>, std::vector<uint32_t>>;
-using OOList3 = std::map<int, OOListElement>;
+using OOListMap = std::map<int, OOListElement>;
 
 /// Maps the integers (h_J, add_J, h_I) to list of strings connected by a_p, where the string
 /// I belongs to the irrep h_I and J belongs to the irrep h_J and add_J is the address of J

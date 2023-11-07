@@ -197,16 +197,12 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     }
     {
         local_timer t;
-        make_vo_list(alfa_strings_, alfa_address_, alfa_vo_list);
-        make_vo_list(beta_strings_, beta_address_, beta_vo_list);
         make_vo_list3(alfa_strings_, alfa_address_, alfa_vo_list3);
         make_vo_list3(beta_strings_, beta_address_, beta_vo_list3);
         vo_list_timer += t.get();
     }
     {
         local_timer t;
-        make_oo_list(alfa_strings_, alfa_address_, alfa_oo_list);
-        make_oo_list(beta_strings_, beta_address_, beta_oo_list);
         make_oo_list3(alfa_strings_, alfa_address_, alfa_oo_list3);
         make_oo_list3(beta_strings_, beta_address_, beta_oo_list3);
         oo_list_timer += t.get();
@@ -231,8 +227,6 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     }
     {
         local_timer t;
-        make_vvoo_list(alfa_strings_, alfa_address_, alfa_vvoo_list);
-        make_vvoo_list(beta_strings_, beta_address_, beta_vvoo_list);
         make_vvoo_list3(alfa_strings_, alfa_address_, alfa_vvoo_list3);
         make_vvoo_list3(beta_strings_, beta_address_, beta_vvoo_list3);
         vvoo_list_timer += t.get();
