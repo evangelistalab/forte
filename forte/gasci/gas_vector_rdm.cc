@@ -735,7 +735,7 @@ void GASVector::test_rdms(GASVector& Cl, GASVector& Cr, int max_rdm_level, RDMsT
 
     Determinant J; // <- xsize (no_);
 
-    psi::outfile->Printf("\n\n==> RDMs Test <==\n");
+    psi::outfile->Printf("\n\n==> RDMs Test (max level = %d)<==\n", max_rdm_level);
 
     if (max_rdm_level >= 1) {
         // compute the reference 1-RDM_A

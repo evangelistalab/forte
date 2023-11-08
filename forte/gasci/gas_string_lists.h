@@ -93,9 +93,9 @@ class GASStringLists {
     size_t pairpi(int h) const { return pairpi_[h]; }
 
     /// @return the alpha string address object
-    const auto& alfa_address() { return alfa_address_; }
+    const auto& alfa_address() const { return alfa_address_; }
     /// @return the beta string address object
-    const auto& beta_address() { return beta_address_; }
+    const auto& beta_address() const { return beta_address_; }
     /// @return the string class object
     const auto& string_class() { return string_class_; }
     /// @return the alpha string address object for N - 1 electrons
@@ -159,6 +159,12 @@ class GASStringLists {
     std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I, size_t add_I, int h_J);
 
     Pair get_pair_list(int h, int n) const { return pair_list_[h][n]; }
+
+    friend std::map<std::pair<int, int>, std::vector<std::pair<int, int>>>
+    find_string_map(const GASStringLists& list_left, const GASStringLists& list_right, bool alfa);
+
+    friend VOListMap find_ov_string_map(const GASStringLists& list_left,
+                                        const GASStringLists& list_right, bool alfa);
 
   private:
     // ==> Class Data <==
@@ -237,19 +243,19 @@ class GASStringLists {
     /// The pair string list
     PairList pair_list_;
     /// The VO string lists
-    VOListMap alfa_vo_list3;
-    VOListMap beta_vo_list3;
+    VOListMap alfa_vo_list;
+    VOListMap beta_vo_list;
     /// The OO string lists
-    OOListMap alfa_oo_list3;
-    OOListMap beta_oo_list3;
+    OOListMap alfa_oo_list;
+    OOListMap beta_oo_list;
 
     /// The VVOO string lists
-    VVOOListMap alfa_vvoo_list3;
-    VVOOListMap beta_vvoo_list3;
+    VVOOListMap alfa_vvoo_list;
+    VVOOListMap beta_vvoo_list;
 
     const VOListElement empty_vo_list;
     const OOListElement empty_oo_list;
-    const VVOOListElement empty_vvoo_list3;
+    const VVOOListElement empty_vvoo_list;
 
     /// The 1-hole lists
     H1List alfa_1h_list;
@@ -295,10 +301,14 @@ class GASStringLists {
     PairList make_pair_list();
 
     /// Make the VO list
-    void make_vo_list(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                      VOListMap& list);
-    void make_vo(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                 VOListMap& list, int p, int q);
+    static void make_vo_list(const StringList& strings,
+                             const std::shared_ptr<StringAddress>& I_addresser,
+                             const std::shared_ptr<StringAddress>& J_addresser, VOListMap& list,
+                             int nmo);
+    static void make_vo(const StringList& strings,
+                        const std::shared_ptr<StringAddress>& I_addresser,
+                        const std::shared_ptr<StringAddress>& J_addresser, VOListMap& list, int p,
+                        int q);
 
     void make_oo_list(const StringList& strings, std::shared_ptr<StringAddress> addresser,
                       OOListMap& list);
@@ -323,4 +333,11 @@ class GASStringLists {
 
     void get_gas_occupation();
 };
+
+std::map<std::pair<int, int>, std::vector<std::pair<int, int>>>
+find_string_map(const GASStringLists& list_left, const GASStringLists& list_right, bool alfa);
+
+VOListMap find_ov_string_map(const GASStringLists& list_left, const GASStringLists& list_right,
+                             bool alfa);
+
 } // namespace forte

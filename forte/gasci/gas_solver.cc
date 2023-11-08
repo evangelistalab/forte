@@ -330,7 +330,8 @@ double GASCISolver::compute_energy() {
 
     energy_ = dl_solver_->eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
-    psi::Process::environment.globals["FCI ENERGY"] = energy_;
+    psi::Process::environment.globals["GASCI ENERGY"] = energy_;
+    psi::outfile->Printf("\n    Time for GASCI: %20.12f", t.get());
 
     return energy_;
 }
@@ -352,7 +353,7 @@ void GASCISolver::print_solutions(size_t sample_size, std::shared_ptr<psi::Vecto
             C_->max_abs_elements(sample_size);
 
         for (const auto& [ci_abs, ci, class_Ia, class_Ib, add_Ia, add_Ib] : dets_config) {
-            if (ci_abs < 0.01)
+            if (ci_abs < 0.05)
                 continue;
 
             auto Ia_v = lists_->alfa_str(class_Ia, add_Ia);

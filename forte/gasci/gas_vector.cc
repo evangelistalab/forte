@@ -103,9 +103,9 @@ void GASVector::startup() {
     cmopi_ = lists_->cmopi();
     cmopi_offset_ = lists_->cmopi_offset();
 
-    psi::outfile->Printf("\n  symmetry: %d", symmetry_);
-    psi::outfile->Printf("\n  nirrep: %d", nirrep_);
-    psi::outfile->Printf("\n  ncmo: %d", ncmo_);
+    // psi::outfile->Printf("\n  symmetry: %d", symmetry_);
+    // psi::outfile->Printf("\n  nirrep: %d", nirrep_);
+    // psi::outfile->Printf("\n  ncmo: %d", ncmo_);
 
     ndet_ = 0;
     for (const auto& [_, class_Ia, class_Ib] : lists_->determinant_classes()) {
@@ -115,8 +115,6 @@ void GASVector::startup() {
         ndet_ += detpcls;
         detpcls_.push_back(detpcls);
     }
-
-    psi::outfile->Printf("\n\n  Number of determinants: %d", ndet_);
 
     // Allocate the wave function
     for (const auto& [_, class_Ia, class_Ib] : lists_->determinant_classes()) {

@@ -37,16 +37,11 @@ StringAddress::StringAddress(const std::vector<int>& gas_size, int ne,
                              const std::vector<std::vector<String>>& strings)
     : nclasses_(strings.size()), nstr_(0), strpcls_(strings.size(), 0), nones_(ne),
       gas_size_(gas_size) {
-    psi::outfile->Printf("String classes: %d\n", nclasses_);
     for (int h = 0; h < nclasses_; h++) {
         const auto& strings_h = strings[h];
         for (const auto& s : strings_h) {
             push_back(s, h);
         }
-    }
-    // print strpcls_
-    for (int h = 0; h < nclasses_; h++) {
-        psi::outfile->Printf("String class %d: %zu\n", h, strpcls_[h]);
     }
 }
 

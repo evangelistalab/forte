@@ -2284,15 +2284,15 @@ void FCI_MO::build_lists321() {
     auto Ja_size = dets321_a_.size();
     auto Jb_size = dets321_b_.size();
 
-    list321_aaa_.clear();
-    list321_abb_.clear();
-    list321_baa_.clear();
-    list321_bbb_.clear();
+    list21_aaa_.clear();
+    list21_abb_.clear();
+    list21_baa_.clear();
+    list21_bbb_.clear();
 
-    list321_aaa_.resize(Ja_size);
-    list321_abb_.resize(Ja_size);
-    list321_baa_.resize(Jb_size);
-    list321_bbb_.resize(Jb_size);
+    list21_aaa_.resize(Ja_size);
+    list21_abb_.resize(Ja_size);
+    list21_baa_.resize(Jb_size);
+    list21_bbb_.resize(Jb_size);
 
     timer timer_lists("Build z^+ v u |0> sub. lists new");
 
@@ -2311,7 +2311,7 @@ void FCI_MO::build_lists321() {
             for (const auto j : detIa.get_alfa_occ(nactv_)) {
                 // j = k
                 auto address_Ia = dets321_a_.find(detIa)->second;
-                list321_aaa_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+                list21_aaa_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
 
                 // j != k
                 for (const auto k : detIa.get_alfa_vir(nactv_)) {
@@ -2320,7 +2320,7 @@ void FCI_MO::build_lists321() {
                     detIaac.set_alfa_bit(k, true);
                     auto sign_jk = detIaac.slater_sign_aa(j, k);
                     auto address_Iaac = dets321_a_.find(detIaac)->second;
-                    list321_aaa_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                    list21_aaa_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
                 }
             }
 
@@ -2328,7 +2328,7 @@ void FCI_MO::build_lists321() {
             for (const auto j : detIa.get_beta_occ(nactv_)) {
                 // j = k
                 auto address_Ia = dets321_a_.find(detIa)->second;
-                list321_abb_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+                list21_abb_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
 
                 // j != k
                 for (const auto k : detIa.get_beta_vir(nactv_)) {
@@ -2337,7 +2337,7 @@ void FCI_MO::build_lists321() {
                     detIaac.set_beta_bit(k, true);
                     auto sign_jk = detIaac.slater_sign_bb(j, k);
                     auto address_Iaac = dets321_a_.find(detIaac)->second;
-                    list321_abb_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                    list21_abb_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
                 }
             }
         }
@@ -2354,7 +2354,7 @@ void FCI_MO::build_lists321() {
             for (const auto j : detIa.get_alfa_occ(nactv_)) {
                 // j = k
                 auto address_Ia = dets321_b_.find(detIa)->second;
-                list321_baa_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+                list21_baa_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
 
                 // j != k
                 for (const auto k : detIa.get_alfa_vir(nactv_)) {
@@ -2363,7 +2363,7 @@ void FCI_MO::build_lists321() {
                     detIaac.set_alfa_bit(k, true);
                     auto sign_jk = detIaac.slater_sign_aa(j, k);
                     auto address_Iaac = dets321_b_.find(detIaac)->second;
-                    list321_baa_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                    list21_baa_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
                 }
             }
 
@@ -2371,7 +2371,7 @@ void FCI_MO::build_lists321() {
             for (const auto j : detIa.get_beta_occ(nactv_)) {
                 // j = k
                 auto address_Ia = dets321_b_.find(detIa)->second;
-                list321_bbb_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+                list21_bbb_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
 
                 // j != k
                 for (const auto k : detIa.get_beta_vir(nactv_)) {
@@ -2380,17 +2380,17 @@ void FCI_MO::build_lists321() {
                     detIaac.set_beta_bit(k, true);
                     auto sign_jk = detIaac.slater_sign_bb(j, k);
                     auto address_Iaac = dets321_b_.find(detIaac)->second;
-                    list321_bbb_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                    list21_bbb_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
                 }
             }
         }
     }
 
     if (print_ > 2) {
-        outfile->Printf("\n  list aaa size = %zu", list321_aaa_.size());
-        outfile->Printf("\n  list abb size = %zu", list321_abb_.size());
-        outfile->Printf("\n  list baa size = %zu", list321_baa_.size());
-        outfile->Printf("\n  list bbb size = %zu", list321_bbb_.size());
+        outfile->Printf("\n  list aaa size = %zu", list21_aaa_.size());
+        outfile->Printf("\n  list abb size = %zu", list21_abb_.size());
+        outfile->Printf("\n  list baa size = %zu", list21_baa_.size());
+        outfile->Printf("\n  list bbb size = %zu", list21_bbb_.size());
     }
 
     built_lists321_ = true;
@@ -2493,13 +2493,13 @@ FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>&
             auto& ket_Jb_data = (ket_Jb[thread]).data();
 
             for (size_t J = 0; J < ndets_a; ++J) {
-                for (const auto& coupled_dets : list321_aaa_[J]) {
+                for (const auto& coupled_dets : list21_aaa_[J]) {
                     const auto [I, u, v, z, sign] = coupled_dets;
                     auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
                     ket_Ja_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
                     bra_Ja_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
                 }
-                for (const auto& coupled_dets : list321_abb_[J]) {
+                for (const auto& coupled_dets : list21_abb_[J]) {
                     const auto [I, u, v, z, sign] = coupled_dets;
                     auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
                     ket_Ja_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
@@ -2508,13 +2508,13 @@ FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>&
             }
 
             for (size_t J = 0; J < ndets_b; ++J) {
-                for (const auto& coupled_dets : list321_baa_[J]) {
+                for (const auto& coupled_dets : list21_baa_[J]) {
                     const auto [I, u, v, z, sign] = coupled_dets;
                     auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
                     ket_Jb_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
                     bra_Jb_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
                 }
-                for (const auto& coupled_dets : list321_bbb_[J]) {
+                for (const auto& coupled_dets : list21_bbb_[J]) {
                     const auto [I, u, v, z, sign] = coupled_dets;
                     auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
                     ket_Jb_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
@@ -2615,8 +2615,8 @@ FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>&
             auto& pbra_data = pbra[thread].data();
             auto& pket_data = pket[thread].data();
 
-            p_add(list321_aaa_[J], evec, pbra_data, pket_data); // z_α^+ v_α u_α |I>
-            p_add(list321_abb_[J], evec, pbra_data, pket_data); // z_β^+ v_β u_α |I>
+            p_add(list21_aaa_[J], evec, pbra_data, pket_data); // z_α^+ v_α u_α |I>
+            p_add(list21_abb_[J], evec, pbra_data, pket_data); // z_β^+ v_β u_α |I>
             results[thread] += pbra[thread]("p") * pket[thread]("p");
         }
 
@@ -2631,8 +2631,8 @@ FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>&
             auto& pbra_data = pbra[thread].data();
             auto& pket_data = pket[thread].data();
 
-            p_add(list321_baa_[J], evec, pbra_data, pket_data); // z_α^+ v_α u_β |I>
-            p_add(list321_bbb_[J], evec, pbra_data, pket_data); // z_β^+ v_β u_β |I>
+            p_add(list21_baa_[J], evec, pbra_data, pket_data); // z_α^+ v_α u_β |I>
+            p_add(list21_bbb_[J], evec, pbra_data, pket_data); // z_β^+ v_β u_β |I>
             results[thread] += pbra[thread]("p") * pket[thread]("p");
         }
 

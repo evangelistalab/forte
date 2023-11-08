@@ -97,13 +97,13 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         }
     }
 
-    debug([&]() {
-        psi::outfile->Printf("\n    GAS space sizes: %s", container_to_string(gas_size_).c_str());
-        for (size_t n = 0; n < ngas_spaces_; ++n) {
-            psi::outfile->Printf("\n    GAS%d MOs: %s", n + 1,
-                                 container_to_string(gas_mos_[n]).c_str());
-        }
-    });
+    // debug([&]() {
+    //     psi::outfile->Printf("\n    GAS space sizes: %s",
+    //     container_to_string(gas_size_).c_str()); for (size_t n = 0; n < ngas_spaces_; ++n) {
+    //         psi::outfile->Printf("\n    GAS%d MOs: %s", n + 1,
+    //                              container_to_string(gas_mos_[n]).c_str());
+    //     }
+    // });
 
     get_gas_occupation();
 
@@ -197,14 +197,14 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     }
     {
         local_timer t;
-        make_vo_list(alfa_strings_, alfa_address_, alfa_vo_list3);
-        make_vo_list(beta_strings_, beta_address_, beta_vo_list3);
+        make_vo_list(alfa_strings_, alfa_address_, alfa_address_, alfa_vo_list, ncmo_);
+        make_vo_list(beta_strings_, beta_address_, beta_address_, beta_vo_list, ncmo_);
         vo_list_timer += t.get();
     }
     {
         local_timer t;
-        make_oo_list(alfa_strings_, alfa_address_, alfa_oo_list3);
-        make_oo_list(beta_strings_, beta_address_, beta_oo_list3);
+        make_oo_list(alfa_strings_, alfa_address_, alfa_oo_list);
+        make_oo_list(beta_strings_, beta_address_, beta_oo_list);
         oo_list_timer += t.get();
     }
     {
@@ -227,8 +227,8 @@ void GASStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     }
     {
         local_timer t;
-        make_vvoo_list(alfa_strings_, alfa_address_, alfa_vvoo_list3);
-        make_vvoo_list(beta_strings_, beta_address_, beta_vvoo_list3);
+        make_vvoo_list(alfa_strings_, alfa_address_, alfa_vvoo_list);
+        make_vvoo_list(beta_strings_, beta_address_, beta_vvoo_list);
         vvoo_list_timer += t.get();
     }
 
@@ -548,7 +548,7 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
     std::vector<std::vector<String>> gas_space_string(ngas_spaces_, std::vector<String>{});
     std::vector<std::vector<String>> full_strings(nirrep_, std::vector<String>{});
     // print gas_occupation
-    psi::outfile->Printf("\n  GAS occupation: %s", container_to_string(gas_occupation).c_str());
+    // psi::outfile->Printf("\n  GAS occupation: %s", container_to_string(gas_occupation).c_str());
 
     // enumerate all the possible strings in each GAS space
     for (size_t n = 0; n < ngas_spaces_; n++) {
@@ -556,7 +556,6 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
         auto gas_norb = gas_size[n];
         auto gas_ne = gas_occupation[n];
         if ((gas_ne >= 0) and (gas_ne <= gas_norb)) {
-            psi::outfile->Printf("\n    GAS%d", n + 1);
             const auto I_begin = I.begin();
             const auto I_end = I.begin() + gas_norb;
 
@@ -572,14 +571,14 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
                         J[gas_mos_[n][i]] = true;
                 }
                 gas_space_string[n].push_back(J);
-                psi::outfile->Printf("\n    %s", str(J, ncmo_).c_str());
+                // psi::outfile->Printf("\n    %s", str(J, ncmo_).c_str());
             } while (std::next_permutation(I_begin, I_end));
         }
     }
 
     auto product_strings = math::cartesian_product(gas_space_string);
     // print product_strings
-    psi::outfile->Printf("\n\n  GAS product strings (size = %d):", product_strings.size());
+    // psi::outfile->Printf("\n\n  GAS product strings (size = %d):", product_strings.size());
     for (const auto& strings : product_strings) {
         String I;
         I.zero();
@@ -587,7 +586,7 @@ void GASStringLists::make_gas_strings_with_occupation(StringList& list,
             I |= J;
         }
         size_t sym_I = string_class_->symmetry(I);
-        psi::outfile->Printf("\n    %s", str(I, ncmo_).c_str());
+        // psi::outfile->Printf("\n    %s", str(I, ncmo_).c_str());
         full_strings[sym_I].push_back(I);
     }
 

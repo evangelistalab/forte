@@ -51,7 +51,7 @@ namespace forte {
 
 const OOListElement& GASStringLists::get_alfa_oo_list(int class_I) const {
     // check if the key exists, if not return an empty list
-    if (auto it = alfa_oo_list3.find(class_I); it != alfa_oo_list3.end()) {
+    if (auto it = alfa_oo_list.find(class_I); it != alfa_oo_list.end()) {
         return it->second;
     }
     return empty_oo_list;
@@ -59,7 +59,7 @@ const OOListElement& GASStringLists::get_alfa_oo_list(int class_I) const {
 
 const OOListElement& GASStringLists::get_beta_oo_list(int class_I) const {
     // check if the key exists, if not return an empty list
-    if (auto it = beta_oo_list3.find(class_I); it != beta_oo_list3.end()) {
+    if (auto it = beta_oo_list.find(class_I); it != beta_oo_list.end()) {
         return it->second;
     }
     return empty_oo_list;
@@ -101,7 +101,7 @@ void GASStringLists::make_oo(const StringList& strings, std::shared_ptr<StringAd
  */
 const VOListElement& GASStringLists::get_alfa_vo_list(int class_I, int class_J) const {
     // check if the key exists, if not return an empty list
-    if (auto it = alfa_vo_list3.find(std::make_pair(class_I, class_J)); it != alfa_vo_list3.end()) {
+    if (auto it = alfa_vo_list.find(std::make_pair(class_I, class_J)); it != alfa_vo_list.end()) {
         return it->second;
     }
     return empty_vo_list;
@@ -115,25 +115,30 @@ const VOListElement& GASStringLists::get_alfa_vo_list(int class_I, int class_J) 
  */
 const VOListElement& GASStringLists::get_beta_vo_list(int class_I, int class_J) const {
     // check if the key exists, if not return an empty list
-    if (auto it = beta_vo_list3.find(std::make_pair(class_I, class_J)); it != beta_vo_list3.end()) {
+    if (auto it = beta_vo_list.find(std::make_pair(class_I, class_J)); it != beta_vo_list.end()) {
         return it->second;
     }
     return empty_vo_list;
 }
 
 void GASStringLists::make_vo_list(const StringList& strings,
-                                  std::shared_ptr<StringAddress> addresser, VOListMap& list) {
-    for (int p = 0; p < ncmo_; p++) {
-        for (int q = 0; q < ncmo_; q++) {
-            make_vo(strings, addresser, list, p, q);
+                                  const std::shared_ptr<StringAddress>& I_addresser,
+                                  const std::shared_ptr<StringAddress>& J_addresser,
+                                  VOListMap& list, int nmo) {
+    for (int p = 0; p < nmo; p++) {
+        for (int q = 0; q < nmo; q++) {
+            make_vo(strings, I_addresser, J_addresser, list, p, q);
         }
     }
 }
 
-void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAddress> addresser,
-                             VOListMap& list, int p, int q) {
+void GASStringLists::make_vo(const StringList& strings,
+                             const std::shared_ptr<StringAddress>& I_addresser,
+                             const std::shared_ptr<StringAddress>& J_addresser, VOListMap& list,
+                             int p, int q) {
     for (const auto& string_class : strings) {
         for (const auto& I : string_class) {
+            const auto& [add_I, class_I] = I_addresser->address_and_class(I);
             auto J = I;
             double sign = 1.0;
             if (J[q]) {
@@ -142,8 +147,7 @@ void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAd
                 if (!J[p]) {
                     sign *= J.slater_sign(p);
                     J[p] = true;
-                    if (auto it = addresser->find(J); it != addresser->end()) {
-                        const auto& [add_I, class_I] = addresser->address_and_class(I);
+                    if (auto it = J_addresser->find(J); it != J_addresser->end()) {
                         const auto& [add_J, class_J] = it->second;
                         auto& list_IJ = list[std::make_tuple(class_I, class_J)];
                         list_IJ[std::make_tuple(p, q)].push_back(
@@ -157,20 +161,20 @@ void GASStringLists::make_vo(const StringList& strings, std::shared_ptr<StringAd
 
 const VVOOListElement& GASStringLists::get_alfa_vvoo_list(int class_I, int class_J) const {
     // check if the key exists, if not return an empty list
-    if (auto it = alfa_vvoo_list3.find(std::make_pair(class_I, class_J));
-        it != alfa_vvoo_list3.end()) {
+    if (auto it = alfa_vvoo_list.find(std::make_pair(class_I, class_J));
+        it != alfa_vvoo_list.end()) {
         return it->second;
     }
-    return empty_vvoo_list3;
+    return empty_vvoo_list;
 }
 
 const VVOOListElement& GASStringLists::get_beta_vvoo_list(int class_I, int class_J) const {
     // check if the key exists, if not return an empty list
-    if (auto it = beta_vvoo_list3.find(std::make_pair(class_I, class_J));
-        it != beta_vvoo_list3.end()) {
+    if (auto it = beta_vvoo_list.find(std::make_pair(class_I, class_J));
+        it != beta_vvoo_list.end()) {
         return it->second;
     }
-    return empty_vvoo_list3;
+    return empty_vvoo_list;
 }
 
 void GASStringLists::make_vvoo_list(const StringList& strings,
@@ -387,4 +391,39 @@ void GASStringLists::make_3h_list(const StringList& strings,
         }
     }
 }
+
+std::map<std::pair<int, int>, std::vector<std::pair<int, int>>>
+find_string_map(const GASStringLists& list_left, const GASStringLists& list_right, bool alfa) {
+    std::map<std::pair<int, int>, std::vector<std::pair<int, int>>> m;
+    const auto& strings_left = alfa ? list_left.beta_strings() : list_left.alfa_strings();
+    const auto& strings_right = alfa ? list_right.beta_strings() : list_right.alfa_strings();
+    const auto& address_left = alfa ? list_left.beta_address() : list_left.alfa_address();
+    auto ncmo = list_left.ncmo();
+
+    // loop over all the right string classes (I)
+    for (int class_I{0}; const auto& string_class_right : strings_right) {
+        // loop over all the right strings (I)
+        for (size_t addI{0}; const auto& I : string_class_right) {
+            // find the left string class (class_J) and string address (addJ) of the string J = I
+            if (auto it = address_left->find(I); it != address_left->end()) {
+                const auto& [addJ, class_J] = it->second;
+                m[std::make_pair(class_I, class_J)].push_back(std::make_pair(addI, addJ));
+            }
+            addI++;
+        }
+        class_I++;
+    }
+    return m;
+}
+
+VOListMap find_ov_string_map(const GASStringLists& list_left, const GASStringLists& list_right,
+                             bool alfa) {
+    VOListMap vo_list;
+    const auto& strings_right = alfa ? list_right.alfa_strings() : list_right.beta_strings();
+    const auto& I_address = alfa ? list_right.alfa_address() : list_right.beta_address();
+    const auto& J_address = alfa ? list_left.alfa_address() : list_left.beta_address();
+    list_right.make_vo_list(strings_right, I_address, J_address, vo_list, list_left.ncmo());
+    return vo_list;
+}
+
 } // namespace forte
