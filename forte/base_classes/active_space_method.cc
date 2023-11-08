@@ -309,6 +309,7 @@ std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_transition_
     // compute transition dipole
     std::vector<std::shared_ptr<psi::Vector>> trans_dipoles(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+        rdms[i]->SF_G1().print();
         auto td = ampints->compute_electronic_dipole(rdms[i], true);
         trans_dipoles[i] = td;
 

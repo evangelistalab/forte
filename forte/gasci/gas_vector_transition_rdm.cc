@@ -47,6 +47,11 @@ std::shared_ptr<RDMs> compute_transition_rdms(GASVector& C_left, GASVector& C_ri
     size_t na_right = C_right.alfa_address()->nones();
     size_t nb_right = C_right.beta_address()->nones();
 
+    psi::outfile->Printf("\n  Left eigenvector\n");
+    C_left.print(0.01);
+    psi::outfile->Printf("\n  Right eigenvector\n");
+    C_right.print(0.01);
+
     if (C_left.ncmo() != C_right.ncmo()) {
         throw std::runtime_error(
             "FCI transition RDMs: The number of MOs must be the same in the two wave functions.");

@@ -83,7 +83,7 @@ FCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
     // cast method2 to FCISolver
     auto method2_fcisolver = std::dynamic_pointer_cast<FCISolver>(method2);
     // copy the right root onto the temporary vector C_
-    method2_fcisolver->copy_state_into_fci_vector(root_right, method2_fcisolver->C_);
+    method2_fcisolver->copy_state_into_fci_vector(root_right, method2_fcisolver->T_);
 
     if (print_) {
         std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + " " +
@@ -92,11 +92,11 @@ FCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
         print_h2(title_rdm);
     }
 
-    auto rdms = compute_transition_rdms(*C_, *method2_fcisolver->C_, max_rdm_level, type);
+    auto rdms = compute_transition_rdms(*C_, *method2_fcisolver->T_, max_rdm_level, type);
 
     // Optionally, test the RDMs
     if (test_rdms_) {
-        FCIVector::test_rdms(*C_, *method2_fcisolver->C_, 1, type, rdms);
+        FCIVector::test_rdms(*C_, *method2_fcisolver->T_, 1, type, rdms);
     }
 
     // // Print the NO if energy converged

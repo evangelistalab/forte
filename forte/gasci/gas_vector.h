@@ -172,11 +172,11 @@ class GASVector {
                                                    const size_t&, const size_t&, const double&)>
                                     lambda) const {
         for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
-            const auto c = C_[n]->pointer();
             const auto& nIa = alfa_address_->strpcls(class_Ia);
             const auto& nIb = beta_address_->strpcls(class_Ib);
             if (nIa == 0 or nIb == 0)
                 continue;
+            const auto c = C_[n]->pointer();
             for (size_t Ia = 0; Ia < nIa; ++Ia) {
                 for (size_t Ib = 0; Ib < nIb; ++Ib) {
                     lambda(n, class_Ia, class_Ib, Ia, Ib, c[Ia][Ib]);
@@ -188,11 +188,11 @@ class GASVector {
     void for_each_index_element(std::function<void(const size_t&, double&)> lambda) {
         size_t I = 0;
         for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
-            const auto c = C_[n]->pointer();
             const auto& nIa = alfa_address_->strpcls(class_Ia);
             const auto& nIb = beta_address_->strpcls(class_Ib);
             if (nIa == 0 or nIb == 0)
                 continue;
+            const auto c = C_[n]->pointer();
             for (size_t Ia = 0; Ia < nIa; ++Ia) {
                 for (size_t Ib = 0; Ib < nIb; ++Ib) {
                     lambda(I, c[Ia][Ib]);
@@ -205,11 +205,11 @@ class GASVector {
     void const_for_each_index_element(std::function<void(const size_t&, const double&)> lambda) {
         size_t I = 0;
         for (const auto& [n, class_Ia, class_Ib] : lists_->determinant_classes()) {
-            const auto c = C_[n]->pointer();
             const auto& nIa = alfa_address_->strpcls(class_Ia);
             const auto& nIb = beta_address_->strpcls(class_Ib);
             if (nIa == 0 or nIb == 0)
                 continue;
+            const auto c = C_[n]->pointer();
             for (size_t Ia = 0; Ia < nIa; ++Ia) {
                 for (size_t Ib = 0; Ib < nIb; ++Ib) {
                     lambda(I, c[Ia][Ib]);
