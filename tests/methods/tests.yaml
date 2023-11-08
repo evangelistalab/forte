@@ -259,6 +259,18 @@ sa-fci:
    long:
       - sa-fci-6
       - sa-fci-7
+
+fci-gas:
+   short:
+      - fci-gas-1
+      - fci-gas-2
+      - fci-gas-3
+      - fci-gas-4
+      - fci-gas-5
+      - fci-gas-dsrg-mrpt2
+      - fci-gas-trdm-1
+      - fci-gas-trdm-2
+
 gasci:
    short:
       - gasci-1

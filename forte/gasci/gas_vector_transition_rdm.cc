@@ -47,11 +47,6 @@ std::shared_ptr<RDMs> compute_transition_rdms(GASVector& C_left, GASVector& C_ri
     size_t na_right = C_right.alfa_address()->nones();
     size_t nb_right = C_right.beta_address()->nones();
 
-    psi::outfile->Printf("\n  Left eigenvector\n");
-    C_left.print(0.01);
-    psi::outfile->Printf("\n  Right eigenvector\n");
-    C_right.print(0.01);
-
     if (C_left.ncmo() != C_right.ncmo()) {
         throw std::runtime_error(
             "FCI transition RDMs: The number of MOs must be the same in the two wave functions.");
@@ -74,14 +69,12 @@ std::shared_ptr<RDMs> compute_transition_rdms(GASVector& C_left, GASVector& C_ri
     if (type == RDMsType::spin_dependent) {
         if (max_rdm_level == 1) {
             auto rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b);
-            GASVector::test_rdms(C_left, C_right, 1, type, rdms);
             return rdms;
         }
     } else {
         g1a("pq") += g1b("pq");
         if (max_rdm_level == 1) {
             auto rdms = std::make_shared<RDMsSpinFree>(g1a);
-            GASVector::test_rdms(C_left, C_right, 1, type, rdms);
             return rdms;
         }
     }

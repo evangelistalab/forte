@@ -88,12 +88,12 @@ GASCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
     // copy the right root onto the temporary vector C_
     method2_fcisolver->copy_state_into_fci_vector(root_right, method2_fcisolver->T_);
 
-    if (print_) {
-        std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + " " +
-                                state().str_minimum() + "| ... |" + std::to_string(root_right) +
-                                " " + method2->state().str_minimum() + ">";
-        print_h2(title_rdm);
-    }
+    // if (print_) {
+    //     std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + " " +
+    //                             state().str_minimum() + "| ... |" + std::to_string(root_right) +
+    //                             " " + method2->state().str_minimum() + ">";
+    //     psi::outfile->Printf("\n    %s", title_rdm.c_str());
+    // }
 
     auto rdms = compute_transition_rdms(*C_, *method2_fcisolver->T_, max_rdm_level, type);
 

@@ -421,37 +421,39 @@ void GASStringLists::get_gas_occupation() {
         }
     }
 
-    print_h2("Possible Electron Occupations of alpha/beta strings in GAS");
+    // print_h2("Possible Electron Occupations of alpha/beta strings in GAS");
 
-    outfile->Printf("\n    Alfa Occ.");
-    int ndash = 7;
-    std::vector<std::string> gas_alfa_name = {"GAS1_A", "GAS2_A", "GAS3_A",
-                                              "GAS4_A", "GAS5_A", "GAS6_A"};
-    for (size_t i = 0; i < gas_num_; i++) {
-        std::string name = gas_alfa_name.at(i).substr(3, 3);
-        outfile->Printf("  %s", name.c_str());
-        ndash += 5;
-    }
-    for (int n{0}; const auto& aocc : gas_alfa_occupations_) {
-        outfile->Printf("\n    %6d ", ++n);
-        for (size_t i = 0; i < gas_num_; i++) {
-            outfile->Printf(" %4d", aocc[i]);
-        }
-    }
-    outfile->Printf("\n    Beta Occ.");
-    for (size_t i = 0; i < gas_num_; i++) {
-        std::string name = gas_alfa_name.at(i).substr(3, 3);
-        outfile->Printf("  %s", name.c_str());
-        ndash += 5;
-    }
-    for (int n{0}; const auto& bocc : gas_beta_occupations_) {
-        outfile->Printf("\n    %6d ", ++n);
-        for (size_t i = 0; i < gas_num_; i++) {
-            outfile->Printf(" %4d", bocc[i]);
-        }
-    }
+    // outfile->Printf("\n    Alfa Occ.");
+
+    // std::vector<std::string> gas_alfa_name = {"GAS1_A", "GAS2_A", "GAS3_A",
+    //                                           "GAS4_A", "GAS5_A", "GAS6_A"};
+    // for (size_t i = 0; i < gas_num_; i++) {
+    //     std::string name = gas_alfa_name.at(i).substr(3, 3);
+    //     outfile->Printf("  %s", name.c_str());
+    //     ndash += 5;
+    // }
+    // for (int n{0}; const auto& aocc : gas_alfa_occupations_) {
+    //     outfile->Printf("\n    %6d ", ++n);
+    //     for (size_t i = 0; i < gas_num_; i++) {
+    //         outfile->Printf(" %4d", aocc[i]);
+    //     }
+    // }
+    // outfile->Printf("\n    Beta Occ.");
+    // for (size_t i = 0; i < gas_num_; i++) {
+    //     std::string name = gas_alfa_name.at(i).substr(3, 3);
+    //     outfile->Printf("  %s", name.c_str());
+    //     ndash += 5;
+    // }
+    // for (int n{0}; const auto& bocc : gas_beta_occupations_) {
+    //     outfile->Printf("\n    %6d ", ++n);
+    //     for (size_t i = 0; i < gas_num_; i++) {
+    //         outfile->Printf(" %4d", bocc[i]);
+    //     }
+    // }
 
     print_h2("Possible Electron Occupations in GAS");
+
+    int ndash = 7;
     outfile->Printf("\n    Config.");
     std::vector<std::string> gas_electron_name = {"GAS1_A", "GAS1_B", "GAS2_A", "GAS2_B",
                                                   "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",

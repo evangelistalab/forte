@@ -127,6 +127,9 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
              std::tuple<std::vector<double>, std::vector<double>, std::shared_ptr<psi::Matrix>>>
         guess_info;
 
+    double E0 = as_ints->nuclear_repulsion_energy() + as_ints->frozen_core_energy() +
+                as_ints->scalar_energy();
+
     // Loop over the groups of roots with the same multiplicity and compute the guess vectors
     for (const auto& [m, start, end] : groups) {
         // setup dimension objects
@@ -151,6 +154,9 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
         auto S2evals_block = S2evals->get_block(block_slice);
 
         std::vector<double> energies = Vector_to_vector_double(HS2evals_block);
+        for (auto& e : energies) {
+            e += E0;
+        }
         std::vector<double> s2 = Vector_to_vector_double(S2evals_block);
 
         auto C_block = std::make_shared<psi::Matrix>("C", col_dim, block_dim);

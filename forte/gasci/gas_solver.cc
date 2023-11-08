@@ -217,34 +217,6 @@ double GASCISolver::compute_energy() {
         spin_adapt_ ? form_Hdiag_csf(as_ints_, spin_adapter_) : form_Hdiag_det(as_ints_);
     dl_solver_->add_h_diag(Hdiag_vec);
 
-    // for (size_t I = 0; I < basis_size; ++I) {
-    //     auto detI = lists_->determinant(I);
-    //     psi::outfile->Printf("\n|%2d> = %s", I, str(detI, 12).c_str());
-    // }
-
-    // C_->print(0.0);
-    // for (size_t I = 0; I < basis_size; ++I) {
-    //     // Compute sigma in the determinant basis
-    //     b_basis->zero();
-    //     b_basis->set(I, 1.0);
-    //     C_->copy(b_basis);
-    //     C_->Hamiltonian(*T_, as_ints_);
-    //     T_->copy_to(sigma_basis);
-    //     auto detI = lists_->determinant(I);
-    //     for (size_t J = 0; J < basis_size; ++J) {
-    //         auto detJ = lists_->determinant(J);
-    //         auto HIJ_sigma = sigma_basis->get(J);
-    //         auto HIJ = as_ints_->slater_rules(detJ, detI);
-    //         HIJ_sigma += (I == J)
-    //                          ? -as_ints_->frozen_core_energy() -
-    //                                as_ints_->nuclear_repulsion_energy() -
-    //                                as_ints_->scalar_energy()
-    //                          : 0.0;
-    //         psi::outfile->Printf("\nH[%2d][%2d] = %15.8f vs %15.8f -> diff = %15.8f", J, I,
-    //                              HIJ_sigma, HIJ, HIJ_sigma - HIJ);
-    //     }
-    // }
-
     // The first time we run Form the diagonal of the Hamiltonian and the initial guess
     if (spin_adapt_) {
         if (first_run) {
@@ -353,7 +325,7 @@ void GASCISolver::print_solutions(size_t sample_size, std::shared_ptr<psi::Vecto
             C_->max_abs_elements(sample_size);
 
         for (const auto& [ci_abs, ci, class_Ia, class_Ib, add_Ia, add_Ib] : dets_config) {
-            if (ci_abs < 0.05)
+            if (ci_abs < 0.1)
                 continue;
 
             auto Ia_v = lists_->alfa_str(class_Ia, add_Ia);
