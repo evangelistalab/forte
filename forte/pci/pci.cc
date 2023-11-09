@@ -1177,7 +1177,7 @@ std::map<std::string, double> ProjectorCI::estimate_energy(const det_hashvec& de
         } else {
             psi::timer_on("PCI:<E>v");
             results["VARIATIONAL ENERGY"] =
-                estimate_var_energy(dets_hashvec, C, energy_estimate_threshold_);
+                estimate_var_energy_within_error_sigma(dets_hashvec, C, energy_estimate_threshold_);
             psi::timer_off("PCI:<E>v");
         }
     }
@@ -1201,61 +1201,6 @@ double ProjectorCI::estimate_proj_energy(const det_hashvec& dets_hashvec, std::v
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
     return projective_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
-}
-
-double ProjectorCI::estimate_var_energy(const det_hashvec& dets_hashvec, std::vector<double>& C,
-                                        double tollerance) {
-    // Compute a variational estimator of the energy
-    size_t size = dets_hashvec.size();
-    double variational_energy_estimator = 0.0;
-#pragma omp parallel for reduction(+ : variational_energy_estimator)
-    for (size_t I = 0; I < size; ++I) {
-        const Determinant& detI = dets_hashvec[I];
-        variational_energy_estimator += C[I] * C[I] * as_ints_->energy(detI);
-        for (size_t J = I + 1; J < size; ++J) {
-            if (std::fabs(C[I] * C[J]) > tollerance) {
-                double HIJ = as_ints_->slater_rules(dets_hashvec[I], dets_hashvec[J]);
-                variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
-            }
-        }
-    }
-    return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
-}
-
-double ProjectorCI::estimate_var_energy_within_error(const det_hashvec& dets_hashvec,
-                                                     std::vector<double>& C, double max_error) {
-    // Compute a variational estimator of the energy
-    size_t cut_index = dets_hashvec.size() - 1;
-    double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
-                         ? dets_single_max_coupling_
-                         : dets_double_max_coupling_;
-    double ignore_bound = max_error * max_error / (2.0 * max_HIJ * max_HIJ);
-    double cume_ignore = 0.0;
-    for (; cut_index > 0; --cut_index) {
-        cume_ignore += C[cut_index] * C[cut_index];
-        if (cume_ignore >= ignore_bound) {
-            break;
-        }
-    }
-    cume_ignore -= C[cut_index] * C[cut_index];
-    if (cut_index < dets_hashvec.size() - 1) {
-        ++cut_index;
-    }
-    psi::outfile->Printf(
-        "\n  Variational energy estimated with %zu determinants to meet the max error %e",
-        cut_index + 1, max_error);
-    double variational_energy_estimator = 0.0;
-#pragma omp parallel for reduction(+ : variational_energy_estimator)
-    for (size_t I = 0; I <= cut_index; ++I) {
-        const Determinant& detI = dets_hashvec[I];
-        variational_energy_estimator += C[I] * C[I] * as_ints_->energy(detI);
-        for (size_t J = I + 1; J <= cut_index; ++J) {
-            double HIJ = as_ints_->slater_rules(dets_hashvec[I], dets_hashvec[J]);
-            variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
-        }
-    }
-    variational_energy_estimator /= 1.0 - cume_ignore;
-    return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
 double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
@@ -1589,158 +1534,6 @@ double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double
                             detJ.set_beta_bit(bb, false);
                         }
                     }
-                }
-            }
-        }
-    }
-    return result;
-}
-
-double ProjectorCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
-                               size_t cut_index) {
-    const Determinant& detI = dets_hashvec[I];
-    double CI = C[I];
-
-    // diagonal contribution
-    double result = CI * CI * as_ints_->energy(detI);
-
-    Determinant detJ(detI);
-    double HJI;
-    for (size_t x = 0; x < a_couplings_size_; ++x) {
-        int i = std::get<0>(a_couplings_[x]);
-        if (detI.get_alfa_bit(i)) {
-            std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
-            size_t sub_couplings_size = sub_couplings.size();
-            for (size_t y = 0; y < sub_couplings_size; ++y) {
-                int a;
-                std::tie(a, HJI) = sub_couplings[y];
-                if (!detI.get_alfa_bit(a)) {
-                    //                    size_t max_bit = 2 * nact_;
-                    //                    bit_t& bits = detJ.bits_;
-                    //                    std::vector<double>& double_couplings =
-                    //                        single_alpha_excite_double_couplings_[i][a];
-                    //                    for (size_t p = 0; p < max_bit; ++p) {
-                    //                        if (bits[p]) {
-                    //                            HJI += double_couplings[p];
-                    //                        }
-                    //                    }
-                    //                    HJI *= detJ.single_excitation_a(i, a);
-                    HJI = as_ints_->slater_rules_single_alpha_abs(detJ, i, a);
-                    HJI *= detJ.single_excitation_a(i, a);
-                    size_t index = dets_hashvec.find(detJ);
-                    if (index <= cut_index) {
-                        result += 2.0 * HJI * CI * C[index];
-                    }
-                    detJ.set_alfa_bit(i, true);
-                    detJ.set_alfa_bit(a, false);
-                }
-            }
-        }
-    }
-
-    for (size_t x = 0; x < b_couplings_size_; ++x) {
-        int i = std::get<0>(b_couplings_[x]);
-        if (detI.get_beta_bit(i)) {
-            std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
-            size_t sub_couplings_size = sub_couplings.size();
-            for (size_t y = 0; y < sub_couplings_size; ++y) {
-                int a;
-                std::tie(a, HJI) = sub_couplings[y];
-                if (!detI.get_beta_bit(a)) {
-                    //                    size_t max_bit = 2 * nact_;
-                    //                    bit_t& bits = detJ.bits_;
-                    //                    std::vector<double>& double_couplings =
-                    //                        single_beta_excite_double_couplings_[i][a];
-                    //                    for (size_t p = 0; p < max_bit; ++p) {
-                    //                        if (bits[p]) {
-                    //                            HJI += double_couplings[p];
-                    //                        }
-                    //                    }
-                    //                    HJI *= detJ.single_excitation_b(i, a);
-                    HJI = as_ints_->slater_rules_single_beta_abs(detJ, i, a);
-                    HJI *= detJ.single_excitation_b(i, a);
-                    size_t index = dets_hashvec.find(detJ);
-                    if (index <= cut_index) {
-                        result += 2.0 * HJI * CI * C[index];
-                    }
-                    detJ.set_beta_bit(i, true);
-                    detJ.set_beta_bit(a, false);
-                }
-            }
-        }
-    }
-
-    // Generate aa excitations
-    for (size_t x = 0; x < aa_couplings_size_; ++x) {
-        int i = std::get<0>(aa_couplings_[x]);
-        int j = std::get<1>(aa_couplings_[x]);
-        if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
-            std::vector<std::tuple<int, int, double>>& sub_couplings =
-                std::get<3>(aa_couplings_[x]);
-            size_t sub_couplings_size = sub_couplings.size();
-            for (size_t y = 0; y < sub_couplings_size; ++y) {
-                int a, b;
-                std::tie(a, b, HJI) = sub_couplings[y];
-                if (!(detI.get_alfa_bit(a) or detI.get_alfa_bit(b))) {
-                    HJI *= detJ.double_excitation_aa(i, j, a, b);
-                    size_t index = dets_hashvec.find(detJ);
-                    if (index <= cut_index) {
-                        result += 2.0 * HJI * CI * C[index];
-                    }
-                    detJ.set_alfa_bit(i, true);
-                    detJ.set_alfa_bit(j, true);
-                    detJ.set_alfa_bit(a, false);
-                    detJ.set_alfa_bit(b, false);
-                }
-            }
-        }
-    }
-
-    for (size_t x = 0; x < ab_couplings_size_; ++x) {
-        int i = std::get<0>(ab_couplings_[x]);
-        int j = std::get<1>(ab_couplings_[x]);
-        if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
-            std::vector<std::tuple<int, int, double>>& sub_couplings =
-                std::get<3>(ab_couplings_[x]);
-            size_t sub_couplings_size = sub_couplings.size();
-            for (size_t y = 0; y < sub_couplings_size; ++y) {
-                int a, b;
-                std::tie(a, b, HJI) = sub_couplings[y];
-                if (!(detI.get_alfa_bit(a) or detI.get_beta_bit(b))) {
-                    HJI *= detJ.double_excitation_ab(i, j, a, b);
-                    size_t index = dets_hashvec.find(detJ);
-                    if (index <= cut_index) {
-                        result += 2.0 * HJI * CI * C[index];
-                    }
-                    detJ.set_alfa_bit(i, true);
-                    detJ.set_beta_bit(j, true);
-                    detJ.set_alfa_bit(a, false);
-                    detJ.set_beta_bit(b, false);
-                }
-            }
-        }
-    }
-
-    for (size_t x = 0; x < bb_couplings_size_; ++x) {
-        int i = std::get<0>(bb_couplings_[x]);
-        int j = std::get<1>(bb_couplings_[x]);
-        if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
-            std::vector<std::tuple<int, int, double>>& sub_couplings =
-                std::get<3>(bb_couplings_[x]);
-            size_t sub_couplings_size = sub_couplings.size();
-            for (size_t y = 0; y < sub_couplings_size; ++y) {
-                int a, b;
-                std::tie(a, b, HJI) = sub_couplings[y];
-                if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
-                    HJI *= detJ.double_excitation_bb(i, j, a, b);
-                    size_t index = dets_hashvec.find(detJ);
-                    if (index <= cut_index) {
-                        result += 2.0 * HJI * CI * C[index];
-                    }
-                    detJ.set_beta_bit(i, true);
-                    detJ.set_beta_bit(j, true);
-                    detJ.set_beta_bit(a, false);
-                    detJ.set_beta_bit(b, false);
                 }
             }
         }
@@ -2154,52 +1947,6 @@ void ProjectorCI::compute_couplings_half(const det_hashvec& dets, size_t cut_siz
         }
     }
     bb_couplings_size_ = bb_couplings_.size();
-}
-
-std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std::string type) {
-    std::vector<std::tuple<double, int, int>> labeled_orb;
-
-    if (type == "RHF" or type == "ROHF" or type == "ALFA") {
-
-        // Create a vector of orbital energy and index pairs
-        std::vector<std::pair<double, int>> orb_e;
-        int cumidx = 0;
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(
-                    std::make_pair(scf_info_->epsilon_a()->get(h, frzcpi_[h] + a), a + cumidx));
-            }
-            cumidx += nactpi_[h];
-        }
-
-        // Create a vector that stores the orbital energy, symmetry, and idx
-        for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(
-                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
-        }
-        // Order by energy, low to high
-        std::sort(labeled_orb.begin(), labeled_orb.end());
-    }
-    if (type == "BETA") {
-        // Create a vector of orbital energies and index pairs
-        std::vector<std::pair<double, int>> orb_e;
-        int cumidx = 0;
-        for (int h = 0; h < nirrep_; ++h) {
-            for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(
-                    std::make_pair(scf_info_->epsilon_b()->get(h, frzcpi_[h] + a), a + cumidx));
-            }
-            cumidx += nactpi_[h];
-        }
-
-        // Create a vector that stores the orbital energy, sym, and idx
-        for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(
-                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
-        }
-        std::sort(labeled_orb.begin(), labeled_orb.end());
-    }
-    return labeled_orb;
 }
 
 void ProjectorCI::set_method_variables(
