@@ -59,6 +59,9 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
 }
 
 void SemiCanonical::read_options(const std::shared_ptr<ForteOptions>& foptions) {
+    inactive_mix_ = foptions->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+    active_mix_ = foptions->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
+
     // compute thresholds from options
     double econv = foptions->get_double("E_CONVERGENCE");
     threshold_tight_ = (econv < 1.0e-12) ? 1.0e-12 : econv;
@@ -87,9 +90,11 @@ void SemiCanonical::startup() {
 
     // Find the elementary blocks
     auto composite_spaces = mo_space_info_->composite_space_names();
-    auto docc_names = composite_spaces["INACTIVE_DOCC"];
-    auto actv_names = composite_spaces["ACTIVE"];
-    auto uocc_names = composite_spaces["INACTIVE_UOCC"];
+    auto docc_names = inactive_mix_ ? std::vector<std::string>{"INACTIVE_DOCC"}
+                                    : composite_spaces["INACTIVE_DOCC"];
+    auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"} : composite_spaces["ACTIVE"];
+    auto uocc_names = inactive_mix_ ? std::vector<std::string>{"INACTIVE_UOCC"}
+                                    : composite_spaces["INACTIVE_UOCC"];
 
     std::vector<std::string> space_names(docc_names);
     space_names.insert(space_names.end(), actv_names.begin(), actv_names.end());
@@ -128,6 +133,9 @@ void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& bui
     timer t_semi("semicanonicalize orbitals");
 
     print_h2("Semicanonicalize Orbitals");
+    auto true_or_false = [](bool x) { return x ? "TRUE" : "FALSE"; };
+    outfile->Printf("\n    MIX INACTIVE ORBITALS   ...... %5s", true_or_false(inactive_mix_));
+    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS ...... %5s", true_or_false(active_mix_));
 
     // build Fock matrix
     if (build_fock) {
@@ -284,7 +292,8 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
 }
 
 void SemiCanonical::fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
-    auto actv_names = mo_space_info_->composite_space_names()["ACTIVE"];
+    auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"}
+                                  : mo_space_info_->composite_space_names()["ACTIVE"];
     auto& Ut_data = Ut.data();
 
     for (const std::string& name : actv_names) {

@@ -1,7 +1,8 @@
+# Li2 minimal basis FCI
 import forte
 
-refscf = -14.54873910108353
-reffci = -14.595808852754054
+refscf = -14.548739101084
+reffci = -14.595808852754
 
 molecule {
 0 1
@@ -18,7 +19,7 @@ set {
 }
 
 set forte {
-  active_space_solver gasci
+  active_space_solver genci
 }
 
 energy('scf')
@@ -26,7 +27,6 @@ compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
 energy('forte')
 compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
-
 
 refvals = [
     ("ENERGY ROOT 0 1AG"        , -14.595808852754),

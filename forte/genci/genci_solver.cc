@@ -302,8 +302,8 @@ double GenCISolver::compute_energy() {
 
     energy_ = dl_solver_->eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
-    psi::Process::environment.globals["GASCI ENERGY"] = energy_;
-    psi::outfile->Printf("\n    Time for GASCI: %20.12f", t.get());
+    psi::Process::environment.globals["CI ENERGY"] = energy_;
+    psi::outfile->Printf("\n    Time for GenCI: %20.12f", t.get());
 
     return energy_;
 }
