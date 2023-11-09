@@ -35,7 +35,6 @@
 #include <vector>
 #include <utility>
 
-#include "binary_graph.hpp"
 #include "helpers/timer.h"
 #include "sparse_ci/determinant.h"
 

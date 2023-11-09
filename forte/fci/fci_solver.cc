@@ -35,10 +35,11 @@
 #include "helpers/davidson_liu_solver.h"
 
 #include "fci_solver.h"
-#include "fci_vector.h"
 #include "string_lists.h"
 #include "helpers/printing.h"
 #include "fci/string_address.h"
+
+#include "fci_vector.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -46,8 +47,6 @@
 #endif
 
 #include "psi4/psi4-dec.h"
-
-using namespace psi;
 
 namespace forte {
 
@@ -83,7 +82,18 @@ void FCISolver::set_test_rdms(bool value) { test_rdms_ = value; }
 
 void FCISolver::set_print_no(bool value) { print_no_ = value; }
 
-std::shared_ptr<FCIVector> FCISolver::get_FCIWFN() { return C_; }
+void FCISolver::copy_state_into_fci_vector(int root, std::shared_ptr<FCIVector> C) {
+    // grab a row of the eigenvector matrix and put it into the FCIVector
+    std::shared_ptr<psi::Vector> psi_vector;
+    if (spin_adapt_) {
+        auto eig = eigen_vecs_->get_row(0, root);
+        psi_vector = std::make_shared<psi::Vector>(spin_adapter_->ndet());
+        spin_adapter_->csf_C_to_det_C(eig, psi_vector);
+    } else {
+        psi_vector = eigen_vecs_->get_row(0, root);
+    }
+    C->copy(psi_vector);
+}
 
 std::shared_ptr<psi::Matrix> FCISolver::evecs() { return eigen_vecs_; }
 
@@ -119,7 +129,7 @@ void FCISolver::startup() {
                               {"Target root", root_}});
         printer.add_bool_data({{"Spin adapt", spin_adapt_}});
         std::string table = printer.get_table("FCI Solver");
-        outfile->Printf("%s", table.c_str());
+        psi::outfile->Printf("%s", table.c_str());
     }
 }
 
@@ -150,13 +160,12 @@ double FCISolver::compute_energy() {
 
     FCIVector::allocate_temp_space(lists_, print_);
 
-    FCIVector Hdiag(lists_, symmetry_);
     C_ = std::make_shared<FCIVector>(lists_, symmetry_);
-    FCIVector HC(lists_, symmetry_);
+    T_ = std::make_shared<FCIVector>(lists_, symmetry_);
     C_->set_print(print_);
 
     // Compute the size of the determinant space and the basis used by the Davidson solver
-    size_t det_size = Hdiag.size();
+    size_t det_size = C_->size();
     size_t basis_size = spin_adapt_ ? spin_adapter_->ncsf() : det_size;
 
     // Create the vectors that stores the b and sigma vectors in the determinant basis
@@ -208,8 +217,8 @@ double FCISolver::compute_energy() {
     }
 
     // Print the initial guess
-    auto sigma_builder = [this, &HC, &b_basis, &b, &sigma,
-                          &sigma_basis](std::span<double> b_span, std::span<double> sigma_span) {
+    auto sigma_builder = [this, &b_basis, &b, &sigma, &sigma_basis](std::span<double> b_span,
+                                                                    std::span<double> sigma_span) {
         // copy the b vector
         size_t basis_size = b_span.size();
         for (size_t I = 0; I < basis_size; ++I) {
@@ -219,14 +228,14 @@ double FCISolver::compute_energy() {
             // Compute sigma in the CSF basis and convert it to the determinant basis
             spin_adapter_->csf_C_to_det_C(b_basis, b);
             C_->copy(b);
-            C_->Hamiltonian(HC, as_ints_);
-            HC.copy_to(sigma);
+            C_->Hamiltonian(*T_, as_ints_);
+            T_->copy_to(sigma);
             spin_adapter_->det_C_to_csf_C(sigma, sigma_basis);
         } else {
             // Compute sigma in the determinant basis
             C_->copy(b_basis);
-            C_->Hamiltonian(HC, as_ints_);
-            HC.copy_to(sigma_basis);
+            C_->Hamiltonian(*T_, as_ints_);
+            T_->copy_to(sigma_basis);
         }
         for (size_t I = 0; I < basis_size; ++I) {
             sigma_span[I] = sigma_basis->get(I);
@@ -265,7 +274,7 @@ double FCISolver::compute_energy() {
 
     // Print determinants
     if (print_) {
-        print_solutions(num_guess_states, b, b_basis, dl_solver_);
+        print_solutions(100, b, b_basis, dl_solver_);
     }
 
     // Optionally, test the RDMs
@@ -280,49 +289,11 @@ double FCISolver::compute_energy() {
     return energy_;
 }
 
-void FCISolver::compute_rdms_root(size_t root1, size_t /*root2*/, int max_rdm_level) {
-    // make sure a compute_energy is called before this
-    if (C_) {
-        if (root1 >= nroot_) {
-            std::string error = "Cannot compute RDMs of root " + std::to_string(root1) +
-                                "(0-based) because nroot = " + std::to_string(nroot_);
-            throw psi::PSIEXCEPTION(error);
-        }
-
-        std::shared_ptr<psi::Vector> evec(eigen_vecs_->get_row(0, root1));
-        std::shared_ptr<psi::Vector> b;
-        if (spin_adapt_) {
-            b = std::make_shared<psi::Vector>(spin_adapter_->ndet());
-            spin_adapter_->csf_C_to_det_C(evec, b);
-        } else {
-            b = evec;
-        }
-        C_->copy(b);
-        if (print_) {
-            std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root1);
-            print_h2(title_rdm);
-        }
-        C_->compute_rdms(max_rdm_level);
-
-        // Optionally, test the RDMs
-        if (test_rdms_) {
-            C_->rdm_test();
-        }
-
-        // Print the NO if energy converged
-        if (print_no_ || print_ > 0) {
-            C_->print_natural_orbitals(mo_space_info_);
-        }
-    } else {
-        throw psi::PSIEXCEPTION("FCIVector is not assigned. Cannot compute RDMs.");
-    }
-}
-
-void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
+void FCISolver::print_solutions(size_t sample_size, std::shared_ptr<psi::Vector> b,
                                 std::shared_ptr<psi::Vector> b_basis,
                                 std::shared_ptr<DavidsonLiuSolver> dls) {
     for (size_t r = 0; r < nroot_; ++r) {
-        outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
+        psi::outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
         b_basis = dls->eigenvector(r);
         if (spin_adapt_) {
@@ -332,20 +303,20 @@ void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> 
         }
         C_->copy(b);
         std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
-            C_->max_abs_elements(guess_size);
+            C_->max_abs_elements(sample_size);
 
         for (auto& det_config : dets_config) {
             double ci_abs, ci;
             size_t h, add_Ia, add_Ib;
             std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
 
-            if (ci_abs < 0.1)
+            if (ci_abs < 0.01)
                 continue;
 
             auto Ia_v = lists_->alfa_str(h, add_Ia);
             auto Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
 
-            outfile->Printf("\n    ");
+            psi::outfile->Printf("\n    ");
             size_t offset = 0;
             for (int h = 0; h < nirrep_; ++h) {
                 for (int k = 0; k < active_dim_[h]; ++k) {
@@ -353,21 +324,21 @@ void FCISolver::print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> 
                     bool a = Ia_v[i];
                     bool b = Ib_v[i];
                     if (a == b) {
-                        outfile->Printf("%d", a ? 2 : 0);
+                        psi::outfile->Printf("%d", a ? 2 : 0);
                     } else {
-                        outfile->Printf("%c", a ? 'a' : 'b');
+                        psi::outfile->Printf("%c", a ? 'a' : 'b');
                     }
                 }
                 if (active_dim_[h] != 0)
-                    outfile->Printf(" ");
+                    psi::outfile->Printf(" ");
                 offset += active_dim_[h];
             }
-            outfile->Printf("%15.8f", ci);
+            psi::outfile->Printf("%15.8f", ci);
         }
 
         double root_energy = dl_solver_->eigenvalues()->get(r);
 
-        outfile->Printf("\n\n    Total Energy: %20.12f, <S^2>: %8.6f", root_energy, spin2_[r]);
+        psi::outfile->Printf("\n\n    Total Energy: %20.12f, <S^2>: %8.6f", root_energy, spin2_[r]);
     }
 }
 
@@ -384,8 +355,9 @@ void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::V
         std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
         print_h2(title_rdm);
     }
-    C_->compute_rdms(3);
-    C_->rdm_test();
+    int max_rdm_level = 3;
+    auto rdms = C_->compute_rdms(*C_, *C_, max_rdm_level, RDMsType::spin_dependent);
+    C_->test_rdms(*C_, *C_, max_rdm_level, RDMsType::spin_dependent, rdms);
 }
 
 std::shared_ptr<psi::Matrix> FCISolver::ci_wave_functions() {
@@ -399,167 +371,4 @@ std::shared_ptr<psi::Matrix> FCISolver::ci_wave_functions() {
     return evecs;
 }
 
-std::vector<std::shared_ptr<RDMs>>
-FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
-                RDMsType type) {
-    if (max_rdm_level <= 0) {
-        auto nroots = root_list.size();
-        if (type == RDMsType::spin_dependent) {
-            return std::vector<std::shared_ptr<RDMs>>(nroots,
-                                                      std::make_shared<RDMsSpinDependent>());
-        } else {
-            return std::vector<std::shared_ptr<RDMs>>(nroots, std::make_shared<RDMsSpinFree>());
-        }
-    }
-
-    std::vector<std::shared_ptr<RDMs>> refs;
-
-    // loop over all the pairs of references
-    for (auto& roots : root_list) {
-
-        if (roots.first != roots.second) {
-            throw psi::PSIEXCEPTION(
-                "FCISolver::rdms(): cannot compute transition RDMs within the same symmetry.");
-        }
-
-        compute_rdms_root(roots.first, roots.second, max_rdm_level);
-
-        size_t nact = active_dim_.sum();
-        size_t nact2 = nact * nact;
-        size_t nact3 = nact2 * nact;
-        size_t nact4 = nact3 * nact;
-        size_t nact5 = nact4 * nact;
-
-        ambit::Tensor g1a, g1b;
-        ambit::Tensor g2aa, g2ab, g2bb;
-        ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
-
-        // TODO: the following needs clean-up/optimization for spin-free RDMs
-        // TODO: put RDMs directly as ambit Tensor in FCIVector?
-
-        if (max_rdm_level >= 1) {
-            // One-particle density matrices in the active space
-            std::vector<double>& opdm_a = C_->opdm_a();
-            std::vector<double>& opdm_b = C_->opdm_b();
-            g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact, nact});
-            g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact, nact});
-            if (na_ >= 1) {
-                g1a.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = opdm_a[i[0] * nact + i[1]];
-                });
-            }
-            if (nb_ >= 1) {
-                g1b.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = opdm_b[i[0] * nact + i[1]];
-                });
-            }
-        }
-
-        if (max_rdm_level >= 2) {
-            // Two-particle density matrices in the active space
-            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact, nact, nact, nact});
-            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact, nact, nact, nact});
-            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact, nact, nact, nact});
-
-            if (na_ >= 2) {
-                std::vector<double>& tpdm_aa = C_->tpdm_aa();
-                g2aa.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_aa[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-                });
-            }
-            if ((na_ >= 1) and (nb_ >= 1)) {
-                std::vector<double>& tpdm_ab = C_->tpdm_ab();
-                g2ab.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_ab[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-                });
-            }
-            if (nb_ >= 2) {
-                std::vector<double>& tpdm_bb = C_->tpdm_bb();
-                g2bb.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-                });
-            }
-        }
-
-        if (max_rdm_level >= 3) {
-            // Three-particle density matrices in the active space
-            g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa",
-                                         {nact, nact, nact, nact, nact, nact});
-            g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab",
-                                         {nact, nact, nact, nact, nact, nact});
-            g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb",
-                                         {nact, nact, nact, nact, nact, nact});
-            g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb",
-                                         {nact, nact, nact, nact, nact, nact});
-            if (na_ >= 3) {
-                std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
-                g3aaa.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_aaa[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                     i[4] * nact + i[5]];
-                });
-            }
-            if ((na_ >= 2) and (nb_ >= 1)) {
-                std::vector<double>& tpdm_aab = C_->tpdm_aab();
-                g3aab.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_aab[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                     i[4] * nact + i[5]];
-                });
-            }
-            if ((na_ >= 1) and (nb_ >= 2)) {
-                std::vector<double>& tpdm_abb = C_->tpdm_abb();
-                g3abb.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_abb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                     i[4] * nact + i[5]];
-                });
-            }
-            if (nb_ >= 3) {
-                std::vector<double>& tpdm_bbb = C_->tpdm_bbb();
-                g3bbb.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                     i[4] * nact + i[5]];
-                });
-            }
-        }
-
-        if (type == RDMsType::spin_dependent) {
-            if (max_rdm_level == 1) {
-                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b));
-            }
-            if (max_rdm_level == 2) {
-                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb));
-            }
-            if (max_rdm_level == 3) {
-                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb,
-                                                                      g3aaa, g3aab, g3abb, g3bbb));
-            }
-        } else {
-            g1a("pq") += g1b("pq");
-            if (max_rdm_level > 1) {
-                g2aa("pqrs") += g2ab("pqrs") + g2ab("qpsr");
-                g2aa("pqrs") += g2bb("pqrs");
-            }
-            if (max_rdm_level > 2) {
-                g3aaa("pqrstu") += g3aab("pqrstu") + g3aab("prqsut") + g3aab("qrptus");
-                g3aaa("pqrstu") += g3abb("pqrstu") + g3abb("qprtsu") + g3abb("rpqust");
-                g3aaa("pqrstu") += g3bbb("pqrstu");
-            }
-            if (max_rdm_level == 1)
-                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a));
-            if (max_rdm_level == 2)
-                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a, g2aa));
-            if (max_rdm_level == 3)
-                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a, g2aa, g3aaa));
-        }
-    }
-    return refs;
-}
-
-std::vector<std::shared_ptr<RDMs>>
-FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                           std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/,
-                           RDMsType /*rdm_type*/) {
-    std::vector<std::shared_ptr<RDMs>> refs;
-    throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
-    return refs;
-}
 } // namespace forte

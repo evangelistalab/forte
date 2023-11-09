@@ -41,9 +41,8 @@ using namespace psi;
 
 namespace forte {
 
-std::shared_ptr<psi::Matrix> FCIVector::C1;
-std::shared_ptr<psi::Matrix> FCIVector::Y1;
-size_t FCIVector::sizeC1 = 0;
+std::shared_ptr<psi::Matrix> FCIVector::CR;
+std::shared_ptr<psi::Matrix> FCIVector::CL;
 
 double FCIVector::hdiag_timer = 0.0;
 double FCIVector::h1_aa_timer = 0.0;
@@ -55,33 +54,34 @@ double FCIVector::h2_bbbb_timer = 0.0;
 void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_) {
     size_t nirreps = lists_->nirrep();
 
-    // if C1 is already allocated (e.g., because we computed several roots) make sure
-    // we do not allocate a matrix of smaller size. So let's find out the size of the current C1
-    size_t current_maxC1 = C1 ? C1->rowdim() : 0;
+    // if CR is already allocated (e.g., because we computed several roots) make sure
+    // we do not allocate a matrix of smaller size. So let's find out the size of the current CR
+    size_t current_size = CR ? CR->rowdim() : 0;
 
-    size_t maxC1 = 0;
+    // Find the largest size of the symmetry blocks
+    size_t max_size = 0;
     for (size_t Ia_sym = 0; Ia_sym < nirreps; ++Ia_sym) {
-        maxC1 = std::max(maxC1, lists_->alfa_address()->strpi(Ia_sym));
+        max_size = std::max(max_size, lists_->alfa_address()->strpi(Ia_sym));
     }
     for (size_t Ib_sym = 0; Ib_sym < nirreps; ++Ib_sym) {
-        maxC1 = std::max(maxC1, lists_->beta_address()->strpi(Ib_sym));
+        max_size = std::max(max_size, lists_->beta_address()->strpi(Ib_sym));
     }
 
-    // Allocate the temporary arrays C1 and Y1 with the largest sizes
-    if (maxC1 > current_maxC1) {
-        C1 = std::make_shared<psi::Matrix>("C1", maxC1, maxC1);
-        Y1 = std::make_shared<psi::Matrix>("Y1", maxC1, maxC1);
+    // Allocate the temporary arrays CR and CL with the largest block size
+    if (max_size > current_size) {
+        CR = std::make_shared<psi::Matrix>("CR", max_size, max_size);
+        CL = std::make_shared<psi::Matrix>("CL", max_size, max_size);
+        if (print_)
+            outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
+                            "Size: 2 x %zu x %zu.   Memory: %8.6f GB",
+                            max_size, max_size, to_gb(2 * max_size * max_size));
     }
-
-    if (print_)
-        outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
-                        "Size: 2 x %zu x %zu.   Memory: %8.6f GB",
-                        maxC1, maxC1, to_gb(2 * maxC1 * maxC1));
-
-    sizeC1 = maxC1 * maxC1 * static_cast<size_t>(sizeof(double));
 }
 
 void FCIVector::release_temp_space() {}
+
+std::shared_ptr<psi::Matrix> FCIVector::get_CR() { return CR; }
+std::shared_ptr<psi::Matrix> FCIVector::get_CL() { return CL; }
 
 FCIVector::FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry)
     : symmetry_(symmetry), lists_(lists), alfa_address_(lists_->alfa_address()),
@@ -89,18 +89,12 @@ FCIVector::FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry)
     startup();
 }
 
-FCIVector::~FCIVector() { cleanup(); }
-
-///**
-// * Copy data from moinfo and allocate the memory
-// */
 void FCIVector::startup() {
 
     nirrep_ = lists_->nirrep();
     ncmo_ = lists_->ncmo();
     cmopi_ = lists_->cmopi();
     cmopi_offset_ = lists_->cmopi_offset();
-    //    cmo_to_mo_ = lists_->cmo_to_mo();
 
     ndet_ = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
@@ -120,14 +114,22 @@ void FCIVector::startup() {
     }
 }
 
-/**
- * Dellocate the memory
- */
-void FCIVector::cleanup() {}
+size_t FCIVector::symmetry() const { return symmetry_; }
 
-/**
- * Set the wave function to another wave function
- */
+size_t FCIVector::nirrep() const { return nirrep_; }
+
+size_t FCIVector::ncmo() const { return ncmo_; }
+
+size_t FCIVector::size() const { return ndet_; }
+
+const std::vector<size_t>& FCIVector::detpi() const { return detpi_; }
+
+psi::Dimension FCIVector::cmopi() const { return cmopi_; }
+
+const std::vector<size_t>& FCIVector::cmopi_offset() const { return cmopi_offset_; }
+
+const std::shared_ptr<StringLists>& FCIVector::lists() const { return lists_; }
+
 void FCIVector::copy(FCIVector& wfn) {
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         C_[alfa_sym]->copy(wfn.C_[alfa_sym]);
@@ -173,99 +175,6 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
     }
 }
 
-///**
-// * Set the wave function to the nth determinant in the list
-// */
-// void FCIVector::set_to(int n)
-//{
-//  int k = 0;
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(h);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        if(k == n){
-//          coefficients[h][Ia][Ib] = 1.0;
-//        }else{
-//          coefficients[h][Ia][Ib] = 0.0;
-//        }
-//        k++;
-//      }
-//    }
-//  }
-//}
-
-///**
-// * Get the coefficient of the nth determinant in the list
-// */
-// double FCIVector::get(int n)
-//{
-//  int k = 0;
-//  double c = 0.0;
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(h);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        if(k == n){
-//          c = coefficients[h][Ia][Ib];
-//        }
-//        k++;
-//      }
-//    }
-//  }
-//  return c;
-//}
-
-///**
-// * Get a vector of the determinants with weight greather than alpha
-// */
-// std::vector<int> FCIVector::get_important(double alpha)
-//{
-//  int k = 0;
-//  std::vector<int> list;
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(h);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        if(std::fabs(coefficients[h][Ia][Ib]) >= alpha){
-//          list.push_back(k);
-//        }
-//        k++;
-//      }
-//    }
-//  }
-//  return list;
-//}
-
-/////**
-//// * Get a vector of the determinants with weight greather than alpha
-//// */
-////vector<int> FCIVector::get_sorted_important()
-////{
-////  std::vector<pair<double,int> > list;
-////  for(int h = 0; h < nirrep_; ++h){
-////    int beta_sym = h ^ symmetry_;
-////    size_t maxIa = alfa_address_->strpi(h);
-////    size_t maxIb = beta_address_->strpi(beta_sym);
-////    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-////      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-////        list.push_back(std::make_pair(std::fabs(coefficients[h][Ia][Ib]),k));
-////        k++;
-////      }
-////    }
-////  }
-////  sort(list.begin(),list.end(),std::greater<pair<double,int> >());
-////  return list;
-////}
-
-/**
- * Normalize the wave function without changing the phase
- */
 void FCIVector::normalize() {
     double factor = norm(2.0);
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
@@ -273,40 +182,20 @@ void FCIVector::normalize() {
     }
 }
 
-///**
-// * Normalize the wave function wrt to a single Slater determinant
-// */
-// void FCIVector::randomize()
-//{
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_address_->strpi(h);
-//    size_t maxIb = beta_address_->strpi(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        coefficients[h][Ia][Ib] += 0.001 * static_cast<double>(std::rand()) /
-//        static_cast<double>(RAND_MAX);
-//      }
-//    }
-//  }
-//}
-
-/**
- * Zero the wave function
- */
 void FCIVector::zero() {
     for (auto C_h : C_) {
         C_h->zero();
     }
 }
 
-void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
+void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                       std::shared_ptr<RDMs> rdms) {
     print_h2("Natural Orbitals");
     psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
     auto nfdocc = mo_space_info->size("FROZEN_DOCC");
 
-    size_t na = alfa_address_->nones();
-    size_t nb = beta_address_->nones();
+    auto G1 = rdms->SF_G1();
+    auto& G1_data = G1.data();
 
     auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
 
@@ -314,13 +203,7 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     for (int h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim[h]; u++) {
             for (int v = 0; v < active_dim[h]; v++) {
-                double gamma_uv = 0.0;
-                if (na > 0) {
-                    gamma_uv += opdm_a_[(u + offset) * ncmo_ + v + offset];
-                }
-                if (nb > 0) {
-                    gamma_uv += opdm_b_[(u + offset) * ncmo_ + v + offset];
-                }
+                double gamma_uv = G1_data[(u + offset) * ncmo_ + v + offset];
                 opdm->set(h, u, v, gamma_uv);
             }
         }
@@ -350,6 +233,47 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
             outfile->Printf("\n    ");
     }
     outfile->Printf("\n");
+}
+
+double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
+                        std::shared_ptr<StringAddress> alfa_address,
+                        std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero) {
+    // if alfa is true just return the pointer to the block
+    auto c = C.C(ha)->pointer();
+    if (alfa) {
+        if (zero)
+            C.C(ha)->zero();
+        return c;
+    }
+    // if alfa is false
+    size_t maxIa = alfa_address->strpi(ha);
+    size_t maxIb = beta_address->strpi(hb);
+    auto m = M->pointer();
+    if (zero) {
+        for (size_t Ib = 0; Ib < maxIb; ++Ib)
+            for (size_t Ia = 0; Ia < maxIa; ++Ia)
+                m[Ib][Ia] = 0.0;
+    } else {
+        for (size_t Ia = 0; Ia < maxIa; ++Ia)
+            for (size_t Ib = 0; Ib < maxIb; ++Ib)
+                m[Ib][Ia] = c[Ia][Ib];
+    }
+    return m;
+}
+
+void scatter_C_block(FCIVector& C, double** m, bool alfa,
+                     std::shared_ptr<StringAddress> alfa_address,
+                     std::shared_ptr<StringAddress> beta_address, int ha, int hb) {
+    if (!alfa) {
+        size_t maxIa = alfa_address->strpi(ha);
+        size_t maxIb = beta_address->strpi(hb);
+
+        double** c = C.C(ha)->pointer();
+        // Add m transposed to C
+        for (size_t Ia = 0; Ia < maxIa; ++Ia)
+            for (size_t Ib = 0; Ib < maxIb; ++Ib)
+                c[Ia][Ib] += m[Ib][Ia];
+    }
 }
 
 ///**
@@ -606,14 +530,14 @@ void FCIVector::print() {
 //  for(int alfa_sym = 0; alfa_sym < nirreps; ++alfa_sym){
 //    int beta_sym = alfa_sym ^ symmetry_;
 //    if(detpi[alfa_sym] > 0){
-//      double** Y = alfa ? result.coefficients[alfa_sym] : Y1;
-//      double** C = alfa ? coefficients[alfa_sym]        : C1;
+//      double** Y = alfa ? result.coefficients[alfa_sym] : CL;
+//      double** C = alfa ? coefficients[alfa_sym]        : CR;
 //      if(!alfa){
-//        memset(&(C[0][0]), 0, sizeC1);
-//        memset(&(Y[0][0]), 0, sizeC1);
+//        memset(&(C[0][0]), 0, size_Ctemp);
+//        memset(&(Y[0][0]), 0, size_Ctemp);
 //        size_t maxIa = alfa_address_->strpi(alfa_sym);
 //        size_t maxIb = beta_address_->strpi(beta_sym);
-//        // Copy C transposed in C1
+//        // Copy C transposed in CR
 //        for(size_t Ia = 0; Ia < maxIa; ++Ia)
 //          for(size_t Ib = 0; Ib < maxIb; ++Ib)
 //            C[Ib][Ia] = coefficients[alfa_sym][Ia][Ib];
@@ -692,7 +616,7 @@ void FCIVector::print() {
 //      if(!alfa){
 //        size_t maxIa = alfa_address_->strpi(alfa_sym);
 //        size_t maxIb = beta_address_->strpi(beta_sym);
-//        // Add Y1 transposed to Y
+//        // Add CL transposed to Y
 //        for(size_t Ia = 0; Ia < maxIa; ++Ia)
 //          for(size_t Ib = 0; Ib < maxIb; ++Ib)
 //            result.coefficients[alfa_sym][Ia][Ib] += Y[Ib][Ia];

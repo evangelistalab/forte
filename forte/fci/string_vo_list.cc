@@ -52,8 +52,7 @@ namespace forte {
  * the irrep h.
  */
 std::vector<StringSubstitution>& StringLists::get_alfa_vo_list(size_t p, size_t q, int h) {
-    std::tuple<size_t, size_t, int> pq_pair(p, q, h);
-    return alfa_vo_list[pq_pair];
+    return alfa_vo_list[std::make_tuple(p, q, h)];
 }
 
 /**
@@ -63,8 +62,7 @@ std::vector<StringSubstitution>& StringLists::get_alfa_vo_list(size_t p, size_t 
  * the irrep h.
  */
 std::vector<StringSubstitution>& StringLists::get_beta_vo_list(size_t p, size_t q, int h) {
-    std::tuple<size_t, size_t, int> pq_pair(p, q, h);
-    return beta_vo_list[pq_pair];
+    return beta_vo_list[std::make_tuple(p, q, h)];
 }
 
 void StringLists::make_vo_list(std::shared_ptr<StringAddress> addresser, VOList& list) {

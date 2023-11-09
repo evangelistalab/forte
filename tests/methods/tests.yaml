@@ -241,11 +241,14 @@ fci:
       - fci-ecp-1
       - fci-ecp-2
       - fci-rdms-2
+      - fci-trdms-1
+      - fci-trdms-2
    long:
       - fci-6
       - fci-7 # moved to pytest
       - fci-ex-1 # moved to pytest
       - fci-rdms-1 # moved to pytest
+      - fci-trdms-3
       - fci-one-electron # moved to pytest
 sa-fci:
    short:
