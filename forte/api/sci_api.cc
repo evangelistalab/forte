@@ -40,8 +40,8 @@
 
 #include "fci/fci_string_address.h"
 
-#include "gasci/gas_string_lists.h"
-#include "gasci/gas_vector.h"
+#include "genci/genci_string_lists.h"
+#include "genci/genci_vector.h"
 
 #include "base_classes/mo_space_info.h"
 
@@ -403,19 +403,19 @@ void export_SparseCISolver(py::module& m) {
 }
 
 void export_GAS(py::module& m) {
-    py::class_<GASStringLists, std::shared_ptr<GASStringLists>>(
-        m, "GASStringLists", "A class to represent the strings of a GAS")
+    py::class_<GenCIStringLists, std::shared_ptr<GenCIStringLists>>(
+        m, "GenCIStringLists", "A class to represent the strings of a GAS")
         .def(py::init<std::shared_ptr<MOSpaceInfo>, size_t, size_t, int, int,
                       const std::vector<int>, const std::vector<int>>())
-        .def("make_determinants", &GASStringLists::make_determinants,
+        .def("make_determinants", &GenCIStringLists::make_determinants,
              "Return a vector of Determinants");
-    py::class_<GASVector, std::shared_ptr<GASVector>>(m, "GASVector",
-                                                      "A class to represent a GAS vector")
-        .def(py::init<std::shared_ptr<GASStringLists>>())
-        .def("print", &GASVector::print, "Print the GAS vector")
-        .def("size", &GASVector::size, "Return the size of the GAS vector")
-        .def("__len__", &GASVector::size, "Return the size of the GAS vector")
-        .def("as_state_vector", &GASVector::as_state_vector, "Return a StateVector object")
-        .def("set_to", &GASVector::set_to, "Set the GAS vector to a given value");
+    py::class_<GenCIVector, std::shared_ptr<GenCIVector>>(m, "GenCIVector",
+                                                          "A class to represent a GAS vector")
+        .def(py::init<std::shared_ptr<GenCIStringLists>>())
+        .def("print", &GenCIVector::print, "Print the GAS vector")
+        .def("size", &GenCIVector::size, "Return the size of the GAS vector")
+        .def("__len__", &GenCIVector::size, "Return the size of the GAS vector")
+        .def("as_state_vector", &GenCIVector::as_state_vector, "Return a StateVector object")
+        .def("set_to", &GenCIVector::set_to, "Set the GAS vector to a given value");
 }
 } // namespace forte

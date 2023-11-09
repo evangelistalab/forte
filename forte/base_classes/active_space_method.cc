@@ -40,7 +40,7 @@
 #include "helpers/string_algorithms.h"
 #include "integrals/one_body_integrals.h"
 #include "fci/fci_solver.h"
-#include "gasci/gas_solver.h"
+#include "genci/genci_solver.h"
 #include "casscf/casscf.h"
 #include "sci/aci.h"
 #include "sci/asci.h"
@@ -411,7 +411,7 @@ std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
     if (type == "FCI") {
         method = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "GASCI") {
-        method = std::make_unique<GASCISolver>(state, nroot, mo_space_info, as_ints);
+        method = std::make_unique<GenCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {
         method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
