@@ -287,6 +287,7 @@ double GenCISolver::compute_energy() {
         }
         C_->copy(b);
         spin2_[r] = C_->compute_spin2();
+        C_->print(0.0);
     }
     eigen_vecs_ = dl_solver_->eigenvectors();
 

@@ -286,7 +286,7 @@ gasci:
 gasscf:
    short:
       - gasscf-1
-      - gasscf-3
+      - gasaciscf-3
       - sa-gasscf-1
       - sa-gasscf-2
       - sa-gasscf-dsrg-mrpt2-1
