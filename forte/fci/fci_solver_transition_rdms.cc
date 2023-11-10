@@ -77,8 +77,7 @@ FCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
         throw std::runtime_error(error);
     }
 
-    // here we will use C_ for the left wave function and T_ for the right wave function
-
+    // here we will use C_ for the left wave function and method2->T_ for the right wave function
     this->copy_state_into_fci_vector(root_left, C_);
     // cast method2 to FCISolver
     auto method2_fcisolver = std::dynamic_pointer_cast<FCISolver>(method2);
