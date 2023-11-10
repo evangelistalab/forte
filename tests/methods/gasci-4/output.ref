@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wednesday, 08 November 2023 04:33PM
+    Psi4 started on: Wednesday, 08 November 2023 04:34PM
 
-    Process ID: 73217
+    Process ID: 73257
     Host:       macbook-pro-158.wireless.emory.edu
     PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
@@ -42,25 +42,27 @@
   ==> Input File <==
 
 --------------------------------------------------------------------------
-# GAS CI calculation with multi-gas algorithm
+# GASCI calculation on energy and transition dipole with states of different symmetries
 
 import forte
 
 refscf = -76.0172965561
-refaci = -65.93594498028247131  # averaged ACI energy
+refaci = -65.52803723267440716
+refacipt2 = -55.02612867161270316
+refosc_0a1_0b1 =  0.00000307 
+s_max_0a1_0b1 = 0.00986351
 
-memory 6000mb
 molecule h2o{
-O
-H 1 1.00
-H 1 1.00 2 103.1
+   O
+   H  1 1.00
+   H  1 1.00 2 103.1
 }
 
 set global {
   basis 6-31g**
-  e_convergence 12
-  d_convergence 8
-  r_convergence 8
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
   guess gwh
   scf_type pk
   reference rhf
@@ -74,32 +76,23 @@ set forte {
   root_sym 0
   charge 0
   e_convergence 10
+  charge 0
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
   GAS1MAX [2,1]
   GAS1MIN [0,0]
-  avg_state [[0,1,1],[0,1,1]] #same symmetry and different GAS
-  fci_test_rdms true
+  avg_state [[0,1,1],[2,1,1]]
+  transition_dipoles true
 }
 
 escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
 
 eaci = energy('forte', ref_wfn=wfn)
-compare_values(refaci, eaci, 8, "Averaged GASCI energy")
-
-compare_values(0.0, variable("AA 1-RDM ERROR"),12, "AA 1-RDM") #TEST
-compare_values(0.0, variable("BB 1-RDM ERROR"),12, "BB 1-RDM") #TEST
-compare_values(0.0, variable("AAAA 2-RDM ERROR"),12, "AAAA 2-RDM") #TEST
-compare_values(0.0, variable("BBBB 2-RDM ERROR"),12, "BBBB 2-RDM") #TEST
-compare_values(0.0, variable("ABAB 2-RDM ERROR"),12, "ABAB 2-RDM") #TEST
-compare_values(0.0, variable("AABAAB 3-RDM ERROR"),12, "AABAAB 3-RDM") #TEST
-compare_values(0.0, variable("ABBABB 3-RDM ERROR"),12, "ABBABB 3-RDM") #TEST
-compare_values(0.0, variable("AAAAAA 3-RDM ERROR"),12, "AAAAAA 3-RDM") #TEST
-compare_values(0.0, variable("BBBBBB 3-RDM ERROR"),12, "BBBBBB 3-RDM") #TEST
+compare_values(refaci, eaci, 8, "Averaged ACI energy")
+compare_values(refosc_0a1_0b1, variable("OSC. SINGLET 0A1 -> 0B1"), 6, "Oscillator strength singlet 0A1 -> 0B1")
+compare_values(s_max_0a1_0b1, variable("TRANS SINGLET S_MAX 0A1 -> 0B1"), 6, "S_MAX singlet 0A1 -> 0B1")
 --------------------------------------------------------------------------
-
-  Memory set to   5.588 GiB by Python driver.
 
 Scratch directory: /tmp/
    => Libint2 <=
@@ -110,7 +103,7 @@ Scratch directory: /tmp/
     Solid Harmonics ordering:            gaussian
 
 *** tstart() called on macbook-pro-158.wireless.emory.edu
-*** at Wed Nov  8 16:33:18 2023
+*** at Wed Nov  8 16:34:36 2023
 
    => Loading Basis Set <=
 
@@ -126,7 +119,7 @@ Scratch directory: /tmp/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                               RHF Reference
-                        1 Threads,   5722 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -161,8 +154,8 @@ Scratch directory: /tmp/
   MOM disabled.
   Fractional occupation disabled.
   Guess Type is GWH.
-  Energy threshold   = 1.00e-12
-  Density threshold  = 1.00e-08
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-10
   Integral threshold = 1.00e-12
 
   ==> Primary Basis <==
@@ -187,7 +180,7 @@ Scratch directory: /tmp/
 
   ==> Integral Setup <==
 
-  DFHelper Memory: AOs need 0.001 GiB; user supplied 4.191 GiB. 
+  DFHelper Memory: AOs need 0.001 GiB; user supplied 0.366 GiB. 
   Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
@@ -196,7 +189,7 @@ Scratch directory: /tmp/
     K tasked:                   Yes
     wK tasked:                   No
     OpenMP threads:               1
-    Memory [MiB]:              4291
+    Memory [MiB]:               375
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
     Mask sparsity (%):       0.0000
@@ -246,6 +239,8 @@ Scratch directory: /tmp/
    @DF-RHF iter   9:   -76.01725998413119   -1.61921e-09   5.25388e-07 DIIS
    @DF-RHF iter  10:   -76.01725998416302   -3.18323e-11   3.67583e-08 DIIS
    @DF-RHF iter  11:   -76.01725998416325   -2.27374e-13   3.41540e-09 DIIS
+   @DF-RHF iter  12:   -76.01725998416322    2.84217e-14   5.26149e-10 DIIS
+   @DF-RHF iter  13:   -76.01725998416323   -1.42109e-14   4.86461e-11 DIIS
 
   DF guess converged.
 
@@ -259,12 +254,15 @@ Scratch directory: /tmp/
     Screening Cutoff:        1E-12
     Incremental Fock:           No
 
-   @RHF iter  12:   -76.01729654450129   -7.60173e+01   1.19915e-05 DIIS
-   @RHF iter  13:   -76.01729655577888   -1.12776e-08   1.64013e-06 DIIS
-   @RHF iter  14:   -76.01729655606742   -2.88537e-10   4.89582e-07 DIIS
-   @RHF iter  15:   -76.01729655608835   -2.09326e-11   1.68490e-07 DIIS
-   @RHF iter  16:   -76.01729655609134   -2.98428e-12   4.58604e-08 DIIS
-   @RHF iter  17:   -76.01729655609162   -2.84217e-13   5.20963e-09 DIIS
+   @RHF iter  14:   -76.01729654450106   -7.60173e+01   1.19915e-05 DIIS
+   @RHF iter  15:   -76.01729655577874   -1.12777e-08   1.64017e-06 DIIS
+   @RHF iter  16:   -76.01729655606739   -2.88651e-10   4.89637e-07 DIIS
+   @RHF iter  17:   -76.01729655608844   -2.10463e-11   1.68506e-07 DIIS
+   @RHF iter  18:   -76.01729655609141   -2.97007e-12   4.58642e-08 DIIS
+   @RHF iter  19:   -76.01729655609159   -1.84741e-13   5.21058e-09 DIIS
+   @RHF iter  20:   -76.01729655609164   -4.26326e-14   7.84807e-10 DIIS
+   @RHF iter  21:   -76.01729655609162    1.42109e-14   1.27027e-10 DIIS
+   @RHF iter  22:   -76.01729655609171   -8.52651e-14   2.82297e-11 DIIS
   Energy and wave function converged.
 
 
@@ -294,14 +292,14 @@ Scratch directory: /tmp/
     NA   [     3,    0,    1,    1 ]
     NB   [     3,    0,    1,    1 ]
 
-  @RHF Final Energy:   -76.01729655609162
+  @RHF Final Energy:   -76.01729655609171
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              8.8046866532470247
-    One-Electron Energy =                -122.3894315674565973
-    Two-Electron Energy =                  37.5674483581179643
-    Total Energy =                        -76.0172965560916225
+    One-Electron Energy =                -122.3894315645720070
+    Two-Electron Energy =                  37.5674483552332674
+    Total Energy =                        -76.0172965560917078
 
 Computation Completed
 
@@ -325,14 +323,14 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on macbook-pro-158.wireless.emory.edu at Wed Nov  8 16:33:18 2023
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Wed Nov  8 16:34:36 2023
 Module time:
-	user time   =       0.55 seconds =       0.01 minutes
-	system time =       1.21 seconds =       0.02 minutes
+	user time   =       0.44 seconds =       0.01 minutes
+	system time =       1.47 seconds =       0.02 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.55 seconds =       0.01 minutes
-	system time =       1.21 seconds =       0.02 minutes
+	user time   =       0.44 seconds =       0.01 minutes
+	system time =       1.47 seconds =       0.02 minutes
 	total time  =          0 seconds =       0.00 minutes
     SCF energy............................................................................PASSED
 
@@ -429,7 +427,7 @@ Scratch directory: /tmp/
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
-    Memory [MiB]:             4577
+    Memory [MiB]:              400
     Schwarz Cutoff:          1E-12
 
     OpenMP threads:              1
@@ -454,19 +452,19 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02808150 s
+  Integral transformation done. 0.00918133 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.008731 GB
-  Timing for conventional integral transformation:            0.040 s.
+  Timing for conventional integral transformation:            0.027 s.
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing conventional integrals:                0.040 s.
+  Timing for computing conventional integrals:                0.027 s.
 
   ==> Summary of Active Space Solver Input <==
 
     Irrep.  Multi.(2ms)      N
     --------------------------
        A1      1  (  0)      1
-       A1      1  (  0)      1
+       B1      1  (  0)      1
     --------------------------
     N: number of roots
     ms: spin z component
@@ -536,13 +534,13 @@ Scratch directory: /tmp/
 
     Spin    Root           Energy        <S^2>    Status
   -------------------------------------------------------
-   singlet    0      -84.834586908595  -0.000000  added
+   singlet    0      -84.834586908546  -0.000000  added
   -------------------------------------------------------
 
   ==> Davidson-Liu Solver <==
 
     Energy convergence threshold                   1.000e-10
-    Residual convergence threshold                 1.000e-08
+    Residual convergence threshold                 1.000e-10
     Schmidt orthogonality threshold                1.000e-12
     Schmidt discard threshold                      1.000e-07
     Size of the space                                    133
@@ -556,42 +554,27 @@ Scratch directory: /tmp/
   Davidson-Liu solver: adding 1 guess vectors
   Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
   ---------------------------------------------------------------------------------
-       0      -76.029900255348       76.029900255348        0.021751815848      1
-       1      -76.029944647905        0.000044392557        0.002017138418      2
-       2      -76.029945651533        0.000001003628        0.000542330238      3
-       3      -76.029945784126        0.000000132593        0.000229504982      4
-       4      -76.029945793515        0.000000009389        0.000032892672      5
-       5      -76.029945793774        0.000000000259        0.000005704627      6
-       6      -76.029945793785        0.000000000011        0.000001317778      7
-       7      -76.029945793785        0.000000000000        0.000000209721      8
-       8      -76.029945793785        0.000000000000        0.000000038931      9
-       9      -76.029945793785        0.000000000000        0.000000007774     10
+       0      -76.029900255299       76.029900255299        0.021751815816      1
+       1      -76.029944647856        0.000044392557        0.002017138410      2
+       2      -76.029945651484        0.000001003628        0.000542330237      3
+       3      -76.029945784077        0.000000132593        0.000229504979      4
+       4      -76.029945793466        0.000000009389        0.000032892673      5
+       5      -76.029945793725        0.000000000259        0.000005704627      6
+       6      -76.029945793736        0.000000000011        0.000001317778      7
+       7      -76.029945793736        0.000000000000        0.000000209721      8
+       8      -76.029945793736        0.000000000000        0.000000038931      9
+       9      -76.029945793736        0.000000000000        0.000000007774     10
+      10      -76.029945793736        0.000000000000        0.000000001324      3
+      11      -76.029945793736        0.000000000000        0.000000000390      4
+      12      -76.029945793736        0.000000000000        0.000000000094      5
   ---------------------------------------------------------------------------------
 
   ==> Root No. 0 <==
 
-    2220 2 20      0.99554992
+    2220 2 20     -0.99554992
 
-    Total Energy:     -76.029945793785, <S^2>: 0.000000
-
-  ==> Computing RDMs for Root No. 0 <==
-
-    Timing for 1-RDM: 0.000 s
-    Timing for 2-RDM: 0.000 s
-    Timing for 3-RDM: 0.051 s
-
-==> RDMs Test (max level = 3)<==
-
-    AA 1-RDM Error :   +5.551687e-16
-    BB 1-RDM Error :   +6.280644e-16
-    AAAA 2-RDM Error :   +7.382122e-15
-    BBBB 2-RDM Error :   +8.208324e-15
-    ABAB 2-RDM Error :   +4.089775e-15
-    AAAAAA 3-RDM Error : +4.820397e-16
-    AABAAB 3-RDM Error : +4.864375e-15
-    ABBABB 3-RDM Error : +4.371334e-15
-    BBBBBB 3-RDM Error : +1.038309e-15
-    Time for GASCI:       0.163052250000
+    Total Energy:     -76.029945793736, <S^2>: -0.000000
+    Time for GASCI:       0.003032791000
 
   ==> Number of Electrons in GAS <==
 
@@ -629,8 +612,8 @@ Scratch directory: /tmp/
   ==> GASCI Solver <==
 
     Spin adapt                                         FALSE
-    Number of determinants                                68
-    Symmetry                                               0
+    Number of determinants                                40
+    Symmetry                                               2
     Multiplicity                                           1
     Number of roots                                        1
     Target root                                            0
@@ -638,30 +621,30 @@ Scratch directory: /tmp/
 
   ==> Initial Guess <==
 
-  Initial guess determinants:         50
+  Initial guess determinants:         40
 
   Classification of the initial guess solutions
 
   Number   2S+1   Selected
   ------------------------
-    21       1       *
-    25       3        
+    16       1       *
+    20       3        
      4       5        
   ------------------------
 
     Spin    Root           Energy        <S^2>    Status
   -------------------------------------------------------
-   triplet    0      -64.658644353268  +2.000000  removed
-   singlet    0      -64.645487970257  -0.000000  added
+   triplet    0      -63.891145086919  +2.000000  removed
+   singlet    0      -63.830815324846  -0.000000  added
   -------------------------------------------------------
 
   ==> Davidson-Liu Solver <==
 
     Energy convergence threshold                   1.000e-10
-    Residual convergence threshold                 1.000e-08
+    Residual convergence threshold                 1.000e-10
     Schmidt orthogonality threshold                1.000e-12
     Schmidt discard threshold                      1.000e-07
-    Size of the space                                     68
+    Size of the space                                     40
     Number of roots                                        1
     Maximum number of iterations                         100
     Collapse subspace size                                 2
@@ -672,59 +655,31 @@ Scratch directory: /tmp/
   Davidson-Liu solver: adding 1 guess vectors
   Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
   ---------------------------------------------------------------------------------
-       0      -55.840801317010       55.840801317010        0.166012103150      1
-       1      -55.841932967646        0.001131650636        0.006007990288      2
-       2      -55.841943055336        0.000010087689        0.001561751418      3
-       3      -55.841944047975        0.000000992640        0.000559068748      4
-       4      -55.841944162855        0.000000114880        0.000159553962      5
-       5      -55.841944169945        0.000000007089        0.000038788887      6
-       6      -55.841944170256        0.000000000311        0.000007805321      7
-       7      -55.841944170272        0.000000000015        0.000001499276      8
-       8      -55.841944170272        0.000000000000        0.000000292048      9
-       9      -55.841944170272        0.000000000000        0.000000043889     10
-      10      -55.841944170272        0.000000000000        0.000000010126      3
-      11      -55.841944170272        0.000000000000        0.000000002433      4
+       0      -55.026128671599       55.026128671599        0.000000000000      1
+       1      -55.026128671599        0.000000000000        0.000000000000      2
   ---------------------------------------------------------------------------------
 
   ==> Root No. 0 <==
 
-    b22a 2 20      0.65804037
-    a22b 2 20      0.65804037
-    a22b 2 ba      0.16141777
-    b22a 2 ab      0.16141777
-    a22b 2 ab      0.13665173
-    b22a 2 ba      0.13665173
-    a2b2 2 20     -0.10742248
-    b2a2 2 20     -0.10742248
+    b222 a 20     -0.57909814
+    a222 b 20     -0.57909814
+    a220 b 22     -0.30118962
+    b220 a 22     -0.30118962
+    a222 b ba     -0.17160275
+    b222 a ab     -0.17160275
+    a222 b ab     -0.17022639
+    b222 a ba     -0.17022639
 
-    Total Energy:     -55.841944170272, <S^2>: 0.000000
-
-  ==> Computing RDMs for Root No. 0 <==
-
-    Timing for 1-RDM: 0.000 s
-    Timing for 2-RDM: 0.000 s
-    Timing for 3-RDM: 0.025 s
-
-==> RDMs Test (max level = 3)<==
-
-    AA 1-RDM Error :   +3.598245e-16
-    BB 1-RDM Error :   +5.273624e-16
-    AAAA 2-RDM Error :   +6.873328e-15
-    BBBB 2-RDM Error :   +8.128848e-15
-    ABAB 2-RDM Error :   +4.475386e-15
-    AAAAAA 3-RDM Error : +4.060881e-16
-    AABAAB 3-RDM Error : +7.080143e-15
-    ABBABB 3-RDM Error : +5.501165e-15
-    BBBBBB 3-RDM Error : +3.658473e-16
-    Time for GASCI:       0.078611167000
+    Total Energy:     -55.026128671599, <S^2>: 0.000000
+    Time for GASCI:       0.001161042000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    A1     0      -76.029945793785   0.000000
+       1  (  0)    A1     0      -76.029945793736  -0.000000
     --------------------------------------------------------
-       1  (  0)    A1     0      -55.841944170272   0.000000
+       1  (  0)    B1     0      -55.026128671599   0.000000
     --------------------------------------------------------
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
@@ -733,10 +688,6 @@ Scratch directory: /tmp/
   ==> Computing RDMs <0 Singlet (Ms = 0) A1| ... |0 Singlet (Ms = 0) A1> <==
 
     Timing for 1-RDM: 0.000 s
-
-==> RDMs Test (max level = 1)<==
-
-    SF 1-RDM Error :   +1.132297e-15
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0A1     0.00000000     0.00000000     0.82078282     0.82078282
@@ -744,19 +695,15 @@ Scratch directory: /tmp/
      Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
     --------------------------------------------------------------------
 
-  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1 <==
 
 
-  ==> Computing RDMs <0 Singlet (Ms = 0) A1| ... |0 Singlet (Ms = 0) A1> <==
+  ==> Computing RDMs <0 Singlet (Ms = 0) B1| ... |0 Singlet (Ms = 0) B1> <==
 
     Timing for 1-RDM: 0.000 s
-
-==> RDMs Test (max level = 1)<==
-
-    SF 1-RDM Error :   +9.397160e-16
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-         0A1     0.00000000    -0.00000000    -0.09659764     0.09659764
+         0B1     0.00000000    -0.00000000    -1.59791946     1.59791946
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
     --------------------------------------------------------------------
@@ -767,49 +714,56 @@ Scratch directory: /tmp/
   ==> Computing RDMs <0 Singlet (Ms = 0) A1| ... |0 Singlet (Ms = 0) A1> <==
 
     Timing for 1-RDM: 0.000 s
-
-==> RDMs Test (max level = 1)<==
-
-    SF 1-RDM Error :   +1.132297e-15
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0A1    -5.44267550     0.00000000     0.00000000    -3.23081135     0.00000000    -4.33178388
+         0A1    -5.44267552     0.00000000     0.00000000    -3.23081135     0.00000000    -4.33178388
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
     --------------------------------------------------------------------------------------------------
 
-  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1 <==
 
 
-  ==> Computing RDMs <0 Singlet (Ms = 0) A1| ... |0 Singlet (Ms = 0) A1> <==
+  ==> Computing RDMs <0 Singlet (Ms = 0) B1| ... |0 Singlet (Ms = 0) B1> <==
 
     Timing for 1-RDM: 0.000 s
-
-==> RDMs Test (max level = 1)<==
-
-    SF 1-RDM Error :   +9.397160e-16
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0A1    -6.91245282     0.00000000     0.00000000    -7.03120450     0.00000000    -7.54238257
+         0B1    -7.38291364     0.00000000     0.00000000   -12.47859248    -0.00000000   -11.01681402
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     4.38045134     0.00000000     2.31648182
     --------------------------------------------------------------------------------------------------
 
-  Time to prepare integrals:        0.048 seconds
-  Time to run job          :        0.243 seconds
-  Total                    :        0.291 seconds
-    Averaged GASCI energy.................................................................PASSED
-    AA 1-RDM..............................................................................PASSED
-    BB 1-RDM..............................................................................PASSED
-    AAAA 2-RDM............................................................................PASSED
-    BBBB 2-RDM............................................................................PASSED
-    ABAB 2-RDM............................................................................PASSED
-    AABAAB 3-RDM..........................................................................PASSED
-    ABBABB 3-RDM..........................................................................PASSED
-    AAAAAA 3-RDM..........................................................................PASSED
-    BBBBBB 3-RDM..........................................................................PASSED
+  ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
 
-    Psi4 stopped on: Wednesday, 08 November 2023 04:33PM
-    Psi4 wall time for execution: 0:00:00.60
+       Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
+    -------------------------------------------------------------------------
+       0A1    0B1    -0.00046855     0.00000000     0.00000000     0.00046855
+    -------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
+
+    Transition from State  0A1  to State  0B1 :
+      Component  1 with value of W = 0.0099
+        Init. Orbital: 1.0000 Orb.  0
+        Final Orbital: 1.0000 Orb.  4
+
+
+  ==> Transitions for Singlet (Ms = 0) A1 -> Singlet (Ms = 0) B1 <==
+
+     Init.  Final  Energy [a.u.]    Energy [eV]    Osc. [a.u.]
+    ----------------------------------------------------------
+       0A1    0B1    21.00381712   571.54297560     0.00000307
+    ----------------------------------------------------------
+
+  Time to prepare integrals:        0.035 seconds
+  Time to run job          :        0.005 seconds
+  Total                    :        0.040 seconds
+    Averaged ACI energy...................................................................PASSED
+    Oscillator strength singlet 0A1 -> 0B1................................................PASSED
+    S_MAX singlet 0A1 -> 0B1..............................................................PASSED
+
+    Psi4 stopped on: Wednesday, 08 November 2023 04:34PM
+    Psi4 wall time for execution: 0:00:00.36
 
 *** Psi4 exiting successfully. Buy a developer a beer!

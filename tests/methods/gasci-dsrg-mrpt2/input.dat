@@ -22,7 +22,7 @@ Ezero, wfn = energy('scf', return_wfn=True)
 set forte {
   job_type              newdriver
   int_type              df
-  active_space_solver   detci
+  active_space_solver   genci
   correlation_solver    sa-mrdsrg
   dsrg_s                0.0
   calc_type             sa
