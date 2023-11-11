@@ -1,15 +1,14 @@
-#! Generated using commit GITCOMMIT
-# SA-GASSCF-DSRG-MRPT2 test on H2O
+# H2O 1A1 ground state + core excited state
+# 6-31G**/state-averaged GASSCF + DSRG-MRPT2 calculation
 # averaging over the ground state and core-excited singlet B1 state
 # at most one electron occupies the core orbital for B1 state
 
 import forte
 
-refscf = -76.0172965561
-refgasscf = -65.866749078651708
-refdsrg = -66.08575361222897
+refscf    = -76.0172965561
+refgasscf = -65.8667490786
+refdsrg   = -66.0857536122
 
-memory 1000 mb
 molecule h2o{
    O
    H  1 1.00
@@ -18,25 +17,23 @@ molecule h2o{
 
 set global {
   basis 6-31g**
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
-  guess gwh
+  e_convergence 12
+  d_convergence 8
   scf_type pk
   reference rhf
 }
 
 set forte {
-  e_convergence 10
-  active_ref_type gas
-  GAS1 [1,0,0,0]
-  GAS2 [3,0,1,2]
-  GAS1MAX [2,1]
-  GAS1MIN [0,0]
-  AVG_STATE [[0,1,1],[2,1,1]]
-  job_type mcscf_two_step
-  casscf_ci_solver detci
-  casscf_maxiter 100
+  job_type            mcscf_two_step
+  e_convergence       12
+  active_ref_type     gas
+  gas1                [1,0,0,0]
+  gas2                [3,0,1,2]
+  gas1max             [2,1]
+  gas1min             [0,0]
+  avg_state           [[0,1,1],[2,1,1]]
+  casscf_ci_solver    genci
+  casscf_maxiter      100
   casscf_e_convergence 1e-10
   casscf_g_convergence 1e-8
   casscf_active_frozen_orbital [0]
@@ -48,13 +45,11 @@ egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
-  job_type newdriver
-  active_space_solver aci
-  one_cycle true
-  sigma 0.00
-  correlation_solver dsrg-mrpt2
-  dsrg_s 1.0
-  calc_type sa
+  job_type            newdriver
+  active_space_solver genci
+  correlation_solver  dsrg-mrpt2
+  dsrg_s              1.0
+  calc_type           sa
 }
 
 edsrg = energy('forte', ref_wfn=wfn_gasscf)
