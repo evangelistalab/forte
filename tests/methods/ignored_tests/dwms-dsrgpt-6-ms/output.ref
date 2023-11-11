@@ -1,0 +1,3513 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.2a1.dev939 
+
+                         Git: Rev {master} b05c0bb 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 02 April 2018 11:11PM
+
+    Process ID:  13473
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+memory 1 gb
+
+import forte
+
+Emcscf_avg    = -106.75289569194828
+Ept2ms_0      = -106.99147083929090
+Ept2ms_1      = -106.98209968432992
+Ept2xms_0     = -106.99142907134139
+Ept2xms_1     = -106.98215925774610
+Ept2msHbar3_0 = -106.99152613086480
+Ept2msHbar3_1 = -106.98215305247781
+
+molecule {
+  0 1
+  Li
+  F  1 R
+  R = 10.000
+
+  units bohr
+}
+
+basis {
+  assign Li Li-cc-pvdz
+  assign F  aug-cc-pvdz
+[ Li-cc-pvdz ]
+spherical
+****
+Li     0
+S   8   1.00
+   1469.0000000              0.0007660
+    220.5000000              0.0058920
+     50.2600000              0.0296710
+     14.2400000              0.1091800
+      4.5810000              0.2827890
+      1.5800000              0.4531230
+      0.5640000              0.2747740
+      0.0734500              0.0097510
+S   8   1.00
+   1469.0000000             -0.0001200
+    220.5000000             -0.0009230
+     50.2600000             -0.0046890
+     14.2400000             -0.0176820
+      4.5810000             -0.0489020
+      1.5800000             -0.0960090
+      0.5640000             -0.1363800
+      0.0734500              0.5751020
+S   1   1.00
+      0.0280500              1.0000000
+P   3   1.00
+      1.5340000              0.0227840
+      0.2749000              0.1391070
+      0.0736200              0.5003750
+P   1   1.00
+      0.0240300              1.0000000
+D   1   1.00
+      0.1239000              1.0000000
+****
+}
+
+set globals{
+  reference           rhf
+  scf_type            df
+  maxiter             300
+  e_convergence       10
+  d_convergence       10
+  docc                [4,0,1,1]
+  restricted_docc     [3,0,1,1]
+  active              [2,0,0,0]
+  mcscf_type          df
+  mcscf_r_convergence 7
+  mcscf_e_convergence 10
+  mcscf_maxiter       250
+  mcscf_diis_start    6
+  num_roots           2
+  follow_root         2
+  avg_states          [0,1]
+}
+
+set forte{
+  job_type           dwms-dsrgpt2
+  int_type           df
+  frozen_docc        [2,0,0,0]
+  restricted_docc    [1,0,0,0]
+  active             [3,0,2,2]
+  dsrg_s             0.5
+  maxiter            50
+  e_convergence      10
+  cas_type           cas
+  avg_state          [[0,1,2]]
+  dwms_algorithm     ms
+  dwms_zeta          1000.0
+}
+
+Emcscf, wfn = energy('casscf', return_wfn=True)
+compare_values(Emcscf_avg,get_variable("CURRENT ENERGY"),8,"SA-CASSCF energy")
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2ms_0,E0,8,"DWMS-DSRG-PT2 (DF) energy on root 0")
+compare_values(Ept2ms_1,E1,8,"DWMS-DSRG-PT2 (DF) energy on root 1")
+
+set forte {
+  dwms_algorithm xms
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2xms_0,E0,8,"DWXMS-DSRG-PT2 (DF) energy on root 0")
+compare_values(Ept2xms_1,E1,8,"DWXMS-DSRG-PT2 (DF) energy on root 1")
+
+set forte{
+  dwms_algorithm ms
+  form_hbar3     true
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2msHbar3_0,E0,8,"DWMS-DSRG-PT2 (DF, HBAR3) energy on root 0")
+compare_values(Ept2msHbar3_1,E1,8,"DWMS-DSRG-PT2 (DF, HBAR3) energy on root 1")
+
+set forte{
+  int_type diskdf
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2msHbar3_0,E0,8,"DWMS-DSRG-PT2 (DiskDF, HBAR3) energy on root 0")
+compare_values(Ept2msHbar3_1,E1,8,"DWMS-DSRG-PT2 (DiskDF, HBAR3) energy on root 1")
+--------------------------------------------------------------------------
+
+  Memory set to 953.674 MiB by Python driver.
+
+*** tstart() called on dhcp189-216.emerson.emory.edu
+*** at Mon Apr  2 23:11:01 2018
+
+   => Loading Basis Set <=
+
+    Name: ANONYMOUSC1B87A2D
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry LI         line     5 inputblock li-cc-pvdz 
+    atoms 2 entry F          line   286 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
+                              RHF Reference
+                        1 Threads,    953 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          LI          0.000000000000     0.000000000000    -7.303031224277     7.016004548000
+           F          0.000000000000     0.000000000000     2.696968775723    18.998403224000
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      0.11749  C =      0.11749 [cm^-1]
+  Rotational constants: A = ************  B =   3522.26409  C =   3522.26409 [MHz]
+  Nuclear repulsion =    2.700000000000000
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 12
+  Nalpha       = 6
+  Nbeta        = 6
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-10
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: ANONYMOUSC1B87A2D
+    Blend: AUG-CC-PVDZ + LI-CC-PVDZ
+    Number of shells: 15
+    Number of basis function: 37
+    Number of Cartesian functions: 40
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (ANONYMOUSC1B87A2D AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1 entry LI         line    59 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-jkfit.gbs 
+    atoms 2 entry F          line   328 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     A1        18      18       4       4       4       0
+     A2         3       3       0       0       0       0
+     B1         8       8       1       1       1       0
+     B2         8       8       1       1       1       0
+   -------------------------------------------------------
+    Total      37      37       6       6       6       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  ==> DFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    OpenMP threads:              1
+    Integrals threads:           1
+    Memory (MB):               715
+    Algorithm:                Core
+    Integral Cache:           NONE
+    Schwarz Cutoff:          1E-12
+    Fitting Condition:       1E-12
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (ANONYMOUSC1B87A2D AUX)
+    Blend: AUG-CC-PVDZ-JKFIT + DEF2-QZVPP-JKFIT
+    Number of shells: 45
+    Number of basis function: 137
+    Number of Cartesian functions: 161
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 8.8020111411E-02.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter   0:  -106.49244758567004   -1.06492e+02   4.41618e-03 
+   @DF-RHF iter   1:  -106.67532388975391   -1.82876e-01   2.14614e-02 
+   @DF-RHF iter   2:  -105.54392991436788    1.13139e+00   5.79644e-02 DIIS
+   @DF-RHF iter   3:  -106.73991924474727   -1.19599e+00   1.07812e-02 DIIS
+   @DF-RHF iter   4:  -106.76332949103963   -2.34102e-02   2.28237e-03 DIIS
+   @DF-RHF iter   5:  -106.76472362832375   -1.39414e-03   6.45115e-04 DIIS
+   @DF-RHF iter   6:  -106.76485874292257   -1.35115e-04   1.83822e-04 DIIS
+   @DF-RHF iter   7:  -106.76486855386511   -9.81094e-06   2.43051e-05 DIIS
+   @DF-RHF iter   8:  -106.76486888443806   -3.30573e-07   3.27331e-06 DIIS
+   @DF-RHF iter   9:  -106.76486889721448   -1.27764e-08   2.09100e-06 DIIS
+   @DF-RHF iter  10:  -106.76486889852579   -1.31131e-09   3.99614e-07 DIIS
+   @DF-RHF iter  11:  -106.76486889859885   -7.30580e-11   9.00418e-08 DIIS
+   @DF-RHF iter  12:  -106.76486889860321   -4.36273e-12   3.41548e-09 DIIS
+   @DF-RHF iter  13:  -106.76486889860314    7.10543e-14   5.87169e-10 DIIS
+   @DF-RHF iter  14:  -106.76486889860328   -1.42109e-13   6.54719e-11 DIIS
+
+  ==> Post-Iterations <==
+
+    Orbital Energies (a.u.)
+    -----------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -25.949814     2A1    -2.691666     3A1    -1.181712  
+       1B1    -0.282873     1B2    -0.282873     4A1    -0.281738  
+
+    Virtual:                                                              
+
+       5A1    -0.102315     2B1    -0.034300     2B2    -0.034300  
+       6A1    -0.017923     7A1     0.059045     3B1     0.069772  
+       3B2     0.069772     8A1     0.115189     1A2     0.230550  
+       9A1     0.230550    10A1     0.235496     4B1     0.236553  
+       4B2     0.236553     5B1     0.415024     5B2     0.415024  
+      11A1     0.434343    12A1     0.463817    13A1     1.634170  
+       6B2     1.634573     6B1     1.634573    14A1     1.636157  
+       2A2     1.636157     7B1     1.968931     7B2     1.968931  
+      15A1     1.981930    16A1     2.604924    17A1     5.198103  
+       8B2     5.198134     8B1     5.198134     3A2     5.198806  
+      18A1     5.198806  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     4,    0,    1,    1 ]
+
+  Energy converged.
+
+  @DF-RHF Final Energy:  -106.76486889860328
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              2.7000000000000002
+    One-Electron Energy =                -157.5883835445638397
+    Two-Electron Energy =                  48.1235146459605616
+    Total Energy =                       -106.7648688986032823
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     2.3636
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:   -12.2800
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -9.9163     Total:     9.9163
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:   -25.2048     Total:    25.2048
+
+
+*** tstop() called on dhcp189-216.emerson.emory.edu at Mon Apr  2 23:11:02 2018
+Module time:
+	user time   =       0.64 seconds =       0.01 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.64 seconds =       0.01 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+   => Loading Basis Set <=
+
+    Name: (ANONYMOUSC1B87A2D AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1 entry LI         line    59 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-jkfit.gbs 
+    atoms 2 entry F          line   328 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+
+
+         ---------------------------------------------------------
+                Multi-Configurational Self-Consistent Field
+                            (a 'D E T C I' module)
+
+                 Daniel G. A. Smith, C. David Sherrill, and
+                              Matt L. Leininger
+         ---------------------------------------------------------
+
+
+   ==> Parameters <==
+
+    EX LEVEL       =        2      H0 BLOCKSIZE  =     1000
+    VAL EX LEVEL   =        0      H0 GUESS SIZE =     1000
+    H0COUPLINGSIZE =        0      H0 COUPLING   =       NO
+    MAXITER        =       12      NUM PRINT     =       20
+    NUM ROOTS      =        2      ICORE         =        1
+    PRINT LVL      =        1      FCI           =      YES
+    R CONV         = 1.00e-07      MIXED         =      YES
+    E CONV         = 1.00e-10      MIXED4        =      YES
+    R4S            =       NO      REPL OTF      =       NO
+    DIAG METHOD    =      SEM      FOLLOW ROOT   =        2
+    PRECONDITIONER = DAVIDSON      UPDATE        = DAVIDSON
+    S              =   0.0000      Ms0           =      YES
+    GUESS VECTOR   =  H0BLOCK      OPENTYPE      =     NONE
+    COLLAPSE SIZE  =        1      HD AVG        = EVANGELISTI
+    MAX NUM VECS   =       26      REF SYM       =     AUTO
+    IOPEN        =       NO
+
+    EX ALLOW       =  1  1 
+    STATE AVERAGE  =  0(0.50)  1(0.50) 
+
+   ==> CI Orbital and Space information <==
+
+   ------------------------------------------------------
+               Space    Total    A1    A2    B1    B2
+   ------------------------------------------------------
+                 Nso       37    18     3     8     8
+                 Nmo       37    18     3     8     8
+               Ndocc        6     4     0     1     1
+               Nsocc        0     0     0     0     0
+   ------------------------------------------------------
+                        MCSCF Spaces
+   ------------------------------------------------------
+         Frozen DOCC        0     0     0     0     0
+     Restricted DOCC        5     3     0     1     1
+              Active        2     2     0     0     0
+     Restricted UOCC       30    13     3     7     7
+         Frozen UOCC        0     0     0     0     0
+   ------------------------------------------------------
+
+   ==> Setting up CI strings <==
+
+    There are 2 alpha and 2 beta strings
+    The CI space requires 4 (4.00E+00) determinants and 1 blocks
+
+   ==> Setting up DF-MCSCF integrals <==
+
+  ==> DFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    OpenMP threads:              1
+    Integrals threads:           1
+    Memory (MB):               762
+    Algorithm:                Core
+    Integral Cache:           NONE
+    Schwarz Cutoff:          1E-12
+    Fitting Condition:       1E-12
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (ANONYMOUSC1B87A2D AUX)
+    Blend: AUG-CC-PVDZ-JKFIT + DEF2-QZVPP-JKFIT
+    Number of shells: 45
+    Number of basis function: 137
+    Number of Cartesian functions: 161
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+
+   ==> Starting DF-MCSCF iterations <==
+
+           Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
+(sem_iter): H0block_->H0b_diag[1][1] - H0block_->H0b_diag[2][1] = -0.707107 - 0.707107 = -1.414214 > 1.0E-8
+   @DF-MCSCF  1:   -106.719664845379    4.5204e-02  7.73e-02  3.93e-09    1    1  Initial CI
+   @DF-MCSCF  2:   -106.743601870187   -2.3937e-02  4.80e-02  7.53e-11    1    1  TS
+   @DF-MCSCF  3:   -106.749731811224   -6.1299e-03  2.62e-02  2.03e-10    1    1  TS
+   @DF-MCSCF  4:   -106.751842266334   -2.1105e-03  1.47e-02  1.48e-10    1    1  TS
+   @DF-MCSCF  5:   -106.752518088222   -6.7582e-04  8.16e-03  1.64e-10    1    1  TS
+   @DF-MCSCF  6:   -106.752756028314   -2.3794e-04  4.54e-03  1.56e-10    1    1  TS
+   @DF-MCSCF  7:   -106.752841015131   -8.4987e-05  2.53e-03  1.61e-10    1    1  TS, DIIS
+   @DF-MCSCF  8:   -106.752873312410   -3.2297e-05  1.41e-03  1.59e-10    1    1  TS, DIIS
+   @DF-MCSCF  9:   -106.752869825747    3.4867e-06  2.51e-03  1.61e-10    1    1  TS, DIIS
+   @DF-MCSCF 10:   -106.752887664365   -1.7839e-05  1.46e-03  1.59e-10    2    1  TS, DIIS
+   @DF-MCSCF 11:   -106.752895046965   -7.3826e-06  4.11e-04  1.60e-10    1    1  TS, DIIS
+   @DF-MCSCF 12:   -106.752895643295   -5.9633e-07  1.12e-04  1.60e-10    1    1  TS, DIIS
+   @DF-MCSCF 13:   -106.752895691850   -4.8555e-08  6.71e-07  1.60e-10    1    1  TS, DIIS
+   @DF-MCSCF 14:   -106.752895691847    2.8848e-12  1.11e-06  1.60e-10    1    1  TS, DIIS
+   @DF-MCSCF 15:   -106.752895691852   -4.7038e-12  3.42e-09  1.60e-10    1    1  TS, DIIS
+
+          @DF-MCSCF has converged!
+
+   @DF-MCSCF Final Energy: -106.752895691851506
+
+   Computing CI Semicanonical Orbitals
+
+   ==> Energetics <==
+
+    SCF energy =         -106.764868898603282
+    Total MCSCF energy = -106.752895691851506
+
+   ==> MCSCF root 0 information <==
+
+    MCSCF Root 0 energy =  -106.772352879434408
+
+   Active Space Natural occupation numbers:
+
+        A1   1.177980        A1   0.822020
+
+   The 4 most important determinants:
+
+    *   1   -0.699845  (    0,    1)  4A1A 5A1B 
+    *   2   -0.699845  (    1,    0)  4A1B 5A1A 
+    *   3   -0.142083  (    0,    0)  4A1X 
+    *   4    0.015726  (    1,    1)  5A1X 
+
+
+   ==> MCSCF root 1 information <==
+
+    MCSCF Root 1 energy =  -106.733438504269259
+
+   Active Space Natural occupation numbers:
+
+        A1   1.999870        A1   0.000130
+
+   The 4 most important determinants:
+
+    *   1   -0.989855  (    0,    0)  4A1X 
+    *   2    0.100457  (    0,    1)  4A1A 5A1B 
+    *   3    0.100457  (    1,    0)  4A1B 5A1A 
+    *   4   -0.002053  (    1,    1)  5A1X 
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the CASSCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     2.3636
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -7.3349
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -4.9713     Total:     4.9713
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:   -12.6358     Total:    12.6358
+
+	SA-CASSCF energy..................................................PASSED
+   => Loading Basis Set <=
+
+    Name: (ANONYMOUSC1B87A2D AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1 entry LI         line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-ri.gbs 
+    atoms 2 entry F          line   250 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry LI         line    31 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwsa-dsrg-pt - git commit: 5258b91f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     1
+    ACTIVE              3     0     2     2     7
+    RESTRICTED_UOCC    12     3     6     6    27
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     3     8     8    37
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               37
+  Number of correlated molecular orbitals:    35
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+
+  DFIntegrals overall time
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.030906 s
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.17824900 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00774700s
+  DFIntegrals take      0.36844600 s
+
+        ----------------------------------------------------------------
+          Dynamically Weighted Driven Similarity Renormalization Group
+                        Multi-State Perturbation Theory
+                                  Chenyang Li
+        ----------------------------------------------------------------
+
+
+  ==> DWMS-DSRG Options <==
+
+    CORRELATION LEVEL         PT2
+    ZETA VALUE           1.00e+03
+    REFERENCE               CASCI
+    ALGORITHM                  MS
+
+  ==> Implementation Note on MS <==
+
+  - Perform CASCI using user-defined weights.
+  - Loop over symmetry entries:
+    - Initialize effective Hamiltonian Heff.
+    - Loop over averaged states:
+      - Compute new density weights if ζ is nonzero.
+      - Semicanonicalize orbitals.
+      - Put SS-DSRG-PT2 energy to diagonal of Heff.
+      - Compute couplings of Heff:
+        - De-normal-order cluster amplitudes.
+        - Compute 1, 2, 3 transition densities in semicanonical basis.
+        - <A|Heff|B> <- 0.5 * <A|Heff(B)|B>.
+  - Collect and print energies.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     3     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     3     8     8 ]
+    CORE                          [    1     0     0     0 ]
+    ACTIVE                        [    3     0     2     2 ]
+    VIRTUAL                       [   12     3     6     6 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates      Weights
+    ------------------------------------
+      A1       1        2    0.500 0.500
+    ------------------------------------
+    Total number of states: 2
+    ------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000119 s
+  Forming determinants                ...  Done. Timing        0.000143 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   321
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.001260 s
+        β          0.001241 s
+        αα         0.001101 s
+        ββ         0.001075 s
+        αβ         0.003023 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 25 determinant(s).  25 determinant(s) added.
+  Initial guess found 89 solutions with 2S+1 = 1 *
+  Initial guess found 103 solutions with 2S+1 = 3  
+  Initial guess found 30 solutions with 2S+1 = 5  
+  Initial guess found 3 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+  Adding guess 2 (multiplicity = 1.000000)
+  Adding guess 3 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -97.332635295282  -9.733e+01
+      2      -97.332635295282  -5.826e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+  Davidson-Liu procedure took  0.312737 s  Done. Timing        0.322882 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    ba0 20 20          0.6992354877
+    ab0 20 20          0.6992354877
+    200 20 20          0.1459597022
+
+    Total Energy:   -106.774168186072217
+
+
+  ==> Root No. 1 <==
+
+    200 20 20          0.9608908711
+    b0a 20 20          0.1531331815
+    a0b 20 20          0.1531331815
+    ba0 20 20         -0.1033323552
+    ab0 20 20         -0.1033323552
+
+    Total Energy:   -106.737360548030566
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.2186  Total:  0.2186
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.0000  Y:  0.0000  Z: -8.9749  Total:  8.9749
+
+
+  ==> Transition Dipole Moments (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z: -1.7569  Total:  1.7569
+
+
+  ==> Oscillator Strength (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
+
+  Total Energy (averaged over 2 states): -106.755764367051398
+
+
+  =========================================
+  Build Effective Hamiltonian of Singlet A1
+  =========================================
+
+
+  ==> Compute DSRG-MRPT2 Energy of Root 0 <==
+
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.500 0.500
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.795 0.205
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003638 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006817 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.023457 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003446 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.006504 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.022537 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001670 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.208747 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.072032 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0061918326   0.0111816921
+    Fb actv              0.0061918326   0.0111816921
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0349707485   0.1482104951
+    Fb virt              0.0349707485   0.1482104951
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.032484 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.18009800 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00781200s
+  Frozen Orbitals takes     0.189 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.788992 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
+                      Kevin Hannon and Chenyang (York) Li
+                                    1 thread
+                  --------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
+
+
+  ==> Calculation Information <==
+
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                   MULTI-STATE
+    Multi-state type                                 SA_FULL
+    form Hbar3                                         FALSE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -106.766619440948574
+    Computing T2                             ...... Done. Timing        0.085141 s
+    Renormalizing V                          ...... Done. Timing        0.059451 s
+    Computing T1                             ...... Done. Timing        0.006170 s
+    Renormalizing F                          ...... Done. Timing        0.009890 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001944 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.005368 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.004922 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005861 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.008713 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.066477 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.226153 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.028450 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001630 s
+  Eccvv: -0.0077239620
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -106.766619440948574
+    <[F, T1]>                      =     -0.009585089997279
+    <[F, T2]>                      =     -0.000667172727388
+    <[V, T1]>                      =     -0.000652142858409
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.001912946993100
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.008123061614625
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.025055660673567
+    <[V, T2]> C_6 C_2              =      0.000080780358239
+    <[V, T2]> (C_2)^4              =     -0.244909928020302
+    <[V, T2]>                      =     -0.209737478380770
+    DSRG-MRPT2 correlation energy  =     -0.220641883963846
+    DSRG-MRPT2 total energy        =   -106.987261324912424
+    max(T1)                        =      0.020993665139289
+    ||T1||                         =      0.055718370901612
+
+  ==> Form DSRG-PT2 Transformed Hamiltonian <==
+
+    Initalizing Hbar                         ... Done. Timing:      0.008 s.
+    Computing all-active Hbar                ... Done. Timing:      0.462 s.
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.002 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.029 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 0).
+  Transform Heff_2nd to original basis.
+  Compute densities.
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000136 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000168 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.004786 s
+  Contract densities with Heff.
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003355 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006398 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.026540 s
+  Contract transition densities with Heff.
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.005
+    Time for [A2,B1] -> C0:      0.005
+    Time for [A2,B2] -> C0:      0.111
+    Time for [A1,B1] -> C1:      0.002
+    Time for [A1,B2] -> C1:      0.012
+    Time for [A2,B1] -> C1:      0.009
+    Time for [A2,B2] -> C1:      0.227
+    Time for [A1,B2] -> C2:      0.017
+    Time for [A2,B1] -> C2:      0.033
+    Time for [A2,B2] -> C2:      0.161
+    Time for [A2,B2] -> C3:      0.470
+    ==================================
+
+  ==> Compute DSRG-MRPT2 Energy of Root 1 <==
+
+
+  ==> Transformation Integrals Back to Original <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.031025 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.15974500 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00700700s
+  Frozen Orbitals takes     0.168 s.
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.795 0.205
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.205 0.795
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000112 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000165 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.005790 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000117 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000165 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004991 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001152 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.198317 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.058150 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0180217108   0.0333446577
+    Fb actv              0.0180217108   0.0333446577
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0282457312   0.1144297191
+    Fb virt              0.0282457312   0.1144297191
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.029130 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.16188700 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00620400s
+  Frozen Orbitals takes     0.169 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.334910 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
+                      Kevin Hannon and Chenyang (York) Li
+                                    1 thread
+                  --------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
+
+
+  ==> Calculation Information <==
+
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                   MULTI-STATE
+    Multi-state type                                 SA_FULL
+    form Hbar3                                         FALSE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -106.744909293154024
+    Computing T2                             ...... Done. Timing        0.053731 s
+    Renormalizing V                          ...... Done. Timing        0.050170 s
+    Computing T1                             ...... Done. Timing        0.006271 s
+    Renormalizing F                          ...... Done. Timing        0.007963 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001837 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.007120 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.008301 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.007395 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.008744 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.034278 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.213421 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.028416 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001477 s
+  Eccvv: -0.0077949255
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -106.744909293154024
+    <[F, T1]>                      =     -0.007237677667677
+    <[F, T2]>                      =      0.000248846816113
+    <[V, T1]>                      =      0.000250880395084
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000240426983209
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000602866542164
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.002673516095154
+    <[V, T2]> C_6 C_2              =      0.000039568800722
+    <[V, T2]> (C_2)^4              =     -0.238722835024916
+    <[V, T2]>                      =     -0.235166456603668
+    DSRG-MRPT2 correlation energy  =     -0.241904407060149
+    DSRG-MRPT2 total energy        =   -106.986813700214171
+    max(T1)                        =      0.016493788442881
+    ||T1||                         =      0.048198278822423
+
+  ==> Form DSRG-PT2 Transformed Hamiltonian <==
+
+    Initalizing Hbar                         ... Done. Timing:      0.007 s.
+    Computing all-active Hbar                ... Done. Timing:      0.352 s.
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.002 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 1).
+  Transform Heff_2nd to original basis.
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000112 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000167 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.004755 s
+  Contract transition densities with Heff.
+  Compute densities.
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000161 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000250 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.006952 s
+  Contract densities with Heff.
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.007
+    Time for [A2,B1] -> C0:      0.008
+    Time for [A2,B2] -> C0:      0.080
+    Time for [A1,B1] -> C1:      0.002
+    Time for [A1,B2] -> C1:      0.011
+    Time for [A2,B1] -> C1:      0.008
+    Time for [A2,B2] -> C1:      0.187
+    Time for [A1,B2] -> C2:      0.015
+    Time for [A2,B1] -> C2:      0.018
+    Time for [A2,B2] -> C2:      0.111
+    Time for [A2,B2] -> C3:      0.424
+    ==================================
+
+  ==> Effective Hamiltonian Summary <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98720903898781    -0.00460905124900
+    2    -0.00472369737333  -106.98636148460639
+
+
+
+  ## Symmetrized Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98720903898781    -0.00466637431117
+    2    -0.00466637431117  -106.98636148460639
+
+
+
+  ## U of Heff (Symmetrized) with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.7383911   0.6743727
+    2  -0.6743727  -0.7383911
+
+     -106.9914708-106.9820997
+
+
+
+  ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
+
+    Multi.  Irrep.  No.                   CASCI
+    -------------------------------------------
+       1      A1     0      -106.77416818607222
+       1      A1     1      -106.73736054803057
+    -------------------------------------------
+
+    Multi.  Irrep.  No.           DW-DSRG-MSPT2
+    -------------------------------------------
+       1      A1     0      -106.99147083927691
+       1      A1     1      -106.98209968431729
+    -------------------------------------------
+	DWMS-DSRG-PT2 (DF) energy on root 0...............................PASSED
+	DWMS-DSRG-PT2 (DF) energy on root 1...............................PASSED
+   => Loading Basis Set <=
+
+    Name: (ANONYMOUSC1B87A2D AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1 entry LI         line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-ri.gbs 
+    atoms 2 entry F          line   250 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry LI         line    31 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwsa-dsrg-pt - git commit: 5258b91f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     1
+    ACTIVE              3     0     2     2     7
+    RESTRICTED_UOCC    12     3     6     6    27
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     3     8     8    37
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               37
+  Number of correlated molecular orbitals:    35
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+
+  DFIntegrals overall time
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.032054 s
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.17357600 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00721200s
+  DFIntegrals take      0.36609100 s
+
+        ----------------------------------------------------------------
+          Dynamically Weighted Driven Similarity Renormalization Group
+                        Multi-State Perturbation Theory
+                                  Chenyang Li
+        ----------------------------------------------------------------
+
+
+  ==> DWMS-DSRG Options <==
+
+    CORRELATION LEVEL         PT2
+    ZETA VALUE           1.00e+03
+    REFERENCE               CASCI
+    ALGORITHM                 XMS
+
+  ==> Implementation Note on XMS <==
+
+  - Perform CASCI using user-defined weights.
+  - Perform XMS rotation on reference CI vectors.
+  - Loop over symmetry entries:
+    - Initialize effective Hamiltonian Heff.
+    - Loop over averaged states:
+      - Compute new density weights if ζ is nonzero.
+      - Semicanonicalize orbitals.
+      - Put SS-DSRG-PT2 energy to diagonal of Heff.
+      - Compute couplings of Heff:
+        - De-normal-order cluster amplitudes.
+        - Compute 1, 2, 3 transition densities in semicanonical basis.
+        - <A|Heff|B> <- 0.5 * <A|Heff(B)|B>.
+  - Collect and print energies.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     3     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     3     8     8 ]
+    CORE                          [    1     0     0     0 ]
+    ACTIVE                        [    3     0     2     2 ]
+    VIRTUAL                       [   12     3     6     6 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates      Weights
+    ------------------------------------
+      A1       1        2    0.500 0.500
+    ------------------------------------
+    Total number of states: 2
+    ------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000097 s
+  Forming determinants                ...  Done. Timing        0.000135 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   321
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.001328 s
+        β          0.001292 s
+        αα         0.001513 s
+        ββ         0.001322 s
+        αβ         0.002905 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 7 determinant(s).  7 determinant(s) added.
+  Initial guess found 83 solutions with 2S+1 = 1 *
+  Initial guess found 94 solutions with 2S+1 = 3  
+  Initial guess found 27 solutions with 2S+1 = 5  
+  Initial guess found 3 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+  Adding guess 2 (multiplicity = 1.000000)
+  Adding guess 3 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -97.332635292879  -9.733e+01
+      2      -97.332635295269  -2.390e-09
+      3      -97.332635295282  -1.316e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 4 iterations.
+  Davidson-Liu procedure took  0.272668 s  Done. Timing        0.283363 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    ba0 20 20         -0.6847421985
+    ab0 20 20         -0.6847421985
+    b0a 20 20         -0.1422473145
+    a0b 20 20         -0.1422473145
+    200 20 20          0.1250713505
+
+    Total Energy:   -106.774168186072004
+
+
+  ==> Root No. 1 <==
+
+    200 20 20         -0.9803778091
+    ba0 20 20         -0.1051627374
+    ab0 20 20         -0.1051627374
+    b0a 20 20          0.0762743601
+    a0b 20 20          0.0762743601
+
+    Total Energy:   -106.737360548029955
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.2186  Total:  0.2186
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.0000  Y:  0.0000  Z: -8.9749  Total:  8.9749
+
+
+  ==> Transition Dipole Moments (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  1.7569  Total:  1.7569
+
+
+  ==> Oscillator Strength (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
+
+  Total Energy (averaged over 2 states): -106.755764367050972
+
+
+  ==> XMS Rotation of All CI Vectors <==
+
+  Set equal states weights to 0.5000 = 1/2.
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003631 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003697 s  Form averaged Fock matrix.
+  XMS Rotation for Singlet A1.
+
+  ## Fock <M|F|N> (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1    -2.46494712396634     0.03393012173057
+    2     0.03393012173057    -2.68625664172722
+
+
+
+  ## Fock Evec with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.1482162  -0.9889550
+    2   0.9889550  -0.1482162
+
+       -2.6913418  -2.4598620
+
+
+
+  =========================================
+  Build Effective Hamiltonian of Singlet A1
+  =========================================
+
+
+  ==> Compute DSRG-MRPT2 Energy of Root 0 <==
+
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.500 0.500
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.795 0.205
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... 
+  Deleted files from disk for 1RDM(0-0) of Singlet A1.Writing ... Done. Timing        0.003883 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006734 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.025154 s
+  Computing  1RDM (1-1) of Singlet A1 ... 
+  Deleted files from disk for 1RDM(1-1) of Singlet A1.Writing ... Done. Timing        0.004267 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.006349 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.021690 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001100 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.206468 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.058799 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0055552642   0.0088559358
+    Fb actv              0.0055552642   0.0088559358
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0009039775   0.0042638658
+    Fb virt              0.0009039775   0.0042638658
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.033137 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.17556700 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00898200s
+  Frozen Orbitals takes     0.185 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.496281 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
+                      Kevin Hannon and Chenyang (York) Li
+                                    1 thread
+                  --------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
+
+
+  ==> Calculation Information <==
+
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                   MULTI-STATE
+    Multi-state type                                 SA_FULL
+    form Hbar3                                         FALSE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -106.745386222705449
+    Computing T2                             ...... Done. Timing        0.049912 s
+    Renormalizing V                          ...... Done. Timing        0.043442 s
+    Computing T1                             ...... Done. Timing        0.006258 s
+    Renormalizing F                          ...... Done. Timing        0.007936 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.002245 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.006776 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.004923 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005584 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.009390 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.032024 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.186712 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.029651 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001440 s
+  Eccvv: -0.0077960451
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -106.745386222705449
+    <[F, T1]>                      =     -0.007719106670638
+    <[F, T2]>                      =      0.000242303946955
+    <[V, T1]>                      =      0.000243976300667
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000226303244649
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000567010132301
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.002503993480981
+    <[V, T2]> C_6 C_2              =      0.000027755483124
+    <[V, T2]> (C_2)^4              =     -0.238298411829796
+    <[V, T2]>                      =     -0.234973349488742
+    DSRG-MRPT2 correlation energy  =     -0.242206175911759
+    DSRG-MRPT2 total energy        =   -106.987592398617210
+    max(T1)                        =      0.017081835141244
+    ||T1||                         =      0.049683731808341
+
+  ==> Form DSRG-PT2 Transformed Hamiltonian <==
+
+    Initalizing Hbar                         ... Done. Timing:      0.008 s.
+    Computing all-active Hbar                ... Done. Timing:      0.356 s.
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.002 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 0).
+  Transform Heff_2nd to original basis.
+  Compute densities.
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000110 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000163 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.004753 s
+  Contract densities with Heff.
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003374 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006405 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.026088 s
+  Contract transition densities with Heff.
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.007
+    Time for [A2,B1] -> C0:      0.005
+    Time for [A2,B2] -> C0:      0.078
+    Time for [A1,B1] -> C1:      0.002
+    Time for [A1,B2] -> C1:      0.012
+    Time for [A2,B1] -> C1:      0.008
+    Time for [A2,B2] -> C1:      0.187
+    Time for [A1,B2] -> C2:      0.015
+    Time for [A2,B1] -> C2:      0.018
+    Time for [A2,B2] -> C2:      0.114
+    Time for [A2,B2] -> C3:      0.424
+    ==================================
+
+  ==> Compute DSRG-MRPT2 Energy of Root 1 <==
+
+
+  ==> Transformation Integrals Back to Original <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.030367 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.16011900 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00706600s
+  Frozen Orbitals takes     0.168 s.
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.795 0.205
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.205 0.795
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000109 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000163 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.005571 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000128 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000173 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004913 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001037 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.198392 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.058698 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0242286106   0.0464347963
+    Fb actv              0.0242286106   0.0464347963
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0518390839   0.2315639386
+    Fb virt              0.0518390839   0.2315639386
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.029844 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.15908500 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00616000s
+  Frozen Orbitals takes     0.166 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.263885 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
+                      Kevin Hannon and Chenyang (York) Li
+                                    1 thread
+                  --------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
+
+
+  ==> Calculation Information <==
+
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                   MULTI-STATE
+    Multi-state type                                 SA_FULL
+    form Hbar3                                         FALSE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -106.766142511396907
+    Computing T2                             ...... Done. Timing        0.049007 s
+    Renormalizing V                          ...... Done. Timing        0.043586 s
+    Computing T1                             ...... Done. Timing        0.006026 s
+    Renormalizing F                          ...... Done. Timing        0.006998 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001874 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.005664 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.004835 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005731 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.009116 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.031334 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.184864 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.026854 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001400 s
+  Eccvv: -0.0077229653
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -106.766142511396907
+    <[F, T1]>                      =     -0.010131004006709
+    <[F, T2]>                      =     -0.000706193984305
+    <[V, T1]>                      =     -0.000697609693076
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.001948473350713
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.008316003006517
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.025619185789096
+    <[V, T2]> C_6 C_2              =      0.000107071294644
+    <[V, T2]> (C_2)^4              =     -0.244794203002082
+    <[V, T2]>                      =     -0.208803469561112
+    DSRG-MRPT2 correlation energy  =     -0.220338277245203
+    DSRG-MRPT2 total energy        =   -106.986480788642112
+    max(T1)                        =      0.021528031644852
+    ||T1||                         =      0.057291173426369
+
+  ==> Form DSRG-PT2 Transformed Hamiltonian <==
+
+    Initalizing Hbar                         ... Done. Timing:      0.007 s.
+    Computing all-active Hbar                ... Done. Timing:      0.348 s.
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.002 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 1).
+  Transform Heff_2nd to original basis.
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000111 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000167 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.004770 s
+  Contract transition densities with Heff.
+  Compute densities.
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000096 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000162 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004725 s
+  Contract densities with Heff.
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.006
+    Time for [A2,B1] -> C0:      0.005
+    Time for [A2,B2] -> C0:      0.075
+    Time for [A1,B1] -> C1:      0.001
+    Time for [A1,B2] -> C1:      0.011
+    Time for [A2,B1] -> C1:      0.008
+    Time for [A2,B2] -> C1:      0.184
+    Time for [A1,B2] -> C2:      0.015
+    Time for [A2,B1] -> C2:      0.017
+    Time for [A2,B2] -> C2:      0.109
+    Time for [A2,B2] -> C3:      0.407
+    ==================================
+
+  ==> Effective Hamiltonian Summary <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98769947398877    -0.00450221047437
+    2    -0.00458905330093  -106.98588885148618
+
+
+
+  ## Symmetrized Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98769947398877    -0.00454563188765
+    2    -0.00454563188765  -106.98588885148618
+
+
+
+  ## U of Heff (Symmetrized) with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.7730862   0.6343010
+    2  -0.6343010  -0.7730862
+
+     -106.9914291-106.9821593
+
+
+
+  ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
+
+    Multi.  Irrep.  No.                   CASCI
+    -------------------------------------------
+       1      A1     0      -106.77416818607200
+       1      A1     1      -106.73736054802995
+    -------------------------------------------
+
+    Multi.  Irrep.  No.          DW-DSRG-XMSPT2
+    -------------------------------------------
+       1      A1     0      -106.99142906917879
+       1      A1     1      -106.98215925629617
+    -------------------------------------------
+	DWXMS-DSRG-PT2 (DF) energy on root 0..............................PASSED
+	DWXMS-DSRG-PT2 (DF) energy on root 1..............................PASSED
+   => Loading Basis Set <=
+
+    Name: (ANONYMOUSC1B87A2D AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1 entry LI         line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-ri.gbs 
+    atoms 2 entry F          line   250 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry LI         line    31 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwsa-dsrg-pt - git commit: 5258b91f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     1
+    ACTIVE              3     0     2     2     7
+    RESTRICTED_UOCC    12     3     6     6    27
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     3     8     8    37
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               37
+  Number of correlated molecular orbitals:    35
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+
+  DFIntegrals overall time
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.030069 s
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.15752900 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00752200s
+  DFIntegrals take      0.33793800 s
+
+        ----------------------------------------------------------------
+          Dynamically Weighted Driven Similarity Renormalization Group
+                        Multi-State Perturbation Theory
+                                  Chenyang Li
+        ----------------------------------------------------------------
+
+
+  ==> DWMS-DSRG Options <==
+
+    CORRELATION LEVEL         PT2
+    ZETA VALUE           1.00e+03
+    REFERENCE               CASCI
+    ALGORITHM                  MS
+
+  ==> Implementation Note on MS <==
+
+  - Perform CASCI using user-defined weights.
+  - Loop over symmetry entries:
+    - Initialize effective Hamiltonian Heff.
+    - Loop over averaged states:
+      - Compute new density weights if ζ is nonzero.
+      - Semicanonicalize orbitals.
+      - Put SS-DSRG-PT2 energy to diagonal of Heff.
+      - Compute couplings of Heff:
+        - De-normal-order cluster amplitudes.
+        - Compute 1, 2, 3 transition densities in semicanonical basis.
+        - <A|Heff|B> <- 0.5 * <A|Heff(B)|B>.
+  - Collect and print energies.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     3     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     3     8     8 ]
+    CORE                          [    1     0     0     0 ]
+    ACTIVE                        [    3     0     2     2 ]
+    VIRTUAL                       [   12     3     6     6 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates      Weights
+    ------------------------------------
+      A1       1        2    0.500 0.500
+    ------------------------------------
+    Total number of states: 2
+    ------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000092 s
+  Forming determinants                ...  Done. Timing        0.000135 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   321
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.001231 s
+        β          0.001196 s
+        αα         0.001040 s
+        ββ         0.001029 s
+        αβ         0.002667 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 13 determinant(s).  13 determinant(s) added.
+  Initial guess found 85 solutions with 2S+1 = 1 *
+  Initial guess found 97 solutions with 2S+1 = 3  
+  Initial guess found 28 solutions with 2S+1 = 5  
+  Initial guess found 3 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+  Adding guess 2 (multiplicity = 1.000000)
+  Adding guess 3 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -97.332635295282  -9.733e+01
+      2      -97.332635295282  -3.411e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+  Davidson-Liu procedure took  0.264987 s  Done. Timing        0.274308 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    ba0 20 20          0.6981784271
+    ab0 20 20          0.6981784271
+    200 20 20          0.1387968443
+    b0a 20 20          0.0518433845
+    a0b 20 20          0.0518433845
+
+    Total Energy:   -106.774168186072188
+
+
+  ==> Root No. 1 <==
+
+    200 20 20          0.9622704398
+    b0a 20 20          0.1454999816
+    a0b 20 20          0.1454999816
+    ba0 20 20         -0.1071352814
+    ab0 20 20         -0.1071352814
+
+    Total Energy:   -106.737360548030537
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.2186  Total:  0.2186
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.0000  Y:  0.0000  Z: -8.9749  Total:  8.9749
+
+
+  ==> Transition Dipole Moments (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z: -1.7569  Total:  1.7569
+
+
+  ==> Oscillator Strength (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
+
+  Total Energy (averaged over 2 states): -106.755764367051370
+
+
+  =========================================
+  Build Effective Hamiltonian of Singlet A1
+  =========================================
+
+
+  ==> Compute DSRG-MRPT2 Energy of Root 0 <==
+
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.500 0.500
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.795 0.205
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003405 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006228 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.021890 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003324 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.006405 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.020649 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001043 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.228859 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.061173 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0059322942   0.0088165041
+    Fb actv              0.0059322942   0.0088165041
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0015437221   0.0053997443
+    Fb virt              0.0015437221   0.0053997443
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.031050 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.16225800 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00667300s
+  Frozen Orbitals takes     0.170 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.324185 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
+                      Kevin Hannon and Chenyang (York) Li
+                                    1 thread
+                  --------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
+
+
+  ==> Calculation Information <==
+
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                   MULTI-STATE
+    Multi-state type                                 SA_FULL
+    form Hbar3                                          TRUE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -106.766619440948602
+    Computing T2                             ...... Done. Timing        0.053975 s
+    Renormalizing V                          ...... Done. Timing        0.047533 s
+    Computing T1                             ...... Done. Timing        0.006480 s
+    Renormalizing F                          ...... Done. Timing        0.007845 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001990 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.005920 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.005227 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.006490 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.010282 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.036287 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.190445 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.028071 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001415 s
+  Eccvv: -0.0077239620
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -106.766619440948602
+    <[F, T1]>                      =     -0.009585089997290
+    <[F, T2]>                      =     -0.000667172727460
+    <[V, T1]>                      =     -0.000652142858393
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.001912946993157
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.008123061614799
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.025055660673029
+    <[V, T2]> C_6 C_2              =      0.000080780358204
+    <[V, T2]> (C_2)^4              =     -0.244909928020348
+    <[V, T2]>                      =     -0.209737478381158
+    DSRG-MRPT2 correlation energy  =     -0.220641883964302
+    DSRG-MRPT2 total energy        =   -106.987261324912907
+    max(T1)                        =      0.020993665139352
+    ||T1||                         =      0.055718370901698
+
+  ==> Form DSRG-PT2 Transformed Hamiltonian <==
+
+    Initalizing Hbar                         ... Done. Timing:      0.007 s.
+    Computing all-active Hbar                ... Done. Timing:      0.358 s.
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.058 s
+    Computing the 1-body term                ... Done. Timing    0.056 s
+    Computing the 2-body term                ... Done. Timing    0.026 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.020 s
+    Rotating 3-body to original basis        ... Done. Timing    1.994 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 0).
+  Transform Heff_2nd to original basis.
+  Compute densities.
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000133 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000179 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.005521 s
+  Contract densities with Heff.
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.004235 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006916 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.021926 s
+  Contract transition densities with Heff.
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.006
+    Time for [A2,B1] -> C0:      0.005
+    Time for [A2,B2] -> C0:      0.083
+    Time for [A1,B1] -> C1:      0.001
+    Time for [A1,B2] -> C1:      0.012
+    Time for [A2,B1] -> C1:      0.008
+    Time for [A2,B2] -> C1:      0.188
+    Time for [A1,B2] -> C2:      0.015
+    Time for [A2,B1] -> C2:      0.018
+    Time for [A2,B2] -> C2:      0.115
+    Time for [A2,B2] -> C3:      0.868
+    ==================================
+
+  ==> Compute DSRG-MRPT2 Energy of Root 1 <==
+
+
+  ==> Transformation Integrals Back to Original <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.030582 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.16085900 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00666100s
+  Frozen Orbitals takes     0.169 s.
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.795 0.205
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.205 0.795
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000110 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000162 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.005580 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000129 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000174 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004946 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001096 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.197033 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.059031 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0136142566   0.0280119410
+    Fb actv              0.0136142566   0.0280119410
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0667155732   0.2786723348
+    Fb virt              0.0667155732   0.2786723348
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+  Computing DF Integrals               ......Done. Timing        0.029830 s
+ Integrals are about to be updated.
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.15970400 s
+  Resorting integrals after freezing core.
+ Done with resorting
+ Resorting integrals takes   0.00713900s
+  Frozen Orbitals takes     0.168 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.238668 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
+                      Kevin Hannon and Chenyang (York) Li
+                                    1 thread
+                  --------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
+
+
+  ==> Calculation Information <==
+
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                   MULTI-STATE
+    Multi-state type                                 SA_FULL
+    form Hbar3                                          TRUE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -106.744909293154024
+    Computing T2                             ...... Done. Timing        0.048396 s
+    Renormalizing V                          ...... Done. Timing        0.042636 s
+    Computing T1                             ...... Done. Timing        0.005741 s
+    Renormalizing F                          ...... Done. Timing        0.006972 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001845 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.005204 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.004838 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005470 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.009360 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.031271 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.180408 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.026591 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001403 s
+  Eccvv: -0.0077949255
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -106.744909293154024
+    <[F, T1]>                      =     -0.007237677667610
+    <[F, T2]>                      =      0.000248846816111
+    <[V, T1]>                      =      0.000250880395070
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000240426983217
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000602866542213
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.002673516095018
+    <[V, T2]> C_6 C_2              =      0.000039568800742
+    <[V, T2]> (C_2)^4              =     -0.238722835024962
+    <[V, T2]>                      =     -0.235166456603772
+    DSRG-MRPT2 correlation energy  =     -0.241904407060201
+    DSRG-MRPT2 total energy        =   -106.986813700214228
+    max(T1)                        =      0.016493788442784
+    ||T1||                         =      0.048198278822199
+
+  ==> Form DSRG-PT2 Transformed Hamiltonian <==
+
+    Initalizing Hbar                         ... Done. Timing:      0.007 s.
+    Computing all-active Hbar                ... Done. Timing:      0.343 s.
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.053 s
+    Computing the 1-body term                ... Done. Timing    0.052 s
+    Computing the 2-body term                ... Done. Timing    0.024 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
+    Rotating 3-body to original basis        ... Done. Timing    1.850 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 1).
+  Transform Heff_2nd to original basis.
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000111 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000165 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.005175 s
+  Contract transition densities with Heff.
+  Compute densities.
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000098 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000163 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.005160 s
+  Contract densities with Heff.
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.005
+    Time for [A2,B1] -> C0:      0.005
+    Time for [A2,B2] -> C0:      0.074
+    Time for [A1,B1] -> C1:      0.001
+    Time for [A1,B2] -> C1:      0.011
+    Time for [A2,B1] -> C1:      0.008
+    Time for [A2,B2] -> C1:      0.180
+    Time for [A1,B2] -> C2:      0.014
+    Time for [A2,B1] -> C2:      0.018
+    Time for [A2,B2] -> C2:      0.109
+    Time for [A2,B2] -> C3:      0.819
+    ==================================
+
+  ==> Effective Hamiltonian Summary <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98727387312715    -0.00460905124900
+    2    -0.00472369737335  -106.98640531018947
+
+
+
+  ## Symmetrized Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98727387312715    -0.00466637431118
+    2    -0.00466637431118  -106.98640531018947
+
+
+
+  ## U of Heff (Symmetrized) with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.7391433   0.6735482
+    2  -0.6735482  -0.7391433
+
+     -106.9915261-106.9821531
+
+
+
+  ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
+
+    Multi.  Irrep.  No.                   CASCI
+    -------------------------------------------
+       1      A1     0      -106.77416818607219
+       1      A1     1      -106.73736054803054
+    -------------------------------------------
+
+    Multi.  Irrep.  No.           DW-DSRG-MSPT2
+    -------------------------------------------
+       1      A1     0      -106.99152613085117
+       1      A1     1      -106.98215305246545
+    -------------------------------------------
+	DWMS-DSRG-PT2 (DF, HBAR3) energy on root 0........................PASSED
+	DWMS-DSRG-PT2 (DF, HBAR3) energy on root 1........................PASSED
+   => Loading Basis Set <=
+
+    Name: (ANONYMOUSC1B87A2D AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1 entry LI         line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-ri.gbs 
+    atoms 2 entry F          line   250 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry LI         line    31 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwsa-dsrg-pt - git commit: 5258b91f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     1
+    ACTIVE              3     0     2     2     7
+    RESTRICTED_UOCC    12     3     6     6    27
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     3     8     8    37
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               37
+  Number of correlated molecular orbitals:    35
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+
+  DISKDFIntegrals overall time
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+    Computing DF Integrals               ......Done. Timing        0.029835 s
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.16403000 s
+  Resorting integrals after freezing core.
+ Resorting integrals takes   0.00003600s
+  DISKDFIntegrals take      0.33680000 s
+
+        ----------------------------------------------------------------
+          Dynamically Weighted Driven Similarity Renormalization Group
+                        Multi-State Perturbation Theory
+                                  Chenyang Li
+        ----------------------------------------------------------------
+
+
+  ==> DWMS-DSRG Options <==
+
+    CORRELATION LEVEL         PT2
+    ZETA VALUE           1.00e+03
+    REFERENCE               CASCI
+    ALGORITHM                  MS
+
+  ==> Implementation Note on MS <==
+
+  - Perform CASCI using user-defined weights.
+  - Loop over symmetry entries:
+    - Initialize effective Hamiltonian Heff.
+    - Loop over averaged states:
+      - Compute new density weights if ζ is nonzero.
+      - Semicanonicalize orbitals.
+      - Put SS-DSRG-PT2 energy to diagonal of Heff.
+      - Compute couplings of Heff:
+        - De-normal-order cluster amplitudes.
+        - Compute 1, 2, 3 transition densities in semicanonical basis.
+        - <A|Heff|B> <- 0.5 * <A|Heff(B)|B>.
+  - Collect and print energies.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     3     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     3     8     8 ]
+    CORE                          [    1     0     0     0 ]
+    ACTIVE                        [    3     0     2     2 ]
+    VIRTUAL                       [   12     3     6     6 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates      Weights
+    ------------------------------------
+      A1       1        2    0.500 0.500
+    ------------------------------------
+    Total number of states: 2
+    ------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000128 s
+  Forming determinants                ...  Done. Timing        0.000136 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   321
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.001200 s
+        β          0.001221 s
+        αα         0.001045 s
+        ββ         0.001038 s
+        αβ         0.002699 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 7 determinant(s).  7 determinant(s) added.
+  Initial guess found 83 solutions with 2S+1 = 1 *
+  Initial guess found 94 solutions with 2S+1 = 3  
+  Initial guess found 27 solutions with 2S+1 = 5  
+  Initial guess found 3 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+  Adding guess 2 (multiplicity = 1.000000)
+  Adding guess 3 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -97.332635292879  -9.733e+01
+      2      -97.332635295269  -2.390e-09
+      3      -97.332635295282  -1.315e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 4 iterations.
+  Davidson-Liu procedure took  0.257339 s  Done. Timing        0.266711 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    ba0 20 20         -0.6847421985
+    ab0 20 20         -0.6847421985
+    b0a 20 20         -0.1422473145
+    a0b 20 20         -0.1422473145
+    200 20 20          0.1250713505
+
+    Total Energy:   -106.774168186071932
+
+
+  ==> Root No. 1 <==
+
+    200 20 20          0.9803778091
+    ba0 20 20          0.1051627374
+    ab0 20 20          0.1051627374
+    b0a 20 20         -0.0762743600
+    a0b 20 20         -0.0762743600
+
+    Total Energy:   -106.737360548030509
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.2186  Total:  0.2186
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.0000  Y:  0.0000  Z: -8.9749  Total:  8.9749
+
+
+  ==> Transition Dipole Moments (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z: -1.7569  Total:  1.7569
+
+
+  ==> Oscillator Strength (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
+
+  Total Energy (averaged over 2 states): -106.755764367051228
+
+
+  =========================================
+  Build Effective Hamiltonian of Singlet A1
+  =========================================
+
+
+  ==> Compute DSRG-MRPT2 Energy of Root 0 <==
+
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.500 0.500
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.795 0.205
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003345 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006303 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.036737 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003827 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.006255 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.021033 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001051 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.209396 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+ Making a fock matrix 
+
+---------Blocking Information-------
+
+  1695400 / 750000000 = 0
+  Block_size = 173 num_block = 1
+  Took 0.057214 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0213520921   0.0461695766
+    Fb actv              0.0213520921   0.0461695766
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0510098940   0.2277782872
+    Fb virt              0.0510098940   0.2277782872
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+    Computing DF Integrals               ......Done. Timing        0.030707 s
+ Integrals are about to be updated.
+ Make diagonal integrals in DISKDF took 0.000000 s
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.16676400 s
+  Resorting integrals after freezing core.
+ Resorting integrals takes   0.00004500s
+  Frozen Orbitals takes     0.167 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.361170 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ 
+ Making a fock matrix 
+
+---------Blocking Information-------
+
+  1695400 / 750000000 = 0
+  Block_size = 173 num_block = 1Done
+    Checking reference energy ....................... Done
+
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
+                      Kevin Hannon and Chenyang (York) Li
+                                    1 thread
+                  --------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
+
+
+  ==> Calculation Information <==
+
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                     DISKDF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                   MULTI-STATE
+    Multi-state type                                 SA_FULL
+    form Hbar3                                          TRUE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -106.766619440948361
+    Computing minimal T2                     ...... Done. Timing        0.110656 s
+    Renormalizing minimal V                  ...... Done. Timing        0.165483 s
+    Computing T1                             ...... Done. Timing        0.006166 s
+    Renormalizing F                          ...... Done. Timing        0.006890 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001845 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.005385 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.004476 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005036 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.008420 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.029599 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.186025 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...
+
+  CAVV computation takes 0.01791502
+
+  CCVA takes 0.00279658... Done. Timing        0.042088 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.004071 s
+  Eccvv: -0.0077239619
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -106.766619440948361
+    <[F, T1]>                      =     -0.009585091499734
+    <[F, T2]>                      =     -0.000667173003645
+    <[V, T1]>                      =     -0.000652143131466
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.001912947031219
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.008123062111591
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.025055662718462
+    <[V, T2]> C_6 C_2              =      0.000080780787470
+    <[V, T2]> (C_2)^4              =     -0.244909928508240
+    <[V, T2]>                      =     -0.209737475859498
+    DSRG-MRPT2 correlation energy  =     -0.220641883494342
+    DSRG-MRPT2 total energy        =   -106.987261324442699
+    max(T1)                        =      0.020993666960973
+    ||T1||                         =      0.055718375744132
+
+  ==> Form DSRG-PT2 Transformed Hamiltonian <==
+
+    Initalizing Hbar                         ... Done. Timing:      0.012 s.
+    Computing all-active Hbar                ... Done. Timing:      0.343 s.
+    Computing DISKDF Hbar C                  ... Done. Timing:      0.666 s.
+    Computing DISKDF Hbar V                  ... Done. Timing:      0.104 s.
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.053 s
+    Computing the 1-body term                ... Done. Timing    0.053 s
+    Computing the 2-body term                ... Done. Timing    0.025 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
+    Rotating 3-body to original basis        ... Done. Timing    1.857 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 0).
+  Transform Heff_2nd to original basis.
+  Compute densities.
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000113 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000168 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.004776 s
+  Contract densities with Heff.
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003321 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006377 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.020545 s
+  Contract transition densities with Heff.
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.005
+    Time for [A2,B1] -> C0:      0.004
+    Time for [A2,B2] -> C0:      0.089
+    Time for [A1,B1] -> C1:      0.002
+    Time for [A1,B2] -> C1:      0.011
+    Time for [A2,B1] -> C1:      0.008
+    Time for [A2,B2] -> C1:      0.180
+    Time for [A1,B2] -> C2:      0.014
+    Time for [A2,B1] -> C2:      0.018
+    Time for [A2,B2] -> C2:      0.110
+    Time for [A2,B2] -> C3:      0.836
+    ==================================
+
+  ==> Compute DSRG-MRPT2 Energy of Root 1 <==
+
+
+  ==> Transformation Integrals Back to Original <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+    Computing DF Integrals               ......Done. Timing        0.030339 s
+ Integrals are about to be updated.
+ Make diagonal integrals in DISKDF took 0.000000 s
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.15782600 s
+  Resorting integrals after freezing core.
+ Resorting integrals takes   0.00004500s
+  Frozen Orbitals takes     0.158 s.
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.795 0.205
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.205 0.795
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000113 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000165 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.006066 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000132 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000175 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.007423 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001076 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.198937 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+ Making a fock matrix 
+
+---------Blocking Information-------
+
+  1695400 / 750000000 = 0
+  Block_size = 173 num_block = 1
+  Took 0.053228 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000114   0.0000000235
+    Fb actv              0.0000000114   0.0000000235
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000084   0.0000000375
+    Fb virt              0.0000000084   0.0000000375
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.
+ Computing Density fitted integrals 
+
+ Number of auxiliary basis functions:  173
+ Need 0.001765 GB to store DF integrals
+
+    Computing DF Integrals               ......Done. Timing        0.030214 s
+ Integrals are about to be updated.
+ Make diagonal integrals in DISKDF took 0.000000 s
+  Frozen-core energy            -84.715129644694 a.u.
+
+  FrozenOneBody Operator takes  0.17849700 s
+  Resorting integrals after freezing core.
+ Resorting integrals takes   0.00003500s
+  Frozen Orbitals takes     0.179 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.312955 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ 
+ Making a fock matrix 
+
+---------Blocking Information-------
+
+  1695400 / 750000000 = 0
+  Block_size = 173 num_block = 1Done
+    Checking reference energy ....................... Done
+
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
+                      Kevin Hannon and Chenyang (York) Li
+                                    1 thread
+                  --------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
+
+
+  ==> Calculation Information <==
+
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                     DISKDF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                   MULTI-STATE
+    Multi-state type                                 SA_FULL
+    form Hbar3                                          TRUE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -106.744909293153952
+    Computing minimal T2                     ...... Done. Timing        0.086004 s
+    Renormalizing minimal V                  ...... Done. Timing        0.113219 s
+    Computing T1                             ...... Done. Timing        0.005615 s
+    Renormalizing F                          ...... Done. Timing        0.006910 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001855 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.005891 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.004415 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005045 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.008015 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.029704 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.180644 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...
+
+  CAVV computation takes 0.01702158
+
+  CCVA takes 0.00270365... Done. Timing        0.041013 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.004021 s
+  Eccvv: -0.0077949254
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -106.744909293153952
+    <[F, T1]>                      =     -0.007237672741284
+    <[F, T2]>                      =      0.000248846896957
+    <[V, T1]>                      =      0.000250880479914
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000240427057699
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000602866888952
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.002673518521724
+    <[V, T2]> C_6 C_2              =      0.000039568943814
+    <[V, T2]> (C_2)^4              =     -0.238722840397991
+    <[V, T2]>                      =     -0.235166458985803
+    DSRG-MRPT2 correlation energy  =     -0.241904404350215
+    DSRG-MRPT2 total energy        =   -106.986813697504161
+    max(T1)                        =      0.016493782310774
+    ||T1||                         =      0.048198262476525
+
+  ==> Form DSRG-PT2 Transformed Hamiltonian <==
+
+    Initalizing Hbar                         ... Done. Timing:      0.011 s.
+    Computing all-active Hbar                ... Done. Timing:      0.331 s.
+    Computing DISKDF Hbar C                  ... Done. Timing:      0.671 s.
+    Computing DISKDF Hbar V                  ... Done. Timing:      0.101 s.
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.053 s
+    Computing the 1-body term                ... Done. Timing    0.053 s
+    Computing the 2-body term                ... Done. Timing    0.025 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
+    Rotating 3-body to original basis        ... Done. Timing    1.880 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 1).
+  Transform Heff_2nd to original basis.
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000114 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000165 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.004839 s
+  Contract transition densities with Heff.
+  Compute densities.
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000100 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000164 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004782 s
+  Contract densities with Heff.
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.006
+    Time for [A2,B1] -> C0:      0.004
+    Time for [A2,B2] -> C0:      0.088
+    Time for [A1,B1] -> C1:      0.002
+    Time for [A1,B2] -> C1:      0.011
+    Time for [A2,B1] -> C1:      0.008
+    Time for [A2,B2] -> C1:      0.171
+    Time for [A1,B2] -> C2:      0.014
+    Time for [A2,B1] -> C2:      0.017
+    Time for [A2,B2] -> C2:      0.108
+    Time for [A2,B2] -> C3:      0.864
+    ==================================
+
+  ==> Effective Hamiltonian Summary <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98727387347235    -0.00460905065410
+    2    -0.00472369680036  -106.98640530667821
+
+
+
+  ## Symmetrized Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98727387347235    -0.00466637372723
+    2    -0.00466637372723  -106.98640530667821
+
+
+
+  ## U of Heff (Symmetrized) with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.7391435   0.6735480
+    2  -0.6735480  -0.7391435
+
+     -106.9915261-106.9821531
+
+
+
+  ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
+
+    Multi.  Irrep.  No.                   CASCI
+    -------------------------------------------
+       1      A1     0      -106.77416818607193
+       1      A1     1      -106.73736054803051
+    -------------------------------------------
+
+    Multi.  Irrep.  No.           DW-DSRG-MSPT2
+    -------------------------------------------
+       1      A1     0      -106.99152612886537
+       1      A1     1      -106.98215305128518
+    -------------------------------------------
+	DWMS-DSRG-PT2 (DiskDF, HBAR3) energy on root 0....................PASSED
+	DWMS-DSRG-PT2 (DiskDF, HBAR3) energy on root 1....................PASSED
+
+*** Psi4 exiting successfully. Buy a developer a beer!

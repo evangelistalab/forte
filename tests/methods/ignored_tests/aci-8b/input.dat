@@ -1,0 +1,49 @@
+#! This tests a similar to aci-8 but it enforces a spin-complete determinant space
+#! Generated using commit GITCOMMIT
+#
+import forte 
+
+refscf = -2.0310813811962447 #TEST
+refaci = -2.115455548697 #TEST 
+refacipt2 = -2.116454728791 #TEST
+spin_val = 0.029056451 #TEST
+
+molecule li2{
+0 1
+H -0.4  0.0 0.0
+H  0.4  0.0 0.0
+H  0.1 -0.3 1.0
+H -0.1  0.5 1.0
+}
+
+set {
+  basis cc-pVDZ
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  scf_type pk
+  guess gwh
+}
+
+set forte {
+  active_space_solver aci
+  sci_enforce_spin_complete true
+  sigma 0.001
+  nroot 1
+  charge 0
+  diag_algorithm sparse
+  spin_analysis true
+  spin_basis NO
+  spin_test true
+  r_convergence 6
+  e_convergence 12
+}
+
+energy('scf')
+
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+
+energy('forte')
+compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+compare_values(spin_val, variable("SPIN CORRELATION TEST"),7, "Spin Correlation") #TEST

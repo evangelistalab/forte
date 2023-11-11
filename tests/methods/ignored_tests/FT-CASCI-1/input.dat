@@ -1,0 +1,45 @@
+#! Generated using commit GITCOMMIT
+# FT-CAS-CI on LiH
+
+import forte
+
+refscf = -7.862246310410
+reffci = -7.862504477513882
+
+molecule {
+0 1
+Li
+H 1 R
+
+R = 3.0
+units bohr 
+symmetry c1
+}
+
+set {
+  basis sto-3g
+  reference rhf
+  scf_type pk
+  e_convergence 12
+  d_convergence  6
+}
+energy('scf')
+
+set scf_type direct
+set forte {
+  job_type               fci
+  print                   1
+  restricted_docc        [1]
+  active                 [2]
+  alternative_casscf    FTHF
+  TEMPERATURE           500.0
+  maxiter               200
+  print_no              true
+}
+
+
+energy('scf')
+#compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST

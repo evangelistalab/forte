@@ -1,0 +1,37 @@
+import forte
+
+refscf  = -108.95414169056576
+refdsrg = -108.69919525235822
+
+molecule N2{
+0 1
+N  0.0000  0.0000  0.5488
+N  0.0000  0.0000 -0.5488
+}
+
+set {
+  basis          cc-pvdz
+  reference      rhf
+  scf_type       out_of_core
+  e_convergence  14
+  d_convergence  12
+  maxiter        100
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf,variable("CURRENT ENERGY"),8,"SCF energy") #TEST
+
+set forte{
+  job_type           active-dsrgpt2
+  active_space_solver           cas
+  frozen_docc        [1,0,0,0,0,1,0,0]
+  restricted_docc    [1,0,0,0,0,1,1,1]
+  active             [3,0,0,0,0,0,0,0]
+  multiplicity       1
+  fcimo_actv_type    cis
+  fcimo_ipea         ip
+  fcimo_print_civec  0.0000000000001
+  nrootpi            [2,0,0,0,0,0,0,0]
+  dsrg_s             0.5
+}
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrg,variable("CURRENT ENERGY"),8,"DSRG energy of Ag state") #TEST

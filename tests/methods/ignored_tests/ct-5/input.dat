@@ -1,0 +1,32 @@
+#! L-CTSD cc-pVDZ energy for Be.
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refscf = -14.57233763095337 #TEST
+refct  = -14.625133722062042 # TEST
+
+molecule hf {
+0 1
+Be
+}
+
+set {
+  reference rhf
+  e_convergence 12
+  scf_type pk
+  df_scf_guess false
+  freeze_core false
+}
+
+set forte{
+  job_type tensorsrg
+  srg_mode ct
+}
+
+set basis cc-pVDZ
+
+energy('scf')
+compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
+energy('forte')
+compare_values(refct, variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST

@@ -1,0 +1,58 @@
+#! Generated using commit GITCOMMIT
+
+import v2rdm_casscf
+import forte
+
+#! cc-pvdz N2 (6,6) active space Test DQG
+refscf     = -108.953796240158  # RHF
+refv2rdm_4 = -109.094685844148  # V2RDM-CASSCF r_convergence 4
+refpt2_4   = -109.245629804471  # DSRG-MRPT2
+refv2rdm   = -109.094651151711  # V2RDM-CASSCF r_convergence 5
+refpt2     = -109.245618929207  # DSRG-MRPT2 
+
+molecule N2 {
+  0 1
+  N
+  N 1 r
+
+  r = 1.1
+}
+
+set {
+  basis            cc-pvdz
+  scf_type         out_of_core
+  d_convergence    1e-10
+  maxiter          500
+  restricted_docc  [ 2, 0, 0, 0, 0, 2, 0, 0 ]
+  restricted_uocc  [ 4, 1, 2, 2, 1, 4, 2, 2 ]
+}
+
+set v2rdm_casscf {
+  positivity                dqg
+  r_convergence             1e-5
+  e_convergence             1e-5
+  maxiter                   100000
+  semicanonicalize_orbitals false
+  tpdm_write                true
+}
+
+set forte{
+  job_type               dsrg-mrpt2
+  active_space_solver               v2rdm
+  frozen_docc            [1,0,0,0,0,1,0,0]
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  root_sym               0
+  nroot                  1
+  dsrg_s                 1.0
+# avg_dens_spin          true
+  threepdc               zero
+}
+
+activate(N2)
+Ev2rdm, wfn = energy('v2rdm-casscf', return_wfn=True)
+compare_values(refscf, variable("SCF TOTAL ENERGY"), 8, "SCF total energy")
+compare_values(refv2rdm, variable("CURRENT ENERGY"), 4, "v2RDM-CASSCF total energy")
+
+energy('forte',ref_wfn=wfn)
+compare_values(refpt2, variable("CURRENT ENERGY"), 4, "DSRG-MRPT2 total energy")

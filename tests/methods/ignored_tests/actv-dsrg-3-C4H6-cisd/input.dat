@@ -1,0 +1,52 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+memory 1 gb
+
+r_scf = -154.97926325583234
+r_0bu = -155.36953568464449
+r_1ag = -155.34256245114440
+
+molecule butadiene{
+0 1
+H  1.080977 -2.558832  0.000000
+H -1.080977  2.558832  0.000000
+H  2.103773 -1.017723  0.000000
+H -2.103773  1.017723  0.000000
+H -0.973565 -1.219040  0.000000
+H  0.973565  1.219040  0.000000
+C  0.000000  0.728881  0.000000
+C  0.000000 -0.728881  0.000000
+C  1.117962 -1.474815  0.000000
+C -1.117962  1.474815  0.000000
+}
+
+set {
+  reference      rhf
+  scf_type       df
+  basis          def2-tzvp
+  df_basis_scf   def2-universal-jkfit
+  df_basis_mp2   def2-universal-jkfit
+  e_convergence  10
+  d_convergence  12
+  maxiter        100
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(r_scf, Escf, 8, "SCF energy")
+
+set forte{
+  job_type           active-dsrgpt2
+  int_type           df
+  active_space_solver           cas
+  e_convergence      10
+  dsrg_s             0.5
+  internal_amp       singles_doubles
+  fcimo_actv_type    cisd
+  frozen_docc        [2,0,0,2]
+  restricted_docc    [5,0,0,4]
+  active             [0,2,2,0]
+  nrootpi            [3,0,0,1]
+  multiplicity       1
+}
+E0bu = energy('forte', ref_wfn=wfn)
+compare_values(r_0bu, E0bu, 8, "abs. energy of singlet 0Bu") #TEST

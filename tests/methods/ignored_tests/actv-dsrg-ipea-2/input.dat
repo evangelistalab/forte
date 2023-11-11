@@ -1,0 +1,41 @@
+import forte
+
+refscf     = -460.09810235902489
+refdsrg_b1 = -459.82835337288083
+
+memory 500 mb
+
+molecule {
+0 1
+Cl	0.0000	0.0000	0.0000
+H	0.0000	0.0000	1.2746
+}
+
+set {
+  reference     rhf
+  maxiter       100
+  basis         def2-TZVP
+  scf_type      out_of_core
+  e_convergence 10
+  d_convergence 12
+}
+Escf, wfn = energy('scf', return_wfn=True)
+oeprop(wfn,"MO_EXTENTS")
+compare_values(refscf,variable("CURRENT ENERGY"),8,"SCF energy") #TEST
+
+set forte{
+  job_type           active-dsrgpt2
+  frozen_docc        [3,0,1,1]
+  restricted_docc    [2,0,0,0]
+  active             [4,0,2,2]
+  nrootpi            [1,0,1,0]
+  dsrg_s             0.5
+  active_space_solver           cas
+  multiplicity       1
+  fcimo_actv_type    cisd
+  fcimo_cisd_nohf    false
+  fcimo_ipea         ip
+# diag_algorithm     full    # full may not work when diffused orbital is added
+}
+Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refdsrg_b1,variable("CURRENT ENERGY"),8,"DSRG energy of B1 state") #TEST

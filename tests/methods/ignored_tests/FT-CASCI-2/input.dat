@@ -1,0 +1,47 @@
+#! Generated using commit GITCOMMIT
+#! BeH2 with symmetry
+
+import forte
+
+refscf     = -15.50490325102
+refcasscf  = -15.486191885022143
+
+molecule {
+  0 1
+  Be        0.000000000000     0.000000000000     0.000000000000
+  H         0.000000000000     1.390000000000     2.500000000000
+  H         0.000000000000    -1.390000000000     2.500000000000
+  units bohr
+  no_reorient
+}
+
+set globals{
+   scf_type             direct
+   guess                gwh
+   d_convergence        10
+   e_convergence        10
+   basis                3-21g
+   docc                 [2, 0, 0, 1]
+   restricted_docc                 [2,0,0,0]
+   active                          [1,0,0,1]
+   maxiter              20
+   reference            RHF
+}
+
+scf = energy('scf')
+mints()
+
+set forte{
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
+   int_type             conventional
+   cholesky_tolerance   1e-10
+   ALTERNATIVE_CASSCF   FTHF
+   TEMPERATURE          50000.0
+   job_type             FCI
+   maxiter              300
+}
+casscf = energy('forte')
+
+compare_values(refscf, scf, 8, "SCF ENERGY")
+compare_values(refcasscf, casscf, 6, "FT-CAS-CI Energy")
