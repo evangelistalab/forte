@@ -1,9 +1,9 @@
 #! Generated using commit GITCOMMIT
-# SA-GASSCF calculation
+# H2O lowest two 1A1 singlets, 6-31G**/state-averaged GASSCF calculation
 
 import forte
 
-refgasscf = -75.84770282800
+refgasscf = -75.84533745227
 
 memory 6000mb
 #! 6-31G** H2O Test RASSCF Energy Point
@@ -23,7 +23,7 @@ set global {
 }
 
 set forte {
-  active_space_solver detci
+  active_space_solver genci
   ms                  0.0
   e_convergence       12
   r_convergence       8
@@ -34,9 +34,8 @@ set forte {
   gas1min             [6]
   gas2max             [2]
   avg_state           [[0,1,2]]
-  job_type            casscf #mcscf_two_step
-  casscf_maxiter      200
-  casscf_ci_solver    detci
+  job_type            mcscf_two_step
+  casscf_ci_solver    genci
   casscf_e_convergence 1e-10
   casscf_g_convergence 1e-8
 }
