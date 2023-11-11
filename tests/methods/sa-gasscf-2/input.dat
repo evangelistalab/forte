@@ -1,9 +1,10 @@
-# H2O lowest two 1A1 singlets, 6-31G**/state-averaged GASSCF calculation
+# H2O 1A1 ground state + core excited state
+# 6-31G**/state-averaged GASSCF calculation
 
 import forte
 
-refscf = -76.0172965561
-refgasscf = -66.12966484124343935
+refscf    = -76.0172965561
+refgasscf = -66.1296648412
 
 memory 6000mb
 #! 6-31G** H2O Test RASSCF Energy Point
@@ -35,7 +36,7 @@ set forte {
   job_type            mcscf_two_step
   casscf_maxiter      200
   casscf_active_frozen_orbital [0]
-  casscf_diis_start 15
+  casscf_diis_start   15
   casscf_ci_solver    genci
   casscf_e_convergence 1e-10
   casscf_g_convergence 1e-8

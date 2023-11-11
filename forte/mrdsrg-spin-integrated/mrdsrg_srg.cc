@@ -35,10 +35,8 @@
 #include "lib/fmt/core.h"
 
 #include "base_classes/mo_space_info.h"
-// #include "boost/numeric/odeint.hpp"
+#include "helpers/odeint.hpp"
 #include "mrdsrg.h"
-
-// using namespace boost::numeric::odeint;
 
 using namespace psi;
 
@@ -231,6 +229,14 @@ double MRDSRG::compute_energy_lsrg2() {
     MRSRG_ODEInt mrsrg_flow_computer(*this);
     MRSRG_Print mrsrg_printer(*this);
 
+    runge_kutta_4_adaptive([&](const odeint_state_type& x, odeint_state_type& dxdt,
+                               const double t) { mrsrg_flow_computer(x, dxdt, t); },
+                           [&](const odeint_state_type& x, const double t) { mrsrg_printer(x, t); },
+                           x, start_time, end_time, initial_step, absolute_error);
+
+    // void runge_kutta_4_adaptive([](, MRSRG_Print& printer, std::vector<double>& x,
+    //                         std::vector<double>& y, double t_init, double t_end, double h,
+    //                         double tolerance) {
     // // start iterations
     // if (srg_odeint == "FEHLBERG78") {
     //     integrate_adaptive(make_controlled(absolute_error, relative_error,
@@ -396,9 +402,14 @@ double MRDSRG::compute_energy_srgpt2() {
 
     double initial_step = foptions_->get_double("SRG_DT");
     std::string srg_odeint = foptions_->get_str("SRG_ODEINT");
+    double absolute_error = foptions_->get_double("SRG_ODEINT_ABSERR");
+    double relative_error = foptions_->get_double("SRG_ODEINT_RELERR");
+
     outfile->Printf("\n    Max s:             %10.6f", end_time);
     outfile->Printf("\n    ODE algorithm:     %10s", srg_odeint.c_str());
     outfile->Printf("\n    Initial time step: %10.6f", initial_step);
+    outfile->Printf("\n    Absolute error:    %14.12f", absolute_error);
+    outfile->Printf("\n    Relative error:    %14.12f", relative_error);
     outfile->Printf("\n");
 
     std::string title;
@@ -479,11 +490,13 @@ double MRDSRG::compute_energy_srgpt2() {
         });
     }
 
-    double absolute_error = foptions_->get_double("SRG_ODEINT_ABSERR");
-    double relative_error = foptions_->get_double("SRG_ODEINT_RELERR");
     srg_time_ = 0.0;
     SRGPT2_ODEInt mrsrg_flow_computer(*this, Hzero, relax_ref);
     MRSRG_Print mrsrg_printer(*this);
+    runge_kutta_4_adaptive([&](const odeint_state_type& x, odeint_state_type& dxdt,
+                               const double t) { mrsrg_flow_computer(x, dxdt, t); },
+                           [&](const odeint_state_type& x, const double t) { mrsrg_printer(x, t); },
+                           x, start_time, end_time, initial_step, absolute_error);
 
     // start iterations
     // if (srg_odeint == "FEHLBERG78") {

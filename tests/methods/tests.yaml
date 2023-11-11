@@ -88,6 +88,7 @@ casscf:
       - casscf-gradient-2
       - casscf-opt-1
       # - casscf-opt-2
+      - sa-casscf-1
    long:
       - casscf-8
 cd-dsrg-mrpt2:
@@ -260,17 +261,9 @@ sa-fci:
       - sa-fci-6
       - sa-fci-7
 
-   short:
-      - fci-gas-1
-      - fci-gas-2
-      - fci-gas-3
-      - fci-gas-4
-
 gasci:
    short:
       - gasci-1
-      - gasaci-1
-      - gasaci-4
    medium:
       - gasci-2
       - gasci-3
@@ -278,22 +271,31 @@ gasci:
       - gasci-5
       - gasci-trdm-1
       - gasci-trdm-2
-      - gasaci-3
    long:
       - gasci-dsrg-mrpt2
-      - gasaci-5
       # - gasaci-2 # disabled because of issues with reference
+
+gasaci:
+   short:
+      - gasaci-1
+      - gasaci-4
+   medium:
+      - gasaci-3
+      - gasaciscf-1
+      - sa-gasaciscf-1
+   long:
+      - gasaci-5
+
 gasscf:
    short:
       - gasscf-1
-      - gasaciscf-3
       - sa-gasscf-1
       - sa-gasscf-2
       - sa-gasscf-dsrg-mrpt2-1
    medium:
       - gasscf-2
       - gasscf-dsrg-mrpt2-1
-      - sa-gasscf-3
+
 integrals:
    short:
       - integrals-3
@@ -357,8 +359,6 @@ mrdsrg-ldsrg2-spin-integrated:
       - mrdsrg-ldsrg2-qc-2
    long:
       - mrdsrg-ldsrg2-qc-1
-      - mrdsrg-srgpt2-1
-      - mrdsrg-srgpt2-2
 mrdsrg-pt2:
    short:
       - mrdsrg-pt2-2
@@ -408,6 +408,10 @@ read-orbitals:
    short:
       - read-orbitals-1
       - read-orbitals-2
+srg:
+   short:
+      - mr-srg-pt2-1
+      - mrdsrg-srgpt2-1
 tdci:
    short:
       - tdci-1

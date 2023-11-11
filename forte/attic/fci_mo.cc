@@ -1204,7 +1204,7 @@ void FCI_MO::compute_transition_dipole() {
     //        symmetrize_density(opdm_a, transD);
     //        transD->back_transform(ints_->Ca());
 
-    //        boost::shared_ptr<OEProp> oe(new OEProp(reference_wavefunction_));
+    //        std::shared_ptr<OEProp> oe(new OEProp(reference_wavefunction_));
     //        oe->set_title("CAS TRANSITION");
     //        oe->add("TRANSITION_DIPOLE");
     //        oe->set_Da_so(transD);
