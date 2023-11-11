@@ -1,45 +1,44 @@
-#! Generated using commit GITCOMMIT 
-# SA-GASSCF for core-excited state with core orbital frozen
-# Without CASSCF_FROZEN_ORBITAL the state will collapse to ground state and not converge
+# H2O lowest two 1A1 singlets, 6-31G**/state-averaged GASSCF calculation
 
 import forte
 
-refscf = -76.0172965561 #TEST
-refgasscf = -66.12966484124343935 #TEST
+refscf = -76.0172965561
+refgasscf = -66.12966484124343935
 
-memory 1000mb
+memory 6000mb
+#! 6-31G** H2O Test RASSCF Energy Point
+##! will default to only singles and doubles in the active space
 molecule h2o{
-   O
-   H  1 1.00
-   H  1 1.00 2 103.1
+  O
+  H  1 1.00
+  H  1 1.00 2 103.1
 }
 
 set global {
   basis 6-31g**
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
-  guess gwh
+  e_convergence 12
+  d_convergence 8
   scf_type direct
   reference rhf
 }
 
 set forte {
-  e_convergence 10
-  sigma 0.00
-  one_cycle true
-  active_ref_type gas
-  GAS1 [1,0,0,0]
-  GAS2 [3,0,1,2]
-  GAS1MAX [2,1]
-  GAS1MIN [0,1]
-  AVG_STATE [[0,1,1],[0,1,1]]
-  job_type casscf
-  casscf_ci_solver aci
-  casscf_maxiter 100
-  casscf_e_convergence 1e-10
+  active_space_solver genci
+  ms                  0.0
+  e_convergence       12
+  r_convergence       8
+  gas1                [1,0,0,0]
+  gas2                [3,0,1,2]
+  gas1min             [0,1]
+  gas1max             [2,1]
+  avg_state           [[0,1,1],[0,1,1]]
+  job_type            mcscf_two_step
+  casscf_maxiter      200
   casscf_active_frozen_orbital [0]
   casscf_diis_start 15
+  casscf_ci_solver    genci
+  casscf_e_convergence 1e-10
+  casscf_g_convergence 1e-8
 }
 
 escf, wfn = energy('scf', return_wfn=True)
