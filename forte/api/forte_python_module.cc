@@ -63,6 +63,7 @@
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
+#include "genci/ci_occupation.h"
 
 #include "post_process/spin_corr.h"
 
@@ -264,6 +265,9 @@ PYBIND11_MODULE(_forte, m) {
         },
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
+
+    m.def("get_gas_occupation", &get_gas_occupation);
+    m.def("get_ormas_occupation", &get_ormas_occupation);
 
     //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
 

@@ -224,7 +224,6 @@ double MRDSRG::compute_energy_lsrg2() {
     });
 
     double absolute_error = foptions_->get_double("SRG_ODEINT_ABSERR");
-    double relative_error = foptions_->get_double("SRG_ODEINT_RELERR");
     srg_time_ = 0.0;
     MRSRG_ODEInt mrsrg_flow_computer(*this);
     MRSRG_Print mrsrg_printer(*this);
@@ -233,27 +232,6 @@ double MRDSRG::compute_energy_lsrg2() {
                                const double t) { mrsrg_flow_computer(x, dxdt, t); },
                            [&](const odeint_state_type& x, const double t) { mrsrg_printer(x, t); },
                            x, start_time, end_time, initial_step, absolute_error);
-
-    // void runge_kutta_4_adaptive([](, MRSRG_Print& printer, std::vector<double>& x,
-    //                         std::vector<double>& y, double t_init, double t_end, double h,
-    //                         double tolerance) {
-    // // start iterations
-    // if (srg_odeint == "FEHLBERG78") {
-    //     integrate_adaptive(make_controlled(absolute_error, relative_error,
-    //                                        runge_kutta_fehlberg78<odeint_state_type>()),
-    //                        mrsrg_flow_computer, x, start_time, end_time, initial_step,
-    //                        mrsrg_printer);
-    // } else if (srg_odeint == "CASHKARP") {
-    //     integrate_adaptive(make_controlled(absolute_error, relative_error,
-    //                                        runge_kutta_cash_karp54<odeint_state_type>()),
-    //                        mrsrg_flow_computer, x, start_time, end_time, initial_step,
-    //                        mrsrg_printer);
-    // } else if (srg_odeint == "DOPRI5") {
-    //     integrate_adaptive(make_controlled(absolute_error, relative_error,
-    //                                        runge_kutta_dopri5<odeint_state_type>()),
-    //                        mrsrg_flow_computer, x, start_time, end_time, initial_step,
-    //                        mrsrg_printer);
-    // }
 
     // print summary
     outfile->Printf("\n    %s", dash.c_str());
@@ -497,24 +475,6 @@ double MRDSRG::compute_energy_srgpt2() {
                                const double t) { mrsrg_flow_computer(x, dxdt, t); },
                            [&](const odeint_state_type& x, const double t) { mrsrg_printer(x, t); },
                            x, start_time, end_time, initial_step, absolute_error);
-
-    // start iterations
-    // if (srg_odeint == "FEHLBERG78") {
-    //     integrate_adaptive(make_controlled(absolute_error, relative_error,
-    //                                        runge_kutta_fehlberg78<odeint_state_type>()),
-    //                        mrsrg_flow_computer, x, start_time, end_time, initial_step,
-    //                        mrsrg_printer);
-    // } else if (srg_odeint == "CASHKARP") {
-    //     integrate_adaptive(make_controlled(absolute_error, relative_error,
-    //                                        runge_kutta_cash_karp54<odeint_state_type>()),
-    //                        mrsrg_flow_computer, x, start_time, end_time, initial_step,
-    //                        mrsrg_printer);
-    // } else if (srg_odeint == "DOPRI5") {
-    //     integrate_adaptive(make_controlled(absolute_error, relative_error,
-    //                                        runge_kutta_dopri5<odeint_state_type>()),
-    //                        mrsrg_flow_computer, x, start_time, end_time, initial_step,
-    //                        mrsrg_printer);
-    // }
 
     // print summary
     outfile->Printf("\n    %s", dash.c_str());
