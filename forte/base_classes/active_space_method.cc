@@ -408,9 +408,9 @@ std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
     std::shared_ptr<ForteOptions> options) {
 
     std::shared_ptr<ActiveSpaceMethod> method;
-    if (type == "OLDFCI") {
+    if (type == "FCI") {
         method = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
-    } else if ((type == "GENCI") or type == "FCI") {
+    } else if (type == "GENCI") {
         method = std::make_unique<GenCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {
         method = std::make_unique<ExcitedStateSolver>(

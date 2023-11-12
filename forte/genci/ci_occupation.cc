@@ -89,10 +89,6 @@ std::tuple<size_t, std::vector<std::array<int, 6>>, std::vector<std::array<int, 
            std::vector<std::pair<size_t, size_t>>>
 get_ormas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
                      const std::vector<int>& gas_max, const std::vector<int>& gas_size) {
-    std::vector<std::array<int, 6>> gas_alfa_occupations;
-    std::vector<std::array<int, 6>> gas_beta_occupations;
-    std::vector<std::pair<size_t, size_t>> gas_occupations;
-
     psi::outfile->Printf("\n\n    %s", container_to_string(gas_min).c_str());
     psi::outfile->Printf("\n    %s", container_to_string(gas_max).c_str());
     psi::outfile->Printf("\n    %s", container_to_string(gas_size).c_str());
@@ -127,6 +123,21 @@ get_ormas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
         }
     }
 
+    auto [gas_alfa_occupations, gas_beta_occupations, gas_occupations] =
+        generate_gas_occupations(na, nb, gas_min_el, gas_max_el, gas_size, num_gas_spaces);
+
+    return std::make_tuple(num_gas_spaces, gas_alfa_occupations, gas_beta_occupations,
+                           gas_occupations);
+}
+
+std::tuple<std::vector<occupation_t>, std::vector<occupation_t>,
+           std::vector<std::pair<size_t, size_t>>>
+generate_gas_occupations(int na, int nb, const std::vector<int>& gas_min_el,
+                         const std::vector<int>& gas_max_el, const std::vector<int>& gas_size,
+                         size_t num_gas_spaces) {
+    std::vector<occupation_t> gas_alfa_occupations;
+    std::vector<occupation_t> gas_beta_occupations;
+    std::vector<std::pair<size_t, size_t>> gas_occupations;
     for (int gas6_na = std::max(0, gas_min_el[5] - gas_size[5]);
          gas6_na <= std::min(gas_max_el[5], gas_size[5]); gas6_na++) {
         for (int gas6_nb = std::max(0, gas_min_el[5] - gas6_na);
@@ -208,8 +219,7 @@ get_ormas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
             }
         }
     }
-    return std::make_tuple(num_gas_spaces, gas_alfa_occupations, gas_beta_occupations,
-                           gas_occupations);
+    return std::make_tuple(gas_alfa_occupations, gas_beta_occupations, gas_occupations);
 }
 
 std::tuple<size_t, std::vector<std::array<int, 6>>, std::vector<std::array<int, 6>>,

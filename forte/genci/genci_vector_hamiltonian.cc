@@ -253,7 +253,16 @@ void GenCIVector::H2_aabb(GenCIVector& result, std::shared_ptr<ActiveSpaceIntegr
                     const double integral = fci_ints->tei_ab(p, r, q, s);
 
                     for (const auto& [sign, I, J] : vo_alfa_list) {
-                        C_DAXPY(beta_list_size, integral * sign, Cr[I], 1, Cl[J], 1);
+                        const auto factor = integral * sign;
+                        std::transform(Cr[I], Cr[I] + beta_list_size, Cl[J], Cl[J],
+                                       [factor](double xi, double yi) { return factor * xi + yi; });
+                        // C_DAXPY(beta_list_size, integral * sign, Cr[I], 1, Cl[J], 1);
+                        // the urolled version of the loop above is faster
+                        // const auto& ClJ = Cl[J];
+                        // const auto& CrI = Cr[I];
+                        // const auto factor = integral * sign;
+                        // for (size_t idx{0}; idx != beta_list_size; ++idx)
+                        //     ClJ[idx] += factor * CrI[idx];
                     }
                 } // End loop over p,q
 

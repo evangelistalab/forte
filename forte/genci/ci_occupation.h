@@ -35,6 +35,9 @@
 
 namespace forte {
 
+const size_t max_active_spaces = 6;
+using occupation_t = std::array<int, max_active_spaces>;
+
 std::tuple<size_t, std::vector<std::array<int, 6>>, std::vector<std::array<int, 6>>,
            std::vector<std::pair<size_t, size_t>>>
 get_gas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
@@ -44,6 +47,12 @@ std::tuple<size_t, std::vector<std::array<int, 6>>, std::vector<std::array<int, 
            std::vector<std::pair<size_t, size_t>>>
 get_ormas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
                      const std::vector<int>& gas_max, const std::vector<int>& gas_size);
+
+std::tuple<std::vector<occupation_t>, std::vector<occupation_t>,
+           std::vector<std::pair<size_t, size_t>>>
+generate_gas_occupations(int na, int nb, const std::vector<int>& gas_min_el,
+                         const std::vector<int>& gas_max_el, const std::vector<int>& gas_size,
+                         size_t num_gas_spaces);
 
 std::vector<std::array<int, 6>>
 generate_1h_occupations(const std::vector<std::array<int, 6>>& gas_occupations);
