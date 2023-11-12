@@ -70,10 +70,11 @@ FCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
                                         std::shared_ptr<ActiveSpaceMethod> method2,
                                         int max_rdm_level, RDMsType type) {
     // make sure the root is valid
-    if (std::max(root_left, root_right) >= nroot_) {
+    if (root_left >= nroot_ or root_right >= method2->nroot()) {
         std::string error = "Cannot compute RDMs <" + std::to_string(root_left) + "| ... |" +
                             std::to_string(root_right) +
-                            "> (0-based) because nroot = " + std::to_string(nroot_);
+                            "> (0-based) because nroot_left = " + std::to_string(nroot_) +
+                            " and nroot_right = " + std::to_string(method2->nroot());
         throw std::runtime_error(error);
     }
 
