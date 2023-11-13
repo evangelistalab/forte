@@ -26,18 +26,16 @@
  * @END LICENSE
  */
 
-#include "boost/format.hpp"
-
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_functions.hpp"
 #include "sparse_ci/ci_spin_adaptation.h"
 
 #include "fci_solver.h"
 #include "fci_vector.h"
-#include "string_lists.h"
+#include "fci_string_lists.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
-#include "string_address.h"
+#include "fci_string_address.h"
 
 #include "sparse_ci/sparse_initial_guess.h"
 

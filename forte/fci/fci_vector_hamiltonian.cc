@@ -32,8 +32,8 @@
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
 #include "fci_vector.h"
-#include "string_lists.h"
-#include "string_address.h"
+#include "fci_string_lists.h"
+#include "fci_string_address.h"
 
 using namespace psi;
 
@@ -99,7 +99,7 @@ void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_
             auto Cl =
                 gather_C_block(result, CL, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, !alfa);
 
-            size_t maxL = alfa ? beta_address_->strpi(h_Ib) : alfa_address_->strpi(h_Ia);
+            size_t maxL = alfa ? beta_address_->strpcls(h_Ib) : alfa_address_->strpcls(h_Ia);
 
             for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
@@ -135,7 +135,7 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
             auto Cl =
                 gather_C_block(result, CL, alfa, alfa_address_, beta_address_, h_Ia, h_Ib, !alfa);
 
-            size_t maxL = alfa ? beta_address_->strpi(h_Ib) : alfa_address_->strpi(h_Ia);
+            size_t maxL = alfa ? beta_address_->strpcls(h_Ib) : alfa_address_->strpcls(h_Ia);
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
@@ -194,7 +194,7 @@ void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals
 void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Loop over blocks of matrix C
     for (int h_Ia = 0; h_Ia < nirrep_; ++h_Ia) {
-        const size_t maxIa = alfa_address_->strpi(h_Ia);
+        const size_t maxIa = alfa_address_->strpcls(h_Ia);
         const int h_Ib = h_Ia ^ symmetry_;
         const auto C = C_[h_Ia]->pointer();
 
@@ -203,7 +203,7 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
             const int h_Jb = h_Ib ^ rs_sym;
             const int h_Ja = h_Jb ^ symmetry_;
 
-            const size_t maxJa = alfa_address_->strpi(h_Ja);
+            const size_t maxJa = alfa_address_->strpcls(h_Ja);
             auto HC = result.C_[h_Ja]->pointer();
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 const int s_sym = rs_sym ^ r_sym;
@@ -239,8 +239,8 @@ void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals>
                         for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                             int q_sym = pq_sym ^ p_sym;
                             for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                                int p_abs = p_rel + cmopi_offset_[p_sym];
                                 for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
+                                    int p_abs = p_rel + cmopi_offset_[p_sym];
                                     int q_abs = q_rel + cmopi_offset_[q_sym];
                                     // Grab the integral
                                     const double integral =

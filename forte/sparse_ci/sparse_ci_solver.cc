@@ -30,8 +30,6 @@
 #include <algorithm>
 #include <numeric>
 
-#include "boost/format.hpp"
-
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 

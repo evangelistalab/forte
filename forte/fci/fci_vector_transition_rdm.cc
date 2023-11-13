@@ -29,8 +29,8 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/matrix.h"
 
-#include "string_lists.h"
-#include "string_address.h"
+#include "fci_string_lists.h"
+#include "fci_string_address.h"
 
 #include "fci_vector.h"
 
@@ -137,7 +137,7 @@ ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right
             auto Cr = gather_C_block(C_right, FCIVector::get_CR(), alfa, alfa_address_right,
                                      beta_address_right, h_Ia, h_Ib, false);
             const size_t maxL =
-                alfa ? beta_address_right->strpi(h_Ib) : alfa_address_right->strpi(h_Ia);
+                alfa ? beta_address_right->strpcls(h_Ib) : alfa_address_right->strpcls(h_Ia);
             for (size_t p_sym = 0; p_sym < nirrep; ++p_sym) {
                 int q_sym =
                     p_sym ^ symmetry_left ^ symmetry_right; // Select the pair pq that makes the

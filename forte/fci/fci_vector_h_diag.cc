@@ -28,7 +28,7 @@
 
 #include "psi4/libmints/matrix.h"
 
-#include "string_address.h"
+#include "fci_string_address.h"
 
 #include "fci_vector.h"
 
@@ -46,8 +46,8 @@ FCIVector::max_abs_elements(size_t num_dets) {
 
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_address_->strpi(alfa_sym);
-        size_t maxIb = beta_address_->strpi(beta_sym);
+        size_t maxIa = alfa_address_->strpcls(alfa_sym);
+        size_t maxIb = beta_address_->strpcls(beta_sym);
         double** C_ha = C_[alfa_sym]->pointer();
         for (size_t Ia = 0; Ia < maxIa; ++Ia) {
             for (size_t Ib = 0; Ib < maxIb; ++Ib) {

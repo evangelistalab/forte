@@ -30,8 +30,6 @@
 #include <map>
 #include <vector>
 
-#include "boost/format.hpp"
-
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"

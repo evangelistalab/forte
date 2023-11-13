@@ -36,6 +36,7 @@
 #include <numeric>
 #include <string>
 #include <vector>
+#include <coroutine>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -205,9 +206,61 @@ bool is_near_integer(double value, double toll = 1.0e-12);
 std::vector<std::tuple<int, size_t, size_t>> find_integer_groups(const std::vector<double>& vec,
                                                                  double toll = 1.0e-12);
 
+#include <iostream>
+#include <unordered_map>
+#include <cmath>
+#include <string>
+#include <limits>
+
+#include <iostream>
+#include <unordered_map>
+#include <cmath>
+#include <string>
+#include <limits>
+
+// Function to compare two hash maps
+template <typename T, typename S, typename Q>
+bool compare_hashes(const std::unordered_map<T, S, Q>& hash1,
+                    const std::unordered_map<T, S, Q>& hash2, S tolerance = S(1e-12)) {
+    // Go through the first hash
+    for (const auto& [key, value] : hash1) {
+        auto it = hash2.find(key);
+        if (it == hash2.end()) {
+            // If the key is not in the second hash but the value is significant
+            if (std::fabs(value) > tolerance) {
+                return false;
+            }
+        } else {
+            S diff = std::fabs(value - it->second);
+            if (diff > tolerance) {
+                return false; // Coefficients differ more than the tolerance
+            }
+        }
+    }
+
+    // Go through the second hash to catch any keys that are not in the first hash
+    for (const auto& [key, value] : hash2) {
+        if (hash1.find(key) == hash1.end()) {
+            // If the key is not in the first hash but the value is significant
+            if (std::fabs(value) > tolerance) {
+                return false;
+            }
+        }
+        // No need to compare the values again if the key was found in the first hash,
+        // that was already done in the first loop.
+    }
+
+    return true;
+}
+
 namespace math {
 /// Return the number of combinations of n identical objects
 size_t combinations(size_t n, size_t k);
+
+template <typename Container> auto sum(const Container& c) -> typename Container::value_type {
+    using T = typename Container::value_type;
+    return std::accumulate(std::begin(c), std::end(c), T(0));
+}
 
 /// Return the Cartesian product of the input vector<vector<T>>
 /// https://stackoverflow.com/a/17050528/4101036

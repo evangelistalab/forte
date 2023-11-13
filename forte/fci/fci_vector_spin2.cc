@@ -30,8 +30,8 @@
 
 #include "psi4/libmints/matrix.h"
 
-#include "string_lists.h"
-#include "string_address.h"
+#include "fci_string_lists.h"
+#include "fci_string_address.h"
 
 #include "fci_vector.h"
 

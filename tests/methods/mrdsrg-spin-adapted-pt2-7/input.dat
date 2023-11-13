@@ -32,6 +32,7 @@ Escf, wfn = energy('scf', return_wfn=True)
 
 set forte {
   job_type                  mcscf_two_step
+  active_space_solver       detci
   int_type                  df
   restricted_docc           [3,0,0,1,0,2,1,0]
   active                    [0,0,2,0,0,0,0,1]

@@ -95,6 +95,11 @@ void MCSCF_2STEP::read_options() {
     orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
 
     ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
+    if (ci_type_ == "")
+        ci_type_ = options_->get_str("ACTIVE_SPACE_SOLVER");
+    if (ci_type_ == "") {
+        throw std::runtime_error("ACTIVE_SPACE_SOLVER or CASSCF_CI_SOLVER are not specified!");
+    }
 
     opt_orbs_ = not options_->get_bool("CASSCF_NO_ORBOPT");
     max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
@@ -392,7 +397,8 @@ double MCSCF_2STEP::compute_energy() {
 
             cas_grad.canonicalize_final(semi.Ua());
 
-            // TODO: need to implement the transformation of CI coefficients due to orbital changes
+            // TODO: need to implement the transformation of CI coefficients due to orbital
+            // changes
         }
 
         // pass to wave function

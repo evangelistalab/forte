@@ -34,6 +34,8 @@
 #include "ambit/tensor.h"
 
 #include "base_classes/rdms.h"
+#include "fci_string_lists.h"
+#include "fci_string_address.h"
 
 #define CAPRICCIO_USE_DAXPY 1
 
@@ -45,13 +47,12 @@ class Vector;
 namespace forte {
 class ActiveSpaceIntegrals;
 class MOSpaceInfo;
-class StringLists;
 class StringAddress;
 class RDMs;
 
 class FCIVector {
   public:
-    FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry);
+    FCIVector(std::shared_ptr<FCIStringLists> lists, size_t symmetry);
 
     /// @brief return the number of irreps
     size_t nirrep() const;
@@ -68,7 +69,7 @@ class FCIVector {
     psi::Dimension cmopi() const;
     /// @brief return the offset array for cmopi
     const std::vector<size_t>& cmopi_offset() const;
-    const std::shared_ptr<StringLists>& lists() const;
+    const std::shared_ptr<FCIStringLists>& lists() const;
 
     /// @brief zero the vector
     void zero();
@@ -99,9 +100,9 @@ class FCIVector {
     double dot(std::shared_ptr<FCIVector>& wfn);
 
     // return alfa_address_
-    std::shared_ptr<StringAddress> alfa_address() { return alfa_address_; }
+    std::shared_ptr<FCIStringAddress> alfa_address() { return alfa_address_; }
     // return beta_address_
-    std::shared_ptr<StringAddress> beta_address() { return beta_address_; }
+    std::shared_ptr<FCIStringAddress> beta_address() { return beta_address_; }
 
     std::shared_ptr<psi::Matrix>& C(int irrep) { return C_[irrep]; }
 
@@ -133,7 +134,7 @@ class FCIVector {
     max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_);
+    static void allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, int print_);
     static void release_temp_space();
     void set_print(int print) { print_ = print; }
 
@@ -167,11 +168,11 @@ class FCIVector {
     int print_ = 0;
 
     /// The string list
-    std::shared_ptr<StringLists> lists_;
+    std::shared_ptr<FCIStringLists> lists_;
     /// The alpha string addressing object
-    std::shared_ptr<StringAddress> alfa_address_;
+    std::shared_ptr<FCIStringAddress> alfa_address_;
     /// The beta string addressing object
-    std::shared_ptr<StringAddress> beta_address_;
+    std::shared_ptr<FCIStringAddress> beta_address_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
 
@@ -276,8 +277,8 @@ class FCIVector {
 /// @param zero If true, zero the matrix before returning it
 /// @return A pointer to the block of the coefficient matrix
 double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
-                        std::shared_ptr<StringAddress> alfa_address,
-                        std::shared_ptr<StringAddress> beta_address, int ha, int hb, bool zero);
+                        std::shared_ptr<FCIStringAddress> alfa_address,
+                        std::shared_ptr<FCIStringAddress> beta_address, int ha, int hb, bool zero);
 
 /// @brief Scatter the data from a matrix to the coefficient matrix. This is used in the sigma
 /// vector algorithm
@@ -291,8 +292,8 @@ double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
 /// @param ha The string class of the alfa component (a generalization of the irrep)
 /// @param hb The string class of the beta component (a generalization of the irrep)
 void scatter_C_block(FCIVector& C, double** m, bool alfa,
-                     std::shared_ptr<StringAddress> alfa_address,
-                     std::shared_ptr<StringAddress> beta_address, int ha, int hb);
+                     std::shared_ptr<FCIStringAddress> alfa_address,
+                     std::shared_ptr<FCIStringAddress> beta_address, int ha, int hb);
 
 std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_right,
                                               int max_rdm_level, RDMsType type);
