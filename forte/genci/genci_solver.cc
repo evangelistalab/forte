@@ -305,6 +305,7 @@ double GenCISolver::compute_energy() {
     psi::Process::environment.globals["CI ENERGY"] = energy_;
     psi::outfile->Printf("\n    Time for GenCI: %20.12f", t.get());
 
+    // GenCIVector::release_temp_space();
     return energy_;
 }
 

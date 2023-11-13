@@ -27,7 +27,7 @@ set forte{
    int_type             conventional
    print                0
    casscf_do_diis       true
-   casscf_ci_solver     fci
+   active_space_solver  fci
    dl_dets_per_guess    1
 }
 

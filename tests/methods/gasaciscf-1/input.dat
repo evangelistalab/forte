@@ -35,7 +35,6 @@ set forte {
   restricted_uocc     [8,2,3,5]  
   gas1min             [6]
   gas2max             [2]
-  casscf_ci_solver    aci  
   job_type            mcscf_two_step
   casscf_maxiter      200
   casscf_e_convergence 1e-10

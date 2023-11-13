@@ -35,7 +35,6 @@ set forte {
   gas2max             [2]
   avg_state           [[0,1,2]]
   job_type            mcscf_two_step
-  casscf_ci_solver    genci
   casscf_e_convergence 1e-10
   casscf_g_convergence 1e-8
 }

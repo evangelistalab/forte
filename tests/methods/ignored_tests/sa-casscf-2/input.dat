@@ -29,7 +29,7 @@ refmcscf = energy('casscf')
 
 set scf_type direct
 set forte{
-  job_type                casscf
+  job_type                mcscf_two_step
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]

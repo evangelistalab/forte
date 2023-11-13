@@ -49,8 +49,8 @@ set forte {
   sigma                  0.001
   sci_enforce_spin_complete   true
   casscf_reference       true
-  casscf_ci_solver        ACI
-  job_type                casscf
+  active_space_solver    aci
+  job_type               mcscf_two_step
   print_no               true
   casscf_maxiter         50
   CASSCF_DIIS_NORM        1e-3

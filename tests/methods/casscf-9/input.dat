@@ -34,7 +34,7 @@ Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
 compare_values(refcasscf, Ecasscf, 8, "CASSCF energy")
 
 set forte {
-  job_type             casscf
+  job_type             mcscf_two_step
   active_space_solver  detci
   int_type             df
   multiplicity         1

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
+active_space_solvers = ["FCI", "GENCI", "ACI", "ASCI", "PCI", "DETCI", "CAS", "DMRG", "EXTERNAL"]
+
+
 def register_forte_options(options):
     register_driver_options(options)
     register_mo_space_info_options(options)
@@ -51,7 +54,7 @@ def register_driver_options(options):
     options.add_str(
         "ACTIVE_SPACE_SOLVER",
         "",
-        ["OLDFCI", "FCI", "GENCI", "ACI", "ASCI", "PCI", "DETCI", "CAS", "DMRG", "EXTERNAL"],
+        active_space_solvers,
         "Active space solver type",
     )
     options.add_str(
@@ -1025,7 +1028,7 @@ def register_casscf_options(options):
         "Constraints for redundant orbital pairs at the end of macro iteration",
     )
 
-    options.add_str("CASSCF_CI_SOLVER", "FCI", "The active space solver to use in CASSCF")
+    options.add_str("CASSCF_CI_SOLVER", "", active_space_solvers, "The active space solver to use in CASSCF")
 
     options.add_int(
         "CASSCF_CI_FREQ",

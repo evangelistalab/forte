@@ -30,7 +30,7 @@ job_type             mcscf_two_step
 frozen_docc          [0,0,0,0,0,0,0,0]
 restricted_docc      [1,0,0,0,0,1,0,0]
 active               [2,0,1,1,0,2,1,1]
-casscf_ci_solver     fci
+active_space_solver  fci
 casscf_maxiter       100
 casscf_e_convergence 8
 casscf_g_convergence 8

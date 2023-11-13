@@ -86,7 +86,14 @@ void GenCIVector::allocate_temp_space(std::shared_ptr<GenCIStringLists> lists_, 
     }
 }
 
-void GenCIVector::release_temp_space() {}
+void GenCIVector::release_temp_space() {
+    if (CR) {
+        CR.reset();
+    }
+    if (CL) {
+        CL.reset();
+    }
+}
 
 std::shared_ptr<psi::Matrix> GenCIVector::get_CR() { return CR; }
 std::shared_ptr<psi::Matrix> GenCIVector::get_CL() { return CL; }
@@ -183,8 +190,8 @@ void GenCIVector::set_to(double value) {
 
 void GenCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
     zero();
-    for (const auto& [h, Ia, Ib, C] : sparse_vec) {
-        C_[h]->set(Ia, Ib, C);
+    for (const auto& [n, Ia, Ib, c] : sparse_vec) {
+        C_[n]->set(Ia, Ib, c);
     }
 }
 

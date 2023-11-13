@@ -87,8 +87,9 @@ class GenCIVector {
     /// copy the wave function object
     void copy_to(std::shared_ptr<psi::Vector> vec);
     /// @brief set the vector from a list of tuples
-    /// @param sparse_vec a list of tuples (irrep, Ia, Ib, C)
+    /// @param sparse_vec a list of tuples (block, Ia, Ib, coefficient)
     void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
+    /// @brief set all the vector elements to a given value
     void set_to(double value);
 
     /// @brief compute the norm of the wave function

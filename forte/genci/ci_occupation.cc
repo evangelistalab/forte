@@ -85,7 +85,7 @@ void recursive_gas_generation(const std::vector<int>& gas_mine, const std::vecto
     // }
 }
 
-std::tuple<size_t, std::vector<std::array<int, 6>>, std::vector<std::array<int, 6>>,
+std::tuple<size_t, std::vector<occupation_t>, std::vector<occupation_t>,
            std::vector<std::pair<size_t, size_t>>>
 get_ormas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
                      const std::vector<int>& gas_max, const std::vector<int>& gas_size) {
