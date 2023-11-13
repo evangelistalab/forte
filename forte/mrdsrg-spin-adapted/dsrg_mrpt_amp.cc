@@ -29,7 +29,7 @@
 #include <algorithm>
 
 #define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
+#include "fmt/core.h"
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 

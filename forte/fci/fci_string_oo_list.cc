@@ -27,6 +27,7 @@
  */
 
 #include <algorithm>
+#include <memory>
 
 #include "fci_string_address.h"
 

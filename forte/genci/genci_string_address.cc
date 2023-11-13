@@ -25,6 +25,7 @@
  *
  * @END LICENSE
  */
+#include <memory>
 
 #include "genci_string_address.h"
 
@@ -124,8 +125,8 @@ StringClass::StringClass(size_t symmetry, const std::vector<int>& mopi,
     for (const auto& [aocc_idx, bocc_idx] : occupations) {
         for (size_t h_Ia = 0; h_Ia < nirrep_; h_Ia++) {
             auto h_Ib = h_Ia ^ symmetry;
-            auto aocc_h_Ia = alfa_string_classes_map_.at(std::make_tuple(aocc_idx, h_Ia));
-            auto bocc_h_Ib = beta_string_classes_map_.at(std::make_tuple(bocc_idx, h_Ib));
+            auto aocc_h_Ia = alfa_string_classes_map_.at(std::make_pair(aocc_idx, h_Ia));
+            auto bocc_h_Ib = beta_string_classes_map_.at(std::make_pair(bocc_idx, h_Ib));
             block_index_[std::make_pair(aocc_h_Ia, bocc_h_Ib)] = determinant_classes_.size();
             determinant_classes_.emplace_back(determinant_classes_.size(), aocc_h_Ia, bocc_h_Ib);
         }

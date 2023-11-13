@@ -35,7 +35,7 @@
 #include <utility>
 
 #define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
+#include "fmt/core.h"
 
 #include "ambit/tensor.h"
 

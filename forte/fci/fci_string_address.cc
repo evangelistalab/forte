@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <memory>
+
 #include "fci_string_address.h"
 
 #include "base_classes/mo_space_info.h"

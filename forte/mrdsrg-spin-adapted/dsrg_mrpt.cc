@@ -34,7 +34,7 @@
 #include "psi4/libpsi4util/process.h"
 
 #define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
+#include "fmt/core.h"
 
 #include "integrals/active_space_integrals.h"
 #include "base_classes/state_info.h"
