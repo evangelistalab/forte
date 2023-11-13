@@ -409,10 +409,10 @@ class MRDSRG : public MASTER_DSRG {
     void print_cumulant_summary();
 };
 
-/// The type of container used to hold the state vector used by boost::odeint
+/// The type of container used to hold the state vector used by odeint
 using odeint_state_type = std::vector<double>;
 
-/// The functor used for boost ODE integrator in MR-SRG.
+/// The functor used for ODE integrator in MR-SRG.
 class MRSRG_ODEInt {
   public:
     MRSRG_ODEInt(MRDSRG& mrdsrg_obj) : mrdsrg_obj_(mrdsrg_obj) {}
@@ -422,7 +422,7 @@ class MRSRG_ODEInt {
     MRDSRG& mrdsrg_obj_;
 };
 
-/// The functor used for boost ODE integrator in SRG-MRPT2.
+/// The functor used for ODE integrator in SRG-MRPT2.
 class SRGPT2_ODEInt {
   public:
     SRGPT2_ODEInt(MRDSRG& mrdsrg_obj, std::string Hzero, bool relax_ref)

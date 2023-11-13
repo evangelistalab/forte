@@ -21,8 +21,7 @@ set globals{
 
 set forte{
   job_type                mcscf_two_step
-  active_ref_type         cas
-  casscf_ci_solver        fci
+  active_space_solver     fci
   frozen_docc             [1,0,0,0]
 }
 

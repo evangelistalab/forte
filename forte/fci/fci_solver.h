@@ -30,10 +30,11 @@
 
 #include "base_classes/active_space_method.h"
 #include "psi4/libmints/dimension.h"
+#include "fci_string_lists.h"
+#include "fci_string_address.h"
 
 namespace forte {
 class FCIVector;
-class StringLists;
 class SpinAdapter;
 class DavidsonLiuSolver;
 
@@ -118,7 +119,7 @@ class FCISolver : public ActiveSpaceMethod {
     std::shared_ptr<psi::Matrix> ci_wave_functions() override;
 
     /// Return string lists
-    std::shared_ptr<StringLists> lists();
+    std::shared_ptr<FCIStringLists> lists();
 
     /// Return symmetry
     int symmetry();
@@ -130,7 +131,7 @@ class FCISolver : public ActiveSpaceMethod {
     psi::Dimension active_dim_;
 
     /// A object that stores string information
-    std::shared_ptr<StringLists> lists_;
+    std::shared_ptr<FCIStringLists> lists_;
 
     /// A object that handles spin adaptation
     std::shared_ptr<SpinAdapter> spin_adapter_;

@@ -48,6 +48,8 @@ class StateVector {
 
     /// @return the map that holds the determinants
     det_hash<double>& map() { return state_vec_; }
+    /// @return the map that holds the determinants
+    const det_hash<double>& map() const { return state_vec_; }
     /// @return true if the two states are identical
     bool operator==(const StateVector& lhs) const;
 
@@ -61,6 +63,7 @@ class StateVector {
     /// @param d the determinant to search for
     /// @return the element found
     auto find(const Determinant& d) const { return state_vec_.find(d); }
+    auto count(const Determinant& d) const { return state_vec_.count(d); }
 
     /// @return the beginning of the map
     auto begin() { return state_vec_.begin(); }

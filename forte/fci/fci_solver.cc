@@ -34,12 +34,12 @@
 #include "sparse_ci/ci_spin_adaptation.h"
 #include "helpers/davidson_liu_solver.h"
 
-#include "fci_solver.h"
-#include "string_lists.h"
+#include "fci_string_lists.h"
 #include "helpers/printing.h"
-#include "fci/string_address.h"
-
+#include "fci_string_address.h"
 #include "fci_vector.h"
+
+#include "fci_solver.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -97,18 +97,38 @@ void FCISolver::copy_state_into_fci_vector(int root, std::shared_ptr<FCIVector> 
 
 std::shared_ptr<psi::Matrix> FCISolver::evecs() { return eigen_vecs_; }
 
-std::shared_ptr<StringLists> FCISolver::lists() { return lists_; }
+std::shared_ptr<FCIStringLists> FCISolver::lists() { return lists_; }
 
 int FCISolver::symmetry() { return symmetry_; }
 
 void FCISolver::startup() {
     // Create the string lists
-    lists_ = std::make_shared<StringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
+
+#if USE_GAS_LISTS
+    std::vector<int> gas_size;
+    std::vector<int> gas_min;
+    std::vector<int> gas_max;
+    for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+        std::string space = "GAS" + std::to_string(gas_count + 1);
+        int orbital_maximum = mo_space_info_->size(space);
+        gas_size.push_back(orbital_maximum);
+    }
+    for (auto n : state_.gas_min()) {
+        gas_min.push_back(n);
+    }
+    for (auto n : state_.gas_max()) {
+        gas_max.push_back(n);
+    }
+    lists_ = std::make_shared<FCIStringLists>(mo_space_info_, na_, nb_, print_, gas_size, gas_min,
+                                              gas_max);
+#else
+    lists_ = std::make_shared<FCIStringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
+#endif
 
     nfci_dets_ = 0;
     for (int h = 0; h < nirrep_; ++h) {
-        size_t nastr = lists_->alfa_address()->strpi(h);
-        size_t nbstr = lists_->beta_address()->strpi(h ^ symmetry_);
+        size_t nastr = lists_->alfa_address()->strpcls(h);
+        size_t nbstr = lists_->beta_address()->strpcls(h ^ symmetry_);
         nfci_dets_ += nastr * nbstr;
     }
 
@@ -249,7 +269,8 @@ double FCISolver::compute_energy() {
     if (not converged) {
         throw std::runtime_error(
             "Davidson-Liu solver did not converge.\nPlease try to increase the number of "
-            "Davidson-Liu iterations (DL_MAXITER). You can also try to increase:\n - the maximum "
+            "Davidson-Liu iterations (DL_MAXITER). You can also try to increase:\n - the "
+            "maximum "
             "size of the subspace (DL_SUBSPACE_PER_ROOT)"
             "\n - the number of guess states (DL_GUESS_PER_ROOT)");
         return false;
@@ -285,6 +306,8 @@ double FCISolver::compute_energy() {
     energy_ = dl_solver_->eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
+
+    psi::outfile->Printf("\n    Time for FCI: %20.12f", t.get());
 
     return energy_;
 }

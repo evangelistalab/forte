@@ -44,7 +44,7 @@ Escf, wfn = energy('scf', return_wfn=True)
 
 set forte{
   job_type               mcscf_two_step
-  casscf_ci_solver       fci
+  active_space_solver    fci
   restricted_docc        [5,3,0,0,0,0,4,4]
   active                 [1,0,1,2,1,2,1,0]
   e_convergence          12

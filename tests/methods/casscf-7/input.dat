@@ -27,11 +27,11 @@ e_casscf = energy('casscf')
 compare_values(e_casscf_psi4, e_casscf, 6, "CASSCF ENERGY PSI4")
 
 set forte {
-  job_type            casscf
+  job_type            mcscf_two_step
   int_type            conventional
+  active_space_solver fci
   restricted_docc     [6,0,1,2]
   active              [0,1,1,1]
-  casscf_ci_solver    fci
   root_sym            0
   nroot               1
   root                0

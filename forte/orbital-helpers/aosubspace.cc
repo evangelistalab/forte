@@ -45,8 +45,6 @@ namespace py = pybind11;
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/masses.h"
 
-#include "boost/format.hpp"
-
 #include "helpers/string_algorithms.h"
 #include "base_classes/forte_options.h"
 #include "helpers/printing.h"

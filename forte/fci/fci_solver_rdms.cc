@@ -30,7 +30,7 @@
 
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/ci_spin_adaptation.h"
-#include "string_lists.h"
+#include "fci_string_lists.h"
 #include "fci_vector.h"
 
 #include "fci_solver.h"

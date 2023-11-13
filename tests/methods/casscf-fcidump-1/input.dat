@@ -25,6 +25,7 @@ set {
 
 set forte {
   job_type           mcscf_two_step
+  active_space_solver fci
   int_type           fcidump
   frozen_docc        [2,0,0,0]
   frozen_uocc        [0,0,0,0]
