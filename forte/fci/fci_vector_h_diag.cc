@@ -32,6 +32,8 @@
 
 #include "fci_vector.h"
 
+#include <cmath>
+
 namespace forte {
 
 std::vector<std::tuple<double, double, size_t, size_t, size_t>>

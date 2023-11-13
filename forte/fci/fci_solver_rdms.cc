@@ -25,6 +25,7 @@
  *
  * @END LICENSE
  */
+#include <memory>
 
 #include "helpers/printing.h"
 

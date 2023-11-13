@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
 #include "psi4/libmints/matrix.h"
 
 #include "string_lists.h"
