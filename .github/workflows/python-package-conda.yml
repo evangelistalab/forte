@@ -43,7 +43,6 @@ jobs:
     - name: Compile forte
       run: |
         cd ../forte
-	pwd
         ls -l
         cmake_psi4=$(psi4 --plugin-compile)
         $cmake_psi4 --debug-output \
