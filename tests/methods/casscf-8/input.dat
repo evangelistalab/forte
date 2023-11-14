@@ -35,7 +35,7 @@ Ecasscf, wfn = energy('casscf', ref_wfn=wfnSCF, return_wfn=True)
 compare_values(refcasscf, Ecasscf, 9, "PSI4 CASSCF energy")
 
 set forte {
-  job_type             casscf
+  job_type             mcscf_two_step
   frozen_docc          [0,0,0,0,0,0,0,0]
   frozen_uocc          [0,0,0,0,0,0,0,0]
   restricted_docc      [2,0,0,0,0,2,0,0]

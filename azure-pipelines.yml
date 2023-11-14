@@ -106,7 +106,6 @@ jobs:
       source activate p4env
       conda install -c conda-forge \
         hdf5 \
-        boost \
         mkl-devel \
         pybind11 \
         pytest \

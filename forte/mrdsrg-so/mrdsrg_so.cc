@@ -149,6 +149,8 @@ void MRDSRG_SO::startup() {
     size_t nmo = nso_ / 2;
     size_t na_mo = na_ / 2;
 
+    BlockedTensor::reset_mo_spaces();
+
     BTF_->add_mo_space("c", "mn", core_sos, AlphaSpin);
     BTF_->add_mo_space("a", "uvwxyz", actv_sos, AlphaSpin);
     BTF_->add_mo_space("v", "ef", virt_sos, AlphaSpin);

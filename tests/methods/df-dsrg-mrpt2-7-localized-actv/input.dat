@@ -37,6 +37,7 @@ compare_values(r_scf, Escf, 8, "SCF energy")
 
 set forte{
   job_type             mcscf_two_step
+  active_space_solver  fci
   int_type             df
   e_convergence        12
   dsrg_s               0.5
