@@ -12,7 +12,6 @@ dependencies:
     - pyyaml
     - py-cpuinfo
     - hdf5
-    - boost
     - yaml
     - pytest
     - conda-forge::lcov

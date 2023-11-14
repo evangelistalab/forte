@@ -43,7 +43,9 @@ jobs:
     - name: Compile forte
       run: |
         cd ../forte
-        cmake_psi4=`psi4 --plugin-compile`
+	pwd
+        ls -l
+        cmake_psi4=$(psi4 --plugin-compile)
         $cmake_psi4 --debug-output \
         -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
         -DENABLE_ForteTests=TRUE \        
