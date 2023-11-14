@@ -230,10 +230,6 @@ get_gas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
     std::vector<std::array<int, 6>> gas_beta_occupations;
     std::vector<std::pair<size_t, size_t>> gas_occupations;
 
-    psi::outfile->Printf("\n\n    %s", container_to_string(gas_min).c_str());
-    psi::outfile->Printf("\n    %s", container_to_string(gas_max).c_str());
-    psi::outfile->Printf("\n    %s", container_to_string(gas_size).c_str());
-
     // The vectors of maximum number of electrons, minimum number of electrons,
     // and the number of orbitals
     std::vector<int> gas_max_el(6, 0);
