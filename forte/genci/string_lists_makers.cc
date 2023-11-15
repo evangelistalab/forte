@@ -315,7 +315,8 @@ H2List make_2h_list(const StringList& strings, std::shared_ptr<StringAddress> ad
                                 const auto& [add_J, class_J] = it->second;
                                 std::tuple<int, size_t, int> I_tuple(class_J, add_J, class_I);
                                 list[I_tuple].push_back(H2StringSubstitution(sign, p, q, add_I));
-                                list[I_tuple].push_back(H2StringSubstitution(-sign, q, p, add_I));
+                                // list[I_tuple].push_back(H2StringSubstitution(-sign, q, p,
+                                // add_I));
                             }
                         }
                     }
@@ -338,6 +339,12 @@ H3List make_3h_list(const StringList& strings, std::shared_ptr<StringAddress> ad
     int n = addresser->nbits();
     int k = addresser->nones();
     size_t nmo = addresser->nbits();
+    // int num_occ;
+    // std::vector<int> occ(n);
+    //             find_set_bits(occ, num_occ);
+    //             for (size_t r = 0; r < nmo; ++r) {
+    //                 for (size_t q = r + 1; q < nmo; ++q) {
+    //                     for (size_t p = q + 1; p < nmo; ++p) {
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (const auto& string_class : strings) {
             for (const auto& I : string_class) {

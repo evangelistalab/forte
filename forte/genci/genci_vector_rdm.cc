@@ -70,14 +70,18 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
     if (max_rdm_level >= 3) {
         local_timer t;
         if (na >= 3) {
+            local_timer t_aaa;
             g3aaa = compute_3rdm_aaa_same_irrep(C_left, C_right, true);
+            psi::outfile->Printf("\n    Timing for 3-RDM (aaa): %.3f s", t_aaa.get());
         } else {
             g3aaa =
                 ambit::Tensor::build(ambit::CoreTensor, "g3aaa", {nmo, nmo, nmo, nmo, nmo, nmo});
             g3aaa.zero();
         }
         if (nb >= 3) {
+            local_timer t_bbb;
             g3bbb = compute_3rdm_aaa_same_irrep(C_left, C_right, false);
+            psi::outfile->Printf("\n    Timing for 3-RDM (bbb): %.3f s", t_bbb.get());
         } else {
             g3bbb =
                 ambit::Tensor::build(ambit::CoreTensor, "g3bbb", {nmo, nmo, nmo, nmo, nmo, nmo});
@@ -85,7 +89,9 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
         }
 
         if ((na >= 2) and (nb >= 1)) {
+            local_timer t_aab;
             g3aab = compute_3rdm_aab_same_irrep(C_left, C_right);
+            psi::outfile->Printf("\n    Timing for 3-RDM (aab): %.3f s", t_aab.get());
         } else {
             g3aab =
                 ambit::Tensor::build(ambit::CoreTensor, "g3aab", {nmo, nmo, nmo, nmo, nmo, nmo});
@@ -93,7 +99,9 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
         }
 
         if ((na >= 1) and (nb >= 2)) {
+            local_timer t_abb;
             g3abb = compute_3rdm_abb_same_irrep(C_left, C_right);
+            psi::outfile->Printf("\n    Timing for 3-RDM (abb): %.3f s", t_abb.get());
         } else {
             g3abb =
                 ambit::Tensor::build(ambit::CoreTensor, "g3abb", {nmo, nmo, nmo, nmo, nmo, nmo});
@@ -485,12 +493,21 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
                             auto& Lrlist = lists->get_beta_1h_list(class_L, L, class_Ib);
                             auto& Lllist = lists->get_beta_1h_list(class_L, L, class_Jb);
                             for (const auto& [sign_pq, p, q, Ia] : Krlist) {
-                                for (const auto& [sign_st, s, t, Ja] : Kllist) {
-                                    for (const auto& [sign_r, r, Ib] : Lrlist) {
+                                for (const auto& [sign_r, r, Ib] : Lrlist) {
+                                    const double CrI = sign_pq * sign_r * Cr[Ia][Ib];
+                                    for (const auto& [sign_st, s, t, Ja] : Kllist) {
+                                        const auto ClJa = Cl[Ja];
                                         for (const auto& [sign_a, a, Jb] : Lllist) {
+                                            const double rdm_element =
+                                                sign_st * sign_a * CrI * ClJa[Jb];
                                             rdm_data[six_index(p, q, r, s, t, a, ncmo)] +=
-                                                sign_pq * sign_st * sign_r * sign_a * Cr[Ia][Ib] *
-                                                Cl[Ja][Jb];
+                                                rdm_element;
+                                            rdm_data[six_index(p, q, r, t, s, a, ncmo)] -=
+                                                rdm_element;
+                                            rdm_data[six_index(q, p, r, s, t, a, ncmo)] -=
+                                                rdm_element;
+                                            rdm_data[six_index(q, p, r, t, s, a, ncmo)] +=
+                                                rdm_element;
                                         }
                                     }
                                 }
@@ -501,56 +518,6 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
             }
         }
     }
-
-    // for (int h_K = 0; h_K < nirrep; ++h_K) {
-    //     size_t maxK = lists->alfa_address_2h()->strpcls(h_K);
-    //     for (int h_L = 0; h_L < nirrep; ++h_L) {
-    //         size_t maxL = lists->beta_address_1h()->strpcls(h_L);
-    //         // I and J refer to the 2h part of the operator
-    //         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-    //             int h_Mb = h_Ia ^ symmetry;
-    //             double** C_I_p = C_right.C(h_Ia)->pointer();
-    //             for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
-    //                 int h_Nb = h_Ja ^ symmetry;
-    //                 double** C_J_p = C_left.C(h_Ja)->pointer();
-    //                 for (size_t K = 0; K < maxK; ++K) {
-    //                     std::vector<H2StringSubstitution>& Ilist =
-    //                         lists->get_alfa_2h_list(h_K, K, h_Ia);
-    //                     std::vector<H2StringSubstitution>& Jlist =
-    //                         lists->get_alfa_2h_list(h_K, K, h_Ja);
-    //                     for (size_t L = 0; L < maxL; ++L) {
-    //                         std::vector<H1StringSubstitution>& Mlist =
-    //                             lists->get_beta_1h_list(h_L, L, h_Mb);
-    //                         std::vector<H1StringSubstitution>& Nlist =
-    //                             lists->get_beta_1h_list(h_L, L, h_Nb);
-    //                         for (const auto& Iel : Ilist) {
-    //                             size_t q = Iel.p;
-    //                             size_t p = Iel.q;
-    //                             size_t I = Iel.J;
-    //                             for (const auto& Jel : Jlist) {
-    //                                 size_t t = Jel.p;
-    //                                 size_t s = Jel.q;
-    //                                 size_t J = Jel.J;
-    //                                 for (const auto& Mel : Mlist) {
-    //                                     size_t r = Mel.p;
-    //                                     size_t M = Mel.J;
-    //                                     for (const auto& Nel : Nlist) {
-    //                                         size_t a = Nel.p;
-    //                                         size_t N = Nel.J;
-    //                                         short sign = Iel.sign * Jel.sign *
-    //                                         Mel.sign * Nel.sign; rdm[six_index(p, q,
-    //                                         r, s, t, a, ncmo)] +=
-    //                                             sign * C_I_p[I][M] * C_J_p[J][N];
-    //                                     }
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
     return rdm;
 }
 
@@ -593,12 +560,21 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
                             auto& Lrlist = lists->get_beta_2h_list(class_L, L, class_Ib);
                             auto& Lllist = lists->get_beta_2h_list(class_L, L, class_Jb);
                             for (const auto& [sign_p, p, Ia] : Krlist) {
-                                for (const auto& [sign_s, s, Ja] : Kllist) {
-                                    for (const auto& [sign_qr, q, r, Ib] : Lrlist) {
+                                for (const auto& [sign_qr, q, r, Ib] : Lrlist) {
+                                    const double CrI = sign_p * sign_qr * Cr[Ia][Ib];
+                                    for (const auto& [sign_s, s, Ja] : Kllist) {
+                                        const auto ClJa = Cl[Ja];
                                         for (const auto& [sign_ta, t, a, Jb] : Lllist) {
+                                            const double rdm_element =
+                                                sign_s * sign_ta * CrI * ClJa[Jb];
+                                            rdm_data[six_index(p, q, r, s, a, t, ncmo)] -=
+                                                rdm_element;
                                             rdm_data[six_index(p, q, r, s, t, a, ncmo)] +=
-                                                sign_p * sign_s * sign_qr * sign_ta * Cr[Ia][Ib] *
-                                                Cl[Ja][Jb];
+                                                rdm_element;
+                                            rdm_data[six_index(p, r, q, s, a, t, ncmo)] +=
+                                                rdm_element;
+                                            rdm_data[six_index(p, r, q, s, t, a, ncmo)] -=
+                                                rdm_element;
                                         }
                                     }
                                 }
@@ -609,56 +585,6 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
             }
         }
     }
-
-    // for (int h_K = 0; h_K < nirrep; ++h_K) {
-    //     size_t maxK = lists->alfa_address_1h()->strpcls(h_K);
-    //     for (int h_L = 0; h_L < nirrep; ++h_L) {
-    //         size_t maxL = lists->beta_address_2h()->strpcls(h_L);
-    //         // I and J refer to the 1h part of the operator
-    //         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-    //             int h_Mb = h_Ia ^ symmetry;
-    //             double** C_I_p = C_right.C(h_Ia)->pointer();
-    //             for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
-    //                 int h_Nb = h_Ja ^ symmetry;
-    //                 double** C_J_p = C_left.C(h_Ja)->pointer();
-    //                 for (size_t K = 0; K < maxK; ++K) {
-    //                     std::vector<H1StringSubstitution>& Ilist =
-    //                         lists->get_alfa_1h_list(h_K, K, h_Ia);
-    //                     std::vector<H1StringSubstitution>& Jlist =
-    //                         lists->get_alfa_1h_list(h_K, K, h_Ja);
-    //                     for (size_t L = 0; L < maxL; ++L) {
-    //                         std::vector<H2StringSubstitution>& Mlist =
-    //                             lists->get_beta_2h_list(h_L, L, h_Mb);
-    //                         std::vector<H2StringSubstitution>& Nlist =
-    //                             lists->get_beta_2h_list(h_L, L, h_Nb);
-    //                         for (size_t Iel = 0; Iel < Ilist.size(); Iel++) {
-    //                             size_t p = Ilist[Iel].p;
-    //                             size_t I = Ilist[Iel].J;
-    //                             for (const auto& Mel : Mlist) {
-    //                                 size_t q = Mel.p;
-    //                                 size_t r = Mel.q;
-    //                                 size_t M = Mel.J;
-    //                                 for (const auto& Jel : Jlist) {
-    //                                     size_t s = Jel.p;
-    //                                     size_t J = Jel.J;
-    //                                     for (const auto& Nel : Nlist) {
-    //                                         size_t t = Nel.p;
-    //                                         size_t a = Nel.q;
-    //                                         size_t N = Nel.J;
-    //                                         short sign =
-    //                                             Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
-    //                                         rdm[six_index(p, q, r, s, t, a, ncmo)] +=
-    //                                             sign * C_I_p[I][M] * C_J_p[J][N];
-    //                                     }
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
     return rdm;
 }
 
