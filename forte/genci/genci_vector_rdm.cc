@@ -455,6 +455,12 @@ ambit::Tensor GenCIVector::compute_3rdm_aaa_same_irrep(GenCIVector& C_left, GenC
 }
 
 ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenCIVector& C_right) {
+    // this threshold is used to avoid computing very small contributions to the 3-RDM
+    // here we screen for the absolute value of the elements of the C vector, and since the vector
+    // is normalized, we can guarantee that the neglected contribution to the 3-RDM is smaller or
+    // equal than this value
+    const double c_threshold = 1.0e-14;
+
     size_t ncmo = C_left.ncmo_;
     const auto& lists = C_left.lists_;
 
@@ -492,14 +498,16 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
                         for (size_t Kb = 0; Kb < maxKb; ++Kb) {
                             auto& Kb_right_list = lists->get_beta_1h_list(class_Kb, Kb, class_Ib);
                             auto& Kb_left_list = lists->get_beta_1h_list(class_Kb, Kb, class_Jb);
-                            for (const auto& [sign_pq, p, q, Ia] : Ka_right_list) {
-                                for (const auto& [sign_r, r, Ib] : Kb_right_list) {
-                                    const double CrI = sign_pq * sign_r * Cr[Ia][Ib];
-                                    for (const auto& [sign_st, s, t, Ja] : Ka_left_list) {
-                                        const auto ClJa = Cl[Ja];
-                                        for (const auto& [sign_a, a, Jb] : Kb_left_list) {
-                                            rdm_data[six_index(s, t, a, p, q, r, ncmo)] +=
-                                                sign_st * sign_a * CrI * ClJa[Jb];
+                            for (const auto& [sign_uv, u, v, Ja] : Ka_left_list) {
+                                for (const auto& [sign_w, w, Jb] : Kb_left_list) {
+                                    const double ClJ = sign_uv * sign_w * Cl[Ja][Jb];
+                                    if (std::fabs(ClJ) < c_threshold)
+                                        continue;
+                                    for (const auto& [sign_xy, x, y, Ia] : Ka_right_list) {
+                                        const auto CrIa = Cr[Ia];
+                                        for (const auto& [sign_z, z, Ib] : Kb_right_list) {
+                                            rdm_data[six_index(u, v, w, x, y, z, ncmo)] +=
+                                                sign_xy * sign_z * ClJ * CrIa[Ib];
                                         }
                                     }
                                 }
@@ -510,16 +518,16 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
             }
         }
     }
-    for (size_t p = 0; p < ncmo; ++p) {
-        for (size_t q = 0; q < p; ++q) {
-            for (size_t r = 0; r < ncmo; ++r) {
-                for (size_t s = 0; s < ncmo; ++s) {
-                    for (size_t t = 0; t < s; ++t) {
-                        for (size_t a = 0; a < ncmo; ++a) {
-                            const double rdm_element = rdm_data[six_index(p, q, r, s, t, a, ncmo)];
-                            rdm_data[six_index(p, q, r, t, s, a, ncmo)] = -rdm_element;
-                            rdm_data[six_index(q, p, r, s, t, a, ncmo)] = -rdm_element;
-                            rdm_data[six_index(q, p, r, t, s, a, ncmo)] = +rdm_element;
+    for (size_t u = 0; u < ncmo; ++u) {
+        for (size_t v = 0; v < u; ++v) {
+            for (size_t w = 0; w < ncmo; ++w) {
+                for (size_t x = 0; x < ncmo; ++x) {
+                    for (size_t y = 0; y < x; ++y) {
+                        for (size_t z = 0; z < ncmo; ++z) {
+                            const double rdm_element = rdm_data[six_index(u, v, w, x, y, z, ncmo)];
+                            rdm_data[six_index(u, v, w, y, x, z, ncmo)] = -rdm_element;
+                            rdm_data[six_index(v, u, w, x, y, z, ncmo)] = -rdm_element;
+                            rdm_data[six_index(v, u, w, y, x, z, ncmo)] = +rdm_element;
                         }
                     }
                 }
@@ -530,6 +538,12 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
 }
 
 ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenCIVector& C_right) {
+    // this threshold is used to avoid computing very small contributions to the 3-RDM
+    // here we screen for the absolute value of the elements of the C vector, and since the vector
+    // is normalized, we can guarantee that the neglected contribution to the 3-RDM is smaller or
+    // equal than this value
+    const double c_threshold = 1.0e-14;
+
     size_t ncmo = C_left.ncmo_;
     const auto& lists = C_left.lists_;
 
@@ -567,14 +581,16 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
                         for (size_t Kb = 0; Kb < maxKb; ++Kb) {
                             auto& Kb_right_list = lists->get_beta_2h_list(class_Kb, Kb, class_Ib);
                             auto& Kb_left_list = lists->get_beta_2h_list(class_Kb, Kb, class_Jb);
-                            for (const auto& [sign_p, p, Ia] : Ka_right_list) {
-                                for (const auto& [sign_qr, q, r, Ib] : Kb_right_list) {
-                                    const double CrI = sign_p * sign_qr * Cr[Ia][Ib];
-                                    for (const auto& [sign_s, s, Ja] : Ka_left_list) {
-                                        const auto ClJa = Cl[Ja];
-                                        for (const auto& [sign_ta, t, a, Jb] : Kb_left_list) {
-                                            rdm_data[six_index(s, t, a, p, q, r, ncmo)] +=
-                                                sign_s * sign_ta * CrI * ClJa[Jb];
+                            for (const auto& [sign_u, u, Ja] : Ka_left_list) {
+                                for (const auto& [sign_vw, v, w, Jb] : Kb_left_list) {
+                                    const double ClJ = sign_u * sign_vw * Cl[Ja][Jb];
+                                    if (std::fabs(ClJ) < c_threshold)
+                                        continue;
+                                    for (const auto& [sign_x, x, Ia] : Ka_right_list) {
+                                        const auto CrIa = Cr[Ia];
+                                        for (const auto& [sign_yz, y, z, Ib] : Kb_right_list) {
+                                            rdm_data[six_index(u, v, w, x, y, z, ncmo)] +=
+                                                sign_x * sign_yz * ClJ * CrIa[Ib];
                                         }
                                     }
                                 }
@@ -585,16 +601,16 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
             }
         }
     }
-    for (size_t p = 0; p < ncmo; ++p) {
-        for (size_t q = 0; q < ncmo; ++q) {
-            for (size_t r = 0; r < q; ++r) {
-                for (size_t s = 0; s < ncmo; ++s) {
-                    for (size_t t = 0; t < ncmo; ++t) {
-                        for (size_t a = 0; a < t; ++a) {
-                            const double rdm_element = rdm_data[six_index(p, q, r, s, t, a, ncmo)];
-                            rdm_data[six_index(p, q, r, s, a, t, ncmo)] = -rdm_element;
-                            rdm_data[six_index(p, r, q, s, t, a, ncmo)] = -rdm_element;
-                            rdm_data[six_index(p, r, q, s, a, t, ncmo)] = +rdm_element;
+    for (size_t u = 0; u < ncmo; ++u) {
+        for (size_t v = 0; v < ncmo; ++v) {
+            for (size_t w = 0; w < v; ++w) {
+                for (size_t x = 0; x < ncmo; ++x) {
+                    for (size_t y = 0; y < ncmo; ++y) {
+                        for (size_t z = 0; z < y; ++z) {
+                            const double rdm_element = rdm_data[six_index(u, v, w, x, y, z, ncmo)];
+                            rdm_data[six_index(u, v, w, x, z, y, ncmo)] = -rdm_element;
+                            rdm_data[six_index(u, w, v, x, y, z, ncmo)] = -rdm_element;
+                            rdm_data[six_index(u, w, v, x, z, y, ncmo)] = +rdm_element;
                         }
                     }
                 }
@@ -610,8 +626,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
     auto state_vector_l = Cl.as_state_vector();
     auto state_vector_r = Cr.as_state_vector();
 
-    Determinant J; // <- xsize (no_);
-
+    Determinant J;
     psi::outfile->Printf("\n\n==> RDMs Test (max level = %d)<==\n", max_rdm_level);
 
     if (max_rdm_level >= 1) {
