@@ -1,51 +1,41 @@
-#! Generated using commit GITCOMMIT 
-# GASSCF calculation 
+# H2O singlet, 6-31G**/GASSCF calculation 
 
 import forte
 
 refgasscf = -76.073064961664 #TEST 
 
-memory 6000mb
-#! 6-31G** H2O Test RASSCF Energy Point
-##! will default to only singles and doubles in the active space
 molecule h2o{
    O
    H  1 1.00
    H  1 1.00 2 103.1
-      }
+}
 
 set global {
   basis 6-31g**
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
-  guess gwh
-  scf_type pk
+  e_convergence 12
+  d_convergence 8
+  scf_type direct
   reference rhf
 }
 
-set scf_type direct
 set forte {
-  active_space_solver aci
-  ms 0.0
-  multiplicity 1
-  sigma 0.000
-  nroot 1
-  root_sym 0
-  charge 0
-  sci_enforce_spin_complete true
-  e_convergence 6
-  charge 0
-  active_ref_type gas
-  GAS1 [2,0,1,1]
-  GAS2 [1,0,0,1]
-  restricted_docc [1,0,0,0]
-  restricted_uocc [8,2,3,5]
-  GAS1MIN [6]
-  GAS2MAX [2]
-  job_type casscf
-  casscf_ci_solver aci
-  casscf_maxiter 200
+  active_space_solver genci
+  ms                  0.0
+  multiplicity        1
+  nroot               1
+  root_sym            0
+  charge              0 
+  e_convergence       12
+  r_convergence       8
+  charge              0
+  restricted_docc     [1,0,0,0]
+  gas1                [2,0,1,1]
+  gas2                [1,0,0,1]
+  restricted_uocc     [8,2,3,5]
+  gas1min             [6]
+  gas2max             [2]
+  job_type            mcscf_two_step
+  casscf_maxiter      200
   casscf_e_convergence 1e-10
   casscf_g_convergence 1e-8
 }

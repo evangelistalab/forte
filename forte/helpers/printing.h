@@ -72,6 +72,24 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
  */
 void print_timing(const std::string& text, double seconds);
 
+/// @brief Print the content of a container to the output file
+template <typename Container> std::string container_to_string(const Container& c) {
+    if (c.empty()) {
+        return "[]";
+    }
+    std::stringstream ss;
+    ss << "[";
+    for (const auto& item : c) {
+        ss << item << ",";
+    }
+    std::string result = ss.str();
+    if (!result.empty() and result.back() == ',') {
+        result.pop_back(); // Remove the trailing space
+    }
+    result += "]";
+    return result;
+}
+
 class table_printer {
   public:
     void add_string_data(const std::vector<std::pair<std::string, std::string>>& data) {

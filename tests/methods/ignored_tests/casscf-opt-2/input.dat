@@ -1,0 +1,56 @@
+import forte
+
+refEcas = -108.581826813258914
+refEopt = -108.581904286642313
+refRe   =    2.143209840738143 # in Bohr
+
+molecule N2p{
+1 2
+N
+N 1 1.14
+}
+
+set {
+basis         cc-pvdz
+reference     rohf
+maxiter       100
+d_convergence 6
+e_convergence 8
+g_convergence gau_verytight
+docc          [2,0,0,0,0,2,1,1]
+socc          [1,0,0,0,0,0,0,0]
+}
+
+set findif {
+points 5
+}
+
+set forte{
+job_type             mcscf_two_step
+frozen_docc          [0,0,0,0,0,0,0,0]
+restricted_docc      [1,0,0,0,0,1,0,0]
+active               [2,0,1,1,0,2,1,1]
+active_space_solver  fci
+casscf_maxiter       100
+casscf_e_convergence 8
+casscf_g_convergence 8
+}
+
+# Assuming the starting geometry is close to the equilibrium,
+# we can pass the Wavefunction of the starting geometry as the guess for MCSCF.
+
+Ecas, ref_wfn = energy('forte', return_wfn=True)
+compare_values(refEcas, Ecas, 7, "CASSCF(9e,8o)/cc-pVDZ on N2+ @ 1.14 A")
+
+Eopt, wfn = optimize('forte', return_wfn=True, ref_wfn=ref_wfn, dertype=0)
+compare_values(refEopt, Eopt, 7, "CASSCF(9e,8o)/cc-pVDZ on N2+ @ Re")
+
+mol = psi4.core.get_active_molecule()
+bond = abs(mol.z(0) - mol.z(1))
+print(mol.to_string(dtype='psi4', units='angstrom'))
+compare_values(refRe, bond, 6, "CASSCF(9e,8o)/cc-pVDZ optimized bond length")
+
+mol = wfn.molecule()
+bond = abs(mol.z(0) - mol.z(1))
+print(mol.to_string(dtype='psi4', units='angstrom'))
+compare_values(refRe, bond, 6, "CASSCF(9e,8o)/cc-pVDZ optimized bond length")

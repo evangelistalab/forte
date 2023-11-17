@@ -118,15 +118,14 @@ class ActiveSpaceMethod {
      * @brief Compute the reduced density matrices up to a given particle rank (max_rdm_level)
      *
      *        This function can be used to compute transition density matrices between
-     *        states of difference symmetry,
+     *        states of the same symmetry,
      *
-     *        D^{p}_{q} = <I, symmetry_l| a+_p1 ... a_qn |J, symmetry_r>
+     *        D^{p}_{q} = <I, this| a+_p1 ... a_qn |J, this>
      *
-     *        where |I, symmetry_l> is the I-th state of symmetry = symmetry_l
-     *              |J, symmetry_r> is the J-th state of symmetry = symmetry_r
+     *        where |I> is the I-th state of this object
+     *              |J> is the J-th state of this object
      *
      * @param root_list     a list of pairs of roots to compute [(I_1, J_1), (I_2, J_2), ...]
-     * @param method2       a second ActiveSpaceMethod object that holds the states for symmetry_r
      * @param max_rdm_level the maximum RDM rank
      * @return
      */
@@ -134,6 +133,19 @@ class ActiveSpaceMethod {
     rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
          RDMsType type) = 0;
 
+    /// @brief Compute the transition density matrices between two states of different symmetry
+    ///        This function can be used to compute transition density matrices between
+    ///        states of different symmetry,
+    ///
+    ///        D^{p}_{q} = <I, this, symmetry_l| a+_p1 ... a_qn |J, method2, symmetry_r>
+    ///
+    ///        where |I, this, symmetry_l> is the I-th state of this object
+    ///              |J, method2, symmetry_r> is the J-th state of the method2 object
+    ///
+    /// @param root_list     a list of pairs of roots to compute [(I_1, J_1), (I_2, J_2), ...]
+    /// @param method2       the method that computes the right wave function
+    /// @param max_rdm_level the maximum RDM rank
+    /// @return a vector of RDMs objects
     virtual std::vector<std::shared_ptr<RDMs>>
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                     std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
