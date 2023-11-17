@@ -29,6 +29,7 @@
 #ifndef _spin_adaptation_h_
 #define _spin_adaptation_h_
 
+#include <memory>
 #include <vector>
 
 namespace psi {

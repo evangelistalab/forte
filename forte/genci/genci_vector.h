@@ -30,6 +30,7 @@
 
 #include <functional>
 #include <vector>
+#include <cmath>
 
 #include "psi4/libmints/dimension.h"
 #include "ambit/tensor.h"
