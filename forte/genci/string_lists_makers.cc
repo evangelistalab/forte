@@ -182,7 +182,7 @@ void make_vo(const StringList& strings, const std::shared_ptr<StringAddress>& I_
                     J[p] = true;
                     if (auto it = J_addresser->find(J); it != J_addresser->end()) {
                         const auto& [add_J, class_J] = it->second;
-                        auto& list_IJ = list[std::make_tuple(class_I, class_J)];
+                        auto& list_IJ = list[std::make_pair(class_I, class_J)];
                         list_IJ[std::make_tuple(p, q)].push_back(
                             StringSubstitution(sign, add_I, add_J));
                     }
@@ -252,7 +252,7 @@ void make_vvoo(const StringList& strings, std::shared_ptr<StringAddress> address
                             if (auto it = addresser->find(J); it != addresser->end()) {
                                 const auto& [add_I, class_I] = addresser->address_and_class(I);
                                 const auto& [add_J, class_J] = it->second;
-                                auto& list_IJ = list[std::make_tuple(class_I, class_J)];
+                                auto& list_IJ = list[std::make_pair(class_I, class_J)];
                                 list_IJ[std::make_tuple(p, q, r, s)].push_back(
                                     StringSubstitution(sign, add_I, add_J));
                             }
