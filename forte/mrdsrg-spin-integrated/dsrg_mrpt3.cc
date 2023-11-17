@@ -43,7 +43,7 @@
 #include "psi4/libqt/qt.h"
 
 #define FMT_HEADER_ONLY
-#include "fmt/core.h"
+#include "lib/fmt/core.h"
 
 #include "helpers/helpers.h"
 #include "helpers/timer.h"

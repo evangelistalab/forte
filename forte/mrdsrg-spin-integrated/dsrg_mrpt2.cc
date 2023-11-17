@@ -40,7 +40,7 @@
 #include "psi4/libmints/dipole.h"
 
 #define FMT_HEADER_ONLY
-#include "fmt/core.h"
+#include "lib/fmt/core.h"
 
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"

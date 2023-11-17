@@ -32,7 +32,7 @@
 #include <string>
 
 #define FMT_HEADER_ONLY
-#include "fmt/core.h"
+#include "lib/fmt/core.h"
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"

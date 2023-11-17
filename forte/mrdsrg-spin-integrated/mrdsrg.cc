@@ -37,7 +37,7 @@
 #include "psi4/libmints/molecule.h"
 
 #define FMT_HEADER_ONLY
-#include "fmt/core.h"
+#include "lib/fmt/core.h"
 
 #include "base_classes/active_space_solver.h"
 #include "fci/fci_solver.h"

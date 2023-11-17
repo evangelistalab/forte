@@ -35,7 +35,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #define FMT_HEADER_ONLY
-#include "fmt/core.h"
+#include "lib/fmt/core.h"
 
 #include "base_classes/mo_space_info.h"
 #include "helpers/disk_io.h"

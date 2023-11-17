@@ -37,7 +37,7 @@
 #include "psi4/libcubeprop/cubeprop.h"
 
 #define FMT_HEADER_ONLY
-#include "fmt/core.h"
+#include "lib/fmt/core.h"
 
 #include "base_classes/forte_options.h"
 

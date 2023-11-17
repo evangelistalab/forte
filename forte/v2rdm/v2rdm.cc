@@ -30,7 +30,7 @@
 #include <iostream>
 
 #define FMT_HEADER_ONLY
-#include "fmt/core.h"
+#include "lib/fmt/core.h"
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/dimension.h"
