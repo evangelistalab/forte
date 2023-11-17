@@ -459,7 +459,7 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
     // here we screen for the absolute value of the elements of the C vector, and since the vector
     // is normalized, we can guarantee that the neglected contribution to the 3-RDM is smaller or
     // equal than this value
-    const double c_threshold = 1.0e-14;
+    // const double c_threshold = 1.0e-14;
 
     size_t ncmo = C_left.ncmo_;
     const auto& lists = C_left.lists_;
@@ -501,8 +501,8 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
                             for (const auto& [sign_uv, u, v, Ja] : Ka_left_list) {
                                 for (const auto& [sign_w, w, Jb] : Kb_left_list) {
                                     const double ClJ = sign_uv * sign_w * Cl[Ja][Jb];
-                                    if (std::fabs(ClJ) < c_threshold)
-                                        continue;
+                                    // if (std::fabs(ClJ) < c_threshold)
+                                    //     continue;
                                     for (const auto& [sign_xy, x, y, Ia] : Ka_right_list) {
                                         const auto CrIa = Cr[Ia];
                                         for (const auto& [sign_z, z, Ib] : Kb_right_list) {
@@ -542,7 +542,7 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
     // here we screen for the absolute value of the elements of the C vector, and since the vector
     // is normalized, we can guarantee that the neglected contribution to the 3-RDM is smaller or
     // equal than this value
-    const double c_threshold = 1.0e-14;
+    // const double c_threshold = 1.0e-14;
 
     size_t ncmo = C_left.ncmo_;
     const auto& lists = C_left.lists_;
@@ -584,8 +584,8 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
                             for (const auto& [sign_u, u, Ja] : Ka_left_list) {
                                 for (const auto& [sign_vw, v, w, Jb] : Kb_left_list) {
                                     const double ClJ = sign_u * sign_vw * Cl[Ja][Jb];
-                                    if (std::fabs(ClJ) < c_threshold)
-                                        continue;
+                                    // if (std::fabs(ClJ) < c_threshold)
+                                    //     continue;
                                     for (const auto& [sign_x, x, Ia] : Ka_right_list) {
                                         const auto CrIa = Cr[Ia];
                                         for (const auto& [sign_yz, y, z, Ib] : Kb_right_list) {
