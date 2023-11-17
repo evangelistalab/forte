@@ -25,6 +25,7 @@
  *
  * @END LICENSE
  */
+
 #include <memory>
 
 #include "genci_string_address.h"

@@ -26,13 +26,13 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
 #include "psi4/libmints/matrix.h"
 
 #include "fci_string_address.h"
 
 #include "fci_vector.h"
-
-#include <cmath>
 
 namespace forte {
 
