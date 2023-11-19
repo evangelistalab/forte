@@ -262,7 +262,7 @@ class ProcedureDSRG:
                     e_relax = list(active_space_solver_2.compute_energy().values())[0][0]
                 self.energies.append((e_dsrg, e_relax))
                 break
-            
+
             if self.do_multi_state and self.options.get_bool("SAVE_SA_DSRG_INTS"):
                 state_map = forte.to_state_nroots_map(self.state_weights_map)
                 write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
@@ -287,10 +287,9 @@ class ProcedureDSRG:
 
             if self.Meff_implemented:
                 if self.max_dipole_level > 0:
-                    mp_level = 1
+                    self.active_space_solver.compute_multipole_moment(asmpints, 1)
                 if self.max_quadrupole_level > 0:
-                    mp_level = 2
-                self.active_space_solver.compute_multipole_moment(asmpints, mp_level)
+                    self.active_space_solver.compute_multipole_moment(asmpints, 2)
                 if self.max_dipole_level > 0:
                     self.active_space_solver.compute_fosc_same_orbs(asmpints)
 
