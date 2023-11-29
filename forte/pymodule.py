@@ -616,7 +616,7 @@ def run_forte(name, **kwargs):
         active_space_method = forte.make_active_space_method(
             "ACI", state, options.get_int("NROOT"), scf_info, mo_space_info, as_ints, options
         )
-        active_space_method.set_quiet_mode(True)
+        active_space_method.set_quiet_mode()
         active_space_method.compute_energy()
 
         tdci = forte.TDCI(active_space_method, scf_info, options, mo_space_info, as_ints)
