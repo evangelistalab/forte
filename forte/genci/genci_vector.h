@@ -34,12 +34,11 @@
 
 #include "psi4/libmints/dimension.h"
 #include "ambit/tensor.h"
+#include "helpers/printing.h"
 
 #include "base_classes/rdms.h"
 #include "genci_string_lists.h"
 #include "sparse_ci/sparse_state_vector.h"
-
-#define CAPRICCIO_USE_DAXPY 1
 
 namespace psi {
 class Matrix;
@@ -140,9 +139,11 @@ class GenCIVector {
     max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<GenCIStringLists> lists_, int print_);
+    static void allocate_temp_space(std::shared_ptr<GenCIStringLists> lists_, PrintLevel print_);
     static void release_temp_space();
-    void set_print(int print) { print_ = print; }
+
+    /// Return the print level
+    void set_print(PrintLevel print) { print_ = print; }
 
     // ==> Class Static Functions <==
     static std::shared_ptr<RDMs> compute_rdms(GenCIVector& C_left, GenCIVector& C_right,
@@ -240,7 +241,7 @@ class GenCIVector {
     /// The number of determinants per class
     std::vector<size_t> detpi_; // TODO: remove this
     /// The print level
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The string list
     std::shared_ptr<GenCIStringLists> lists_;

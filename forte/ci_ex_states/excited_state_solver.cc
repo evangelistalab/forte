@@ -78,7 +78,6 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
-    quiet_ = options->get_bool("SCI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
@@ -119,7 +118,7 @@ double ExcitedStateSolver::compute_energy() {
         {"Selected Configuration Interaction Excited States",
          "written by Jeffrey B. Schriber, Tianyuan Zhang, and Francesco A. Evangelista"});
     print_info();
-    if (!quiet_) {
+    if (print_ >= PrintLevel::Default) {
         psi::outfile->Printf("\n  Using %d thread(s)", omp_get_max_threads());
     }
 
@@ -150,7 +149,7 @@ double ExcitedStateSolver::compute_energy() {
     std::shared_ptr<psi::Vector> PQ_evals;
 
     for (int i = 0; i < nrun; ++i) {
-        if (!quiet_)
+        if (print_ >= PrintLevel::Default)
             psi::outfile->Printf("\n  Computing wavefunction for root %d", i);
 
         if (multi_state) {
@@ -179,7 +178,7 @@ double ExcitedStateSolver::compute_energy() {
 
         if (ex_alg_ == "ROOT_COMBINE") {
             sizes[i] = PQ_space.size();
-            if (!quiet_)
+            if (print_ >= PrintLevel::Default)
                 psi::outfile->Printf("\n  Combining determinant spaces");
             // Combine selected determinants into total space
             full_space.merge(PQ_space);
@@ -819,7 +818,7 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets,
                                        int ref_root) {
     std::vector<std::pair<Determinant, double>> vec;
 
-    if (!quiet_ and nroot_ > 0) {
+    if (print_ >= PrintLevel::Default and nroot_ > 0) {
         psi::outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root);
     }
     const det_hashvec& detmap = dets.wfn_hash();
@@ -827,7 +826,7 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets,
         vec.push_back(std::make_pair(detmap[i], PQ_evecs->get(i, ref_root)));
     }
     old_roots_.push_back(vec);
-    if (!quiet_ and nroot_ > 0) {
+    if (print_ >= PrintLevel::Default and nroot_ > 0) {
         psi::outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
     }
 }

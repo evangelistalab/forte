@@ -36,6 +36,7 @@
 #include <utility>
 
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 #include "sparse_ci/determinant.h"
 #include "fci/string_list_defs.h"
 
@@ -61,7 +62,7 @@ class FCIStringLists {
     /// @param nb number of beta electrons
     /// @param print print level
     FCIStringLists(psi::Dimension cmopi, std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo,
-                   size_t na, size_t nb, int print);
+                   size_t na, size_t nb, PrintLevel print);
 
     ~FCIStringLists() {}
 
@@ -180,7 +181,7 @@ class FCIStringLists {
     /// The offset array for pairpi
     std::vector<int> pair_offset_;
     /// The print level
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
 
     // String lists
     std::shared_ptr<FCIStringClass> string_class_;

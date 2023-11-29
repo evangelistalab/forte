@@ -85,7 +85,7 @@ FCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
     // copy the right root onto the temporary vector C_
     method2_fcisolver->copy_state_into_fci_vector(root_right, method2_fcisolver->T_);
 
-    if (print_) {
+    if (print_ >= PrintLevel::Verbose) {
         std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + " " +
                                 state().str_minimum() + "| ... |" + std::to_string(root_right) +
                                 " " + method2->state().str_minimum() + ">";
@@ -100,7 +100,7 @@ FCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
     }
 
     // // Print the NO if energy converged
-    // if (print_no_ || print_ > 0) {
+    // if (print_no_ || print_ > 1) {
     //     C_->print_natural_orbitals(mo_space_info_);
     // }
     return rdms;

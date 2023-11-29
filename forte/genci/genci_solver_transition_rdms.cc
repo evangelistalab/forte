@@ -104,7 +104,7 @@ GenCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
     }
 
     // // Print the NO if energy converged
-    // if (print_no_ || print_ > 0) {
+    // if (print_no_ || print_ > 1) {
     //     C_->print_natural_orbitals(mo_space_info_);
     // }
     return rdms;

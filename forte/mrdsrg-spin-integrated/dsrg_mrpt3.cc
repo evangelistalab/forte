@@ -186,12 +186,12 @@ void DSRG_MRPT3::startup() {
     }
 
     // Print levels
-    if (print_ > 1) {
+    if (print_ > 2) {
         Gamma1_.print(stdout);
         Eta1_.print(stdout);
         F_.print(stdout);
     }
-    if (print_ > 3) {
+    if (print_ > 4) {
         V_.print(stdout);
     }
     profile_print_ = foptions_->get_bool("PRINT_TIME_PROFILE");
@@ -2177,7 +2177,7 @@ void DSRG_MRPT3::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& a
     C1["QP"] += alpha * temp["gPM"] * B["gQM"];
     C1["QP"] += alpha * temp["gPY"] * B["gQY"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("211", timer.get());
@@ -2219,7 +2219,7 @@ void DSRG_MRPT3::V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& a
     C2["RSQA"] += alpha * temp["gRA"] * B["gSQ"];
     C2["sRpA"] -= alpha * temp["gRA"] * B["gsp"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("212", timer.get());
@@ -2470,7 +2470,7 @@ void DSRG_MRPT3::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
                         compute_elapsed_time(start_, end_).count());
     }
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("221", timer.get());
@@ -3064,7 +3064,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         V_T2_C2_DF_VA_EX(B, T2, alpha, C2, qs_lower, jb_lower);
     }
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("222", timer.get());

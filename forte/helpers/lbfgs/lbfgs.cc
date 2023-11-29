@@ -67,7 +67,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, std::shared_ptr<psi::Vect
     // routine of diagonal Hessian
     auto compute_h0 = [&](std::shared_ptr<psi::Vector> x) {
         func.hess_diag(x, h0_);
-        if (param_->print > 2) {
+        if (param_->print > 3) {
             print_h2("Diagonal Hessian at Iter. " + std::to_string(iter_));
             h0_->print();
         }
@@ -102,7 +102,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, std::shared_ptr<psi::Vect
 
         // print current iteration
         g_norm = g_->norm();
-        if (param_->print > 0)
+        if (param_->print > 2)
             outfile->Printf("\n    L-BFGS Iter:%3d; fx = %20.15f; g_norm = %12.6e; step = %9.3e",
                             iter_ + 1, fx, g_norm, step);
 
@@ -150,7 +150,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, std::shared_ptr<psi::Vect
         }
     } while (iter_ < param_->maxiter);
 
-    if ((not converged_) and param_->print > 1) {
+    if ((not converged_) and param_->print > 2) {
         outfile->Printf("\n  L-BFGS Warning: No convergence in %d iterations", iter_);
     }
 
@@ -183,7 +183,7 @@ void LBFGS::update() {
     // for descent
     p_.scale(-1.0);
 
-    if (param_->print > 2)
+    if (param_->print > 3)
         p_.print();
 }
 
@@ -200,7 +200,7 @@ void LBFGS::next_step(Foo& foo, std::shared_ptr<psi::Vector> x, double& fx, doub
         throw std::runtime_error("Unknown STEP_LENGTH_METHOD");
     }
 
-    if (param_->print > 2)
+    if (param_->print > 3)
         g_->print();
 }
 
@@ -320,7 +320,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
         double dg = g_->vector_dot(p_);
 
         if (std::fabs(dg) <= w2) {
-            if (param_->print > 2) {
+            if (param_->print > 3) {
                 outfile->Printf("\n    Optimal step length from bracketing stage: %.15f", step);
             }
             return;
@@ -337,7 +337,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
 
         step *= 2.0;
     }
-    if (param_->print > 2) {
+    if (param_->print > 3) {
         outfile->Printf("\n    Step lengths after bracketing stage: low = %.10f, high = %.10f",
                         step_low, step_high);
     }
@@ -360,7 +360,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
             double dg = g_->vector_dot(p_);
 
             if (std::fabs(dg) <= w2) {
-                if (param_->print > 2) {
+                if (param_->print > 3) {
                     outfile->Printf("\n    Optimal step length from zooming stage: %.15f", step);
                 }
                 break;
@@ -375,7 +375,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
             fx_low = fx;
         }
     }
-    if (param_->print > 2) {
+    if (param_->print > 3) {
         outfile->Printf("\n    Step lengths after zooming stage: low = %.10f, high = %.10f",
                         step_low, step_high);
     }
@@ -396,7 +396,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> 
 void LBFGS::apply_h0(psi::Vector& q) {
     if (param_->h0_freq < 0) {
         double gamma = compute_gamma();
-        if (param_->print > 2)
+        if (param_->print > 3)
             outfile->Printf("\n    gamma for H0: %.15f", gamma);
         q.scale(gamma);
     } else {

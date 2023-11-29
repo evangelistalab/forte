@@ -88,9 +88,9 @@ void ActiveSpaceMethod::set_wfn_filename(const std::string& name) { wfn_filename
 
 void ActiveSpaceMethod::set_root(int value) { root_ = value; }
 
-void ActiveSpaceMethod::set_print(int level) { print_ = level; }
+void ActiveSpaceMethod::set_print(PrintLevel level) { print_ = level; }
 
-void ActiveSpaceMethod::set_quiet_mode(bool quiet) { quiet_ = quiet; }
+void ActiveSpaceMethod::set_quiet_mode() { set_print(PrintLevel::Quiet); }
 
 DeterminantHashVec ActiveSpaceMethod::get_PQ_space() { return final_wfn_; }
 
@@ -130,23 +130,12 @@ std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_permanent_q
     auto ms_label = get_ms_string(state_.twice_ms());
     auto irrep_label = state_.irrep_label();
 
-    std::string state_label = multi_label + " (Ms = " + ms_label + ") " + irrep_label;
-    std::string prefix = ampints->qp_name().empty() ? "" : ampints->qp_name() + " ";
-    print_h2(prefix + "Quadrupole Moments [e a0^2] (Nuclear + Electronic) for " + state_label);
-
     // nuclear contributions
     auto quadrupole_nuc = ampints->nuclear_quadrupole();
 
     // prepare RDMs
     auto rdms_vec = rdms(root_list, ampints->qp_many_body_level(), RDMsType::spin_free);
 
-    // print table header
-    psi::outfile->Printf("\n    %8s %14s %14s %14s %14s %14s %14s", "State", "QM_XX", "QM_XY",
-                         "QM_XZ", "QM_YY", "QM_YZ", "QM_ZZ");
-    std::string dash(98, '-');
-    psi::outfile->Printf("\n    %s", dash.c_str());
-
-    // compute quadrupole
     std::vector<std::shared_ptr<psi::Vector>> out(root_list.size());
     for (size_t i = 0, size = root_list.size(); i < size; ++i) {
         const auto& [root1, root2] = root_list[i];
@@ -164,8 +153,6 @@ std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_permanent_q
         auto yy = quadrupole->get(3);
         auto yz = quadrupole->get(4);
         auto zz = quadrupole->get(5);
-        psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f%15.8f%15.8f", name.c_str(), xx, xy,
-                             xz, yy, yz, zz);
 
         // push to Psi4 global environment
         push_to_psi4_env_globals(xx, multi_label_upper + " <" + name + "|QM_XX|" + name + ">");
@@ -175,14 +162,49 @@ std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_permanent_q
         push_to_psi4_env_globals(yz, multi_label_upper + " <" + name + "|QM_YZ|" + name + ">");
         push_to_psi4_env_globals(zz, multi_label_upper + " <" + name + "|QM_ZZ|" + name + ">");
     }
-    psi::outfile->Printf("\n    %s", dash.c_str());
 
-    // print nuclear contribution
-    psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f%15.8f%15.8f", "Nuclear",
-                         quadrupole_nuc->get(0), quadrupole_nuc->get(1), quadrupole_nuc->get(2),
-                         quadrupole_nuc->get(3), quadrupole_nuc->get(4), quadrupole_nuc->get(5));
-    psi::outfile->Printf("\n    %s", dash.c_str());
+    if (print_ >= PrintLevel::Default) {
+        std::string state_label = multi_label + " (Ms = " + ms_label + ") " + irrep_label;
+        std::string prefix = ampints->qp_name().empty() ? "" : ampints->qp_name() + " ";
+        print_h2(prefix + "Quadrupole Moments [e a0^2] (Nuclear + Electronic) for " + state_label);
 
+        // print table header
+        psi::outfile->Printf("\n    %8s %14s %14s %14s %14s %14s %14s", "State", "QM_XX", "QM_XY",
+                             "QM_XZ", "QM_YY", "QM_YZ", "QM_ZZ");
+        std::string dash(98, '-');
+        psi::outfile->Printf("\n    %s", dash.c_str());
+
+        // compute quadrupole
+        std::vector<std::shared_ptr<psi::Vector>> out(root_list.size());
+        for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+            const auto& [root1, root2] = root_list[i];
+            if (root1 != root2)
+                continue;
+            std::string name = std::to_string(root1) + upper_string(irrep_label);
+
+            auto quadrupole = ampints->compute_electronic_quadrupole(rdms_vec[i]);
+            quadrupole->add(*quadrupole_nuc);
+            out[i] = quadrupole;
+
+            auto xx = quadrupole->get(0);
+            auto xy = quadrupole->get(1);
+            auto xz = quadrupole->get(2);
+            auto yy = quadrupole->get(3);
+            auto yz = quadrupole->get(4);
+            auto zz = quadrupole->get(5);
+            psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f%15.8f%15.8f", name.c_str(), xx,
+                                 xy, xz, yy, yz, zz);
+        }
+
+        psi::outfile->Printf("\n    %s", dash.c_str());
+
+        // print nuclear contribution
+        psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f%15.8f%15.8f", "Nuclear",
+                             quadrupole_nuc->get(0), quadrupole_nuc->get(1), quadrupole_nuc->get(2),
+                             quadrupole_nuc->get(3), quadrupole_nuc->get(4),
+                             quadrupole_nuc->get(5));
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
     return out;
 }
 
@@ -195,20 +217,11 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
     auto ms_label = get_ms_string(state_.twice_ms());
     auto irrep_label = state_.irrep_label();
 
-    std::string state_label = multi_label + " (Ms = " + ms_label + ") " + irrep_label;
-    std::string prefix = ampints->dp_name().empty() ? "" : ampints->dp_name() + " ";
-    print_h2(prefix + "Dipole Moments [e a0] (Nuclear + Electronic) for " + state_label);
-
     // nuclear contributions
     auto dipole_nuc = ampints->nuclear_dipole();
 
     // prepare RDMs
     auto rdms_vec = rdms(root_list, ampints->dp_many_body_level(), RDMsType::spin_free);
-
-    // print table header
-    psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
-    std::string dash(68, '-');
-    psi::outfile->Printf("\n    %s", dash.c_str());
 
     // compute dipole
     std::vector<std::shared_ptr<psi::Vector>> dipoles_out(root_list.size());
@@ -226,20 +239,43 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
         auto dy = dipole->get(1);
         auto dz = dipole->get(2);
         auto dm = dipole->norm();
-        psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dx, dy, dz, dm);
-
         // push to Psi4 global environment
         push_to_psi4_env_globals(dx, multi_label_upper + " <" + name + "|DM_X|" + name + ">");
         push_to_psi4_env_globals(dy, multi_label_upper + " <" + name + "|DM_Y|" + name + ">");
         push_to_psi4_env_globals(dz, multi_label_upper + " <" + name + "|DM_Z|" + name + ">");
         push_to_psi4_env_globals(dm, multi_label_upper + " |<" + name + "|DM|" + name + ">|");
     }
-    psi::outfile->Printf("\n    %s", dash.c_str());
 
-    // print nuclear contribution
-    psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", "Nuclear", dipole_nuc->get(0),
-                         dipole_nuc->get(1), dipole_nuc->get(2), dipole_nuc->norm());
-    psi::outfile->Printf("\n    %s", dash.c_str());
+    if (print_ >= PrintLevel::Default) {
+        std::string state_label = multi_label + " (Ms = " + ms_label + ") " + irrep_label;
+        std::string prefix = ampints->dp_name().empty() ? "" : ampints->dp_name() + " ";
+        print_h2(prefix + "Dipole Moments [e a0] (Nuclear + Electronic) for " + state_label);
+
+        // print table header
+        std::string dash(68, '-');
+        psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z",
+                             "|DM|");
+        psi::outfile->Printf("\n    %s", dash.c_str());
+        for (size_t i = 0, size = root_list.size(); i < size; ++i) {
+            const auto& [root1, root2] = root_list[i];
+            if (root1 != root2)
+                continue;
+            std::string name = std::to_string(root1) + upper_string(irrep_label);
+            auto dipole = dipoles_out[i];
+
+            auto dx = dipole->get(0);
+            auto dy = dipole->get(1);
+            auto dz = dipole->get(2);
+            auto dm = dipole->norm();
+            psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dx, dy, dz, dm);
+        }
+        psi::outfile->Printf("\n    %s", dash.c_str());
+
+        // print nuclear contribution
+        psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", "Nuclear", dipole_nuc->get(0),
+                             dipole_nuc->get(1), dipole_nuc->get(2), dipole_nuc->norm());
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
 
     return dipoles_out;
 }
@@ -382,7 +418,8 @@ std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_transition_
                 for (size_t j = 0; j < nactv; j++) {
                     double coeff_i = U->get(j, comp);
                     if (coeff_i * coeff_i > 0.10) {
-                        // Print the components with more than 0.1 amplitude from original orbitals
+                        // Print the components with more than 0.1 amplitude from original
+                        // orbitals
                         psi::outfile->Printf(" %6.4f Orb. %2zu", coeff_i * coeff_i, j);
                     }
                 }

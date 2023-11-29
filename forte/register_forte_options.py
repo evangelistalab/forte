@@ -116,7 +116,7 @@ def register_driver_options(options):
         "Active space solver used in the relaxation when using `external` active space solver",
     )
 
-    options.add_int("PRINT", 1, "Set the print level.")
+    options.add_int("PRINT", 2, "Set the print level. (0 = quiet, 1 = brief, 2 = default, 3 = verbose, 4 = debug)")
 
     options.add_bool("READ_ORBITALS", False, "Read orbitals from file if true")
 

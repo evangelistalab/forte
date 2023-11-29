@@ -140,7 +140,7 @@ void FCISolver::startup() {
         spin_adapter_->prepare_couplings(dets_);
     }
 
-    if (print_) {
+    if (print_ >= PrintLevel::Default) {
         table_printer printer;
         printer.add_int_data({{"Number of determinants", nfci_dets_},
                               {"Symmetry", symmetry_},
@@ -168,7 +168,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
     set_maxiter_davidson(options->get_int("DL_MAXITER"));
 
-    set_print(options->get_int("PRINT"));
+    set_print(int_to_print_level(options->get_int("PRINT")));
 }
 
 /*
@@ -294,7 +294,7 @@ double FCISolver::compute_energy() {
     eigen_vecs_ = dl_solver_->eigenvectors();
 
     // Print determinants
-    if (print_) {
+    if (print_ >= PrintLevel::Default) {
         print_solutions(100, b, b_basis, dl_solver_);
     }
 
@@ -374,7 +374,7 @@ void FCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::V
         b = b_basis;
     }
     C_->copy(b);
-    if (print_) {
+    if (print_ >= PrintLevel::Verbose) {
         std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
         print_h2(title_rdm);
     }

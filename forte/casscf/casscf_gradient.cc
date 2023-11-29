@@ -217,7 +217,7 @@ void CASSCF::tpdm_backtransform() {
         IntegralTransform::OutputType::DPDOnly,              // Output buffer
         IntegralTransform::MOOrdering::QTOrder,              // MO ordering
         IntegralTransform::FrozenOrbitals::None);            // Frozen orbitals?
-    transform->set_print(print_);
+    transform->set_print(static_cast<int>(print_));
     transform->backtransform_density();
     transform.reset();
 
