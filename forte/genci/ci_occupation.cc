@@ -163,13 +163,19 @@ get_ci_occupation_patterns(size_t na, size_t nb, const std::vector<int>& occ_min
             num_spaces += 1;
         }
     }
+    // the exception that breaks the rule
+    if (num_spaces == 0) {
+        std::vector<occupation_t> empty_occ(1, occupation_t{});
+        std::vector<std::pair<size_t, size_t>> empty_pairs(1, {0, 0});
+        return std::make_tuple(1, empty_occ, empty_occ, empty_pairs);
+    }
     return generate_ormas_occupations(na, nb, min_occ, max_occ, space_size, num_spaces);
 }
 
 std::tuple<std::vector<occupation_t>, std::vector<occupation_t>,
            std::vector<std::pair<size_t, size_t>>>
 generate_gas_occupations(int na, int nb, const occupation_t& min_occ, const occupation_t& max_occ,
-                         const occupation_t& gas_size, size_t num_spaces) {
+                         const occupation_t& gas_size) {
     std::vector<occupation_t> gas_alfa_occupations;
     std::vector<occupation_t> gas_beta_occupations;
     std::vector<std::pair<size_t, size_t>> gas_occupations;

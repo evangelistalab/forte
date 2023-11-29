@@ -51,8 +51,7 @@ get_ci_occupation_patterns(size_t na, size_t nb, const std::vector<int>& min_occ
 std::tuple<std::vector<occupation_t>, std::vector<occupation_t>,
            std::vector<std::pair<size_t, size_t>>>
 generate_gas_occupations(int na, int nb, const occupation_t& gas_min_el,
-                         const occupation_t& gas_max_el, const occupation_t& gas_size,
-                         size_t num_gas_spaces);
+                         const occupation_t& gas_max_el, const occupation_t& gas_size);
 
 std::vector<std::array<int, 6>>
 generate_1h_occupations(const std::vector<std::array<int, 6>>& gas_occupations);

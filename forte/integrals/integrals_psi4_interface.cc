@@ -196,7 +196,7 @@ void Psi4Integrals::make_psi4_JK() {
             JK_ = JK::build_JK(basis, basis_aux, psi4_options, "MEM_DF");
         }
     } else {
-        throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
+        throw psi::PSIEXCEPTION("Unknown Psi4 integral type to initialize JK in Forte");
     }
 
     JK_->set_cutoff(schwarz_cutoff_);
