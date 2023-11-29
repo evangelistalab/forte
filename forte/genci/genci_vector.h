@@ -130,8 +130,8 @@ class GenCIVector {
 
     /// Print the natural_orbitals from FCIWFN
     /// Assume user specified active space
-    // void print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mospace_info,
-    //                             std::shared_ptr<RDMs> rdms);
+    void print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mospace_info,
+                                std::shared_ptr<RDMs> rdms);
 
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,class_Ia, class_Ib,Ia,Ib)

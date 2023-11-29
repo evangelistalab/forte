@@ -107,7 +107,7 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     // });
 
     std::tie(ngas_spaces_, gas_alfa_occupations_, gas_beta_occupations_, gas_occupations_) =
-        get_gas_occupation(na_, nb_, gas_min_, gas_max_, gas_size_);
+        get_ci_occupation_patterns(na_, nb_, gas_min_, gas_max_, gas_size_);
 
     if (print_ >= PrintLevel::Default) {
         print_h2("Possible Electron Occupations");

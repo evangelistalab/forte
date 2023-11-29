@@ -43,15 +43,15 @@ std::tuple<size_t, std::vector<std::array<int, 6>>, std::vector<std::array<int, 
 get_gas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
                    const std::vector<int>& gas_max, const std::vector<int>& gas_size);
 
-std::tuple<size_t, std::vector<std::array<int, 6>>, std::vector<std::array<int, 6>>,
+std::tuple<size_t, std::vector<occupation_t>, std::vector<occupation_t>,
            std::vector<std::pair<size_t, size_t>>>
-get_ormas_occupation(size_t na, size_t nb, const std::vector<int>& gas_min,
-                     const std::vector<int>& gas_max, const std::vector<int>& gas_size);
+get_ci_occupation_patterns(size_t na, size_t nb, const std::vector<int>& min_occ,
+                           const std::vector<int>& max_occ, const std::vector<int>& size);
 
 std::tuple<std::vector<occupation_t>, std::vector<occupation_t>,
            std::vector<std::pair<size_t, size_t>>>
-generate_gas_occupations(int na, int nb, const std::vector<int>& gas_min_el,
-                         const std::vector<int>& gas_max_el, const std::vector<int>& gas_size,
+generate_gas_occupations(int na, int nb, const occupation_t& gas_min_el,
+                         const occupation_t& gas_max_el, const occupation_t& gas_size,
                          size_t num_gas_spaces);
 
 std::vector<std::array<int, 6>>

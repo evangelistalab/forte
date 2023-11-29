@@ -219,54 +219,52 @@ void GenCIVector::zero() {
         c->zero();
 }
 
-// void GenCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
-//                                        std::shared_ptr<RDMs> rdms) {
-//     print_h2("Natural Orbitals");
-//     psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
-//     auto nfdocc = mo_space_info->size("FROZEN_DOCC");
+void GenCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                         std::shared_ptr<RDMs> rdms) {
+    print_h2("Natural Orbitals Occupation Numbers");
+    psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
+    auto nfdocc = mo_space_info->size("FROZEN_DOCC");
 
-//     auto G1 = rdms->SF_G1();
-//     auto& G1_data = G1.data();
+    auto G1 = rdms->SF_G1();
+    auto& G1_data = G1.data();
 
-//     auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
+    auto opdm = std::make_shared<psi::Matrix>("OPDM", active_dim, active_dim);
 
-//     int offset = 0;
-//     for (int h = 0; h < nirrep_; h++) {
-//         for (int u = 0; u < active_dim[h]; u++) {
-//             for (int v = 0; v < active_dim[h]; v++) {
-//                 double gamma_uv = G1_data[(u + offset) * ncmo_ + v + offset];
-//                 opdm->set(h, u, v, gamma_uv);
-//             }
-//         }
-//         offset += active_dim[h];
-//     }
+    int offset = 0;
+    for (int h = 0; h < nirrep_; h++) {
+        for (int u = 0; u < active_dim[h]; u++) {
+            for (int v = 0; v < active_dim[h]; v++) {
+                double gamma_uv = G1_data[(u + offset) * ncmo_ + v + offset];
+                opdm->set(h, u, v, gamma_uv);
+            }
+        }
+        offset += active_dim[h];
+    }
 
-//     auto OCC = std::make_shared<psi::Vector>("Occupation numbers", active_dim);
-//     auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim,
-//     active_dim);
+    auto OCC = std::make_shared<psi::Vector>("Occupation numbers", active_dim);
+    auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim, active_dim);
 
-//     opdm->diagonalize(NO, OCC, psi::descending);
-//     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
-//     for (int h = 0; h < nirrep_; h++) {
-//         for (int u = 0; u < active_dim[h]; u++) {
-//             auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
-//             vec_irrep_occupation.push_back(irrep_occ);
-//         }
-//     }
-//     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
-//               std::greater<std::pair<double, std::pair<int, int>>>());
+    opdm->diagonalize(NO, OCC, psi::descending);
+    std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
+    for (int h = 0; h < nirrep_; h++) {
+        for (int u = 0; u < active_dim[h]; u++) {
+            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
+            vec_irrep_occupation.push_back(irrep_occ);
+        }
+    }
+    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
+              std::greater<std::pair<double, std::pair<int, int>>>());
 
-//     size_t count = 0;
-//     psi::outfile->Printf("\n    ");
-//     for (auto vec : vec_irrep_occupation) {
-//         psi::outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
-//                              mo_space_info->irrep_label(vec.second.first).c_str(),
-//                              vec.first);
-//         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
-//             psi::outfile->Printf("\n    ");
-//     }
-//     psi::outfile->Printf("\n");
-// }
+    size_t count = 0;
+    psi::outfile->Printf("\n    ");
+    for (auto vec : vec_irrep_occupation) {
+        psi::outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
+                             mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
+        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+            psi::outfile->Printf("\n    ");
+    }
+    psi::outfile->Printf("\n");
+}
 
 double** GenCIVector::gather_C_block(std::shared_ptr<psi::Matrix> M, bool alfa,
                                      std::shared_ptr<StringAddress> alfa_address,
