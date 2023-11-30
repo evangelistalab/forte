@@ -99,10 +99,10 @@ FCISolver::compute_transition_rdms_root(size_t root_left, size_t root_right,
         FCIVector::test_rdms(*C_, *method2_fcisolver->T_, 1, type, rdms);
     }
 
-    // // Print the NO if energy converged
-    // if (print_no_ || print_ > 1) {
-    //     C_->print_natural_orbitals(mo_space_info_);
-    // }
+    // Print the NO if energy converged
+    if (print_no_ || print_ >= PrintLevel::Default) {
+        C_->print_natural_orbitals(mo_space_info_, rdms);
+    }
     return rdms;
 }
 
