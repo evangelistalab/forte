@@ -12,7 +12,7 @@ timer.dat
 forte/version.h
 forte.egg-info
 docs/build
-
+build/**
 
 # Qt Creator project files
 *.config
@@ -42,6 +42,8 @@ forte_benchmarks
 /tests/**/test_results_*
 /tests/**/*.json
 tests/pytest/.cache/
+**/.ipynb_checkpoints
+
 
 doc/doxygen/html
 doc/doxygen/latex
