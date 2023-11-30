@@ -58,7 +58,7 @@ template <typename Func> void debug(Func func) {
 }
 
 GenCIStringLists::GenCIStringLists(std::shared_ptr<MOSpaceInfo> mo_space_info, size_t na, size_t nb,
-                                   int symmetry, int print, const std::vector<int> gas_min,
+                                   int symmetry, PrintLevel print, const std::vector<int> gas_min,
                                    const std::vector<int> gas_max)
     : symmetry_(symmetry), nirrep_(mo_space_info->nirrep()), ncmo_(mo_space_info->size("ACTIVE")),
       na_(na), nb_(nb), print_(print), gas_min_(gas_min), gas_max_(gas_max) {
@@ -107,12 +107,14 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     // });
 
     std::tie(ngas_spaces_, gas_alfa_occupations_, gas_beta_occupations_, gas_occupations_) =
-        get_gas_occupation(na_, nb_, gas_min_, gas_max_, gas_size_);
+        get_ci_occupation_patterns(na_, nb_, gas_min_, gas_max_, gas_size_);
 
-    print_h2("Possible Electron Occupations in GAS");
-    auto table = occupation_table(ngas_spaces_, gas_alfa_occupations_, gas_beta_occupations_,
-                                  gas_occupations_);
-    outfile->Printf("%s", table.c_str());
+    if (print_ >= PrintLevel::Default) {
+        print_h2("Possible Electron Occupations");
+        auto table = occupation_table(ngas_spaces_, gas_alfa_occupations_, gas_beta_occupations_,
+                                      gas_occupations_);
+        outfile->Printf("%s", table.c_str());
+    }
 
     // local_timers
     double str_list_timer = 0.0;
@@ -252,22 +254,23 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer +
                         vvoo_list_timer + vovo_list_timer;
 
-    if (print_) {
+    if (print_ >= PrintLevel::Default) {
         table_printer printer;
         printer.add_int_data({{"number of alpha electrons", na_},
                               {"number of beta electrons", nb_},
                               {"number of alpha strings", nas_},
                               {"number of beta strings", nbs_}});
-        printer.add_timing_data({{"timing for strings", str_list_timer},
-                                 {"timing for NN strings", nn_list_timer},
-                                 {"timing for VO strings", vo_list_timer},
-                                 {"timing for OO strings", oo_list_timer},
-                                 {"timing for VVOO strings", vvoo_list_timer},
-                                 {"timing for 1-hole strings", h1_list_timer},
-                                 {"timing for 2-hole strings", h2_list_timer},
-                                 {"timing for 3-hole strings", h3_list_timer},
-                                 {"total timing", total_time}});
-
+        if (print_ >= PrintLevel::Verbose) {
+            printer.add_timing_data({{"timing for strings", str_list_timer},
+                                     {"timing for NN strings", nn_list_timer},
+                                     {"timing for VO strings", vo_list_timer},
+                                     {"timing for OO strings", oo_list_timer},
+                                     {"timing for VVOO strings", vvoo_list_timer},
+                                     {"timing for 1-hole strings", h1_list_timer},
+                                     {"timing for 2-hole strings", h2_list_timer},
+                                     {"timing for 3-hole strings", h3_list_timer},
+                                     {"total timing", total_time}});
+        }
         std::string table = printer.get_table("String Lists");
         outfile->Printf("%s", table.c_str());
     }

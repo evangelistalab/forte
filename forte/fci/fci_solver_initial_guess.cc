@@ -76,7 +76,7 @@ std::vector<Determinant> FCISolver::initial_guess_generate_dets(std::shared_ptr<
     // Make sure that the spin space is complete
     enforce_spin_completeness(guess_dets, active_mo_.size());
     if (guess_dets.size() > num_guess_dets) {
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Brief) {
             psi::outfile->Printf("\n  Initial guess space is incomplete.\n  Adding "
                                  "%d determinant(s).",
                                  guess_dets.size() - num_guess_dets);
@@ -98,13 +98,14 @@ FCISolver::initial_guess_det(std::shared_ptr<psi::Vector> diag, size_t num_guess
 
     // here we use a standard guess procedure
     return find_initial_guess_det(guess_dets, guess_dets_pos, num_guess_states, fci_ints,
-                                  state().multiplicity(), true, print_,
+                                  state().multiplicity(), true, print_ >= PrintLevel::Default,
                                   std::vector<std::vector<std::pair<size_t, double>>>());
 }
 
 sparse_mat FCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag,
                                         size_t num_guess_states) {
-    return find_initial_guess_csf(diag, num_guess_states, state().multiplicity(), print_);
+    return find_initial_guess_csf(diag, num_guess_states, state().multiplicity(),
+                                  print_ >= PrintLevel::Default);
 }
 
 std::shared_ptr<psi::Vector>

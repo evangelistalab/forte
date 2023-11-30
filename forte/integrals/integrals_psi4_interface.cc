@@ -196,7 +196,7 @@ void Psi4Integrals::make_psi4_JK() {
             JK_ = JK::build_JK(basis, basis_aux, psi4_options, "MEM_DF");
         }
     } else {
-        throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
+        throw psi::PSIEXCEPTION("Unknown Psi4 integral type to initialize JK in Forte");
     }
 
     JK_->set_cutoff(schwarz_cutoff_);
@@ -243,11 +243,11 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
         corr_offset += ncmopi_[h];
     }
 
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Frozen-core energy        %20.15f a.u.", frozen_core_energy_);
         print_timing("frozen one-body operator", timer_frozen_one_body.get());
     }
-    if (print_ > 2) {
+    if (print_ > 3) {
         print_h1("One-body Hamiltonian elements dressed by frozen-core orbitals");
         if (Fock_a == Fock_b) {
             Fock_a->set_name("Frozen One Body");

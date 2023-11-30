@@ -84,7 +84,7 @@ void CASSCF::startup() {
         }
     }
 
-    print_ = options_->get_int("PRINT");
+    print_ = int_to_print_level(options_->get_int("PRINT"));
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
     nsopi_ = ints_->nsopi();
@@ -207,14 +207,14 @@ double CASSCF::compute_energy() {
 
         local_timer trans_ints_timer;
         tei_gaaa_ = transform_integrals(Ca);
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Default) {
             outfile->Printf("\n\n  Transform Integrals takes %8.8f s.", trans_ints_timer.get());
         }
         iter_con.push_back(iter);
 
         // Perform a CASCI
         E_casscf_old = E_casscf_;
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Default) {
             std::string ci_type = options_->get_str("CASSCF_CI_SOLVER");
             outfile->Printf("\n\n  Performing a CAS with %s", ci_type.c_str());
         }
@@ -229,7 +229,7 @@ double CASSCF::compute_energy() {
         } else {
             diagonalize_hamiltonian();
         }
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Default) {
             outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
         }
 
@@ -239,7 +239,7 @@ double CASSCF::compute_energy() {
         orbital_optimizer.set_frozen_one_body(F_frozen_core_);
         orbital_optimizer.set_symmmetry_mo(Ca);
         orbital_optimizer.one_body(Hcore_->clone());
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Default) {
             orbital_optimizer.set_print_timings(true);
         }
         orbital_optimizer.set_jk(JK_);
@@ -418,7 +418,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
             index += 1;
         }
     }
-    if (print_ > 1) {
+    if (print_ >= PrintLevel::Verbose) {
         outfile->Printf("\n  CSO2AO takes %8.4f s.", CSO2AO.get());
     }
 

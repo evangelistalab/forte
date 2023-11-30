@@ -153,10 +153,10 @@ class ForteIntegrals {
     /// temporary solution for not having a Wavefunction
     std::shared_ptr<psi::Wavefunction> wfn();
 
-    /// Return the Pis4 JK object
+    /// Return the Psi4 JK object
     std::shared_ptr<psi::JK> jk();
 
-    /// Enum class for the status of Pis4 JK
+    /// Enum class for the status of Psi4 JK
     enum class JKStatus { empty, initialized, finalized };
     /// Return the status of Psi4 JK object
     JKStatus jk_status();

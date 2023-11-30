@@ -96,7 +96,7 @@ class MCSCF_2STEP {
     std::string der_type_;
 
     /// The printing level
-    int print_;
+    PrintLevel print_ = PrintLevel::Default;
     /// Enable debug printing or not
     bool debug_print_;
 
@@ -148,7 +148,7 @@ class MCSCF_2STEP {
     /// @return averaged energy
     double diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
                                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                   const std::tuple<int, double, double, bool>& params);
+                                   const std::tuple<PrintLevel, double, double, bool>& params);
 
     /// Test if we are doing a single-reference orbital optimization
     bool is_single_reference();

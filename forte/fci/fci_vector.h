@@ -36,10 +36,10 @@
 #include "ambit/tensor.h"
 
 #include "base_classes/rdms.h"
+#include "helpers/printing.h"
+
 #include "fci_string_lists.h"
 #include "fci_string_address.h"
-
-#define CAPRICCIO_USE_DAXPY 1
 
 namespace psi {
 class Matrix;
@@ -136,9 +136,9 @@ class FCIVector {
     max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, int print_);
+    static void allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, PrintLevel print_);
     static void release_temp_space();
-    void set_print(int print) { print_ = print; }
+    void set_print(PrintLevel print) { print_ = print; }
 
     // ==> Class Static Functions <==
     static std::shared_ptr<RDMs> compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order,
@@ -167,7 +167,7 @@ class FCIVector {
     /// The number of determinants per irrep
     std::vector<size_t> detpi_;
     /// The print level
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The string list
     std::shared_ptr<FCIStringLists> lists_;

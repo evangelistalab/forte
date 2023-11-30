@@ -31,17 +31,20 @@
 
 #include <vector>
 #include <unordered_set>
+
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+
 #include "ambit/tensor.h"
 
 namespace ambit {
 class BlockedTensor;
 }
 
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
-
 #include "base_classes/rdms.h"
 #include "base_classes/state_info.h"
+
+#include "helpers/printing.h"
 #include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
@@ -329,10 +332,10 @@ class ActiveSpaceMethod {
 
     /// Set the print level
     /// @param level the print level (0 = no printing, 1 default)
-    void set_print(int level);
+    void set_print(PrintLevel level);
 
     /// Quiet mode (no printing, for use with CASSCF)
-    void set_quiet_mode(bool quiet);
+    void set_quiet_mode();
 
     /// Get the model space
     DeterminantHashVec get_PQ_space();
@@ -381,10 +384,7 @@ class ActiveSpaceMethod {
     int root_ = 0;
 
     /// A variable to control printing information
-    int print_ = 0;
-
-    /// Quiet printing
-    bool quiet_ = false;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// Eigenvalues
     std::shared_ptr<psi::Vector> evals_;

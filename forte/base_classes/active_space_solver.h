@@ -32,17 +32,21 @@
 #include <map>
 #include <vector>
 #include <string>
+
 #include <ambit/tensor.h>
+#include "psi4/libmints/matrix.h"
 
 namespace ambit {
 class BlockedTensor;
 }
 
-#include "psi4/libmints/matrix.h"
 #include "base_classes/state_info.h"
 #include "base_classes/rdms.h"
+#include "helpers/printing.h"
+
 #include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
+
 namespace forte {
 
 class ActiveSpaceMethod;
@@ -82,8 +86,8 @@ class ActiveSpaceSolver {
     // ==> Class Interface <==
 
     /// Set the print level
-    /// @param level the print level (0 = no printing, 1 default)
-    void set_print(int level);
+    /// @param level the print level
+    void set_print(PrintLevel level);
 
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
@@ -247,7 +251,7 @@ class ActiveSpaceSolver {
     std::map<StateInfo, std::string> state_filename_map_;
 
     /// A variable to control printing information
-    int print_ = 1;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The energy convergence criterion
     double e_convergence_ = 1.0e-10;

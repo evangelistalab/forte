@@ -70,14 +70,18 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
     if (max_rdm_level >= 3) {
         local_timer t;
         if (na >= 3) {
+            local_timer t_aaa;
             g3aaa = compute_3rdm_aaa_same_irrep(C_left, C_right, true);
+            psi::outfile->Printf("\n    Timing for 3-RDM (aaa): %.3f s", t_aaa.get());
         } else {
             g3aaa =
                 ambit::Tensor::build(ambit::CoreTensor, "g3aaa", {nmo, nmo, nmo, nmo, nmo, nmo});
             g3aaa.zero();
         }
         if (nb >= 3) {
+            local_timer t_bbb;
             g3bbb = compute_3rdm_aaa_same_irrep(C_left, C_right, false);
+            psi::outfile->Printf("\n    Timing for 3-RDM (bbb): %.3f s", t_bbb.get());
         } else {
             g3bbb =
                 ambit::Tensor::build(ambit::CoreTensor, "g3bbb", {nmo, nmo, nmo, nmo, nmo, nmo});
@@ -85,7 +89,9 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
         }
 
         if ((na >= 2) and (nb >= 1)) {
+            local_timer t_aab;
             g3aab = compute_3rdm_aab_same_irrep(C_left, C_right);
+            psi::outfile->Printf("\n    Timing for 3-RDM (aab): %.3f s", t_aab.get());
         } else {
             g3aab =
                 ambit::Tensor::build(ambit::CoreTensor, "g3aab", {nmo, nmo, nmo, nmo, nmo, nmo});
@@ -93,7 +99,9 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
         }
 
         if ((na >= 1) and (nb >= 2)) {
+            local_timer t_abb;
             g3abb = compute_3rdm_abb_same_irrep(C_left, C_right);
+            psi::outfile->Printf("\n    Timing for 3-RDM (abb): %.3f s", t_abb.get());
         } else {
             g3abb =
                 ambit::Tensor::build(ambit::CoreTensor, "g3abb", {nmo, nmo, nmo, nmo, nmo, nmo});
@@ -102,9 +110,9 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
         rdm_timing.push_back(t.get());
     }
 
-    for (size_t n = 0; n < rdm_timing.size(); ++n) {
-        psi::outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
-    }
+    // for (size_t n = 0; n < rdm_timing.size(); ++n) {
+    //     psi::outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
+    // }
 
     if (type == RDMsType::spin_dependent) {
         if (max_rdm_level == 1) {
@@ -447,6 +455,12 @@ ambit::Tensor GenCIVector::compute_3rdm_aaa_same_irrep(GenCIVector& C_left, GenC
 }
 
 ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenCIVector& C_right) {
+    // this threshold is used to avoid computing very small contributions to the 3-RDM
+    // here we screen for the absolute value of the elements of the C vector, and since the vector
+    // is normalized, we can guarantee that the neglected contribution to the 3-RDM is smaller or
+    // equal than this value
+    // const double c_threshold = 1.0e-14;
+
     size_t ncmo = C_left.ncmo_;
     const auto& lists = C_left.lists_;
 
@@ -455,14 +469,14 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
     rdm.zero();
     auto& rdm_data = rdm.data();
 
-    int num_2h_class_K = lists->alfa_address_2h()->nclasses();
-    int num_1h_class_L = lists->beta_address_1h()->nclasses();
+    int num_2h_class_Ka = lists->alfa_address_2h()->nclasses();
+    int num_1h_class_Kb = lists->beta_address_1h()->nclasses();
 
-    for (int class_K = 0; class_K < num_2h_class_K; ++class_K) {
-        size_t maxK = lists->alfa_address_2h()->strpcls(class_K);
+    for (int class_Ka = 0; class_Ka < num_2h_class_Ka; ++class_Ka) {
+        size_t maxKa = lists->alfa_address_2h()->strpcls(class_Ka);
 
-        for (int class_L = 0; class_L < num_1h_class_L; ++class_L) {
-            size_t maxL = lists->beta_address_1h()->strpcls(class_L);
+        for (int class_Kb = 0; class_Kb < num_1h_class_Kb; ++class_Kb) {
+            size_t maxKb = lists->beta_address_1h()->strpcls(class_Kb);
 
             // loop over blocks of matrix C
             for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
@@ -478,19 +492,22 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
                     // Get a pointer to the correct block of matrix C
                     const auto Cl = C_left.C_[nJ]->pointer();
 
-                    for (size_t K = 0; K < maxK; ++K) {
-                        auto& Krlist = lists->get_alfa_2h_list(class_K, K, class_Ia);
-                        auto& Kllist = lists->get_alfa_2h_list(class_K, K, class_Ja);
-                        for (size_t L = 0; L < maxL; ++L) {
-                            auto& Lrlist = lists->get_beta_1h_list(class_L, L, class_Ib);
-                            auto& Lllist = lists->get_beta_1h_list(class_L, L, class_Jb);
-                            for (const auto& [sign_pq, p, q, Ia] : Krlist) {
-                                for (const auto& [sign_st, s, t, Ja] : Kllist) {
-                                    for (const auto& [sign_r, r, Ib] : Lrlist) {
-                                        for (const auto& [sign_a, a, Jb] : Lllist) {
-                                            rdm_data[six_index(p, q, r, s, t, a, ncmo)] +=
-                                                sign_pq * sign_st * sign_r * sign_a * Cr[Ia][Ib] *
-                                                Cl[Ja][Jb];
+                    for (size_t Ka = 0; Ka < maxKa; ++Ka) {
+                        auto& Ka_right_list = lists->get_alfa_2h_list(class_Ka, Ka, class_Ia);
+                        auto& Ka_left_list = lists->get_alfa_2h_list(class_Ka, Ka, class_Ja);
+                        for (size_t Kb = 0; Kb < maxKb; ++Kb) {
+                            auto& Kb_right_list = lists->get_beta_1h_list(class_Kb, Kb, class_Ib);
+                            auto& Kb_left_list = lists->get_beta_1h_list(class_Kb, Kb, class_Jb);
+                            for (const auto& [sign_uv, u, v, Ja] : Ka_left_list) {
+                                for (const auto& [sign_w, w, Jb] : Kb_left_list) {
+                                    const double ClJ = sign_uv * sign_w * Cl[Ja][Jb];
+                                    // if (std::fabs(ClJ) < c_threshold)
+                                    //     continue;
+                                    for (const auto& [sign_xy, x, y, Ia] : Ka_right_list) {
+                                        const auto CrIa = Cr[Ia];
+                                        for (const auto& [sign_z, z, Ib] : Kb_right_list) {
+                                            rdm_data[six_index(u, v, w, x, y, z, ncmo)] +=
+                                                sign_xy * sign_z * ClJ * CrIa[Ib];
                                         }
                                     }
                                 }
@@ -501,60 +518,32 @@ ambit::Tensor GenCIVector::compute_3rdm_aab_same_irrep(GenCIVector& C_left, GenC
             }
         }
     }
-
-    // for (int h_K = 0; h_K < nirrep; ++h_K) {
-    //     size_t maxK = lists->alfa_address_2h()->strpcls(h_K);
-    //     for (int h_L = 0; h_L < nirrep; ++h_L) {
-    //         size_t maxL = lists->beta_address_1h()->strpcls(h_L);
-    //         // I and J refer to the 2h part of the operator
-    //         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-    //             int h_Mb = h_Ia ^ symmetry;
-    //             double** C_I_p = C_right.C(h_Ia)->pointer();
-    //             for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
-    //                 int h_Nb = h_Ja ^ symmetry;
-    //                 double** C_J_p = C_left.C(h_Ja)->pointer();
-    //                 for (size_t K = 0; K < maxK; ++K) {
-    //                     std::vector<H2StringSubstitution>& Ilist =
-    //                         lists->get_alfa_2h_list(h_K, K, h_Ia);
-    //                     std::vector<H2StringSubstitution>& Jlist =
-    //                         lists->get_alfa_2h_list(h_K, K, h_Ja);
-    //                     for (size_t L = 0; L < maxL; ++L) {
-    //                         std::vector<H1StringSubstitution>& Mlist =
-    //                             lists->get_beta_1h_list(h_L, L, h_Mb);
-    //                         std::vector<H1StringSubstitution>& Nlist =
-    //                             lists->get_beta_1h_list(h_L, L, h_Nb);
-    //                         for (const auto& Iel : Ilist) {
-    //                             size_t q = Iel.p;
-    //                             size_t p = Iel.q;
-    //                             size_t I = Iel.J;
-    //                             for (const auto& Jel : Jlist) {
-    //                                 size_t t = Jel.p;
-    //                                 size_t s = Jel.q;
-    //                                 size_t J = Jel.J;
-    //                                 for (const auto& Mel : Mlist) {
-    //                                     size_t r = Mel.p;
-    //                                     size_t M = Mel.J;
-    //                                     for (const auto& Nel : Nlist) {
-    //                                         size_t a = Nel.p;
-    //                                         size_t N = Nel.J;
-    //                                         short sign = Iel.sign * Jel.sign *
-    //                                         Mel.sign * Nel.sign; rdm[six_index(p, q,
-    //                                         r, s, t, a, ncmo)] +=
-    //                                             sign * C_I_p[I][M] * C_J_p[J][N];
-    //                                     }
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    for (size_t u = 0; u < ncmo; ++u) {
+        for (size_t v = 0; v < u; ++v) {
+            for (size_t w = 0; w < ncmo; ++w) {
+                for (size_t x = 0; x < ncmo; ++x) {
+                    for (size_t y = 0; y < x; ++y) {
+                        for (size_t z = 0; z < ncmo; ++z) {
+                            const double rdm_element = rdm_data[six_index(u, v, w, x, y, z, ncmo)];
+                            rdm_data[six_index(u, v, w, y, x, z, ncmo)] = -rdm_element;
+                            rdm_data[six_index(v, u, w, x, y, z, ncmo)] = -rdm_element;
+                            rdm_data[six_index(v, u, w, y, x, z, ncmo)] = +rdm_element;
+                        }
+                    }
+                }
+            }
+        }
+    }
     return rdm;
 }
 
 ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenCIVector& C_right) {
+    // this threshold is used to avoid computing very small contributions to the 3-RDM
+    // here we screen for the absolute value of the elements of the C vector, and since the vector
+    // is normalized, we can guarantee that the neglected contribution to the 3-RDM is smaller or
+    // equal than this value
+    // const double c_threshold = 1.0e-14;
+
     size_t ncmo = C_left.ncmo_;
     const auto& lists = C_left.lists_;
 
@@ -563,14 +552,14 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
     rdm.zero();
     auto& rdm_data = rdm.data();
 
-    int num_1h_class_K = lists->alfa_address_1h()->nclasses();
-    int num_2h_class_L = lists->beta_address_2h()->nclasses();
+    int num_1h_class_Ka = lists->alfa_address_1h()->nclasses();
+    int num_2h_class_Kb = lists->beta_address_2h()->nclasses();
 
-    for (int class_K = 0; class_K < num_1h_class_K; ++class_K) {
-        size_t maxK = lists->alfa_address_1h()->strpcls(class_K);
+    for (int class_Ka = 0; class_Ka < num_1h_class_Ka; ++class_Ka) {
+        size_t maxKa = lists->alfa_address_1h()->strpcls(class_Ka);
 
-        for (int class_L = 0; class_L < num_2h_class_L; ++class_L) {
-            size_t maxL = lists->beta_address_2h()->strpcls(class_L);
+        for (int class_Kb = 0; class_Kb < num_2h_class_Kb; ++class_Kb) {
+            size_t maxKb = lists->beta_address_2h()->strpcls(class_Kb);
 
             // loop over blocks of matrix C
             for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
@@ -586,19 +575,22 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
                     // Get a pointer to the correct block of matrix C
                     const auto Cl = C_left.C_[nJ]->pointer();
 
-                    for (size_t K = 0; K < maxK; ++K) {
-                        auto& Krlist = lists->get_alfa_1h_list(class_K, K, class_Ia);
-                        auto& Kllist = lists->get_alfa_1h_list(class_K, K, class_Ja);
-                        for (size_t L = 0; L < maxL; ++L) {
-                            auto& Lrlist = lists->get_beta_2h_list(class_L, L, class_Ib);
-                            auto& Lllist = lists->get_beta_2h_list(class_L, L, class_Jb);
-                            for (const auto& [sign_p, p, Ia] : Krlist) {
-                                for (const auto& [sign_s, s, Ja] : Kllist) {
-                                    for (const auto& [sign_qr, q, r, Ib] : Lrlist) {
-                                        for (const auto& [sign_ta, t, a, Jb] : Lllist) {
-                                            rdm_data[six_index(p, q, r, s, t, a, ncmo)] +=
-                                                sign_p * sign_s * sign_qr * sign_ta * Cr[Ia][Ib] *
-                                                Cl[Ja][Jb];
+                    for (size_t Ka = 0; Ka < maxKa; ++Ka) {
+                        auto& Ka_right_list = lists->get_alfa_1h_list(class_Ka, Ka, class_Ia);
+                        auto& Ka_left_list = lists->get_alfa_1h_list(class_Ka, Ka, class_Ja);
+                        for (size_t Kb = 0; Kb < maxKb; ++Kb) {
+                            auto& Kb_right_list = lists->get_beta_2h_list(class_Kb, Kb, class_Ib);
+                            auto& Kb_left_list = lists->get_beta_2h_list(class_Kb, Kb, class_Jb);
+                            for (const auto& [sign_u, u, Ja] : Ka_left_list) {
+                                for (const auto& [sign_vw, v, w, Jb] : Kb_left_list) {
+                                    const double ClJ = sign_u * sign_vw * Cl[Ja][Jb];
+                                    // if (std::fabs(ClJ) < c_threshold)
+                                    //     continue;
+                                    for (const auto& [sign_x, x, Ia] : Ka_right_list) {
+                                        const auto CrIa = Cr[Ia];
+                                        for (const auto& [sign_yz, y, z, Ib] : Kb_right_list) {
+                                            rdm_data[six_index(u, v, w, x, y, z, ncmo)] +=
+                                                sign_x * sign_yz * ClJ * CrIa[Ib];
                                         }
                                     }
                                 }
@@ -609,56 +601,22 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
             }
         }
     }
-
-    // for (int h_K = 0; h_K < nirrep; ++h_K) {
-    //     size_t maxK = lists->alfa_address_1h()->strpcls(h_K);
-    //     for (int h_L = 0; h_L < nirrep; ++h_L) {
-    //         size_t maxL = lists->beta_address_2h()->strpcls(h_L);
-    //         // I and J refer to the 1h part of the operator
-    //         for (int h_Ia = 0; h_Ia < nirrep; ++h_Ia) {
-    //             int h_Mb = h_Ia ^ symmetry;
-    //             double** C_I_p = C_right.C(h_Ia)->pointer();
-    //             for (int h_Ja = 0; h_Ja < nirrep; ++h_Ja) {
-    //                 int h_Nb = h_Ja ^ symmetry;
-    //                 double** C_J_p = C_left.C(h_Ja)->pointer();
-    //                 for (size_t K = 0; K < maxK; ++K) {
-    //                     std::vector<H1StringSubstitution>& Ilist =
-    //                         lists->get_alfa_1h_list(h_K, K, h_Ia);
-    //                     std::vector<H1StringSubstitution>& Jlist =
-    //                         lists->get_alfa_1h_list(h_K, K, h_Ja);
-    //                     for (size_t L = 0; L < maxL; ++L) {
-    //                         std::vector<H2StringSubstitution>& Mlist =
-    //                             lists->get_beta_2h_list(h_L, L, h_Mb);
-    //                         std::vector<H2StringSubstitution>& Nlist =
-    //                             lists->get_beta_2h_list(h_L, L, h_Nb);
-    //                         for (size_t Iel = 0; Iel < Ilist.size(); Iel++) {
-    //                             size_t p = Ilist[Iel].p;
-    //                             size_t I = Ilist[Iel].J;
-    //                             for (const auto& Mel : Mlist) {
-    //                                 size_t q = Mel.p;
-    //                                 size_t r = Mel.q;
-    //                                 size_t M = Mel.J;
-    //                                 for (const auto& Jel : Jlist) {
-    //                                     size_t s = Jel.p;
-    //                                     size_t J = Jel.J;
-    //                                     for (const auto& Nel : Nlist) {
-    //                                         size_t t = Nel.p;
-    //                                         size_t a = Nel.q;
-    //                                         size_t N = Nel.J;
-    //                                         short sign =
-    //                                             Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
-    //                                         rdm[six_index(p, q, r, s, t, a, ncmo)] +=
-    //                                             sign * C_I_p[I][M] * C_J_p[J][N];
-    //                                     }
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    for (size_t u = 0; u < ncmo; ++u) {
+        for (size_t v = 0; v < ncmo; ++v) {
+            for (size_t w = 0; w < v; ++w) {
+                for (size_t x = 0; x < ncmo; ++x) {
+                    for (size_t y = 0; y < ncmo; ++y) {
+                        for (size_t z = 0; z < y; ++z) {
+                            const double rdm_element = rdm_data[six_index(u, v, w, x, y, z, ncmo)];
+                            rdm_data[six_index(u, v, w, x, z, y, ncmo)] = -rdm_element;
+                            rdm_data[six_index(u, w, v, x, y, z, ncmo)] = -rdm_element;
+                            rdm_data[six_index(u, w, v, x, z, y, ncmo)] = +rdm_element;
+                        }
+                    }
+                }
+            }
+        }
+    }
     return rdm;
 }
 
@@ -668,8 +626,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
     auto state_vector_l = Cl.as_state_vector();
     auto state_vector_r = Cr.as_state_vector();
 
-    Determinant J; // <- xsize (no_);
-
+    Determinant J;
     psi::outfile->Printf("\n\n==> RDMs Test (max level = %d)<==\n", max_rdm_level);
 
     if (max_rdm_level >= 1) {

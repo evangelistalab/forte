@@ -82,7 +82,7 @@ void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = va
 
 void SparseCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
 
-void SparseCISolver::set_print(int value) { print_ = value; }
+void SparseCISolver::set_print(PrintLevel value) { print_ = value; }
 
 void SparseCISolver::set_spin_adapt_full_preconditioner(bool value) {
     spin_adapt_full_preconditioner_ = value;
@@ -114,7 +114,7 @@ void SparseCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_spin_project(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     set_spin_project_full(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
 
-    set_print(options->get_int("PRINT"));
+    set_print(int_to_print_level(options->get_int("PRINT")));
 
     set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
     set_spin_adapt_full_preconditioner(options->get_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER"));
@@ -418,14 +418,15 @@ auto SparseCISolver::initial_guess_det(const DeterminantHashVec& space,
     }
 
     return find_initial_guess_det(guess_dets, guess_dets_pos, num_guess_states,
-                                  sigma_vector->as_ints(), multiplicity, do_spin_project, print_,
-                                  user_guess_);
+                                  sigma_vector->as_ints(), multiplicity, do_spin_project,
+                                  print_ >= PrintLevel::Default, user_guess_);
 }
 
 auto SparseCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
                                        int multiplicity) {
 
-    return find_initial_guess_csf(diag, num_guess_states, multiplicity, print_details_);
+    return find_initial_guess_csf(diag, num_guess_states, multiplicity,
+                                  print_ >= PrintLevel::Default);
 }
 
 std::shared_ptr<psi::Vector>

@@ -267,7 +267,15 @@ PYBIND11_MODULE(_forte, m) {
         "abab...");
 
     m.def("get_gas_occupation", &get_gas_occupation);
-    m.def("get_ormas_occupation", &get_ormas_occupation);
+    m.def("get_ci_occupation_patterns", &get_ci_occupation_patterns);
+
+    py::enum_<PrintLevel>(m, "PrintLevel")
+        .value("Quiet", PrintLevel::Quiet)
+        .value("Brief", PrintLevel::Brief)
+        .value("Default", PrintLevel::Default)
+        .value("Verbose", PrintLevel::Verbose)
+        .value("Debug", PrintLevel::Debug)
+        .export_values();
 
     //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
 

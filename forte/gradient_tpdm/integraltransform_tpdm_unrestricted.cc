@@ -111,7 +111,7 @@ void TPDMBackTransform::backtransform_tpdm_unrestricted() {
             rowsLeft = 0;
         }
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\n    h = %d; memfree         = %lu", h, memFree);
             outfile->Printf("\n    h = %d; rows_per_bucket = %lu", h, rowsPerBucket);
             outfile->Printf("\n    h = %d; rows_left       = %lu", h, rowsLeft);
@@ -214,7 +214,7 @@ void TPDMBackTransform::backtransform_tpdm_unrestricted() {
             rowsLeft = 0;
         }
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\n    h = %d; memfree         = %lu", h, memFree);
             outfile->Printf("\n    h = %d; rows_per_bucket = %lu", h, rowsPerBucket);
             outfile->Printf("\n    h = %d; rows_left       = %lu", h, rowsLeft);
@@ -319,7 +319,7 @@ void TPDMBackTransform::backtransform_tpdm_unrestricted() {
             rowsLeft = 0;
         }
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\n    h = %d; memfree         = %lu", h, memFree);
             outfile->Printf("\n    h = %d; rows_per_bucket = %lu", h, rowsPerBucket);
             outfile->Printf("\n    h = %d; rows_left       = %lu", h, rowsLeft);

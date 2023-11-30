@@ -43,7 +43,8 @@ using namespace psi;
 namespace forte {
 
 FCIStringLists::FCIStringLists(psi::Dimension cmopi, std::vector<size_t> core_mo,
-                               std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print)
+                               std::vector<size_t> cmo_to_mo, size_t na, size_t nb,
+                               PrintLevel print)
     : nirrep_(cmopi.n()), ncmo_(cmopi.sum()), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo),
       fomo_to_mo_(core_mo), na_(na), nb_(nb), print_(print) {
     startup();
@@ -181,21 +182,23 @@ void FCIStringLists::startup() {
     double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer +
                         vvoo_list_timer + vovo_list_timer;
 
-    if (print_) {
+    if (print_ >= PrintLevel::Default) {
         table_printer printer;
         printer.add_int_data({{"number of alpha electrons", na_},
                               {"number of beta electrons", nb_},
                               {"number of alpha strings", nas_},
                               {"number of beta strings", nbs_}});
-        printer.add_timing_data({{"timing for strings", str_list_timer},
-                                 {"timing for NN strings", nn_list_timer},
-                                 {"timing for VO strings", vo_list_timer},
-                                 {"timing for OO strings", oo_list_timer},
-                                 {"timing for VVOO strings", vvoo_list_timer},
-                                 {"timing for 1-hole strings", h1_list_timer},
-                                 {"timing for 2-hole strings", h2_list_timer},
-                                 {"timing for 3-hole strings", h3_list_timer},
-                                 {"total timing", total_time}});
+        if (print_ >= PrintLevel::Verbose) {
+            printer.add_timing_data({{"timing for strings", str_list_timer},
+                                     {"timing for NN strings", nn_list_timer},
+                                     {"timing for VO strings", vo_list_timer},
+                                     {"timing for OO strings", oo_list_timer},
+                                     {"timing for VVOO strings", vvoo_list_timer},
+                                     {"timing for 1-hole strings", h1_list_timer},
+                                     {"timing for 2-hole strings", h2_list_timer},
+                                     {"timing for 3-hole strings", h3_list_timer},
+                                     {"total timing", total_time}});
+        }
 
         std::string table = printer.get_table("String Lists");
         outfile->Printf("%s", table.c_str());
