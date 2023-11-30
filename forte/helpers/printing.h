@@ -135,6 +135,8 @@ class table_printer {
     std::string get_table(const std::string& title) const {
         std::ostringstream oss;
         print_h2(oss, title);
+        std::string line(56, '-');
+        oss << "\n    " << line;
         print_data(oss, info_string, [](const std::string& val) { return val; });
         print_data(oss, info_bool,
                    [](bool val) { return val ? std::string("TRUE") : std::string("FALSE"); });
@@ -146,7 +148,7 @@ class table_printer {
         });
         print_data(oss, info_timing,
                    [](double val) { return format_double(val, "%15.3f") + " s"; });
-        oss << "\n";
+        oss << "\n    " << line;
         return oss.str();
     }
 
