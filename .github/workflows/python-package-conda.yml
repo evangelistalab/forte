@@ -29,7 +29,6 @@ jobs:
         echo $HOME
         ls -l
         conda env update --file environment.yml --name base
-        conda install -y -c psi4 libint2
 
     - name: Install ambit
       run: |
@@ -41,7 +40,7 @@ jobs:
         cd ambit
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/bin/ambit
         cd objdir
-        make -j4
+        make -j8
         make install
 
     - name: Compile psi4
@@ -51,7 +50,7 @@ jobs:
         git clone https://github.com/evangelistalab/psi4.git
         cd psi4
         git checkout policyfix
-        cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PSI4BIN_DIR -DENABLE_ecpint=ON
+        cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PSI4BIN_DIR -DMAX_AM_ERI=4 -DENABLE_ecpint=ON
         cd objdir
         make -j4
         make install
