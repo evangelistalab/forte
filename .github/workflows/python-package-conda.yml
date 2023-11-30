@@ -30,7 +30,7 @@ jobs:
         echo $PSI4BIN_DIR >> $GITHUB_PATH
         echo "env.GITHUB_PATH: ${{ env.PSI4BIN_DIR }}"
 
-        export PATH=${{ env.PSI4BIN_DIR }}:$PATH
+        export PATH=$HOME/psi4bin:$PATH
         echo "Current PATH: $PATH"
 
     - name: Install dependencies
