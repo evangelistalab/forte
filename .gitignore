@@ -21,6 +21,8 @@ docs/build
 *.files
 *.includes
 
+.vscode/**
+
 forte_tests
 forte_benchmarks
 
@@ -36,6 +38,9 @@ forte_benchmarks
 /tests/methods/*/timer.dat
 /tests/methods/*/*.txt
 /tests/methods/*/*.npz
+/tests/**/failed_tests.yaml
+/tests/**/test_results_*
+/tests/**/*.json
 tests/pytest/.cache/
 
 doc/doxygen/html
