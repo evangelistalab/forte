@@ -29,6 +29,7 @@ jobs:
         echo $HOME
         ls -l
         conda env update --file environment.yml --name base
+        conda install -c psi4 libint2
 
     - name: Install ambit
       run: |
