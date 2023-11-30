@@ -51,7 +51,7 @@ double FCIVector::h2_aaaa_timer = 0.0;
 double FCIVector::h2_aabb_timer = 0.0;
 double FCIVector::h2_bbbb_timer = 0.0;
 
-void FCIVector::allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, int print_) {
+void FCIVector::allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, PrintLevel print_) {
     size_t nirreps = lists_->nirrep();
 
     // if CR is already allocated (e.g., because we computed several roots) make sure
@@ -71,7 +71,7 @@ void FCIVector::allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, int 
     if (max_size > current_size) {
         CR = std::make_shared<psi::Matrix>("CR", max_size, max_size);
         CL = std::make_shared<psi::Matrix>("CL", max_size, max_size);
-        if (print_)
+        if (print_ >= PrintLevel::Verbose)
             outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
                             "Size: 2 x %zu x %zu.   Memory: %8.6f GB",
                             max_size, max_size, to_gb(2 * max_size * max_size));

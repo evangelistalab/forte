@@ -62,9 +62,9 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
       mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
 
-    print_options();
+    // print_options();
 
-    print_ = options->get_int("PRINT");
+    print_ = int_to_print_level(options->get_int("PRINT"));
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
@@ -87,7 +87,7 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     }
 }
 
-void ActiveSpaceSolver::set_print(int level) { print_ = level; }
+void ActiveSpaceSolver::set_print(PrintLevel level) { print_ = level; }
 
 void ActiveSpaceSolver::set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
 
@@ -182,11 +182,29 @@ void ActiveSpaceSolver::validate_spin(const std::vector<double>& spin2, const St
 }
 
 void ActiveSpaceSolver::print_energies() {
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
+
+    for (const auto& state_nroot : state_nroots_map_) {
+        const auto& state = state_nroot.first;
+        int irrep = state.irrep();
+        int multi = state.multiplicity();
+        int nstates = state_nroot.second;
+        int twice_ms = state.twice_ms();
+        for (int i = 0; i < nstates; ++i) {
+            double energy = state_energies_map_[state][i];
+            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
+                         irrep_symbol[irrep];
+            push_to_psi4_env_globals(energy, upper_string(label));
+        }
+    }
+
+    if (print_ < PrintLevel::Brief)
+        return;
+
     print_h2("Energy Summary");
     psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy      <S^2>");
     std::string dash(56, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
-    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -205,12 +223,7 @@ void ActiveSpaceSolver::print_energies() {
                 psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f       n/a", multi,
                                      twice_ms, irrep_symbol[irrep].c_str(), i, energy);
             }
-
-            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
-                         irrep_symbol[irrep];
-            push_to_psi4_env_globals(energy, upper_string(label));
         }
-
         psi::outfile->Printf("\n    %s", dash.c_str());
     }
 }

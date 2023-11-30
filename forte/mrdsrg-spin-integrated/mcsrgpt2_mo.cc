@@ -140,7 +140,7 @@ void MCSRGPT2_MO::startup() {
 
     // Print Delta
     print_ = options_->get_int("PRINT");
-    if (print_ > 1) {
+    if (print_ > 2) {
         PrintDelta();
         test_D1_RE();
         test_D2_RE();
@@ -3363,7 +3363,7 @@ void MCSRGPT2_MO::Form_Fock(d2& A, d2& B) {
     }
     timer_off("Form Fock");
 
-    if (print_ > 1) {
+    if (print_ > 2) {
         print_Fock("Alpha", A);
         print_Fock("Beta", B);
     }
@@ -3383,7 +3383,7 @@ void MCSRGPT2_MO::fill_naive_cumulants(std::shared_ptr<RDMs> ref, const int leve
     ambit::Tensor L1a = ref->g1a();
     ambit::Tensor L1b = ref->g1b();
     fill_one_cumulant(L1a, L1b);
-    if (print_ > 1) {
+    if (print_ > 2) {
         print_density("Alpha", Da_);
         print_density("Beta", Db_);
     }
@@ -3394,7 +3394,7 @@ void MCSRGPT2_MO::fill_naive_cumulants(std::shared_ptr<RDMs> ref, const int leve
         ambit::Tensor L2ab = ref->L2ab();
         ambit::Tensor L2bb = ref->L2bb();
         fill_two_cumulant(L2aa, L2ab, L2bb);
-        if (print_ > 2) {
+        if (print_ > 3) {
             print2PDC("L2aa", L2aa_, print_);
             print2PDC("L2ab", L2ab_, print_);
             print2PDC("L2bb", L2bb_, print_);
@@ -3408,7 +3408,7 @@ void MCSRGPT2_MO::fill_naive_cumulants(std::shared_ptr<RDMs> ref, const int leve
         ambit::Tensor L3abb = ref->L3abb();
         ambit::Tensor L3bbb = ref->L3bbb();
         fill_three_cumulant(L3aaa, L3aab, L3abb, L3bbb);
-        if (print_ > 3) {
+        if (print_ > 4) {
             print3PDC("L3aaa", L3aaa_, print_);
             print3PDC("L3aab", L3aab_, print_);
             print3PDC("L3abb", L3abb_, print_);

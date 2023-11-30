@@ -211,7 +211,7 @@ void THREE_DSRG_MRPT2::startup() {
         Fa_ = Fdiag_a_;
         Fb_ = Fdiag_b_;
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             Gamma1_.print(stdout);
             Eta1_.print(stdout);
             F_.print(stdout);
@@ -384,10 +384,10 @@ double THREE_DSRG_MRPT2::compute_energy() {
         // renormalize F
         renormalize_F();
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             F_.print();
         }
-        if (print_ > 2) {
+        if (print_ > 3) {
             T1_.print();
         }
     }
@@ -1567,7 +1567,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             //            Lambda3_aAA("pqrstu") = L3abb_("pqrstu");
             //            Lambda3_AAA("pqrstu") = L3bbb_("pqrstu");
 
-            //            if (print_ > 3){
+            //            if (print_ > 4){
             //                Lambda3.print(stdout);
             //            }
 
@@ -2819,7 +2819,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
     Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
 
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n\n  CAVV computation takes %8.8f", ccvaTimer.get());
     }
 
@@ -2949,7 +2949,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     }
     Eccva += tempTaa_all("vu") * Eta1_aa("uv");
     Eccva += tempTAA_all("VU") * Eta1_AA("UV");
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n\n  CCVA takes %8.8f", cavvTimer.get());
     }
 

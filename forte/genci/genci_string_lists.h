@@ -35,6 +35,8 @@
 #include <utility>
 
 #include "helpers/timer.h"
+#include "helpers/printing.h"
+
 #include "sparse_ci/determinant.h"
 #include "fci/string_list_defs.h"
 #include "genci_string_address.h"
@@ -54,7 +56,8 @@ class GenCIStringLists {
     // ==> Constructor and Destructor <==
     /// @brief The GenCIStringLists constructor
     GenCIStringLists(std::shared_ptr<MOSpaceInfo> mo_space_info, size_t na, size_t nb, int symmetry,
-                     int print, const std::vector<int> gas_min, const std::vector<int> gas_max);
+                     PrintLevel print, const std::vector<int> gas_min,
+                     const std::vector<int> gas_max);
 
     ~GenCIStringLists() {}
 
@@ -180,7 +183,7 @@ class GenCIStringLists {
     /// The offset array for pairpi
     std::vector<int> pair_offset_;
     /// The print level
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
 
     // GAS specific data
 

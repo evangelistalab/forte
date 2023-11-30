@@ -405,7 +405,7 @@ void export_SparseCISolver(py::module& m) {
 void export_GAS(py::module& m) {
     py::class_<GenCIStringLists, std::shared_ptr<GenCIStringLists>>(
         m, "GenCIStringLists", "A class to represent the strings of a GAS")
-        .def(py::init<std::shared_ptr<MOSpaceInfo>, size_t, size_t, int, int,
+        .def(py::init<std::shared_ptr<MOSpaceInfo>, size_t, size_t, int, PrintLevel,
                       const std::vector<int>, const std::vector<int>>())
         .def("make_determinants", &GenCIStringLists::make_determinants,
              "Return a vector of Determinants");

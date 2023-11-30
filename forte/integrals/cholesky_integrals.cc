@@ -283,7 +283,7 @@ void CholeskyIntegrals::transform_integrals() {
 }
 
 void CholeskyIntegrals::resort_integrals_after_freezing() {
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
     // Resort the three-index integrals

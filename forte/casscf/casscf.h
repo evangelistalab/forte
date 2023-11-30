@@ -233,7 +233,7 @@ class CASSCF {
     ambit::Tensor tei_gaaa_;
 
     /// The print level
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;

@@ -100,7 +100,7 @@ std::shared_ptr<psi::IntegralTransform> ConventionalIntegrals::transform_integra
     integral_transform->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
     dpd_set_default(integral_transform->get_dpd_id());
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     }
     return integral_transform;
@@ -174,7 +174,7 @@ void ConventionalIntegrals::gather_integrals() {
     mints.integrals();
     auto integral_transform = transform_integrals();
 
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Reading the two-electron integrals from disk");
         outfile->Printf("\n  Size of two-electron integrals: %10.6f GB",
                         double(3 * 8 * num_aptei_) / 1073741824.0);
@@ -240,7 +240,7 @@ void ConventionalIntegrals::gather_integrals() {
 }
 
 void ConventionalIntegrals::resort_integrals_after_freezing() {
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
     // Resort the four-index integrals

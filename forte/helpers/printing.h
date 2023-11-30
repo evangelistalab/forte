@@ -38,7 +38,27 @@
 
 namespace forte {
 
-enum class PrintLevel { Quiet = 0, Mini = 1, Default = 2, Debug = 3 };
+/// This enum is used to control the verbosity of the output
+/// The higher the level, the more verbose the output
+/// This is roughly how these should be used:
+/// - Quiet: No output at all, except for errors
+/// - Mini: Only the most important information
+/// - Default: The most important information and some extra information
+/// - Debug: All the information and more
+enum class PrintLevel { Quiet = 0, Brief = 1, Default = 2, Verbose = 3, Debug = 4 };
+
+bool operator>(PrintLevel a, PrintLevel b);
+
+bool operator<(PrintLevel a, PrintLevel b);
+
+/// @brief  Convert an integer to a PrintLevel
+/// @param level the print level as an integer (0 = quiet, 1 = brief, 2 = default, 3 = verbose, 4
+/// =debug)
+/// @return
+PrintLevel int_to_print_level(int level);
+
+/// @brief Return the string representation of a PrintLevel
+std::string to_string(PrintLevel level);
 
 /**
  * @brief print_h1 Print a header
@@ -115,6 +135,8 @@ class table_printer {
     std::string get_table(const std::string& title) const {
         std::ostringstream oss;
         print_h2(oss, title);
+        std::string line(56, '-');
+        oss << "\n    " << line;
         print_data(oss, info_string, [](const std::string& val) { return val; });
         print_data(oss, info_bool,
                    [](bool val) { return val ? std::string("TRUE") : std::string("FALSE"); });
@@ -126,7 +148,7 @@ class table_printer {
         });
         print_data(oss, info_timing,
                    [](double val) { return format_double(val, "%15.3f") + " s"; });
-        oss << "\n";
+        oss << "\n    " << line;
         return oss.str();
     }
 

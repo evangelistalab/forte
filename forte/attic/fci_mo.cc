@@ -158,7 +158,7 @@ void FCI_MO::startup() {
     read_options();
 
     // print options
-    if (print_ > 0) {
+    if (print_ > 1) {
         print_options();
     }
 
@@ -398,7 +398,7 @@ void FCI_MO::form_p_space() {
         outfile->Printf("\n");
     }
 
-    if (print_ > 1) {
+    if (print_ > 2) {
         print_det(determinant_);
     }
 
@@ -2217,7 +2217,7 @@ void FCI_MO::build_dets321() {
             }
         }
     }
-    if (print_ > 2)
+    if (print_ > 3)
         outfile->Printf("\n  dets321 sizes: a = %zu, b = %zu", dets321_a_.size(),
                         dets321_b_.size());
 
@@ -2386,7 +2386,7 @@ void FCI_MO::build_lists321() {
         }
     }
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n  list aaa size = %zu", list21_aaa_.size());
         outfile->Printf("\n  list abb size = %zu", list21_abb_.size());
         outfile->Printf("\n  list baa size = %zu", list21_baa_.size());

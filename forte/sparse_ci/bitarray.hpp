@@ -418,6 +418,24 @@ template <size_t N> class BitArray {
         return ~word_t(0);
     }
 
+    /// Find all the bits set to one and store their indices in the vector occ
+    /// @param occ a vector of integers where the indices of the bits set to one are stored
+    /// @param n the number of bits set to one
+    /// @param begin the index of the first word to test
+    /// @param end the index of the last word to test (not included)
+    void find_set_bits(std::vector<int>& occ, int& n, size_t begin = 0,
+                       size_t end = nwords_) const {
+        n = 0;
+        uint64_t x;
+        for (; begin < end; ++begin) {
+            x = words_[begin];
+            while (x != 0) {
+                occ[n] = ui64_find_and_clear_lowest_one_bit(x) + begin * bits_per_word;
+                ++n;
+            }
+        }
+    }
+
     /// Implements the operation: (a & b) == b
     bool fast_a_and_b_equal_b(const BitArray<N>& b) const {
         bool result = false;

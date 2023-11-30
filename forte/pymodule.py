@@ -513,7 +513,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
 
-        if options.get_str("DERTYPE") == "FIRST" and active_space_solver_type == "DETCI":
+        if options.get_str("DERTYPE") == "FIRST" and active_space_solver_type in ["DETCI", "GENCI"]:
             # Compute coupling coefficients
             # NOTE: 1. Orbitals have to be semicanonicalized already to make sure
             #          DSRG reads consistent CI coefficients before and after SemiCanonical class.
@@ -616,7 +616,7 @@ def run_forte(name, **kwargs):
         active_space_method = forte.make_active_space_method(
             "ACI", state, options.get_int("NROOT"), scf_info, mo_space_info, as_ints, options
         )
-        active_space_method.set_quiet_mode(True)
+        active_space_method.set_quiet_mode()
         active_space_method.compute_energy()
 
         tdci = forte.TDCI(active_space_method, scf_info, options, mo_space_info, as_ints)

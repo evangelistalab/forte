@@ -82,7 +82,7 @@ std::shared_ptr<RDMs> FCISolver::compute_rdms_root(size_t root_left, size_t root
         T_->copy(*C_);
     }
 
-    if (print_) {
+    if (print_ >= PrintLevel::Verbose) {
         std::string title_rdm = "Computing RDMs <" + std::to_string(root_left) + " " +
                                 state().str_minimum() + "| ... |" + std::to_string(root_right) +
                                 " " + state().str_minimum() + ">";
@@ -97,7 +97,7 @@ std::shared_ptr<RDMs> FCISolver::compute_rdms_root(size_t root_left, size_t root
     }
 
     // Print the NO if energy converged
-    if (print_no_ || print_ > 0) {
+    if (print_no_ || print_ >= PrintLevel::Default) {
         C_->print_natural_orbitals(mo_space_info_, rdms);
     }
     return rdms;

@@ -137,7 +137,7 @@ void GenCISolver::startup() {
         spin_adapter_->prepare_couplings(dets_);
     }
 
-    if (print_) {
+    if (print_ >= PrintLevel::Brief) {
         table_printer printer;
         printer.add_int_data({{"Number of determinants", nfci_dets_},
                               {"Symmetry", symmetry_},
@@ -145,7 +145,8 @@ void GenCISolver::startup() {
                               {"Number of roots", nroot_},
                               {"Target root", root_}});
         printer.add_bool_data({{"Spin adapt", spin_adapt_}});
-        std::string table = printer.get_table("GASCI Solver");
+        printer.add_string_data({{"Print level", to_string(print_)}});
+        std::string table = printer.get_table("String-based CI Solver");
         psi::outfile->Printf("%s", table.c_str());
     }
 }
@@ -165,7 +166,7 @@ void GenCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
     set_maxiter_davidson(options->get_int("DL_MAXITER"));
 
-    set_print(options->get_int("PRINT"));
+    set_print(int_to_print_level(options->get_int("PRINT")));
 }
 
 /*
@@ -290,8 +291,12 @@ double GenCISolver::compute_energy() {
     }
     eigen_vecs_ = dl_solver_->eigenvectors();
 
+    if (print_ >= PrintLevel::Default) {
+        print_timing("CI", t.get());
+    }
+
     // Print determinants
-    if (print_) {
+    if (print_ >= PrintLevel::Default) {
         print_solutions(100, b, b_basis, dl_solver_);
     }
 
@@ -303,7 +308,6 @@ double GenCISolver::compute_energy() {
     energy_ = dl_solver_->eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["CI ENERGY"] = energy_;
-    psi::outfile->Printf("\n    Time for GenCI: %20.12f", t.get());
 
     // GenCIVector::release_temp_space();
     return energy_;
@@ -367,7 +371,7 @@ void GenCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi:
         b = b_basis;
     }
     C_->copy(b);
-    if (print_) {
+    if (print_ >= PrintLevel::Verbose) {
         std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
         print_h2(title_rdm);
     }

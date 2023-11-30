@@ -37,6 +37,8 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 
+#include "helpers/printing.h"
+
 namespace psi {
 class Vector;
 class Matrix;
@@ -61,7 +63,7 @@ class DavidsonLiuSolver {
     void add_project_out_vectors(const std::vector<sparse_vec>& project_out_vectors);
 
     /// Set the print level
-    void set_print_level(size_t n);
+    void set_print_level(PrintLevel level);
     /// Set the energy convergence
     void set_e_convergence(double value);
     /// Set the residual convergence
@@ -110,7 +112,7 @@ class DavidsonLiuSolver {
     std::vector<sparse_vec> project_out_vectors_;
 
     /// The print level
-    size_t print_level_ = 1;
+    PrintLevel print_ = PrintLevel::Default;
     /// The maximum number of iterations
     size_t max_iter_ = 50;
     /// Eigenvalue convergence threshold
