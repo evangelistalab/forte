@@ -28,9 +28,10 @@ jobs:
 
         PSI4BIN_DIR=$HOME/psi4bin
         echo $PSI4BIN_DIR >> $GITHUB_PATH
+        echo "env.GITHUB_PATH: ${{ env.PSI4BIN_DIR }}"
 
+        export PATH=${{ env.PSI4BIN_DIR }}:$PATH
         echo "Current PATH: $PATH"
-        echo "Current GITHUB_PATH: $GITHUB_PATH"
 
     - name: Install dependencies
       run: |
@@ -66,6 +67,8 @@ jobs:
 
     - name: Compile forte
       run: |
+        export PATH=${{ env.PSI4BIN_DIR }}:$PATH
+        echo $PATH
         pwd
         cd $HOME/work/forte/forte
         pwd
@@ -81,6 +84,8 @@ jobs:
 
     - name: Run forte tests
       run: |
+        export PATH=${{ env.PSI4BIN_DIR }}:$PATH
+        echo $PATH      
         cd $HOME/forte/tests/methods
         python run_forte_tests.py
     
