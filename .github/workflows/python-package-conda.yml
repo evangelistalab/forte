@@ -18,10 +18,19 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Add conda to system path
+    - name: Add conda and psi4 to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo "Old PATH: $PATH"
+        echo "Old GITHUB_PATH: $GITHUB_PATH"
+
         echo $CONDA/bin >> $GITHUB_PATH
+
+        PSI4BIN_DIR=$HOME/psi4bin
+        echo $PSI4BIN_DIR >> $GITHUB_PATH
+
+        echo "Current PATH: $PATH"
+        echo "Current GITHUB_PATH: $GITHUB_PATH"
 
     - name: Install dependencies
       run: |
@@ -40,26 +49,20 @@ jobs:
         cd ambit
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/bin/ambit
         cd objdir
-        make -j8
+        make -j2
         make install
 
     - name: Compile psi4
       run: |
-        cd $HOME
-        PSI4BIN_DIR=$HOME/psi4bin
+        cd $HOME        
         git clone https://github.com/evangelistalab/psi4.git
         cd psi4
         git checkout policyfix
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PSI4BIN_DIR -DMAX_AM_ERI=4 -DENABLE_ecpint=ON
         cd objdir
-        make -j4
+        make -j2
         make install
-
-    - name: Add directory to PATH
-      run: |
-        echo "Old PATH: $PATH"
-        echo $PSI4BIN_DIR/bin >> $GITHUB_PATH
-        echo "Current PATH: $PATH"
+        ls $PSI4BIN_DIR
 
     - name: Compile forte
       run: |
@@ -67,11 +70,14 @@ jobs:
         cd $HOME/work/forte/forte
         pwd
         ls -l
+        echo "Current PATH: $PATH"
+        echo "Current GITHUB_PATH: $GITHUB_PATH"
+
         cmake_psi4=$(psi4 --plugin-compile)
         $cmake_psi4 --debug-output \
         -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
         -DENABLE_ForteTests=TRUE \        
-        make -j10        
+        make -j2        
 
     - name: Run forte tests
       run: |
