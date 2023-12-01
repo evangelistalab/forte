@@ -61,6 +61,7 @@ jobs:
 
     - name: Run forte tests
       run: |
+        echo $LD_LIBRARY_PATH
         export LD_LIBRARY_PATH=/opt/hostedtoolcache/Python/3.10.13/x64/lib:$LD_LIBRARY_PATH
         export PATH=$HOME/psi4bin/bin:$PATH
         cd $HOME/work/forte/forte/tests/methods
