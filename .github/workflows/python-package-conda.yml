@@ -48,7 +48,6 @@ jobs:
         cd objdir
         make -j2
         make install
-        ls $PSI4BIN_DIR
 
     - name: Compile forte
       run: |
