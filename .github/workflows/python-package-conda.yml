@@ -47,7 +47,7 @@ jobs:
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
         cd objdir
         make -j2
-        make install
+        # make install
 
     - name: Compile forte
       run: |
