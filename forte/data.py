@@ -1,13 +1,17 @@
 from dataclasses import dataclass
 
 from psi4.core import Wavefunction
-from forte import Model
+
 from ._forte import ForteOptions, SCFInfo, MOSpaceInfo, ForteIntegrals, ActiveSpaceIntegrals, StateInfo
+from forte import Model
 
 
 @dataclass
 class ForteData:
-    """Dataclass for holding data passed around in forte."""
+    """Dataclass for holding data passed around in forte.
+
+    This class is the container for all the data that is passed around in forte from one module to another.
+    """
 
     options: ForteOptions = None
     state_weights_map: dict[StateInfo] = None
