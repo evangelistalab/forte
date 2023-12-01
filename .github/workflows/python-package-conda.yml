@@ -26,17 +26,11 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pwd
-        echo $HOME
-        ls -l
         conda env update --file environment.yml --name base
 
     - name: Install ambit
       run: |
-        pwd      
         cd $HOME
-        pwd
-        ls -l
         git clone https://github.com/jturney/ambit.git
         cd ambit
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/bin/ambit
@@ -59,14 +53,7 @@ jobs:
     - name: Compile forte
       run: |
         export PATH=$HOME/psi4bin/bin:$PATH
-        echo $PATH
-        ls $HOME/psi4bin
-        ls $HOME/psi4bin/bin
-        pwd
         cd $HOME/work/forte/forte
-        pwd
-        ls -l
-
         cmake_psi4=$(psi4 --plugin-compile)
         $cmake_psi4 --debug-output \
         -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
@@ -76,7 +63,5 @@ jobs:
     - name: Run forte tests
       run: |
         export PATH=$HOME/psi4bin/bin:$PATH
-        echo $PATH      
-        cd cd $HOME/work/forte/forte/tests/methods
+        cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py
-    
