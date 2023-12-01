@@ -77,6 +77,6 @@ jobs:
       run: |
         export PATH=$HOME/psi4bin/bin:$PATH
         echo $PATH      
-        cd $HOME/forte/tests/methods
+        cd cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py
     
