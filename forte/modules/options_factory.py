@@ -1,0 +1,61 @@
+import psi4
+import forte
+
+from forte.data import ForteData
+from .module import Module
+
+from forte.register_forte_options import register_forte_options
+
+
+class OptionsFactory(Module):
+    """
+    A module to generate the ForteOptions object
+    """
+
+    def __init__(self, options: dict = None):
+        """
+        Parameters
+        ----------
+        options: dict
+            A dictionary of options. Defaults to None, in which case the options are read from psi4.
+        """
+        super().__init__(options=options)
+
+    def _run(self, data: ForteData = None) -> ForteData:
+        if data is None:
+            data = ForteData()
+        data.options = forte.forte_options
+        # if no options dict is provided then read from psi4
+        if self.options is None:
+            # Get the option object
+            psi4_options = psi4.core.get_options()
+            psi4_options.set_current_module("FORTE")
+
+            # Get the forte option object
+            data.options.get_options_from_psi4(psi4_options)
+        else:
+            psi4.core.print_out(
+                f"\n  Forte will use options passed as a dictionary. Option read from psi4 will be ignored\n"
+            )
+            data.options = forte.ForteOptions()
+            register_forte_options(data.options)
+            data.options.set_from_dict(self.options)
+
+        return data
+
+    # def run(self, data: ForteData = None) -> ForteData:
+    #     """
+    #     A general solver interface.
+
+    #     This method is common to all solvers, and in turn it is routed to
+    #     the method ``_run()`` implemented differently in each solver.
+
+    #     Return
+    #     ------
+    #         A data object
+    #     """
+
+    #     # Run the module
+    #     data = self._run(data)
+
+    #     return data
