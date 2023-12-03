@@ -42,20 +42,3 @@ class OptionsFactory(Module):
             data.options.set_from_dict(self.options)
 
         return data
-
-    # def run(self, data: ForteData = None) -> ForteData:
-    #     """
-    #     A general solver interface.
-
-    #     This method is common to all solvers, and in turn it is routed to
-    #     the method ``_run()`` implemented differently in each solver.
-
-    #     Return
-    #     ------
-    #         A data object
-    #     """
-
-    #     # Run the module
-    #     data = self._run(data)
-
-    #     return data

@@ -51,7 +51,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.data import ForteData
-from forte.modules import OptionsFactory
+from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP
 
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
@@ -265,36 +265,36 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
     return (state_weights_map, mo_space_info, scf_info)
 
 
-def make_state_info_from_fcidump(fcidump, options):
-    nel = fcidump["nelec"]
-    if not options.is_none("NEL"):
-        nel = options.get_int("NEL")
+# def make_state_info_from_fcidump(fcidump, options):
+#     nel = fcidump["nelec"]
+#     if not options.is_none("NEL"):
+#         nel = options.get_int("NEL")
 
-    multiplicity = fcidump["ms2"] + 1
-    if not options.is_none("MULTIPLICITY"):
-        multiplicity = options.get_int("MULTIPLICITY")
+#     multiplicity = fcidump["ms2"] + 1
+#     if not options.is_none("MULTIPLICITY"):
+#         multiplicity = options.get_int("MULTIPLICITY")
 
-    # If the user did not specify ms determine the value from the input or
-    # take the lowest value consistent with the value of "MULTIPLICITY"
-    # For example:
-    #    singlet: multiplicity = 1 -> twice_ms = 0 (ms = 0)
-    #    doublet: multiplicity = 2 -> twice_ms = 1 (ms = 1/2)
-    #    triplet: multiplicity = 3 -> twice_ms = 0 (ms = 0)
-    twice_ms = (multiplicity + 1) % 2
-    if not options.is_none("MS"):
-        twice_ms = int(round(2.0 * options.get_double("MS")))
+#     # If the user did not specify ms determine the value from the input or
+#     # take the lowest value consistent with the value of "MULTIPLICITY"
+#     # For example:
+#     #    singlet: multiplicity = 1 -> twice_ms = 0 (ms = 0)
+#     #    doublet: multiplicity = 2 -> twice_ms = 1 (ms = 1/2)
+#     #    triplet: multiplicity = 3 -> twice_ms = 0 (ms = 0)
+#     twice_ms = (multiplicity + 1) % 2
+#     if not options.is_none("MS"):
+#         twice_ms = int(round(2.0 * options.get_double("MS")))
 
-    if ((nel - twice_ms) % 2) != 0:
-        raise Exception(f"Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})")
+#     if ((nel - twice_ms) % 2) != 0:
+#         raise Exception(f"Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})")
 
-    na = (nel + twice_ms) // 2
-    nb = nel - na
+#     na = (nel + twice_ms) // 2
+#     nb = nel - na
 
-    irrep = fcidump["isym"]
-    if not options.is_none("ROOT_SYM"):
-        irrep = options.get_int("ROOT_SYM")
+#     irrep = fcidump["isym"]
+#     if not options.is_none("ROOT_SYM"):
+#         irrep = options.get_int("ROOT_SYM")
 
-    return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
+#     return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
 
 
 def prepare_forte_objects_from_fcidump(options, path="."):
@@ -376,34 +376,34 @@ def prepare_forte_objects_from_fcidump(options, path="."):
     return (state_weights_map, mo_space_info, scf_info, fcidump)
 
 
-def make_ints_from_fcidump(fcidump, data: ForteData):
-    # transform two-electron integrals from chemist to physicist notation
-    eri = fcidump["eri"]
-    nmo = fcidump["norb"]
-    eri_aa = np.zeros((nmo, nmo, nmo, nmo))
-    eri_ab = np.zeros((nmo, nmo, nmo, nmo))
-    eri_bb = np.zeros((nmo, nmo, nmo, nmo))
-    # <ij||kl> = (ik|jl) - (il|jk)
-    eri_aa += np.einsum("ikjl->ijkl", eri)
-    eri_aa -= np.einsum("iljk->ijkl", eri)
-    # <ij|kl> = (ik|jl)
-    eri_ab = np.einsum("ikjl->ijkl", eri)
-    # <ij||kl> = (ik|jl) - (il|jk)
-    eri_bb += np.einsum("ikjl->ijkl", eri)
-    eri_bb -= np.einsum("iljk->ijkl", eri)
+# def make_ints_from_fcidump(fcidump, data: ForteData):
+#     # transform two-electron integrals from chemist to physicist notation
+#     eri = fcidump["eri"]
+#     nmo = fcidump["norb"]
+#     eri_aa = np.zeros((nmo, nmo, nmo, nmo))
+#     eri_ab = np.zeros((nmo, nmo, nmo, nmo))
+#     eri_bb = np.zeros((nmo, nmo, nmo, nmo))
+#     # <ij||kl> = (ik|jl) - (il|jk)
+#     eri_aa += np.einsum("ikjl->ijkl", eri)
+#     eri_aa -= np.einsum("iljk->ijkl", eri)
+#     # <ij|kl> = (ik|jl)
+#     eri_ab = np.einsum("ikjl->ijkl", eri)
+#     # <ij||kl> = (ik|jl) - (il|jk)
+#     eri_bb += np.einsum("ikjl->ijkl", eri)
+#     eri_bb -= np.einsum("iljk->ijkl", eri)
 
-    ints = forte.make_custom_ints(
-        data.options,
-        data.mo_space_info,
-        fcidump["enuc"],
-        fcidump["hcore"].flatten(),
-        fcidump["hcore"].flatten(),
-        eri_aa.flatten(),
-        eri_ab.flatten(),
-        eri_bb.flatten(),
-    )
-    data.ints = ints
-    return data
+#     ints = forte.make_custom_ints(
+#         data.options,
+#         data.mo_space_info,
+#         fcidump["enuc"],
+#         fcidump["hcore"].flatten(),
+#         fcidump["hcore"].flatten(),
+#         eri_aa.flatten(),
+#         eri_ab.flatten(),
+#         eri_bb.flatten(),
+#     )
+#     data.ints = ints
+#     return data
 
 
 def prepare_forte_objects(data, name, **kwargs):
@@ -416,20 +416,12 @@ def prepare_forte_objects(data, name, **kwargs):
     """
     lowername = name.lower().strip()
     options = data.options
-    if "FCIDUMP" in options.get_str("INT_TYPE"):
-        if "FIRST" in options.get_str("DERTYPE"):
-            raise Exception("Energy gradients NOT available for custom integrals!")
 
-        psi4.core.print_out("\n  Preparing forte objects from a custom source\n")
-        forte_objects = prepare_forte_objects_from_fcidump(options)
-        state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
-        ref_wfn = None
-    else:
-        psi4.core.print_out("\n\n  Preparing forte objects from a Psi4 Wavefunction object")
-        ref_wfn, mo_space_info = prepare_psi4_ref_wfn(options, **kwargs)
-        forte_objects = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, mo_space_info)
-        state_weights_map, mo_space_info, scf_info = forte_objects
-        fcidump = None
+    psi4.core.print_out("\n\n  Preparing forte objects from a Psi4 Wavefunction object")
+    ref_wfn, mo_space_info = prepare_psi4_ref_wfn(options, **kwargs)
+    forte_objects = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, mo_space_info)
+    state_weights_map, mo_space_info, scf_info = forte_objects
+    fcidump = None
 
     data.mo_space_info = mo_space_info
     data.scf_info = scf_info
@@ -530,17 +522,21 @@ def run_forte(name, **kwargs):
     # my_proc_n_nodes = forte.startup()
     # my_proc, n_nodes = my_proc_n_nodes
 
-    # Create a ForteData object
-    data = ForteData()
-
     # Build Forte options
-    data = OptionsFactory(options=kwargs.get("forte_options")).run(data)
+    data = OptionsFactory(options=kwargs.get("forte_options")).run()
 
     # Print the banner
     forte.banner()
 
+    # Start timer
+    start_pre_ints = time.time()
+
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
-    data, fcidump = prepare_forte_objects(data, name, **kwargs)
+    if "FCIDUMP" in data.options.get_str("INT_TYPE"):
+        psi4.core.print_out("\n  Forte will use custom integrals")
+        data = ObjectsFactoryFCIDUMP(options=kwargs).run(data)
+    else:
+        data, fcidump = prepare_forte_objects(data, name, **kwargs)
 
     job_type = data.options.get_str("JOB_TYPE")
     if job_type == "NONE" and data.options.get_str("ORBITAL_TYPE") == "CANONICAL":
@@ -557,12 +553,8 @@ def run_forte(name, **kwargs):
             exit()
         read_wavefunction(data)
 
-    start_pre_ints = time.time()
-
     if "FCIDUMP" in data.options.get_str("INT_TYPE"):
-        psi4.core.print_out("\n  Forte will use custom integrals")
-        # Make an integral object from the psi4 wavefunction object
-        data = make_ints_from_fcidump(fcidump, data)
+        pass
     else:
         psi4.core.print_out("\n  Forte will use psi4 integrals")
         # Make an integral object from the psi4 wavefunction object
@@ -647,11 +639,8 @@ def gradient_forte(name, **kwargs):
     optstash = p4util.OptionsState(["GLOBALS", "DERTYPE"])
     psi4.core.set_global_option("DERTYPE", "FIRST")
 
-    # Create a ForteData object
-    data = ForteData()
-
     # Build Forte options
-    data = OptionsFactory(options=kwargs.get("forte_options")).run(data)
+    data = OptionsFactory(options=kwargs.get("forte_options")).run()
 
     # Print the banner
     forte.banner()
