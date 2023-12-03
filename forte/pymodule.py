@@ -54,41 +54,6 @@ from forte.data import ForteData
 from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4
 
 
-def check_MO_orthonormality(S, Ca):
-    """
-    Return whether the MO overlap matrix is identity or not.
-    S_MO = Ca^T S_SO Ca.
-    The MO overlap is the identity if and only if the orbitals are orthonormal.
-    Most electronic structure methods are derived assuming orthonormal orbitals.
-
-    :param S: a Psi4 Matrix of overlap integrals in the SO basis
-    :param Ca: a Psi4 Matrix that holds orbital coefficients
-
-    :return: S_MO == I
-    """
-    p4print = psi4.core.print_out
-
-    p4print("\n  Checking orbital orthonormality against current geometry ...")
-
-    S = S.clone()
-    S.transform(Ca)  # S = Ca^T S Ca
-
-    # test orbital orthonormality
-    identity = S.clone()
-    identity.identity()
-    S.subtract(identity)
-    absmax = S.absmax()
-
-    if absmax > 1.0e-8:
-        p4print("\n\n  Forte Warning: ")
-        p4print("Input orbitals are NOT from the current geometry!")
-        p4print(f"\n  Max value of MO overlap: {absmax:.15f}\n")
-        return False
-    else:
-        p4print(" Done (OK)\n\n")
-        return True
-
-
 def forte_driver(data: ForteData):
     """
     Driver to perform a Forte calculation using new solvers.
@@ -175,6 +140,7 @@ def run_forte(name, **kwargs):
     >>> energy('forte')
 
     """
+
     # # Start Forte, initialize ambit
     # my_proc_n_nodes = forte.startup()
     # my_proc, n_nodes = my_proc_n_nodes
@@ -195,7 +161,7 @@ def run_forte(name, **kwargs):
         psi4.core.print_out("\n  Forte will use custom integrals")
         data = ObjectsFactoryFCIDUMP(options=kwargs).run(data)
     else:
-        data = ObjectsFactoryPsi4(options=kwargs).run(data)
+        data = ObjectsFactoryPsi4(**kwargs).run(data)
 
     start = time.time()
 

@@ -9,6 +9,8 @@ import psi4.driver.p4util as p4util
 import forte
 
 from forte.data import ForteData
+
+from .check_mo_orthogonality import check_mo_orthonormality
 from .module import Module
 
 from forte.register_forte_options import register_forte_options
@@ -122,7 +124,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
         new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
 
-        if check_MO_orthonormality(new_S, Ca):
+        if check_mo_orthonormality(new_S, Ca):
             wfn_new = ref_wfn
             wfn_new.Ca().copy(Ca)
         else:
@@ -191,7 +193,7 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
     return (state_weights_map, mo_space_info, scf_info)
 
 
-def prepare_forte_objects(data, kwargs):
+def prepare_forte_objects(data, name, **kwargs):
     """
     Prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects.
     :param data: the ForteOptions object
@@ -203,7 +205,6 @@ def prepare_forte_objects(data, kwargs):
     options = data.options
 
     psi4.core.print_out("\n\n  Preparing forte objects from a Psi4 Wavefunction object")
-    kwargs = {}
     ref_wfn, mo_space_info = prepare_psi4_ref_wfn(options, **kwargs)
     forte_objects = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, mo_space_info)
     state_weights_map, mo_space_info, scf_info = forte_objects
@@ -222,7 +223,7 @@ class ObjectsFactoryPsi4(Module):
     A module to prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects from a Psi4 Wavefunction object
     """
 
-    def __init__(self, options: dict = None):
+    def __init__(self, options: dict = None, **kwargs):
         """
         Parameters
         ----------
@@ -230,11 +231,11 @@ class ObjectsFactoryPsi4(Module):
             A dictionary of options. Defaults to None, in which case the options are read from psi4.
         """
         super().__init__(options=options)
+        self.kwargs = kwargs
 
     def _run(self, data: ForteData = None) -> ForteData:
         name = "forte"
-        kwargs = {}
-        data, fcidump = prepare_forte_objects(data, name, **kwargs)
+        data, fcidump = prepare_forte_objects(data, name, **self.kwargs)
 
         job_type = data.options.get_str("JOB_TYPE")
         if job_type == "NONE" and data.options.get_str("ORBITAL_TYPE") == "CANONICAL":
