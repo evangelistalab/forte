@@ -37,7 +37,6 @@ import os
 import numpy as np
 import psi4
 import forte
-from .register_forte_options import *
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
@@ -52,6 +51,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.data import ForteData
+from forte.modules import OptionsFactory
 
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
@@ -406,39 +406,6 @@ def make_ints_from_fcidump(fcidump, data: ForteData):
     return data
 
 
-def prepare_forte_options(data: ForteData, options_dict=None):
-    """
-    Generate the ForteOptions object
-
-    Parameters
-    ----------
-    data : ForteData
-        A ForteData object
-    options_dict : dict
-        An optional dictionary used to define the options
-    """
-    options = forte.forte_options
-    # if no options_dict is provided then read from psi4
-    if options_dict is None:
-        # Get the option object
-        psi4_options = psi4.core.get_options()
-        psi4_options.set_current_module("FORTE")
-
-        # Get the forte option object
-        options.get_options_from_psi4(psi4_options)
-    else:
-        psi4.core.print_out(
-            f"\n  Forte will use options passed as a dictionary. Option read from psi4 will be ignored\n"
-        )
-        options = forte.ForteOptions()
-        register_forte_options(options)
-        options.set_from_dict(options_dict)
-
-    data.options = options
-
-    return data
-
-
 def prepare_forte_objects(data, name, **kwargs):
     """
     Prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects.
@@ -567,7 +534,7 @@ def run_forte(name, **kwargs):
     data = ForteData()
 
     # Build Forte options
-    data = prepare_forte_options(data, kwargs.get("forte_options"))
+    data = OptionsFactory(options=kwargs.get("forte_options")).run(data)
 
     # Print the banner
     forte.banner()
@@ -684,7 +651,7 @@ def gradient_forte(name, **kwargs):
     data = ForteData()
 
     # Build Forte options
-    data = prepare_forte_options(data, kwargs.get("forte_options"))
+    data = OptionsFactory(options=kwargs.get("forte_options")).run(data)
 
     # Print the banner
     forte.banner()
