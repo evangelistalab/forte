@@ -153,7 +153,7 @@ def _prepare_forte_objects_from_fcidump(data, path="."):
 
 class ObjectsFactoryFCIDUMP(Module):
     """
-    A module to prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects from a Psi4 Wavefunction object
+    A module to prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects from a FCIDUMP file
     """
 
     def __init__(self, options: dict = None):
