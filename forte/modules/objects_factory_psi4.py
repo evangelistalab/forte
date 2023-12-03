@@ -15,6 +15,7 @@ from .module import Module
 
 from forte.register_forte_options import register_forte_options
 from forte.proc.orbital_helpers import orbital_projection
+from forte.proc.orbital_helpers import read_orbitals, dump_orbitals, ortho_orbs_forte
 
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
