@@ -1,5 +1,6 @@
 import pathlib
 import warnings
+import os
 
 
 import numpy as np
@@ -16,6 +17,13 @@ from .module import Module
 from forte.register_forte_options import register_forte_options
 from forte.proc.orbital_helpers import orbital_projection
 from forte.proc.orbital_helpers import read_orbitals, dump_orbitals, ortho_orbs_forte
+from forte.proc.external_active_space_solver import (
+    write_external_active_space_file,
+    write_external_rdm_file,
+    write_wavefunction,
+    read_wavefunction,
+    make_hamiltonian,
+)
 
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
@@ -241,7 +249,7 @@ class ObjectsFactoryPsi4(Module):
         job_type = data.options.get_str("JOB_TYPE")
         if job_type == "NONE" and data.options.get_str("ORBITAL_TYPE") == "CANONICAL":
             psi4.core.set_scalar_variable("CURRENT ENERGY", 0.0)
-            return data.psi_wfn
+            return data
 
         # these two functions are used by the external solver to read and write MO coefficients
         if data.options.get_bool("WRITE_WFN"):

@@ -28,21 +28,12 @@
 #
 
 import time
-import math
-import warnings
-import pathlib
-
-from sys import exit
 import os
-import numpy as np
 import psi4
 import forte
-import psi4.driver.p4util as p4util
-from psi4.driver.procrouting import proc_util
-import forte.proc.fcidump
-from forte.proc.dsrg import ProcedureDSRG
-from forte.proc.orbital_helpers import ortho_orbs_forte, orbital_projection
-from forte.proc.orbital_helpers import read_orbitals, dump_orbitals
+
+from forte.data import ForteData
+from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -50,8 +41,21 @@ from forte.proc.external_active_space_solver import (
     read_wavefunction,
     make_hamiltonian,
 )
-from forte.data import ForteData
-from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4
+from forte.proc.dsrg import ProcedureDSRG
+
+# import math
+# import warnings
+# import pathlib
+
+# from sys import exit
+# import numpy as np
+
+# import psi4.driver.p4util as p4util
+# from psi4.driver.procrouting import proc_util
+# import forte.proc.fcidump
+
+# from forte.proc.orbital_helpers import ortho_orbs_forte, orbital_projection
+# from forte.proc.orbital_helpers import read_orbitals, dump_orbitals
 
 
 def forte_driver(data: ForteData):
@@ -145,20 +149,18 @@ def run_forte(name, **kwargs):
     # my_proc_n_nodes = forte.startup()
     # my_proc, n_nodes = my_proc_n_nodes
 
-    # Build Forte options
-    data = OptionsFactory(options=kwargs.get("forte_options")).run()
+    # Start timer
+    start_pre_ints = time.time()
 
     # Print the banner
     forte.banner()
 
+    # Build Forte options
+    data = OptionsFactory(options=kwargs.get("forte_options")).run()
+
     job_type = data.options.get_str("JOB_TYPE")
-
-    # Start timer
-    start_pre_ints = time.time()
-
-    # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
+    # Prepare Forte objects
     if "FCIDUMP" in data.options.get_str("INT_TYPE"):
-        psi4.core.print_out("\n  Forte will use custom integrals")
         data = ObjectsFactoryFCIDUMP(options=kwargs).run(data)
     else:
         data = ObjectsFactoryPsi4(**kwargs).run(data)
@@ -200,18 +202,18 @@ def run_forte(name, **kwargs):
         as_ints = forte.make_active_space_ints(data.mo_space_info, data.ints, "ACTIVE", ["RESTRICTED_DOCC"])
         state_map = forte.to_state_nroots_map(data.state_weights_map)
         active_space_method = forte.make_active_space_method(
-            "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, data.as_ints, data.options
+            "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, as_ints, data.options
         )
         active_space_method.set_quiet_mode()
         active_space_method.compute_energy()
 
-        tdci = forte.TDCI(active_space_method, data.scf_info, data.options, data.mo_space_info, data.as_ints)
+        tdci = forte.TDCI(active_space_method, data.scf_info, data.options, data.mo_space_info, as_ints)
         energy = tdci.compute_energy()
 
     if job_type == "NEWDRIVER":
         energy = forte_driver(data)
     elif job_type == "MR-DSRG-PT2":
-        energy = mr_dsrg_pt2(job_type, forte_objects, data.ints, data.options)
+        energy = mr_dsrg_pt2(job_type, data)
 
     end = time.time()
 
@@ -228,6 +230,7 @@ def run_forte(name, **kwargs):
         if data.options.get_bool("DUMP_ORBITALS"):
             dump_orbitals(data.psi_wfn)
         return data.psi_wfn
+    return None
 
 
 def gradient_forte(name, **kwargs):
@@ -257,8 +260,7 @@ def gradient_forte(name, **kwargs):
         raise Exception("Analytic energy gradients are only implemented for" " CASSCF, MCSCF_TWO_STEP, or DSRG-MRPT2.")
 
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
-    data, fcidump = prepare_forte_objects(data, name, **kwargs)
-    # ref_wfn, state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
+    data = ObjectsFactoryPsi4(**kwargs).run(data)
 
     # Make an integral object
     time_pre_ints = time.time()
@@ -326,14 +328,20 @@ def gradient_forte(name, **kwargs):
     return data.psi_wfn
 
 
-def mr_dsrg_pt2(job_type, forte_objects, ints, options):
+def mr_dsrg_pt2(job_type, data):
     """
     Driver to perform a MCSRGPT2_MO computation.
 
     :return: the computed energy
     """
     final_energy = 0.0
-    ref_wfn, state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
+
+    options = data.options
+    ref_wfn = data.psi_wfn
+    state_weights_map = data.state_weights_map
+    mo_space_info = data.mo_space_info
+    scf_info = data.scf_info
+    ints = data.ints
 
     state = forte.make_state_info_from_psi(options)
     # generate a list of states with their own weights

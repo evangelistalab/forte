@@ -15,7 +15,7 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 def write_wavefunction(data):
-    Ca = data.ref_wfn.Ca().to_array()
+    Ca = data.psi_wfn.Ca().to_array()
 
     with open("coeff.json", "w+") as f:
         json.dump({"Ca": Ca}, f, cls=NumpyEncoder)
@@ -33,12 +33,12 @@ def read_wavefunction(data):
         else:
             C_list.append(np.asarray(C_read[i]))
 
-    if data.ref_wfn.nirrep() != 1:
+    if data.psi_wfn.nirrep() != 1:
         C_mat = psi4.core.Matrix.from_array(C_list)
     else:  # C1 no spatial symmetry, input is list(np.ndarray)
         C_mat = psi4.core.Matrix.from_array([np.asarray(C_list)])
-    data.ref_wfn.Ca().copy(C_mat)
-    data.ref_wfn.Cb().copy(C_mat)
+    data.psi_wfn.Ca().copy(C_mat)
+    data.psi_wfn.Cb().copy(C_mat)
 
 
 def write_external_active_space_file(as_ints, state_map, mo_space_info, json_file="forte_ints.json"):

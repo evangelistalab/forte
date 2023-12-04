@@ -164,6 +164,7 @@ class ObjectsFactoryFCIDUMP(Module):
             A dictionary of options. Defaults to None, in which case the options are read from psi4.
         """
         super().__init__(options=options)
+        psi4.core.print_out("\n  Forte will use custom integrals")
 
     def _run(self, data: ForteData = None) -> ForteData:
         if "FIRST" in data.options.get_str("DERTYPE"):
