@@ -35,7 +35,7 @@ import psi4.driver.p4util as p4util
 
 import forte
 from forte.data import ForteData
-from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4
+from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4, ActiveSpaceIntsFactory
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -71,7 +71,8 @@ def forte_driver(data: ForteData):
 
     # create an active space solver object and compute the energy
     active_space_solver_type = options.get_str("ACTIVE_SPACE_SOLVER")
-    as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+    data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+    as_ints = data.as_ints
     active_space_solver = forte.make_active_space_solver(
         active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
     )
@@ -187,15 +188,15 @@ def run_forte(name, **kwargs):
 
     if job_type == "TDCI":
         state = forte.make_state_info_from_psi(data.options)
-        as_ints = forte.make_active_space_ints(data.mo_space_info, data.ints, "ACTIVE", ["RESTRICTED_DOCC"])
+        data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
         state_map = forte.to_state_nroots_map(data.state_weights_map)
         active_space_method = forte.make_active_space_method(
-            "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, as_ints, data.options
+            "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, data.as_ints, data.options
         )
         active_space_method.set_quiet_mode()
         active_space_method.compute_energy()
 
-        tdci = forte.TDCI(active_space_method, data.scf_info, data.options, data.mo_space_info, as_ints)
+        tdci = forte.TDCI(active_space_method, data.scf_info, data.options, data.mo_space_info, data.as_ints)
         energy = tdci.compute_energy()
 
     if job_type == "NEWDRIVER":
@@ -340,8 +341,8 @@ def mr_dsrg_pt2(job_type, data):
     if actv_type == "CIS" or actv_type == "CISD":
         raise Exception("Forte: VCIS/VCISD is not supported for MR-DSRG-PT2")
     max_rdm_level = 2 if options.get_str("THREEPDC") == "ZERO" else 3
-    as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
-    ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints, options)
+    data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+    ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, data.as_ints, options)
     ci.compute_energy()
 
     rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)

@@ -15,17 +15,16 @@ def test_ul_uccsd_1():
 
     psi4.set_options(
         {
-            "FORTE__FCIDUMP_FILE": "INTDUMP2",
             "FORTE__FCIDUMP_DOCC": [2],
             "FORTE__FROZEN_DOCC": [0],
         }
     )
 
     data = forte.modules.OptionsFactory().run()
-    data = forte.modules.ObjectsFactoryFCIDUMP().run(data)
-    as_ints = forte.make_active_space_ints(data.mo_space_info, data.ints, "CORRELATED", [])
+    data = forte.modules.ObjectsFactoryFCIDUMP(file=os.path.dirname(__file__) + "/INTDUMP2").run(data)
+    data = forte.modules.ActiveSpaceIntsFactory("CORRELATED", []).run(data)
     calc_data = scc.run_cc(
-        as_ints,
+        data.as_ints,
         data.scf_info,
         data.mo_space_info,
         cc_type="ucc",

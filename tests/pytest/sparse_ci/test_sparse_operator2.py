@@ -15,10 +15,10 @@ def test_sparse_operator2():
      H
      H 1 1.0
     """
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='DZ', reference='RHF')
-    forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
+    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="DZ", reference="RHF")
+    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn).run()
 
-    as_ints = forte_objs['as_ints']
+    as_ints = data.as_ints  # forte_objs["as_ints"]
 
     ham_op = forte.SparseHamiltonian(as_ints)
 

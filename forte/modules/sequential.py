@@ -30,8 +30,6 @@ class Sequential(Module):
 
     def _run(self, input_data):
         data = input_data
-        for input_module in self.input_modules:
-            data = input_module.run(data)
         for module in self.modules:
             data = module.run(data)
         return data

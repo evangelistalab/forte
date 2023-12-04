@@ -9,17 +9,11 @@ data = ForteData()
 # graph = GraphVisualizer().visualize(hf)
 # print(graph)
 
-
 ints = Ints()
 ints2 = Ints2()
-ints3 = Ints2()
-seq = Sequential([HF(), Localizer()], [ints, ints2])
-fci = FCI([seq, ints3])
-
+seq = Sequential([HF(), Localizer()], ints)
+fci = FCI(seq)
 
 graph = GraphVisualizer().visualize(fci)
 print(graph)
-seq.run(data)
-
-print("\n\n")
-Ints().run(data)
+fci.run(data)

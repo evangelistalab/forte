@@ -64,6 +64,9 @@ class Module:
         # log call to run()
         flog("info", f"{type(self).__name__}: calling run()")
 
+        for input_module in self.input_modules:
+            data = input_module.run(data)
+
         # call derived class implementation of _run()
         data = self._run(data)
 

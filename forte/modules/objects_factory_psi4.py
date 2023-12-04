@@ -108,9 +108,12 @@ def prepare_psi4_ref_wfn(options, **kwargs):
         # Ca from file has higher priority than that of ref_wfn
         Ca = ref_wfn.Ca().clone() if Ca is None else Ca
 
-    # build Forte MOSpaceInfo
+    # create a MOSpaceInfo object
     nmopi = ref_wfn.nmopi()
-    mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+    if kwargs.get("mo_spaces") is None:
+        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+    else:
+        mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
 
     # do we need to check MO overlap?
     if not need_orbital_check:

@@ -72,10 +72,8 @@ def _make_state_info_from_fcidump(fcidump, options):
     return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
 
 
-def _prepare_forte_objects_from_fcidump(data, path="."):
+def _prepare_forte_objects_from_fcidump(data, filename: str = None):
     options = data.options
-    fcidump_file = data.options.get_str("FCIDUMP_FILE")
-    filename = pathlib.Path(path) / fcidump_file
     psi4.core.print_out(f"\n  Reading integral information from FCIDUMP file {filename}")
     fcidump = forte.proc.fcidump_from_file(filename, convert_to_psi4=True)
 
@@ -156,14 +154,17 @@ class ObjectsFactoryFCIDUMP(Module):
     A module to prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects from a FCIDUMP file
     """
 
-    def __init__(self, options: dict = None):
+    def __init__(self, file=None, options: dict = None):
         """
         Parameters
         ----------
+        file: str
+            The name of the FCIDUMP file to read
         options: dict
             A dictionary of options. Defaults to None, in which case the options are read from psi4.
         """
         super().__init__(options=options)
+        self.filename = file
         psi4.core.print_out("\n  Forte will use custom integrals")
 
     def _run(self, data: ForteData = None) -> ForteData:
@@ -171,8 +172,10 @@ class ObjectsFactoryFCIDUMP(Module):
             raise Exception("Energy gradients NOT available for custom integrals!")
 
         psi4.core.print_out("\n  Preparing forte objects from a custom source\n")
-        data, fcidump = _prepare_forte_objects_from_fcidump(data)
-        # state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
+        if self.filename is None:
+            self.filename = data.options.get_str("FCIDUMP_FILE")
+
+        data, fcidump = _prepare_forte_objects_from_fcidump(data, self.filename)
 
         # Make an integral object from the psi4 wavefunction object
         data = _make_ints_from_fcidump(fcidump, data)
