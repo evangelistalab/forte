@@ -29,9 +29,11 @@
 
 import time
 import os
-import psi4
-import forte
 
+import psi4
+import psi4.driver.p4util as p4util
+
+import forte
 from forte.data import ForteData
 from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4
 from forte.proc.external_active_space_solver import (
@@ -42,20 +44,6 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.proc.dsrg import ProcedureDSRG
-
-# import math
-# import warnings
-# import pathlib
-
-# from sys import exit
-# import numpy as np
-
-# import psi4.driver.p4util as p4util
-# from psi4.driver.procrouting import proc_util
-# import forte.proc.fcidump
-
-# from forte.proc.orbital_helpers import ortho_orbs_forte, orbital_projection
-# from forte.proc.orbital_helpers import read_orbitals, dump_orbitals
 
 
 def forte_driver(data: ForteData):
