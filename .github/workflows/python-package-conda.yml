@@ -51,7 +51,8 @@ jobs:
 
     - name: Compile forte
       run: |
-        export PATH=$HOME/psi4bin/bin:$PATH
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
         cd $HOME/work/forte/forte
         cmake_psi4=$(psi4 --plugin-compile)
         $cmake_psi4 --debug-output \
@@ -64,6 +65,6 @@ jobs:
         echo $LD_LIBRARY_PATH
         export LD_LIBRARY_PATH=/usr/share/miniconda/lib/:$LD_LIBRARY_PATH
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
-        export PATH=$HOME/psi4bin/bin:$PATH
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin        
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py
