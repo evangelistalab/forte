@@ -5,6 +5,7 @@
 *.log
 *.dat
 *.clean
+*.swp
 Makefile.*
 Makefile
 timer.dat
