@@ -13,19 +13,25 @@ def test_ul_uccsd_1():
 
     ref_energy = -1.9437216535661626  # from Jonathon
 
-    psi4.set_options({
-        'FORTE__FCIDUMP_FILE': 'INTDUMP2',
-        'FORTE__FCIDUMP_DOCC': [2],
-        'FORTE__FROZEN_DOCC': [0],
-    })
+    psi4.set_options(
+        {
+            "FORTE__FCIDUMP_DOCC": [2],
+            "FORTE__FROZEN_DOCC": [0],
+        }
+    )
 
-    options = forte.prepare_forte_options()
-    forte_objects = forte.prepare_forte_objects_from_fcidump(options, os.path.dirname(__file__))
-    state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
-    ints = forte.make_ints_from_fcidump(fcidump, options, mo_space_info)
-    as_ints = forte.make_active_space_ints(mo_space_info, ints, 'CORRELATED', [])
+    data = forte.modules.OptionsFactory().run()
+    data = forte.modules.ObjectsFactoryFCIDUMP(file=os.path.dirname(__file__) + "/INTDUMP2").run(data)
+    data = forte.modules.ActiveSpaceIntsFactory("CORRELATED", []).run(data)
     calc_data = scc.run_cc(
-        as_ints, scf_info, mo_space_info, cc_type='ucc', max_exc=2, e_convergence=1.0e-10, linked=False, diis_start=2
+        data.as_ints,
+        data.scf_info,
+        data.mo_space_info,
+        cc_type="ucc",
+        max_exc=2,
+        e_convergence=1.0e-10,
+        linked=False,
+        diis_start=2,
     )
 
     psi4.core.clean()

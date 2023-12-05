@@ -19,26 +19,26 @@ def test_uccsd_6():
      H 0.0 0.0 4.5     
     """
 
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='sto-3g', reference='RHF')
-    forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
+    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="sto-3g", reference="RHF")
+    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn, mo_spaces={}).run()
     calc_data = scc.run_cc(
-        forte_objs['as_ints'],
-        forte_objs['scf_info'],
-        forte_objs['mo_space_info'],
-        cc_type='ucc',
+        data.as_ints,
+        data.scf_info,
+        data.mo_space_info,
+        cc_type="ucc",
         max_exc=2,
         e_convergence=1.0e-10,
         linked=False,
-        maxk=1
+        maxk=1,
     )
 
     psi4.core.clean()
 
     energy = calc_data[-1][1]
 
-    print(f'  HF energy:    {scf_energy}')
-    print(f'  CCSD energy:  {energy}')
-    print(f'  corr. energy: {energy - scf_energy}')
+    print(f"  HF energy:    {scf_energy}")
+    print(f"  CCSD energy:  {energy}")
+    print(f"  corr. energy: {energy - scf_energy}")
 
     assert energy == pytest.approx(ref_energy, 1.0e-9)
 

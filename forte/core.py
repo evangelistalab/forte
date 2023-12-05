@@ -52,12 +52,13 @@ def clean_options():
 
     # push the options defined in forte_options to psi
     psi_options = psi4.core.get_options()
-    psi_options.set_current_module('FORTE')
+    psi_options.set_current_module("FORTE")
     forte.forte_options.push_options_to_psi4(psi_options)
 
 
 class ForteManager(object):
     """Singleton class to handle startup and cleanup of forte (mostly ambit)"""
+
     _instance = None
 
     def __new__(cls):
@@ -71,7 +72,7 @@ class ForteManager(object):
         forte.cleanup()
 
 
-def start_logging(filename='forte.log', level=logging.DEBUG):
+def start_logging(filename="forte.log", level=logging.DEBUG):
     """
     This function sets the output of logs to ``filename`` (default = forte.log)
     and sets the log level to all information.
@@ -83,8 +84,8 @@ def start_logging(filename='forte.log', level=logging.DEBUG):
     level: {logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL}
         the level of severity of the events tracked (default = logging.DEBUG, which means track everything)
     """
-    logging.basicConfig(filename=filename, level=level, format='# %(asctime)s | %(levelname)s | %(message)s')
-    logging.info('Starting the Forte logger')
+    logging.basicConfig(filename=filename, level=level, format="# %(asctime)s | %(levelname)s | %(message)s")
+    logging.info("Starting the Forte logger")
 
 
 def flog(level, msg):
@@ -109,18 +110,18 @@ def flog(level, msg):
     """
     global logging_depth
     level = level.lower()
-    spaces = ' ' * max((logging_depth - 1), 0) * 2
+    spaces = " " * max((logging_depth - 1), 0) * 2
     s = f"{spaces}{msg}"
-    if level == 'info':
+    if level == "info":
         logging.info(s)
-    elif level == 'warning':
+    elif level == "warning":
         logging.warning(s)
-    elif level == 'debug':
+    elif level == "debug":
         logging.debug(s)
-    elif level == 'error':
+    elif level == "error":
         logging.error(s)
     else:
-        raise ValueError(f'forte.core.flog was called with an unrecognized level ({level})')
+        raise ValueError(f"forte.core.flog was called with an unrecognized level ({level})")
 
 
 def increase_log_depth(func):
@@ -132,10 +133,12 @@ def increase_log_depth(func):
             def run(self):
                 ...
     """
+
     def wrapper(*args, **kwargs):
         global logging_depth
         logging_depth += 1
-        func(*args, **kwargs)
+        result = func(*args, **kwargs)
         logging_depth += -1
+        return result
 
     return wrapper
