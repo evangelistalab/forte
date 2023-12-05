@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import math
-import pytest
-import psi4
-import forte
-
 
 def test_spinorbital_mp2():
+    import math
+    import pytest
+    import psi4
     import forte
     import forte.utils
     from math import isclose
+
     import numpy as np
 
     geom = """0 1
@@ -21,7 +20,10 @@ def test_spinorbital_mp2():
 
     basis = "6-31g"
     Escf, wfn = forte.utils.psi4_scf(geom, basis, "rhf")
-    data = forte.modules.ObjectsUtilPsi4(ref_wnf=wfn, mo_spaces={"RESTRICTED_DOCC": [5], "ACTIVE": [0]}).run()
+    # having options={} is a hack and should not be required.
+    data = forte.modules.ObjectsUtilPsi4(
+        ref_wfn=wfn, options={}, mo_spaces={"RESTRICTED_DOCC": [5], "ACTIVE": [0]}
+    ).run()
 
     mo_space_info = data.mo_space_info
     core = mo_space_info.corr_absolute_mo("RESTRICTED_DOCC")

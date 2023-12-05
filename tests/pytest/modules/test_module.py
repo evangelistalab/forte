@@ -4,11 +4,6 @@ from forte import ForteData
 
 data = ForteData()
 
-# ints = Ints()
-# hf = HF(ints)
-# graph = GraphVisualizer().visualize(hf)
-# print(graph)
-
 ints = Ints()
 ints2 = Ints2()
 seq = Sequential([HF(), Localizer()], ints)
