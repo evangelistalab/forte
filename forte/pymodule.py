@@ -57,14 +57,21 @@ def forte_driver(data: ForteData):
     """
     Driver to perform a Forte calculation using new solvers.
 
-    :param state_weights_map: dictionary of {state: weights}
-    :param scf_info: a SCFInfo object of Forte
-    :param options: a ForteOptions object of Forte
-    :param ints: a ForteIntegrals object of Forte
-    :param mo_space_info: a MOSpaceInfo object of Forte
-
-    :return: the computed energy
+    Parameters
+    ----------
+    data: ForteData
+        A ForteData object initialized with the following attributes:
+        state_weights_map: dictionary of {state: weights}
+        scf_info: a SCFInfo object of Forte
+        options: a ForteOptions object of Forte
+        ints: a ForteIntegrals object of Forte
+        mo_space_info: a MOSpaceInfo object of Forte
+    Returns
+    -------
+    return_en: float
+        The computed energy
     """
+
     state_weights_map, scf_info, options, ints, mo_space_info = (
         data.state_weights_map,
         data.scf_info,
