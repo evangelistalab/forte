@@ -2,7 +2,16 @@ from dataclasses import dataclass
 
 from psi4.core import Wavefunction
 
-from ._forte import ForteOptions, SCFInfo, MOSpaceInfo, ForteIntegrals, ActiveSpaceIntegrals, StateInfo
+from ._forte import (
+    ForteOptions,
+    SCFInfo,
+    MOSpaceInfo,
+    ForteIntegrals,
+    ActiveSpaceIntegrals,
+    StateInfo,
+    ActiveSpaceSolver,
+    RDMs,
+)
 from forte import Model
 
 
@@ -21,3 +30,5 @@ class ForteData:
     ints: ForteIntegrals = None
     as_ints: ActiveSpaceIntegrals = None
     psi_wfn: Wavefunction = None
+    active_space_solver: ActiveSpaceSolver = None
+    rdms: rdms = None

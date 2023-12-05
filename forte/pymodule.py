@@ -35,7 +35,14 @@ import psi4.driver.p4util as p4util
 
 import forte
 from forte.data import ForteData
-from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4, ActiveSpaceIntsFactory
+from forte.modules import (
+    OptionsFactory,
+    ObjectsFactoryFCIDUMP,
+    ObjectsFactoryPsi4,
+    ActiveSpaceIntsFactory,
+    ActiveSpaceSolver,
+    ActiveSpaceRDMs,
+)
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -70,52 +77,38 @@ def forte_driver(data: ForteData):
     state_map = forte.to_state_nroots_map(state_weights_map)
 
     # create an active space solver object and compute the energy
-    active_space_solver_type = options.get_str("ACTIVE_SPACE_SOLVER")
     data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
     as_ints = data.as_ints
-    active_space_solver = forte.make_active_space_solver(
-        active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
-    )
 
-    if active_space_solver_type == "EXTERNAL":
-        write_external_active_space_file(as_ints, state_map, mo_space_info, "as_ints.json")
-        msg = "External solver: save active space integrals to as_ints.json"
-        print(msg)
-        psi4.core.print_out(msg)
-
-        if not os.path.isfile("rdms.json"):
-            msg = "External solver: rdms.json file not present, exit."
-            print(msg)
-            psi4.core.print_out(msg)
-            # finish the computation
-            exit()
-    # if rdms.json exists, then run "external" as_solver to compute energy
-    state_energies_list = active_space_solver.compute_energy()
+    active_space_solver_type = options.get_str("ACTIVE_SPACE_SOLVER")
+    data = ActiveSpaceSolver(solver_type=active_space_solver_type).run(data)
+    state_energies_list = data.state_energies_list
 
     if options.get_bool("WRITE_RDM"):
         max_rdm_level = 3  # TODO allow the user to change this variable
-        write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level)
+        data = ActiveSpaceRDMs(max_rdm_level=max_rdm_level).run(data)
+        write_external_rdm_file(data.rdms)
 
     if options.get_bool("SPIN_ANALYSIS"):
-        rdms = active_space_solver.compute_average_rdms(state_weights_map, 2, forte.RDMsType.spin_dependent)
-        forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
+        data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
+        forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")
     if correlation_solver_type != "NONE":
-        dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
+        dsrg_proc = ProcedureDSRG(data.active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
         return_en = dsrg_proc.compute_energy()
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
 
-        if options.get_str("DERTYPE") == "FIRST" and active_space_solver_type in ["DETCI", "GENCI"]:
+        if options.get_str("DERTYPE") == "FIRST" and data.active_space_solver_type in ["DETCI", "GENCI"]:
             # Compute coupling coefficients
             # NOTE: 1. Orbitals have to be semicanonicalized already to make sure
             #          DSRG reads consistent CI coefficients before and after SemiCanonical class.
             #       2. This is OK only when running ground-state calculations
             state = list(state_map.keys())[0]
             psi4.core.print_out(f"\n  ==> Coupling Coefficients for {state} <==")
-            ci_vectors = active_space_solver.eigenvectors(state)
+            ci_vectors = data.active_space_solver.eigenvectors(state)
             dsrg_proc.compute_gradient(ci_vectors)
         else:
             psi4.core.print_out("\n  Semicanonical orbitals must be used!\n")
