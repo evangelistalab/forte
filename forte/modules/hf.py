@@ -108,7 +108,7 @@ class HF(Module):
 
         # add the energy to the results
         # flog("info", f"HF: hf energy = {energy}")
-        # self._results.add("hf energy", energy, "Hartree-Fock energy", "Eh")
+        data.results.add("hf energy", energy, "Hartree-Fock energy", "Eh")
 
         # store calculation outputs in the Data object
         data.psi_wfn = psi_wfn
@@ -120,7 +120,6 @@ class HF(Module):
         # flog("info", "HF: calling psi4.core.clean()")
         psi4.core.clean()
 
-        return self
         return data
 
     def check_symmetry(self, data, psi_wfn):

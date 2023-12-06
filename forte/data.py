@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from psi4.core import Wavefunction, Molecule
 
@@ -13,7 +13,7 @@ from ._forte import (
     RDMs,
     Symmetry,
 )
-from forte import Model
+from forte import Model, Results
 
 
 @dataclass
@@ -60,3 +60,4 @@ class ForteData:
     psi_wfn: Wavefunction = None
     active_space_solver: ActiveSpaceSolver = None
     rdms: rdms = None
+    results: Results = field(default_factory=Results)
