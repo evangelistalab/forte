@@ -10,3 +10,6 @@ from .objects_factory_fcidump import ObjectsFactoryFCIDUMP
 from .objects_factory_psi4 import ObjectsFactoryPsi4
 from .mock import HF, FCI, Ints, Ints2, Localizer
 from .objects_util_psi4 import ObjectsUtilPsi4
+from .molecule_factory import MoleculeFactory
+from .state_factory import StateFactory
+from .hf import HF

@@ -126,14 +126,18 @@ def forte_driver(data: ForteData):
     return return_en
 
 
-def run_forte(name, **kwargs):
-    r"""Function encoding sequence of PSI module and plugin calls so that
-    forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
-
-    >>> energy('forte')
-
+def energy_forte(name, **kwargs):
     """
+    This funtion is called when the user calls energy('forte').
+    It sets up the computation and calls the Forte driver.
 
+    Parameters
+    ----------
+    name: str
+        The name of the module (forte)
+    kwargs: dict
+        The kwargs dictionary
+    """
     # # Start Forte, initialize ambit
     # my_proc_n_nodes = forte.startup()
     # my_proc, n_nodes = my_proc_n_nodes
@@ -223,11 +227,17 @@ def run_forte(name, **kwargs):
 
 
 def gradient_forte(name, **kwargs):
-    r"""Function encoding sequence of PSI module and plugin calls so that
-    forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
+    """
+    This funtion is called when the user calls gradient('forte').
+    It sets up the computation and calls the Forte driver.
+    This function is currently only implemented for CASSCF and MCSCF_TWO_STEP and DSRG-MRPT2.
 
-    >>> gradient('forte')
-        available for : CASSCF
+    Parameters
+    ----------
+    name: str
+        The name of the module (forte)
+    kwargs: dict
+        The kwargs dictionary
     """
 
     # Get the psi4 option object
@@ -355,5 +365,5 @@ def mr_dsrg_pt2(job_type, data):
 
 
 # Integration with driver routines
-psi4.driver.procedures["energy"]["forte"] = run_forte
+psi4.driver.procedures["energy"]["forte"] = energy_forte
 psi4.driver.procedures["gradient"]["forte"] = gradient_forte
