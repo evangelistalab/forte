@@ -25,7 +25,7 @@ jobs:
         add-pip-as-python-dependency: true
         channels: conda-forge
 
-    # - name: Install ambit
+    - name: Install ambit
       run: |
         conda info
         conda list
@@ -38,31 +38,31 @@ jobs:
         make install
 
     # - name: Compile psi4
-      # run: |
-        cd $HOME        
-        git clone https://github.com/evangelistalab/psi4.git
-        cd psi4
-        cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
-        cd objdir
-        make -j2
-        # make install
+    #   run: |
+    #     cd $HOME        
+    #     git clone https://github.com/evangelistalab/psi4.git
+    #     cd psi4
+    #     cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
+    #     cd objdir
+    #     make -j2
+    #     # make install
 
     # - name: Compile forte
-      # run: |
-        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
-        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
-        cd $HOME/work/forte/forte
-        cmake_psi4=$(psi4 --plugin-compile)
-        $cmake_psi4 --debug-output \
-        -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
-        -DENABLE_ForteTests=TRUE \        
-        make -j2        
+    #   run: |
+    #     export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
+    #     export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+    #     cd $HOME/work/forte/forte
+    #     cmake_psi4=$(psi4 --plugin-compile)
+    #     $cmake_psi4 --debug-output \
+    #     -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
+    #     -DENABLE_ForteTests=TRUE \        
+    #     make -j2        
 
     # - name: Run forte tests
-      # run: |
-        echo $LD_LIBRARY_PATH
-        export LD_LIBRARY_PATH=/usr/share/miniconda/lib/:$LD_LIBRARY_PATH
-        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
-        export PATH=$PATH:$HOME/psi4/objdir/stage/bin        
-        cd $HOME/work/forte/forte/tests/methods
-        python run_forte_tests.py
+    #   run: |
+    #     echo $LD_LIBRARY_PATH
+    #     export LD_LIBRARY_PATH=/usr/share/miniconda/lib/:$LD_LIBRARY_PATH
+    #     export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
+    #     export PATH=$PATH:$HOME/psi4/objdir/stage/bin        
+    #     cd $HOME/work/forte/forte/tests/methods
+    #     python run_forte_tests.py
