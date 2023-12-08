@@ -25,7 +25,7 @@ jobs:
         add-pip-as-python-dependency: true
         channels: conda-forge
 
-    - name: Install ambit
+    # - name: Install ambit
       run: |
         conda info
         conda list
@@ -38,7 +38,7 @@ jobs:
         make install
 
     # - name: Compile psi4
-      run: |
+      # run: |
         cd $HOME        
         git clone https://github.com/evangelistalab/psi4.git
         cd psi4
@@ -48,7 +48,7 @@ jobs:
         # make install
 
     # - name: Compile forte
-      run: |
+      # run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
         cd $HOME/work/forte/forte
@@ -59,7 +59,7 @@ jobs:
         make -j2        
 
     # - name: Run forte tests
-      run: |
+      # run: |
         echo $LD_LIBRARY_PATH
         export LD_LIBRARY_PATH=/usr/share/miniconda/lib/:$LD_LIBRARY_PATH
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
