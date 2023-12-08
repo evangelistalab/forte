@@ -16,3 +16,5 @@ dependencies:
     - yaml
     - pytest
     - conda-forge::lcov
+    - conda-forge/label/libint_dev::libint
+    #-psi4::libint2  # high AM
