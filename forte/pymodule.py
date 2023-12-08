@@ -128,7 +128,7 @@ def forte_driver(data: ForteData):
 
 def energy_forte(name, **kwargs):
     """
-    This funtion is called when the user calls energy('forte').
+    This function is called when the user calls energy('forte').
     It sets up the computation and calls the Forte driver.
 
     Parameters

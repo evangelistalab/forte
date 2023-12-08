@@ -18,7 +18,7 @@ from forte import Model, Results
 
 @dataclass
 class ForteData:
-    """Dataclass for holding data passed around in forte.
+    """Dataclass for holding objects passed around in Forte.
 
     This class is the container for all the data that is passed around in forte from one module to another.
 
@@ -59,5 +59,5 @@ class ForteData:
     as_ints: ActiveSpaceIntegrals = None
     psi_wfn: Wavefunction = None
     active_space_solver: ActiveSpaceSolver = None
-    rdms: rdms = None
+    rdms: RDMs = None
     results: Results = field(default_factory=Results)
