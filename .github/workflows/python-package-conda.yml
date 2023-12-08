@@ -15,7 +15,7 @@ jobs:
         submodules: 'true'
 
     - name: Setup Conda
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: forte
         environment-file: environment.yml
