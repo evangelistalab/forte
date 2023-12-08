@@ -10,10 +10,10 @@ jobs:
 
     steps:
     - name: Checkout code
-    - uses: actions/checkout@v3
+      uses: actions/checkout@v3
       with:
         submodules: 'true'
-        
+
     - name: Setup Conda
       uses: conda-incubator/setup-miniconda@v2
       with:
