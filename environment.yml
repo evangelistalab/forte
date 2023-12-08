@@ -5,6 +5,7 @@ dependencies:
     - pybind11
     - gcc
     - libgcc
+    - mkl
     - cmake
     - numpy
     - scipy
