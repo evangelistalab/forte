@@ -44,6 +44,7 @@ jobs:
 
     - name: Install ambit
       run: |
+        conda activate forte
         cd $HOME
         git clone https://github.com/jturney/ambit.git
         cd ambit
