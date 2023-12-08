@@ -13,7 +13,7 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:
         activate-environment: fortebuild
-        environment-file: environment.yaml
+        environment-file: environment.yml
         show-channel-urls: true
         python-version: '3.10'
         auto-activate-base: false
