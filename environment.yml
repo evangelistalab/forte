@@ -3,6 +3,7 @@ name: forte
 dependencies:
     - pip>=19.0
     - pybind11
+    - gcc
     - libgcc
     - cmake
     - numpy
