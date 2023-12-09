@@ -46,9 +46,9 @@ jobs:
       run: |
         # export LD_LIBRARY_PATH=/home/runner/miniconda3/envs/forte/x86_64-conda-linux-gnu/lib:$LD_LIBRARY_PATH      
         cd $HOME        
-        git clone https://github.com/evangelistalab/psi4.git
+        git clone https://github.com/psi4/psi4.git
         cd psi4
-        #git pull origin master --tags 
+        git pull origin master --tags 
         git fetch origin "refs/tags/*:refs/tags/*"
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
         cd objdir
