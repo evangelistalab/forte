@@ -42,6 +42,7 @@ from forte.modules import (
     ActiveSpaceIntsFactory,
     ActiveSpaceSolver,
     ActiveSpaceRDMs,
+    OrbitalTransformation,
 )
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
@@ -108,7 +109,7 @@ def forte_driver(data: ForteData):
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
 
-        if options.get_str("DERTYPE") == "FIRST" and data.active_space_solver_type in ["DETCI", "GENCI"]:
+        if options.get_str("DERTYPE") == "FIRST" and active_space_solver_type in ["DETCI", "GENCI"]:
             # Compute coupling coefficients
             # NOTE: 1. Orbitals have to be semicanonicalized already to make sure
             #          DSRG reads consistent CI coefficients before and after SemiCanonical class.
@@ -163,21 +164,17 @@ def energy_forte(name, **kwargs):
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = data.options.get_str("ORBITAL_TYPE")
     if orb_type != "CANONICAL":
-        orb_t = forte.make_orbital_transformation(orb_type, data.scf_info, data.options, data.ints, data.mo_space_info)
-        orb_t.compute_transformation()
-        Ua = orb_t.get_Ua()
-        Ub = orb_t.get_Ub()
-        data.ints.rotate_orbitals(Ua, Ub, job_type != "NONE")
-
-    # Run a method
-    if job_type == "NONE":
-        psi4.core.set_scalar_variable("CURRENT ENERGY", 0.0)
-        # forte.cleanup()
-        return data.psi_wfn
+        OrbitalTransformation(orb_type, job_type != "NONE").run(data)
 
     energy = 0.0
 
+    # Run a method
+    if job_type == "NONE":
+        psi4.core.set_scalar_variable("CURRENT ENERGY", energy)
+        return data.psi_wfn
+
     if data.options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF":
+        raise Exception("Forte: CASSCF_REFERENCE is not supported")
         if data.options.get_str("INT_TYPE") == "FCIDUMP":
             raise Exception("Forte: the CASSCF code cannot use integrals read from a FCIDUMP file")
 
@@ -185,8 +182,12 @@ def energy_forte(name, **kwargs):
         energy = casscf.compute_energy()
 
     if job_type == "MCSCF_TWO_STEP":
+        state_map = forte.to_state_nroots_map(data.state_weights_map)
+        data.active_space_solver = forte.make_active_space_solver(
+            data.options.get_str("ACTIVE_SPACE_SOLVER"), state_map, data.scf_info, data.mo_space_info, data.options
+        )
         casscf = forte.make_mcscf_two_step(
-            data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
+            data.active_space_solver, data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
         )
         energy = casscf.compute_energy()
 
@@ -283,8 +284,12 @@ def gradient_forte(name, **kwargs):
         casscf.compute_gradient()
 
     if job_type == "MCSCF_TWO_STEP":
+        state_map = forte.to_state_nroots_map(data.state_weights_map)
+        data.active_space_solver = forte.make_active_space_solver(
+            data.options.get_str("ACTIVE_SPACE_SOLVER"), state_map, data.scf_info, data.mo_space_info, data.options
+        )
         casscf = forte.make_mcscf_two_step(
-            data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
+            data.active_space_solver, data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
         )
         energy = casscf.compute_energy()
 
@@ -352,7 +357,7 @@ def mr_dsrg_pt2(job_type, data):
         raise Exception("Forte: VCIS/VCISD is not supported for MR-DSRG-PT2")
     max_rdm_level = 2 if options.get_str("THREEPDC") == "ZERO" else 3
     data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
-    ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, data.as_ints, options)
+    ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, options, data.as_ints)
     ci.compute_energy()
 
     rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)

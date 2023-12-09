@@ -347,7 +347,7 @@ void CASSCF::diagonalize_hamiltonian() {
 
     auto state_map = to_state_nroots_map(state_weights_map_);
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
-                                                        mo_space_info_, fci_ints, options_);
+                                                        mo_space_info_, options_, fci_ints);
     active_space_solver->set_print(print_);
     const auto state_energies_map = active_space_solver->compute_energy();
     cas_ref_ =

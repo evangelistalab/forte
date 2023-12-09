@@ -80,8 +80,8 @@ class ActiveSpaceSolver {
     ActiveSpaceSolver(const std::string& method,
                       const std::map<StateInfo, size_t>& state_nroots_map,
                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                      std::shared_ptr<ForteOptions> options);
+                      std::shared_ptr<ForteOptions> options,
+                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
@@ -219,6 +219,9 @@ class ActiveSpaceSolver {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// User-provided options
+    std::shared_ptr<ForteOptions> options_;
+
     /// The molecular integrals for the active space
     /// This object holds only the integrals for the orbital contained in the
     /// active_mo_vector.
@@ -228,9 +231,6 @@ class ActiveSpaceSolver {
 
     /// The multipole integrals for the active space
     std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints_;
-
-    /// User-provided options
-    std::shared_ptr<ForteOptions> options_;
 
     /// A map of state symmetries to the associated ActiveSpaceMethod
     std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> state_method_map_;
@@ -292,7 +292,8 @@ class ActiveSpaceSolver {
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);
+    std::shared_ptr<ForteOptions> options,
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints = std::shared_ptr<ActiveSpaceIntegrals>());
 
 /**
  * @brief Convert a map of StateInfo to weight lists to a map of StateInfo to number of roots.

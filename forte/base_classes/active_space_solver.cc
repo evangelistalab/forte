@@ -57,10 +57,10 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
                                      const std::map<StateInfo, size_t>& state_nroots_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                     std::shared_ptr<ForteOptions> options)
+                                     std::shared_ptr<ForteOptions> options,
+                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
-      mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
+      mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
     // print_options();
 
@@ -79,12 +79,6 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         Ua_data[i * nactv + i] = 1.0;
         Ub_data[i * nactv + i] = 1.0;
     }
-
-    // initialize multipole integrals
-    if (as_ints_->ints()->integral_type() != Custom) {
-        auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
-        as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
-    }
 }
 
 void ActiveSpaceSolver::set_print(PrintLevel level) { print_ = level; }
@@ -97,8 +91,8 @@ void ActiveSpaceSolver::set_maxiter(int maxiter) { maxiter_ = maxiter; }
 
 void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     as_ints_ = as_ints;
-    for (auto& [state, nroot] : state_nroots_map_) {
-        state_method_map_[state]->set_active_space_integrals(as_ints);
+    for (const auto& [state, method] : state_method_map_) {
+        method->set_active_space_integrals(as_ints_);
     }
 }
 
@@ -112,6 +106,17 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::state_energie
 }
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
+    // check if the integrals are available
+    if (not as_ints_) {
+        throw std::runtime_error("ActiveSpaceSolver: ActiveSpaceIntegrals are not available.");
+    }
+
+    // initialize multipole integrals
+    if (as_ints_->ints()->integral_type() != Custom) {
+        auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
+        as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+    }
+
     state_energies_map_.clear();
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -189,7 +194,6 @@ void ActiveSpaceSolver::print_energies() {
         int irrep = state.irrep();
         int multi = state.multiplicity();
         int nstates = state_nroot.second;
-        int twice_ms = state.twice_ms();
         for (int i = 0; i < nstates; ++i) {
             double energy = state_energies_map_[state][i];
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
@@ -391,9 +395,9 @@ void ActiveSpaceSolver::print_options() {
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
+    std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     return std::make_shared<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
-                                               as_ints, options);
+                                               options, as_ints);
 }
 
 std::map<StateInfo, size_t>

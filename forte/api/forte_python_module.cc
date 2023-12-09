@@ -73,6 +73,7 @@ using namespace pybind11::literals;
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
+void export_ActiveSpaceIntegrals(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
@@ -173,6 +174,10 @@ PYBIND11_MODULE(_forte, m) {
     py::module::import("ambit");
 
     m.doc() = "pybind11 Forte module"; // module docstring
+
+    // export base classes
+    export_ActiveSpaceIntegrals(m);
+
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
@@ -192,7 +197,10 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "ref_wfn"_a, "options"_a,
           "mo_space_info"_a, "int_type"_a = "", "Make a Forte integral object from psi4");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
-    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
+    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver",
+          "method"_a, "state_nroots_map"_a, "scf_info"_a, "mo_space_info"_a, "options"_a,
+          "as_ints"_a = std::shared_ptr<ActiveSpaceIntegrals>());
+
     m.def("make_orbital_transformation", &make_orbital_transformation,
           "Make an orbital transformation");
     m.def("make_state_info_from_psi", &make_state_info_from_psi,
@@ -328,27 +336,6 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &DynamicCorrelationSolver::compute_energy)
         .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
              "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
-
-    // export ActiveSpaceIntegrals
-    py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
-                                                                            "ActiveSpaceIntegrals")
-        .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
-             "Compute the matrix element of the Hamiltonian between two determinants")
-        .def("nuclear_repulsion_energy", &ActiveSpaceIntegrals::nuclear_repulsion_energy,
-             "Get the nuclear repulsion energy")
-        .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,
-             "Get the frozen core energy (contribution from FROZEN_DOCC)")
-        .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
-             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
-        .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
-        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry,
-             "Return the symmetry of the active MOs")
-        .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
-        .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
-        .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
-        .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
-        .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
-        .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
 
     // export ActiveMultipoleIntegrals
     py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(

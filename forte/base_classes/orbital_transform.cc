@@ -69,7 +69,7 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
         auto state_weights_map = make_state_weights_map(options, mo_space_info);
         auto state_nroots_map = to_state_nroots_map(state_weights_map);
         auto as_solver = make_active_space_solver(as_type, state_nroots_map, scf_info,
-                                                  mo_space_info, as_ints, options);
+                                                  mo_space_info, options, as_ints);
         auto state_energies = as_solver->compute_energy();
 
         // compute RDMs

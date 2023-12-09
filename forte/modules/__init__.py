@@ -13,3 +13,4 @@ from .objects_util_psi4 import ObjectsUtilPsi4
 from .molecule_factory import MoleculeFactory
 from .state_factory import StateFactory
 from .hf import HF
+from .orbital_transform import OrbitalTransformation

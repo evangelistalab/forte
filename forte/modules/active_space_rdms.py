@@ -1,4 +1,3 @@
-# import forte
 from typing import List
 from .module import Module
 from forte.data import ForteData
@@ -25,7 +24,7 @@ class ActiveSpaceRDMs(Module):
     def _run(self, data: ForteData) -> ForteData:
         import forte
 
-        data.rdm = data.active_space_solver.compute_average_rdms(
+        data.rdms = data.active_space_solver.compute_average_rdms(
             data.state_weights_map, self.max_rdm_level, self.rdms_type
         )
 
