@@ -68,7 +68,7 @@ jobs:
 
     - name: Run forte tests
       run: |
-        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/work/forte/forte
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/work/forte
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py --failed_dump --bw
