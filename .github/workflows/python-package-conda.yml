@@ -75,4 +75,4 @@ jobs:
         # export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
         # export PATH=$PATH:$HOME/psi4/objdir/stage/bin        
         cd $HOME/work/forte/forte/tests/methods
-        python run_forte_tests.py
+        python run_forte_tests.py --failed_dump --bw
