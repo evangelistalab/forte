@@ -142,10 +142,17 @@ class ForteIntegrals {
     /// Skip integral transformation
     bool skip_build_;
 
-    /// Return Ca
-    std::shared_ptr<psi::Matrix> Ca() const;
+    /// @brief Access the coefficient matrix for the alpha orbitals used to transform the integrals
+    ///
+    /// Note that the matrix is a constant pointer, so it cannot be modified.
+    /// To modify the orbitals, use the rotate_orbitals function or the update_orbitals functions.
+    /// These will keep track of whether the integrals need to be re-transformed.
+    /// Use the function update_ints_if_needed to re-transform the integrals only if they changed.
+    ///
+    /// @return the coefficient matrix for the alpha orbitals used to transform the integrals
+    std::shared_ptr<const psi::Matrix> Ca() const;
     /// Return Cb
-    std::shared_ptr<psi::Matrix> Cb() const;
+    std::shared_ptr<const psi::Matrix> Cb() const;
 
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
@@ -355,6 +362,11 @@ class ForteIntegrals {
     virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
                                  bool re_transform = true);
 
+    /// Update the integrals if the MO coefficients have changed but the integrals were not
+    /// re-transformed
+    /// @return true if the integrals were updated
+    bool update_ints_if_needed();
+
     /// Make the orbital phase consistent when updating orbitals
     /// @param U the unitary transformation matrix so that C_new = C_old * U
     /// @param is_alpha target Ca if true else Cb
@@ -421,6 +433,12 @@ class ForteIntegrals {
 
     // Cb matrix from psi
     std::shared_ptr<psi::Matrix> Cb_;
+
+    // AO overlap matrix from psi
+    std::shared_ptr<psi::Matrix> S_;
+
+    // This variable tells if the integrals are consistent with the MO coefficients
+    bool ints_consistent_ = true;
 
     /// Number of irreps
     int nirrep_;
