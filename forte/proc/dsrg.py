@@ -205,8 +205,11 @@ class ProcedureDSRG:
         # Perform the initial un-relaxed DSRG
         self.make_dsrg_solver()
         self.dsrg_setup()
+        psi4.core.print_out(f"\n  =>** Before self.dsrg_solver.compute_energy() **<=\n")
         e_dsrg = self.dsrg_solver.compute_energy()
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
+
+        psi4.core.print_out(f"\n  =>** After self.dsrg_solver.compute_energy() **<=\n")
 
         self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items() if "ROOT" in k}
 
@@ -216,6 +219,7 @@ class ProcedureDSRG:
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
+            psi4.core.print_out(f"\n  =>** In reference relaxation loop **<=\n")
             # Grab the effective Hamiltonian in the active space
             # Note: The active integrals (ints_dressed) are in the original basis
             #       (before semi-canonicalization in the init function),

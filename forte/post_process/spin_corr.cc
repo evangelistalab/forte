@@ -164,7 +164,7 @@ void SpinCorr::spin_analysis() {
 
     //} else
     if (options_->get_str("SPIN_BASIS") == "NO") {
-        throw RuntimeError("SPIN_BASIS = NO basis not implemented yet");
+        throw std::runtime_error("SPIN_BASIS = NO basis not implemented yet");
 
         outfile->Printf("\n  Computing spin correlation in NO basis \n");
 

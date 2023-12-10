@@ -3,7 +3,7 @@ from .module import Module
 from .sequential import Sequential
 from .options_factory import OptionsFactory
 from .objects_factory_psi4 import ObjectsFromPsi4
-from .active_space_ints_factory import ActiveSpaceInts
+from .active_space_ints import ActiveSpaceInts
 
 
 class ObjectsUtilPsi4(Module):

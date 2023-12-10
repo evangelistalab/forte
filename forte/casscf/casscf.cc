@@ -278,8 +278,9 @@ double CASSCF::compute_energy() {
         }
         auto Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 
-        // update MO coefficients
+        // update MO coefficients locally and in the integrals object
         Ca->copy(Cp);
+        ints_->update_orbitals(Cp, Cp, false);
 
         std::string diis_start_label = "";
         if (do_diis and (iter > diis_start or g_norm < diis_gradient_norm)) {

@@ -20,7 +20,6 @@ set {
 Ezero, wfn = energy('scf', return_wfn=True)
 
 set forte {
-  job_type              newdriver
   int_type              df
   active_space_solver   genci
   correlation_solver    sa-mrdsrg
@@ -35,7 +34,7 @@ set forte {
   gas1min               [2,1,1]
   transition_dipoles    true
   e_convergence         8
-  r_convergence         7
+  r_convergence         6
 }
 edsrg = energy('forte', ref_wfn = wfn)
 

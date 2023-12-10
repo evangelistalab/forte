@@ -175,7 +175,7 @@ def energy_forte(name, **kwargs):
         return data.psi_wfn
 
     if job_type == "CASSCF":
-        raise Exception("Forte: CASSCF_REFERENCE is not supported")
+        # raise Exception("Forte: CASSCF_REFERENCE is not supported")
         if data.options.get_str("INT_TYPE") == "FCIDUMP":
             raise Exception("Forte: the CASSCF code cannot use integrals read from a FCIDUMP file")
 
@@ -187,17 +187,19 @@ def energy_forte(name, **kwargs):
         energy = data.results.value("energy")
 
     if job_type == "TDCI":
-        state = forte.make_state_info_from_psi(data.options)
-        data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
-        state_map = forte.to_state_nroots_map(data.state_weights_map)
-        active_space_method = forte.make_active_space_method(
-            "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, data.as_ints, data.options
-        )
-        active_space_method.set_quiet_mode()
-        active_space_method.compute_energy()
+        data = TDACI().run(data)
+        energy = data.results.value("energy")
+        # state = forte.make_state_info_from_psi(data.options)
+        # data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+        # state_map = forte.to_state_nroots_map(data.state_weights_map)
+        # active_space_method = forte.make_active_space_method(
+        #     "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, data.as_ints, data.options
+        # )
+        # active_space_method.set_quiet_mode()
+        # active_space_method.compute_energy()
 
-        tdci = forte.TDCI(active_space_method, data.scf_info, data.options, data.mo_space_info, data.as_ints)
-        energy = tdci.compute_energy()
+        # tdci = forte.TDCI(active_space_method, data.scf_info, data.options, data.mo_space_info, data.as_ints)
+        # energy = tdci.compute_energy()
 
     if job_type == "NEWDRIVER":
         energy = forte_driver(data)

@@ -47,9 +47,9 @@ set forte job_type newdriver
 # I just want to test the RDMs!
 # - rerun a CASCI, copied from pymodule
 
-from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4
+from forte.modules import OptionsFactory, ObjectsFromPsi4
 data = OptionsFactory().run()
-data = ObjectsFactoryPsi4(ref_wfn=wfn).run(data)
+data = ObjectsFromPsi4(ref_wfn=wfn).run(data)
 
 
 #from forte.pymodule import prepare_forte_options, prepare_forte_objects

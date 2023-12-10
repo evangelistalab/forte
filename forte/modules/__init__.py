@@ -1,7 +1,7 @@
 from .module import Module
 from .sequential import Sequential
 
-from .active_space_ints_factory import ActiveSpaceInts
+from .active_space_ints import ActiveSpaceInts
 from .active_space_rdms import ActiveSpaceRDMs
 from .active_space_solver import ActiveSpaceSolver
 from .graph_visualizer import GraphVisualizer
@@ -15,3 +15,4 @@ from .state_factory import StateFactory
 from .hf import HF
 from .orbital_transform import OrbitalTransformation
 from .mcscf import MCSCF
+from .tdaci import TDACI
