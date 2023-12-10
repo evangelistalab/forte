@@ -3,7 +3,7 @@ from .module import Module
 from forte.data import ForteData
 
 
-class ActiveSpaceIntsFactory(Module):
+class ActiveSpaceInts(Module):
     """
     A module to prepare an ActiveSpaceIntegral
     """

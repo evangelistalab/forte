@@ -2282,7 +2282,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
-    auto Cwfn = ints_->Ca();
+    auto Cwfn = ints_->Ca()->clone();
     if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 

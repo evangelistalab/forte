@@ -230,7 +230,7 @@ def prepare_forte_objects(data, name, **kwargs):
     return data, fcidump
 
 
-class ObjectsFactoryPsi4(Module):
+class ObjectsFromPsi4(Module):
     """
     A module to prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects from a Psi4 Wavefunction object
     """

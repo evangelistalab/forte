@@ -52,7 +52,7 @@ void DSRG_MRPT2::write_lagrangian() {
         });
     }
 
-    L->back_transform(ints_->Ca());
+    L->back_transform(ints_->Ca()->clone());
     ints_->wfn()->set_lagrangian(
         std::make_shared<psi::Matrix>("Lagrangian", nirrep, irrep_vec, irrep_vec));
     ints_->wfn()->lagrangian()->copy(L);
@@ -103,7 +103,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
             }
         });
     }
-    D1->back_transform(ints_->Ca());
+    D1->back_transform(ints_->Ca()->clone());
     ints_->wfn()->Da()->copy(D1);
     ints_->wfn()->Db()->copy(D1);
     outfile->Printf("Done");

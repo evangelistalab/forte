@@ -47,8 +47,7 @@ ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
     startup();
 }
 
-void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
-                                                     std::vector<double>& oei_b) {
+void ActiveSpaceIntegrals::compute_restricted_one_body_operator() {
     std::vector<size_t> fomo_to_mo(restricted_docc_mo_);
     std::vector<size_t> cmo_to_mo(active_mo_);
     size_t nfomo1 = fomo_to_mo.size();
@@ -90,7 +89,7 @@ void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
             for (size_t q = 0; q < nmo_; ++q) {
                 size_t qq = cmo_to_mo[q];
                 size_t idx = nmo_ * p + q;
-                oei_a[idx] = ints_->oei_a(pp, qq);
+                oei_a_[idx] = ints_->oei_a(pp, qq);
 
                 double value = 0.0;
 #pragma omp parallel for reduction(+ : value)
@@ -98,11 +97,11 @@ void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
                     value += 2.0 * Jdata[ndim3 * p + ndim2 * f + nfomo1 * q + f];
                     value -= Kdata[ndim3 * p + ndim2 * f + nmo_ * f + q];
                 }
-                oei_a[idx] += value;
+                oei_a_[idx] += value;
             }
         }
 
-        oei_b = oei_a;
+        oei_b_ = oei_a_;
     } else {
         // TODO: this is problematic for large systems (> 500 electrons)
         auto rdocc_aa = ints_->aptei_aa_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
@@ -146,8 +145,8 @@ void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
             for (size_t q = 0; q < nmo_; ++q) {
                 size_t qq = cmo_to_mo[q];
                 size_t idx = nmo_ * p + q;
-                oei_a[idx] = ints_->oei_a(pp, qq);
-                oei_b[idx] = ints_->oei_b(pp, qq);
+                oei_a_[idx] = ints_->oei_a(pp, qq);
+                oei_b_[idx] = ints_->oei_b(pp, qq);
 
                 double va = 0.0, vb = 0.0;
 #pragma omp parallel for reduction(+ : va, vb)
@@ -158,8 +157,8 @@ void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
                     vb += tei_gh_bb[index];
                     vb += tei_gh_ab[index];
                 }
-                oei_a[idx] += va;
-                oei_b[idx] += vb;
+                oei_a_[idx] += va;
+                oei_b_[idx] += vb;
             }
         }
     }
@@ -190,13 +189,6 @@ void ActiveSpaceIntegrals::set_active_integrals(const ambit::Tensor& act_aa,
     tei_bb_ = act_bb.data();
 }
 
-void ActiveSpaceIntegrals::compute_restricted_one_body_operator() {
-    nmo2_ = nmo_ * nmo_;
-    oei_a_.resize(nmo2_);
-    oei_b_.resize(nmo2_);
-    RestrictedOneBodyOperator(oei_a_, oei_b_);
-}
-
 void ActiveSpaceIntegrals::set_active_integrals_and_restricted_docc() {
     ambit::Tensor act_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
     ambit::Tensor act_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
@@ -205,7 +197,7 @@ void ActiveSpaceIntegrals::set_active_integrals_and_restricted_docc() {
     tei_aa_ = act_aa.data();
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
-    RestrictedOneBodyOperator(oei_a_, oei_b_);
+    compute_restricted_one_body_operator();
 }
 
 std::vector<size_t> ActiveSpaceIntegrals::active_mo() const { return active_mo_; }
@@ -544,6 +536,12 @@ std::shared_ptr<ActiveSpaceIntegrals>
 make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ForteIntegrals> ints, const std::string& active_space,
                        const std::vector<std::string>& core_spaces) {
+
+    bool updated_ints = ints->update_ints_if_needed();
+    if (updated_ints) {
+        psi::outfile->Printf(
+            "\n\n  The integrals are not consistent with the orbitals. Re-transforming them.\n");
+    }
 
     // get the active/core vectors
     auto active_mo = mo_space_info->corr_absolute_mo(active_space);

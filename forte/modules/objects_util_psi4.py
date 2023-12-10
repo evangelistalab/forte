@@ -2,8 +2,8 @@ from forte.data import ForteData
 from .module import Module
 from .sequential import Sequential
 from .options_factory import OptionsFactory
-from .objects_factory_psi4 import ObjectsFactoryPsi4
-from .active_space_ints_factory import ActiveSpaceIntsFactory
+from .objects_factory_psi4 import ObjectsFromPsi4
+from .active_space_ints_factory import ActiveSpaceInts
 
 
 class ObjectsUtilPsi4(Module):
@@ -22,8 +22,8 @@ class ObjectsUtilPsi4(Module):
         self.seq = Sequential(
             [
                 OptionsFactory(options=options),
-                ObjectsFactoryPsi4(options=options, **kwargs),
-                ActiveSpaceIntsFactory(active, core),
+                ObjectsFromPsi4(options=options, **kwargs),
+                ActiveSpaceInts(active, core),
             ]
         )
 

@@ -37,12 +37,13 @@ import forte
 from forte.data import ForteData
 from forte.modules import (
     OptionsFactory,
-    ObjectsFactoryFCIDUMP,
-    ObjectsFactoryPsi4,
-    ActiveSpaceIntsFactory,
+    ObjectsFromFCIDUMP,
+    ObjectsFromPsi4,
+    ActiveSpaceInts,
     ActiveSpaceSolver,
     ActiveSpaceRDMs,
     OrbitalTransformation,
+    MCSCF,
 )
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
@@ -85,7 +86,7 @@ def forte_driver(data: ForteData):
     state_map = forte.to_state_nroots_map(state_weights_map)
 
     # create an active space solver object and compute the energy
-    data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+    data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
     as_ints = data.as_ints
 
     active_space_solver_type = options.get_str("ACTIVE_SPACE_SOLVER")
@@ -155,9 +156,9 @@ def energy_forte(name, **kwargs):
     job_type = data.options.get_str("JOB_TYPE")
     # Prepare Forte objects
     if "FCIDUMP" in data.options.get_str("INT_TYPE"):
-        data = ObjectsFactoryFCIDUMP(options=kwargs).run(data)
+        data = ObjectsFromFCIDUMP(options=kwargs).run(data)
     else:
-        data = ObjectsFactoryPsi4(**kwargs).run(data)
+        data = ObjectsFromPsi4(**kwargs).run(data)
 
     start = time.time()
 
@@ -173,7 +174,7 @@ def energy_forte(name, **kwargs):
         psi4.core.set_scalar_variable("CURRENT ENERGY", energy)
         return data.psi_wfn
 
-    if data.options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF":
+    if job_type == "CASSCF":
         raise Exception("Forte: CASSCF_REFERENCE is not supported")
         if data.options.get_str("INT_TYPE") == "FCIDUMP":
             raise Exception("Forte: the CASSCF code cannot use integrals read from a FCIDUMP file")
@@ -181,19 +182,13 @@ def energy_forte(name, **kwargs):
         casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
         energy = casscf.compute_energy()
 
-    if job_type == "MCSCF_TWO_STEP":
-        state_map = forte.to_state_nroots_map(data.state_weights_map)
-        data.active_space_solver = forte.make_active_space_solver(
-            data.options.get_str("ACTIVE_SPACE_SOLVER"), state_map, data.scf_info, data.mo_space_info, data.options
-        )
-        casscf = forte.make_mcscf_two_step(
-            data.active_space_solver, data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
-        )
-        energy = casscf.compute_energy()
+    if data.options.get_bool("CASSCF_REFERENCE") or job_type == "MCSCF_TWO_STEP":
+        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
+        energy = data.results.value("energy")
 
     if job_type == "TDCI":
         state = forte.make_state_info_from_psi(data.options)
-        data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+        data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
         state_map = forte.to_state_nroots_map(data.state_weights_map)
         active_space_method = forte.make_active_space_method(
             "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, data.as_ints, data.options
@@ -260,7 +255,7 @@ def gradient_forte(name, **kwargs):
         raise Exception("Analytic energy gradients are only implemented for" " CASSCF, MCSCF_TWO_STEP, or DSRG-MRPT2.")
 
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
-    data = ObjectsFactoryPsi4(**kwargs).run(data)
+    data = ObjectsFromPsi4(**kwargs).run(data)
 
     # Make an integral object
     time_pre_ints = time.time()
@@ -272,11 +267,7 @@ def gradient_forte(name, **kwargs):
     # Rotate orbitals before computation
     orb_type = data.options.get_str("ORBITAL_TYPE")
     if orb_type != "CANONICAL":
-        orb_t = forte.make_orbital_transformation(orb_type, data.scf_info, data.options, data.ints, data.mo_space_info)
-        orb_t.compute_transformation()
-        Ua = orb_t.get_Ua()
-        Ub = orb_t.get_Ub()
-        ints.rotate_orbitals(Ua, Ub)
+        OrbitalTransformation(orb_type, job_type != "NONE").run(data)
 
     if job_type == "CASSCF":
         casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
@@ -284,14 +275,8 @@ def gradient_forte(name, **kwargs):
         casscf.compute_gradient()
 
     if job_type == "MCSCF_TWO_STEP":
-        state_map = forte.to_state_nroots_map(data.state_weights_map)
-        data.active_space_solver = forte.make_active_space_solver(
-            data.options.get_str("ACTIVE_SPACE_SOLVER"), state_map, data.scf_info, data.mo_space_info, data.options
-        )
-        casscf = forte.make_mcscf_two_step(
-            data.active_space_solver, data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
-        )
-        energy = casscf.compute_energy()
+        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
+        energy = data.results.value("energy")
 
     if job_type == "NEWDRIVER" and correlation_solver == "DSRG-MRPT2":
         forte_driver(data)
@@ -356,7 +341,7 @@ def mr_dsrg_pt2(job_type, data):
     if actv_type == "CIS" or actv_type == "CISD":
         raise Exception("Forte: VCIS/VCISD is not supported for MR-DSRG-PT2")
     max_rdm_level = 2 if options.get_str("THREEPDC") == "ZERO" else 3
-    data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+    data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
     ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, options, data.as_ints)
     ci.compute_energy()
 
