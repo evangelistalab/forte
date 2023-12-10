@@ -113,8 +113,10 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
 
     // initialize multipole integrals
     if (as_ints_->ints()->integral_type() != Custom) {
-        auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
-        as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+        if (not as_mp_ints_) {
+            auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
+            as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+        }
     }
 
     state_energies_map_.clear();
