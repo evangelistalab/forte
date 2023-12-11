@@ -307,8 +307,9 @@ double FCISolver::compute_energy() {
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
 
-    psi::outfile->Printf("\n    Time for FCI: %20.12f", t.get());
-
+    if (print_ >= PrintLevel::Default) {
+        psi::outfile->Printf("\n    Time for FCI: %20.12f", t.get());
+    }
     return energy_;
 }
 

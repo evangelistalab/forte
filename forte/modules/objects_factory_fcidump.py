@@ -149,7 +149,7 @@ def _prepare_forte_objects_from_fcidump(data, filename: str = None):
     return data, fcidump
 
 
-class ObjectsFactoryFCIDUMP(Module):
+class ObjectsFromFCIDUMP(Module):
     """
     A module to prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects from a FCIDUMP file
     """

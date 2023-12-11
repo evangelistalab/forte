@@ -6,9 +6,9 @@ data = ForteData()
 
 ints = Ints()
 ints2 = Ints2()
-seq = Sequential([HF(), Localizer()], ints)
+seq = Sequential([Localizer(), Localizer()], ints)
 fci = FCI(seq)
 
 graph = GraphVisualizer().visualize(fci)
 print(graph)
-fci.run(data)
+data = fci.run(data)

@@ -71,6 +71,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings
 
 # List of CC files
 pybind11_add_module(_forte
+api/active_space_integrals_api.cc
 api/cube_file_api.cc
 api/integrals_api.cc
 api/mospaceinfo_api.cc
@@ -87,6 +88,7 @@ base_classes/dynamic_correlation_solver.cc
 base_classes/forte_options.cc
 base_classes/mo_space_info.cc
 base_classes/orbital_transform.cc
+base_classes/orbitals.cc
 base_classes/rdms.cc
 base_classes/scf_info.cc
 base_classes/state_info.cc

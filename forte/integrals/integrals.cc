@@ -144,9 +144,17 @@ void ForteIntegrals::allocate() {
     }
 }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
+std::shared_ptr<const psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+std::shared_ptr<const psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+
+bool ForteIntegrals::update_ints_if_needed() {
+    if (ints_consistent_) {
+        return false;
+    }
+    update_orbitals(Ca_, Cb_, true);
+    return true;
+}
 
 double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 

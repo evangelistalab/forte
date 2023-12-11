@@ -145,9 +145,7 @@ def make_hamiltonian(as_ints, state_map):
         print(f"\n{H}")
 
 
-def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level):
-    rdm = active_space_solver.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
-
+def write_external_rdm_file(rdm):
     g1a = rdm.g1a()
     g1b = rdm.g1b()
 

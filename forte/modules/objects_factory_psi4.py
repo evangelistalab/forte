@@ -2,18 +2,23 @@ import pathlib
 import warnings
 import os
 
-
 import numpy as np
+
 import psi4
 import psi4.driver.p4util as p4util
 
-import forte
-
-from forte.data import ForteData
 
 from .check_mo_orthogonality import check_mo_orthonormality
-from .module import Module
 
+from forte._forte import (
+    make_mo_space_info,
+    make_mo_space_info_from_map,
+    make_state_weights_map,
+    SCFInfo,
+    make_ints_from_psi4,
+)
+
+from forte.data import ForteData
 from forte.register_forte_options import register_forte_options
 from forte.proc.orbital_helpers import orbital_projection
 from forte.proc.orbital_helpers import read_orbitals, dump_orbitals, ortho_orbs_forte
@@ -24,6 +29,8 @@ from forte.proc.external_active_space_solver import (
     read_wavefunction,
     make_hamiltonian,
 )
+
+from .module import Module
 
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
@@ -111,9 +118,9 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     # create a MOSpaceInfo object
     nmopi = ref_wfn.nmopi()
     if kwargs.get("mo_spaces") is None:
-        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+        mo_space_info = make_mo_space_info(nmopi, point_group, options)
     else:
-        mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
+        mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
 
     # do we need to check MO overlap?
     if not need_orbital_check:
@@ -197,10 +204,10 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
 
     # Build Forte SCFInfo object
-    scf_info = forte.SCFInfo(wfn)
+    scf_info = SCFInfo(wfn)
 
     # Build a map from Forte StateInfo to the weights
-    state_weights_map = forte.make_state_weights_map(options, mo_space_info)
+    state_weights_map = make_state_weights_map(options, mo_space_info)
 
     return (state_weights_map, mo_space_info, scf_info)
 
@@ -230,7 +237,7 @@ def prepare_forte_objects(data, name, **kwargs):
     return data, fcidump
 
 
-class ObjectsFactoryPsi4(Module):
+class ObjectsFromPsi4(Module):
     """
     A module to prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects from a Psi4 Wavefunction object
     """
@@ -269,6 +276,6 @@ class ObjectsFactoryPsi4(Module):
         else:
             psi4.core.print_out("\n  Forte will use psi4 integrals")
             # Make an integral object from the psi4 wavefunction object
-            data.ints = forte.make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info)
+            data.ints = make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info)
 
         return data

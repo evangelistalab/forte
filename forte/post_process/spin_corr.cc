@@ -164,7 +164,6 @@ void SpinCorr::spin_analysis() {
 
     //} else
     if (options_->get_str("SPIN_BASIS") == "NO") {
-
         outfile->Printf("\n  Computing spin correlation in NO basis \n");
 
         auto pair = compute_nos();
@@ -192,14 +191,13 @@ void SpinCorr::spin_analysis() {
             }
         }
 
-        auto CA = as_ints_->ints()->Ca();
-        auto CB = as_ints_->ints()->Cb();
+        auto CA = as_ints_->ints()->Ca()->clone();
+        auto CB = as_ints_->ints()->Cb()->clone();
 
         auto Ca_new = psi::linalg::doublet(CA, Ua_full, false, false);
         auto Cb_new = psi::linalg::doublet(CB, Ub_full, false, false);
 
-        CA->copy(Ca_new);
-        CB->copy(Cb_new);
+        as_ints_->ints()->update_orbitals(Ca_new, Cb_new, false);
 
     } else if (options_->get_str("SPIN_BASIS") == "LOCAL") {
         outfile->Printf("\n  Computing spin correlation in local basis \n");

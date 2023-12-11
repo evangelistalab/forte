@@ -91,6 +91,8 @@ void Psi4Integrals::setup_psi4_ints() {
     Ca_ = wfn_->Ca()->clone();
     Cb_ = (spin_restriction_ == IntegralSpinRestriction::Restricted ? wfn_->Ca()->clone()
                                                                     : wfn_->Cb()->clone());
+    S_ = wfn_->S()->clone();
+
     nso_ = wfn_->nso();
     nsopi_ = wfn_->nsopi();
     nucrep_ = wfn_->molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength());
@@ -263,15 +265,19 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
 
 void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
                                     std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
-
-    // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
+    // 1. Copy orbitals and set the invalid flag
     Ca_->copy(Ca);
     Cb_->copy(Cb);
+    ints_consistent_ = false;
 
+    // if necessary, test they meet the spin restriction condition
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         if (not test_orbital_spin_restriction(Ca, Cb)) {
             Ca->print();
             Cb->print();
+            auto overlap = psi::linalg::triplet(Ca, S_, Cb, true, false, false);
+            overlap->set_name("Overlap <psi_alpha_i|psi_beta_j>");
+            overlap->print();
             auto msg = "Psi4Integrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);
@@ -284,6 +290,7 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
 
     // 3. Re-transform the integrals
     if (re_transform) {
+        ints_consistent_ = true;
         aptei_idx_ = nmo_;
         transform_one_electron_integrals();
         int my_proc = 0;

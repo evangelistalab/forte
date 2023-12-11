@@ -37,7 +37,7 @@ class Dimension;
 namespace forte {
 
 /**
- * @brief The ActiveSpaceIntegrals class stores integrals necessary for FCI calculations
+ * @brief The ActiveSpaceIntegrals class stores integrals necessary for active space solvers
  */
 class ActiveSpaceIntegrals {
   public:
@@ -57,7 +57,7 @@ class ActiveSpaceIntegrals {
 
     // ==> Class Interface <==
 
-    /// Return the
+    /// Return the ForteIntegrals object
     std::shared_ptr<ForteIntegrals> ints() { return ints_; }
 
     /// Return the number of MOs
@@ -144,6 +144,7 @@ class ActiveSpaceIntegrals {
     void set_active_integrals(const ambit::Tensor& tei_aa, const ambit::Tensor& tei_ab,
                               const ambit::Tensor& tei_bb);
     /// Compute the restricted_docc operator
+    /// F^{closed}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv|ii) - (ui|vi)
     void compute_restricted_one_body_operator();
     /// Set the restricted_one_body_operator
     void set_restricted_one_body_operator(const std::vector<double>& oei_a,
@@ -214,8 +215,7 @@ class ActiveSpaceIntegrals {
     inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {
         return nmo3_ * p + nmo2_ * q + nmo_ * r + s;
     }
-    /// F^{closed}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv|ii) - (ui|vi)
-    void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
+
     void startup();
 };
 

@@ -34,6 +34,7 @@ class ActiveSpaceSolver(Solver):
         >>> state_info_2 = StateInfo(...)
         >>> _parse_states({state_info_1: [1.0,1.0,0.5,0.5,0.5],state_info_2: [0.25,0.25,0.25]})
     """
+
     def __init__(
         self,
         input_nodes,
@@ -43,7 +44,7 @@ class ActiveSpaceSolver(Solver):
         e_convergence=1.0e-10,
         r_convergence=1.0e-6,
         options=None,
-        cbh=None
+        cbh=None,
     ):
         """
         Initialize an ActiveSpaceSolver object
@@ -83,7 +84,7 @@ class ActiveSpaceSolver(Solver):
             needs=[Feature.MODEL, Feature.ORBITALS],
             provides=[Feature.MODEL, Feature.ORBITALS, Feature.RDMS],
             options=options,
-            cbh=cbh
+            cbh=cbh,
         )
         self._data = self.input_nodes[0].data
 
@@ -100,7 +101,7 @@ class ActiveSpaceSolver(Solver):
         """
         return a string representation of this object
         """
-        return f'{self._type}(mo_space={self._mo_space_info_map},e_convergence={self._e_convergence},r_convergence={self._r_convergence})'
+        return f"{self._type}(mo_space={self._mo_space_info_map},e_convergence={self._e_convergence},r_convergence={self._r_convergence})"
 
     def __str__(self):
         """
@@ -121,10 +122,10 @@ class ActiveSpaceSolver(Solver):
 
         # compute the guess orbitals
         if not self.input_nodes[0].executed:
-            flog('info', 'ActiveSpaceSolver: MOs not available in mo_solver. Calling mo_solver run()')
+            flog("info", "ActiveSpaceSolver: MOs not available in mo_solver. Calling mo_solver run()")
             self.input_nodes[0].run()
         else:
-            flog('info', 'ActiveSpaceSolver: MOs read from mo_solver object')
+            flog("info", "ActiveSpaceSolver: MOs read from mo_solver object")
 
         # make the state_map
         state_map = to_state_nroots_map(self._states)
@@ -133,33 +134,33 @@ class ActiveSpaceSolver(Solver):
         self.make_mo_space_info(self._mo_space_info_map)
 
         # prepare the options
-        options = {'E_CONVERGENCE': self.e_convergence, 'R_CONVERGENCE': self.r_convergence}
+        options = {"E_CONVERGENCE": self.e_convergence, "R_CONVERGENCE": self.r_convergence}
 
         # values from self._options (user specified) replace those from options
         full_options = {**options, **self._options}
 
-        flog('info', 'ActiveSpaceSolver: adding options')
+        flog("info", "ActiveSpaceSolver: adding options")
         local_options = ForteOptions(forte_options)
         local_options.set_from_dict(full_options)
 
-        flog('info', 'ActiveSpaceSolver: getting integral from the model object')
+        flog("info", "ActiveSpaceSolver: getting integral from the model object")
         self.ints = self.model.ints(self.data, local_options)
 
         # Make an active space integral object
-        flog('info', 'ActiveSpaceSolver: making active space integrals')
+        flog("info", "ActiveSpaceSolver: making active space integrals")
         self.as_ints = make_active_space_ints(self.mo_space_info, self.ints, "ACTIVE", ["RESTRICTED_DOCC"])
 
         # create an active space solver object and compute the energy
-        flog('info', 'ActiveSpaceSolver: creating active space solver object')
+        flog("info", "ActiveSpaceSolver: creating active space solver object")
         self._active_space_solver = make_active_space_solver(
-            self._type, state_map, self.scf_info, self.mo_space_info, self.as_ints, local_options
+            self._type, state_map, self.scf_info, self.mo_space_info, local_options, self.as_ints
         )
 
-        flog('info', 'ActiveSpaceSolver: calling compute_energy() on active space solver object')
+        flog("info", "ActiveSpaceSolver: calling compute_energy() on active space solver object")
         state_energies_list = self._active_space_solver.compute_energy()
-        flog('info', 'ActiveSpaceSolver: compute_energy() done')
+        flog("info", "ActiveSpaceSolver: compute_energy() done")
 
-        flog('info', f'ActiveSpaceSolver: active space energy = {state_energies_list}')
-        self._results.add('active space energy', state_energies_list, 'Active space energy', 'Eh')
+        flog("info", f"ActiveSpaceSolver: active space energy = {state_energies_list}")
+        self._results.add("active space energy", state_energies_list, "Active space energy", "Eh")
 
         return self
