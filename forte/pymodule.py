@@ -44,6 +44,7 @@ from forte.modules import (
     ActiveSpaceRDMs,
     OrbitalTransformation,
     MCSCF,
+    TDACI,
 )
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
