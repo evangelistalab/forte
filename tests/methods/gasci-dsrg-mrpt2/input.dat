@@ -34,7 +34,7 @@ set forte {
   gas1min               [2,1,1]
   transition_dipoles    true
   e_convergence         8
-  r_convergence         6
+  r_convergence         7
 }
 edsrg = energy('forte', ref_wfn = wfn)
 
