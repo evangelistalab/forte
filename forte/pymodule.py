@@ -35,7 +35,17 @@ import psi4.driver.p4util as p4util
 
 import forte
 from forte.data import ForteData
-from forte.modules import OptionsFactory, ObjectsFactoryFCIDUMP, ObjectsFactoryPsi4, ActiveSpaceIntsFactory
+from forte.modules import (
+    OptionsFactory,
+    ObjectsFromFCIDUMP,
+    ObjectsFromPsi4,
+    ActiveSpaceInts,
+    ActiveSpaceSolver,
+    ActiveSpaceRDMs,
+    OrbitalTransformation,
+    MCSCF,
+    TDACI,
+)
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -50,14 +60,21 @@ def forte_driver(data: ForteData):
     """
     Driver to perform a Forte calculation using new solvers.
 
-    :param state_weights_map: dictionary of {state: weights}
-    :param scf_info: a SCFInfo object of Forte
-    :param options: a ForteOptions object of Forte
-    :param ints: a ForteIntegrals object of Forte
-    :param mo_space_info: a MOSpaceInfo object of Forte
-
-    :return: the computed energy
+    Parameters
+    ----------
+    data: ForteData
+        A ForteData object initialized with the following attributes:
+        state_weights_map: dictionary of {state: weights}
+        scf_info: a SCFInfo object of Forte
+        options: a ForteOptions object of Forte
+        ints: a ForteIntegrals object of Forte
+        mo_space_info: a MOSpaceInfo object of Forte
+    Returns
+    -------
+    return_en: float
+        The computed energy
     """
+
     state_weights_map, scf_info, options, ints, mo_space_info = (
         data.state_weights_map,
         data.scf_info,
@@ -70,40 +87,26 @@ def forte_driver(data: ForteData):
     state_map = forte.to_state_nroots_map(state_weights_map)
 
     # create an active space solver object and compute the energy
-    active_space_solver_type = options.get_str("ACTIVE_SPACE_SOLVER")
-    data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+    data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
     as_ints = data.as_ints
-    active_space_solver = forte.make_active_space_solver(
-        active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
-    )
 
-    if active_space_solver_type == "EXTERNAL":
-        write_external_active_space_file(as_ints, state_map, mo_space_info, "as_ints.json")
-        msg = "External solver: save active space integrals to as_ints.json"
-        print(msg)
-        psi4.core.print_out(msg)
-
-        if not os.path.isfile("rdms.json"):
-            msg = "External solver: rdms.json file not present, exit."
-            print(msg)
-            psi4.core.print_out(msg)
-            # finish the computation
-            exit()
-    # if rdms.json exists, then run "external" as_solver to compute energy
-    state_energies_list = active_space_solver.compute_energy()
+    active_space_solver_type = options.get_str("ACTIVE_SPACE_SOLVER")
+    data = ActiveSpaceSolver(solver_type=active_space_solver_type).run(data)
+    state_energies_list = data.state_energies_list
 
     if options.get_bool("WRITE_RDM"):
         max_rdm_level = 3  # TODO allow the user to change this variable
-        write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level)
+        data = ActiveSpaceRDMs(max_rdm_level=max_rdm_level).run(data)
+        write_external_rdm_file(data.rdms)
 
     if options.get_bool("SPIN_ANALYSIS"):
-        rdms = active_space_solver.compute_average_rdms(state_weights_map, 2, forte.RDMsType.spin_dependent)
-        forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
+        data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
+        forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")
     if correlation_solver_type != "NONE":
-        dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
+        dsrg_proc = ProcedureDSRG(data.active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
         return_en = dsrg_proc.compute_energy()
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
@@ -115,7 +118,7 @@ def forte_driver(data: ForteData):
             #       2. This is OK only when running ground-state calculations
             state = list(state_map.keys())[0]
             psi4.core.print_out(f"\n  ==> Coupling Coefficients for {state} <==")
-            ci_vectors = active_space_solver.eigenvectors(state)
+            ci_vectors = data.active_space_solver.eigenvectors(state)
             dsrg_proc.compute_gradient(ci_vectors)
         else:
             psi4.core.print_out("\n  Semicanonical orbitals must be used!\n")
@@ -126,14 +129,18 @@ def forte_driver(data: ForteData):
     return return_en
 
 
-def run_forte(name, **kwargs):
-    r"""Function encoding sequence of PSI module and plugin calls so that
-    forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
-
-    >>> energy('forte')
-
+def energy_forte(name, **kwargs):
     """
+    This function is called when the user calls energy('forte').
+    It sets up the computation and calls the Forte driver.
 
+    Parameters
+    ----------
+    name: str
+        The name of the module (forte)
+    kwargs: dict
+        The kwargs dictionary
+    """
     # # Start Forte, initialize ambit
     # my_proc_n_nodes = forte.startup()
     # my_proc, n_nodes = my_proc_n_nodes
@@ -150,54 +157,50 @@ def run_forte(name, **kwargs):
     job_type = data.options.get_str("JOB_TYPE")
     # Prepare Forte objects
     if "FCIDUMP" in data.options.get_str("INT_TYPE"):
-        data = ObjectsFactoryFCIDUMP(options=kwargs).run(data)
+        data = ObjectsFromFCIDUMP(options=kwargs).run(data)
     else:
-        data = ObjectsFactoryPsi4(**kwargs).run(data)
+        data = ObjectsFromPsi4(**kwargs).run(data)
 
     start = time.time()
 
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = data.options.get_str("ORBITAL_TYPE")
     if orb_type != "CANONICAL":
-        orb_t = forte.make_orbital_transformation(orb_type, data.scf_info, data.options, data.ints, data.mo_space_info)
-        orb_t.compute_transformation()
-        Ua = orb_t.get_Ua()
-        Ub = orb_t.get_Ub()
-        data.ints.rotate_orbitals(Ua, Ub, job_type != "NONE")
-
-    # Run a method
-    if job_type == "NONE":
-        psi4.core.set_scalar_variable("CURRENT ENERGY", 0.0)
-        # forte.cleanup()
-        return data.psi_wfn
+        OrbitalTransformation(orb_type, job_type != "NONE").run(data)
 
     energy = 0.0
 
-    if data.options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF":
+    # Run a method
+    if job_type == "NONE":
+        psi4.core.set_scalar_variable("CURRENT ENERGY", energy)
+        return data.psi_wfn
+
+    if job_type == "CASSCF":
+        # raise Exception("Forte: CASSCF_REFERENCE is not supported")
         if data.options.get_str("INT_TYPE") == "FCIDUMP":
             raise Exception("Forte: the CASSCF code cannot use integrals read from a FCIDUMP file")
 
         casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
         energy = casscf.compute_energy()
 
-    if job_type == "MCSCF_TWO_STEP":
-        casscf = forte.make_mcscf_two_step(
-            data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
-        )
-        energy = casscf.compute_energy()
+    if data.options.get_bool("CASSCF_REFERENCE") or job_type == "MCSCF_TWO_STEP":
+        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
+        energy = data.results.value("energy")
 
     if job_type == "TDCI":
-        state = forte.make_state_info_from_psi(data.options)
-        data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
-        state_map = forte.to_state_nroots_map(data.state_weights_map)
-        active_space_method = forte.make_active_space_method(
-            "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, data.as_ints, data.options
-        )
-        active_space_method.set_quiet_mode()
-        active_space_method.compute_energy()
+        data = TDACI().run(data)
+        energy = data.results.value("energy")
+        # state = forte.make_state_info_from_psi(data.options)
+        # data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+        # state_map = forte.to_state_nroots_map(data.state_weights_map)
+        # active_space_method = forte.make_active_space_method(
+        #     "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, data.as_ints, data.options
+        # )
+        # active_space_method.set_quiet_mode()
+        # active_space_method.compute_energy()
 
-        tdci = forte.TDCI(active_space_method, data.scf_info, data.options, data.mo_space_info, data.as_ints)
-        energy = tdci.compute_energy()
+        # tdci = forte.TDCI(active_space_method, data.scf_info, data.options, data.mo_space_info, data.as_ints)
+        # energy = tdci.compute_energy()
 
     if job_type == "NEWDRIVER":
         energy = forte_driver(data)
@@ -223,11 +226,17 @@ def run_forte(name, **kwargs):
 
 
 def gradient_forte(name, **kwargs):
-    r"""Function encoding sequence of PSI module and plugin calls so that
-    forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
+    """
+    This funtion is called when the user calls gradient('forte').
+    It sets up the computation and calls the Forte driver.
+    This function is currently only implemented for CASSCF and MCSCF_TWO_STEP and DSRG-MRPT2.
 
-    >>> gradient('forte')
-        available for : CASSCF
+    Parameters
+    ----------
+    name: str
+        The name of the module (forte)
+    kwargs: dict
+        The kwargs dictionary
     """
 
     # Get the psi4 option object
@@ -249,7 +258,7 @@ def gradient_forte(name, **kwargs):
         raise Exception("Analytic energy gradients are only implemented for" " CASSCF, MCSCF_TWO_STEP, or DSRG-MRPT2.")
 
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
-    data = ObjectsFactoryPsi4(**kwargs).run(data)
+    data = ObjectsFromPsi4(**kwargs).run(data)
 
     # Make an integral object
     time_pre_ints = time.time()
@@ -261,11 +270,7 @@ def gradient_forte(name, **kwargs):
     # Rotate orbitals before computation
     orb_type = data.options.get_str("ORBITAL_TYPE")
     if orb_type != "CANONICAL":
-        orb_t = forte.make_orbital_transformation(orb_type, data.scf_info, data.options, data.ints, data.mo_space_info)
-        orb_t.compute_transformation()
-        Ua = orb_t.get_Ua()
-        Ub = orb_t.get_Ub()
-        ints.rotate_orbitals(Ua, Ub)
+        OrbitalTransformation(orb_type, job_type != "NONE").run(data)
 
     if job_type == "CASSCF":
         casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
@@ -273,10 +278,8 @@ def gradient_forte(name, **kwargs):
         casscf.compute_gradient()
 
     if job_type == "MCSCF_TWO_STEP":
-        casscf = forte.make_mcscf_two_step(
-            data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
-        )
-        energy = casscf.compute_energy()
+        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
+        energy = data.results.value("energy")
 
     if job_type == "NEWDRIVER" and correlation_solver == "DSRG-MRPT2":
         forte_driver(data)
@@ -341,8 +344,8 @@ def mr_dsrg_pt2(job_type, data):
     if actv_type == "CIS" or actv_type == "CISD":
         raise Exception("Forte: VCIS/VCISD is not supported for MR-DSRG-PT2")
     max_rdm_level = 2 if options.get_str("THREEPDC") == "ZERO" else 3
-    data = ActiveSpaceIntsFactory(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
-    ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, data.as_ints, options)
+    data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+    ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, options, data.as_ints)
     ci.compute_energy()
 
     rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
@@ -355,5 +358,5 @@ def mr_dsrg_pt2(job_type, data):
 
 
 # Integration with driver routines
-psi4.driver.procedures["energy"]["forte"] = run_forte
+psi4.driver.procedures["energy"]["forte"] = energy_forte
 psi4.driver.procedures["gradient"]["forte"] = gradient_forte

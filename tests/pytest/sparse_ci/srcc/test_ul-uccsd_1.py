@@ -21,8 +21,8 @@ def test_ul_uccsd_1():
     )
 
     data = forte.modules.OptionsFactory().run()
-    data = forte.modules.ObjectsFactoryFCIDUMP(file=os.path.dirname(__file__) + "/INTDUMP2").run(data)
-    data = forte.modules.ActiveSpaceIntsFactory("CORRELATED", []).run(data)
+    data = forte.modules.ObjectsFromFCIDUMP(file=os.path.dirname(__file__) + "/INTDUMP2").run(data)
+    data = forte.modules.ActiveSpaceInts("CORRELATED", []).run(data)
     calc_data = scc.run_cc(
         data.as_ints,
         data.scf_info,

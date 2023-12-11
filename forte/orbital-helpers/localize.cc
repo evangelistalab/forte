@@ -81,7 +81,7 @@ void Localize::compute_transformation() {
         exit(1);
     }
 
-    auto Ca = ints_->Ca();
+    auto Ca = ints_->Ca()->clone();
 
     Ua_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());
     Ub_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());

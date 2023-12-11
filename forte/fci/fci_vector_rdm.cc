@@ -102,9 +102,9 @@ std::shared_ptr<RDMs> FCIVector::compute_rdms(FCIVector& C_left, FCIVector& C_ri
         rdm_timing.push_back(t.get());
     }
 
-    for (size_t n = 0; n < rdm_timing.size(); ++n) {
-        psi::outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
-    }
+    // for (size_t n = 0; n < rdm_timing.size(); ++n) {
+    //     psi::outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
+    // }
 
     if (type == RDMsType::spin_dependent) {
         if (max_rdm_level == 1) {

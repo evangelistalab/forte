@@ -294,7 +294,7 @@ def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_
     # create an active space solver object and compute the energy
     as_solver_type = "FCI"
     as_solver = forte.make_active_space_solver(
-        as_solver_type, state_map, scf_info, mo_space_info, as_ints, forte.forte_options
+        as_solver_type, state_map, scf_info, mo_space_info, forte.forte_options, as_ints
     )
 
     state_energies_list = as_solver.compute_energy()  # a map {StateInfo: a list of energies}
