@@ -88,6 +88,7 @@ base_classes/dynamic_correlation_solver.cc
 base_classes/forte_options.cc
 base_classes/mo_space_info.cc
 base_classes/orbital_transform.cc
+base_classes/orbitals.cc
 base_classes/rdms.cc
 base_classes/scf_info.cc
 base_classes/state_info.cc
