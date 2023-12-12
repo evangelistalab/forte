@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _cpscf_h_
-#define _cpscf_h_
+#pragma once
 
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
@@ -132,5 +131,3 @@ class CPSCF_SOLVER {
     CPSCF cpscf_;
 };
 } // namespace forte
-
-#endif // _cpscf_h_
