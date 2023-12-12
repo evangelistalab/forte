@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _v2rdm_h_
-#define _v2rdm_h_
+#pragma once
 
 #include <map>
 #include "psi4/libmints/wavefunction.h"
