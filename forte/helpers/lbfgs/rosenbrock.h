@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _rosenbrock_h_
-#define _rosenbrock_h_
+#pragma once
 
 #include "psi4/libmints/vector.h"
 
@@ -62,4 +61,3 @@ class ROSENBROCK {
 /// Test L-BFGS on Rosenbrock function
 double test_lbfgs_rosenbrock(int n, int h0_freq = 0);
 } // namespace forte
-#endif // _rosenbrock_h_

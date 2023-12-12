@@ -26,9 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _hash_vec_h_
-#define _hash_vec_h_
-
+#pragma once
 #include <cstdint>
 #include <vector>
 #include <algorithm>

@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _cube_file_h_
-#define _cube_file_h_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -134,5 +133,3 @@ class CubeFile {
 };
 
 } // namespace forte
-
-#endif // _cube_file_h_
