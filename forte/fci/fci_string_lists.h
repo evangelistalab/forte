@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#pragma once
+
 #ifndef _string_lists_
 #define _string_lists_
 
