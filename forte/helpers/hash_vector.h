@@ -27,6 +27,7 @@
  */
 
 #pragma once
+
 #include <cstdint>
 #include <vector>
 #include <algorithm>
@@ -938,5 +939,3 @@ void merge(HashVector<Key, Hash>& hvec, std::vector<Value>& values,
         }
     }
 }
-
-#endif // _hash_vec_h_
