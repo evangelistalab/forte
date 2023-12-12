@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dsrg_mrpt3_h_
-#define _dsrg_mrpt3_h_
+#pragma once
 
 #include "master_mrdsrg.h"
 
@@ -274,5 +273,3 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     std::array<double, 3> Mbar0_pt2c_;
 };
 } // namespace forte
-
-#endif // _dsrg_mrpt3_h_
