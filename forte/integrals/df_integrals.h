@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _df_integrals_h_
-#define _df_integrals_h_
+#pragma once
 
 #include "integrals.h"
 
@@ -94,5 +93,3 @@ class DFIntegrals : public Psi4Integrals {
 };
 
 } // namespace forte
-
-#endif // _df_integrals_h_

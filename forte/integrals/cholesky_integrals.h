@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _cholesky_integrals_h_
-#define _cholesky_integrals_h_
+#pragma once
 
 #include "integrals.h"
 
@@ -102,5 +101,3 @@ class CholeskyIntegrals : public Psi4Integrals {
 };
 
 } // namespace forte
-
-#endif // _cholesky_integrals_h_

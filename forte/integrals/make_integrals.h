@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _make_integrals_h_
-#define _make_integrals_h_
+#pragma once
 
 namespace forte {
 /**
@@ -53,5 +52,3 @@ make_custom_forte_integrals(std::shared_ptr<ForteOptions> options,
                             const std::vector<double>& tei_bb);
 
 } // namespace forte
-
-#endif // _make_integrals_h_
