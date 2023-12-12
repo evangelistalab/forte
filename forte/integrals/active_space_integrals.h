@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _active_space_integrals_
-#define _active_space_integrals_
+#pragma once
 
 #include "integrals/integrals.h"
 #include "sparse_ci/determinant.h"
@@ -225,5 +224,3 @@ make_active_space_ints(std::shared_ptr<forte::MOSpaceInfo> mo_space_info,
                        const std::vector<std::string>& core_spaces);
 
 } // namespace forte
-
-#endif // _active_space_integrals_

@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _aosubspace_h_
-#define _aosubspace_h_
+#pragma once
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/basisset.h"
@@ -247,5 +246,3 @@ std::shared_ptr<psi::Matrix> make_aosubspace_projector(psi::SharedWavefunction w
                                                        std::shared_ptr<ForteOptions> options,
                                                        const pybind11::dict& atom_normals);
 } // namespace forte
-
-#endif // _aosubspace_h_
