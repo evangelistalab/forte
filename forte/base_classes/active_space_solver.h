@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _active_space_solver_h_
-#define _active_space_solver_h_
+#pragma once 
 
 #include <map>
 #include <vector>
@@ -323,5 +322,3 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
                              const std::map<StateInfo, std::vector<double>>& state_weight_map);
 
 } // namespace forte
-
-#endif // _active_space_solver_h_

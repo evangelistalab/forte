@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _forte_options_h_
-#define _forte_options_h_
+#pragma once 
 
 #include <pybind11/pybind11.h>
 
@@ -354,5 +353,3 @@ class ForteOptions {
     std::string group_ = "";
 };
 } // namespace forte
-
-#endif // _forte_options_h_
