@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dmrgsolver_h_
-#define _dmrgsolver_h_
+#pragma once
 
 #include <filesystem>
 
@@ -146,4 +145,3 @@ class DMRGSolver : public ActiveSpaceMethod {
                                             const int max_rdm_level, RDMsType rdm_type);
 };
 } // namespace forte
-#endif // _dmrgsolver_h_
