@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _pao_builder_h_
-#define _pao_builder_h_
+#pragma once
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/basisset.h"
@@ -105,4 +104,3 @@ class PAObuilder {
 };
 
 } // namespace forte
-#endif // _pao_builder_h_

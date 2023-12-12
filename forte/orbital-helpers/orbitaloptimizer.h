@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _orbital_optimizer_h_
-#define _orbital_optimizer_h_
+#pragma once
 
 #include "ambit/blocked_tensor.h"
 #include "base_classes/rdms.h"
@@ -286,5 +285,3 @@ class PostCASSCFOrbitalOptimizer : public OrbitalOptimizer {
     virtual void form_fock_intermediates();
 };
 } // namespace forte
-
-#endif // _orbital_optimizer_h_

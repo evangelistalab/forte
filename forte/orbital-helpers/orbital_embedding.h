@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _orbital_embedding_h_
-#define _orbital_embedding_h_
+#pragma once
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
@@ -46,5 +45,3 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte
-
-#endif // _orbital_embedding_h_
