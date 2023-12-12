@@ -28,9 +28,6 @@
 
 #pragma once
 
-#ifndef _string_lists_
-#define _string_lists_
-
 #include "psi4/libmints/dimension.h"
 
 #include <map>
@@ -273,5 +270,3 @@ class FCIStringLists {
                    int s);
 };
 } // namespace forte
-
-#endif // _string_lists_
