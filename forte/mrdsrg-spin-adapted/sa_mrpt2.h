@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sa_mrpt2_h_
-#define _sa_mrpt2_h_
+#pragma once
 
 #include "sa_dsrgpt.h"
 
@@ -136,5 +135,3 @@ class SA_MRPT2 : public SA_DSRGPT {
                                                               size_t max_size);
 };
 } // namespace forte
-
-#endif // _sa_mrpt2_h_

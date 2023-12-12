@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dwms_mrpt2_h_
-#define _dwms_mrpt2_h_
+#pragma once
 
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 
@@ -222,5 +221,3 @@ class DWMS_DSRGPT2 {
                       bool pass_process = false);
 };
 } // namespace forte
-
-#endif // DWMS_MRPT2_H

@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _external_active_space_method_h_
-#define _external_active_space_method_h_
+#pragma once
 
 #include "base_classes/active_space_method.h"
 
@@ -107,5 +106,3 @@ class ExternalActiveSpaceMethod : public ActiveSpaceMethod {
 };
 
 } // namespace forte
-
-#endif // _external_active_space_method_h_

@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _so_mrdsrg_h_
-#define _so_mrdsrg_h_
+#pragma once
 
 #include <fstream>
 

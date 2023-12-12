@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _casscf_h_
-#define _casscf_h_
+#pragma once
 
 #include <map>
 
@@ -255,5 +254,3 @@ make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
             std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
 
 } // namespace forte
-
-#endif // _casscf_h_

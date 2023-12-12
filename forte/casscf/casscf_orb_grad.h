@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _casscf_orb_grad_h_
-#define _casscf_orb_grad_h_
+#pragma once
 
 #include <map>
 #include <unordered_map>
@@ -370,5 +369,3 @@ class CASSCF_ORB_GRAD {
     double numerical_zero_ = 1.0e-15;
 };
 } // namespace forte
-
-#endif // _casscf_orb_grad_h_
