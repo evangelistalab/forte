@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _threading_h_
-#define _threading_h_
+#pragma once
 
 namespace forte {
 
@@ -39,5 +38,3 @@ namespace forte {
 std::pair<size_t, size_t> thread_range(size_t n, size_t num_thread, size_t tid);
 
 } // namespace forte
-
-#endif

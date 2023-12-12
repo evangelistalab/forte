@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _lbfgs_h_
-#define _lbfgs_h_
+#pragma once
 
 #include <functional>
 #include <vector>
@@ -152,4 +151,3 @@ class LBFGS {
     void resize(int m);
 };
 } // namespace forte
-#endif // LBFGS_H

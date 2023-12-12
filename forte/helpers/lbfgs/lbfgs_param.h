@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _lbfgs_param_h_
-#define _lbfgs_param_h_
+#pragma once
 
 #include <stdexcept>
 
@@ -86,5 +85,3 @@ class LBFGS_PARAM {
     double c2;
 };
 } // namespace forte
-
-#endif // lbfgs_param_h

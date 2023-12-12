@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _symmetry_h_
-#define _symmetry_h_
+#pragma once
 
 #include <map>
 #include <string>
@@ -76,4 +75,3 @@ class Symmetry {
 };
 
 } // namespace forte
-#endif
