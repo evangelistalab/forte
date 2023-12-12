@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _atomic_orbital_h_
-#define _atomic_orbital_h_
+#pragma once
 
 #include "psi4/psi4-dec.h"
 #include "psi4/lib3index/denominator.h"
@@ -81,5 +80,3 @@ class AtomicOrbitalHelper {
     ~AtomicOrbitalHelper();
 };
 } // namespace forte
-
-#endif

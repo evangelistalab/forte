@@ -25,8 +25,7 @@
  *
  * @END LICENSE
  */
-#ifndef _mrci_no_h_
-#define _mrci_no_h_
+#pragma once
 
 #include "base_classes/orbital_transform.h"
 
@@ -139,5 +138,3 @@ class MRCINO : public OrbitalTransform {
             no_U);
 };
 } // namespace forte
-
-#endif // MRCISNO_H

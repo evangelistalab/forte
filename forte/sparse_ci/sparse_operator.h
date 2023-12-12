@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_operator_h_
-#define _sparse_operator_h_
+#pragma once
 
 #include <vector>
 #include <unordered_map>
@@ -130,5 +129,3 @@ class SparseOperator {
 };
 
 } // namespace forte
-
-#endif // _sparse_operator_h_

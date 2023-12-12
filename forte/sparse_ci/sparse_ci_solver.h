@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_ci_h_
-#define _sparse_ci_h_
+#pragma once
 
 #include "psi4/libmints/dimension.h"
 #include "sparse_ci/determinant_hashvector.h"
@@ -235,5 +234,3 @@ class SparseCISolver {
     std::vector<std::vector<std::pair<size_t, double>>> user_guess_;
 };
 } // namespace forte
-
-#endif // _sparse_ci_h_

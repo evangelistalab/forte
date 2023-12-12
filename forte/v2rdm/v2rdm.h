@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _v2rdm_h_
-#define _v2rdm_h_
+#pragma once
 
 #include <map>
 #include "psi4/libmints/wavefunction.h"
@@ -123,5 +122,3 @@ class V2RDM : public psi::Wavefunction {
     void write_density_to_file();
 };
 } // namespace forte
-
-#endif // V2RDM_H

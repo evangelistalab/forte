@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _determinant_substitution_lists_h_
-#define _determinant_substitution_lists_h_
+#pragma once
 
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
@@ -123,5 +122,3 @@ class DeterminantSubstitutionLists {
     bool quiet_ = true;
 };
 } // namespace forte
-
-#endif // _determinant_substitution_lists_h_

@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _fragment_projector_h_
-#define _fragment_projector_h_
+#pragma once
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
@@ -93,4 +92,3 @@ std::pair<std::shared_ptr<psi::Matrix>, int>
 make_fragment_projector(psi::SharedWavefunction ref_wfn);
 
 } // namespace forte
-#endif // _fragment_projector_h_

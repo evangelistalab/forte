@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dsrg_mrpt2_h_
-#define _dsrg_mrpt2_h_
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -598,5 +597,3 @@ class DSRG_MRPT2 : public MASTER_DSRG {
                      ambit::Tensor& L3bbb);
 };
 } // namespace forte
-
-#endif // _dsrg_mrpt2_h_

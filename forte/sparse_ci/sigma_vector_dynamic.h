@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _sigma_vector_dynamic_h_
-#define _sigma_vector_dynamic_h_
+#pragma once
 
 #include "sigma_vector.h"
 #include "sorted_string_list.h"
@@ -128,5 +127,3 @@ class SigmaVectorDynamic : public SigmaVector {
     void compute_abab_coupling(const String& detIa, const std::vector<double>& b);
 };
 } // namespace forte
-
-#endif // _sigma_vector_dynamic_h_

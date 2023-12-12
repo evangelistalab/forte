@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mrdsrg_so_h_
-#define _mrdsrg_so_h_
+#pragma once
 
 #include <cmath>
 
@@ -289,5 +288,3 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double frozen_core_energy;
 };
 } // namespace forte
-
-#endif // _mrdsrg_so_h_

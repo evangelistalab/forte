@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mcscf_2step_h_
-#define _mcscf_2step_h_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -182,5 +181,3 @@ make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
                     std::shared_ptr<ForteIntegrals> ints);
 
 } // namespace forte
-
-#endif // _mcscf_2step_h_

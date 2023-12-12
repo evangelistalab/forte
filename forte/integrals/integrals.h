@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _integrals_h_
-#define _integrals_h_
+#pragma once
 
 #include <vector>
 
@@ -650,5 +649,3 @@ class Psi4Integrals : public ForteIntegrals {
 };
 
 } // namespace forte
-
-#endif // _integrals_h_

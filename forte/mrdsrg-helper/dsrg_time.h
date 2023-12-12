@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dsrg_time_h_
-#define _dsrg_time_h_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -91,5 +90,3 @@ class DSRG_TIME {
     bool test_code(const std::string& code);
 };
 } // namespace forte
-
-#endif // DSRG_TIME_H
