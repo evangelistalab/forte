@@ -212,4 +212,3 @@ class SOMRDSRG : public DynamicCorrelationSolver {
 };
 } // namespace forte
 
-#endif // _so_mrdsrg_h_

@@ -288,5 +288,3 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double frozen_core_energy;
 };
 } // namespace forte
-
-#endif // _mrdsrg_so_h_
