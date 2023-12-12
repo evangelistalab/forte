@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _active_space_method_h_
-#define _active_space_method_h_
+#pragma once
 
 #include <vector>
 #include <unordered_set>
@@ -426,5 +425,3 @@ std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
 //                                                    int max_rdm_level);
 
 } // namespace forte
-
-#endif // _active_space_method_h_

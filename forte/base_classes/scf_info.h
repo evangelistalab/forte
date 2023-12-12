@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _scf_info_h_
-#define _scf_info_h_
+#pragma once 
 
 #include "psi4/libmints/dimension.h"
 
@@ -87,5 +86,3 @@ class SCFInfo {
 };
 
 } // namespace forte
-
-#endif // _scf_info_h_

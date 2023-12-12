@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _dynamic_correlation_solver_h_
-#define _dynamic_correlation_solver_h_
+#pragma once 
 
 #include <map>
 #include <memory>
@@ -179,5 +178,3 @@ make_dynamic_correlation_solver(const std::string& type, std::shared_ptr<ForteOp
                                 std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte
-
-#endif // _dynamic_correlation_solver_h_
