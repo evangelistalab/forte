@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sa_mrpt3_h_
-#define _sa_mrpt3_h_
+#pragma once
 
 #include "sa_dsrgpt.h"
 
@@ -85,5 +84,3 @@ class SA_MRPT3 : public SA_DSRGPT {
                             const std::vector<int>& max_levels) override;
 };
 } // namespace forte
-
-#endif // _sa_mrpt3_h_

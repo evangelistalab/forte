@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dsrg_mrpt_h_
-#define _dsrg_mrpt_h_
+#pragma once
 
 #include <cmath>
 
@@ -336,5 +335,3 @@ class DSRG_MRPT : public DynamicCorrelationSolver {
     void print_cumulant_summary();
 };
 } // namespace forte
-
-#endif // DSRG_MRPT_H
