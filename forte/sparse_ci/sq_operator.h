@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sq_operator_h_
-#define _sq_operator_h_
+#pragma once
 
 #include <vector>
 
@@ -118,5 +117,3 @@ class SQOperator {
 };
 
 } // namespace forte
-
-#endif // _sq_operator_h_

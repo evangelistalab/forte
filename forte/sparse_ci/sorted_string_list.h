@@ -26,9 +26,7 @@
  *
  * @END LICENSE
  */
-
-#ifndef _sorted_string_list_h_
-#define _sorted_string_list_h_
+#pragma once
 
 #include "determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
@@ -63,5 +61,3 @@ class SortedStringList {
     std::unordered_map<String, std::pair<size_t, size_t>, String::Hash> first_string_range_;
 };
 } // namespace forte
-
-#endif // _sigma_vector_direct_h_

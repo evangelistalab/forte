@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _configuration_h_
-#define _configuration_h_
+#pragma once
 
 namespace forte {
 
@@ -202,5 +201,3 @@ std::string str(const ConfigurationImpl<N>& d, int n = ConfigurationImpl<N>::nbi
 }
 
 } // namespace forte
-
-#endif // _configuration_h_

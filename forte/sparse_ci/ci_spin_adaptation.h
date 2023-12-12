@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _spin_adaptation_h_
-#define _spin_adaptation_h_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -234,5 +233,3 @@ class SpinAdapter {
     auto make_determinant_occupations(int N, int twoS) -> std::vector<String>;
 };
 } // namespace forte
-
-#endif // _spin_adaptation_h_
