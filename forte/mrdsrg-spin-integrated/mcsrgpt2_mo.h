@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mcsrgpt2_mo_h_
-#define _mcsrgpt2_mo_h_
+#pragma once
 
 #include <cmath>
 #include <vector>
@@ -312,5 +311,3 @@ class MCSRGPT2_MO {
     }
 };
 } // namespace forte
-
-#endif // _mcsrgpt2_mo_h_

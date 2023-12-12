@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _memory_h_
-#define _memory_h_
+#pragma once
 
 namespace forte {
 
@@ -62,5 +61,3 @@ template <typename T> std::pair<double, std::string> to_xb2(size_t nele) {
 }
 
 } // namespace forte
-
-#endif // _memory_h_

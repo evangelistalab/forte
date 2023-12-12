@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mrdsrg_so_h_
-#define _mrdsrg_so_h_
+#pragma once
 
 #include <cmath>
 

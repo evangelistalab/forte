@@ -1,5 +1,4 @@
-#ifndef _determinant_helpers_h_
-#define _determinant_helpers_h_
+#pragma once
 
 #include <vector>
 
@@ -26,5 +25,3 @@ std::shared_ptr<psi::Matrix> make_hamiltonian_matrix(const std::vector<Determina
                                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 } // namespace forte
-
-#endif // _determinant_helpers_h_

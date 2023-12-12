@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _helpers_timer_h_
-#define _helpers_timer_h_
+#pragma once
 
 #include "psi4/libqt/qt.h"
 
@@ -122,5 +121,3 @@ class parallel_timer {
     bool running_ = true;
 };
 } // namespace forte
-
-#endif // _helpers_timer_h_

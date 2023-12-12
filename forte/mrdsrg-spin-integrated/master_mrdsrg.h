@@ -1,5 +1,4 @@
-#ifndef _master_mrdsrg_h_
-#define _master_mrdsrg_h_
+#pragma once
 
 #include "ambit/blocked_tensor.h"
 
@@ -487,5 +486,3 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
 };
 } // namespace forte
-
-#endif // MASTER_MRDSRG_H

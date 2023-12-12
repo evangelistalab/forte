@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mrdsrg_h_
-#define _mrdsrg_h_
+#pragma once
 
 #include "master_mrdsrg.h"
 
@@ -447,5 +446,3 @@ class MRSRG_Print {
     std::vector<double> energies_;
 };
 } // namespace forte
-
-#endif // _mrdsrg_h_

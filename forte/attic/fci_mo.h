@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _fci_mo_h_
-#define _fci_mo_h_
+#pragma once
 
 #include <string>
 #include <tuple>
@@ -586,5 +585,3 @@ class FCI_MO : public ActiveSpaceMethod {
                                       const std::vector<std::vector<std::vector<bool>>>& string);
 };
 } // namespace forte
-
-#endif // _fci_mo_h_

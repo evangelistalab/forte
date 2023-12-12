@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _spin_corr_h_
-#define _spin_corr_h_
+#pragma once
 
 #include <fstream>
 #include <iomanip>
