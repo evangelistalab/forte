@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _pci_h_
-#define _pci_h_
+#pragma once
 
 #include <fstream>
 #include <functional>
@@ -354,5 +353,3 @@ class ProjectorCI : public SelectedCIMethod {
     void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
 } // namespace forte
-
-#endif // _pci_h_

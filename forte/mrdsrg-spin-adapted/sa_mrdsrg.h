@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sa_mrdsrg_h_
-#define _sa_mrdsrg_h_
+#pragma once
 
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -198,5 +197,3 @@ class SA_MRDSRG : public SADSRG {
     void compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int max_level, int ind);
 };
 } // namespace forte
-
-#endif // _sa_mrdsrg_h_

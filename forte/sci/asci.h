@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _as_ci_h_
-#define _as_ci_h_
+#pragma once
 
 #include "sci/sci.h"
 #include "sparse_ci/sparse_ci_solver.h"
@@ -186,5 +185,3 @@ class ASCI : public SelectedCIMethod {
 };
 
 } // namespace forte
-
-#endif // _as_ci_h_

@@ -1,5 +1,4 @@
-#ifndef _orbital_transform_h_
-#define _orbital_transform_h_
+#pragma once 
 
 namespace psi {
 class Matrix;
@@ -50,5 +49,3 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
                             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte
-
-#endif

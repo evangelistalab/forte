@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _pci_sigma_h_
-#define _pci_sigma_h_
+#pragma once
 
 #include "sparse_ci/sigma_vector.h"
 
@@ -142,4 +141,3 @@ class PCISigmaVector : public SigmaVector {
         const std::pair<double, double>& max_coupling);
 };
 } // namespace forte
-#endif // _pci_sigma_h_

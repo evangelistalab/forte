@@ -25,8 +25,7 @@
  *
  */
 
-#ifndef _backtransform_tpdm_h_
-#define _backtransform_tpdm_h_
+#pragma once
 
 #include <psi4/libtrans/integraltransform.h>
 
@@ -104,4 +103,3 @@ class TPDMBackTransform : public IntegralTransform {
 
 } // namespace psi
 
-#endif

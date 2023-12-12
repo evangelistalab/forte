@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _one_body_integrals_
-#define _one_body_integrals_
+#pragma once
 
 #include <vector>
 
@@ -256,5 +255,3 @@ class ActiveMultipoleIntegrals {
     void _test_tensor_dims(ambit::Tensor T);
 };
 } // namespace forte
-
-#endif // _one_body_integrals_

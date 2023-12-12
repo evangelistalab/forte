@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _hash_vec_h_
-#define _hash_vec_h_
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -940,5 +939,3 @@ void merge(HashVector<Key, Hash>& hvec, std::vector<Value>& values,
         }
     }
 }
-
-#endif // _hash_vec_h_

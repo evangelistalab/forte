@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _forte_def_h_
-#define _forte_def_h_
+#pragma once
 
 // Define OPENMP functions in case they are not available
 #ifdef _OPENMP
@@ -37,5 +36,3 @@
 #define omp_get_thread_num() 0
 #define omp_get_num_threads() 1
 #endif
-
-#endif // _forte_def_h_

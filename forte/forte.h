@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#pragma once
+
 #include "base_classes/forte_options.h"
 
 namespace forte {

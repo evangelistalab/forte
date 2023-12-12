@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _semi_canonicalize_h_
-#define _semi_canonicalize_h_
+#pragma once
 
 #include <tuple>
 
@@ -150,5 +149,3 @@ class SemiCanonical {
     bool fix_orbital_success_;
 };
 } // namespace forte
-
-#endif // _semi_canonicalize_h_

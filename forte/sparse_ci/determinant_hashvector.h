@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _determinant_hashvector_h_
-#define _determinant_hashvector_h_
+#pragma once
 
 #include <memory>
 
@@ -139,5 +138,3 @@ class DeterminantHashVec {
     det_hashvec wfn_;
 };
 } // namespace forte
-
-#endif // _determinant_hashvector_h_

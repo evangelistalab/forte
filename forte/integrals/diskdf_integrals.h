@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _diskdf_integrals_h_
-#define _diskdf_integrals_h_
+#pragma once
 
 #include "psi4/lib3index/dfhelper.h"
 #include "integrals.h"
@@ -98,5 +97,3 @@ class DISKDFIntegrals : public Psi4Integrals {
 };
 
 } // namespace forte
-
-#endif // _diskdf_integrals_h_

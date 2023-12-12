@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _tdci_h_
-#define _tdci_h_
+#pragma once
 
 #include <fstream>
 #include <iomanip>
@@ -160,5 +159,3 @@ class TDCI {
 };
 
 } // namespace forte
-
-#endif // _tdci_h_

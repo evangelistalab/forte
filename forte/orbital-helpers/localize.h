@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _localize_h_
-#define _localize_h_
+#pragma once
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
@@ -66,5 +65,3 @@ class Localize : public OrbitalTransform {
     std::string local_method_;
 };
 } // namespace forte
-
-#endif

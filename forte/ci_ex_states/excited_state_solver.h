@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _excited_state_solver_h_
-#define _excited_state_solver_h_
+#pragma once
 
 #include "base_classes/active_space_method.h"
 #include "base_classes/rdms.h"
@@ -137,4 +136,4 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
                                        int max_rdm_level, RDMsType rdm_type);
 };
 } // namespace forte
-#endif // _excited_state_solver_h_
+  
