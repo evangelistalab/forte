@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _custom_integrals_h_
-#define _custom_integrals_h_
+#pragma once
 
 #include "integrals.h"
 
@@ -144,5 +143,3 @@ class CustomIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-
-#endif // _integrals_h_

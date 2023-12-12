@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#pragma once
+
 #include "psi4/libmints/basisset.h"
 #include "psi4/psi4-dec.h"
 
@@ -57,5 +59,4 @@ class ParallelDFMO {
     size_t memory_;
     size_t nmo_;
 };
-}
-}
+} // namespace forte
