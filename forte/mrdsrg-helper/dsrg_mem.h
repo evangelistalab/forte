@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dsrg_mem_h_
-#define _dsrg_mem_h_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -93,5 +92,3 @@ class DSRG_MEM {
     std::map<char, size_t> label_to_size_;
 };
 } // namespace forte
-
-#endif // _dsrg_mem_h_
