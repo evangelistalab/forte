@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mrpt2_h_
-#define _mrpt2_h_
+#pragma once
 
 #include "base_classes/mo_space_info.h"
 #include "sparse_ci/determinant.h"
@@ -79,5 +78,3 @@ class MRPT2 {
     double energy_kernel(int bin, int nbin, int root);
 };
 } // namespace forte
-
-#endif // _mrpt2_h_
