@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sadsrg_h_
-#define _sadsrg_h_
+#pragma once
 
 #include "ambit/blocked_tensor.h"
 
@@ -469,7 +468,7 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Print the contents with padding: <text> <padding with dots>
     void print_contents(const std::string& str, size_t size = 45);
     /// Print done and timing
-    void print_done(double t, const std::string& done="Done");
+    void print_done(double t, const std::string& done = "Done");
 
     // ==> common amplitudes analysis and printing <==
 
@@ -502,5 +501,3 @@ class SADSRG : public DynamicCorrelationSolver {
     }
 };
 } // namespace forte
-
-#endif // SADSRG_H

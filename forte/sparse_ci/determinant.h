@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _determinant_h_
-#define _determinant_h_
+#pragma once
 
 #include <unordered_map>
 
@@ -49,5 +48,3 @@ template <typename T = double>
 using det_hash = std::unordered_map<Determinant, T, Determinant::Hash>;
 using det_hash_it = std::unordered_map<Determinant, double, Determinant::Hash>::iterator;
 } // namespace forte
-
-#endif // _determinant_h_

@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _mo_space_info_h_
-#define _mo_space_info_h_
+#pragma once 
 
 #include "psi4/libmints/dimension.h"
 
@@ -299,5 +298,3 @@ make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& poin
                             const std::vector<size_t>& reorder);
 
 } // namespace forte
-
-#endif // _mo_space_info_h_

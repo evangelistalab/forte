@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _ci_no_h_
-#define _ci_no_h_
+#pragma once
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/molecule.h"
@@ -151,5 +150,3 @@ class CINO : public OrbitalTransform {
 };
 std::string dimension_to_string(psi::Dimension dim);
 } // namespace forte
-
-#endif // _ci_no_h_

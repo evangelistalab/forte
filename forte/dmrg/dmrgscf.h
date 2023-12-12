@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef DMRG_H
-#define DMRG_H
+#pragma once
 
 #include "psi4/libfock/jk.h"
 #include "psi4/libtrans/mospace.h"
@@ -119,5 +118,3 @@ class DMRGSCF : public ActiveSpaceMethod {
                               std::shared_ptr<psi::Matrix> target);
 };
 } // namespace forte
-
-#endif // DMRG_H

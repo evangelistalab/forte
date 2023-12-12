@@ -25,8 +25,7 @@
  * @END LICENSE
  */
 
-#ifndef IAO_BUILDER_H
-#define IAO_BUILDER_H
+#pragma once
 
 #include <map>
 
@@ -149,5 +148,3 @@ class IAOBuilder {
 };
 
 } // namespace forte
-
-#endif

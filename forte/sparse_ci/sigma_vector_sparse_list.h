@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sigma_vector_sparse_list_h_
-#define _sigma_vector_sparse_list_h_
+#pragma once
 
 #include "sigma_vector.h"
 
@@ -117,5 +116,3 @@ class SigmaVectorSparseList : public SigmaVector {
 };
 
 } // namespace forte
-
-#endif // _sigma_vector_sparse_list_h_

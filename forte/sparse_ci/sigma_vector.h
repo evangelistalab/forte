@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sigma_vector_h_
-#define _sigma_vector_h_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -139,5 +138,3 @@ std::shared_ptr<SigmaVector> make_sigma_vector(const std::vector<Determinant>& s
                                                size_t max_memory, SigmaVectorType sigma_type);
 
 } // namespace forte
-
-#endif // _sigma_vector_h_

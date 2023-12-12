@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _string_lists_
-#define _string_lists_
+#pragma once
 
 #include "psi4/libmints/dimension.h"
 
@@ -271,5 +270,3 @@ class FCIStringLists {
                    int s);
 };
 } // namespace forte
-
-#endif // _string_lists_

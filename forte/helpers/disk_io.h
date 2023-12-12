@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _disk_io_h_
-#define _disk_io_h_
+#pragma once
 
 #include <algorithm>
 #include <chrono>
@@ -106,5 +105,3 @@ void read_psi_matrix(const std::string& filename, psi::Matrix& mat);
 // void delete_disk_BT(const std::string& filename);
 
 } // namespace forte
-
-#endif // _disk_io_h_

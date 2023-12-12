@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_state_vector_h_
-#define _sparse_state_vector_h_
+#pragma once
 
 #include <vector>
 #include <unordered_map>
@@ -101,5 +100,3 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state0,
                            double screen_thresh = 1.0e-12);
 
 } // namespace forte
-
-#endif // _sparse_state_vector_h_

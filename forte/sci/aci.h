@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _aci_h_
-#define _aci_h_
+#pragma once
 
 #include <fstream>
 #include <iomanip>
@@ -364,5 +363,3 @@ class AdaptiveCI : public SelectedCIMethod {
 };
 
 } // namespace forte
-
-#endif // _aci_h_

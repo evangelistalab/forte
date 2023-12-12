@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _helpers_h_
-#define _helpers_h_
+#pragma once
 
 #include <algorithm>
 #include <chrono>
@@ -284,5 +283,3 @@ std::vector<std::vector<T>> cartesian_product(const std::vector<std::vector<T>>&
 } // namespace math
 
 } // namespace forte
-
-#endif // _helpers_h_

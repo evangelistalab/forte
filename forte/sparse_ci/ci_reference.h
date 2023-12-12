@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _ci_reference_h_
-#define _ci_reference_h_
+#pragma once
 
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
@@ -177,5 +176,3 @@ class CI_Reference {
     std::vector<std::vector<int>> gas_electrons();
 };
 } // namespace forte
-
-#endif // _ci_reference_h_

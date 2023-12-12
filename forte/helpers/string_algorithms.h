@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _string_algorithms_h_
-#define _string_algorithms_h_
+#pragma once
 
 #include <sstream>
 #include <string>
@@ -62,5 +61,3 @@ std::vector<std::string>::const_iterator find_case_insensitive(const std::string
                                                                const std::vector<std::string>& vec);
 
 } // namespace forte
-
-#endif // _string_algorithms_h_

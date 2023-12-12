@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _spin_corr_h_
-#define _spin_corr_h_
+#pragma once
 
 #include <fstream>
 #include <iomanip>
@@ -77,5 +76,3 @@ void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOpti
                            std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 } // namespace forte
-
-#endif // _spin_corr_h_

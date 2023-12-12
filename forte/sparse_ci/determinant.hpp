@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _determinant_hpp_
-#define _determinant_hpp_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -871,5 +870,3 @@ template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const Determinan
 }
 
 } // namespace forte
-
-#endif // _determinant_hpp_

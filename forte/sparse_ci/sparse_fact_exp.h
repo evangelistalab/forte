@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_fact_exp_h_
-#define _sparse_fact_exp_h_
+#pragma once
 
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
@@ -107,5 +106,3 @@ class SparseFactExp {
 };
 
 } // namespace forte
-
-#endif // _sparse_fact_exp_h_

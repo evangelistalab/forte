@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _conventional_integrals_h_
-#define _conventional_integrals_h_
+#pragma once
 
 #include "integrals.h"
 
@@ -88,5 +87,3 @@ class ConventionalIntegrals : public Psi4Integrals {
 };
 
 } // namespace forte
-
-#endif // _conventional_integrals_h_
