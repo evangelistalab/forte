@@ -73,6 +73,7 @@ using namespace pybind11::literals;
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
+void export_EPICTensors(py::module& m);
 void export_ActiveSpaceIntegrals(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
@@ -176,6 +177,8 @@ PYBIND11_MODULE(_forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
 
     // export base classes
+    export_EPICTensors(m);
+
     export_ActiveSpaceIntegrals(m);
 
     m.def("startup", &startup);
