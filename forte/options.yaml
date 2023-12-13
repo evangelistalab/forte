@@ -1,0 +1,11 @@
+AVAS:
+  AVAS:
+    type: "bool"
+    default: False
+    help: "Form AVAS orbitals?"
+
+  JOB_TYPE:
+    type: "str"
+    default: "NEWDRIVER"
+    choices: ["NONE", "NEWDRIVER", "MR-DSRG-PT2", "CASSCF", "MCSCF_TWO_STEP", "TDCI"]
+    help: "Specify the job type"
