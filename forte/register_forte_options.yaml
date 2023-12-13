@@ -38,7 +38,7 @@ AVAS:
     type: int
     default: 0
     help: >
-      The number of active occupied orbitals. If 
+      The number of active occupied orbitals. If
 
 CINO:
   CINO:
@@ -202,7 +202,7 @@ MO_Space_Info:
     help: >
       An array of MOs to swap in the format
       [irrep, mo_1, mo_2, irrep, mo_3, mo_4].
-      Irrep and MOs are all 1-based (NOT 
+      Irrep and MOs are all 1-based (NOT
 
 Active_Space_Solver:
   NROOT:
@@ -261,7 +261,23 @@ PCI:
   PCI_GENERATOR:
     type: str
     default: "WALL-CHEBYSHEV"
-    choices: ["LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER", "TROTTER", "OLSEN", "DAVIDSON", "MITRUSHENKOV", "EXP-CHEBYSHEV", "WALL-CHEBYSHEV", "CHEBYSHEV", "LANCZOS", "DL"]
+    choices:
+      [
+        "LINEAR",
+        "QUADRATIC",
+        "CUBIC",
+        "QUARTIC",
+        "POWER",
+        "TROTTER",
+        "OLSEN",
+        "DAVIDSON",
+        "MITRUSHENKOV",
+        "EXP-CHEBYSHEV",
+        "WALL-CHEBYSHEV",
+        "CHEBYSHEV",
+        "LANCZOS",
+        "DL",
+      ]
     help: "The propagation algorithm."
   PCI_NROOT:
     type: int
@@ -484,7 +500,16 @@ ACI:
   ACI_SCREEN_ALG:
     type: str
     default: "AVERAGE"
-    choices: ["AVERAGE", "SR", "RESTRICTED", "CORE", "BATCH_HASH", "BATCH_VEC", "MULTI_GAS"]
+    choices:
+      [
+        "AVERAGE",
+        "SR",
+        "RESTRICTED",
+        "CORE",
+        "BATCH_HASH",
+        "BATCH_VEC",
+        "MULTI_GAS",
+      ]
     help: "The screening algorithm to use."
   SIGMA:
     type: double
@@ -702,7 +727,20 @@ TDCI:
   TDCI_PROPAGATOR:
     type: str
     default: "EXACT"
-    choices: ["EXACT", "CN", "QCN", "LINEAR", "QUADRATIC", "RK4", "LANCZOS", "EXACT_SELECT", "RK4_SELECT", "RK4_SELECT_LIST", "ALL"]
+    choices:
+      [
+        "EXACT",
+        "CN",
+        "QCN",
+        "LINEAR",
+        "QUADRATIC",
+        "RK4",
+        "LANCZOS",
+        "EXACT_SELECT",
+        "RK4_SELECT",
+        "RK4_SELECT_LIST",
+        "ALL",
+      ]
     help: "Type of propagator."
   TDCI_NSTEP:
     type: int
@@ -1123,6 +1161,7 @@ Localize:
     help: "The method used to localize the orbitals"
   LOCALIZE_SPACE:
     type: int_list
+    default: []
     help: "Sets the orbital space for localization"
 
 CASSCF:
@@ -1168,6 +1207,7 @@ CASSCF:
     help: "Keep GASn-GASn orbital rotations if true"
   CASSCF_ZERO_ROT:
     type: list
+    default: []
     help: "Zero mixing for orbital pairs"
   CASSCF_FINAL_ORBITAL:
     type: str
@@ -1176,6 +1216,7 @@ CASSCF:
     help: "Constraints for redundant orbital pairs at the end of macro iteration"
   CASSCF_CI_SOLVER:
     type: str
+    default: ""
     choices: ["", ...]
     help: "The active space solver to use in CASSCF"
   CASSCF_CI_FREQ:
@@ -1254,6 +1295,7 @@ CASSCF:
     help: "Monitor the CAS-CI solutions through iterations"
   CASSCF_ACTIVE_FROZEN_ORBITAL:
     type: int_list
+    default: []
     help: "A list of active orbitals to be frozen in the MCSCF optimization (in Pitzer order, zero based). Useful when doing core-excited state computations."
   CASSCF_DIE_IF_NOT_CONVERGED:
     type: bool
@@ -1384,57 +1426,75 @@ PSI:
 GAS:
   GAS1MAX:
     type: int_list
+    default: []
     help: "The maximum number of electrons in GAS1 for different states"
   GAS1MIN:
     type: int_list
+    default: []
     help: "The minimum number of electrons in GAS1 for different states"
   GAS2MAX:
     type: int_list
+    default: []
     help: "The maximum number of electrons in GAS2 for different states"
   GAS2MIN:
     type: int_list
+    default: []
     help: "The minimum number of electrons in GAS2 for different states"
   GAS3MAX:
     type: int_list
+    default: []
     help: "The maximum number of electrons in GAS3 for different states"
   GAS3MIN:
     type: int_list
+    default: []
     help: "The minimum number of electrons in GAS3 for different states"
   GAS4MAX:
     type: int_list
+    default: []
     help: "The maximum number of electrons in GAS4 for different states"
   GAS4MIN:
     type: int_list
+    default: []
     help: "The minimum number of electrons in GAS4 for different states"
   GAS5MAX:
     type: int_list
+    default: []
     help: "The maximum number of electrons in GAS5 for different states"
   GAS5MIN:
     type: int_list
+    default: []
     help: "The minimum number of electrons in GAS5 for different states"
   GAS6MAX:
     type: int_list
+    default: []
     help: "The maximum number of electrons in GAS6 for different states"
   GAS6MIN:
     type: int_list
+    default: []
     help: "The minimum number of electrons in GAS6 for different states"
 
 DMRG:
   DMRG_SWEEP_STATES:
     type: int_list
+    default: []
     help: "Number of reduced renormalized basis states kept during successive DMRG instructions"
   DMRG_SWEEP_MAX_SWEEPS:
     type: int_list
+    default: []
     help: "Max number of sweeps to stop an instruction during successive DMRG instructions"
   DMRG_SWEEP_ENERGY_CONV:
     type: double_list
+    default: []
     help: "Energy convergence to stop an instruction during successive DMRG instructions"
   DMRG_SWEEP_NOISE_PREFAC:
     type: double_list
+    default: []
     help: "The noise prefactors for successive DMRG instructions"
   DMRG_SWEEP_DVDSON_RTOL:
     type: double_list
+    default: []
     help: "The residual tolerances for the Davidson diagonalization during DMRG instructions"
   DMRG_PRINT_CORR:
     type: bool
+    default: False
     help: "Whether or not to print the correlation functions after the DMRG calculation"
