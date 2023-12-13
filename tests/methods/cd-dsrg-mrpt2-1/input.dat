@@ -5,17 +5,11 @@ refdsrgpt2   = -15.627184888271 #TEST
 
 molecule {
   0 1
-  BE        0.000000000000     0.000000000000     0.000000000000
+  Be        0.000000000000     0.000000000000     0.000000000000
   H         0.000000000000     1.390000000000     2.500000000000
   H         0.000000000000    -1.390000000000     2.500000000000
   units bohr
   no_reorient
-}
-
-set globals{
-   scf_type             pk
-   d_convergence        6 
-   e_convergence        12
 }
 
 basis {
@@ -52,20 +46,8 @@ S   1   1.00
 }
 
 set forte{
-   job_type             mcscf_two_step
-   active_space_solver  fci
-   restricted_docc      [2,0,0,0]
-   active               [1,0,0,1]
-   casscf_e_convergence 12
-   root_sym             0
-   nroot                1
-}
-
-scf_energy,scf_wfn = energy('forte', return_wfn = True)
-compare_values(refmcscf,scf_energy,10,"MCSCF energy") #TEST
-
-set forte{
-   job_type             newdriver
+   casscf_reference     true
+   casscf_e_convergence 12   
    active_space_solver  fci
    correlation_solver   three-dsrg-mrpt2
    restricted_docc      [2,0,0,0]
@@ -78,5 +60,6 @@ set forte{
    print_denom2         true
 }
 
-energy('forte', ref_wfn = scf_wfn)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy") #TEST
+energy('forte')
+compare_values(refmcscf,variable("DSRG REFERENCE ENERGY"),10,"CASSCF energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

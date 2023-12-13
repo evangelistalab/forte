@@ -26,15 +26,15 @@
  * @END LICENSE
  */
 
-#ifndef _fci_solver_h_
-#define _fci_solver_h_
+#pragma once
 
 #include "base_classes/active_space_method.h"
 #include "psi4/libmints/dimension.h"
+#include "fci_string_lists.h"
+#include "fci_string_address.h"
 
 namespace forte {
 class FCIVector;
-class StringLists;
 class SpinAdapter;
 class DavidsonLiuSolver;
 
@@ -49,6 +49,9 @@ class DavidsonLiuSolver;
 /// It can also run spin-adapted computations using a basis of configuration state functions (CSFs)
 /// instead of determinants.
 class FCISolver : public ActiveSpaceMethod {
+    using sparse_vec = std::vector<std::pair<size_t, double>>;
+    using sparse_mat = std::vector<std::vector<std::pair<size_t, double>>>;
+
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -81,36 +84,45 @@ class FCISolver : public ActiveSpaceMethod {
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
-    /// Compute RDMs on a given root
-    void compute_rdms_root(size_t root1, size_t root2, int max_rdm_level);
+    /// Set the number of determinants per root to use to form the initial guess
+    void set_ndets_per_guess_state(size_t value);
 
-    /// Set the number of trial vectors per root
-    void set_ntrial_per_root(int value);
-    /// Set the convergence for FCI
-    void set_fci_iterations(int value);
+    /// Set the maximum number of DL iterations
+    void set_maxiter_davidson(int value);
+
+    /// Set the number of guess vectors to use
+    void set_guess_per_root(int value);
+
     /// Set the number of collapse vectors for each root
     void set_collapse_per_root(int value);
+
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
+
     /// Spin adapt the FCI wave function
     void set_spin_adapt(bool value);
+
     /// Spin adapt the FCI wave function using a full preconditioner?
     void set_spin_adapt_full_preconditioner(bool value);
+
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
-    void set_test_rdms(bool value) { test_rdms_ = value; }
+    void set_test_rdms(bool value);
+
     /// Print the Natural Orbitals
-    void set_print_no(bool value) { print_no_ = value; }
-    /// Return a FCIVector
-    std::shared_ptr<FCIVector> get_FCIWFN() { return C_; }
+    void set_print_no(bool value);
+
     /// Return eigen vectors (n_DL_guesses x ndets)
-    psi::SharedMatrix evecs() { return eigen_vecs_; }
+    std::shared_ptr<psi::Matrix> evecs();
+
     /// Return the CI wave functions for current state symmetry (ndets x nroots)
-    psi::SharedMatrix ci_wave_functions() override;
+    std::shared_ptr<psi::Matrix> ci_wave_functions() override;
+
     /// Return string lists
-    std::shared_ptr<StringLists> lists() { return lists_; }
+    std::shared_ptr<FCIStringLists> lists();
+
     /// Return symmetry
-    int symmetry() { return symmetry_; }
+    int symmetry();
 
   private:
     // ==> Class Data <==
@@ -119,7 +131,7 @@ class FCISolver : public ActiveSpaceMethod {
     psi::Dimension active_dim_;
 
     /// A object that stores string information
-    std::shared_ptr<StringLists> lists_;
+    std::shared_ptr<FCIStringLists> lists_;
 
     /// A object that handles spin adaptation
     std::shared_ptr<SpinAdapter> spin_adapter_;
@@ -130,11 +142,20 @@ class FCISolver : public ActiveSpaceMethod {
     /// The FCI wave function
     std::shared_ptr<FCIVector> C_;
 
+    /// A temporary wave function
+    std::shared_ptr<FCIVector> T_;
+
     /// The FCI determinant list
     std::vector<Determinant> dets_;
 
-    /// Eigen vectors
-    psi::SharedMatrix eigen_vecs_;
+    /// The number of FCI determinants
+    size_t nfci_dets_;
+
+    /// The Davidson-Liu-Solver object
+    std::shared_ptr<DavidsonLiuSolver> dl_solver_;
+
+    /// Eigenvectors
+    std::shared_ptr<psi::Matrix> eigen_vecs_;
 
     /// The number of irreps
     int nirrep_;
@@ -144,14 +165,16 @@ class FCISolver : public ActiveSpaceMethod {
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
-    /// The number of trial guess vectors to generate per root
-    size_t ntrial_per_root_ = 1;
-    /// The number of collapse vectors for each root
+    /// The number of guess vectors for each root
+    size_t guess_per_root_ = 2;
+    /// The number of collapse vectors for each root.
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
     size_t subspace_per_root_ = 4;
+    /// The number of determinants selected for each guess vector
+    size_t ndets_per_guess_ = 10;
     /// Iterations for FCI
-    int fci_iterations_ = 30;
+    int maxiter_davidson_ = 30;
     /// Test the RDMs?
     bool test_rdms_ = false;
     /// Print the NO from the 1-RDM
@@ -162,43 +185,68 @@ class FCISolver : public ActiveSpaceMethod {
     /// When set to false, it uses an approximate diagonal preconditioner
     bool spin_adapt_full_preconditioner_ = false;
 
-    // ==> Class functions <==
+    // ==> Private class functions <==
 
     /// All that happens before we compute the energy
     void startup();
 
     /// @brief Compute initial guess vectors in the determinant basis
+    /// @note  This function is used when spin-adaptation is not used. Here we generate
+    /// num_guess_states
     /// @param diag The diagonal of the Hamiltonian in the determinant basis
-    /// @param n The number of guess vectors to generate
+    /// @param num_guess_states The number of guess vectors to generate
     /// @param fci_ints The integrals object
-    /// @param dls The Davidson-Liu-Solver object
     /// @param temp A temporary vector of dimension ndets to store the guess vectors
-    void initial_guess_det(FCIVector& diag, size_t n,
-                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DavidsonLiuSolver& dls,
-                           std::shared_ptr<psi::Vector> temp);
+    std::pair<sparse_mat, sparse_mat>
+    initial_guess_det(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+
+    /// @brief Generate at least num_guess_states of the lowest energy determinants
+    /// @param diag
+    /// @param num_guess_states
+    /// @return
+    std::vector<Determinant> initial_guess_generate_dets(std::shared_ptr<psi::Vector> diag,
+                                                         size_t num_guess_states);
 
     /// @brief Compute initial guess vectors in the CSF basis
+    /// @note  This function is only used for spin-adapted calculations and works differnt than
+    /// the one used to generate the guess vectors in the determinant basis. Here we generate
+    /// num_guess_states CSFs and use those as initial guess.
     /// @param diag The diagonal of the Hamiltonian in the CSF basis
-    /// @param n The number of guess vectors to generate
-    /// @param dls The Davidson-Liu-Solver object
+    /// @param num_guess_states The number of guess vectors to generate
     /// @param temp A temporary vector of dimension ncfs to store the guess vectors
-    void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t n, DavidsonLiuSolver& dls,
-                           std::shared_ptr<psi::Vector> temp);
+    sparse_mat initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states);
+
+    /// @brief Compute the diagonal of the Hamiltonian in the determinant basis
+    /// @param fci_ints The integrals object
+    std::shared_ptr<psi::Vector> form_Hdiag_det(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
     /// @param fci_ints The integrals object
     /// @param spin_adapter The spin adapter object
-    psi::SharedVector form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                     std::shared_ptr<SpinAdapter> spin_adapter);
+    std::shared_ptr<psi::Vector> form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                                std::shared_ptr<SpinAdapter> spin_adapter);
 
     /// @brief Print a summary of the FCI calculation
-    void print_solutions(size_t guess_size, std::shared_ptr<psi::Vector> b,
-                         std::shared_ptr<psi::Vector> b_basis, DavidsonLiuSolver& dls);
+    void print_solutions(size_t sample_size, std::shared_ptr<psi::Vector> b,
+                         std::shared_ptr<psi::Vector> b_basis,
+                         std::shared_ptr<DavidsonLiuSolver> dls);
+
+    /// @brief Compute the RDMs for a given root
+    /// @param root_left the left root
+    /// @param root_right the right root
+    /// @param max_rdm_level the maximum level of the RDMs to compute
+    std::shared_ptr<RDMs> compute_rdms_root(size_t root_left, size_t root_right, int max_rdm_level,
+                                            RDMsType type);
+
+    std::shared_ptr<RDMs> compute_transition_rdms_root(size_t root_left, size_t root_right,
+                                                       std::shared_ptr<ActiveSpaceMethod> method2,
+                                                       int max_rdm_level, RDMsType type);
 
     /// @brief Test the RDMs
     void test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi::Vector> b_basis,
-                   DavidsonLiuSolver& dls);
+                   std::shared_ptr<DavidsonLiuSolver> dls);
+
+    void copy_state_into_fci_vector(int root, std::shared_ptr<FCIVector> C);
 };
 } // namespace forte
-
-#endif // _fci_solver_h_

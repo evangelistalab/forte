@@ -1,22 +1,17 @@
-#! Generated using commit GITCOMMIT
-#! A FCI test of H-He-H singlet triplet splitting 
-#! Kevin found that this case fails 
+# H-He-H singlet-triplet splitting, def2-tzvp ROHF/CASCI
 
 import forte 
 
-#The triplet ROHF energy
-#ref_rohf = -3.85103041668458
-ref_rohf = -3.8510304164778151
-#Reference value in wavenumbers
+# The triplet ROHF energy
+ref_rohf =  -3.851030416477
+# Reference value in wavenumbers
 ref_split = (-3.851214594496629 - -3.851030416685039) * 219474.63
 
-memory 1 GB
 molecule HHeH {
 0   3
-H   0.00  0.00  -2.0
-He  0.00  0.00   0.00
-H   0.00  0.00   2.0
-units angstrom
+H   0.0  0.0 -2.0
+He  0.0  0.0  0.0
+H   0.0  0.0  2.0
 }
 
 set global{
@@ -27,37 +22,29 @@ set global{
     reference ROHF
 }
 
-scf_first = energy('scf')
-
 set forte {
-restricted_docc [ 1,0,0,0,0,0,0,0]
-active [1, 0, 0, 0, 0, 1, 0, 0]
-dsrg_s  0.5
-active_space_solver FCI
-multiplicity 3
-root_sym     5
-ms           0.0
-active_space_solver     FCI
-e_convergence 1e-10
+  restricted_docc     [1,0,0,0,0,0,0,0]
+  active              [1,0,0,0,0,1,0,0]
+  active_space_solver genci
+  multiplicity        3
+  root_sym            5
+  ms                  0.0
+  e_convergence       1e-10
 }
 
+escf = energy('scf')
+compare_values(ref_rohf, escf, 10, "SCF energy") 
 triplet = energy('forte')
 
-scf_second = energy('scf')
-compare_values(ref_rohf, scf_second, 10, "SCF energy") 
 
 set forte {
-restricted_docc    [1, 0, 0, 0, 0, 0, 0, 0]
-active             [1, 0, 0, 0, 0, 1, 0, 0]
-dsrg_s  0.5
-int_type conventional
-active_space_solver FCI
-multiplicity 1
-root_sym     0
-ms           0.0
+  active_space_solver genci
+  restricted_docc     [1,0,0,0,0,0,0,0]
+  active              [1,0,0,0,0,1,0,0]
+  multiplicity        1
+  root_sym            0
 }
+
 singlet = energy('forte')
 fci_split = (singlet - triplet) * 219474.63
 compare_values(ref_split, fci_split, 3, "FCI splitting")
-
-

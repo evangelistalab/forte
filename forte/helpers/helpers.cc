@@ -74,7 +74,7 @@ py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector
     return py::array_t<double>(dims, &(v.data()[0]));
 }
 
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
+std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
     auto M = std::make_shared<psi::Matrix>("M", size1, size2);
@@ -82,7 +82,7 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     return M;
 }
 
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
+std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
     if (t.dims().size() != 2) {
         throw std::runtime_error("Unable to convert: Tensor rank is not 2!");
     }
@@ -111,6 +111,15 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
         offset += dims[h];
     }
     return M_sym;
+}
+
+std::vector<double> Vector_to_vector_double(const psi::Vector& v) {
+    const size_t dim = v.dim();
+    std::vector<double> v_double(dim);
+    for (size_t i = 0; i < dim; ++i) {
+        v_double[i] = v.get(i);
+    }
+    return v_double;
 }
 
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
@@ -215,6 +224,38 @@ void push_to_psi4_env_globals(double value, const std::string& label) {
     }
 
     globals[label] = value;
+}
+
+bool is_near_integer(double value, double toll) {
+    return std::abs(value - std::round(value)) <= toll;
+}
+
+std::vector<std::tuple<int, size_t, size_t>> find_integer_groups(const std::vector<double>& vec,
+                                                                 double toll) {
+    std::vector<std::tuple<int, size_t, size_t>> groups;
+
+    auto it = vec.begin();
+    while (it != vec.end()) {
+        // Find the start of the group
+        it = std::find_if(it, vec.end(), [toll](double val) { return is_near_integer(val, toll); });
+
+        // If we found a start, find the end of the group
+        if (it != vec.end()) {
+            auto start = it;
+            it = std::adjacent_find(it, vec.end(), [toll](double a, double b) {
+                return is_near_integer(a, toll) and (std::fabs(a - b) > 2 * toll);
+            });
+
+            // If we didn't find an end, the group goes to the end of the vector
+            auto end = (it != vec.end()) ? it : vec.end() - 1;
+
+            groups.push_back({std::llround(*start), std::distance(vec.begin(), start),
+                              std::distance(vec.begin(), end) + 1});
+            it = end + 1;
+        }
+    }
+
+    return groups;
 }
 
 // void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,

@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _excited_state_solver_h_
-#define _excited_state_solver_h_
+#pragma once
 
 #include "base_classes/active_space_method.h"
 #include "base_classes/rdms.h"
@@ -84,7 +83,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
     /// Read temporary ave function from disk
     /// Return the number of active orbitals, set of determinants, CI coefficients
-    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
     read_wave_function(const std::string& filename) override;
 
   protected:
@@ -120,11 +119,11 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     void save_old_root(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix>& PQ_evecs, int root,
                        int ref_root);
 
-    void compute_multistate(psi::SharedVector& PQ_evals);
+    void compute_multistate(std::shared_ptr<psi::Vector>& PQ_evals);
 
     /// Print Summary
     void print_final(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix>& PQ_evecs,
-                     psi::SharedVector& PQ_evals, size_t cycle);
+                     std::shared_ptr<psi::Vector>& PQ_evals, size_t cycle);
     /// Save a wave function
     void wfn_to_file(DeterminantHashVec& det_space, std::shared_ptr<psi::Matrix> evecs, int root);
     /// Print a wave function
@@ -137,4 +136,4 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
                                        int max_rdm_level, RDMsType rdm_type);
 };
 } // namespace forte
-#endif // _excited_state_solver_h_
+  

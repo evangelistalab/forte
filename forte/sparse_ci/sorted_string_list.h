@@ -26,9 +26,7 @@
  *
  * @END LICENSE
  */
-
-#ifndef _sorted_string_list_h_
-#define _sorted_string_list_h_
+#pragma once
 
 #include "determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
@@ -42,9 +40,7 @@ namespace forte {
  */
 class SortedStringList {
   public:
-    SortedStringList(const DeterminantHashVec& space,
-                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                     DetSpinType sorted_string_spin);
+    SortedStringList(size_t nmo, const DeterminantHashVec& space, DetSpinType sorted_string_spin);
 
     SortedStringList();
     ~SortedStringList();
@@ -56,7 +52,7 @@ class SortedStringList {
     size_t add(size_t pos) const;
 
   protected:
-    int nmo_ = 0;
+    size_t nmo_ = 0;
     size_t num_dets_ = 0;
     DetSpinType sorted_spin_type_;
     std::vector<String> sorted_half_dets_;
@@ -65,5 +61,3 @@ class SortedStringList {
     std::unordered_map<String, std::pair<size_t, size_t>, String::Hash> first_string_range_;
 };
 } // namespace forte
-
-#endif // _sigma_vector_direct_h_

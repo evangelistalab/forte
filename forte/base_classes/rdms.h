@@ -26,13 +26,19 @@
  * @END LICENSE
  */
 
-#ifndef _rdms_h_
-#define _rdms_h_
+#pragma once 
 
 #include <string>
 #include <vector>
-#include <ambit/tensor.h>
-#include "psi4/libmints/matrix.h"
+
+namespace psi {
+class Dimension;
+class Matrix;
+} // namespace psi
+
+namespace ambit {
+class Tensor;
+}
 
 namespace forte {
 
@@ -449,5 +455,3 @@ class RDMsSpinFree : public RDMs {
     ambit::Tensor SF_G3_;
 };
 } // namespace forte
-
-#endif // _rdms_h_

@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dmrgsolver_h_
-#define _dmrgsolver_h_
+#pragma once
 
 #include <filesystem>
 
@@ -80,14 +79,14 @@ class DMRGSolver : public ActiveSpaceMethod {
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
     /// Return the CI wave functions for current state symmetry
-    //    psi::SharedMatrix ci_wave_functions() override { return evecs_; }
+    //    std::shared_ptr<psi::Matrix> ci_wave_functions() override { return evecs_; }
 
     /// Dump wave function to disk (already dumped when computing energies)
     void dump_wave_function(const std::string&) override{};
 
     /// Read wave function from disk
     /// Return the number of active orbitals, set of determinants, CI coefficients
-    //    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    //    std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
     //    read_wave_function(const std::string& filename) override;
 
   private:
@@ -146,4 +145,3 @@ class DMRGSolver : public ActiveSpaceMethod {
                                             const int max_rdm_level, RDMsType rdm_type);
 };
 } // namespace forte
-#endif // _dmrgsolver_h_

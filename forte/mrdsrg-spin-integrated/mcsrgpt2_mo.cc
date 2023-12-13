@@ -34,15 +34,16 @@
 #include <string>
 #include <utility>
 
-#include "psi4/libpsi4util/PsiOutStream.h"
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/format.hpp"
+#include "ambit/tensor.h"
+
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "psi4/libqt/qt.h"
 
 #include "mcsrgpt2_mo.h"
-#include "sci/fci_mo.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "helpers/printing.h"
 
@@ -139,7 +140,7 @@ void MCSRGPT2_MO::startup() {
 
     // Print Delta
     print_ = options_->get_int("PRINT");
-    if (print_ > 1) {
+    if (print_ > 2) {
         PrintDelta();
         test_D1_RE();
         test_D2_RE();
@@ -1056,8 +1057,8 @@ void MCSRGPT2_MO::test_D1_RE() {
         std::string indent(4, ' ');
         std::string dash(47, '-');
         std::string title = indent +
-                            str(boost::format("%=9s    %=15s    %=15s\n") % "Indices" %
-                                "Denominator" % "Original Denom.") +
+                            fmt::format("{:<9}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                                        "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD1) {
@@ -1193,8 +1194,8 @@ void MCSRGPT2_MO::test_D2_RE() {
         std::string indent(4, ' ');
         std::string dash(57, '-');
         std::string title = indent +
-                            str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
-                                "Denominator" % "Original Denom.") +
+                            fmt::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                                        "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD2aa) {
@@ -1216,8 +1217,8 @@ void MCSRGPT2_MO::test_D2_RE() {
         std::string indent(4, ' ');
         std::string dash(57, '-');
         std::string title = indent +
-                            str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
-                                "Denominator" % "Original Denom.") +
+                            fmt::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                                        "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD2ab) {
@@ -1467,8 +1468,8 @@ void MCSRGPT2_MO::test_D2_Dyall() {
         std::string indent(4, ' ');
         std::string dash(57, '-');
         std::string title = indent +
-                            str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
-                                "Denominator" % "Original Denom.") +
+                            fmt::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                                        "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD2aa) {
@@ -1490,8 +1491,8 @@ void MCSRGPT2_MO::test_D2_Dyall() {
         std::string indent(4, ' ');
         std::string dash(57, '-');
         std::string title = indent +
-                            str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
-                                "Denominator" % "Original Denom.") +
+                            fmt::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                                        "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD2ab) {
@@ -1530,23 +1531,8 @@ void MCSRGPT2_MO::PrintDelta() {
                         continue;
                     } else {
                         double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
-                        //                        double Dab = Fa_[ni][ni] +
-                        //                        Fb_[nj][nj] - Fa_[na][na] -
-                        //                        Fb_[nb][nb];
-                        //                        double Dbb = Fb_[ni][ni] +
-                        //                        Fb_[nj][nj] - Fb_[na][na] -
-                        //                        Fb_[nb][nb];
-
-                        out_delta << boost::format("%3d %3d %3d %3d %20.15f\n") % ni % nj % na %
-                                         nb % Daa;
-                        //                        out_delta <<
-                        //                        boost::format("%3d %3d %3d %3d
-                        //                        %20.15f\n") % ni % nj % na %
-                        //                        nb % Dab;
-                        //                        out_delta <<
-                        //                        boost::format("%3d %3d %3d %3d
-                        //                        %20.15f\n") % ni % nj % na %
-                        //                        nb % Dbb;
+                        out_delta << fmt::format("{:>3} {:>3} {:>3} {:>3} {:>20.15f}\n", ni, nj, na,
+                                                 nb, Daa);
                     }
                 }
             }
@@ -1568,10 +1554,7 @@ void MCSRGPT2_MO::PrintDelta() {
                 continue;
             } else {
                 double delta_a = Fa_[ni][ni] - Fa_[na][na];
-                //                double delta_b = Fb_[ni][ni] - Fb_[na][na];
-                out_delta << boost::format("%3d %3d %20.15f\n") % ni % na % delta_a;
-                //                out_delta << boost::format("%3d %3d
-                //                %20.15f\n") % ni % na % delta_b;
+                out_delta << fmt::format("{:>3} {:>3} {:>20.15f}\n", ni, na, delta_a);
             }
         }
     }
@@ -1592,7 +1575,7 @@ void MCSRGPT2_MO::Form_AMP_DSRG() {
     outfile->Printf("\n");
     outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
 
-    if (boost::starts_with(t_algorithm, "DSRG")) {
+    if (t_algorithm.compare(0, 4, "DSRG") == 0) {
         outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
         Form_T2_DSRG(T2aa_, T2ab_, T2bb_, t_algorithm);
         if (!t1_zero) {
@@ -3342,7 +3325,7 @@ void MCSRGPT2_MO::print_Fock(const std::string& spin, const d2& Fock) {
                 }
             }
 
-            psi::SharedMatrix FT = Fr.transpose();
+            auto FT = Fr.transpose();
             for (size_t i = 0; i < dim1; ++i) {
                 for (size_t j = 0; j < dim2; ++j) {
                     double diff = FT->get(i, j) - F.get(i, j);
@@ -3380,7 +3363,7 @@ void MCSRGPT2_MO::Form_Fock(d2& A, d2& B) {
     }
     timer_off("Form Fock");
 
-    if (print_ > 1) {
+    if (print_ > 2) {
         print_Fock("Alpha", A);
         print_Fock("Beta", B);
     }
@@ -3400,7 +3383,7 @@ void MCSRGPT2_MO::fill_naive_cumulants(std::shared_ptr<RDMs> ref, const int leve
     ambit::Tensor L1a = ref->g1a();
     ambit::Tensor L1b = ref->g1b();
     fill_one_cumulant(L1a, L1b);
-    if (print_ > 1) {
+    if (print_ > 2) {
         print_density("Alpha", Da_);
         print_density("Beta", Db_);
     }
@@ -3411,7 +3394,7 @@ void MCSRGPT2_MO::fill_naive_cumulants(std::shared_ptr<RDMs> ref, const int leve
         ambit::Tensor L2ab = ref->L2ab();
         ambit::Tensor L2bb = ref->L2bb();
         fill_two_cumulant(L2aa, L2ab, L2bb);
-        if (print_ > 2) {
+        if (print_ > 3) {
             print2PDC("L2aa", L2aa_, print_);
             print2PDC("L2ab", L2ab_, print_);
             print2PDC("L2bb", L2bb_, print_);
@@ -3425,7 +3408,7 @@ void MCSRGPT2_MO::fill_naive_cumulants(std::shared_ptr<RDMs> ref, const int leve
         ambit::Tensor L3abb = ref->L3abb();
         ambit::Tensor L3bbb = ref->L3bbb();
         fill_three_cumulant(L3aaa, L3aab, L3abb, L3bbb);
-        if (print_ > 3) {
+        if (print_ > 4) {
             print3PDC("L3aaa", L3aaa_, print_);
             print3PDC("L3aab", L3aab_, print_);
             print3PDC("L3abb", L3abb_, print_);
@@ -3547,7 +3530,7 @@ void MCSRGPT2_MO::print_density(const std::string& spin, const d2& density) {
     std::string name = "Density " + spin;
     outfile->Printf("  ==> %s <==\n\n", name.c_str());
 
-    psi::SharedMatrix dens(new psi::Matrix("A-A", nactv_, nactv_));
+    auto dens = std::make_shared<psi::Matrix>("A-A", nactv_, nactv_);
     for (size_t u = 0; u < nactv_; ++u) {
         size_t nu = actv_mos_[u];
         for (size_t v = 0; v < nactv_; ++v) {

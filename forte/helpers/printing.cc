@@ -36,7 +36,51 @@
 
 using namespace psi;
 
+std::vector<std::string> __s2_labels{
+    "singlet", "doublet", "triplet", "quartet", "quintet", "sextet", "septet", "octet",
+    "nonet",   "decet",   "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+    "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
+
 namespace forte {
+
+PrintLevel int_to_print_level(int level) {
+    switch (level) {
+    case 0:
+        return PrintLevel::Quiet;
+    case 1:
+        return PrintLevel::Brief;
+    case 2:
+        return PrintLevel::Default;
+    case 3:
+        return PrintLevel::Verbose;
+    case 4:
+        return PrintLevel::Debug;
+    default:
+        throw std::out_of_range("Invalid PrintLevel value");
+    }
+}
+
+/// @brief Return the string representation of a PrintLevel
+std::string to_string(PrintLevel level) {
+    switch (level) {
+    case PrintLevel::Quiet:
+        return "Quiet";
+    case PrintLevel::Brief:
+        return "Brief";
+    case PrintLevel::Default:
+        return "Default";
+    case PrintLevel::Verbose:
+        return "Verbose";
+    case PrintLevel::Debug:
+        return "Debug";
+    default:
+        throw std::out_of_range("Invalid PrintLevel value");
+    }
+}
+
+bool operator>(PrintLevel a, PrintLevel b) { return static_cast<int>(a) > static_cast<int>(b); }
+
+bool operator<(PrintLevel a, PrintLevel b) { return static_cast<int>(a) < static_cast<int>(b); }
 
 void print_h1(const std::string& text, bool centerd, const std::string& left_filler,
               const std::string& right_filler) {
@@ -86,26 +130,6 @@ void print_timing(const std::string& text, double seconds) {
     }
 }
 
-void print_selected_options(const std::string& title,
-                            const std::vector<std::pair<std::string, std::string>>& info_string,
-                            const std::vector<std::pair<std::string, bool>>& info_bool,
-                            const std::vector<std::pair<std::string, double>>& info_double,
-                            const std::vector<std::pair<std::string, int>>& info_int) {
-    print_h2(title);
-    for (auto& str_dim : info_string) {
-        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
-    }
-    for (auto& str_dim : info_bool) {
-        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(),
-                        str_dim.second ? "TRUE" : "FALSE");
-    }
-    for (auto& str_dim : info_double) {
-        outfile->Printf("\n    %-40s %15.3e", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : info_int) {
-        outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
-    }
-    outfile->Printf("\n");
-}
+const std::string& s2_label(int twiceS) { return __s2_labels.at(twiceS); }
 
 } // namespace forte

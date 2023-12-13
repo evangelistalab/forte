@@ -63,6 +63,7 @@
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
+#include "genci/ci_occupation.h"
 
 #include "post_process/spin_corr.h"
 
@@ -72,11 +73,14 @@ using namespace pybind11::literals;
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
+void export_EPICTensors(py::module& m);
+void export_ActiveSpaceIntegrals(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
 void export_RDMs(py::module& m);
 void export_Determinant(py::module& m);
+void export_GAS(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
@@ -84,6 +88,7 @@ void export_ForteCubeFile(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
 void export_SemiCanonical(py::module& m);
+void export_DavidsonLiuSolver(py::module& m);
 
 void set_master_screen_threshold(double value);
 double get_master_screen_threshold();
@@ -123,7 +128,8 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("state_filename_map", &ActiveSpaceSolver::state_filename_map,
              "Return a map from StateInfo to wave function file names")
         .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function,
-             "Dump wave functions to disk");
+             "Dump wave functions to disk")
+        .def("eigenvectors", &ActiveSpaceSolver::eigenvectors, "Return the CI wave functions");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
@@ -169,6 +175,12 @@ PYBIND11_MODULE(_forte, m) {
     py::module::import("ambit");
 
     m.doc() = "pybind11 Forte module"; // module docstring
+
+    // export base classes
+    export_EPICTensors(m);
+
+    export_ActiveSpaceIntegrals(m);
+
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
@@ -188,7 +200,10 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "ref_wfn"_a, "options"_a,
           "mo_space_info"_a, "int_type"_a = "", "Make a Forte integral object from psi4");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
-    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
+    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver",
+          "method"_a, "state_nroots_map"_a, "scf_info"_a, "mo_space_info"_a, "options"_a,
+          "as_ints"_a = std::shared_ptr<ActiveSpaceIntegrals>());
+
     m.def("make_orbital_transformation", &make_orbital_transformation,
           "Make an orbital transformation");
     m.def("make_state_info_from_psi", &make_state_info_from_psi,
@@ -262,6 +277,17 @@ PYBIND11_MODULE(_forte, m) {
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
 
+    m.def("get_gas_occupation", &get_gas_occupation);
+    m.def("get_ci_occupation_patterns", &get_ci_occupation_patterns);
+
+    py::enum_<PrintLevel>(m, "PrintLevel")
+        .value("Quiet", PrintLevel::Quiet)
+        .value("Brief", PrintLevel::Brief)
+        .value("Default", PrintLevel::Default)
+        .value("Verbose", PrintLevel::Verbose)
+        .value("Debug", PrintLevel::Debug)
+        .export_values();
+
     //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
 
     export_ForteOptions(m);
@@ -280,6 +306,8 @@ PYBIND11_MODULE(_forte, m) {
 
     export_Determinant(m);
 
+    export_GAS(m);
+
     export_RDMs(m);
 
     export_StateInfo(m);
@@ -290,6 +318,8 @@ PYBIND11_MODULE(_forte, m) {
     export_ForteCubeFile(m);
 
     export_MOSpaceInfo(m);
+
+    export_DavidsonLiuSolver(m);
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
@@ -306,28 +336,9 @@ PYBIND11_MODULE(_forte, m) {
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
         m, "DynamicCorrelationSolver")
-        .def("compute_energy", &DynamicCorrelationSolver::compute_energy);
-
-    // export ActiveSpaceIntegrals
-    py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
-                                                                            "ActiveSpaceIntegrals")
-        .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
-             "Compute the matrix element of the Hamiltonian between two determinants")
-        .def("nuclear_repulsion_energy", &ActiveSpaceIntegrals::nuclear_repulsion_energy,
-             "Get the nuclear repulsion energy")
-        .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,
-             "Get the frozen core energy (contribution from FROZEN_DOCC)")
-        .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
-             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
-        .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
-        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry,
-             "Return the symmetry of the active MOs")
-        .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
-        .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
-        .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
-        .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
-        .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
-        .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
+        .def("compute_energy", &DynamicCorrelationSolver::compute_energy)
+        .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
+             "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
 
     // export ActiveMultipoleIntegrals
     py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(
@@ -343,6 +354,7 @@ PYBIND11_MODULE(_forte, m) {
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
+        .def("compute_gradient", &MASTER_DSRG::compute_gradient, "Compute the DSRG gradient")
         .def("compute_Heff_actv", &MASTER_DSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
@@ -358,7 +370,11 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
-             "Delete amplitudes checkpoint files");
+             "Delete amplitudes checkpoint files")
+        .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
+             "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
+        .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
+             "Set the shared pointer for ActiveSpaceSolver");
 
     // export SADSRG
     py::class_<SADSRG>(m, "SADSRG")

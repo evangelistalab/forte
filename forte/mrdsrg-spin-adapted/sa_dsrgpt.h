@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sa_dsrgpt_h_
-#define _sa_dsrgpt_h_
+#pragma once
 
 #include "sadsrg.h"
 
@@ -87,5 +86,3 @@ class SA_DSRGPT : public SADSRG {
     void renormalize_integrals(bool add);
 };
 } // namespace forte
-
-#endif // _sa_dsrgpt_h_

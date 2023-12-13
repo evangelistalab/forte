@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _as_ci_h_
-#define _as_ci_h_
+#pragma once
 
 #include "sci/sci.h"
 #include "sparse_ci/sparse_ci_solver.h"
@@ -81,8 +80,8 @@ class ASCI : public SelectedCIMethod {
         const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) override;
 
     DeterminantHashVec get_PQ_space() override;
-    psi::SharedMatrix get_PQ_evecs() override;
-    psi::SharedVector get_PQ_evals() override;
+    std::shared_ptr<psi::Matrix> get_PQ_evecs() override;
+    std::shared_ptr<psi::Vector> get_PQ_evals() override;
 
     //    std::shared_ptr<WFNOperator> get_op() override;
 
@@ -101,8 +100,8 @@ class ASCI : public SelectedCIMethod {
 
     DeterminantHashVec final_wfn_;
     // Temporarily added
-    psi::SharedMatrix P_evecs_;
-    psi::SharedVector P_evals_;
+    std::shared_ptr<psi::Matrix> P_evecs_;
+    std::shared_ptr<psi::Vector> P_evals_;
     DeterminantHashVec P_space_;
     DeterminantHashVec P_ref_;
     std::vector<double> P_ref_evecs_;
@@ -116,8 +115,8 @@ class ASCI : public SelectedCIMethod {
     local_timer cycle_time_;
 
     // Temporarily added interface to ExcitedStateSolver
-    psi::SharedMatrix PQ_evecs_;
-    psi::SharedVector PQ_evals_;
+    std::shared_ptr<psi::Matrix> PQ_evecs_;
+    std::shared_ptr<psi::Vector> PQ_evals_;
     DeterminantHashVec PQ_space_;
     /// Roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots_;
@@ -140,7 +139,7 @@ class ASCI : public SelectedCIMethod {
     /// Compute 1-RDM?
     bool compute_rdms_;
     /// The CI coeffiecients
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
 
     bool build_lists_;
     bool print_weights_ = false;
@@ -164,8 +163,8 @@ class ASCI : public SelectedCIMethod {
     void print_info() override;
 
     // Optimized for a single root
-    void get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
-                                     det_hash<double>& V_hash);
+    void get_excited_determinants_sr(std::shared_ptr<psi::Matrix> evecs,
+                                     DeterminantHashVec& P_space, det_hash<double>& V_hash);
 
     /// Prune the space of determinants
     void prune_PQ_to_P() override;
@@ -175,15 +174,14 @@ class ASCI : public SelectedCIMethod {
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      DeterminantSubstitutionLists& op, psi::SharedMatrix& PQ_evecs, int root1,
-                      int root2, int max_level);
+                      DeterminantSubstitutionLists& op, std::shared_ptr<psi::Matrix>& PQ_evecs,
+                      int root1, int root2, int max_level);
 
     void add_bad_roots(DeterminantHashVec& dets);
 
     int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                    DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots);
+                    DeterminantHashVec& P_space, std::shared_ptr<psi::Matrix> P_evecs,
+                    int num_ref_roots);
 };
 
 } // namespace forte
-
-#endif // _as_ci_h_

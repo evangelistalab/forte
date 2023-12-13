@@ -187,7 +187,7 @@ void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
 
 void DFIntegrals::gather_integrals() {
 
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Computing density fitted integrals\n");
     }
 
@@ -197,7 +197,7 @@ void DFIntegrals::gather_integrals() {
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();
     nthree_ = naux;
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Number of auxiliary basis functions:  %u", naux);
         auto mem_info = to_xb2<double>(nprim * nprim * naux);
         outfile->Printf("\n  Need %.2f %s to store DF integrals\n", mem_info.first,
@@ -241,16 +241,16 @@ void DFIntegrals::gather_integrals() {
     // Finally computes the df integrals
     // Does the timings also
     local_timer timer;
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Transforming DF Integrals");
     }
     df->transform();
-    if (print_ > 0) {
+    if (print_ > 1) {
         print_timing("density-fitting transformation", timer.get());
         outfile->Printf("\n");
     }
 
-    std::shared_ptr<psi::Matrix> Bpq(new psi::Matrix("Bpq", naux, nmo_ * nmo_));
+    auto Bpq = std::make_shared<psi::Matrix>("Bpq", naux, nmo_ * nmo_);
 
     Bpq = df->get_tensor("B");
 
@@ -260,7 +260,7 @@ void DFIntegrals::gather_integrals() {
 
 void DFIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    std::shared_ptr<psi::Matrix> temp_threeint(new psi::Matrix("tmp", ncmo_ * ncmo_, nthree_));
+    auto temp_threeint = std::make_shared<psi::Matrix>("tmp", ncmo_ * ncmo_, nthree_);
     temp_threeint->zero();
 
     // Borrwed from resort_four.
@@ -283,13 +283,13 @@ void DFIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vect
 
 void DFIntegrals::resort_integrals_after_freezing() {
     local_timer timer_resort;
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
 
     resort_three(ThreeIntegral_, cmotomo_);
 
-    if (print_ > 0) {
+    if (print_ > 1) {
         print_timing("resorting DF integrals", timer_resort.get());
     }
 }

@@ -32,11 +32,19 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 
+#include "helpers/determinant_helpers.h"
+
 #include "sparse_ci/sigma_vector.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
 
-#include "fci/string_address.h"
+#include "fci/fci_string_address.h"
+
+#include "genci/genci_string_lists.h"
+#include "genci/genci_vector.h"
+
+#include "base_classes/mo_space_info.h"
+
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_state_vector.h"
@@ -248,12 +256,12 @@ void export_Determinant(py::module& m) {
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
-    py::class_<StringAddress>(m, "StringAddress", "A class to compute the address of a string")
-        .def(py::init<const std::vector<std::vector<String>>&>(),
+    py::class_<FCIStringAddress>(m, "StringAddress", "A class to compute the address of a string")
+        .def(py::init<int, int, const std::vector<std::vector<String>>&>(),
              "Construct a StringAddress object from a list of lists of strings")
-        .def("add", &StringAddress::add, "Return the address of a string")
-        .def("sym", &StringAddress::sym, "Return the symmetry of a string")
-        .def("strpi", &StringAddress::strpi, "Return the number of strings per irrep");
+        .def("add", &FCIStringAddress::add, "Return the address of a string")
+        .def("sym", &FCIStringAddress::sym, "Return the symmetry of a string")
+        .def("strpcls", &FCIStringAddress::strpcls, "Return the number of strings per class");
 
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
         .def(py::init<bool>(), "antihermitian"_a = false)
@@ -287,13 +295,15 @@ void export_Determinant(py::module& m) {
         .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
         .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
 
-    py::class_<StateVector>(m, "StateVector", "A class to represent a vector of determinants")
+    py::class_<StateVector, std::shared_ptr<StateVector>>(
+        m, "StateVector", "A class to represent a vector of determinants")
         .def(py::init<const det_hash<double>&>())
         .def(py::init<const StateVector&>())
         .def(
             "items", [](const StateVector& v) { return py::make_iterator(v.begin(), v.end()); },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def("str", &StateVector::str)
+        .def("__len__", &StateVector::size)
         .def("__eq__", &StateVector::operator==)
         .def("__repr__", [](const StateVector& v) { return v.str(); })
         .def("__str__", [](const StateVector& v) { return v.str(); })
@@ -335,6 +345,11 @@ void export_Determinant(py::module& m) {
     m.def("get_projection", &get_projection);
     m.def("overlap", &overlap);
     m.def("spin2", &spin2<Determinant::nbits>);
+    m.def("make_hamiltonian_matrix", &make_hamiltonian_matrix, "dets"_a, "as_ints"_a,
+          "Make a Hamiltonian matrix (psi::Matrix) from a list of determinants and an "
+          "ActiveSpaceIntegrals object");
+    m.def("make_s2_matrix", &make_s2_matrix, "dets"_a,
+          "Make a matrix (psi::Matrix) of the S^2 operator from a list of determinants");
 }
 
 void export_SigmaVector(py::module& m) {
@@ -385,5 +400,22 @@ void export_SparseCISolver(py::module& m) {
             return std::make_tuple(energy, evals, evecs, spin);
         },
         "Diagonalize the Hamiltonian in a basis of determinants");
+}
+
+void export_GAS(py::module& m) {
+    py::class_<GenCIStringLists, std::shared_ptr<GenCIStringLists>>(
+        m, "GenCIStringLists", "A class to represent the strings of a GAS")
+        .def(py::init<std::shared_ptr<MOSpaceInfo>, size_t, size_t, int, PrintLevel,
+                      const std::vector<int>, const std::vector<int>>())
+        .def("make_determinants", &GenCIStringLists::make_determinants,
+             "Return a vector of Determinants");
+    py::class_<GenCIVector, std::shared_ptr<GenCIVector>>(m, "GenCIVector",
+                                                          "A class to represent a GAS vector")
+        .def(py::init<std::shared_ptr<GenCIStringLists>>())
+        .def("print", &GenCIVector::print, "Print the GAS vector")
+        .def("size", &GenCIVector::size, "Return the size of the GAS vector")
+        .def("__len__", &GenCIVector::size, "Return the size of the GAS vector")
+        .def("as_state_vector", &GenCIVector::as_state_vector, "Return a StateVector object")
+        .def("set_to", &GenCIVector::set_to, "Set the GAS vector to a given value");
 }
 } // namespace forte

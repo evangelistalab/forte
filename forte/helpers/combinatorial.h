@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _combinatorial_h_
-#define _combinatorial_h_
+#pragma once
 
 #include <cstddef>
 #include <vector>
@@ -48,5 +47,3 @@ namespace forte {
 int permutation_parity(const std::vector<size_t>& p);
 
 } // namespace forte
-
-#endif // _combinatorial_h_

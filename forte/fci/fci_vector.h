@@ -26,15 +26,20 @@
  * @END LICENSE
  */
 
-#ifndef _fci_vector_
-#define _fci_vector_
+#pragma once
 
+#include <memory>
 #include <vector>
+#include <cmath>
 
 #include "psi4/libmints/dimension.h"
+#include "ambit/tensor.h"
 
-#define CAPRICCIO_USE_DAXPY 1
-#define CAPRICCIO_USE_UNROLL 0
+#include "base_classes/rdms.h"
+#include "helpers/printing.h"
+
+#include "fci_string_lists.h"
+#include "fci_string_address.h"
 
 namespace psi {
 class Matrix;
@@ -43,84 +48,106 @@ class Vector;
 
 namespace forte {
 class ActiveSpaceIntegrals;
-class BinaryGraph;
 class MOSpaceInfo;
-class StringLists;
+class StringAddress;
+class RDMs;
 
 class FCIVector {
   public:
-    FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry);
-    ~FCIVector();
+    FCIVector(std::shared_ptr<FCIStringLists> lists, size_t symmetry);
 
-    //    // Simple operation
-    void print();
+    /// @brief return the number of irreps
+    size_t nirrep() const;
+    /// @brief return the symmetry of this vector
+    size_t symmetry() const;
+    /// @brief return the number of correlated molecular orbitals
+    size_t ncmo() const;
+    /// @brief return the size of the CI basis
+    size_t size() const;
+    /// @brief return the number of determinants per irrep
+    const std::vector<size_t>& detpi() const;
+
+    /// @brief return the number of correlated molecular orbitals per irrep
+    psi::Dimension cmopi() const;
+    /// @brief return the offset array for cmopi
+    const std::vector<size_t>& cmopi_offset() const;
+    const std::shared_ptr<FCIStringLists>& lists() const;
+
+    /// @brief zero the vector
     void zero();
-    /// The size of the CI basis
-    size_t size() const { return ndet_; }
+    /// @brief print the vector
+    void print();
 
-    /// Copy the wave function object
+    /// copy the wave function object
     void copy(FCIVector& wfn);
-    /// Copy the coefficient from a Vector object
+    /// copy the coefficient from a Vector object
     void copy(std::shared_ptr<psi::Vector> vec);
-    /// Copy the wave function object
+    /// copy the wave function object
     void copy_to(std::shared_ptr<psi::Vector> vec);
-
-    /// Form the diagonal part of the Hamiltonian
-    void form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
-    //    double approximate_spin(double )
-
-    //    /// Initial guess
-    //    void initial_guess(FCIVector& diag, size_t num_dets = 100);
-
-    ////    void set_to(Determinant& det);
+    /// @brief set the vector from a list of tuples
+    /// @param sparse_vec a list of tuples (irrep, Ia, Ib, C)
     void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
-    //    double get(int n);
-    //    void plus_equal(double factor,FCIVector& wfn);
-    //    void scale(double factor);
+
+    /// @brief compute the norm of the wave function
+    /// @param power The power of the norm (default 2 = Frobenius norm)
     double norm(double power = 2.0);
-    ////    void normalize_wrt(Determinant& det);
+
+    /// @brief normalize the wave function
     void normalize();
+
+    /// @brief Compute the dot product of this wave functions with another
+    /// @param wfn The wave function to dot with
+    /// @return The dot product
     double dot(FCIVector& wfn);
     double dot(std::shared_ptr<FCIVector>& wfn);
 
-    std::vector<double>& opdm_a() { return opdm_a_; }
-    std::vector<double>& opdm_b() { return opdm_b_; }
-    std::vector<double>& tpdm_aa() { return tpdm_aa_; }
-    std::vector<double>& tpdm_ab() { return tpdm_ab_; }
-    std::vector<double>& tpdm_bb() { return tpdm_bb_; }
-    std::vector<double>& tpdm_aaa() { return tpdm_aaa_; }
-    std::vector<double>& tpdm_aab() { return tpdm_aab_; }
-    std::vector<double>& tpdm_abb() { return tpdm_abb_; }
-    std::vector<double>& tpdm_bbb() { return tpdm_bbb_; }
+    // return alfa_address_
+    std::shared_ptr<FCIStringAddress> alfa_address() { return alfa_address_; }
+    // return beta_address_
+    std::shared_ptr<FCIStringAddress> beta_address() { return beta_address_; }
+
+    std::shared_ptr<psi::Matrix>& C(int irrep) { return C_[irrep]; }
 
     // Operations on the wave function
     void Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     double energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    void compute_rdms(int max_order = 2);
-    void rdm_test();
+    /// @brief Test the RDMs
+    /// @param Cl the left state
+    /// @param Cr the right state
+    /// @param type the type of RDMs to test
+    /// @param rdms the RDMs object to test
+    /// @param max_rdm_level the maximum RDM level to test
+    static void test_rdms(FCIVector& Cl, FCIVector& Cr, int max_rdm_level, RDMsType type,
+                          std::shared_ptr<RDMs> rdms);
 
     /// Compute the expectation value of the S^2 operator
     double compute_spin2();
 
     /// Print the natural_orbitals from FCIWFN
     /// Assume user specified active space
-    void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
+    void print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mospace_info,
+                                std::shared_ptr<RDMs> rdms);
 
-    /// Return the elements with the smallest value
-    /// This function returns the tuple (C_I,irrep,Ia,Ib)
-    std::vector<std::tuple<double, size_t, size_t, size_t>> min_elements(size_t num_dets);
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
     std::vector<std::tuple<double, double, size_t, size_t, size_t>>
     max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_);
+    static void allocate_temp_space(std::shared_ptr<FCIStringLists> lists_, PrintLevel print_);
     static void release_temp_space();
-    void set_print(int print) { print_ = print; }
+    void set_print(PrintLevel print) { print_ = print; }
+
+    // ==> Class Static Functions <==
+    static std::shared_ptr<RDMs> compute_rdms(FCIVector& C_left, FCIVector& C_right, int max_order,
+                                              RDMsType type);
+
+    /// Return the temporary matrix CR
+    static std::shared_ptr<psi::Matrix> get_CR();
+    /// Return the temporary matrix CL
+    static std::shared_ptr<psi::Matrix> get_CL();
 
   private:
     // ==> Class Data <==
@@ -140,32 +167,25 @@ class FCIVector {
     /// The number of determinants per irrep
     std::vector<size_t> detpi_;
     /// The print level
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The string list
-    std::shared_ptr<StringLists> lists_;
-    // Graphs
-    /// The alpha string graph
-    std::shared_ptr<BinaryGraph> alfa_graph_;
-    /// The beta string graph
-    std::shared_ptr<BinaryGraph> beta_graph_;
+    std::shared_ptr<FCIStringLists> lists_;
+    /// The alpha string addressing object
+    std::shared_ptr<FCIStringAddress> alfa_address_;
+    /// The beta string addressing object
+    std::shared_ptr<FCIStringAddress> beta_address_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<std::shared_ptr<psi::Matrix>> C_;
-    std::vector<double> opdm_a_;
-    std::vector<double> opdm_b_;
-    std::vector<double> tpdm_aa_;
-    std::vector<double> tpdm_ab_;
-    std::vector<double> tpdm_bb_;
-    std::vector<double> tpdm_aaa_;
-    std::vector<double> tpdm_aab_;
-    std::vector<double> tpdm_abb_;
-    std::vector<double> tpdm_bbb_;
 
     // ==> Class Static Data <==
 
-    static std::shared_ptr<psi::Matrix> C1;
-    static std::shared_ptr<psi::Matrix> Y1;
-    static size_t sizeC1;
+    // Temporary matrix of size as large as the largest block of C. Used to store the right
+    // coefficient vector
+    static std::shared_ptr<psi::Matrix> CR;
+    // Temporary matrix of size as large as the largest block of C. Used to store the left
+    // coefficient vector
+    static std::shared_ptr<psi::Matrix> CL;
 
     // Timers
     static double hdiag_timer;
@@ -182,55 +202,109 @@ class FCIVector {
 
     // ==> Class Private Functions <==
 
-    size_t oei_index(size_t p, size_t q) const { return ncmo_ * p + q; }
-    size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {
-        return ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;
+    static size_t oei_index(size_t p, size_t q, size_t ncmo) { return ncmo * p + q; }
+    static size_t tei_index(size_t p, size_t q, size_t r, size_t s, size_t ncmo) {
+        return ncmo * ncmo * ncmo * p + ncmo * ncmo * q + ncmo * r + s;
     }
-    size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u) const {
-        return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * ncmo_ * ncmo_ * q +
-                ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
+    static size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u,
+                            size_t ncmo) {
+        return (ncmo * ncmo * ncmo * ncmo * ncmo * p + ncmo * ncmo * ncmo * ncmo * q +
+                ncmo * ncmo * ncmo * r + ncmo * ncmo * s + ncmo * t + u);
     }
 
+    /// @brief Apply the scalar part of the Hamiltonian to this vector and add it to the result
+    /// @param result The wave function to add the result to
+    /// @param fci_ints The integrals object
     void H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+
+    /// @brief Apply the one-particle Hamiltonian to this vector and add it to the result
+    /// @param result The wave function to add the result to
+    /// @param fci_ints The integrals object
+    /// @param alfa flag for alfa or beta component, true = alfa, false = beta
     void H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
-    void H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+
+    /// @brief Apply the same-spin two-particle Hamiltonian to this vector and add it to the result
+    /// @param result The wave function to add the result to
+    /// @param fci_ints The integrals object
+    /// @param alfa flag for alfa or beta component, true = alfa, false = beta
     void H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
+
+    /// @brief Apply the different-spin component of two-particle Hamiltonian to this vector and add
+    /// it to the result
+    /// @param result The wave function to add the result to
+    /// @param fci_ints The integrals object/
+    void H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     // 1-RDM elements are stored in the format
     // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]
 
     /// Compute the matrix elements of the same 1-RDM <a^+_{p} a_{q}>
-    void compute_1rdm(std::vector<double>& rdm, bool alfa);
+    static ambit::Tensor compute_1rdm_same_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa);
 
     // 2-RDM elements are stored in the format
     // <a^+_{p} a^+_{q} a_{s} a_r> -> rdm[tei_index(p,q,r,s)]
 
-    /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all indices
-    /// alpha or beta)
-    void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
+    /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all
+    /// indices alpha or beta)
+    static ambit::Tensor compute_2rdm_aa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+                                                    bool alfa);
     /// Compute the matrix elements of the alpha-beta 2-RDM <a^+_{pa} a^+_{qb} a_{sb} a_{ra}>
-    void compute_2rdm_ab(std::vector<double>& rdm);
+    static ambit::Tensor compute_2rdm_ab_same_irrep(FCIVector& C_left, FCIVector& C_right);
 
     // 3-RDM elements are stored in the format
     // <a^+_p a^+_q a^+_r a_u a_t a_s> -> rdm[six_index(p,q,r,s,t,u)]
 
     /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a_s a_r> (with all indices
     /// alpha or beta)
-    void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
+    static ambit::Tensor compute_3rdm_aaa_same_irrep(FCIVector& C_left, FCIVector& C_right,
+                                                     bool alfa);
     /// Compute the matrix elements of the alpha-alpha-beta 3-RDM <a^+_{pa} a^+_{qa} a^+_{rb} a_{ub}
     /// a_{ta} a_{sa}>
-    void compute_3rdm_aab(std::vector<double>& rdm);
+    static ambit::Tensor compute_3rdm_aab_same_irrep(FCIVector& C_left, FCIVector& C_right);
     /// Compute the matrix elements of the alpha-beta-beta 3-RDM <a^+_{pa} a^+_{qb} a^+_{rb} a_{ub}
     /// a_{tb} a_{sa}>
-    void compute_3rdm_abb(std::vector<double>& rdm);
+    static ambit::Tensor compute_3rdm_abb_same_irrep(FCIVector& C_left, FCIVector& C_right);
 };
+
+/// @brief Provide a pointer to the a block of the coefficient matrix in such a way that we can use
+/// its content in several algorithms (sigma vector, RDMs, etc.)
+/// @param C The fci vector
+/// @param M The matrix that might hold the data it if is transposed
+/// @param alfa flag for alfa or beta component, true = alfa, false = beta. This affects
+/// transposition
+/// @param alfa_address The addressing object for the alfa component
+/// @param beta_address The addressing object for the beta component
+/// @param ha The string class of the alfa component (a generalization of the irrep)
+/// @param hb The string class of the beta component (a generalization of the irrep)
+/// @param zero If true, zero the matrix before returning it
+/// @return A pointer to the block of the coefficient matrix
+double** gather_C_block(FCIVector& C, std::shared_ptr<psi::Matrix> M, bool alfa,
+                        std::shared_ptr<FCIStringAddress> alfa_address,
+                        std::shared_ptr<FCIStringAddress> beta_address, int ha, int hb, bool zero);
+
+/// @brief Scatter the data from a matrix to the coefficient matrix. This is used in the sigma
+/// vector algorithm
+/// @param C The fci vector
+/// @param m The matrix that holds the data
+/// @param alfa flag for alfa or beta component, true = alfa, false = beta. If true, the data is
+/// already in place and this function does nothing. If false, the data is transposed before being
+/// added.
+/// @param alfa_address The addressing object for the alfa component
+/// @param beta_address The addressing object for the beta component
+/// @param ha The string class of the alfa component (a generalization of the irrep)
+/// @param hb The string class of the beta component (a generalization of the irrep)
+void scatter_C_block(FCIVector& C, double** m, bool alfa,
+                     std::shared_ptr<FCIStringAddress> alfa_address,
+                     std::shared_ptr<FCIStringAddress> beta_address, int ha, int hb);
+
+std::shared_ptr<RDMs> compute_transition_rdms(FCIVector& C_left, FCIVector& C_right,
+                                              int max_rdm_level, RDMsType type);
+
+/// @brief Compute the one-particle density matrix for a given wave function
+/// @param C_left The left wave function
+/// @param C_right The right wave function
+/// @param alfa flag for alfa or beta component, true = alfa, false = beta
+/// @return The one-particle density matrix as a tensor
+ambit::Tensor compute_1rdm_different_irrep(FCIVector& C_left, FCIVector& C_right, bool alfa);
+
 } // namespace forte
-
-#endif // _fci_vector_
-
-////    DetAddress get_det_address(Determinant& det) {
-////        int sym = alfa_graph_->sym(det.get_alfa_bits());
-////        size_t alfa_string = alfa_graph_->rel_add(det.get_alfa_bits());
-////        size_t beta_string = beta_graph_->rel_add(det.get_beta_bits());
-////        return DetAddress(sym,alfa_string,beta_string);
-////    };

@@ -26,9 +26,9 @@
  * @END LICENSE
  */
 
-#ifndef _state_info_h_
-#define _state_info_h_
+#pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -114,5 +114,3 @@ class StateInfo {
 StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options);
 
 } // namespace forte
-
-#endif // _state_info_h_

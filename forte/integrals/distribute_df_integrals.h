@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _conventional_integrals_h_
-#define _conventional_integrals_h_
+#pragma once
 
 #include "integrals.h"
 
@@ -107,5 +106,3 @@ class DistDFIntegrals : public Psi4Integrals {
 #endif
 
 } // namespace forte
-
-#endif // _conventional_integrals_h_

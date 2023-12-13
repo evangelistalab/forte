@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _active_space_integrals_
-#define _active_space_integrals_
+#pragma once
 
 #include "integrals/integrals.h"
 #include "sparse_ci/determinant.h"
@@ -37,7 +36,7 @@ class Dimension;
 namespace forte {
 
 /**
- * @brief The ActiveSpaceIntegrals class stores integrals necessary for FCI calculations
+ * @brief The ActiveSpaceIntegrals class stores integrals necessary for active space solvers
  */
 class ActiveSpaceIntegrals {
   public:
@@ -57,7 +56,7 @@ class ActiveSpaceIntegrals {
 
     // ==> Class Interface <==
 
-    /// Return the
+    /// Return the ForteIntegrals object
     std::shared_ptr<ForteIntegrals> ints() { return ints_; }
 
     /// Return the number of MOs
@@ -144,6 +143,7 @@ class ActiveSpaceIntegrals {
     void set_active_integrals(const ambit::Tensor& tei_aa, const ambit::Tensor& tei_ab,
                               const ambit::Tensor& tei_bb);
     /// Compute the restricted_docc operator
+    /// F^{closed}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv|ii) - (ui|vi)
     void compute_restricted_one_body_operator();
     /// Set the restricted_one_body_operator
     void set_restricted_one_body_operator(const std::vector<double>& oei_a,
@@ -204,7 +204,7 @@ class ActiveSpaceIntegrals {
     std::vector<double> diag_tei_bb_;
     /// A vector of indices for the active molecular orbitals
     std::vector<size_t> active_mo_;
-    /// A vector of the symmetry ofthe active molecular orbitals
+    /// A vector of the symmetry of the active molecular orbitals
     std::vector<int> active_mo_symmetry_;
     /// A Vector of indices for the restricted_docc molecular orbitals
     std::vector<size_t> restricted_docc_mo_;
@@ -214,8 +214,7 @@ class ActiveSpaceIntegrals {
     inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {
         return nmo3_ * p + nmo2_ * q + nmo_ * r + s;
     }
-    /// F^{closed}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv|ii) - (ui|vi)
-    void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
+
     void startup();
 };
 
@@ -225,5 +224,3 @@ make_active_space_ints(std::shared_ptr<forte::MOSpaceInfo> mo_space_info,
                        const std::vector<std::string>& core_spaces);
 
 } // namespace forte
-
-#endif // _active_space_integrals_

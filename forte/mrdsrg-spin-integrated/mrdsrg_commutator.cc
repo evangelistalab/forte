@@ -30,8 +30,6 @@
 #include <map>
 #include <vector>
 
-#include "boost/format.hpp"
-
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
@@ -281,7 +279,7 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     C1["QS"] -= alpha * temp["MU"] * B["gUM"] * B["gQS"];
     C1["QS"] += alpha * temp["MU"] * B["gUS"] * B["gQM"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("221", timer.get());
@@ -316,7 +314,7 @@ void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("210", timer.get());
@@ -346,7 +344,7 @@ void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * B["gQP"] * B["gVM"];
     C1["QP"] += alpha * T1["MU"] * Gamma1_["UV"] * B["gQM"] * B["gVP"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("211", timer.get());
@@ -379,7 +377,7 @@ void MRDSRG::H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     C2["RSPA"] -= alpha * T1["IA"] * B["gRP"] * B["gSI"];
     C2["RSPA"] += alpha * T1["IA"] * B["gRI"] * B["gSP"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("212", timer.get());
@@ -589,7 +587,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("220", timer.get());
@@ -700,7 +698,7 @@ void MRDSRG::H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     C2["iQaS"] += alpha * Gamma1_["XY"] * B["gYS"] * B["gQJ"] * T2["iJaX"];
     hp.stop();
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("222", timer.get());
@@ -1341,7 +1339,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    E *= alpha;
 //    C0 += E;
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("110", timer.get());
@@ -1372,7 +1370,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    E *= alpha;
 //    C0 += E;
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("120", timer.get());
@@ -1403,7 +1401,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    E *= alpha;
 //    C0 += E;
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("210", timer.get());
@@ -1570,7 +1568,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    E *= alpha;
 //    C0 += E;
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("220", timer.get());
@@ -1585,7 +1583,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C1["IP"] += alpha * H1["AP"] * T1["IA"];
 //    C1["QA"] -= alpha * T1["IA"] * H1["QI"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("111", timer.get());
@@ -1609,7 +1607,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C1["IA"] += alpha * H1["BU"] * T2["IVAB"] * Gamma1_["UV"];
 //    C1["IA"] -= alpha * H1["VJ"] * T2["IJAU"] * Gamma1_["UV"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("121", timer.get());
@@ -1633,7 +1631,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C1["QP"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["QEPY"];
 //    C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["QVPM"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("211", timer.get());
@@ -1794,7 +1792,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C1["qs"] -= alpha * temp["MU"] * H2["qUsM"];
 //    C1["QS"] -= alpha * temp["MU"] * H2["UQMS"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("221", timer.get());
@@ -1845,7 +1843,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    //    C2["QJAB"] -= temp["QJAB"]; // explicitly evaluate by temp
 //    //    C2["IQAB"] += temp["QIAB"]; // use permutation of temp
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("122", timer.get());
@@ -1870,7 +1868,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C2["RSAQ"] -= alpha * T1["IA"] * H2["RSIQ"];
 //    C2["RSPA"] -= alpha * T1["IA"] * H2["RSPI"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("212", timer.get());
@@ -1961,7 +1959,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C2["iQaS"] -= alpha * Gamma1_["XY"] * H2["YQJS"] * T2["iJaX"];
 //    hp.stop();
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("222", timer.get());
@@ -1977,7 +1975,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C1["IP"] += alpha * H1["AP"] * T1["IA"];
 //    C1["QA"] -= alpha * T1["IA"] * H1["QI"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("111", timer.get());
@@ -2001,7 +1999,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C1["IA"] += alpha * H1["BU"] * T2["IVAB"] * Gamma1_["UV"];
 //    C1["IA"] -= alpha * H1["VJ"] * T2["IJAU"] * Gamma1_["UV"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("121", timer.get());
@@ -2025,7 +2023,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C1["QP"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["QEPY"];
 //    C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["QVPM"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("211", timer.get());
@@ -2186,7 +2184,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C1["qs"] -= alpha * temp["MU"] * H2["qUsM"];
 //    C1["QS"] -= alpha * temp["MU"] * H2["UQMS"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("221", timer.get());
@@ -2237,7 +2235,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    //    C2["QJAB"] -= temp["QJAB"]; // explicitly evaluate by temp
 //    //    C2["IQAB"] += temp["QIAB"]; // use permutation of temp
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("122", timer.get());
@@ -2262,7 +2260,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C2["RSAQ"] -= alpha * T1["IA"] * H2["RSIQ"];
 //    C2["RSPA"] -= alpha * T1["IA"] * H2["RSPI"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("212", timer.get());
@@ -2353,7 +2351,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 //    C2["iQaS"] -= alpha * Gamma1_["XY"] * H2["YQJS"] * T2["iJaX"];
 //    hp.stop();
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("222", timer.get());

@@ -74,7 +74,7 @@ double MRDSRG::compute_energy_pt2() {
 
     // create zeroth-order Hamiltonian
     H0th_ = BTF_->build(tensor_type_, "Zeroth-order H", spin_cases({"gg"}));
-    for (const std::string& block : {"cc", "CC", "aa", "AA", "vv", "VV"}) {
+    for (const auto block : {"cc", "CC", "aa", "AA", "vv", "VV"}) {
         H0th_.block(block)("pq") = F_.block(block)("pq");
     }
 
@@ -787,7 +787,7 @@ double MRDSRG::compute_energy_pt3() {
 
     // create zeroth-order Hamiltonian
     H0th_ = BTF_->build(tensor_type_, "Zeroth-order H", spin_cases({"gg"}));
-    for (const std::string& block : {"cc", "CC", "aa", "AA", "vv", "VV"}) {
+    for (const auto block : {"cc", "CC", "aa", "AA", "vv", "VV"}) {
         H0th_.block(block)("pq") = F_.block(block)("pq");
     }
 

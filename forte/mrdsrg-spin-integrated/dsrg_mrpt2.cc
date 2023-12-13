@@ -39,16 +39,16 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/dipole.h"
 
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
+
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
-#include "boost/format.hpp"
-#include "sci/fci_mo.h"
 #include "fci/fci_solver.h"
 #include "helpers/printing.h"
 #include "dsrg_mrpt2.h"
 
 using namespace ambit;
-
 using namespace psi;
 
 namespace forte {
@@ -102,16 +102,16 @@ void DSRG_MRPT2::startup() {
     }
 
     // print levels
-    if (print_ > 1) {
+    if (print_ > 2) {
         Gamma1_.print(stdout);
         Eta1_.print(stdout);
         F_.print(stdout);
     }
-    if (print_ > 2) {
+    if (print_ > 3) {
         V_.print(stdout);
         Lambda2_.print(stdout);
     }
-    if (print_ > 3 and do_cu3_) {
+    if (print_ > 4 and do_cu3_) {
         L3aaa_.print();
         L3aab_.print();
         L3abb_.print();
@@ -249,12 +249,13 @@ void DSRG_MRPT2::build_fock() {
 
 void DSRG_MRPT2::print_options_summary() {
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info_int{{"ntamp", ntamp_}};
+    table_printer printer;
+    printer.add_int_data({{"ntamp", ntamp_}});
+    printer.add_double_data({{"flow parameter", s_},
+                             {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+                             {"intruder_tamp", intruder_tamp_}});
 
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"flow parameter", s_},
-        {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"intruder_tamp", intruder_tamp_}};
+    printer.add_bool_data({{"form Hbar3", foptions_->get_bool("FORM_HBAR3")}});
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"int_type", ints_type_},
@@ -262,23 +263,20 @@ void DSRG_MRPT2::print_options_summary() {
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {
-        calculation_info_string.push_back({"state_type", "MULTI-STATE"});
-        calculation_info_string.push_back({"multi-state type", multi_state_algorithm_});
+        calculation_info_string.emplace_back("state_type", "MULTI-STATE");
+        calculation_info_string.emplace_back("multi-state type", multi_state_algorithm_);
     } else {
-        calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
+        calculation_info_string.emplace_back("state_type", "STATE-SPECIFIC");
     }
 
     if (internal_amp_) {
-        calculation_info_string.push_back({"internal_amp", foptions_->get_str("INTERNAL_AMP")});
-        calculation_info_string.push_back({"internal_amp_select", internal_amp_select_});
+        calculation_info_string.emplace_back("internal_amp", foptions_->get_str("INTERNAL_AMP"));
+        calculation_info_string.emplace_back("internal_amp_select", internal_amp_select_);
     }
+    printer.add_string_data(calculation_info_string);
 
-    std::vector<std::pair<std::string, bool>> calculation_info_bool{
-        {"form Hbar3", foptions_->get_bool("FORM_HBAR3")}};
-
-    // print information
-    print_selected_options("Calculation Information", calculation_info_string,
-                           calculation_info_bool, calculation_info_double, calculation_info_int);
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 
     if (foptions_->get_bool("MEMORY_SUMMARY")) {
         BTF_->print_memory_info();
@@ -346,9 +344,9 @@ double DSRG_MRPT2::compute_energy() {
     } else {
         outfile->Printf("\n    Ignore [H0th, A1st] in DSRG-MRPT2!");
     }
-    if (print_ > 1)
+    if (print_ > 2)
         F_.print(stdout);
-    if (print_ > 2) {
+    if (print_ > 3) {
         T1_.print(stdout);
         T2_.print(stdout);
         V_.print(stdout);
@@ -360,35 +358,35 @@ double DSRG_MRPT2::compute_energy() {
     double Ecorr = 0.0;
     double Etotal = 0.0;
     std::vector<std::pair<std::string, double>> energy;
-    energy.push_back({"E0 (reference)", Eref_});
+    energy.emplace_back("E0 (reference)", Eref_);
 
     Etemp = E_FT1();
     Ecorr += Etemp;
-    energy.push_back({"<[F, T1]>", Etemp});
+    energy.emplace_back("<[F, T1]>", Etemp);
 
     Etemp = E_FT2();
     Ecorr += Etemp;
-    energy.push_back({"<[F, T2]>", Etemp});
+    energy.emplace_back("<[F, T2]>", Etemp);
 
     Etemp = E_VT1();
     Ecorr += Etemp;
-    energy.push_back({"<[V, T1]>", Etemp});
+    energy.emplace_back("<[V, T1]>", Etemp);
 
     Etemp = E_VT2_2();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> (C_2)^4", Etemp});
+    energy.emplace_back("<[V, T2]> (C_2)^4", Etemp);
 
     Etemp = E_VT2_4HH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 HH", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 HH", Etemp);
 
     Etemp = E_VT2_4PP();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PP", Etemp);
 
     Etemp = E_VT2_4PH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
+    energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PH", Etemp);
 
     if (do_cu3_) {
         Etemp = E_VT2_6();
@@ -396,13 +394,13 @@ double DSRG_MRPT2::compute_energy() {
         Etemp = 0.0;
     }
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
+    energy.emplace_back("<[V, T2]> C_6 C_2", Etemp);
 
     Ecorr += EVT2;
     Etotal = Ecorr + Eref_;
-    energy.push_back({"<[V, T2]>", EVT2});
-    energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
-    energy.push_back({"DSRG-MRPT2 total energy", Etotal});
+    energy.emplace_back("<[V, T2]>", EVT2);
+    energy.emplace_back("DSRG-MRPT2 correlation energy", Ecorr);
+    energy.emplace_back("DSRG-MRPT2 total energy", Etotal);
     Hbar0_ = Ecorr;
 
     // Analyze T1 and T2
@@ -416,10 +414,10 @@ double DSRG_MRPT2::compute_energy() {
     }
     check_t1();
     check_t2();
-    energy.push_back({"max(T1)", T1max_});
-    energy.push_back({"max(T2)", T2max_});
-    energy.push_back({"||T1||", T1norm_});
-    energy.push_back({"||T2||", T2norm_});
+    energy.emplace_back("max(T1)", T1max_);
+    energy.emplace_back("max(T2)", T2max_);
+    energy.emplace_back("||T1||", T1norm_);
+    energy.emplace_back("||T2||", T2norm_);
 
     print_h2("Possible Intruders");
     print_intruder("A", lt1a_);
@@ -587,7 +585,7 @@ void DSRG_MRPT2::compute_t2() {
                 }
             }
         } else if (internal_amp_select_ == "OOVV") {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
 
@@ -605,7 +603,7 @@ void DSRG_MRPT2::compute_t2() {
                 }
             }
         } else {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
                 // copy original data
                 std::vector<double> data(T2_.block(block).data());
                 T2_.block(block).zero();
@@ -1442,7 +1440,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
 
-    auto dipole_array = std::make_shared<Matrix>(1, 3);
+    auto dipole_array = std::make_shared<psi::Matrix>(1, 3);
     dipole_array->set(0, 0, x);
     dipole_array->set(0, 1, y);
     dipole_array->set(0, 2, z);
@@ -1474,8 +1472,9 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    D1["AB"] += 0.5 * T2_["MNBC"] * T2_["MNAC"];
     //    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
 
-    //    // transform D1 with a irrep psi::SharedMatrix
-    //    psi::SharedMatrix SOdens(new psi::Matrix("SO density ", this->nmopi(), this->nmopi()));
+    //    // transform D1 with a irrep std::shared_ptr<psi::Matrix>
+    //    auto SOdens = std::make_shared<psi::Matrix>("SO density ", this->nmopi(,
+    //    this->nmopi()));
 
     //    for (const auto& pair: mo_space_info_->relative_mo("FROZEN_DOCC")) {
     //        size_t h = pair.first;
@@ -1508,12 +1507,12 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 
     //    SOdens->back_transform(this->Ca());
 
-    //    psi::SharedMatrix sotoao(this->aotoso()->transpose());
+    //    std::shared_ptr<psi::Matrix> sotoao(this->aotoso()->transpose());
     //    size_t nao = sotoao->coldim(0);
-    //    psi::SharedMatrix AOdens(new psi::Matrix("AO density ", nao, nao));
+    //    auto AOdens = std::make_shared<psi::Matrix>("AO density ", nao, nao);
     //    AOdens->remove_symmetry(SOdens, sotoao);
 
-    //    std::vector<psi::SharedMatrix> aodipole_ints = ints_->ao_dipole_ints();
+    //    std::vector<std::shared_ptr<psi::Matrix>> aodipole_ints = ints_->ao_dipole_ints();
     //    std::vector<double> de(4, 0.0);
     //    for (int i = 0; i < 3; ++i) {
     //        de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
@@ -2194,7 +2193,7 @@ void DSRG_MRPT2::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& 
     C1["UV"] += alpha * H1["AV"] * T1["UA"];
     C1["VU"] -= alpha * T1["IU"] * H1["VI"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("111", timer.get());
@@ -2218,7 +2217,7 @@ void DSRG_MRPT2::H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& 
     C1["YX"] += alpha * H1["BU"] * T2["YVXB"] * Gamma1_["UV"];
     C1["YX"] -= alpha * H1["VJ"] * T2["YJXU"] * Gamma1_["UV"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("121", timer.get());
@@ -2242,7 +2241,7 @@ void DSRG_MRPT2::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& 
     C1["UV"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["UEVY"];
     C1["UV"] -= alpha * T1["MX"] * Gamma1_["XY"] * H2["UYVM"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("211", timer.get());
@@ -2403,7 +2402,7 @@ void DSRG_MRPT2::H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& 
     C1["xy"] -= alpha * temp["MU"] * H2["xUyM"];
     C1["XY"] -= alpha * temp["MU"] * H2["UXMY"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("221", timer.get());
@@ -2428,7 +2427,7 @@ void DSRG_MRPT2::H1_T2_C2aaaa(BlockedTensor& H1, BlockedTensor& T2, const double
     C2["UVXY"] -= alpha * T2["IVXY"] * H1["UI"];
     C2["UVXY"] -= alpha * T2["UJXY"] * H1["VJ"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("122", timer.get());
@@ -2453,7 +2452,7 @@ void DSRG_MRPT2::H2_T1_C2aaaa(BlockedTensor& H2, BlockedTensor& T1, const double
     C2["UVXY"] -= alpha * T1["IX"] * H2["UVIY"];
     C2["UVXY"] -= alpha * T1["IY"] * H2["UVXI"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("212", timer.get());
@@ -2530,7 +2529,7 @@ void DSRG_MRPT2::H2_T2_C2aaaa(BlockedTensor& H2, BlockedTensor& T2, const double
     C2["uVxY"] -= alpha * Gamma1_["wz"] * H2["zVjY"] * T2["ujxw"];
     C2["uVxY"] -= alpha * Gamma1_["WZ"] * H2["ZVJY"] * T2["uJxW"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("222", timer.get());
@@ -2613,7 +2612,7 @@ void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const doub
     C3["xYZuWV"] -= temp["xYZuVW"];
     C3["xZYuWV"] += temp["xYZuVW"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C3 : %12.3f", timer.get());
     }
     dsrg_time_.add("223", timer.get());
@@ -2821,8 +2820,8 @@ ambit::BlockedTensor DSRG_MRPT2::get_RH1deGNO() {
     return RH1eff;
 }
 
-void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose,
-                            const bool& t1eff) {
+void DSRG_MRPT2::rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                            const bool& transpose, const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
@@ -2831,7 +2830,7 @@ void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bo
     space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     // alpha
-    for (const std::string& block : {"cc", "aa", "vv"}) {
+    for (const std::string block : {"cc", "aa", "vv"}) {
         char space = block[0];
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -2851,7 +2850,7 @@ void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bo
     }
 
     // beta
-    for (const std::string& block : {"CC", "AA", "VV"}) {
+    for (const std::string block : {"CC", "AA", "VV"}) {
         char space = tolower(block[0]);
 
         U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3068,40 +3067,41 @@ void DSRG_MRPT2::print_amp_summary(const std::string& name,
     };
 
     if (rank == 1) {
-        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] % ' ' %
-                          spin_case[name[0]] % ' ' % ' ');
+        spin_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", spin_case[name[0]], "",
+                                  spin_case[name[0]], "", "");
         if (spin_title.find_first_not_of(' ') != std::string::npos) {
             spin_title = "\n" + indent + extendstr(spin_title, 3);
         } else {
             spin_title = "";
         }
-        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % ' ' % 'a' % ' ' % ' ');
+        mo_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", "i", "", "a", "", "");
         mo_title = "\n" + indent + extendstr(mo_title, 3);
         for (size_t n = 0; n != list.size(); ++n) {
             if (n % 3 == 0)
                 output += "\n" + indent;
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
-            output += str(boost::format("[%3d %3c %3d %3c]%9.6f ") % idx[0] % ' ' % idx[1] % ' ' %
-                          datapair.second);
+            output += fmt::format("[{:>3} {:>3} {:>3} {:>3}]{:>9.6f} ", idx[0], " ", idx[1], " ",
+                                  datapair.second);
         }
     } else if (rank == 2) {
-        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] %
-                          spin_case[name[1]] % spin_case[name[0]] % spin_case[name[1]] % ' ');
+        spin_title += fmt::format(" {:3} {:3} {:3} {:3} {:9} ", spin_case[name[0]],
+                                  spin_case[name[1]], spin_case[name[0]], spin_case[name[1]], " ");
+
         if (spin_title.find_first_not_of(' ') != std::string::npos) {
             spin_title = "\n" + indent + extendstr(spin_title, 3);
         } else {
             spin_title = "";
         }
-        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % 'j' % 'a' % 'b' % ' ');
+        mo_title += fmt::format(" {:3} {:3} {:3} {:3} {:9} ", "i", "j", "a", "b", " ");
         mo_title = "\n" + indent + extendstr(mo_title, 3);
         for (size_t n = 0; n != list.size(); ++n) {
             if (n % 3 == 0)
                 output += "\n" + indent;
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
-            output += str(boost::format("[%3d %3d %3d %3d]%9.6f ") % idx[0] % idx[1] % idx[2] %
-                          idx[3] % datapair.second);
+            output += fmt::format("[{:3} {:3} {:3} {:3}] {:9.6f} ", idx[0], idx[1], idx[2], idx[3],
+                                  datapair.second);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -3113,7 +3113,7 @@ void DSRG_MRPT2::print_amp_summary(const std::string& name,
         line = "\n" + indent + std::string(linesize - indent.size(), '-');
         summary = "\n" + indent + "Norm of T" + std::to_string(rank) + name +
                   " vector: (nonzero elements: " + std::to_string(number_nonzero) + ")";
-        std::string strnorm = str(boost::format("%.15f.") % norm);
+        std::string strnorm = fmt::format("{:.15f}.", norm);
         std::string blank(linesize - summary.size() - strnorm.size() + 1, ' ');
         summary += blank + strnorm;
 
@@ -3131,8 +3131,7 @@ void DSRG_MRPT2::print_intruder(const std::string& name,
 
     std::string indent(4, ' ');
     std::string title = indent + "T" + std::to_string(rank) + " amplitudes larger than " +
-                        str(boost::format("%.4f") % intruder_tamp_) + " for spin case " + name +
-                        ":";
+                        fmt::format("{:.4f}", intruder_tamp_) + " for spin case " + name + ":";
     std::string col_title;
     std::string line;
     std::string output;
@@ -3153,8 +3152,8 @@ void DSRG_MRPT2::print_intruder(const std::string& name,
             double v = datapair.second;
 
             output += "\n" + indent +
-                      str(boost::format("[%3d %3c %3d %3c] %13.8f (%10.6f - %10.6f = %10.6f)") % i %
-                          ' ' % a % ' ' % v % fi % fa % down);
+                      fmt::format("[{:3} {:3} {:3} {:3}] {:13.8f} ({:10.6f} - {:10.6f} = {:10.6f})",
+                                  i, " ", a, " ", v, fi, fa, down);
         }
     } else if (rank == 2) {
         int x = 50 + 4 * 3 + 2 - 11;
@@ -3172,9 +3171,9 @@ void DSRG_MRPT2::print_intruder(const std::string& name,
             double v = datapair.second;
 
             output += "\n" + indent +
-                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                          i % j % a % b % v % fi % fj % fa % fb % down);
+                      fmt::format("[{:3} {:3} {:3} {:3}] {:13.8f} ({:10.6f} + {:10.6f} - {:10.6f} "
+                                  "- {:10.6f} = {:10.6f})",
+                                  i, j, a, b, v, fi, fj, fa, fb, down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");

@@ -27,16 +27,13 @@
  * @END LICENSE
  */
 
-#ifndef _bitarray_hpp_
-#define _bitarray_hpp_
+#pragma once
 
 #include <array>
 
 #include "bitwise_operations.hpp"
 
 namespace forte {
-
-#define PERFORMANCE_OPTIMIZATION 0
 
 /**
  * @brief This class represents an array of N bits. The bits are stored in
@@ -57,7 +54,7 @@ template <size_t N> class BitArray {
     /// the total number of bits (must be a multiple of 64)
     static constexpr size_t nbits = N;
 
-    /// the number of bits in one word (64)
+    /// the number of bits in one word (8 * 8 = 64)
     static constexpr size_t bits_per_word = 8 * sizeof(word_t);
 
     /// this tests that a word has 64 bits
@@ -76,13 +73,16 @@ template <size_t N> class BitArray {
 
     using container_t = std::array<word_t, nwords_>;
 
-    BitArray() {}
+    BitArray() = default;
+
     BitArray(const std::vector<bool>& v) {
-        for (size_t i = 0, maxi = v.size(); i < maxi; i++) {
-            set_bit(i, v[i]);
+        for (size_t i = 0; const auto b : v) {
+            set_bit(i, b);
+            ++i;
         }
     }
 
+    /// @brief A class to access the bits of a BitArray object as if they were a vector of bools
     class Proxy {
       public:
         Proxy(word_t& word, size_t index) : word_(word), mask_(maskbit(index)) {}
@@ -98,7 +98,9 @@ template <size_t N> class BitArray {
 
         // assignment operator for write access
         Proxy& operator=(const Proxy& other) {
-            *this = static_cast<bool>(other);
+            if (this != &other) { // check for self-assignment
+                *this = static_cast<bool>(other);
+            }
             return *this;
         }
 
@@ -110,11 +112,19 @@ template <size_t N> class BitArray {
         }
 
       private:
-        word_t& word_;
-        word_t mask_;
+        word_t& word_; // reference to the word where the bit is stored
+        word_t mask_;  // mask for the bit
     };
 
+    /// @brief Access the bits of a BitArray object as if they were a vector of bools
+    /// @param index the index of the bit to access
+    /// @return a Proxy object that can be used to read or write the bit
     Proxy operator[](size_t index) { return Proxy(getword(index), whichbit(index)); }
+
+    /// @brief Access the bits of a BitArray object as if they were a vector of bools (const
+    /// version)
+    /// @param index the index of the bit to access
+    /// @return the value of the bit
     bool operator[](size_t index) const { return get_bit(index); }
 
     class iterator {
@@ -167,9 +177,6 @@ template <size_t N> class BitArray {
             const auto overage = result.index_ + (n % bits_per_word);
             result.word_it_ += (n + overage) / bits_per_word;
             result.index_ += overage % bits_per_word;
-            // for (difference_type i = 0; i < n; ++i) {
-            //     ++result;
-            // }
             return result;
         }
 
@@ -188,7 +195,7 @@ template <size_t N> class BitArray {
     iterator end() { return iterator(words_.end(), 0); }
 
     // get the value of bit in position pos
-    bool get_bit(size_t pos) const { return this->getword(pos) & maskbit(pos); }
+    bool get_bit(size_t pos) const { return getword(pos) & maskbit(pos); }
 
     /// set bit in position pos to the value val
     void set_bit(size_t pos, bool val) {
@@ -241,12 +248,6 @@ template <size_t N> class BitArray {
             }
             return true;
         }
-        //        // a possibly faster version without if
-        //        bool val(true);
-        //        for (size_t n = 0, bool val = true; n < nwords_; ++n) {
-        //            val = val && (this->words_[n] != lhs.words_[n]);
-        //        }
-        //        return val;
     }
 
     /// not operator
@@ -298,7 +299,7 @@ template <size_t N> class BitArray {
     }
 
     /// Bitwise OR operator (|=)
-    BitArray<N> operator|=(const BitArray<N>& lhs) const {
+    BitArray<N> operator|=(const BitArray<N>& lhs) {
         for (size_t n = 0; n < nwords_; n++) {
             words_[n] |= lhs.words_[n];
         }
@@ -417,20 +418,23 @@ template <size_t N> class BitArray {
         return ~word_t(0);
     }
 
-    // uint64_t find_lowest_one_bit_at_pos(size_t pos) {
-    //     size_t n = whichword(pos); // word where we find pos
-    //     pos = whichbit(pos);       // the position within word n
-    //     for (; n < nwords_; n++) {
-    //         // find a word that is not 0
-    //         if (words_[n] != word_t(0)) {
-    //             // get the lowest set bit after pos
-    //             return ui64_find_lowest_one_bit_at_pos(words_[n], pos) + n * bits_per_word;
-    //         }
-    //         pos = 0; // reset pos after searching once
-    //     }
-    //     // if the BitArray object is zero then return ~0
-    //     return ~word_t(0);
-    // }
+    /// Find all the bits set to one and store their indices in the vector occ
+    /// @param occ a vector of integers where the indices of the bits set to one are stored
+    /// @param n the number of bits set to one
+    /// @param begin the index of the first word to test
+    /// @param end the index of the last word to test (not included)
+    void find_set_bits(std::vector<int>& occ, int& n, size_t begin = 0,
+                       size_t end = nwords_) const {
+        n = 0;
+        uint64_t x;
+        for (; begin < end; ++begin) {
+            x = words_[begin];
+            while (x != 0) {
+                occ[n] = ui64_find_and_clear_lowest_one_bit(x) + begin * bits_per_word;
+                ++n;
+            }
+        }
+    }
 
     /// Implements the operation: (a & b) == b
     bool fast_a_and_b_equal_b(const BitArray<N>& b) const {
@@ -479,6 +483,31 @@ template <size_t N> class BitArray {
             int c = 0;
             for (size_t n = 0; n < nwords_; n++) {
                 c += ui64_bit_count(words_[n] ^ b.words_[n]);
+            }
+            return c;
+        }
+    }
+
+    /// Implements the operation: count(a & b)
+    int fast_a_and_b_count(const BitArray<N>& b) const {
+        if constexpr (N == 64) {
+            return ui64_bit_count(words_[0] & b.words_[0]);
+        } else if constexpr (N == 128) {
+            return ui64_bit_count(words_[0] & b.words_[0]) +
+                   ui64_bit_count(words_[1] & b.words_[1]);
+        } else if constexpr (N == 192) {
+            return ui64_bit_count(words_[0] & b.words_[0]) +
+                   ui64_bit_count(words_[1] & b.words_[1]) +
+                   ui64_bit_count(words_[2] & b.words_[2]);
+        } else if constexpr (N == 256) {
+            return ui64_bit_count(words_[0] & b.words_[0]) +
+                   ui64_bit_count(words_[1] & b.words_[1]) +
+                   ui64_bit_count(words_[2] & b.words_[2]) +
+                   ui64_bit_count(words_[3] & b.words_[3]);
+        } else {
+            int c = 0;
+            for (size_t n = 0; n < nwords_; n++) {
+                c += ui64_bit_count(words_[n] & b.words_[n]);
             }
             return c;
         }
@@ -615,12 +644,6 @@ template <size_t N> class BitArray {
     /// the index of the word where the bit in position pos is found
     static constexpr size_t whichword(size_t pos) noexcept { return pos / bits_per_word; }
 
-    /// the word where bit in position pos is found
-    word_t& getword(size_t pos) { return words_[whichword(pos)]; }
-
-    /// the word where bit in position pos is found (const version)
-    const word_t& getword(size_t pos) const { return words_[whichword(pos)]; }
-
     /// the index of a bit within a word
     static constexpr size_t whichbit(size_t pos) noexcept { return pos % bits_per_word; }
 
@@ -629,15 +652,16 @@ template <size_t N> class BitArray {
         return (static_cast<word_t>(1)) << whichbit(pos);
     }
 
+    /// the word where bit in position pos is found
+    word_t& getword(size_t pos) { return words_[whichword(pos)]; }
+
+    /// the word where bit in position pos is found (const version)
+    const word_t& getword(size_t pos) const { return words_[whichword(pos)]; }
+
     // ==> Private Data <==
 
-#if PERFORMANCE_OPTIMIZATION
-    /// The bits stored as a vector of words (uninitialized)
-    std::array<word_t, nwords_> words_;
-#else
     /// The bits stored as a vector of words (initialized to zero at construction)
     container_t words_ = {};
-#endif
 };
 
 template <size_t N> std::string str(const BitArray<N>& ba, int n = BitArray<N>::nbits) {
@@ -665,5 +689,3 @@ void swap(typename forte::BitArray<N>::Proxy& a, typename forte::BitArray<N>::Pr
     b = temp_a;
 }
 } // namespace std
-
-#endif // _bitarray_hpp_

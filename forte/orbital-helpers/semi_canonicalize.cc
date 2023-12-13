@@ -134,8 +134,8 @@ void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& bui
 
     print_h2("Semicanonicalize Orbitals");
     auto true_or_false = [](bool x) { return x ? "TRUE" : "FALSE"; };
-    outfile->Printf("\n    MIX INACTIVE ORBITALS   ...... %5s", true_or_false(inactive_mix_));
-    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS ...... %5s", true_or_false(active_mix_));
+    outfile->Printf("\n    MIX INACTIVE ORBITALS         %5s", true_or_false(inactive_mix_));
+    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS       %5s", true_or_false(active_mix_));
 
     // build Fock matrix
     if (build_fock) {
@@ -167,12 +167,12 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
         std::string name = pair.first;
         if (name.find("GAS") != std::string::npos) {
             if (pair.second.sum() != 0) {
-                outfile->Printf("\n    %-15s ... %10s", name.c_str(), nat.c_str());
+                outfile->Printf("\n    %-15s              %10s", name.c_str(), nat.c_str());
             }
         } else if (name.find("ACTIVE") != std::string::npos) {
-            outfile->Printf("\n    %-15s ... %10s", name.c_str(), nat.c_str());
+            outfile->Printf("\n    %-15s              %10s", name.c_str(), nat.c_str());
         } else {
-            outfile->Printf("\n    %-15s ... %10s", name.c_str(), "CANONICAL");
+            outfile->Printf("\n    %-15s              %10s", name.c_str(), "CANONICAL");
         }
     }
 
@@ -291,7 +291,7 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
     Ub_t_.copy(Ua_t_);
 }
 
-void SemiCanonical::fill_Uactv(const psi::SharedMatrix& U, ambit::Tensor& Ut) {
+void SemiCanonical::fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
     auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"}
                                   : mo_space_info_->composite_space_names()["ACTIVE"];
     auto& Ut_data = Ut.data();

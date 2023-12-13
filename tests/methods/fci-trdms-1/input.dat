@@ -1,0 +1,64 @@
+import forte
+
+oref_0b1u_dp1 = 0.75448668
+
+molecule {
+0 1
+H
+H 1 R
+R = 2.0
+units bohr 
+}
+
+set {
+  basis sto-3g
+  reference rhf
+  scf_type pk
+  e_convergence 12
+  avg_state [[0,1,1],[5,1,1]] # <-- [(Ag, singlet, 1 state), (B1u,singlet,1 state)]
+
+}
+
+set forte {
+  active_space_solver fci
+  fci_test_rdms true
+  transition_dipoles true
+}
+
+energy('scf')
+energy('forte')
+
+compare_values(0.0, variable("SF 1-RDM ERROR"),12, "SF 1-RDM")
+
+refvals = [
+    ("SINGLET <0AG|DM_X|0AG>"         ,      0.000000000000),
+    ("SINGLET <0AG|DM_Y|0AG>"         ,      0.000000000000),
+    ("SINGLET <0AG|DM_Z|0AG>"         ,     -0.000000000000),
+    ("SINGLET <0AG|QM_XX|0AG>"        ,     -1.388900805473),
+    ("SINGLET <0AG|QM_XY|0AG>"        ,      0.000000000000),
+    ("SINGLET <0AG|QM_XZ|0AG>"        ,      0.000000000000),
+    ("SINGLET <0AG|QM_YY|0AG>"        ,     -1.388900805473),
+    ("SINGLET <0AG|QM_YZ|0AG>"        ,      0.000000000000),
+    ("SINGLET <0AG|QM_ZZ|0AG>"        ,     -0.950051546021),
+    ("SINGLET <0B1U|DM_X|0B1U>"       ,      0.000000000000),
+    ("SINGLET <0B1U|DM_Y|0B1U>"       ,      0.000000000000),
+    ("SINGLET <0B1U|DM_Z|0B1U>"       ,      0.000000000000),
+    ("SINGLET <0B1U|QM_XX|0B1U>"      ,     -1.209268224995),
+    ("SINGLET <0B1U|QM_XY|0B1U>"      ,      0.000000000000),
+    ("SINGLET <0B1U|QM_XZ|0B1U>"      ,      0.000000000000),
+    ("SINGLET <0B1U|QM_YY|0B1U>"      ,     -1.209268224995),
+    ("SINGLET <0B1U|QM_YZ|0B1U>"      ,      0.000000000000),
+    ("SINGLET <0B1U|QM_ZZ|0B1U>"      ,     -1.647765408484),
+    ("SINGLET |<0AG|DM|0AG>|"         ,      0.000000000000),
+    ("SINGLET |<0B1U|DM|0B1U>|"       ,      0.000000000000),
+    ("TRANS SINGLET <0AG|DM_X|0B1U>"  ,      0.000000000000),
+    ("TRANS SINGLET <0AG|DM_Y|0B1U>"  ,      0.000000000000),
+    ("TRANS SINGLET S_MAX 0AG -> 0B1U",      1.387777706274),
+    ("TRANS SINGLET |<0AG|DM|0B1U>|"  ,      1.258484309694),
+    ("OSC. SINGLET 0AG -> 0B1U"       ,      0.754486683665),
+]
+
+for label, val in refvals:
+    compare_values(val, variable(label),10,label)
+
+compare_values(1.258484309694,abs(variable("TRANS SINGLET <0AG|DM_Z|0B1U>")),10, "TRANS SINGLET |<0AG|DM_Z|0B1U>|")

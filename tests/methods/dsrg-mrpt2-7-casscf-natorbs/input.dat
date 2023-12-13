@@ -32,7 +32,7 @@ set {
 }
 
 set forte {
-  active_space_solver  cas
+  active_space_solver  detci
   correlation_solver   dsrg-mrpt2
   frozen_docc        [1,0,0,0,0,1,0,0]
   frozen_uocc        [0,0,0,0,0,0,0,0]
@@ -43,7 +43,7 @@ set forte {
   dsrg_s             0.5
   relax_ref          once
   e_convergence      12
-  r_convergence      9
+  r_convergence      8
 }
 
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)

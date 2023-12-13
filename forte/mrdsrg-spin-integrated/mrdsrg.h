@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mrdsrg_h_
-#define _mrdsrg_h_
+#pragma once
 
 #include "master_mrdsrg.h"
 
@@ -66,7 +65,8 @@ class MRDSRG : public MASTER_DSRG {
     double compute_energy_sa();
 
     //    /// Set CASCI eigen values and eigen vectors for state averaging
-    //    void set_eigens(std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens) {
+    //    void set_eigens(std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>,
+    //    double>>> eigens) {
     //        eigens_ = eigens;
     //    }
 
@@ -108,7 +108,7 @@ class MRDSRG : public MASTER_DSRG {
     void dump_amps_to_disk() override;
 
     //    /// CASCI eigen values and eigen vectors for state averaging
-    //    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
+    //    std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>> eigens_;
     //    /// Determinants in the model space
     //    std::vector<std::vector<forte::Determinant>> p_spaces_;
 
@@ -408,10 +408,10 @@ class MRDSRG : public MASTER_DSRG {
     void print_cumulant_summary();
 };
 
-/// The type of container used to hold the state vector used by boost::odeint
+/// The type of container used to hold the state vector used by odeint
 using odeint_state_type = std::vector<double>;
 
-/// The functor used for boost ODE integrator in MR-SRG.
+/// The functor used for ODE integrator in MR-SRG.
 class MRSRG_ODEInt {
   public:
     MRSRG_ODEInt(MRDSRG& mrdsrg_obj) : mrdsrg_obj_(mrdsrg_obj) {}
@@ -421,7 +421,7 @@ class MRSRG_ODEInt {
     MRDSRG& mrdsrg_obj_;
 };
 
-/// The functor used for boost ODE integrator in SRG-MRPT2.
+/// The functor used for ODE integrator in SRG-MRPT2.
 class SRGPT2_ODEInt {
   public:
     SRGPT2_ODEInt(MRDSRG& mrdsrg_obj, std::string Hzero, bool relax_ref)
@@ -446,5 +446,3 @@ class MRSRG_Print {
     std::vector<double> energies_;
 };
 } // namespace forte
-
-#endif // _mrdsrg_h_

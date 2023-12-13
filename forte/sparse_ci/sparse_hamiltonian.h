@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_hamiltonian_h_
-#define _sparse_hamiltonian_h_
+#pragma once
 
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
@@ -88,5 +87,3 @@ class SparseHamiltonian {
 };
 
 } // namespace forte
-
-#endif // _sparse_hamiltonian_h_

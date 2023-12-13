@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sci_h_
-#define _sci_h_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -218,5 +217,3 @@ class SelectedCIMethod {
     ambit::Tensor trdm_bbb_;
 };
 } // namespace forte
-
-#endif // _sci_h_

@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_exp_h_
-#define _sparse_exp_h_
+#pragma once
 
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
@@ -96,5 +95,3 @@ class SparseExp {
 };
 
 } // namespace forte
-
-#endif // _sparse_exp_h_

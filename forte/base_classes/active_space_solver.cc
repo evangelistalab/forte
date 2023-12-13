@@ -30,6 +30,9 @@
 #include <numeric>
 #include <tuple>
 
+#include "ambit/blocked_tensor.h"
+#include "ambit/tensor.h"
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
@@ -54,14 +57,14 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
                                      const std::map<StateInfo, size_t>& state_nroots_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                     std::shared_ptr<ForteOptions> options)
+                                     std::shared_ptr<ForteOptions> options,
+                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
-      mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
+      mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
-    print_options();
+    // print_options();
 
-    print_ = options->get_int("PRINT");
+    print_ = int_to_print_level(options->get_int("PRINT"));
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
@@ -76,34 +79,76 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         Ua_data[i * nactv + i] = 1.0;
         Ub_data[i * nactv + i] = 1.0;
     }
+}
 
-    // initialize multipole integrals
-    if (as_ints_->ints()->integral_type() != Custom) {
-        auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
-        as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+void ActiveSpaceSolver::set_print(PrintLevel level) { print_ = level; }
+
+void ActiveSpaceSolver::set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
+
+void ActiveSpaceSolver::set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
+
+void ActiveSpaceSolver::set_maxiter(int maxiter) { maxiter_ = maxiter; }
+
+void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    as_ints_ = as_ints;
+    for (const auto& [state, method] : state_method_map_) {
+        method->set_active_space_integrals(as_ints_);
     }
 }
 
-void ActiveSpaceSolver::set_print(int level) { print_ = level; }
+void ActiveSpaceSolver::set_active_multipole_integrals(
+    std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
+    as_mp_ints_ = as_mp_ints;
+}
+
+const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::state_energies_map() const {
+    return state_energies_map_;
+}
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
+    // check if the integrals are available
+    if (not as_ints_) {
+        throw std::runtime_error("ActiveSpaceSolver: ActiveSpaceIntegrals are not available.");
+    }
+
+    // initialize multipole integrals
+    if (as_ints_->ints()->integral_type() != Custom) {
+        if (not as_mp_ints_) {
+            auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
+            as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+        }
+    }
+
     state_energies_map_.clear();
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
-        // compute the energy of state and save it
-        std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
-            method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+
+        // so far only FCI and DETCI supports restarting from a previous wavefunction
+        if ((method_ == "FCI") or (method_ == "DETCI")) {
+            auto [it, inserted] = state_method_map_.try_emplace(state);
+            if (inserted) {
+                it->second = make_active_space_method(method_, state, nroot, scf_info_,
+                                                      mo_space_info_, as_ints_, options_);
+            }
+            auto method = it->second;
+        } else {
+            state_method_map_[state] = make_active_space_method(method_, state, nroot, scf_info_,
+                                                                mo_space_info_, as_ints_, options_);
+        }
+        auto method = state_method_map_[state];
+        // set the convergence criteria
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
-        state_method_map_[state] = method;
+        method->set_maxiter(maxiter_);
 
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();
             method->set_read_wfn_guess(read_initial_guess_);
         }
 
+        // compute the energy of state and save it
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
@@ -144,11 +189,28 @@ void ActiveSpaceSolver::validate_spin(const std::vector<double>& spin2, const St
 }
 
 void ActiveSpaceSolver::print_energies() {
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
+
+    for (const auto& state_nroot : state_nroots_map_) {
+        const auto& state = state_nroot.first;
+        int irrep = state.irrep();
+        int multi = state.multiplicity();
+        int nstates = state_nroot.second;
+        for (int i = 0; i < nstates; ++i) {
+            double energy = state_energies_map_[state][i];
+            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
+                         irrep_symbol[irrep];
+            push_to_psi4_env_globals(energy, upper_string(label));
+        }
+    }
+
+    if (print_ < PrintLevel::Brief)
+        return;
+
     print_h2("Energy Summary");
     psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy      <S^2>");
     std::string dash(56, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
-    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -167,12 +229,7 @@ void ActiveSpaceSolver::print_energies() {
                 psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f       n/a", multi,
                                      twice_ms, irrep_symbol[irrep].c_str(), i, energy);
             }
-
-            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
-                         irrep_symbol[irrep];
-            push_to_psi4_env_globals(energy, upper_string(label));
         }
-
         psi::outfile->Printf("\n    %s", dash.c_str());
     }
 }
@@ -289,6 +346,25 @@ std::vector<std::shared_ptr<RDMs>> ActiveSpaceSolver::rdms(
     return refs;
 }
 
+void ActiveSpaceSolver::generalized_rdms(const StateInfo& state, size_t root,
+                                         const std::vector<double>& X, ambit::BlockedTensor& result,
+                                         bool c_right, int rdm_level,
+                                         std::vector<std::string> spin) {
+    state_method_map_[state]->generalized_rdms(root, X, result, c_right, rdm_level, spin);
+}
+
+void ActiveSpaceSolver::add_sigma_kbody(const StateInfo& state, size_t root,
+                                        ambit::BlockedTensor& h,
+                                        const std::map<std::string, double>& block_label_to_factor,
+                                        std::vector<double>& sigma) {
+    state_method_map_[state]->add_sigma_kbody(root, h, block_label_to_factor, sigma);
+}
+
+void ActiveSpaceSolver::generalized_sigma(const StateInfo& state, std::shared_ptr<psi::Vector> x,
+                                          std::shared_ptr<psi::Vector> sigma) {
+    state_method_map_[state]->generalized_sigma(x, sigma);
+}
+
 void ActiveSpaceSolver::print_options() {
     print_h2("Summary of Active Space Solver Input");
 
@@ -321,9 +397,9 @@ void ActiveSpaceSolver::print_options() {
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
+    std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     return std::make_shared<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
-                                               as_ints, options);
+                                               options, as_ints);
 }
 
 std::map<StateInfo, size_t>
@@ -573,8 +649,8 @@ void ActiveSpaceSolver::dump_wave_function() {
     }
 }
 
-std::map<StateInfo, psi::SharedMatrix> ActiveSpaceSolver::state_ci_wfn_map() const {
-    std::map<StateInfo, psi::SharedMatrix> out;
+std::map<StateInfo, std::shared_ptr<psi::Matrix>> ActiveSpaceSolver::state_ci_wfn_map() const {
+    std::map<StateInfo, std::shared_ptr<psi::Matrix>> out;
     for (const auto& pair : state_method_map_) {
         out[pair.first] = pair.second->ci_wave_functions();
     }
@@ -673,6 +749,20 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
             std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
     }
     return average_energy;
+}
+
+std::map<StateInfo, size_t> ActiveSpaceSolver::state_space_size_map() const {
+    std::map<StateInfo, size_t> out;
+    for (const auto& state_method : state_method_map_) {
+        const auto& state = state_method.first;
+        const auto& method = state_method.second;
+        out[state] = method->space_size();
+    }
+    return out;
+}
+
+std::vector<ambit::Tensor> ActiveSpaceSolver::eigenvectors(const StateInfo& state) const {
+    return state_method_map_.at(state)->eigenvectors();
 }
 
 } // namespace forte

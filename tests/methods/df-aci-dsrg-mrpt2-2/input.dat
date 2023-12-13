@@ -25,7 +25,7 @@ set globals{
 
 set forte{
   job_type                mcscf_two_step
-  active_space_solver     cas
+  active_space_solver     detci
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
   casscf_e_convergence    12

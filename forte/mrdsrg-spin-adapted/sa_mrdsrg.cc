@@ -110,22 +110,25 @@ void SA_MRDSRG::startup() {
 
 void SA_MRDSRG::print_options() {
     // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info_int{
-        {"Max number of iterations", maxiter_},
-        {"Max nested commutators", rsc_ncomm_},
-        {"DIIS start", diis_start_},
-        {"Min DIIS vectors", diis_min_vec_},
-        {"Max DIIS vectors", diis_max_vec_},
-        {"DIIS extrapolating freq", diis_freq_},
-        {"Number of amplitudes for printing", ntamp_}};
-
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Flow parameter", s_},
-        {"Energy convergence threshold", e_conv_},
-        {"Residual convergence threshold", r_conv_},
-        {"Recursive single commutator threshold", rsc_conv_},
-        {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"Intruder amplitudes threshold", intruder_tamp_}};
+    table_printer printer;
+    printer.add_int_data({{"Max number of iterations", maxiter_},
+                          {"Max nested commutators", rsc_ncomm_},
+                          {"DIIS start", diis_start_},
+                          {"Min DIIS vectors", diis_min_vec_},
+                          {"Max DIIS vectors", diis_max_vec_},
+                          {"DIIS extrapolating freq", diis_freq_},
+                          {"Number of amplitudes for printing", ntamp_}});
+    printer.add_double_data({{"Flow parameter", s_},
+                             {"Energy convergence threshold", e_conv_},
+                             {"Residual convergence threshold", r_conv_},
+                             {"Recursive single commutator threshold", rsc_conv_},
+                             {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+                             {"Intruder amplitudes threshold", intruder_tamp_}});
+    printer.add_bool_data({{"Restart amplitudes", restart_amps_},
+                           {"Sequential DSRG transformation", sequential_Hbar_},
+                           {"Omit blocks of >= 3 virtual indices", nivo_},
+                           {"Read amplitudes from current dir", read_amps_cwd_},
+                           {"Write amplitudes to current dir", dump_amps_cwd_}});
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Correlation level", corrlv_string_},
@@ -141,16 +144,10 @@ void SA_MRDSRG::print_options() {
         calculation_info_string.emplace_back("Internal amplitudes selection", internal_amp_select_);
     }
 
-    std::vector<std::pair<std::string, bool>> calculation_info_bool{
-        {"Restart amplitudes", restart_amps_},
-        {"Sequential DSRG transformation", sequential_Hbar_},
-        {"Omit blocks of >= 3 virtual indices", nivo_},
-        {"Read amplitudes from current dir", read_amps_cwd_},
-        {"Write amplitudes to current dir", dump_amps_cwd_}};
-
     // print information
-    print_selected_options("Computation Information", calculation_info_string,
-                           calculation_info_bool, calculation_info_double, calculation_info_int);
+    printer.add_string_data(calculation_info_string);
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 void SA_MRDSRG::check_memory() {

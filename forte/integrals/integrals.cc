@@ -144,9 +144,17 @@ void ForteIntegrals::allocate() {
     }
 }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
+std::shared_ptr<const psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+std::shared_ptr<const psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+
+bool ForteIntegrals::update_ints_if_needed() {
+    if (ints_consistent_) {
+        return false;
+    }
+    update_orbitals(Ca_, Cb_, true);
+    return true;
+}
 
 double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 
@@ -213,7 +221,8 @@ ambit::Tensor ForteIntegrals::oei_b_block(const std::vector<size_t>& p,
     return t;
 }
 
-void ForteIntegrals::set_fock_matrix(psi::SharedMatrix fa, psi::SharedMatrix fb) {
+void ForteIntegrals::set_fock_matrix(std::shared_ptr<psi::Matrix> fa,
+                                     std::shared_ptr<psi::Matrix> fb) {
     fock_a_ = fa;
     fock_b_ = fb;
 }
@@ -385,7 +394,7 @@ bool ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
 
 bool ForteIntegrals::test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
                                                    std::shared_ptr<psi::Matrix> B) const {
-    std::shared_ptr<psi::Matrix> A_minus_B = A->clone();
+    auto A_minus_B = A->clone();
     A_minus_B->subtract(B);
     return A_minus_B->absmax() < 1.0e-7;
 }
@@ -527,14 +536,14 @@ void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
 
 void ForteIntegrals::build_multipole_ints_ao() { _undefined_function("build_multipole_ints_ao"); }
 
-std::vector<psi::SharedMatrix> ForteIntegrals::mo_dipole_ints() const {
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_dipole_ints() const {
     _undefined_function("mo_dipole_ints");
-    return std::vector<psi::SharedMatrix>();
+    return std::vector<std::shared_ptr<psi::Matrix>>();
 }
 
-std::vector<psi::SharedMatrix> ForteIntegrals::mo_quadrupole_ints() const {
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_quadrupole_ints() const {
     _undefined_function("mo_quadrupole_ints");
-    return std::vector<psi::SharedMatrix>();
+    return std::vector<std::shared_ptr<psi::Matrix>>();
 }
 
 void ForteIntegrals::_undefined_function(const std::string& method) const {
