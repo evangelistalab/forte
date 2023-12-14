@@ -261,11 +261,6 @@ double MCSCF_2STEP::compute_energy() {
 
         std::vector<CASSCF_HISTORY> history;
 
-        // std::string title = "         Energy CI (  Delta E  )"
-        //                     "         Energy Opt. (  Delta E  )"
-        //                     "  E_OPT - E_CI   Orbital RMS  Micro";
-        // psi::outfile->Printf("\n    %s", title.c_str());
-
         print_h2("MCSCF Iterations");
         std::string dash1 = std::string(30, '-');
         std::string dash2 = std::string(88, '-');
@@ -312,12 +307,8 @@ double MCSCF_2STEP::compute_energy() {
                     title += "  DIIS";
                 psi::outfile->Printf("\n    %s", title.c_str());
             }
-            psi::outfile->Printf("\n    %4d %20.12f %11.4e%20.12f %11.4e  %10.4e %4d/%c", macro + 1,
+            psi::outfile->Printf("\n    %4d %20.12f %11.4e%20.12f %11.4e  %10.4e %4d/%c", macro,
                                  e_c, de_c, e_o, de_o, g_rms, n_micro, o_conv);
-
-            // psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e
-            // %4d/%c",
-            //                      e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
 
             // test convergence
             if (macro == 1 and lbfgs.converged() and std::fabs(de) < e_conv_) {
