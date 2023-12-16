@@ -58,17 +58,20 @@ jobs:
     - name: Compile forte
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
+        export AMBITPATH=$HOME/bin/ambit
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
         cd $HOME/work/forte/forte
-        cmake_psi4=$(psi4 --plugin-compile)
-        $cmake_psi4 --debug-output \
-        -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
-        -DENABLE_ForteTests=TRUE \        
-        make -j2        
+        python setup.py develop
+        pip list
+        # cmake_psi4=$(psi4 --plugin-compile)
+        # $cmake_psi4 --debug-output \
+        # -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
+        # -DENABLE_ForteTests=TRUE \        
+        # make -j2        
 
     - name: Run forte tests
       run: |
-        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/work/forte
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py --failed_dump --bw
