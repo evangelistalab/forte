@@ -1,0 +1,21 @@
+name: forte
+
+dependencies:
+    - pip>=19.0
+    - pybind11
+    - cxx-compiler
+    - mkl
+    - cmake
+    - numpy
+    - scipy
+    - eigen
+    - pint
+    - pydantic
+    - pyyaml
+    - py-cpuinfo
+    - hdf5
+    - yaml
+    - pytest
+    - conda-forge::lcov
+    - conda-forge::libint
+    #-psi4::libint2  # high AM
