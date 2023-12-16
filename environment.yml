@@ -4,7 +4,6 @@ dependencies:
     - pip>=19.0
     - pybind11
     - cxx-compiler
-    - libgcc
     - mkl
     - cmake
     - numpy
