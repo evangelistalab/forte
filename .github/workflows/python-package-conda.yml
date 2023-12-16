@@ -63,8 +63,10 @@ jobs:
         cd $HOME/work/forte/forte
         python setup.py develop
         pip list
-        cd $HOME/work/forte/forte/tests/methods
-        python run_forte_tests.py --failed_dump --bw
+        cd $HOME/work/forte/forte/tests/pytest
+        pytest
+        # cd $HOME/work/forte/forte/tests/methods
+        # python run_forte_tests.py --failed_dump --bw
         # cmake_psi4=$(psi4 --plugin-compile)
         # $cmake_psi4 --debug-output \
         # -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
