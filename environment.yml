@@ -9,6 +9,7 @@ dependencies:
     - numpy
     - scipy
     - eigen
+    - boost
     - pint
     - pydantic
     - pyyaml
