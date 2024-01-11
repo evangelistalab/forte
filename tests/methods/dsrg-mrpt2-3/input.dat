@@ -1,5 +1,3 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 #refrhf       = -2.18862199153970 # cc-pVTZ
@@ -20,7 +18,6 @@ molecule H4{
 }
 
 set globals{
-#   basis                   cc-pvtz
    basis                   cc-pvdz
    reference               rhf
    scf_type                pk
