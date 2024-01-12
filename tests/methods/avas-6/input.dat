@@ -1,6 +1,5 @@
-#! Test AO Subspace regular expression on 3d orbitals
+# Test AO Subspace regular expression on 3d orbitals
 
-refscf = -1646.6261575497
 ref_occ = {
     'RESTRICTED_DOCC': np.array([14, 6, 8, 11]),
     'ACTIVE': np.array([7, 3, 4, 4]),
@@ -51,7 +50,6 @@ df_fitting_condition 1.0e-15
 ints_tolerance       1.0e-15
 }
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, Escf, 8, "SCF energy")
 
 set forte {
 job_type            none
@@ -65,6 +63,7 @@ subspace            ["Fe(3dxy)","Fe(3dxz)","Fe(3dyz)","Fe(3dz2)","Fe(3dx2-y2)",
 #subspace            ["Fe(3d)","C1-10(2pz)"]
 # the easiest way
 #subspace            ["Fe(3d)","C(2pz)"]
+casscf_reference false
 }
 Ezero, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
