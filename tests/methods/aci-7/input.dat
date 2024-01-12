@@ -27,6 +27,7 @@ set {
 
 set forte {
   active_space_solver aci
+  charge 0
   multiplicity 1
   frozen_docc [1,0,0,0,0,1,0,0]
   sigma 0.08
@@ -36,14 +37,10 @@ set forte {
   nroot 3
   orbital_type mp2no
   aci_average_offset 0
-  charge 0
   diag_algorithm dynamic
+  casscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

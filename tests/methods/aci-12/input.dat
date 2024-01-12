@@ -38,12 +38,10 @@ set forte {
   aci_average_offset 0
   diag_algorithm sparse
   active_ref_type hf
+  casscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #TEST
 compare_values(refaci_root0, variable("ENERGY ROOT 0 1AG"),10, "ACI energy root 0") #TEST

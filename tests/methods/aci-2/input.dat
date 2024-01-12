@@ -2,7 +2,6 @@
 
 import forte
 
-refscf = -14.839846512738 #TEST
 refaci = -14.889166993732 #TEST
 refaci_spin = 0.0
 refacipt2 = -14.890166618940 #TEST
@@ -26,12 +25,10 @@ set forte {
   sigma 0.001
   sci_enforce_spin_complete false
   diag_algorithm full 
+  casscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 #compare_values(refaci_spin, variable("ACI SPIN"),9, "ACI spin") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

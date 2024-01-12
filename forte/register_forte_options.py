@@ -1038,7 +1038,7 @@ def register_casscf_options(options):
         "= n: do CI every n macro iteration",
     )
 
-    options.add_bool("CASSCF_REFERENCE", False, "Run a FCI followed by CASSCF computation?")
+    options.add_bool("CASSCF_REFERENCE", True, "Run a CASSCF computation?")
 
     options.add_int(
         "CASSCF_MULTIPLICITY",

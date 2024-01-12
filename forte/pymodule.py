@@ -145,6 +145,9 @@ def energy_forte(name, **kwargs):
     # my_proc_n_nodes = forte.startup()
     # my_proc, n_nodes = my_proc_n_nodes
 
+    # grab reference Wavefunction and Molecule from kwargs
+    kwargs = p4util.kwargs_lower(kwargs)
+
     # Start timer
     start_pre_ints = time.time()
 
@@ -170,22 +173,27 @@ def energy_forte(name, **kwargs):
 
     energy = 0.0
 
+    # Run an MCSCF computation
+    if data.options.get_str("INT_TYPE") == "FCIDUMP":
+        psi4.core.print_out("\n  Skipping MCSCF computation for FCIDUMP input\n")
+    elif data.options.get_bool("CASSCF_REFERENCE") is False:
+        psi4.core.print_out("\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
+    else:
+        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
+        energy = data.results.value("energy")
+
     # Run a method
     if job_type == "NONE":
         psi4.core.set_scalar_variable("CURRENT ENERGY", energy)
         return data.psi_wfn
 
-    if job_type == "CASSCF":
-        # raise Exception("Forte: CASSCF_REFERENCE is not supported")
-        if data.options.get_str("INT_TYPE") == "FCIDUMP":
-            raise Exception("Forte: the CASSCF code cannot use integrals read from a FCIDUMP file")
+    # if job_type == "CASSCF":
+    #     raise Exception("Forte: CASSCF_REFERENCE is not supported")
+    #     if data.options.get_str("INT_TYPE") == "FCIDUMP":
+    #         raise Exception("Forte: the CASSCF code cannot use integrals read from a FCIDUMP file")
 
-        casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
-        energy = casscf.compute_energy()
-
-    if data.options.get_bool("CASSCF_REFERENCE") or job_type == "MCSCF_TWO_STEP":
-        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
-        energy = data.results.value("energy")
+    #     casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
+    #     energy = casscf.compute_energy()
 
     if job_type == "TDCI":
         data = TDACI().run(data)

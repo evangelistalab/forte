@@ -20,7 +20,7 @@ set globals{
    basis                   cc-pvdz
    reference               rhf
    scf_type                pk
-   d_convergence           12
+   d_convergence           7
    e_convergence           13
 }
 

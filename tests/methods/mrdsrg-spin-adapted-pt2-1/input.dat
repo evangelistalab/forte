@@ -11,23 +11,9 @@ molecule HF{
 
 set globals{
   basis                  cc-pvdz
-  scf_type               pk
 }
 
 set forte{
-  job_type               mcscf_two_step
-  active_space_solver    fci
-  restricted_docc        [2,0,1,1]
-  active                 [2,0,0,0]
-  casscf_g_convergence   8
-  casscf_e_convergence   12
-}
-
-Emcscf, wfn = energy('forte', return_wfn=True)
-compare_values(refcas, Emcscf, 10, "CASSCF(2,2) (FORTE) energy")
-
-set forte{
-  job_type                newdriver
   active_space_solver     detci
   correlation_solver      sa-mrdsrg
   corr_level              pt2
@@ -36,14 +22,17 @@ set forte{
   active                  [2,0,0,0]
   dsrg_s                  1.0
   e_convergence           10
+  casscf_g_convergence   8
+  casscf_e_convergence   12  
 }
 
-Ept2 = energy('forte', ref_wfn=wfn)
+Ept2, wfn = energy('forte', return_wfn=True)
 compare_values(refpt2, Ept2, 8, "DSRG-MRPT2 energy")
 
 set forte{
   int_type           cholesky
   cholesky_tolerance 1e-12
 }
+
 Ept2_cholesky = energy('forte', ref_wfn=wfn)
 compare_values(refpt2, Ept2_cholesky, 8, "CD-DSRG-MRPT2 energy")

@@ -48,7 +48,7 @@ set forte{
   avg_state           [[0,1,3], [3,1,1]]
   transition_dipoles  true
 }
-energy('forte', ref_wfn=wfn)
+energy('forte', ref_wfn=wfn,optimize_mos=False)
 
 psi4.core.print_variables()
 compare_values(r_0ag, variable("ENERGY ROOT 0 1AG"), 8, "CASCI(4,4) singlet Ag energy 0")

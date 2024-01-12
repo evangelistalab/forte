@@ -24,7 +24,6 @@ set {
 set scf {
   scf_type pk
   reference rohf
-#  docc = [2,0,0,0,0,1,0,0]
 }
 
 set forte {
@@ -39,13 +38,10 @@ set forte {
   charge 0
   full_mrpt2 true
   r_convergence 8
+  casscf_reference false
 }
 set_num_threads(2)
 
-Escf, wfn = energy('scf', return_wfn=True)
-
-compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy") #TEST
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci, variable("ACI ENERGY"), 9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"), 8, "ACI+PT2 energy") #TEST

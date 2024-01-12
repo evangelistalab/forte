@@ -48,13 +48,10 @@ set forte {
   aci_add_aimed_degenerate false
   sci_project_out_spin_contaminants false
   diag_algorithm full
-#  aci_quiet_mode true
+  casscf_reference      false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, Escf, 10, "SCF Energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),10,"ACI energy")
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
 
