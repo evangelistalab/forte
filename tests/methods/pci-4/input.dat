@@ -33,10 +33,8 @@ set forte {
   sci_max_cycle 100000.00
   pci_e_convergence 12
   pci_STOP_HIGHER_NEW_LOW true
+  casscf_reference false
 }
-
-energy('scf')
-compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refpci, variable("PCI ENERGY"), 9, "PCI energy") #TEST

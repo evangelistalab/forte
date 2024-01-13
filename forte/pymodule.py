@@ -174,12 +174,12 @@ def energy_forte(name, **kwargs):
     energy = 0.0
 
     # Run an MCSCF computation
-    if data.options.get_str("INT_TYPE") == "FCIDUMP":
-        psi4.core.print_out("\n  Skipping MCSCF computation for FCIDUMP input\n")
-    elif data.options.get_bool("CASSCF_REFERENCE") is False:
+    # if data.options.get_str("INT_TYPE") == "FCIDUMP":
+    #     psi4.core.print_out("\n  Skipping MCSCF computation for FCIDUMP input\n")
+    if data.options.get_bool("CASSCF_REFERENCE") is False:
         psi4.core.print_out("\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
     else:
-        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
+        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER"), data.options.get_bool("CASSCF_FREEZE_CORE")).run(data)
         energy = data.results.value("energy")
 
     # Run a method

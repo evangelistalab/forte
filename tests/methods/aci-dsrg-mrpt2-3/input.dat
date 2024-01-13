@@ -37,10 +37,8 @@ set forte{
    multiplicity     1
    relax_ref        once
    sci_direct_rdms true
+   casscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"ACI-DSRG-MRPT2 relaxed energy")

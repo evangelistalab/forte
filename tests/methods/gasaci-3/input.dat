@@ -36,6 +36,7 @@ set forte {
   GAS2 [5,0,2,2]
   GAS1MAX [2]
   GAS1MIN [0]
+  casscf_reference false
 }
 
 escf ,wfn = energy('scf',return_wfn = True)
@@ -49,6 +50,7 @@ set forte {
   GAS1MIN [0]
   root_sym 2
   multiplicity 3
+  casscf_reference false
 }
 
 energy('forte',ref_wfn = wfn)

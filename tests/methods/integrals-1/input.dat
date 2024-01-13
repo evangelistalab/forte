@@ -26,6 +26,7 @@ set forte {
   restricted_docc  [2 ,0 ,0 ,0]
   active           [2 ,2 ,2 ,2]
   e_convergence 12
+  casscf_reference false
 }
 
 energy('forte')

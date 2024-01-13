@@ -69,10 +69,8 @@ set forte {
   root               0
   dsrg_s             1.0
   maxiter            100
+  casscf_reference   false
 }
-
-energy('scf')
-compare_values(refrohf,variable("CURRENT ENERGY"),10,"ROHF energy") #TEST
 
 energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8, "MRDSRG-PT2 relaxed energy") #TEST

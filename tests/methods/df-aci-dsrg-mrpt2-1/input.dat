@@ -48,6 +48,7 @@ set forte {
    root_sym             0
    nroot                1
    multiplicity         1
+   casscf_reference     false
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)

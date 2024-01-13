@@ -1040,6 +1040,8 @@ def register_casscf_options(options):
 
     options.add_bool("CASSCF_REFERENCE", True, "Run a CASSCF computation?")
 
+    options.add_bool("CASSCF_FREEZE_CORE", False, "Freeze the core orbitals in a CASSCF computation?")
+
     options.add_int(
         "CASSCF_MULTIPLICITY",
         0,

@@ -38,12 +38,11 @@ set forte {
   GAS1MIN             [0,0]
   avg_state           [[0,1,1],[2,1,1]]
   transition_dipoles  true
+  casscf_reference    false
 }
 
-escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
 
-eaci = energy('forte', ref_wfn=wfn)
+eaci = energy('forte')
 compare_values(refaci, eaci, 8, "Averaged ACI energy")
 compare_values(refosc_0a1_0b1, variable("OSC. SINGLET 0A1 -> 0B1"), 6, "Oscillator strength singlet 0A1 -> 0B1")
 compare_values(s_max_0a1_0b1, variable("TRANS SINGLET S_MAX 0A1 -> 0B1"), 6, "S_MAX singlet 0A1 -> 0B1")

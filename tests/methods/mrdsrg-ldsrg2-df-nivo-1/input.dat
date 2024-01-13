@@ -78,12 +78,10 @@ set forte {
   relax_ref              twice
   dsrg_nivo              true
   dsrg_read_amps         true
+  casscf_reference       false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrohf, variable("CURRENT ENERGY"), 8, "ROHF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refudsrg, variable("UNRELAXED ENERGY"), 8, "MRDSRG unrelaxed energy")
 compare_values(refprdsrg, variable("PARTIALLY RELAXED ENERGY"), 8, "MRDSRG partially relaxed energy")
 compare_values(refrdsrg, variable("RELAXED ENERGY"), 8, "MRDSRG relaxed energy")

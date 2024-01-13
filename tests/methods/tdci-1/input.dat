@@ -33,6 +33,7 @@ set forte {
   TDCI_HOLE 0
   TDCI_OCC_ORB [0]
   tdci_test_occ true
+  casscf_reference false
 }                                        
                                          
 Escf, scf_wfn = energy('scf', return_wfn=True)

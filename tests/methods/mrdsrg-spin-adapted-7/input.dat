@@ -88,6 +88,7 @@ set forte {
   transition_dipoles        true
   dsrg_max_dipole_level     1
   dsrg_max_quadrupole_level 1
+  casscf_reference false
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 

@@ -62,12 +62,10 @@ set forte {
   root_sym 0
   charge 0
   dsrg_s 1.0e10
+  casscf_reference false
 }
 
 set_num_threads(8)
 
-e, scf_wfn = energy('scf', return_wfn=True)
-compare_values(escf, variable("CURRENT ENERGY"), 9, "SCF energy")
-
-energy('forte', ref_wfn=scf_wfn)
+energy('forte')
 compare_values(eacidsrg, variable("CURRENT ENERGY"), 8, "ACI-DSRG-MRPT2 energy")

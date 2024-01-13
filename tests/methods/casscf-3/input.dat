@@ -26,6 +26,7 @@ set {
 casscf_psi4 = energy('casscf')
 
 set scf_type direct
+
 set forte {
     job_type              mcscf_two_step
     active_space_solver   fci
@@ -34,13 +35,12 @@ set forte {
     int_type              conventional
     CASSCF_E_CONVERGENCE  1e-10
     CASSCF_G_CONVERGENCE  1e-6
-    CASSCF_MAXITER     25
+    CASSCF_MAXITER        25
     print                 0
     CASSCF_DO_DIIS        true
+    CASSCF_FREEZE_CORE    true
 }
 
-
-#mints()
 casscf_forte = energy('forte')
 
 compare_values(ref_my_casscf, casscf_forte, 6, 'CASSCF Energy')  #TEST

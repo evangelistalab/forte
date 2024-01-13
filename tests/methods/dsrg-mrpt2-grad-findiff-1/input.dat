@@ -1,5 +1,3 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 ref_grad = psi4.Matrix.from_list([
@@ -35,6 +33,7 @@ set forte{
   nroot                    1
   dsrg_s                   0.5
   active_space_solver      fci
+  casscf_reference         false
 }
 
 grad = gradient('forte',dertype=0)

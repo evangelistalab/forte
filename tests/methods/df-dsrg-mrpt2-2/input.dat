@@ -43,6 +43,7 @@ set forte{
    int_type               df
    active_space_solver    fci
    correlation_solver     three-dsrg-mrpt2
+   casscf_reference       false
 }
 
 energy('forte', ref_wfn=wfn)

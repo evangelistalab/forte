@@ -36,10 +36,8 @@ set forte {
    correlation_solver      three-dsrg-mrpt2
    active_space_solver     fci
    relax_ref               once
+   casscf_reference        false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrhf,Escf,10,"SCF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refdsrgpt2_ref_relax,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")

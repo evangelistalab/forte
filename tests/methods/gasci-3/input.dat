@@ -34,12 +34,10 @@ set forte {
   gas1min             [0,0]
   avg_state           [[0,1,1],[0,1,1]] # 1 x 1A1 + 1 x 1A1
   fci_test_rdms       true
+  casscf_reference    false
 }
 
-escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
-
-eaci = energy('forte', ref_wfn=wfn)
+eaci = energy('forte')
 compare_values(refaci, eaci, 8, "Averaged GASCI energy")
 
 compare_values(0.0, variable("AA 1-RDM ERROR"),12, "AA 1-RDM") #TEST

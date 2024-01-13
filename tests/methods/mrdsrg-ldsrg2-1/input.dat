@@ -36,6 +36,7 @@ set forte{
   dsrg_read_amps         true
   dsrg_diis_start        1
   dsrg_rsc_ncomm         4
+  casscf_reference       false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

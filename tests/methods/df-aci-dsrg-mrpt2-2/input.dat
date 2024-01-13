@@ -52,6 +52,7 @@ set forte{
   nroot                   1
   sci_direct_rdms         true
   aci_screen_alg          batch_hash
+  casscf_reference        false
 }
 
 energy('forte', ref_wfn = wfn)

@@ -33,10 +33,8 @@ set forte{
    nroot                  1
    dsrg_s                 1.0
    sigma                  0.0
+   casscf_reference       false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")

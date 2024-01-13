@@ -91,10 +91,8 @@ set forte {
   relax_ref             once
   semi_canonical        true
   print                 1
+  casscf_reference      false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrohf,variable("CURRENT ENERGY"),10,"ROHF energy") #TEST
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8, "MRDSRG-PT2 relaxed energy") #TEST

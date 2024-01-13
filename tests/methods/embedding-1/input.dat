@@ -54,6 +54,7 @@ set forte {
   root               0
   d_convergence      10
   dsrg_s             0.5
+  casscf_reference   false
 }
 
 energy('forte', ref_wfn = wfn_cas, return_wfn=True)

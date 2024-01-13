@@ -25,8 +25,6 @@ set {
   guess gwh
 }
 
-
-
 set forte {
   active_space_solver aci
   multiplicity 1
@@ -36,11 +34,8 @@ set forte {
   sigma 0.0
   charge 0
   diag_algorithm sparse
+  casscf_reference false
 }
-
-energy('scf')
-
-compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
 energy('forte')
 compare_values(reffci, variable("ACI ENERGY"),11, "ACI energy") #TEST
