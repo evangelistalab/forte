@@ -34,9 +34,10 @@ set forte {
   GAS1MAX [2,1]
   GAS1MIN [0,0]
   avg_state [[0,1,1],[0,1,1]] #For same symmetry and different GAS
+  casscf_reference false
 }
 
-egas = energy('forte', ref_wfn=wfn, optimize_mos=False)
+egas = energy('forte', ref_wfn=wfn)
 
 compare_values(refgas, egas, 8, "Averaged GASCI energy")
 compare_values(ref0, variable("ENERGY ROOT 0 1A1 ENTRY 0"), 8, "GASCI energy for state entry 0")
