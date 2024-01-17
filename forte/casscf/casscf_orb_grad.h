@@ -60,7 +60,7 @@ class CASSCF_ORB_GRAD {
      */
     CASSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info,
-                    std::shared_ptr<ForteIntegrals> ints);
+                    std::shared_ptr<ForteIntegrals> ints, bool freeze_core);
 
     /// Evaluate the energy and orbital gradient
     double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
@@ -105,6 +105,8 @@ class CASSCF_ORB_GRAD {
 
     /// The Forte integral
     std::shared_ptr<ForteIntegrals> ints_;
+
+    bool freeze_core_;
 
     /// Common setup for the class
     void startup();

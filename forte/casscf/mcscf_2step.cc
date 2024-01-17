@@ -170,7 +170,8 @@ double MCSCF_2STEP::compute_energy() {
     };
 
     // prepare for orbital gradients
-    CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_);
+    CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_,
+                             options_->get_bool("CASSCF_FREEZE_CORE"));
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
 

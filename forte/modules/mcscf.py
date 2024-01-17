@@ -6,7 +6,6 @@ from forte._forte import to_state_nroots_map, make_active_space_solver, make_mcs
 
 
 class MCSCF(Module):
-
     """
     A module to perform MCSCF calculations.
     """

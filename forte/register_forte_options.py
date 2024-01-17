@@ -1065,6 +1065,7 @@ def register_casscf_options(options):
     options.add_str(
         "ORB_ROTATION_ALGORITHM", "DIAGONAL", ["DIAGONAL", "AUGMENTED_HESSIAN"], "Orbital rotation algorithm"
     )
+    options.add_bool("CASSCF_FREEZE_CORE", False, "Freeze core orbitals in CASSCF?")
 
     options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
     options.add_int("CASSCF_DIIS_MIN_VEC", 3, "Minimum size of DIIS vectors for orbital rotations")

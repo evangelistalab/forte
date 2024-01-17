@@ -67,8 +67,8 @@ namespace forte {
 
 CASSCF_ORB_GRAD::CASSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                 std::shared_ptr<ForteIntegrals> ints)
-    : options_(options), mo_space_info_(mo_space_info), ints_(ints) {
+                                 std::shared_ptr<ForteIntegrals> ints, bool freeze_core)
+    : options_(options), mo_space_info_(mo_space_info), ints_(ints), freeze_core_(freeze_core) {
     startup();
 }
 
@@ -97,9 +97,18 @@ void CASSCF_ORB_GRAD::setup_mos() {
 
     nsopi_ = ints_->nsopi();
     nmopi_ = mo_space_info_->dimension("ALL");
-    ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    if (freeze_core_) {
+        nmopi_ = mo_space_info_->dimension("CORRELATED");
+    } else {
+        ncmopi_ =
+            mo_space_info_->dimension("FROZEN_DOCC") + mo_space_info_->dimension("CORRELATED");
+    }
     ndoccpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
-    nfrzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    if (freeze_core_) {
+        nfrzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    } else {
+        nfrzcpi_ = psi::Dimension(nirrep_);
+    }
     nfrzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
     nactvpi_ = mo_space_info_->dimension("ACTIVE");
 
@@ -109,18 +118,30 @@ void CASSCF_ORB_GRAD::setup_mos() {
     nactv_ = nactvpi_.sum();
     nfrzc_ = nfrzcpi_.sum();
 
-    core_mos_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
+    if (freeze_core_) {
+        core_mos_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
+    } else {
+        core_mos_ = mo_space_info_->absolute_mo("INACTIVE_DOCC");
+    }
     actv_mos_ = mo_space_info_->absolute_mo("ACTIVE");
 
     label_to_mos_.clear();
-    label_to_mos_["f"] = mo_space_info_->absolute_mo("FROZEN_DOCC");
+    if (freeze_core_) {
+        label_to_mos_["f"] = mo_space_info_->absolute_mo("FROZEN_DOCC");
+    } else {
+        label_to_mos_["f"] = std::vector<size_t>();
+    }
     label_to_mos_["c"] = core_mos_;
     label_to_mos_["a"] = actv_mos_;
     label_to_mos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
     label_to_mos_["u"] = mo_space_info_->absolute_mo("FROZEN_UOCC");
 
     label_to_cmos_.clear();
-    label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    if (freeze_core_) {
+        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    } else {
+        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("INACTIVE_DOCC");
+    }
     label_to_cmos_["a"] = mo_space_info_->corr_absolute_mo("ACTIVE");
     label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
 
