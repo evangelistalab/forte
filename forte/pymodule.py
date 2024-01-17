@@ -174,12 +174,24 @@ def energy_forte(name, **kwargs):
     energy = 0.0
 
     # Run an MCSCF computation
-    # if data.options.get_str("INT_TYPE") == "FCIDUMP":
-    #     psi4.core.print_out("\n  Skipping MCSCF computation for FCIDUMP input\n")
-    if data.options.get_bool("CASSCF_REFERENCE") is False:
+    if data.options.get_str("INT_TYPE") == "FCIDUMP":
+        psi4.core.print_out("\n  Skipping MCSCF computation. Using integrals from FCIDUMP input\n")
+    elif data.options.get_bool("CASSCF_REFERENCE") is False:
         psi4.core.print_out("\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
     else:
-        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER"), data.options.get_bool("CASSCF_FREEZE_CORE")).run(data)
+        active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
+        casscf_freeze_core = data.options.get_bool("CASSCF_FREEZE_CORE")
+
+        # freeze core orbitals check
+        frozen_docc_set = data.mo_space_info.size("FROZEN_DOCC") > 0
+        if not casscf_freeze_core and frozen_docc_set and data.options.get_str("CORRELATION_SOLVER") == "NONE":
+            msg = "\n  WARNING: By default, Forte will not freeze core orbitals in MCSCF,\n  unless the option CASSCF_FREEZE_CORE is set to True.\n"
+            msg += f"\n  Your input file specifies the FROZEN_DOCC array ({data.mo_space_info.size('FROZEN_DOCC')} MOs) in the\n  MO_SPACE_INFO block, but the option CASSCF_FREEZE_CORE is set to False.\n"
+            msg += "\n  If you want to freeze the core orbitals in MCSCF, set CASSCF_FREEZE_CORE to True,\n  otherwise change the FROZEN_DOCC array to zero(s) and update the RESTRICTED_DOCC array.\n"
+            print(msg)
+            psi4.core.print_out(msg)
+
+        data = MCSCF(active_space_solver_type).run(data)
         energy = data.results.value("energy")
 
     # Run a method
@@ -262,8 +274,8 @@ def gradient_forte(name, **kwargs):
     int_type = data.options.get_str("INT_TYPE")
     correlation_solver = data.options.get_str("CORRELATION_SOLVER")
 
-    if job_type not in {"CASSCF", "MCSCF_TWO_STEP"} and correlation_solver != "DSRG-MRPT2":
-        raise Exception("Analytic energy gradients are only implemented for" " CASSCF, MCSCF_TWO_STEP, or DSRG-MRPT2.")
+    # if job_type not in {"CASSCF", "MCSCF_TWO_STEP"} and correlation_solver != "DSRG-MRPT2":
+    #     raise Exception("Analytic energy gradients are only implemented for" " CASSCF, MCSCF_TWO_STEP, or DSRG-MRPT2.")
 
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
     data = ObjectsFromPsi4(**kwargs).run(data)
@@ -280,14 +292,18 @@ def gradient_forte(name, **kwargs):
     if orb_type != "CANONICAL":
         OrbitalTransformation(orb_type, job_type != "NONE").run(data)
 
-    if job_type == "CASSCF":
-        casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
-        energy = casscf.compute_energy()
-        casscf.compute_gradient()
+    # if job_type == "CASSCF":
+    #     casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
+    #     energy = casscf.compute_energy()
+    #     casscf.compute_gradient()
 
-    if job_type == "MCSCF_TWO_STEP":
-        data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
-        energy = data.results.value("energy")
+    # if job_type == "MCSCF_TWO_STEP":
+    # data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
+    # energy = data.results.value("energy")
+    active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
+    casscf_freeze_core = data.options.get_bool("CASSCF_FREEZE_CORE")
+    data = MCSCF(active_space_solver_type).run(data)
+    energy = data.results.value("energy")
 
     if job_type == "NEWDRIVER" and correlation_solver == "DSRG-MRPT2":
         forte_driver(data)

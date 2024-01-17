@@ -1,6 +1,5 @@
 import forte
 
-memory 500 mb
 refmcscf =   -226.575081996603
 refdsrgpt2 = -226.883026729743
 
@@ -26,19 +25,6 @@ set globals{
 }
 
 set forte{
-  job_type                mcscf_two_step
-  active_space_solver     fci
-  restricted_docc         [5, 3, 1, 1, 0, 1, 4, 4]
-  active                  [1, 0, 0, 0, 0, 0, 1, 0]
-  casscf_e_convergence    12
-  casscf_g_convergence    8
-}
-
-Emcscf, wfn = energy('forte', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
-
-set forte{
-  job_type               newdriver
   active_space_solver    fci
   correlation_solver     three-dsrg-mrpt2
   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
@@ -49,8 +35,10 @@ set forte{
   dsrg_s                 0.5
   int_type               cholesky
   cholesky_tolerance     1e-11
+  casscf_e_convergence   12
+  casscf_g_convergence   8
   print_denom2           true
 }
 
-energy('forte', ref_wfn = wfn)
+energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

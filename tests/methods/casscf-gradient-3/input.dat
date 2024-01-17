@@ -39,7 +39,6 @@ set globals {
 }
 
 set forte{
-  job_type             mcscf_two_step
   active_space_solver  fci
   frozen_docc          [2,0,0,2]
   restricted_docc      [5,0,0,4]
@@ -49,6 +48,7 @@ set forte{
   casscf_maxiter       100
   casscf_g_convergence 1e-10
   casscf_e_convergence 1e-12
+  casscf_freeze_core   true
   cpscf_convergence    1e-10
 }
 

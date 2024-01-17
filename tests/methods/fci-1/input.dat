@@ -20,6 +20,7 @@ set {
 
 set forte {
   active_space_solver genci
+  casscf_reference false
 }
 
 energy('scf')

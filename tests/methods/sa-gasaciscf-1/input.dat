@@ -34,8 +34,6 @@ set forte {
   gas1min             [0,0]
   gas1max             [2,1]
   avg_state           [[0,1,1],[2,3,1]]  
-  job_type            casscf #mcscf_two_step
-  casscf_ci_solver    aci
   casscf_e_convergence 1e-10
   casscf_g_convergence 1e-8     
   casscf_active_frozen_orbital [0]
@@ -43,5 +41,5 @@ set forte {
 }
 
 escf ,wfn = energy('scf',return_wfn = True)
-egasscf = energy('forte')
+egasscf = energy('forte') #,ref_wfn=wfn)
 compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST

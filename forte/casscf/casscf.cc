@@ -215,7 +215,7 @@ double CASSCF::compute_energy() {
         // Perform a CASCI
         E_casscf_old = E_casscf_;
         if (print_ >= PrintLevel::Default) {
-            std::string ci_type = options_->get_str("CASSCF_CI_SOLVER");
+            std::string ci_type = options_->get_str("ACTIVE_SPACE_SOLVER");
             outfile->Printf("\n\n  Performing a CAS with %s", ci_type.c_str());
         }
         local_timer cas_timer;
@@ -346,7 +346,7 @@ void CASSCF::diagonalize_hamiltonian() {
     // perform a CAS-CI with the active given in the input
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
 
-    std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
+    std::string casscf_ci_type = options_->get_str("ACTIVE_SPACE_SOLVER");
 
     auto state_map = to_state_nroots_map(state_weights_map_);
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,

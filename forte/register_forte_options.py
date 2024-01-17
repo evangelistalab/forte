@@ -1028,8 +1028,6 @@ def register_casscf_options(options):
         "Constraints for redundant orbital pairs at the end of macro iteration",
     )
 
-    options.add_str("CASSCF_CI_SOLVER", "", active_space_solvers, "The active space solver to use in CASSCF")
-
     options.add_int(
         "CASSCF_CI_FREQ",
         1,

@@ -60,7 +60,7 @@ class CASSCF_ORB_GRAD {
      */
     CASSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info,
-                    std::shared_ptr<ForteIntegrals> ints);
+                    std::shared_ptr<ForteIntegrals> ints, bool freeze_core);
 
     /// Evaluate the energy and orbital gradient
     double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
@@ -155,10 +155,15 @@ class CASSCF_ORB_GRAD {
     /// The number of frozen-core orbitals
     size_t nfrzc_;
 
+    /// Freeze core or not
+    bool freeze_core_ = false;
+
     /// List of core MOs (Absolute)
     std::vector<size_t> core_mos_;
     /// List of active MOs (Absolute)
     std::vector<size_t> actv_mos_;
+    /// List of virtual MOs (Absolute)
+    std::vector<size_t> virt_mos_;
     /// Map from MO space label to the absolute MO indices
     std::map<std::string, std::vector<size_t>> label_to_mos_;
     /// Map from MO space label to the correlated MO indices

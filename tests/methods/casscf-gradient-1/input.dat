@@ -35,7 +35,6 @@ set globals {
 set scf_type direct
 
 set forte{
-  job_type             mcscf_two_step
   active_space_solver  fci
   CASSCF_REFERENCE     true
   CASSCF_MAXITER       100

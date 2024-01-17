@@ -20,20 +20,18 @@ set globals{
 }
 
 set forte{
-   job_type             mcscf_two_step
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
-   active_space_solver  detci
+   active_space_solver  genci
    int_type             conventional
    cholesky_tolerance   1e-10
    print                0
    CASSCF_G_CONVERGENCE 1e-6
    CASSCF_E_CONVERGENCE 1e-8
    CASSCF_DEBUG_PRINTING  false
-   CASSCF_CI_SOLVER       FCI
    CASSCF_DO_DIIS         true
-
 }
+
 casscf = energy('forte')
 
 compare_values(refcasscf, casscf, 6, "CASSCF ENERGY")

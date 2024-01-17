@@ -121,16 +121,6 @@ void OrbitalOptimizer::startup() {
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
     nirrep_ = mo_space_info_->nirrep();
 
-    auto ci_solver = options_->get_str("CASSCF_CI_SOLVER");
-    std::vector<std::string> ci_types{"FCI", "DETCI", "ACI", "DMRG", "GENCI"};
-    if (std::find(ci_types.begin(), ci_types.end(), ci_solver) == ci_types.end()) {
-        outfile->Printf(
-            "\n\n Please set your CASSCF_CI_SOLVER to either FCI, DETCI, ACI, GENCI, or DMRG");
-        outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.",
-                        options_->get_str("CASSCF_CI_SOLVER").c_str());
-        throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
-    }
-
     cas_ = true;
     gas_ = false;
     if (options_->get_str("ACTIVE_REF_TYPE") == "GAS" or

@@ -95,11 +95,9 @@ void MCSCF_2STEP::read_options() {
 
     orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
 
-    ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
-    if (ci_type_ == "")
-        ci_type_ = options_->get_str("ACTIVE_SPACE_SOLVER");
+    ci_type_ = options_->get_str("ACTIVE_SPACE_SOLVER");
     if (ci_type_ == "") {
-        throw std::runtime_error("ACTIVE_SPACE_SOLVER or CASSCF_CI_SOLVER are not specified!");
+        throw std::runtime_error("ACTIVE_SPACE_SOLVER is not specified!");
     }
 
     opt_orbs_ = not options_->get_bool("CASSCF_NO_ORBOPT");
@@ -170,7 +168,8 @@ double MCSCF_2STEP::compute_energy() {
     };
 
     // prepare for orbital gradients
-    CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_);
+    bool freeze_core = options_->get_bool("CASSCF_FREEZE_CORE");
+    CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, freeze_core);
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
 
