@@ -63,14 +63,22 @@ std::vector<Determinant> FCISolver::initial_guess_generate_dets(std::shared_ptr<
                 vec_e_I.begin(), vec_e_I.end(),
                 [&e](const std::tuple<double, size_t>& t) { return e < std::get<0>(t); });
             vec_e_I.insert(it, std::make_tuple(e, I));
-            emax = std::get<0>(vec_e_I.back());
+            if (!(core_guess_)){
+                emax = std::get<0>(vec_e_I.back());
+            }
             added++;
         }
     }
 
     std::vector<Determinant> guess_dets;
     for (const auto& [e, I] : vec_e_I) {
-        guess_dets.push_back(lists_->determinant(I, symmetry_));
+        if (core_guess_){
+            if (!(lists_->determinant(I, symmetry_).get_alfa_bit(0) and lists_->determinant(I, symmetry_).get_beta_bit(0))){
+                guess_dets.push_back(lists_->determinant(I, symmetry_));
+            }
+        } else {
+            guess_dets.push_back(lists_->determinant(I, symmetry_));
+        }
     }
 
     // Make sure that the spin space is complete

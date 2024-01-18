@@ -74,6 +74,8 @@ void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 void FCISolver::set_spin_adapt(bool value) { spin_adapt_ = value; }
 
+void FCISolver::set_core_guess(bool value) { core_guess_ = value; }
+
 void FCISolver::set_spin_adapt_full_preconditioner(bool value) {
     spin_adapt_full_preconditioner_ = value;
 }
@@ -159,6 +161,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
     set_spin_adapt_full_preconditioner(options->get_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
+    set_core_guess(options->get_bool("CORE_GUESS"));
 
     set_root(options->get_int("ROOT"));
 
