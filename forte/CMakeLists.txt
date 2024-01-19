@@ -253,7 +253,7 @@ orbital-helpers/semi_canonicalize.cc
 orbital-helpers/unpaired_density.cc
 pci/pci.cc
 pci/pci_sigma.cc
-post_process/spin_corr.cc
+post_process/post_process.cc
 sci/aci.cc
 sci/aci_build_F.cc
 sci/asci.cc
