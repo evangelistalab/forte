@@ -57,6 +57,8 @@ class PostProcess {
 
     void spin_analysis();
 
+    void unpaired_density();
+
   private:
 
 	const std::string method_;
