@@ -61,7 +61,7 @@ void PostProcess::process() {
 }
 
 
-std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> PostProcess::compute_nos() {
+std::pair<std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>, std::ppair<std::shared_ptr<psi::Vector>,std::shared_ptr<psi::Vector>> PostProcess::compute_nos() {
 
     print_h2("Natural Orbitals");
 
@@ -116,7 +116,7 @@ std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> PostProces
             }
         }
     }
-    return std::make_pair(Ua, Ub);
+    return std::make_pair<std::make_pair(Ua, Ub), std::make_pair<OCC_A,OCC_B>>;
 }
 
 void PostProcess::spin_analysis() {
@@ -371,6 +371,19 @@ void PostProcess::spin_analysis() {
         psi::Process::environment.globals["SPIN CORRELATION TEST"] = value;
     }
 }
+
+void PostProcess::unpaired_density() {
+
+    size_t nact = static_cast<unsigned long>(nact_);
+    size_t nact2 = nact * nact;
+    size_t nact3 = nact * nact2;
+
+    auto UA = std::make_shared<psi::Matrix>(nact, nact);
+    auto UB = std::make_shared<psi::Matrix>(nact, nact);
+
+    // Get natural orbitals
+}
+
 
 void perform_post_processing(const std::string method, std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
