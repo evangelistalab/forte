@@ -99,9 +99,9 @@ def forte_driver(data: ForteData):
         data = ActiveSpaceRDMs(max_rdm_level=max_rdm_level).run(data)
         write_external_rdm_file(data.rdms)
 
-    if options.get_bool("SPIN_ANALYSIS"):
-        data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
-        forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
+#    if options.get_bool("SPIN_ANALYSIS"):
+#        data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
+#        forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")
@@ -125,6 +125,15 @@ def forte_driver(data: ForteData):
     else:
         average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
         return_en = average_energy
+
+
+    for proc in options.get_list("POST_PROCESS"):
+        if proc in ['SPIN_CORRELATION', 'UNPAIRED_DENSITY']:
+            data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
+            forte.perform_post_processing(proc, data.rdms, options, mo_space_info, as_ints)
+        else:
+            raise Exception(f"Forte: Requestion post processing routine ({proc}) not implemented") 
+			
 
     return return_en
 

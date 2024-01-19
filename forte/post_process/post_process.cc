@@ -34,23 +34,34 @@
 #include "base_classes/forte_options.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
-#include "post_process/spin_corr.h"
+#include "post_process/post_process.h"
 
 using namespace psi;
 
 namespace forte {
 
-SpinCorr::SpinCorr(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info,
-                   std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : rdms_(rdms), options_(options), mo_space_info_(mo_space_info), as_ints_(as_ints) {
+PostProcess::PostProcess(const std::string method, std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : method_(method), rdms_(rdms), options_(options), mo_space_info_(mo_space_info), as_ints_(as_ints) {
 
     nactpi_ = mo_space_info_->dimension("ACTIVE");
     nirrep_ = nactpi_.n();
     nact_ = nactpi_.sum();
 }
 
-std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> SpinCorr::compute_nos() {
+void PostProcess::process() {
+
+	if (method_ == "SPIN_CORRELATION"){
+		spin_analysis();
+	}else if (method_ == "UNPAIRED_DENSITY"){
+	//	up_density();
+	}
+
+}
+
+
+std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> PostProcess::compute_nos() {
 
     print_h2("Natural Orbitals");
 
@@ -108,7 +119,7 @@ std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> SpinCorr::
     return std::make_pair(Ua, Ub);
 }
 
-void SpinCorr::spin_analysis() {
+void PostProcess::spin_analysis() {
     size_t nact = static_cast<unsigned long>(nact_);
     size_t nact2 = nact * nact;
     size_t nact3 = nact * nact2;
@@ -361,11 +372,11 @@ void SpinCorr::spin_analysis() {
     }
 }
 
-void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
+void perform_post_processing(const std::string method, std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-    SpinCorr spin(rdms, options, mo_space_info, as_ints);
-    spin.spin_analysis();
+    PostProcess proc(method, rdms, options, mo_space_info, as_ints);
+    proc.process();
 }
 
 } // namespace forte
