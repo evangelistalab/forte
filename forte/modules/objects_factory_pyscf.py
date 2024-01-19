@@ -36,9 +36,27 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
     options = data.options
     psi4.core.print_out(f"\n  Getting integral information from PySCF")
     nmo = pyscf_obj.mol.nao_nr()
+    
+    irrep_size = {"c1": 1, "ci": 2, "c2": 2, "cs": 2, "d2": 4, "c2v": 4, "c2h": 4, "d2h": 8}
+    
     if pyscf_obj.mol.symmetry is not None:
         nirrep = None
         nmopi_list = None
+    else:
+        if pyscf_obj.mol.symmetry.lower() is bool:
+            raise Exception(f"Forte: the value of pyscf_obj.mol.symmetry ({pyscf_obj.mol.symmetry}) is a boolean")
+        nirrep = irrep_size[pyscf_obj.mol.symmetry.lower()]
+        if isinstance(pyscf_obj, pyscf.scf.hf.SCF): 
+            nmopi_list = np.zeros(nirrep)
+            for i in pyscf_obj.orbsymm:
+                symm = pyscf_obj.orbsymm[i]
+                nmopi_list[symm] += 1
+    
+    nmopi_offset = [sum(nmopi_list[0:h]) for h in range(nirrep)]
+    
+    nmopi = 
+    
+        
     return data, pyscf_obj
 
 class ObjectsFromPySCF(Module):
