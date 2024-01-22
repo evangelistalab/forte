@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,14 +26,11 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_ci_h_
-#define _sparse_ci_h_
+#pragma once
 
-#include "sparse_ci/determinant_hashvector.h"
 #include "psi4/libmints/dimension.h"
-
-#define BIGNUM 1E100
-#define MAXIT 100
+#include "sparse_ci/determinant_hashvector.h"
+#include "helpers/printing.h"
 
 namespace psi {
 class Matrix;
@@ -92,7 +89,7 @@ class SparseCISolver {
     void set_parallel(bool parallel) { parallel_ = parallel; }
 
     /// Set the print level
-    void set_print(int value);
+    void set_print(PrintLevel print);
 
     /// Enable/disable printing of details
     void set_print_details(bool print_details) { print_details_ = print_details; }
@@ -203,7 +200,7 @@ class SparseCISolver {
     /// Print details?
     bool print_details_ = true;
     /// A variable to control printing information
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
     /// Project solutions onto given multiplicity in full algorithm?
@@ -237,5 +234,3 @@ class SparseCISolver {
     std::vector<std::vector<std::pair<size_t, double>>> user_guess_;
 };
 } // namespace forte
-
-#endif // _sparse_ci_h_

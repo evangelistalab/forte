@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -28,7 +28,6 @@
 
 #include <random>
 
-#include "helpers/printing.h"
 #include "helpers/davidson_liu_solver.h"
 
 // Global debug flag
@@ -101,6 +100,9 @@ void DavidsonLiuSolver::startup() {
 }
 
 void DavidsonLiuSolver::print_table() {
+    if (print_ < PrintLevel::Default)
+        return;
+
     // Print a summary of the calculation options
     table_printer printer;
     printer.add_double_data({{"Energy convergence threshold", e_convergence_},
@@ -108,12 +110,15 @@ void DavidsonLiuSolver::print_table() {
                              {"Schmidt orthogonality threshold", schmidt_orthogonality_threshold_},
                              {"Schmidt discard threshold", schmidt_discard_threshold_}});
 
-    printer.add_int_data({{"Size of the space", size_},
-                          {"Number of roots", nroot_},
-                          {"Maximum number of iterations", max_iter_},
-                          {"Collapse subspace size", collapse_size_},
-                          {"Maximum subspace size", subspace_size_},
-                          {"Print level", print_level_}});
+    printer.add_int_data({
+        {"Size of the space", size_},
+        {"Number of roots", nroot_},
+        {"Maximum number of iterations", max_iter_},
+        {"Collapse subspace size", collapse_size_},
+        {"Maximum subspace size", subspace_size_},
+    });
+
+    printer.add_string_data({{"Print level", to_string(print_)}});
 
     std::string table = printer.get_table("Davidson-Liu Solver");
     psi::outfile->Printf("%s", table.c_str());
@@ -151,7 +156,7 @@ void DavidsonLiuSolver::reset() {
     sigma_->zero();
 }
 
-void DavidsonLiuSolver::set_print_level(size_t n) { print_level_ = n; }
+void DavidsonLiuSolver::set_print_level(PrintLevel level) { print_ = level; }
 
 void DavidsonLiuSolver::set_e_convergence(double value) { e_convergence_ = value; }
 
@@ -273,15 +278,19 @@ void DavidsonLiuSolver::setup_guesses() {
         // add the guesses to temp
         if ((guesses_.size() >= nroot_) and (guesses_.size() <= subspace_size_)) {
             // guesses [copy] -> temp [orthonormalize] -> b
-            psi::outfile->Printf("\n\n  Davidson-Liu solver: adding %d guess vectors",
-                                 guesses_.size());
+            if (print_ >= PrintLevel::Default) {
+                psi::outfile->Printf("\n\n  Davidson-Liu solver: adding %d guess vectors",
+                                     guesses_.size());
+            }
             set_vector(temp_, guesses_);
 
         } else if (guesses_.size() == 0) {
             // add random vectors
             temp_->zero();
             add_random_vectors(temp_, 0, nroot_);
-            psi::outfile->Printf("\n\n  Davidson-Liu solver: adding %d random vectors", nroot_);
+            if (print_ >= PrintLevel::Default) {
+                psi::outfile->Printf("\n\n  Davidson-Liu solver: adding %d random vectors", nroot_);
+            }
         } else {
             std::string msg = "DavidsonLiuSolver: number of guess vectors (" +
                               std::to_string(guesses_.size()) +
@@ -328,6 +337,8 @@ void DavidsonLiuSolver::preiteration_sanity_checks() {
 }
 
 void DavidsonLiuSolver::print_header() {
+    if (print_ < PrintLevel::Default)
+        return;
     psi::outfile->Printf(
         "\n  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors");
     psi::outfile->Printf(
@@ -335,11 +346,16 @@ void DavidsonLiuSolver::print_header() {
 }
 
 void DavidsonLiuSolver::print_footer() {
+    if (print_ < PrintLevel::Default)
+        return;
     psi::outfile->Printf(
         "\n  ---------------------------------------------------------------------------------");
 }
 
 void DavidsonLiuSolver::print_iteration(size_t iter) {
+    if (print_ < PrintLevel::Default)
+        return;
+
     auto e_diff = lambda_->clone();
     e_diff.axpy(-1.0, *lambda_old_);
 

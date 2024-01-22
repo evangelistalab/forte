@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,12 +31,13 @@
 #include <map>
 #include <vector>
 
-#include "boost/format.hpp"
-
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
+
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 
 #include "base_classes/active_space_solver.h"
 #include "fci/fci_solver.h"
@@ -448,17 +449,17 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
     int n = labels.size();
     std::string sep(10 + 13 * n, '-');
     std::string indent = "\n    ";
-    std::string output = indent + str(boost::format("%-10s") % name);
+    std::string output = indent + fmt::format("{:<10}", name);
     for (int i = 0; i < n; ++i)
-        output += str(boost::format(" %12s") % labels[i]);
+        output += fmt::format(" {:<12}", labels[i]);
     output += indent + sep;
 
-    output += indent + str(boost::format("%-10s") % "max");
+    output += indent + fmt::format("{:<10}", "max");
     for (int i = 0; i < n; ++i)
-        output += str(boost::format(" %12.6f") % maxes[i]);
-    output += indent + str(boost::format("%-10s") % "norm");
+        output += fmt::format(" {:<12.6f}", maxes[i]);
+    output += indent + fmt::format("{:<10}", "norm");
     for (int i = 0; i < n; ++i)
-        output += str(boost::format(" %12.6f") % norms[i]);
+        output += fmt::format("{:<12.6f}", norms[i]);
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
 }

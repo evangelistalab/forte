@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _integrals_h_
-#define _integrals_h_
+#pragma once
 
 #include <vector>
 
@@ -142,10 +141,17 @@ class ForteIntegrals {
     /// Skip integral transformation
     bool skip_build_;
 
-    /// Return Ca
-    std::shared_ptr<psi::Matrix> Ca() const;
+    /// @brief Access the coefficient matrix for the alpha orbitals used to transform the integrals
+    ///
+    /// Note that the matrix is a constant pointer, so it cannot be modified.
+    /// To modify the orbitals, use the rotate_orbitals function or the update_orbitals functions.
+    /// These will keep track of whether the integrals need to be re-transformed.
+    /// Use the function update_ints_if_needed to re-transform the integrals only if they changed.
+    ///
+    /// @return the coefficient matrix for the alpha orbitals used to transform the integrals
+    std::shared_ptr<const psi::Matrix> Ca() const;
     /// Return Cb
-    std::shared_ptr<psi::Matrix> Cb() const;
+    std::shared_ptr<const psi::Matrix> Cb() const;
 
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
@@ -153,10 +159,10 @@ class ForteIntegrals {
     /// temporary solution for not having a Wavefunction
     std::shared_ptr<psi::Wavefunction> wfn();
 
-    /// Return the Pis4 JK object
+    /// Return the Psi4 JK object
     std::shared_ptr<psi::JK> jk();
 
-    /// Enum class for the status of Pis4 JK
+    /// Enum class for the status of Psi4 JK
     enum class JKStatus { empty, initialized, finalized };
     /// Return the status of Psi4 JK object
     JKStatus jk_status();
@@ -359,6 +365,11 @@ class ForteIntegrals {
     /// @param mo_space_info the MOSpaceInfo object
     void update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    /// Update the integrals if the MO coefficients have changed but the integrals were not
+    /// re-transformed
+    /// @return true if the integrals were updated
+    bool update_ints_if_needed();
+
     /// Make the orbital phase consistent when updating orbitals
     /// @param U the unitary transformation matrix so that C_new = C_old * U
     /// @param is_alpha target Ca if true else Cb
@@ -425,6 +436,12 @@ class ForteIntegrals {
 
     // Cb matrix from psi
     std::shared_ptr<psi::Matrix> Cb_;
+
+    // AO overlap matrix from psi
+    std::shared_ptr<psi::Matrix> S_;
+
+    // This variable tells if the integrals are consistent with the MO coefficients
+    bool ints_consistent_ = true;
 
     /// Number of irreps
     int nirrep_;
@@ -636,5 +653,3 @@ class Psi4Integrals : public ForteIntegrals {
 };
 
 } // namespace forte
-
-#endif // _integrals_h_

@@ -86,7 +86,7 @@ double DETCI::compute_energy() {
     compute_1rdms();
 
     // print CI vectors
-    if (not quiet_) {
+    if (print_ >= PrintLevel::Default) {
         print_ci_wfn();
     }
 
@@ -124,13 +124,13 @@ void DETCI::build_determinant_space() {
             "input (symmetry and multiplicity of the root, etc.)!");
     }
 
-    if (print_ > 2) {
+    if (print_ >= PrintLevel::Debug) {
         print_h2("Determinants");
         for (const auto& det : dets) {
             outfile->Printf("\n  %s", str(det, nactv_).c_str());
         }
     }
-    if (not quiet_) {
+    if (print_ >= PrintLevel::Default) {
         outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
     }
 
@@ -145,7 +145,7 @@ void DETCI::diagonalize_hamiltonian() {
 
     auto solver = prepare_ci_solver();
 
-    if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
+    if (p_space_.size() < 15 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
         sigma_vector_type_ = SigmaVectorType::Full;
     }
 
@@ -170,7 +170,7 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     auto solver = std::make_shared<SparseCISolver>();
     solver->set_options(options_);
     solver->set_spin_project(true);
-    solver->set_print_details(not quiet_);
+    solver->set_print_details(print_ >= PrintLevel::Default);
 
     if (read_wfn_guess_) {
         outfile->Printf("\n  Reading wave function from disk as initial guess:");

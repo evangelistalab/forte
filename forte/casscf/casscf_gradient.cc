@@ -217,7 +217,7 @@ void CASSCF::tpdm_backtransform() {
         IntegralTransform::OutputType::DPDOnly,              // Output buffer
         IntegralTransform::MOOrdering::QTOrder,              // MO ordering
         IntegralTransform::FrozenOrbitals::None);            // Frozen orbitals?
-    transform->set_print(print_);
+    transform->set_print(static_cast<int>(print_));
     transform->backtransform_density();
     transform.reset();
 
@@ -261,7 +261,7 @@ void CASSCF::write_1rdm_spin_dependent() {
         }
     });
 
-    D1->back_transform(ints_->Ca());
+    D1->back_transform(ints_->Ca()->clone());
     ints_->wfn()->Da()->copy(D1);
     ints_->wfn()->Db()->copy(D1);
 
@@ -299,7 +299,7 @@ void CASSCF::write_lagrangian() {
             }
         });
     }
-    L->back_transform(ints_->Ca());
+    L->back_transform(ints_->Ca()->clone());
     ints_->wfn()->lagrangian()->copy(L);
 
     outfile->Printf("Done");

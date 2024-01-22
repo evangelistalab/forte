@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -58,14 +58,14 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
                                      const std::map<StateInfo, size_t>& state_nroots_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                     std::shared_ptr<ForteOptions> options)
+                                     std::shared_ptr<ForteOptions> options,
+                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
-      mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
+      mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
-    print_options();
+    // print_options();
 
-    print_ = options->get_int("PRINT");
+    print_ = int_to_print_level(options->get_int("PRINT"));
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
@@ -80,15 +80,9 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         Ua_data[i * nactv + i] = 1.0;
         Ub_data[i * nactv + i] = 1.0;
     }
-
-    // initialize multipole integrals
-    if (as_ints_->ints()->integral_type() != Custom) {
-        auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
-        as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
-    }
 }
 
-void ActiveSpaceSolver::set_print(int level) { print_ = level; }
+void ActiveSpaceSolver::set_print(PrintLevel level) { print_ = level; }
 
 void ActiveSpaceSolver::set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
 
@@ -102,8 +96,8 @@ void ActiveSpaceSolver::set_die_if_not_converged(bool die_if_not_converged) {
 
 void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     as_ints_ = as_ints;
-    for (auto& [state, nroot] : state_nroots_map_) {
-        state_method_map_[state]->set_active_space_integrals(as_ints);
+    for (const auto& [state, method] : state_method_map_) {
+        method->set_active_space_integrals(as_ints_);
     }
 }
 
@@ -117,6 +111,19 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::state_energie
 }
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
+    // check if the integrals are available
+    if (not as_ints_) {
+        throw std::runtime_error("ActiveSpaceSolver: ActiveSpaceIntegrals are not available.");
+    }
+
+    // initialize multipole integrals
+    if (as_ints_->ints()->integral_type() != Custom) {
+        if (not as_mp_ints_) {
+            auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
+            as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+        }
+    }
+
     state_energies_map_.clear();
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -189,11 +196,28 @@ void ActiveSpaceSolver::validate_spin(const std::vector<double>& spin2, const St
 }
 
 void ActiveSpaceSolver::print_energies() {
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
+
+    for (const auto& state_nroot : state_nroots_map_) {
+        const auto& state = state_nroot.first;
+        int irrep = state.irrep();
+        int multi = state.multiplicity();
+        int nstates = state_nroot.second;
+        for (int i = 0; i < nstates; ++i) {
+            double energy = state_energies_map_[state][i];
+            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
+                         irrep_symbol[irrep];
+            push_to_psi4_env_globals(energy, upper_string(label));
+        }
+    }
+
+    if (print_ < PrintLevel::Brief)
+        return;
+
     print_h2("Energy Summary");
     psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy      <S^2>");
     std::string dash(56, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
-    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -212,12 +236,7 @@ void ActiveSpaceSolver::print_energies() {
                 psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f       n/a", multi,
                                      twice_ms, irrep_symbol[irrep].c_str(), i, energy);
             }
-
-            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
-                         irrep_symbol[irrep];
-            push_to_psi4_env_globals(energy, upper_string(label));
         }
-
         psi::outfile->Printf("\n    %s", dash.c_str());
     }
 }
@@ -242,7 +261,7 @@ void ActiveSpaceSolver::compute_multipole_moment(std::shared_ptr<ActiveMultipole
         for (size_t i = 0; i < nroots; ++i)
             root_list.emplace_back(i, i);
 
-        method->set_print(0);
+        method->set_print(PrintLevel::Quiet);
         state_rdms_map[state] = method->rdms(root_list, max_rdm_level, RDMsType::spin_free);
         method->set_print(print_);
     }
@@ -652,9 +671,9 @@ void ActiveSpaceSolver::print_options() {
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
+    std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     return std::make_shared<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
-                                               as_ints, options);
+                                               options, as_ints);
 }
 
 std::map<StateInfo, size_t>

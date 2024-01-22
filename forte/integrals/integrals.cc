@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -145,9 +145,17 @@ void ForteIntegrals::allocate() {
     }
 }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
+std::shared_ptr<const psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+std::shared_ptr<const psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+
+bool ForteIntegrals::update_ints_if_needed() {
+    if (ints_consistent_) {
+        return false;
+    }
+    update_orbitals(Ca_, Cb_, true);
+    return true;
+}
 
 double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 

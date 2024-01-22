@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _ci_no_h_
-#define _ci_no_h_
+#pragma once
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/molecule.h"
@@ -151,5 +150,3 @@ class CINO : public OrbitalTransform {
 };
 std::string dimension_to_string(psi::Dimension dim);
 } // namespace forte
-
-#endif // _ci_no_h_

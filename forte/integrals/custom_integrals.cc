@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -163,7 +163,7 @@ void CustomIntegrals::gather_integrals() {
 }
 
 void CustomIntegrals::resort_integrals_after_freezing() {
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
     // Resort the four-index integrals
@@ -219,11 +219,11 @@ void CustomIntegrals::compute_frozen_one_body_operator() {
         corr_offset += ncmopi_[h];
     }
 
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n  Frozen-core energy        %20.15f a.u.", frozen_core_energy_);
         print_timing("frozen one-body operator", timer_frozen_one_body.get());
     }
-    if (print_ > 2) {
+    if (print_ > 3) {
         print_h1("One-body Hamiltonian elements dressed by frozen-core orbitals");
         Fock_a->set_name("Frozen One Body (alpha)");
         Fock_a->print();
@@ -542,6 +542,7 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
     Ca_->copy(Ca);
     Cb_->copy(Cb);
+    ints_consistent_ = false;
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         if (not test_orbital_spin_restriction(Ca, Cb)) {
@@ -555,6 +556,7 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
 
     // 2. Re-transform the integrals
     if (re_transform) {
+        ints_consistent_ = true;
         aptei_idx_ = nmo_;
         local_timer int_timer;
         outfile->Printf("\n  Integrals are about to be updated.");
@@ -566,148 +568,4 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     }
 }
 
-// void CustomIntegrals::resort_integrals_after_freezing() {}
-
-//    // Read the integrals from a file
-//    std::string filename("INTDUMP");
-//    std::ifstream file(filename);
-
-//    if (not file.is_open()) {
-//    }
-//    std::string str((std::istreambuf_iterator<char>(file)),
-//    std::istreambuf_iterator<char>());
-
-//    std::vector<std::string> lines = split_string(str, "\n");
-
-//    std::string open_tag("&FCI");
-//    std::string close_tag("&END");
-
-//    int nelec = 0;
-//    int norb = 0;
-//    int ms2 = 0;
-//    std::vector<int> orbsym;
-//    std::vector<double> two_electron_integrals_chemist;
-
-//    bool parsing_section = false;
-//    for (const auto& line : lines) {
-//        outfile->Printf("\n%s", line.c_str());
-//        if (line.find(close_tag) != std::string::npos) {
-//            parsing_section = false;
-//            // now we know how many orbitals are there and we can allocate memory for the
-//            one- and
-//            // two-electron integrals
-//            custom_integrals_allocate(norb, orbsym);
-//            two_electron_integrals_chemist.assign(num_tei_, 0.0);
-//        } else if (line.find(open_tag) != std::string::npos) {
-//            parsing_section = true;
-//        } else {
-//            if (parsing_section) {
-//                std::vector<std::string> split_line = split_string(line, "=");
-//                if (split_line[0] == "NORB") {
-//                    split_line[1].pop_back();
-//                    norb = stoi(split_line[1]);
-//                }
-//                if (split_line[0] == "NELEC") {
-//                    split_line[1].pop_back();
-//                    nelec = stoi(split_line[1]);
-//                }
-//                if (split_line[0] == "MS2") {
-//                    split_line[1].pop_back();
-//                    ms2 = stoi(split_line[1]);
-//                }
-//                if (split_line[0] == "ORBSYM") {
-//                    split_line[1].pop_back();
-//                    std::vector<std::string> vals = split_string(split_line[1], ",");
-//                    for (const auto& val : vals) {
-//                        orbsym.push_back(stoi(val));
-//                    }
-//                }
-//            } else {
-//                if (line.size() > 10) {
-//                    std::vector<std::string> split_line = split_string(line, " ");
-//                    double integral = stoi(split_line[0]);
-//                    int p = stoi(split_line[1]);
-//                    int q = stoi(split_line[2]);
-//                    int r = stoi(split_line[3]);
-//                    int s = stoi(split_line[4]);
-
-//                    if (q == 0) {
-//                        // orbital energies, skip them
-//                    } else if ((r == 0) and (s == 0)) {
-//                        // one-electron integrals
-//                        full_one_electron_integrals_a_[(p - 1) * aptei_idx_ + q - 1] =
-//                        integral; full_one_electron_integrals_b_[(p - 1) * aptei_idx_ + q
-//                        - 1] = integral; full_one_electron_integrals_a_[(q - 1) *
-//                        aptei_idx_ + p - 1] = integral; full_one_electron_integrals_b_[(q
-//                        - 1) * aptei_idx_ + p - 1] = integral;
-//                        one_electron_integrals_a_[(p - 1) * aptei_idx_ + q - 1] =
-//                        integral; one_electron_integrals_b_[(p - 1) * aptei_idx_ + q - 1]
-//                        = integral; one_electron_integrals_a_[(q - 1) * aptei_idx_ + p -
-//                        1] = integral; one_electron_integrals_b_[(q - 1) * aptei_idx_ + p
-//                        - 1] = integral;
-//                    } else {
-//                        // two-electron integrals
-//                        two_electron_integrals_chemist[four(p, q, r, s)] = integral;
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-//    // Store the integrals
-//    for (size_t p = 0; p < nmo_; ++p) {
-//        for (size_t q = 0; q < nmo_; ++q) {
-//            for (size_t r = 0; r < nmo_; ++r) {
-//                for (size_t s = 0; s < nmo_; ++s) {
-//                    // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-//                    double direct = two_electron_integrals_chemist[INDEX4(p, r, q, s)];
-//                    double exchange = two_electron_integrals_chemist[INDEX4(p, s, q, r)];
-//                    size_t index = aptei_index(p, q, r, s);
-//                    aphys_tei_aa[index] = direct - exchange;
-//                    aphys_tei_ab[index] = direct;
-//                    aphys_tei_bb[index] = direct - exchange;
-//                }
-//            }
-//        }
-//    }
-
-//    std::string s(std::istreambuf_iterator<char>(file >> std::skipws),
-//                   std::istreambuf_iterator<char>());
-
-//    std::copy(std::istream_iterator<std::string>(file),
-//              std::istream_iterator<std::string>(),
-//              std::back_inserter(lines));
-
-//    outfile->Printf("%s",s.c_str());
-
-//    for (size_t p = 0; p < nmo_; ++p) {
-//        for (size_t q = 0; q < nmo_; ++q) {
-//            one_electron_integrals_a_[p * nmo_ + q] = 0.0;
-//            one_electron_integrals_b_[p * nmo_ + q] = 0.0;
-//        }
-//    }
-
-//    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-//        aphys_tei_aa[pqrs] = 0.0;
-//    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-//        aphys_tei_ab[pqrs] = 0.0;
-//    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-//        aphys_tei_bb[pqrs] = 0.0;
-
-//    // Store the integrals
-//    for (size_t p = 0; p < nmo_; ++p) {
-//        for (size_t q = 0; q < nmo_; ++q) {
-//            for (size_t r = 0; r < nmo_; ++r) {
-//                for (size_t s = 0; s < nmo_; ++s) {
-//                    // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-//                    double direct = 0.0;
-//                    double exchange = 0.0;
-//                    size_t index = aptei_index(p, q, r, s);
-//                    aphys_tei_aa[index] = direct - exchange;
-//                    aphys_tei_ab[index] = direct;
-//                    aphys_tei_bb[index] = direct - exchange;
-//                }
-//            }
-//        }
-//    }
 } // namespace forte

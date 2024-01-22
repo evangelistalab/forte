@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.8a1.dev66 
+                               Psi4 1.9a1.dev50 
 
-                         Git: Rev {socints} 99d1e64 dirty
+                         Git: Rev {fixtemp} 466ebc2 
 
 
     D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
@@ -31,10 +31,10 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sunday, 28 May 2023 03:50PM
+    Psi4 started on: Wednesday, 08 November 2023 08:44PM
 
-    Process ID: 38290
-    Host:       CHE-FEVANGE-01i
+    Process ID: 80601
+    Host:       MacBook-Pro-158.attlocal.net
     PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -42,8 +42,6 @@
   ==> Input File <==
 
 --------------------------------------------------------------------------
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refscf = -14.54873910108353
@@ -64,7 +62,7 @@ set {
 }
 
 set forte {
-  active_space_solver fci 
+  active_space_solver gasci
 }
 
 energy('scf')
@@ -72,12 +70,38 @@ compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
 energy('forte')
 compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+
+
+refvals = [
+    ("ENERGY ROOT 0 1AG"        , -14.595808852754),
+    ("NUCLEAR REPULSION ENERGY" ,   3.000000000000),
+    ("SCF TOTAL ENERGY"         , -14.548739101084),
+    ("SINGLET <0AG|DM_X|0AG>"   ,   0.000000000000),
+    ("SINGLET <0AG|DM_Y|0AG>"   ,   0.000000000000),
+    ("SINGLET <0AG|DM_Z|0AG>"   ,   0.000000000000),
+    ("SINGLET <0AG|QM_XX|0AG>"  ,  -9.216219318617),
+    ("SINGLET <0AG|QM_XY|0AG>"  ,   0.000000000000),
+    ("SINGLET <0AG|QM_XZ|0AG>"  ,   0.000000000000),
+    ("SINGLET <0AG|QM_YY|0AG>"  ,  -9.216219318617),
+    ("SINGLET <0AG|QM_YZ|0AG>"  ,   0.000000000000),
+    ("SINGLET <0AG|QM_ZZ|0AG>"  ,  -6.361472474611),
+    ("SINGLET |<0AG|DM|0AG>|"   ,   0.000000000000),
+]   
+    
+for label, val in refvals:             
+    compare_values(val, variable(label),10,label)
 --------------------------------------------------------------------------
 
 Scratch directory: /tmp/
+   => Libint2 <=
 
-*** tstart() called on CHE-FEVANGE-01i
-*** at Sun May 28 15:50:43 2023
+    Primary   basis highest AM E, G, H:  5, 4, 3
+    Auxiliary basis highest AM E, G, H:  6, 5, 4
+    Onebody   basis highest AM E, G, H:  6, 5, 4
+    Solid Harmonics ordering:            gaussian
+
+*** tstart() called on MacBook-Pro-158.attlocal.net
+*** at Wed Nov  8 20:44:12 2023
 
    => Loading Basis Set <=
 
@@ -196,9 +220,9 @@ Scratch directory: /tmp/
                         Total Energy        Delta E     RMS |[F,P]|
 
    @RHF iter SAD:   -14.35526221907790   -1.43553e+01   0.00000e+00 
-   @RHF iter   1:   -14.54744094710718   -1.92179e-01   5.24905e-03 DIIS/ADIIS
-   @RHF iter   2:   -14.54852099240110   -1.08005e-03   1.59776e-03 DIIS/ADIIS
-   @RHF iter   3:   -14.54871493704180   -1.93945e-04   5.56678e-04 DIIS/ADIIS
+   @RHF iter   1:   -14.54744094710718   -1.92179e-01   5.24905e-03 ADIIS/DIIS
+   @RHF iter   2:   -14.54852099240110   -1.08005e-03   1.59776e-03 ADIIS/DIIS
+   @RHF iter   3:   -14.54871493704180   -1.93945e-04   5.56678e-04 ADIIS/DIIS
    @RHF iter   4:   -14.54873910073979   -2.41637e-05   5.80725e-06 DIIS
    @RHF iter   5:   -14.54873910108195   -3.42155e-10   1.62513e-07 DIIS
    @RHF iter   6:   -14.54873910108353   -1.57740e-12   6.20543e-09 DIIS
@@ -258,14 +282,14 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on CHE-FEVANGE-01i at Sun May 28 15:50:43 2023
+*** tstop() called on MacBook-Pro-158.attlocal.net at Wed Nov  8 20:44:12 2023
 Module time:
-	user time   =       0.35 seconds =       0.01 minutes
-	system time =       1.17 seconds =       0.02 minutes
+	user time   =       0.38 seconds =       0.01 minutes
+	system time =       0.72 seconds =       0.01 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.35 seconds =       0.01 minutes
-	system time =       1.17 seconds =       0.02 minutes
+	user time   =       0.38 seconds =       0.01 minutes
+	system time =       0.72 seconds =       0.01 minutes
 	total time  =          0 seconds =       0.00 minutes
     SCF energy............................................................................PASSED
 
@@ -275,7 +299,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: ci-update-1 - git commit: d1df356c
+    git branch: strgas - git commit: 9d1877e9
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -287,9 +311,15 @@ Scratch directory: /tmp/
 
   Preparing forte objects from a Psi4 Wavefunction object
   No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
 
-*** tstart() called on CHE-FEVANGE-01i
-*** at Sun May 28 15:50:43 2023
+    Primary   basis highest AM E, G, H:  5, 4, 3
+    Auxiliary basis highest AM E, G, H:  6, 5, 4
+    Onebody   basis highest AM E, G, H:  6, 5, 4
+    Solid Harmonics ordering:            gaussian
+
+*** tstart() called on MacBook-Pro-158.attlocal.net
+*** at Wed Nov  8 20:44:12 2023
 
    => Loading Basis Set <=
 
@@ -408,9 +438,9 @@ Scratch directory: /tmp/
                         Total Energy        Delta E     RMS |[F,P]|
 
    @RHF iter SAD:   -14.35526221907790   -1.43553e+01   0.00000e+00 
-   @RHF iter   1:   -14.54744094710718   -1.92179e-01   5.24905e-03 DIIS/ADIIS
-   @RHF iter   2:   -14.54852099240110   -1.08005e-03   1.59776e-03 DIIS/ADIIS
-   @RHF iter   3:   -14.54871493704180   -1.93945e-04   5.56678e-04 DIIS/ADIIS
+   @RHF iter   1:   -14.54744094710718   -1.92179e-01   5.24905e-03 ADIIS/DIIS
+   @RHF iter   2:   -14.54852099240110   -1.08005e-03   1.59776e-03 ADIIS/DIIS
+   @RHF iter   3:   -14.54871493704180   -1.93945e-04   5.56678e-04 ADIIS/DIIS
    @RHF iter   4:   -14.54873910073979   -2.41637e-05   5.80725e-06 DIIS
    @RHF iter   5:   -14.54873910108195   -3.42155e-10   1.62513e-07 DIIS
    @RHF iter   6:   -14.54873910108353   -1.57740e-12   6.20543e-09 DIIS
@@ -470,14 +500,14 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on CHE-FEVANGE-01i at Sun May 28 15:50:43 2023
+*** tstop() called on MacBook-Pro-158.attlocal.net at Wed Nov  8 20:44:12 2023
 Module time:
-	user time   =       0.16 seconds =       0.00 minutes
-	system time =       0.68 seconds =       0.01 minutes
+	user time   =       0.19 seconds =       0.00 minutes
+	system time =       0.81 seconds =       0.01 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.56 seconds =       0.01 minutes
-	system time =       2.03 seconds =       0.03 minutes
+	user time   =       0.62 seconds =       0.01 minutes
+	system time =       1.76 seconds =       0.03 minutes
 	total time  =          0 seconds =       0.00 minutes
 
 
@@ -565,12 +595,12 @@ Total time:
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00316946 s
+  Integral transformation done. 0.00313238 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000224 GB
-  Timing for conventional integral transformation:            0.008 s.
+  Timing for conventional integral transformation:            0.007 s.
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing conventional integrals:                0.008 s.
+  Timing for computing conventional integrals:                0.007 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -584,113 +614,116 @@ Total time:
     --------------------------
 
 
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    6    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  Alfa Conf.  Beta Conf.
+    -----------------
+         1     3    3    0    0
+
   ==> String Lists <==
 
-  Number of alpha electrons     = 3
-  Number of beta electrons      = 3
-  Number of alpha strings       = 120
-  Number of beta strings        = 120
-  Timing for strings        =      0.000 s
-  Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.027 s
-  Timing for OO strings     =      0.005 s
-  Timing for VVOO strings   =      0.013 s
-  Timing for 1-hole strings =      0.001 s
-  Timing for 2-hole strings =      0.002 s
-  Timing for 3-hole strings =      0.002 s
-  Total timing              =      0.045 s
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                              120
+    number of beta strings                               120
+    timing for strings                                 0.000 s
+    timing for NN strings                              0.000 s
+    timing for VO strings                              0.001 s
+    timing for OO strings                              0.000 s
+    timing for VVOO strings                            0.000 s
+    timing for 1-hole strings                          0.000 s
+    timing for 2-hole strings                          0.000 s
+    timing for 3-hole strings                          0.000 s
+    total timing                                       0.001 s
 
-  ==> FCI Solver <==
 
-    Number of determinants                        1824
-    Symmetry                                         0
-    Multiplicity                                     1
-    Number of roots                                  1
-    Target root                                      0
-    Trial vectors per root                          10
-    Spin adapt                                   false
+  ==> GASCI Solver <==
+
+    Spin adapt                                         FALSE
+    Number of determinants                              1824
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
 
   Allocating memory for the Hamiltonian algorithm. Size: 2 x 16 x 16.   Memory: 0.000004 GB
 
-  ==> FCI Initial Guess <==
+  ==> Initial Guess <==
 
-  ---------------------------------------------
-    Root            Energy     <S^2>   Spin
-  ---------------------------------------------
-      0      -14.594828175260  0.000  singlet
-      1      -14.469453060254  0.000  singlet
-      2      -14.469154929475  0.000  singlet
-      3      -14.451223456742  2.000  triplet
-      4      -14.394161159287  0.000  singlet
-      5      -14.321935748578  0.000  singlet
-      6      -14.229771636774  0.000  singlet
-      7      -14.064103368556  0.000  singlet
-      8      -14.016844953950  0.000  singlet
-      9      -13.710546851095  2.000  triplet
-     10      -13.654995517448  0.000  singlet
-     11      -12.972833009480  0.000  singlet
-     12      -12.407055086773  2.000  triplet
-     13      -12.386750908623  0.000  singlet
-     14      -12.337097172291  2.000  triplet
-     15      -12.323756221993  2.000  triplet
-     16      -12.292845431743  0.000  singlet
-     17      -12.285834367023  2.000  triplet
-     18      -12.284556076585  0.000  singlet
-     19      -12.247779725577  0.000  singlet
-  ---------------------------------------------
-  Timing for initial guess  =      0.003 s
+  Initial guess determinants:         50
 
-  Projecting out guess roots: [3,9,12,14,15,17]
+  Classification of the initial guess solutions
 
-  ==> Diagonalizing Hamiltonian <==
+  Number   2S+1   Selected
+  ------------------------
+    26       1       *
+    21       3        
+     3       5        
+  ------------------------
 
-  Energy   convergence: 1.00e-12
-  Residual convergence: 1.00e-06
-  -----------------------------------------------------
-    Iter.      Avg. Energy       Delta_E     Res. Norm
-  -----------------------------------------------------
-      1      -14.594828175260  -1.459e+01  +6.253e-02
-      2      -14.595798114569  -9.699e-04  +6.534e-03
-      3      -14.595808347826  -1.023e-05  +8.618e-04
-      4      -14.595808781013  -4.332e-07  +3.645e-04
-      5      -14.595808845530  -6.452e-08  +8.118e-05
-      6      -14.595808852202  -6.671e-09  +3.351e-05
-      7      -14.595808852739  -5.378e-10  +7.459e-06
-      8      -14.595808852754  -1.423e-11  +1.189e-06
-      9      -14.595808852754  -3.517e-13  +1.599e-07
-  -----------------------------------------------------
-  The Davidson-Liu algorithm converged in 10 iterations.
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0      -14.595073019819  -0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-12
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                   1824
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            1
+
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -14.595073019819       14.595073019819        0.058180124703      1
+       1      -14.595801576626        0.000728556807        0.005439835076      2
+       2      -14.595808662203        0.000007085577        0.000626882246      3
+       3      -14.595808822921        0.000000160718        0.000208375594      4
+       4      -14.595808848829        0.000000025908        0.000057248138      5
+       5      -14.595808852400        0.000000003571        0.000025427536      6
+       6      -14.595808852743        0.000000000343        0.000006286420      7
+       7      -14.595808852754        0.000000000011        0.000001024671      8
+       8      -14.595808852754        0.000000000000        0.000000136109      9
+  ---------------------------------------------------------------------------------
 
   ==> Root No. 0 <==
 
-    220 0 0 200 0 0     -0.89740847
-    200 0 0 200 2 0      0.29206218
-    200 0 0 200 0 2      0.29206218
-    200 0 0 220 0 0      0.14391931
+    220 0 0 200 0 0      0.89740848
+    200 0 0 200 2 0     -0.29206217
+    200 0 0 200 0 2     -0.29206217
+    200 0 0 220 0 0     -0.14391931
 
-    Total Energy:     -14.595808852754, <S^2>: 0.000000
+    Total Energy:     -14.595808852754, <S^2>: -0.000000
+    Time for GASCI:       0.008130750000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0      -14.595808852754   0.000000
+       1  (  0)    Ag     0      -14.595808852754  -0.000000
     --------------------------------------------------------
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
 
-  ==> Computing RDMs for Root No. 0 <==
+  ==> Computing RDMs <0 Singlet (Ms = 0) Ag| ... |0 Singlet (Ms = 0) Ag> <==
 
     Timing for 1-RDM: 0.000 s
-
-  ==> NATURAL ORBITALS <==
-
-        1Ag     1.999849      1B1u    1.999785      2Ag     1.611384  
-        1B2u    0.170696      1B3u    0.170696      2B1u    0.041574  
-        3Ag     0.005469      1B3g    0.000217      1B2g    0.000217  
-        3B1u    0.000112  
-
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -701,30 +734,35 @@ Total time:
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
 
-  ==> Computing RDMs for Root No. 0 <==
+  ==> Computing RDMs <0 Singlet (Ms = 0) Ag| ... |0 Singlet (Ms = 0) Ag> <==
 
     Timing for 1-RDM: 0.000 s
-
-  ==> NATURAL ORBITALS <==
-
-        1Ag     1.999849      1B1u    1.999785      2Ag     1.611384  
-        1B2u    0.170696      1B3u    0.170696      2B1u    0.041574  
-        3Ag     0.005469      1B3g    0.000217      1B2g    0.000217  
-        3B1u    0.000112  
-
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0AG    -9.21621933     0.00000000     0.00000000    -9.21621933     0.00000000    -6.36147237
+         0AG    -9.21621932     0.00000000     0.00000000    -9.21621932     0.00000000    -6.36147247
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    13.50000000
     --------------------------------------------------------------------------------------------------
 
-  Time to prepare integrals:        0.012 seconds
-  Time to run job          :        0.167 seconds
-  Total                    :        0.178 seconds
+  Time to prepare integrals:        0.010 seconds
+  Time to run job          :        0.009 seconds
+  Total                    :        0.019 seconds
     FCI energy............................................................................PASSED
+    ENERGY ROOT 0 1AG.....................................................................PASSED
+    NUCLEAR REPULSION ENERGY..............................................................PASSED
+    SCF TOTAL ENERGY......................................................................PASSED
+    SINGLET <0AG|DM_X|0AG>................................................................PASSED
+    SINGLET <0AG|DM_Y|0AG>................................................................PASSED
+    SINGLET <0AG|DM_Z|0AG>................................................................PASSED
+    SINGLET <0AG|QM_XX|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_XY|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_XZ|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_YY|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_YZ|0AG>...............................................................PASSED
+    SINGLET <0AG|QM_ZZ|0AG>...............................................................PASSED
+    SINGLET |<0AG|DM|0AG>|................................................................PASSED
 
-    Psi4 stopped on: Sunday, 28 May 2023 03:50PM
-    Psi4 wall time for execution: 0:00:00.97
+    Psi4 stopped on: Wednesday, 08 November 2023 08:44PM
+    Psi4 wall time for execution: 0:00:00.38
 
 *** Psi4 exiting successfully. Buy a developer a beer!

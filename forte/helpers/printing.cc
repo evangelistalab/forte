@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -42,6 +42,45 @@ std::vector<std::string> __s2_labels{
     "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
 namespace forte {
+
+PrintLevel int_to_print_level(int level) {
+    switch (level) {
+    case 0:
+        return PrintLevel::Quiet;
+    case 1:
+        return PrintLevel::Brief;
+    case 2:
+        return PrintLevel::Default;
+    case 3:
+        return PrintLevel::Verbose;
+    case 4:
+        return PrintLevel::Debug;
+    default:
+        throw std::out_of_range("Invalid PrintLevel value");
+    }
+}
+
+/// @brief Return the string representation of a PrintLevel
+std::string to_string(PrintLevel level) {
+    switch (level) {
+    case PrintLevel::Quiet:
+        return "Quiet";
+    case PrintLevel::Brief:
+        return "Brief";
+    case PrintLevel::Default:
+        return "Default";
+    case PrintLevel::Verbose:
+        return "Verbose";
+    case PrintLevel::Debug:
+        return "Debug";
+    default:
+        throw std::out_of_range("Invalid PrintLevel value");
+    }
+}
+
+bool operator>(PrintLevel a, PrintLevel b) { return static_cast<int>(a) > static_cast<int>(b); }
+
+bool operator<(PrintLevel a, PrintLevel b) { return static_cast<int>(a) < static_cast<int>(b); }
 
 void print_h1(const std::string& text, bool centerd, const std::string& left_filler,
               const std::string& right_filler) {

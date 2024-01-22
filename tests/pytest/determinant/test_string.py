@@ -30,7 +30,7 @@ def test_str_address():
     for s,a in zip(test_strings,symmetry):
         assert str_add.sym(s) == a        
     for h, nh in zip([0,3],[3,4]):
-        assert str_add.strpi(h) == nh
+        assert str_add.strpcls(h) == nh
 
 if __name__ == "__main__":
     test_str_constructors()

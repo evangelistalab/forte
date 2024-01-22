@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -187,7 +187,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 }
 
 void SA_MRDSRG::compute_hbar() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
@@ -219,7 +219,7 @@ void SA_MRDSRG::compute_hbar() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -257,7 +257,7 @@ void SA_MRDSRG::compute_hbar() {
         }
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -281,7 +281,7 @@ void SA_MRDSRG::compute_hbar() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
@@ -298,7 +298,7 @@ void SA_MRDSRG::compute_hbar() {
 }
 
 void SA_MRDSRG::compute_hbar_sequential() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
@@ -413,7 +413,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -441,7 +441,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         }
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -465,7 +465,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }

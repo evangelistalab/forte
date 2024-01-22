@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _excited_state_solver_h_
-#define _excited_state_solver_h_
+#pragma once
 
 #include "base_classes/active_space_method.h"
 #include "base_classes/rdms.h"
@@ -137,4 +136,3 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
                                        int max_rdm_level, RDMsType rdm_type);
 };
 } // namespace forte
-#endif // _excited_state_solver_h_

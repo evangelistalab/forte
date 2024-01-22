@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -53,13 +53,14 @@ using namespace ambit;
 
 namespace forte {
 
-MCSCF_2STEP::MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+MCSCF_2STEP::MCSCF_2STEP(std::shared_ptr<ActiveSpaceSolver> as_solver,
+                         const std::map<StateInfo, std::vector<double>>& state_weights_map,
                          std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          std::shared_ptr<forte::SCFInfo> scf_info,
                          std::shared_ptr<ForteIntegrals> ints)
-    : state_weights_map_(state_weights_map), options_(options), mo_space_info_(mo_space_info),
-      scf_info_(scf_info), ints_(ints) {
+    : as_solver_(as_solver), state_weights_map_(state_weights_map), options_(options),
+      mo_space_info_(mo_space_info), scf_info_(scf_info), ints_(ints) {
     startup();
 }
 
@@ -74,7 +75,7 @@ void MCSCF_2STEP::startup() {
 }
 
 void MCSCF_2STEP::read_options() {
-    print_ = options_->get_int("PRINT");
+    print_ = int_to_print_level(options_->get_int("PRINT"));
     debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
     int_type_ = options_->get_str("INT_TYPE");
@@ -96,6 +97,11 @@ void MCSCF_2STEP::read_options() {
     orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
 
     ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
+    if (ci_type_ == "")
+        ci_type_ = options_->get_str("ACTIVE_SPACE_SOLVER");
+    if (ci_type_ == "") {
+        throw std::runtime_error("ACTIVE_SPACE_SOLVER or CASSCF_CI_SOLVER are not specified!");
+    }
 
     opt_orbs_ = not options_->get_bool("CASSCF_NO_ORBOPT");
     max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
@@ -112,7 +118,6 @@ void MCSCF_2STEP::read_options() {
 void MCSCF_2STEP::print_options() {
     // fill in information
     std::vector<std::pair<std::string, int>> info_int{
-        {"Printing level", print_},
         {"Max number of macro iterations", maxiter_},
         {"Max number of micro iterations", micro_maxiter_},
         {"Min number of micro iterations", micro_miniter_}};
@@ -133,7 +138,8 @@ void MCSCF_2STEP::print_options() {
     printer.add_double_data({{"Energy convergence", e_conv_},
                              {"Gradient convergence", g_conv_},
                              {"Max value for rotation", max_rot_}});
-    printer.add_string_data({{"Integral type", int_type_},
+    printer.add_string_data({{"Print level", to_string(print_)},
+                             {"Integral type", int_type_},
                              {"CI solver type", ci_type_},
                              {"Final orbital type", orb_type_redundant_},
                              {"Derivative type", der_type_}});
@@ -183,18 +189,18 @@ double MCSCF_2STEP::compute_energy() {
 
     auto as_solver =
         make_active_space_solver(ci_type_, to_state_nroots_map(state_weights_map_), scf_info_,
-                                 mo_space_info_, cas_grad.active_space_ints(), options_);
-    as_solver->set_print(print_);
+                                 mo_space_info_, options_, cas_grad.active_space_ints());
+    as_solver->set_print(PrintLevel::Quiet);
     as_solver->set_e_convergence(e_conv_);
     as_solver->set_r_convergence(no_orb_opt ? r_conv : 1.0e-2);
     as_solver->set_maxiter(no_orb_opt ? as_maxiter : dl_maxiter_);
     as_solver->set_die_if_not_converged(no_orb_opt);
 
     // initial CI and resulting RDMs
-    const auto state_energies_map = as_solver->compute_energy();
+    const auto state_energies_map = as_solver_->compute_energy();
     auto e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
 
-    auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
+    auto rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);
     cas_grad.evaluate(R, dG);
 
@@ -211,7 +217,7 @@ double MCSCF_2STEP::compute_energy() {
     // set up L-BFGS solver and its parameters for micro iteration
     auto lbfgs_param = std::make_shared<LBFGS_PARAM>();
     lbfgs_param->epsilon = g_conv_;
-    lbfgs_param->print = debug_print_ ? 5 : print_;
+    lbfgs_param->print = debug_print_ ? 5 : static_cast<int>(print_);
     lbfgs_param->max_dir = max_rot_;
     lbfgs_param->step_length_method = LBFGS_PARAM::STEP_LENGTH_METHOD::MAX_CORRECTION;
     LBFGS lbfgs(lbfgs_param);
@@ -257,11 +263,23 @@ double MCSCF_2STEP::compute_energy() {
 
         std::vector<CASSCF_HISTORY> history;
 
+        print_h2("MCSCF Iterations");
+        std::string dash1 = std::string(30, '-');
+        std::string dash2 = std::string(88, '-');
+        psi::outfile->Printf("\n                      Energy CI                    Energy Orbital");
+        psi::outfile->Printf("\n           %s  %s", dash1.c_str(), dash1.c_str());
+        psi::outfile->Printf(
+            "\n    Iter.        Total Energy       Delta        Total Energy       "
+            "Delta  Orb. Grad.  Micro");
+        psi::outfile->Printf("\n    %s", dash2.c_str());
+
         for (int macro = 1; macro <= maxiter_; ++macro) {
             // optimize orbitals
             cas_grad.set_rdms(rdms);
 
-            print_h2("Optimizing Orbitals for Current RDMs");
+            if (print_ >= PrintLevel::Verbose)
+                print_h2("Optimizing Orbitals for Current RDMs");
+
             double e_o = lbfgs.minimize(cas_grad, R);
             energy_ = e_o;
 
@@ -282,15 +300,21 @@ double MCSCF_2STEP::compute_energy() {
             double de_c = (macro > 1) ? e_c - history[macro - 2].e_c : e_c;
 
             // print data of this iteration
-            print_h2("MCSCF Macro Iter. " + std::to_string(macro));
-            std::string title = "         Energy CI (  Delta E  )"
-                                "         Energy Opt. (  Delta E  )"
-                                "  E_OPT - E_CI   Orbital RMS  Micro";
-            if (do_diis_)
-                title += "  DIIS";
-            psi::outfile->Printf("\n    %s", title.c_str());
-            psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e %4d/%c",
-                                 e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
+            if (print_ >= PrintLevel::Verbose) {
+                print_h2("MCSCF Macro Iter. " + std::to_string(macro));
+                std::string title = "         Energy CI (  Delta E  )"
+                                    "         Energy Opt. (  Delta E  )"
+                                    "  E_OPT - E_CI   Orbital RMS  Micro";
+                if (do_diis_)
+                    title += "  DIIS";
+                psi::outfile->Printf("\n    %s", title.c_str());
+            }
+            psi::outfile->Printf("\n    %4d %20.12f %11.4e%20.12f %11.4e  %10.4e %4d/%c", macro + 1,
+                                 e_c, de_c, e_o, de_o, g_rms, n_micro, o_conv);
+
+            // psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e
+            // %4d/%c",
+            //                      e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
 
             // test convergence
             if (macro == 1 and lbfgs.converged() and std::fabs(de) < e_conv_) {
@@ -305,6 +329,7 @@ double MCSCF_2STEP::compute_energy() {
             bool is_diis_conv = !do_diis_ or macro < diis_start_ + diis_min_vec_ or
                                 diis_manager.subspace_size() > 1;
             if (is_de_conv and is_e_conv and is_g_conv and is_diis_conv) {
+                psi::outfile->Printf("\n    %s", dash2.c_str());
                 psi::outfile->Printf(
                     "\n\n  A miracle has come to pass: MCSCF iterations have converged!");
                 converged = true;
@@ -365,23 +390,27 @@ double MCSCF_2STEP::compute_energy() {
 
             // solve the CI problem
             auto fci_ints = cas_grad.active_space_ints();
-            auto print_level = debug_print_ ? 5 : print_;
-            e_c = diagonalize_hamiltonian(as_solver, fci_ints,
+            auto print_level = debug_print_ ? PrintLevel::Debug
+                                            : (print_ >= PrintLevel::Verbose ? PrintLevel::Verbose
+                                                                             : PrintLevel::Quiet);
+            e_c = diagonalize_hamiltonian(as_solver_, fci_ints,
                                           {print_level, dl_e_conv, dl_r_conv, false});
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
+            rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
         }
 
         diis_manager.reset_subspace();
         diis_manager.delete_diis_file();
 
         // print summary
-        print_macro_iteration(history);
+        // print_macro_iteration(history);
     }
 
     // perform final CI using converged orbitals
-    // as_solver->set_maxiter(as_maxiter);
+    if (print_ >= PrintLevel::Default)
+        psi::outfile->Printf("\n\n  Performing final CI Calculation using converged orbitals");
+
     energy_ =
-        diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
+        diagonalize_hamiltonian(as_solver_, cas_grad.active_space_ints(),
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
@@ -389,7 +418,7 @@ double MCSCF_2STEP::compute_energy() {
 
         if (final_orbs != "UNSPECIFIED" or der_type_ == "FIRST") {
             // fix orbitals for redundant pairs
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
+            rdms = as_solver_->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
             auto F = cas_grad.fock(rdms);
             ints_->set_fock_matrix(F, F);
 
@@ -398,7 +427,8 @@ double MCSCF_2STEP::compute_energy() {
 
             cas_grad.canonicalize_final(semi.Ua());
 
-            // TODO: need to implement the transformation of CI coefficients due to orbital changes
+            // TODO: need to implement the transformation of CI coefficients due to orbital
+            // changes
         }
 
         // pass to wave function
@@ -415,12 +445,12 @@ double MCSCF_2STEP::compute_energy() {
             // TODO: remove this re-diagonalization if CI transformation is impelementd
             if (not is_single_reference()) {
                 diagonalize_hamiltonian(
-                    as_solver, cas_grad.active_space_ints(),
-                    {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
+                    as_solver_, cas_grad.active_space_ints(),
+                    {PrintLevel::Quiet, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
             }
 
             // recompute gradient due to canonicalization
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
+            rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
             cas_grad.set_rdms(rdms);
             cas_grad.evaluate(R, dG);
 
@@ -463,20 +493,21 @@ bool MCSCF_2STEP::is_single_reference() {
     return false;
 }
 
-double MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
-                                            std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                            const std::tuple<int, double, double, bool>& params) {
+double
+MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver_,
+                                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                     const std::tuple<PrintLevel, double, double, bool>& params) {
     const auto& [print, e_conv, r_conv, dump_wfn] = params;
 
-    as_solver->set_print(print);
-    as_solver->set_e_convergence(e_conv);
-    as_solver->set_r_convergence(r_conv);
-    as_solver->set_active_space_integrals(fci_ints);
+    as_solver_->set_print(print);
+    as_solver_->set_e_convergence(e_conv);
+    as_solver_->set_r_convergence(r_conv);
+    as_solver_->set_active_space_integrals(fci_ints);
 
-    const auto state_energies_map = as_solver->compute_energy();
+    const auto state_energies_map = as_solver_->compute_energy();
 
     if (dump_wfn)
-        as_solver->dump_wave_function();
+        as_solver_->dump_wave_function();
 
     return compute_average_state_energy(state_energies_map, state_weights_map_);
 }
@@ -554,11 +585,13 @@ void MCSCF_2STEP::print_macro_iteration(const std::vector<CASSCF_HISTORY>& histo
 }
 
 std::unique_ptr<MCSCF_2STEP>
-make_mcscf_two_step(const std::map<StateInfo, std::vector<double>>& state_weight_map,
+make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
+                    const std::map<StateInfo, std::vector<double>>& state_weight_map,
                     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info,
                     std::shared_ptr<ForteIntegrals> ints) {
-    return std::make_unique<MCSCF_2STEP>(state_weight_map, options, mo_space_info, scf_info, ints);
+    return std::make_unique<MCSCF_2STEP>(as_solver, state_weight_map, options, mo_space_info,
+                                         scf_info, ints);
 }
 
 } // namespace forte

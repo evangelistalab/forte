@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,23 +26,26 @@
  * @END LICENSE
  */
 
-#ifndef _active_space_solver_h_
-#define _active_space_solver_h_
+#pragma once
 
 #include <map>
 #include <vector>
 #include <string>
+
 #include <ambit/tensor.h>
+#include "psi4/libmints/matrix.h"
 
 namespace ambit {
 class BlockedTensor;
 }
 
-#include "psi4/libmints/matrix.h"
 #include "base_classes/state_info.h"
 #include "base_classes/rdms.h"
+#include "helpers/printing.h"
+
 #include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
+
 namespace forte {
 
 class ActiveSpaceMethod;
@@ -76,14 +79,14 @@ class ActiveSpaceSolver {
     ActiveSpaceSolver(const std::string& method,
                       const std::map<StateInfo, size_t>& state_nroots_map,
                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                      std::shared_ptr<ForteOptions> options);
+                      std::shared_ptr<ForteOptions> options,
+                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
     /// Set the print level
-    /// @param level the print level (0 = no printing, 1 default)
-    void set_print(int level);
+    /// @param level the print level
+    void set_print(PrintLevel level);
 
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
@@ -221,6 +224,9 @@ class ActiveSpaceSolver {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// User-provided options
+    std::shared_ptr<ForteOptions> options_;
+
     /// The molecular integrals for the active space
     /// This object holds only the integrals for the orbital contained in the
     /// active_mo_vector.
@@ -230,9 +236,6 @@ class ActiveSpaceSolver {
 
     /// The multipole integrals for the active space
     std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints_;
-
-    /// User-provided options
-    std::shared_ptr<ForteOptions> options_;
 
     /// A map of state symmetries to the associated ActiveSpaceMethod
     std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> state_method_map_;
@@ -259,7 +262,7 @@ class ActiveSpaceSolver {
     std::map<StateInfo, std::string> state_filename_map_;
 
     /// A variable to control printing information
-    int print_ = 1;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The energy convergence criterion
     double e_convergence_ = 1.0e-10;
@@ -303,7 +306,8 @@ class ActiveSpaceSolver {
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);
+    std::shared_ptr<ForteOptions> options,
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints = std::shared_ptr<ActiveSpaceIntegrals>());
 
 /**
  * @brief Convert a map of StateInfo to weight lists to a map of StateInfo to number of roots.
@@ -333,5 +337,3 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
                              const std::map<StateInfo, std::vector<double>>& state_weight_map);
 
 } // namespace forte
-
-#endif // _active_space_solver_h_

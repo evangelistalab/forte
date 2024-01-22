@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -148,6 +148,8 @@ void MRDSRG_SO::startup() {
     nso_ = nh_ + nv_;
     size_t nmo = nso_ / 2;
     size_t na_mo = na_ / 2;
+
+    BlockedTensor::reset_mo_spaces();
 
     BTF_->add_mo_space("c", "mn", core_sos, AlphaSpin);
     BTF_->add_mo_space("a", "uvwxyz", actv_sos, AlphaSpin);

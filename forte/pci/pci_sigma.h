@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _pci_sigma_h_
-#define _pci_sigma_h_
+#pragma once
 
 #include "sparse_ci/sigma_vector.h"
 
@@ -142,4 +141,3 @@ class PCISigmaVector : public SigmaVector {
         const std::pair<double, double>& max_coupling);
 };
 } // namespace forte
-#endif // _pci_sigma_h_

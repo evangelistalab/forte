@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -299,7 +299,7 @@ template <size_t N> class BitArray {
     }
 
     /// Bitwise OR operator (|=)
-    BitArray<N> operator|=(const BitArray<N>& lhs) const {
+    BitArray<N> operator|=(const BitArray<N>& lhs) {
         for (size_t n = 0; n < nwords_; n++) {
             words_[n] |= lhs.words_[n];
         }
@@ -418,6 +418,24 @@ template <size_t N> class BitArray {
         return ~word_t(0);
     }
 
+    /// Find all the bits set to one and store their indices in the vector occ
+    /// @param occ a vector of integers where the indices of the bits set to one are stored
+    /// @param n the number of bits set to one
+    /// @param begin the index of the first word to test
+    /// @param end the index of the last word to test (not included)
+    void find_set_bits(std::vector<int>& occ, int& n, size_t begin = 0,
+                       size_t end = nwords_) const {
+        n = 0;
+        uint64_t x;
+        for (; begin < end; ++begin) {
+            x = words_[begin];
+            while (x != 0) {
+                occ[n] = ui64_find_and_clear_lowest_one_bit(x) + begin * bits_per_word;
+                ++n;
+            }
+        }
+    }
+
     /// Implements the operation: (a & b) == b
     bool fast_a_and_b_equal_b(const BitArray<N>& b) const {
         bool result = false;
@@ -465,6 +483,31 @@ template <size_t N> class BitArray {
             int c = 0;
             for (size_t n = 0; n < nwords_; n++) {
                 c += ui64_bit_count(words_[n] ^ b.words_[n]);
+            }
+            return c;
+        }
+    }
+
+    /// Implements the operation: count(a & b)
+    int fast_a_and_b_count(const BitArray<N>& b) const {
+        if constexpr (N == 64) {
+            return ui64_bit_count(words_[0] & b.words_[0]);
+        } else if constexpr (N == 128) {
+            return ui64_bit_count(words_[0] & b.words_[0]) +
+                   ui64_bit_count(words_[1] & b.words_[1]);
+        } else if constexpr (N == 192) {
+            return ui64_bit_count(words_[0] & b.words_[0]) +
+                   ui64_bit_count(words_[1] & b.words_[1]) +
+                   ui64_bit_count(words_[2] & b.words_[2]);
+        } else if constexpr (N == 256) {
+            return ui64_bit_count(words_[0] & b.words_[0]) +
+                   ui64_bit_count(words_[1] & b.words_[1]) +
+                   ui64_bit_count(words_[2] & b.words_[2]) +
+                   ui64_bit_count(words_[3] & b.words_[3]);
+        } else {
+            int c = 0;
+            for (size_t n = 0; n < nwords_; n++) {
+                c += ui64_bit_count(words_[n] & b.words_[n]);
             }
             return c;
         }

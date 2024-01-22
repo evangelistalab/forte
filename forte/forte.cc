@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -126,7 +126,6 @@ void banner() {
         "    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang\n"
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
-    psi::outfile->Printf("\n  Size of Determinant class: %d bits", sizeof(Determinant) * 8);
 }
 
 } // namespace forte

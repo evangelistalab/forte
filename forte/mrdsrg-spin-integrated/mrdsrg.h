@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mrdsrg_h_
-#define _mrdsrg_h_
+#pragma once
 
 #include "master_mrdsrg.h"
 
@@ -409,10 +408,10 @@ class MRDSRG : public MASTER_DSRG {
     void print_cumulant_summary();
 };
 
-/// The type of container used to hold the state vector used by boost::odeint
+/// The type of container used to hold the state vector used by odeint
 using odeint_state_type = std::vector<double>;
 
-/// The functor used for boost ODE integrator in MR-SRG.
+/// The functor used for ODE integrator in MR-SRG.
 class MRSRG_ODEInt {
   public:
     MRSRG_ODEInt(MRDSRG& mrdsrg_obj) : mrdsrg_obj_(mrdsrg_obj) {}
@@ -422,7 +421,7 @@ class MRSRG_ODEInt {
     MRDSRG& mrdsrg_obj_;
 };
 
-/// The functor used for boost ODE integrator in SRG-MRPT2.
+/// The functor used for ODE integrator in SRG-MRPT2.
 class SRGPT2_ODEInt {
   public:
     SRGPT2_ODEInt(MRDSRG& mrdsrg_obj, std::string Hzero, bool relax_ref)
@@ -447,5 +446,3 @@ class MRSRG_Print {
     std::vector<double> energies_;
 };
 } // namespace forte
-
-#endif // _mrdsrg_h_

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _casscf_h_
-#define _casscf_h_
+#pragma once
 
 #include <map>
 
@@ -233,7 +232,7 @@ class CASSCF {
     ambit::Tensor tei_gaaa_;
 
     /// The print level
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
@@ -255,5 +254,3 @@ make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
             std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
 
 } // namespace forte
-
-#endif // _casscf_h_

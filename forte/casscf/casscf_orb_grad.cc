@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -390,7 +390,7 @@ void CASSCF_ORB_GRAD::init_tensors() {
     // save a copy of initial MO
     C0_ = ints_->Ca()->clone();
     C0_->set_name("MCSCF Initial Orbital Coefficients");
-    C_ = ints_->Ca();
+    C_ = ints_->Ca()->clone();
     C_->set_name("MCSCF Orbital Coefficients");
 
     // Fock matrices
@@ -735,6 +735,10 @@ bool CASSCF_ORB_GRAD::update_orbitals(std::shared_ptr<psi::Vector> x) {
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
     if (ints_->integral_type() == Custom) {
         ints_->update_orbitals(C_, C_);
+    } else {
+        // here we push the new orbitals to the integrals object but do not update the integrals
+        // for efficiency
+        ints_->update_orbitals(C_, C_, false);
     }
 
     // printing
@@ -1034,7 +1038,8 @@ void CASSCF_ORB_GRAD::format_1rdm() {
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
     auto actv_sym = mo_space_info_->symmetry("ACTIVE");
-    auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym, core_mos_);
+    auto active_space_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym, core_mos_);
 
     // build antisymmetrized TEI in physists' notation
     auto actv_ab = ambit::Tensor::build(CoreTensor, "tei_actv_aa", std::vector<size_t>(4, nactv_));
@@ -1044,14 +1049,14 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
     actv_aa.copy(actv_ab);
     actv_aa("uvxy") -= actv_ab("uvyx");
 
-    fci_ints->set_active_integrals(actv_aa, actv_ab, actv_aa);
+    active_space_ints->set_active_integrals(actv_aa, actv_ab, actv_aa);
 
     auto& oei = Fc_.block("aa").data();
-    fci_ints->set_restricted_one_body_operator(oei, oei);
+    active_space_ints->set_restricted_one_body_operator(oei, oei);
 
-    fci_ints->set_scalar_energy(e_closed_ - ints_->frozen_core_energy());
+    active_space_ints->set_scalar_energy(e_closed_ - ints_->frozen_core_energy());
 
-    return fci_ints;
+    return active_space_ints;
 }
 
 void CASSCF_ORB_GRAD::canonicalize_final(const std::shared_ptr<psi::Matrix>& U) {
@@ -1061,6 +1066,11 @@ void CASSCF_ORB_GRAD::canonicalize_final(const std::shared_ptr<psi::Matrix>& U) 
     test_orbital_rotations(U_, "WARNING: Final Active Orbitals Maybe Different from the Original");
 
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
+    if (ints_->integral_type() == Custom) {
+        ints_->update_orbitals(C_, C_);
+    } else {
+        ints_->update_orbitals(C_, C_, false);
+    }
     build_mo_integrals();
 }
 } // namespace forte

@@ -16,15 +16,15 @@ def test_ccsdtq_3():
 
     geom = "Ne"
 
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='cc-pVDZ', reference='RHF')
-    forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={'FROZEN_DOCC': [1, 0, 0, 0, 0, 0, 0, 0]})
+    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="cc-pVDZ", reference="RHF")
+    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn, mo_spaces={"FROZEN_DOCC": [1, 0, 0, 0, 0, 0, 0, 0]}).run()
     calc_data = scc.run_cc(
-        forte_objs['as_ints'],
-        forte_objs['scf_info'],
-        forte_objs['mo_space_info'],
-        cc_type='cc',
+        data.as_ints,
+        data.scf_info,
+        data.mo_space_info,
+        cc_type="cc",
         max_exc=4,
-        e_convergence=1.0e-12
+        e_convergence=1.0e-12,
     )
 
     psi4.core.clean()

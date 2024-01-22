@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -51,7 +51,7 @@ double SADSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alph
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("110", timer.get());
@@ -71,7 +71,7 @@ double SADSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alph
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("120", timer.get());
@@ -92,7 +92,7 @@ double SADSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alph
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("210", timer.get());
@@ -130,7 +130,7 @@ std::vector<double> SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, Block
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("220", timer.get());
@@ -303,7 +303,7 @@ void SADSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
     C1["ip"] += alpha * H1["ap"] * T1["ia"];
     C1["qa"] -= alpha * H1["qi"] * T1["ia"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("111", timer.get());
@@ -322,7 +322,7 @@ void SADSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
     C1["ia"] -= alpha * H1["vj"] * T2["ijau"] * L1_["uv"];
     C1["ia"] += 0.5 * alpha * H1["vj"] * T2["jiau"] * L1_["uv"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("121", timer.get());
@@ -341,7 +341,7 @@ void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     C1["qp"] -= alpha * T1["mu"] * L1_["uv"] * H2["qvpm"];
     C1["qp"] += 0.5 * alpha * T1["mu"] * L1_["uv"] * H2["vqpm"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("211", timer.get());
@@ -402,7 +402,7 @@ void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
     C1["qs"] -= alpha * H2["uqms"] * T2["mvxy"] * L2_["xyuv"];
     C1["qs"] += 0.5 * alpha * H2["uqsm"] * T2["mvxy"] * L2_["xyuv"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("221", timer.get());
@@ -418,7 +418,7 @@ void SADSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
     C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
     C2["jqba"] -= alpha * T2["ijab"] * H1["qi"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("122", timer.get());
@@ -434,7 +434,7 @@ void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     C2["rsaq"] -= alpha * T1["ia"] * H2["rsiq"];
     C2["srqa"] -= alpha * T1["ia"] * H2["rsiq"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("212", timer.get());
@@ -492,7 +492,7 @@ void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
     C2["jqsb"] += temp["jqsb"];
     C2["qjbs"] += temp["jqsb"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("222", timer.get());
@@ -512,7 +512,7 @@ void SADSRG::V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("210", timer.get());
@@ -549,7 +549,7 @@ std::vector<double> SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, Bloc
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("220", timer.get());
@@ -573,7 +573,7 @@ void SADSRG::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
 
     C1["qp"] -= 0.5 * alpha * T1["xe"] * L1_["yx"] * B["gep"] * B["gqy"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("211", timer.get());
@@ -646,7 +646,7 @@ void SADSRG::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
 
     C1["qs"] += 0.5 * alpha * B["gus"] * B["gqm"] * T2["mvxy"] * L2_["xyuv"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("221", timer.get());
@@ -661,7 +661,7 @@ void SADSRG::V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     C2["rsaq"] -= alpha * T1["ia"] * B["gri"] * B["gsq"];
     C2["srqa"] -= alpha * T1["ia"] * B["gri"] * B["gsq"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("212", timer.get());
@@ -720,7 +720,7 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     // exchange like terms
     V_T2_C2_DF_PH_X(B, T2, alpha, C2);
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("222", timer.get());

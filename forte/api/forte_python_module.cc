@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -62,8 +62,8 @@
 #include "mrdsrg-spin-adapted/sadsrg.h"
 #include "mrdsrg-spin-adapted/sa_mrpt2.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
-#include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
+#include "genci/ci_occupation.h"
 
 #include "post_process/spin_corr.h"
 
@@ -73,11 +73,14 @@ using namespace pybind11::literals;
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
+void export_EPICTensors(py::module& m);
+void export_ActiveSpaceIntegrals(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
 void export_RDMs(py::module& m);
 void export_Determinant(py::module& m);
+void export_GAS(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
@@ -174,6 +177,12 @@ PYBIND11_MODULE(_forte, m) {
     py::module::import("ambit");
 
     m.doc() = "pybind11 Forte module"; // module docstring
+
+    // export base classes
+    export_EPICTensors(m);
+
+    export_ActiveSpaceIntegrals(m);
+
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
@@ -193,7 +202,10 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "ref_wfn"_a, "options"_a,
           "mo_space_info"_a, "int_type"_a = "", "Make a Forte integral object from psi4");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
-    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
+    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver",
+          "method"_a, "state_nroots_map"_a, "scf_info"_a, "mo_space_info"_a, "options"_a,
+          "as_ints"_a = std::shared_ptr<ActiveSpaceIntegrals>());
+
     m.def("make_orbital_transformation", &make_orbital_transformation,
           "Make an orbital transformation");
     m.def("make_state_info_from_psi", &make_state_info_from_psi,
@@ -267,6 +279,17 @@ PYBIND11_MODULE(_forte, m) {
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
 
+    m.def("get_gas_occupation", &get_gas_occupation);
+    m.def("get_ci_occupation_patterns", &get_ci_occupation_patterns);
+
+    py::enum_<PrintLevel>(m, "PrintLevel")
+        .value("Quiet", PrintLevel::Quiet)
+        .value("Brief", PrintLevel::Brief)
+        .value("Default", PrintLevel::Default)
+        .value("Verbose", PrintLevel::Verbose)
+        .value("Debug", PrintLevel::Debug)
+        .export_values();
+
     //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
 
     export_ForteOptions(m);
@@ -284,6 +307,8 @@ PYBIND11_MODULE(_forte, m) {
     export_SemiCanonical(m);
 
     export_Determinant(m);
+
+    export_GAS(m);
 
     export_RDMs(m);
 
@@ -316,40 +341,6 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &DynamicCorrelationSolver::compute_energy)
         .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
              "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
-
-    // export ActiveSpaceIntegrals
-    py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
-                                                                            "ActiveSpaceIntegrals")
-        .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
-             "Compute the matrix element of the Hamiltonian between two determinants")
-        .def("nuclear_repulsion_energy", &ActiveSpaceIntegrals::nuclear_repulsion_energy,
-             "Get the nuclear repulsion energy")
-        .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,
-             "Get the frozen core energy (contribution from FROZEN_DOCC)")
-        .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
-             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
-        .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
-        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry,
-             "Return the symmetry of the active MOs")
-        .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
-        .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
-        .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
-        .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
-        .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
-        .def("add", &ActiveSpaceIntegrals::add, "Add another integrals to this one", "as_ints"_a,
-             "factor"_a = 1.0)
-        .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
-
-    // export ActiveMultipoleIntegrals
-    py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(
-        m, "ActiveMultipoleIntegrals")
-        .def("compute_electronic_dipole", &ActiveMultipoleIntegrals::compute_electronic_dipole)
-        .def("compute_electronic_quadrupole",
-             &ActiveMultipoleIntegrals::compute_electronic_quadrupole)
-        .def("nuclear_dipole", &ActiveMultipoleIntegrals::nuclear_dipole)
-        .def("nuclear_quadrupole", &ActiveMultipoleIntegrals::nuclear_quadrupole)
-        .def("set_dipole_name", &ActiveMultipoleIntegrals::set_dp_name)
-        .def("set_quadrupole_name", &ActiveMultipoleIntegrals::set_qp_name);
 
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")

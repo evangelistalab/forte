@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -122,9 +122,10 @@ void OrbitalOptimizer::startup() {
     nirrep_ = mo_space_info_->nirrep();
 
     auto ci_solver = options_->get_str("CASSCF_CI_SOLVER");
-    std::vector<std::string> ci_types{"FCI", "DETCI", "ACI", "DMRG"};
+    std::vector<std::string> ci_types{"FCI", "DETCI", "ACI", "DMRG", "GENCI"};
     if (std::find(ci_types.begin(), ci_types.end(), ci_solver) == ci_types.end()) {
-        outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, DETCI, ACI, or DMRG");
+        outfile->Printf(
+            "\n\n Please set your CASSCF_CI_SOLVER to either FCI, DETCI, ACI, GENCI, or DMRG");
         outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.",
                         options_->get_str("CASSCF_CI_SOLVER").c_str());
         throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");

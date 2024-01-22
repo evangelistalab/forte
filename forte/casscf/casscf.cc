@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -84,7 +84,7 @@ void CASSCF::startup() {
         }
     }
 
-    print_ = options_->get_int("PRINT");
+    print_ = int_to_print_level(options_->get_int("PRINT"));
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
     nsopi_ = ints_->nsopi();
@@ -197,7 +197,7 @@ double CASSCF::compute_energy() {
     double econv = options_->get_double("CASSCF_E_CONVERGENCE");
     double gconv = options_->get_double("CASSCF_G_CONVERGENCE");
 
-    auto Ca = ints_->Ca();
+    auto Ca = ints_->Ca()->clone();
 
     print_h2("CASSCF Iteration");
     outfile->Printf("\n  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
@@ -207,14 +207,14 @@ double CASSCF::compute_energy() {
 
         local_timer trans_ints_timer;
         tei_gaaa_ = transform_integrals(Ca);
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Default) {
             outfile->Printf("\n\n  Transform Integrals takes %8.8f s.", trans_ints_timer.get());
         }
         iter_con.push_back(iter);
 
         // Perform a CASCI
         E_casscf_old = E_casscf_;
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Default) {
             std::string ci_type = options_->get_str("CASSCF_CI_SOLVER");
             outfile->Printf("\n\n  Performing a CAS with %s", ci_type.c_str());
         }
@@ -229,7 +229,7 @@ double CASSCF::compute_energy() {
         } else {
             diagonalize_hamiltonian();
         }
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Default) {
             outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
         }
 
@@ -239,7 +239,7 @@ double CASSCF::compute_energy() {
         orbital_optimizer.set_frozen_one_body(F_frozen_core_);
         orbital_optimizer.set_symmmetry_mo(Ca);
         orbital_optimizer.one_body(Hcore_->clone());
-        if (print_ > 0) {
+        if (print_ >= PrintLevel::Default) {
             orbital_optimizer.set_print_timings(true);
         }
         orbital_optimizer.set_jk(JK_);
@@ -278,8 +278,9 @@ double CASSCF::compute_energy() {
         }
         auto Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 
-        // update MO coefficients
+        // update MO coefficients locally and in the integrals object
         Ca->copy(Cp);
+        ints_->update_orbitals(Cp, Cp, false);
 
         std::string diis_start_label = "";
         if (do_diis and (iter > diis_start or g_norm < diis_gradient_norm)) {
@@ -307,8 +308,9 @@ double CASSCF::compute_energy() {
     }
 
     // pass Ca to ForteIntegrals and Psi4
-    ints_->Ca()->copy(Ca);
+    ints_->update_orbitals(Ca, Ca, false);
     ints_->wfn()->Ca()->copy(Ca);
+    ints_->wfn()->Cb()->copy(Ca);
 
     // semicanonicalize
     auto final_orbital_type = options_->get_str("CASSCF_FINAL_ORBITAL");
@@ -323,8 +325,9 @@ double CASSCF::compute_energy() {
         Ca = linalg::doublet(Ca, U, false, false);
         Ca->set_name(Ca_name);
 
-        ints_->Ca()->copy(Ca);
+        ints_->update_orbitals(Ca, Ca, false);
         ints_->wfn()->Ca()->copy(Ca);
+        ints_->wfn()->Cb()->copy(Ca);
 
         if (options_->get_str("DERTYPE") == "FIRST") {
             ints_->update_orbitals(Ca, Ca);
@@ -347,7 +350,7 @@ void CASSCF::diagonalize_hamiltonian() {
 
     auto state_map = to_state_nroots_map(state_weights_map_);
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
-                                                        mo_space_info_, fci_ints, options_);
+                                                        mo_space_info_, options_, fci_ints);
     active_space_solver->set_print(print_);
     const auto state_energies_map = active_space_solver->compute_energy();
     cas_ref_ =
@@ -366,9 +369,10 @@ std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
     auto C_core = std::make_shared<psi::Matrix>("C_core", nirrep_, nsopi_, frozen_docc_dim_);
 
     // Need to get the frozen block of the C matrix
+    auto Ca_copy = Ca->clone();
     for (size_t h = 0; h < nirrep_; h++) {
         for (int i = 0; i < frozen_docc_dim_[h]; i++) {
-            C_core->set_column(h, i, Ca->get_column(h, i));
+            C_core->set_column(h, i, Ca_copy->get_column(h, i));
         }
     }
 
@@ -418,7 +422,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
             index += 1;
         }
     }
-    if (print_ > 1) {
+    if (print_ >= PrintLevel::Verbose) {
         outfile->Printf("\n  CSO2AO takes %8.4f s.", CSO2AO.get());
     }
 
@@ -523,7 +527,7 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
 }
 
 std::vector<double> CASSCF::compute_restricted_docc_operator() {
-    auto Ca = ints_->Ca();
+    auto Ca = ints_->Ca()->clone();
 
     double Edocc = 0.0;                         // energy from restricted docc
     double Efrzc = ints_->frozen_core_energy(); // energy from frozen docc

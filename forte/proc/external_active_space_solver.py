@@ -14,17 +14,17 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def write_wavefunction(ref_wfn):
-    Ca = ref_wfn.Ca().to_array()
+def write_wavefunction(data):
+    Ca = data.psi_wfn.Ca().to_array()
 
-    with open('coeff.json', 'w+') as f:
-        json.dump({'Ca': Ca}, f, cls=NumpyEncoder)
+    with open("coeff.json", "w+") as f:
+        json.dump({"Ca": Ca}, f, cls=NumpyEncoder)
 
 
-def read_wavefunction(ref_wfn):
-    with open('coeff.json') as f:
-        data = json.load(f)
-        C_read = data["Ca"]
+def read_wavefunction(data):
+    with open("coeff.json") as f:
+        coeff_data = json.load(f)
+        C_read = coeff_data["Ca"]
 
     C_list = []
     for i in range(len(C_read)):
@@ -33,12 +33,12 @@ def read_wavefunction(ref_wfn):
         else:
             C_list.append(np.asarray(C_read[i]))
 
-    if ref_wfn.nirrep() != 1:
+    if data.psi_wfn.nirrep() != 1:
         C_mat = psi4.core.Matrix.from_array(C_list)
     else:  # C1 no spatial symmetry, input is list(np.ndarray)
         C_mat = psi4.core.Matrix.from_array([np.asarray(C_list)])
-    ref_wfn.Ca().copy(C_mat)
-    ref_wfn.Cb().copy(C_mat)
+    data.psi_wfn.Ca().copy(C_mat)
+    data.psi_wfn.Cb().copy(C_mat)
 
 
 def write_external_active_space_file(as_ints, state_map, mo_space_info, json_file="forte_ints.json"):
@@ -49,34 +49,34 @@ def write_external_active_space_file(as_ints, state_map, mo_space_info, json_fil
 
         nmo = as_ints.nmo()
 
-        file['state_symmetry'] = {"data": state.irrep(), "description": "Symmetry of the state"}
+        file["state_symmetry"] = {"data": state.irrep(), "description": "Symmetry of the state"}
 
-        file['na'] = {"data": state.na() - ndocc, "description": "number of alpha electrons in the active space"}
+        file["na"] = {"data": state.na() - ndocc, "description": "number of alpha electrons in the active space"}
 
-        file['nb'] = {"data": state.nb() - ndocc, "description": "number of beta electrons in the active space"}
+        file["nb"] = {"data": state.nb() - ndocc, "description": "number of beta electrons in the active space"}
 
-        file['nso'] = {"data": 2 * nmo, "description": "number of active spin orbitals"}
+        file["nso"] = {"data": 2 * nmo, "description": "number of active spin orbitals"}
 
-        file['symmetry'] = {
+        file["symmetry"] = {
             "data": [i for i in as_ints.mo_symmetry() for j in range(2)],
-            "description": "symmetry of each spin orbital (Cotton ordering)"
+            "description": "symmetry of each spin orbital (Cotton ordering)",
         }
 
-        file['spin'] = {
+        file["spin"] = {
             "data": [j for i in range(nmo) for j in range(2)],
-            "description": "spin of each spin orbital (0 = alpha, 1 = beta)"
+            "description": "spin of each spin orbital (0 = alpha, 1 = beta)",
         }
 
         scalar_energy = as_ints.frozen_core_energy() + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy()
-        file['scalar_energy'] = {
+        file["scalar_energy"] = {
             "data": scalar_energy,
-            "description": "scalar energy (sum of nuclear repulsion, frozen core, and scalar contributions"
+            "description": "scalar energy (sum of nuclear repulsion, frozen core, and scalar contributions",
         }
 
         oei_a = [(i * 2, j * 2, as_ints.oei_a(i, j)) for i in range(nmo) for j in range(nmo)]
         oei_b = [(i * 2 + 1, j * 2 + 1, as_ints.oei_b(i, j)) for i in range(nmo) for j in range(nmo)]
 
-        file['oei'] = {"data": oei_a + oei_b, "description": "one-electron integrals as a list of tuples (i,j,<i|h|j>)"}
+        file["oei"] = {"data": oei_a + oei_b, "description": "one-electron integrals as a list of tuples (i,j,<i|h|j>)"}
 
         tei = []
         for i in range(nmo):
@@ -90,12 +90,12 @@ def write_external_active_space_file(as_ints, state_map, mo_space_info, json_fil
                         tei.append((j * 2 + 1, i * 2, l * 2 + 1, k * 2, +as_ints.tei_ab(i, j, k, l)))  # baba
                         tei.append((i * 2 + 1, j * 2 + 1, k * 2 + 1, l * 2 + 1, as_ints.tei_bb(i, j, k, l)))  # bbbb
 
-        file['tei'] = {
+        file["tei"] = {
             "data": tei,
-            "description": "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)"
+            "description": "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)",
         }
 
-        with open(json_file, 'w+') as f:
+        with open(json_file, "w+") as f:
             json.dump(file, f, sort_keys=True, indent=2)
 
         # make_hamiltonian(as_ints,state)
@@ -105,7 +105,7 @@ def make_hamiltonian(as_ints, state_map):
     import itertools
 
     for state, nroots in state_map.items():
-        print(f'\nstate: {state}, nroots: {nroots}')
+        print(f"\nstate: {state}, nroots: {nroots}")
         dets = []
 
         na = state.na()
@@ -124,30 +124,28 @@ def make_hamiltonian(as_ints, state_map):
                     d.set_beta_bit(i, True)
                 dets.append(d)
 
-        print(f'\n\n==> List of FCI determinants <==')
+        print(f"\n\n==> List of FCI determinants <==")
         for d in dets:
-            print(f'{d.str(4)}')
+            print(f"{d.str(4)}")
 
-        scalar_e = as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy() + \
-                   as_ints.frozen_core_energy()
-        print(f'scalar_e = {scalar_e}')
+        scalar_e = as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy() + as_ints.frozen_core_energy()
+        print(f"scalar_e = {scalar_e}")
 
         import numpy as np
+
         ndets = len(dets)
         H = np.ndarray((ndets, ndets))
         for I, detI in enumerate(dets):
             for J, detJ in enumerate(dets):
-                H[I][J] = as_ints.slater_rules(detI,detJ)
+                H[I][J] = as_ints.slater_rules(detI, detJ)
                 # if I == J:
                 #     H[I][J] += scalar_e
-                          
-        print(f'\n==> Active Space Hamiltonian <==\n')
-        print(f'\n{H}')
+
+        print(f"\n==> Active Space Hamiltonian <==\n")
+        print(f"\n{H}")
 
 
-def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level):
-    rdm = active_space_solver.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
-
+def write_external_rdm_file(rdm, active_space_solver):
     g1a = rdm.g1a()
     g1b = rdm.g1b()
 
@@ -162,15 +160,15 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
 
     file = {}
 
-    file['nso'] = {"data": 2 * nact, "description": "number of active spin orbitals"}
+    file["nso"] = {"data": 2 * nact, "description": "number of active spin orbitals"}
 
     state_energies_map = active_space_solver.state_energies_map()
     for state, energies in state_energies_map.items():
-        file['energy'] = {"data": energies[0], "description": "energy"}
+        file["energy"] = {"data": energies[0], "description": "energy"}
 
-    file['gamma1'] = {
+    file["gamma1"] = {
         "data": gamma1_a + gamma1_b,
-        "description": "one-body density matrix as a list of tuples (i,j,<i^ j>)"
+        "description": "one-body density matrix as a list of tuples (i,j,<i^ j>)",
     }
 
     gamma2 = []
@@ -185,12 +183,12 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
                     gamma2.append((j * 2 + 1, i * 2, l * 2 + 1, k * 2, +g2ab[i, j, k, l]))  # baba
                     gamma2.append((i * 2 + 1, j * 2 + 1, k * 2 + 1, l * 2 + 1, g2bb[i, j, k, l]))  # bbbb
 
-    file['gamma2'] = {
+    file["gamma2"] = {
         "data": gamma2,
-        "description": "two-body density matrix as a list of tuples (i,j,k,l,<i^ j^ l k>)"
+        "description": "two-body density matrix as a list of tuples (i,j,k,l,<i^ j^ l k>)",
     }
 
-    if max_rdm_level == 3:
+    if rdm.max_rdm_level() == 3:
         g3aaa = rdm.g3aaa()
         g3aab = rdm.g3aab()
         g3abb = rdm.g3abb()
@@ -241,39 +239,27 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
                                     (i * 2, j * 2 + 1, k * 2 + 1, l * 2, m * 2 + 1, n * 2 + 1, g3abb[i, j, k, l, m, n])
                                 )
                                 gamma3.append(
-                                    (
-                                        i * 2, j * 2 + 1, k * 2 + 1, m * 2 + 1, l * 2, n * 2 + 1,
-                                        -g3abb[i, j, k, l, m, n]
-                                    )
+                                    (i * 2, j * 2 + 1, k * 2 + 1, m * 2 + 1, l * 2, n * 2 + 1, -g3abb[i, j, k, l, m, n])
                                 )
                                 gamma3.append(
                                     (i * 2, j * 2 + 1, k * 2 + 1, m * 2 + 1, n * 2 + 1, l * 2, g3abb[i, j, k, l, m, n])
                                 )
 
                                 gamma3.append(
-                                    (
-                                        j * 2 + 1, i * 2, k * 2 + 1, l * 2, m * 2 + 1, n * 2 + 1,
-                                        -g3abb[i, j, k, l, m, n]
-                                    )
+                                    (j * 2 + 1, i * 2, k * 2 + 1, l * 2, m * 2 + 1, n * 2 + 1, -g3abb[i, j, k, l, m, n])
                                 )
                                 gamma3.append(
                                     (j * 2 + 1, i * 2, k * 2 + 1, m * 2 + 1, l * 2, n * 2 + 1, g3abb[i, j, k, l, m, n])
                                 )
                                 gamma3.append(
-                                    (
-                                        j * 2 + 1, i * 2, k * 2 + 1, m * 2 + 1, n * 2 + 1, l * 2,
-                                        -g3abb[i, j, k, l, m, n]
-                                    )
+                                    (j * 2 + 1, i * 2, k * 2 + 1, m * 2 + 1, n * 2 + 1, l * 2, -g3abb[i, j, k, l, m, n])
                                 )
 
                                 gamma3.append(
                                     (j * 2 + 1, k * 2 + 1, i * 2, l * 2, m * 2 + 1, n * 2 + 1, g3abb[i, j, k, l, m, n])
                                 )
                                 gamma3.append(
-                                    (
-                                        j * 2 + 1, k * 2 + 1, i * 2, m * 2 + 1, l * 2, n * 2 + 1,
-                                        -g3abb[i, j, k, l, m, n]
-                                    )
+                                    (j * 2 + 1, k * 2 + 1, i * 2, m * 2 + 1, l * 2, n * 2 + 1, -g3abb[i, j, k, l, m, n])
                                 )
                                 gamma3.append(
                                     (j * 2 + 1, k * 2 + 1, i * 2, m * 2 + 1, n * 2 + 1, l * 2, g3abb[i, j, k, l, m, n])
@@ -282,17 +268,22 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
                                 # bbb case
                                 gamma3.append(
                                     (
-                                        i * 2 + 1, j * 2 + 1, k * 2 + 1, l * 2 + 1, m * 2 + 1, n * 2 + 1, g3bbb[i, j, k,
-                                                                                                                l, m, n]
+                                        i * 2 + 1,
+                                        j * 2 + 1,
+                                        k * 2 + 1,
+                                        l * 2 + 1,
+                                        m * 2 + 1,
+                                        n * 2 + 1,
+                                        g3bbb[i, j, k, l, m, n],
                                     )
                                 )
 
-        file['gamma3'] = {
+        file["gamma3"] = {
             "data": gamma3,
-            "description": "three-body density matrix as a list of tuples (i,j,k,l,m,n <i^ j^ k^ n m l>)"
+            "description": "three-body density matrix as a list of tuples (i,j,k,l,m,n <i^ j^ k^ n m l>)",
         }
 
-    with open('ref_rdms.json', 'w+') as f:
+    with open("ref_rdms.json", "w+") as f:
         json.dump(file, f, sort_keys=True, indent=2)
 
 

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _determinant_hpp_
-#define _determinant_hpp_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -871,5 +870,3 @@ template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const Determinan
 }
 
 } // namespace forte
-
-#endif // _determinant_hpp_

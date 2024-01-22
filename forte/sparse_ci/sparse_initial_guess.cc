@@ -1,10 +1,40 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/dimension.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
-#include "boost/format.hpp"
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
@@ -97,6 +127,9 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
              std::tuple<std::vector<double>, std::vector<double>, std::shared_ptr<psi::Matrix>>>
         guess_info;
 
+    double E0 = as_ints->nuclear_repulsion_energy() + as_ints->frozen_core_energy() +
+                as_ints->scalar_energy();
+
     // Loop over the groups of roots with the same multiplicity and compute the guess vectors
     for (const auto& [m, start, end] : groups) {
         // setup dimension objects
@@ -121,6 +154,9 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
         auto S2evals_block = S2evals->get_block(block_slice);
 
         std::vector<double> energies = Vector_to_vector_double(HS2evals_block);
+        for (auto& e : energies) {
+            e += E0;
+        }
         std::vector<double> s2 = Vector_to_vector_double(S2evals_block);
 
         auto C_block = std::make_shared<psi::Matrix>("C", col_dim, block_dim);
@@ -179,10 +215,8 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
             auto guess_s2 = s2[r];
             guess_max_energy = std::max(guess_max_energy, guess_energy);
             auto state_label = s2_label(multiplicity - 1);
-
-            auto s = boost::str(boost::format("   %7s  %3d  %20.12f  %+.6f  added") %
-                                state_label.c_str() % r % guess_energy % guess_s2);
-
+            std::string s = fmt::format("   {:>7}  {:>3}  {:>20.12f}  {:+.6f}  added", state_label,
+                                        r, guess_energy, guess_s2);
             table.push_back(std::make_pair(guess_energy, s));
         }
     }
@@ -207,8 +241,8 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
 
                     auto state_label = s2_label(mult - 1);
 
-                    auto s = boost::str(boost::format("   %7s  %3d  %20.12f  %+.6f  removed") %
-                                        state_label.c_str() % r % guess_energy % guess_s2);
+                    std::string s = fmt::format("   {:>7}  {:>3}  {:>20.12f}  {:+.6f}  removed",
+                                                state_label, r, guess_energy, guess_s2);
 
                     table.push_back(std::make_pair(guess_energy, s));
                 }
@@ -284,8 +318,7 @@ sparse_mat find_initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_
         auto label = s2_label(multiplicity - 1);
         for (size_t g = 0; g < num_guess_states_found; ++g) {
             const auto& [e, i] = lowest_energy[g];
-            auto str =
-                boost::str(boost::format("  %6d %20.12f  %.3f  %s") % i % e % S2_target % label);
+            std::string str = fmt::format("  {:>6} {:>20.12f}  {:.3f}  {}", i, e, S2_target, label);
             psi::outfile->Printf("\n%s", str.c_str());
         }
         psi::outfile->Printf("\n  ---------------------------------------------");

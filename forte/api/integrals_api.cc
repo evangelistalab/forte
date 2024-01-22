@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -46,6 +46,8 @@ void export_ForteIntegrals(py::module& m) {
              "Update MOSpaceInfo and orbital countings")
         .def("update_orbitals", &ForteIntegrals::update_orbitals,
              "Update orbitals for given orbital coefficients")
+        .def("Ca", &ForteIntegrals::Ca, "Return the alpha MO coefficients")
+        .def("Cb", &ForteIntegrals::Cb, "Return the beta MO coefficients")
         .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
         .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
         .def("frozen_core_energy", &ForteIntegrals::frozen_core_energy,
