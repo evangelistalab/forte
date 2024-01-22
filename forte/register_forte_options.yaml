@@ -1,3 +1,135 @@
+Driver:
+  JOB_TYPE:
+    type: str
+    default: "NEWDRIVER"
+    choices:
+      ["NONE", "NEWDRIVER", "MR-DSRG-PT2", "CASSCF", "MCSCF_TWO_STEP", "TDCI"]
+    help: "Specify the job type"
+  SCF_TYPE:
+    type: str
+    default: "None"
+    help: "The integrals used in the SCF calculation"
+  REF_TYPE:
+    type: str
+    default: "SCF"
+    choices: ["SCF", "CASSCF"]
+    help: "The type of reference used by forte if a psi4 wave function is missing"
+  DERTYPE:
+    type: str
+    default: "NONE"
+    choices: ["NONE", "FIRST"]
+    help: "Derivative order"
+  E_CONVERGENCE:
+    type: double
+    default: 1.0e-9
+    help: "The energy convergence criterion"
+  D_CONVERGENCE:
+    type: double
+    default: 1.0e-6
+    help: "The density convergence criterion"
+  ACTIVE_SPACE_SOLVER:
+    type: str
+    default: ""
+    choices:
+      ["FCI", "GENCI", "ACI", "ASCI", "PCI", "DETCI", "CAS", "DMRG", "EXTERNAL"]
+    help: "Active space solver type"
+  CORRELATION_SOLVER:
+    type: str
+    default: "NONE"
+    choices:
+      [
+        "DSRG-MRPT2",
+        "THREE-DSRG-MRPT2",
+        "DSRG-MRPT3",
+        "MRDSRG",
+        "SA-MRDSRG",
+        "DSRG_MRPT",
+        "MRDSRG_SO",
+        "SOMRDSRG",
+      ]
+    help: "Dynamical correlation solver type"
+  CALC_TYPE:
+    type: str
+    default: "SS"
+    choices: ["SS", "SA", "MS", "DWMS"]
+    help: "The type of computation"
+  NEL:
+    type: int
+    default: None
+    help: "The number of electrons. Used when reading from FCIDUMP files."
+  CHARGE:
+    type: int
+    default: None
+    help: "The charge of the molecule. If a value is provided it overrides the charge of Psi4."
+  MULTIPLICITY:
+    type: int
+    default: None
+    help: "The multiplicity = (2S + 1) of the electronic state. For example, 1 = singlet, 2 = doublet, 3 = triplet, ... If a value is provided it overrides the multiplicity of Psi4."
+  ROOT_SYM:
+    type: int
+    default: None
+    help: "The symmetry of the electronic state. (zero based)"
+  ORBITAL_TYPE:
+    type: str
+    default: "CANONICAL"
+    choices: ["CANONICAL", "LOCAL", "MP2NO", "MRPT2NO"]
+    help: "Type of orbitals to use"
+  MINAO_BASIS:
+    type: str
+    default: "STO-3G"
+    help: "The basis used to define an orbital subspace"
+  SUBSPACE:
+    type: list
+    default: []
+    help: "A list of orbital subspaces"
+  SUBSPACE_PI_PLANES:
+    type: list
+    default: []
+    help: "A list of arrays of atoms composing the plane"
+  MS:
+    type: double
+    default: None
+    help: "Projection of spin onto the z axis"
+  ACTIVE_REF_TYPE:
+    type: str
+    default: "CAS"
+    choices: ["HF", "CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD", "DOCI"]
+    help: "Initial guess for active space wave functions"
+  WRITE_RDM:
+    type: bool
+    default: False
+    help: "Save RDMs to ref_rdms.json for external computations"
+  # TODO: Remove these in the future since they are redundant with READ/DUMP_ORBITALS (although they use different formats json vs. numpy)
+  WRITE_WFN:
+    type: bool
+    default: False
+    help: "Save ref_wfn.Ca() to coeff.json for external computations"
+  READ_WFN:
+    type: bool
+    default: False
+    help: "Read ref_wfn.Ca()/ref_wfn.Cb() from coeff.json for `external` active space solver"
+  EXTERNAL_PARTIAL_RELAX:
+    type: bool
+    default: False
+    help: "Perform one relaxation step after building the DSRG effective Hamiltonian when using `external` active space solver"
+  EXT_RELAX_SOLVER:
+    type: str
+    default: "FCI"
+    choices: ["FCI", "DETCI", "CAS"]
+    help: "Active space solver used in the relaxation when using `external` active space solver"
+  PRINT:
+    type: int
+    default: 2
+    help: "Set the print level. (0 = quiet, 1 = brief, 2 = default, 3 = verbose, 4 = debug)"
+  READ_ORBITALS:
+    type: bool
+    default: False
+    help: "Read orbitals from file if true"
+  DUMP_ORBITALS:
+    type: bool
+    default: False
+    help: "Save orbitals to file if true"
+
 AVAS:
   AVAS:
     type: bool
@@ -10,35 +142,27 @@ AVAS:
   AVAS_SIGMA:
     type: double
     default: 0.98
-    help: >
-      Cumulative cutoff to the eigenvalues of the overlap,
-      which controls the size of the active space.
-      This value is tested against
-      (sum of active e.values) / (sum of total e.values)
+    help: "Cumulative cutoff to the eigenvalues of the overlap, which controls the size of the active space. This value is tested against (sum of active e.values) / (sum of total e.values)"
   AVAS_CUTOFF:
     type: double
     default: 1.0
-    help: >
-      The eigenvalues of the overlap greater than this cutoff
-      will be considered as active. If not equal to 1.0,
-      it takes priority over cumulative cutoff selection.
+    help: "The eigenvalues of the overlap greater than this cutoff will be considered as active. If not equal to 1.0, it takes priority over cumulative cutoff selection."
   AVAS_EVALS_THRESHOLD:
     type: double
     default: 1.0e-6
-    help: >
-      Threshold smaller than which is considered as zero
-      for an eigenvalue of the projected overlap.
+    help: "Threshold smaller than which is considered as zero for an eigenvalue of the projected overlap."
   AVAS_NUM_ACTIVE:
     type: int
     default: 0
-    help: >
-      The total number of active orbitals. If not equal to 0,
-      it takes priority over threshold-based selections.
+    help: "The total number of active orbitals. If not equal to 0, it takes priority over threshold-based selections."
   AVAS_NUM_ACTIVE_OCC:
     type: int
     default: 0
-    help: >
-      The number of active occupied orbitals. If
+    help: "The number of active occupied orbitals. If not equal to 0, it takes priority over cutoff-based selections and that based on the total number of active orbitals."
+  AVAS_NUM_ACTIVE_VIR:
+    type: int
+    default: 0
+    help: "The number of active virtual orbitals. If not equal to 0, it takes priority over cutoff-based selections and that based on the total number of active orbitals."
 
 CINO:
   CINO:
@@ -92,9 +216,7 @@ MRCINO:
   MRCINO_AUTO:
     type: bool
     default: false
-    help: >
-      Allow the users to choose whether to pass frozen_docc,
-      active_docc, and restricted_docc or not.
+    help: "Allow the users to choose whether to pass frozen_docc, active_docc, and restricted_docc or not."
 
 Embedding:
   EMBEDDING:
@@ -199,10 +321,7 @@ MO_Space_Info:
   ROTATE_MOS:
     type: int_list
     default: []
-    help: >
-      An array of MOs to swap in the format
-      [irrep, mo_1, mo_2, irrep, mo_3, mo_4].
-      Irrep and MOs are all 1-based (NOT
+    help: "An array of MOs to swap in the format [irrep, mo_1, mo_2, irrep, mo_3, mo_4]. Irrep and MOs are all 1-based (NOT 0-based)!"
 
 Active_Space_Solver:
   NROOT:
@@ -216,16 +335,11 @@ Active_Space_Solver:
   AVG_STATE:
     type: list
     default: []
-    help: >
-      A list of integer triplets that specify the irrep, multiplicity,
-      and the number of states requested.
-      Uses the format [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...].
+    help: "A list of integer triplets that specify the irrep, multiplicity, and the number of states requested. Uses the format [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...]."
   AVG_WEIGHT:
     type: list
     default: []
-    help: >
-      A list of lists that specify the weights assigned to all the states requested with AVG_STATE.
-      [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...].
+    help: "A list of lists that specify the weights assigned to all the states requested with AVG_STATE. [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]."
   S_TOLERANCE:
     type: double
     default: 0.25
@@ -298,9 +412,7 @@ PCI:
   PCI_ENERGY_ESTIMATE_THRESHOLD:
     type: double
     default: 1.0e-6
-    help: >
-      The threshold with which we estimate the variational energy.
-      Note that the final energy is always estimated exactly.
+    help: "The threshold with which we estimate the variational energy. Note that the final energy is always estimated exactly."
   PCI_TAU:
     type: double
     default: 1.0
@@ -943,8 +1055,7 @@ DSRG:
   SMART_DSRG_S:
     type: str
     default: "DSRG_S"
-    help: >
-      "Automatically adjust the flow parameter according to denominators"
+    help: "Automatically adjust the flow parameter according to denominators"
   PRINT_TIME_PROFILE:
     type: bool
     default: False
@@ -1070,7 +1181,7 @@ DSRG:
   DSRG_READ_AMPS:
     type: bool
     default: false
-    help: Read initial amplitudes from the current directory
+    help: "Read initial amplitudes from the current directory"
   DSRG_DUMP_AMPS:
     type: bool
     default: false
@@ -1096,7 +1207,7 @@ DSRG:
 
 DWMS:
   DWMS_ZETA:
-    type: float
+    type: double
     default: 0.0
     help: >
       Automatic Gaussian width cutoff for the density weights
@@ -1149,7 +1260,7 @@ DWMS:
       Max number of iteration in the update of the reference
       CI coefficients in SA algorithm, testing in non-DF DSRG-MRPT2
   DWMS_E_CONVERGENCE:
-    type: float
+    type: double
     default: 1.0e-7
     help: "Energy convergence criteria for DWMS iteration"
 
@@ -1182,15 +1293,15 @@ CASSCF:
     default: 50
     help: "Max iteration of solving coupled perturbed SCF equation"
   CPSCF_CONVERGENCE:
-    type: float
+    type: double
     default: 1e-8
     help: "Convergence criterion for CP-SCF equation"
   CASSCF_E_CONVERGENCE:
-    type: float
+    type: double
     default: 1e-8
     help: "The energy convergence criterion (two consecutive energies)"
   CASSCF_G_CONVERGENCE:
-    type: float
+    type: double
     default: 1e-7
     help: "The orbital gradient convergence criterion (RMS of gradient vector)"
   CASSCF_DEBUG_PRINTING:
@@ -1217,7 +1328,8 @@ CASSCF:
   CASSCF_CI_SOLVER:
     type: str
     default: ""
-    choices: ["", ...]
+    choices:
+      ["FCI", "GENCI", "ACI", "ASCI", "PCI", "DETCI", "CAS", "DMRG", "EXTERNAL"]
     help: "The active space solver to use in CASSCF"
   CASSCF_CI_FREQ:
     type: int
@@ -1244,7 +1356,7 @@ CASSCF:
     default: True
     help: "Use JK builder for restricted docc (EXPERT)?"
   CASSCF_MAX_ROTATION:
-    type: float
+    type: double
     default: 0.2
     help: "Max value in orbital update vector"
   CASSCF_ORB_ORTHO_TRANS:
@@ -1254,8 +1366,8 @@ CASSCF:
     help: "Ways to compute the orthogonal transformation U from orbital rotation R"
   ORB_ROTATION_ALGORITHM:
     type: str
-    choices: ["DIAGONAL", "AUGMENTED_HESSIAN"]
     default: "DIAGONAL"
+    choices: ["DIAGONAL", "AUGMENTED_HESSIAN"]
     help: "Orbital rotation algorithm"
   CASSCF_DO_DIIS:
     type: bool
@@ -1278,7 +1390,7 @@ CASSCF:
     default: 1
     help: "How often to do DIIS extrapolation"
   CASSCF_DIIS_NORM:
-    type: float
+    type: double
     default: 1e-3
     help: "Do DIIS when the orbital gradient norm is below this value"
   CASSCF_CI_STEP:
@@ -1312,11 +1424,11 @@ Old:
     default: False
     help: "Use Natural Orbitals to suggest active space?"
   PT2NO_OCC_THRESHOLD:
-    type: float
+    type: double
     default: 0.98
     help: "Occupancy smaller than which is considered as active"
   PT2NO_VIR_THRESHOLD:
-    type: float
+    type: double
     default: 0.02
     help: "Occupancy greater than which is considered as active"
   MEMORY_SUMMARY:
@@ -1371,15 +1483,15 @@ Old:
     choices: ["STANDARD", "FO", "FO2"]
     help: "Select a modified commutator"
   SRG_DT:
-    type: float
+    type: double
     default: 0.001
     help: "The initial time step used by the ode solver"
   SRG_ODEINT_ABSERR:
-    type: float
+    type: double
     default: 1.0e-12
     help: "The absolute error tollerance for the ode solver"
   SRG_ODEINT_RELERR:
-    type: float
+    type: double
     default: 1.0e-12
     help: "The absolute error tollerance for the ode solver"
   SRG_ODEINT:
@@ -1388,7 +1500,7 @@ Old:
     choices: ["DOPRI5", "CASHKARP", "FEHLBERG78"]
     help: "The integrator used to propagate the SRG equations"
   SRG_SMAX:
-    type: float
+    type: double
     default: 10.0
     help: "The end value of the integration parameter s"
 
@@ -1411,15 +1523,15 @@ PSI:
     default: ""
     help: "Auxiliary basis set for density fitting computations"
   INTS_TOLERANCE:
-    type: float
+    type: double
     default: 1.0e-12
     help: "Schwarz screening threshold"
   DF_FITTING_CONDITION:
-    type: float
+    type: double
     default: 1.0e-10
     help: "Eigenvalue threshold for RI basis"
   CHOLESKY_TOLERANCE:
-    type: float
+    type: double
     default: 1.0e-6
     help: "Tolerance for Cholesky integrals"
 
