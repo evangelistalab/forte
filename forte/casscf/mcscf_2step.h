@@ -54,8 +54,7 @@ class MCSCF_2STEP {
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
-    MCSCF_2STEP(std::shared_ptr<ActiveSpaceSolver> as_solver,
-                const std::map<StateInfo, std::vector<double>>& state_weights_map,
+    MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                 std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                 std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteIntegrals> ints);
 
@@ -63,9 +62,6 @@ class MCSCF_2STEP {
     double compute_energy();
 
   private:
-    /// The ActiveSpaceSolver object
-    std::shared_ptr<ActiveSpaceSolver> as_solver_;
-
     /// The list of states to computed. Passed to the ActiveSpaceSolver
     std::map<StateInfo, std::vector<double>> state_weights_map_;
 
@@ -176,8 +172,7 @@ class MCSCF_2STEP {
 };
 
 std::unique_ptr<MCSCF_2STEP>
-make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
-                    const std::map<StateInfo, std::vector<double>>& state_weight_map,
+make_mcscf_two_step(const std::map<StateInfo, std::vector<double>>& state_weight_map,
                     std::shared_ptr<SCFInfo> ref_wfn, std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info,
                     std::shared_ptr<ForteIntegrals> ints);

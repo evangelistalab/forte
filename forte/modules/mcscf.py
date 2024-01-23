@@ -23,11 +23,11 @@ class MCSCF(Module):
 
     def _run(self, data: ForteData) -> ForteData:
         state_map = to_state_nroots_map(data.state_weights_map)
-        data.active_space_solver = make_active_space_solver(
-            self.solver_type, state_map, data.scf_info, data.mo_space_info, data.options
-        )
+        # data.active_space_solver = make_active_space_solver(
+        #     self.solver_type, state_map, data.scf_info, data.mo_space_info, data.options
+        # )
         casscf = make_mcscf_two_step(
-            data.active_space_solver, data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
+            data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
         )
         energy = casscf.compute_energy()
         data.results.add("energy", energy, "MCSCF energy", "hartree")

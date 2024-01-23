@@ -53,14 +53,13 @@ using namespace ambit;
 
 namespace forte {
 
-MCSCF_2STEP::MCSCF_2STEP(std::shared_ptr<ActiveSpaceSolver> as_solver,
-                         const std::map<StateInfo, std::vector<double>>& state_weights_map,
+MCSCF_2STEP::MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                          std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          std::shared_ptr<forte::SCFInfo> scf_info,
                          std::shared_ptr<ForteIntegrals> ints)
-    : as_solver_(as_solver), state_weights_map_(state_weights_map), options_(options),
-      mo_space_info_(mo_space_info), scf_info_(scf_info), ints_(ints) {
+    : state_weights_map_(state_weights_map), options_(options), mo_space_info_(mo_space_info),
+      scf_info_(scf_info), ints_(ints) {
     startup();
 }
 
@@ -197,10 +196,10 @@ double MCSCF_2STEP::compute_energy() {
     as_solver->set_die_if_not_converged(no_orb_opt);
 
     // initial CI and resulting RDMs
-    const auto state_energies_map = as_solver_->compute_energy();
+    const auto state_energies_map = as_solver->compute_energy();
     auto e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
 
-    auto rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
+    auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);
     cas_grad.evaluate(R, dG);
 
@@ -393,9 +392,9 @@ double MCSCF_2STEP::compute_energy() {
             auto print_level = debug_print_ ? PrintLevel::Debug
                                             : (print_ >= PrintLevel::Verbose ? PrintLevel::Verbose
                                                                              : PrintLevel::Quiet);
-            e_c = diagonalize_hamiltonian(as_solver_, fci_ints,
+            e_c = diagonalize_hamiltonian(as_solver, fci_ints,
                                           {print_level, dl_e_conv, dl_r_conv, false});
-            rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
         }
 
         diis_manager.reset_subspace();
@@ -410,7 +409,7 @@ double MCSCF_2STEP::compute_energy() {
         psi::outfile->Printf("\n\n  Performing final CI Calculation using converged orbitals");
 
     energy_ =
-        diagonalize_hamiltonian(as_solver_, cas_grad.active_space_ints(),
+        diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
@@ -418,7 +417,7 @@ double MCSCF_2STEP::compute_energy() {
 
         if (final_orbs != "UNSPECIFIED" or der_type_ == "FIRST") {
             // fix orbitals for redundant pairs
-            rdms = as_solver_->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
             auto F = cas_grad.fock(rdms);
             ints_->set_fock_matrix(F, F);
 
@@ -445,12 +444,12 @@ double MCSCF_2STEP::compute_energy() {
             // TODO: remove this re-diagonalization if CI transformation is impelementd
             if (not is_single_reference()) {
                 diagonalize_hamiltonian(
-                    as_solver_, cas_grad.active_space_ints(),
+                    as_solver, cas_grad.active_space_ints(),
                     {PrintLevel::Quiet, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
             }
 
             // recompute gradient due to canonicalization
-            rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
             cas_grad.set_rdms(rdms);
             cas_grad.evaluate(R, dG);
 
@@ -494,20 +493,20 @@ bool MCSCF_2STEP::is_single_reference() {
 }
 
 double
-MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver_,
+MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
                                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<PrintLevel, double, double, bool>& params) {
     const auto& [print, e_conv, r_conv, dump_wfn] = params;
 
-    as_solver_->set_print(print);
-    as_solver_->set_e_convergence(e_conv);
-    as_solver_->set_r_convergence(r_conv);
-    as_solver_->set_active_space_integrals(fci_ints);
+    as_solver->set_print(print);
+    as_solver->set_e_convergence(e_conv);
+    as_solver->set_r_convergence(r_conv);
+    as_solver->set_active_space_integrals(fci_ints);
 
-    const auto state_energies_map = as_solver_->compute_energy();
+    const auto state_energies_map = as_solver->compute_energy();
 
     if (dump_wfn)
-        as_solver_->dump_wave_function();
+        as_solver->dump_wave_function();
 
     return compute_average_state_energy(state_energies_map, state_weights_map_);
 }
@@ -585,13 +584,11 @@ void MCSCF_2STEP::print_macro_iteration(const std::vector<CASSCF_HISTORY>& histo
 }
 
 std::unique_ptr<MCSCF_2STEP>
-make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
-                    const std::map<StateInfo, std::vector<double>>& state_weight_map,
+make_mcscf_two_step(const std::map<StateInfo, std::vector<double>>& state_weight_map,
                     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info,
                     std::shared_ptr<ForteIntegrals> ints) {
-    return std::make_unique<MCSCF_2STEP>(as_solver, state_weight_map, options, mo_space_info,
-                                         scf_info, ints);
+    return std::make_unique<MCSCF_2STEP>(state_weight_map, options, mo_space_info, scf_info, ints);
 }
 
 } // namespace forte
