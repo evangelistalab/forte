@@ -560,7 +560,7 @@ def register_aci_options(options):
 
     options.add_str("DIAG_ALGORITHM", "SPARSE", ["DYNAMIC", "FULL", "SPARSE"], "The diagonalization method")
 
-    options.add_bool("CORE_GUESS", False, "Add core determinants as initial guess")
+    options.add_int_list("CORE_GUESS", "Add core determinants as initial guess")
 
     options.add_bool("FORCE_DIAG_METHOD", False, "Force the diagonalization procedure?")
 

@@ -142,6 +142,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
         method->set_maxiter(maxiter_);
+        // set boolean for using core determinants in Davidson-Liu algorithm.
+        method->set_core_guess(state.core_guess());
 
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();
@@ -423,6 +425,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     // check if the user provided a AVG_STATE list
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
+    bool core_guess;
+    auto core_guess_list = options->get_int_list("CORE_GUESS");
+
     std::vector<size_t> gas_min(6, 0);
     std::vector<size_t> gas_max(6);
     for (int i = 0; i < 6; ++i) {
@@ -458,8 +463,20 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                 gas_max[gasn] = gas_space_max[0];
             }
         }
+
+        if (core_guess_list.empty()){
+            core_guess = false;
+        } else if (core_guess_list[0] != 0 || core_guess_list[0] != 1) {
+            psi::outfile->Printf("\n  Error: wrong entry value for CORE_GUESS (%d). "
+                                    "Only values of 0 or 1 are acceptable",
+                                        core_guess_list[0]);
+            throw std::runtime_error("Wrong input value for CORE_GUESS.");
+        } else {
+            core_guess = static_cast<bool>(core_guess_list[0]);
+        }
+
         StateInfo state_this(state.na(), state.nb(), state.multiplicity(), state.twice_ms(),
-                             state.irrep(), state.irrep_label(), gas_min, gas_max);
+                             state.irrep(), state.irrep_label(), gas_min, gas_max, core_guess);
         state_weights_map[state_this] = weights;
     } else {
         double sum_of_weights = 0.0;
@@ -560,8 +577,25 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                 }
             }
 
+            if (core_guess_list.empty()){
+                core_guess = false;
+            } else if (core_guess_list.size() != nentry) {
+                psi::outfile->Printf("\n  Error: mismatched number of entries in AVG_STATE "
+                                        "(%d) and CORE_GUESS (%d).",
+                                        nentry, core_guess_list.size());
+                throw std::runtime_error(
+                    "Mismatched number of entries in AVG_STATE and CORE_GUESS.");
+            } else if (!(core_guess_list[i] == 0 || core_guess_list[i] == 1)) {
+                psi::outfile->Printf("\n  Error: wrong entry value for CORE_GUESS (%d). "
+                                        "Only values of 0 or 1 are acceptable",
+                                          core_guess_list[i]);
+                throw std::runtime_error("Wrong input value for CORE_GUESS.");
+            } else {
+                core_guess = static_cast<bool>(core_guess_list[i]);
+            }
+
             StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
-                                 irrep_label, gas_min, gas_max);
+                                 irrep_label, gas_min, gas_max, core_guess);
             state_weights_map[state_this] = weights;
         }
 

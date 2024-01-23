@@ -102,9 +102,6 @@ class FCISolver : public ActiveSpaceMethod {
     /// Spin adapt the FCI wave function
     void set_spin_adapt(bool value);
 
-    /// Enable/disable core det as initial guess for dl
-    void set_core_guess(bool value);
-
     /// Spin adapt the FCI wave function using a full preconditioner?
     void set_spin_adapt_full_preconditioner(bool value);
 
@@ -176,8 +173,6 @@ class FCISolver : public ActiveSpaceMethod {
     size_t subspace_per_root_ = 4;
     /// The number of determinants selected for each guess vector
     size_t ndets_per_guess_ = 10;
-    /// Use core det as initial guess?
-    bool core_guess_ = false;
     /// Iterations for FCI
     int maxiter_davidson_ = 30;
     /// Test the RDMs?
