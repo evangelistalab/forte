@@ -84,7 +84,6 @@ void FCIStringLists::startup() {
 
     auto stop_time_sut = std::clock();
     auto duration_sut = (stop_time_sut - start_time_sut);
-    outfile->Printf("\n\nTag_sut: time = %zu\n", duration_sut);
 
     string_class_ = std::make_shared<FCIStringClass>(cmopi_int);
 
@@ -94,7 +93,6 @@ void FCIStringLists::startup() {
         alfa_address_1h_ = std::make_shared<FCIStringAddress>(ncmo_, na_ - 1, alfa_1h_strings);
         auto stop_time_a1 = std::clock();
         auto duration_a1 = (stop_time_a1 - start_time_a1);
-        outfile->Printf("\nTag_a1: time = %zu\n", duration_a1);
     }
     if (nb_ >= 1) {
         auto start_time_b1 = std::clock();
@@ -102,7 +100,6 @@ void FCIStringLists::startup() {
         beta_address_1h_ = std::make_shared<FCIStringAddress>(ncmo_, nb_ - 1, beta_1h_strings);
         auto stop_time_b1 = std::clock();
         auto duration_b1 = (stop_time_b1 - start_time_b1);
-        outfile->Printf("\nTag_b1: time = %zu\n", duration_b1);
     }
 
     if (na_ >= 2) {
@@ -111,7 +108,6 @@ void FCIStringLists::startup() {
         alfa_address_2h_ = std::make_shared<FCIStringAddress>(ncmo_, na_ - 2, alfa_2h_strings);
         auto stop_time_a2 = std::clock();
         auto duration_a2 = (stop_time_a2 - start_time_a2);
-        outfile->Printf("\nTag_a2: time = %zu\n", duration_a2);
     }
     if (nb_ >= 2) {
         auto start_time_b2 = std::clock();
@@ -119,7 +115,6 @@ void FCIStringLists::startup() {
         beta_address_2h_ = std::make_shared<FCIStringAddress>(ncmo_, nb_ - 2, beta_2h_strings);
         auto stop_time_b2 = std::clock();
         auto duration_b2 = (stop_time_b2 - start_time_b2);
-        outfile->Printf("\nTag_b2: time = %zu\n", duration_b2);
     }
 
     if (na_ >= 3) {
@@ -128,7 +123,6 @@ void FCIStringLists::startup() {
         alfa_address_3h_ = std::make_shared<FCIStringAddress>(ncmo_, na_ - 3, alfa_3h_strings);
         auto stop_time_a3 = std::clock();
         auto duration_a3 = (stop_time_a3 - start_time_a3);
-        outfile->Printf("\nTag_a3: time = %zu\n", duration_a3);
     }
     if (nb_ >= 3) {
         auto start_time_b3 = std::clock();
@@ -136,7 +130,6 @@ void FCIStringLists::startup() {
         beta_address_3h_ = std::make_shared<FCIStringAddress>(ncmo_, nb_ - 3, beta_3h_strings);
         auto stop_time_b3 = std::clock();
         auto duration_b3 = (stop_time_b3 - start_time_b3);
-        outfile->Printf("\nTag_b3: time = %zu\n", duration_b3);
     }
 
     // local_timers
@@ -150,8 +143,6 @@ void FCIStringLists::startup() {
     double vovo_list_timer = 0.0;
     double vvoo_list_timer = 0.0;
 
-    outfile->Printf("\n\n------------------------------------------\n\n");
-
     {
         auto start_time_mkfci = std::clock();
         local_timer t;
@@ -164,7 +155,6 @@ void FCIStringLists::startup() {
         str_list_timer += t.get();
         auto stop_time_mkfci = std::clock();
         auto duration_mkfci = (stop_time_mkfci - start_time_mkfci);
-        outfile->Printf("\nTag_mkfci: time = %zu\n", duration_mkfci);
     }
 
     nas_ = 0;
@@ -175,7 +165,6 @@ void FCIStringLists::startup() {
         nbs_ += beta_address_->strpcls(h);
         auto stop_time_strpcls = std::clock();
         auto duration_strpcls = (stop_time_strpcls - start_time_strpcls);
-        outfile->Printf("\nTag_strpcls: time = %zu\n", duration_strpcls);
     }
 
     {
@@ -185,7 +174,6 @@ void FCIStringLists::startup() {
         nn_list_timer += t.get();
         auto stop_time_pair = std::clock();
         auto duration_pair = (stop_time_pair - start_time_pair);
-        outfile->Printf("\nTag_pair: time = %zu\n", duration_pair);
     }
     {
         auto start_time_vo = std::clock();
@@ -195,7 +183,6 @@ void FCIStringLists::startup() {
         vo_list_timer += t.get();
         auto stop_time_vo = std::clock();
         auto duration_vo = (stop_time_vo - start_time_vo);
-        outfile->Printf("\nTag_vo: time = %zu\n", duration_vo);
     }
     {
         auto start_time_oo = std::clock();
@@ -205,7 +192,6 @@ void FCIStringLists::startup() {
         oo_list_timer += t.get();
         auto stop_time_oo = std::clock();
         auto duration_oo = (stop_time_oo - start_time_oo);
-        outfile->Printf("\nTag_oo: time = %zu\n", duration_oo);
     }
     {
         auto start_time_1h = std::clock();
@@ -215,7 +201,6 @@ void FCIStringLists::startup() {
         h1_list_timer += t.get();
         auto stop_time_1h = std::clock();
         auto duration_1h = (stop_time_1h - start_time_1h);
-        outfile->Printf("\nTag_1h: time = %zu\n", duration_1h);
     }
     {
         auto start_time_2h = std::clock();
@@ -225,7 +210,6 @@ void FCIStringLists::startup() {
         h2_list_timer += t.get();
         auto stop_time_2h = std::clock();
         auto duration_2h = (stop_time_2h - start_time_2h);
-        outfile->Printf("\nTag_2h: time = %zu\n", duration_2h);
     }
     {
         auto start_time_3h = std::clock();
@@ -235,7 +219,6 @@ void FCIStringLists::startup() {
         h3_list_timer += t.get();
         auto stop_time_3h = std::clock();
         auto duration_3h = (stop_time_3h - start_time_3h);
-        outfile->Printf("\nTag_3h: time = %zu\n", duration_3h);
     }
     {
         auto start_time_vvoo = std::clock();
@@ -245,7 +228,6 @@ void FCIStringLists::startup() {
         vvoo_list_timer += t.get();
         auto stop_time_vvoo = std::clock();
         auto duration_vvoo = (stop_time_vvoo - start_time_vvoo);
-        outfile->Printf("\nTag_vvoo: time = %zu\n", duration_vvoo);
     }
 
     double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer +

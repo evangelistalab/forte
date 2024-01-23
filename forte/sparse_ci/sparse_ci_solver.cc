@@ -76,8 +76,6 @@ void SparseCISolver::set_guess_per_root(int value) { guess_per_root_ = value; }
 
 void SparseCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
-void SparseCISolver::set_core_guess(bool value) { core_guess_ = value; }
-
 void SparseCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
@@ -106,7 +104,6 @@ void SparseCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
     set_r_convergence(options->get_double("R_CONVERGENCE"));
-    set_core_guess(options->get_bool("CORE_GUESS"));
 
     set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
     set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
@@ -385,13 +382,7 @@ SparseCISolver::initial_guess_generate_dets(const DeterminantHashVec& space,
     size_t nmo = as_ints->nmo();
 
     for (const Determinant& det : detmap) {
-        if (core_guess_){
-            if (!(det.get_alfa_bit(0) and det.get_beta_bit(0))) {
-                smallest.emplace_back(as_ints->energy(det), det);
-            }
-        } else {
-            smallest.emplace_back(as_ints->energy(det), det);
-        }
+        smallest.emplace_back(as_ints->energy(det), det);
     }
     
     std::sort(smallest.begin(), smallest.end());

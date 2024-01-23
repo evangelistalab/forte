@@ -97,9 +97,6 @@ class SparseCISolver {
     /// Enable/disable spin projection
     void set_spin_project(bool value);
 
-    /// Enable/disable core det as initial guess for dl
-    void set_core_guess(bool value);
-
     /// Enable/disable spin projection in full algorithm
     void set_spin_project_full(bool value);
 
@@ -204,8 +201,6 @@ class SparseCISolver {
     bool print_details_ = true;
     /// A variable to control printing information
     PrintLevel print_ = PrintLevel::Default;
-    /// Use core det as initial guess?
-    bool core_guess_ = false;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
     /// Project solutions onto given multiplicity in full algorithm?
