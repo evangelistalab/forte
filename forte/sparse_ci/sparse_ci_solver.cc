@@ -384,6 +384,7 @@ SparseCISolver::initial_guess_generate_dets(const DeterminantHashVec& space,
     for (const Determinant& det : detmap) {
         smallest.emplace_back(as_ints->energy(det), det);
     }
+    
     std::sort(smallest.begin(), smallest.end());
     std::vector<Determinant> guess_dets(num_guess_dets);
     for (size_t i = 0; i < num_guess_dets; i++) {
