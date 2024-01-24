@@ -92,6 +92,8 @@ void ActiveSpaceMethod::set_print(PrintLevel level) { print_ = level; }
 
 void ActiveSpaceMethod::set_quiet_mode() { set_print(PrintLevel::Quiet); }
 
+std::vector<std::string> ActiveSpaceMethod::get_spectra_results() { return spectra_results_; }
+
 DeterminantHashVec ActiveSpaceMethod::get_PQ_space() { return final_wfn_; }
 
 std::shared_ptr<psi::Matrix> ActiveSpaceMethod::get_PQ_evecs() { return evecs_; }
@@ -313,6 +315,9 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
         psi::outfile->Printf("\n    %6s %6s", name1.c_str(), name2.c_str());
         psi::outfile->Printf("%15.8f%15.8f%15.8f", e_diff, e_diff * pc_hartree2ev, out[i]);
 
+        // push to spectra results vector
+        add_spectra_results(name1.c_str(), name2.c_str(), energies_[root1], energies2[root2], out[i]);
+
         // push to psi4 environment globals
         std::string name_env = "OSC. " + multi_label + " " + name1 + " -> " + name2;
         push_to_psi4_env_globals(out[i], name_env);
@@ -437,6 +442,17 @@ std::vector<std::shared_ptr<psi::Vector>> ActiveSpaceMethod::compute_transition_
     }
 
     return trans_dipoles;
+}
+
+void ActiveSpaceMethod::add_spectra_results(const std::string& name1, const std::string& name2, 
+                                            const double& e1, const double& e2, const double& tdm){
+    spectra_results_.emplace_back(name1);
+    spectra_results_.emplace_back(name2);
+    spectra_results_.emplace_back(std::to_string(e1));
+    spectra_results_.emplace_back(std::to_string(e2));
+    spectra_results_.emplace_back(std::to_string(e2-e1));
+    spectra_results_.emplace_back(std::to_string((e2-e1) * pc_hartree2ev));
+    spectra_results_.emplace_back(std::to_string(tdm));
 }
 
 std::shared_ptr<ActiveSpaceMethod> make_active_space_method(

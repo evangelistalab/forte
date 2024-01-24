@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <numeric>
 #include <tuple>
+#include <fstream>
+#include <filesystem>
 
 #include "ambit/blocked_tensor.h"
 #include "ambit/tensor.h"
@@ -166,6 +168,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         compute_quadrupole_moment(as_mp_ints_);
         if (options_->get_bool("TRANSITION_DIPOLES")) {
             compute_fosc_same_orbs(as_mp_ints_);
+            dump_spectra_results();
         }
     }
 
@@ -363,6 +366,41 @@ void ActiveSpaceSolver::add_sigma_kbody(const StateInfo& state, size_t root,
 void ActiveSpaceSolver::generalized_sigma(const StateInfo& state, std::shared_ptr<psi::Vector> x,
                                           std::shared_ptr<psi::Vector> sigma) {
     state_method_map_[state]->generalized_sigma(x, sigma);
+}
+
+void ActiveSpaceSolver::dump_spectra_results() {
+
+    std::filesystem::path currentPath = std::filesystem::current_path();
+    std::string filename = (currentPath / "spectra.dat").string();
+    std::ofstream outFile(filename);
+
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open output file." << std::endl;
+        return;
+    }
+
+    outFile << "State1, State2, E1, E2, (E2-E1), (E2-E1)[eV], Osc.[a.u.]" << std::endl;
+
+    for (const auto& m : state_method_map_) {
+        auto comp = m.second;
+        auto spectra = comp->get_spectra_results();
+        std::string line;
+
+        for (size_t j = 1; j <= spectra.size(); j++) {
+            line += spectra[j-1];
+            if (j % 7 == 0){
+                if (j == spectra.size()){
+                    outFile << line;
+                } else {
+                    outFile << line << std::endl;
+                }
+                line = "";
+            } else {
+                line += ", ";
+            }
+        }
+    }
+    outFile.close();
 }
 
 void ActiveSpaceSolver::print_options() {
