@@ -99,10 +99,6 @@ def forte_driver(data: ForteData):
         data = ActiveSpaceRDMs(max_rdm_level=max_rdm_level).run(data)
         write_external_rdm_file(data.rdms)
 
-#    if options.get_bool("SPIN_ANALYSIS"):
-#        data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
-#        forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
-
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")
     if correlation_solver_type != "NONE":
