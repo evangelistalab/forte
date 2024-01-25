@@ -250,7 +250,6 @@ orbital-helpers/mrpt2_nos.cc
 orbital-helpers/orbitaloptimizer.cc
 orbital-helpers/pao_builder.cc
 orbital-helpers/semi_canonicalize.cc
-orbital-helpers/unpaired_density.cc
 pci/pci.cc
 pci/pci_sigma.cc
 post_process/post_process.cc
