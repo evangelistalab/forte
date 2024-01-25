@@ -130,9 +130,9 @@ def forte_driver(data: ForteData):
     for proc in options.get_list("POST_PROCESS"):
         if proc in ['SPIN_CORRELATION', 'UNPAIRED_DENSITY']:
             data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
-            forte.perform_post_processing(proc, data.rdms, options, mo_space_info, as_ints)
+            forte.perform_post_processing(proc, data.rdms, options, mo_space_info,ints, as_ints)
         else:
-            raise Exception(f"Forte: Requestion post processing routine ({proc}) not implemented") 
+            raise Exception(f"Forte: Requested post processing routine ({proc}) not implemented") 
 			
 
     return return_en
