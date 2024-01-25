@@ -370,7 +370,7 @@ double Block2DMRGSolver::compute_energy() {
     bool read_initial_guess = options_->get_bool("READ_ACTIVE_WFN_GUESS");
 
     // print sweep schedule
-    if (print_) {
+    if (print_ >= PrintLevel::Default) {
         print_h2("DMRG Settings");
         psi::outfile->Printf("\n    N sweeps       = ");
         for (auto& x : sweep_n_sweeps)
@@ -425,7 +425,7 @@ double Block2DMRGSolver::compute_energy() {
             occs[idx_a[i]]++;
         for (int i = 0; i < nb_; i++)
             occs[idx_b[i]]++;
-        if (print_) {
+        if (print_ >= PrintLevel::Default) {
             psi::outfile->Printf("\n\n    Na = %4d Nb = %4d", na_, nb_);
             psi::outfile->Printf("\n    Use occ numbers for initial guess = ");
             psi::outfile->Printf("\n        ");
@@ -538,7 +538,7 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
         std::string ket_tag = "KET@" + block2::Parsing::to_string(jroot) + "@" +
                               method2->state().str_short() + "@TMP";
 
-        if (print_) {
+        if (print_ >= PrintLevel::Default) {
             if (bra_tag == ket_tag)
                 print_h2("Computing RDMs for Root No. " + block2::Parsing::to_string(iroot));
             else
@@ -675,7 +675,7 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
             }
         }
 
-        if (print_ > 0 && bra_tag == ket_tag)
+        if (print_ >= PrintLevel::Default && bra_tag == ket_tag)
             print_natural_orbitals(mo_space_info_, rdms.back());
     }
 
@@ -688,7 +688,7 @@ void Block2DMRGSolver::set_options(std::shared_ptr<ForteOptions> options) {
 
 void Block2DMRGSolver::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
                                               std::shared_ptr<RDMs> rdms) {
-    if (print_)
+    if (print_ >= PrintLevel::Default)
         print_h2("NATURAL ORBITALS");
     psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
     int n_sites = static_cast<int>(mo_space_info_->size("ACTIVE"));
