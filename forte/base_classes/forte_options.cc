@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -38,8 +38,6 @@
 #include "helpers/string_algorithms.h"
 
 using namespace pybind11::literals;
-
-using namespace psi;
 
 namespace forte {
 
@@ -613,71 +611,6 @@ std::string ForteOptions::str() const {
 void ForteOptions::clear() {
     dict_.clear();
     group_ = "";
-}
-
-std::string ForteOptions::generate_documentation() const {
-    std::vector<std::pair<std::string, std::string>> option_docs_list;
-
-    //    for (const auto& opt : bool_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& default_value = std::get<1>(opt) ? "True" : "False";
-    //        const std::string& description = std::get<2>(opt);
-    //        std::string option_text =
-    //            option_formatter("Boolean", label, default_value, description, "");
-    //        outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    //    for (const auto& opt : int_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& default_value = std::to_string(std::get<1>(opt));
-    //        const std::string& description = std::get<2>(opt);
-    //        std::string option_text =
-    //            option_formatter("Integer", label, default_value, description, "");
-    //        outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    //    for (const auto& opt : double_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& default_value = std::to_string(std::get<1>(opt));
-    //        const std::string& description = std::get<2>(opt);
-    //        std::string option_text = option_formatter("Double", label, default_value,
-    //        description, ""); outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    //    for (const auto& opt : str_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& default_value = std::get<1>(opt);
-    //        const std::string& description = std::get<2>(opt);
-    //        const std::string& allowed_values = to_string(std::get<3>(opt), ", ");
-    //        std::string option_text =
-    //            option_formatter("String", label, default_value, description, allowed_values);
-    //        outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    //    for (const auto& opt : array_opts_) {
-    //        const std::string& label = std::get<0>(opt);
-    //        const std::string& description = std::get<1>(opt);
-    //        std::string option_text = option_formatter("Array", label, "[]", description, "");
-    //        outfile->Printf("\n %s", label.c_str());
-    //        option_docs_list.push_back(std::make_pair(label, option_text));
-    //    }
-
-    std::sort(option_docs_list.begin(), option_docs_list.end());
-    std::vector<std::string> options_lines;
-
-    options_lines.push_back(".. _`sec:options`:\n");
-    options_lines.push_back("List of Forte options");
-    options_lines.push_back("=====================\n");
-    options_lines.push_back(".. sectionauthor:: Francesco A. Evangelista\n");
-    for (const auto& p : option_docs_list) {
-        options_lines.push_back(p.second);
-    }
-
-    return join(options_lines, "\n");
 }
 
 std::string rst_bold(const std::string& s) { return "**" + s + "**"; }

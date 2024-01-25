@@ -28,6 +28,7 @@ set forte {
   sci_enforce_spin_complete false
   sci_project_out_spin_contaminants false
   active_ref_type hf
+  DL_DETS_PER_GUESS 2
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

@@ -19,29 +19,29 @@ def test_ccsd2():
      H 1 1.0 2 104.5
     """
 
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='cc-pVDZ', reference='RHF')
-    forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
+    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="cc-pVDZ", reference="RHF")
+    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn).run()
     calc_data = scc.run_cc(
-        forte_objs['as_ints'],
-        forte_objs['scf_info'],
-        forte_objs['mo_space_info'],
-        cc_type='cc',
+        data.as_ints,
+        data.scf_info,
+        data.mo_space_info,
+        cc_type="cc",
         max_exc=2,
         e_convergence=1.0e-6,
         r_convergence=1.0e-4,
         compute_threshold=1.0e-6,
-        on_the_fly=True
+        on_the_fly=True,
     )
 
     psi4.core.clean()
 
     energy = calc_data[-1][1]
 
-    print(f'  HF energy:   {scf_energy}')
-    print(f'  CCSD energy: {energy}')
-    print(f'  E - Eref:    {energy - ref_energy}')
+    print(f"  HF energy:   {scf_energy}")
+    print(f"  CCSD energy: {energy}")
+    print(f"  E - Eref:    {energy - ref_energy}")
 
-    #assert energy == pytest.approx(ref_energy, 1.0e-11)
+    # assert energy == pytest.approx(ref_energy, 1.0e-11)
 
 
 if __name__ == "__main__":

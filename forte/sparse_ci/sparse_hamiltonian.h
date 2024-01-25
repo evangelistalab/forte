@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_hamiltonian_h_
-#define _sparse_hamiltonian_h_
+#pragma once
 
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
@@ -88,5 +87,3 @@ class SparseHamiltonian {
 };
 
 } // namespace forte
-
-#endif // _sparse_hamiltonian_h_

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,16 +31,16 @@
 #include <map>
 #include <vector>
 
-#include "boost/format.hpp"
-
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
+
 #include "base_classes/active_space_solver.h"
 #include "fci/fci_solver.h"
-#include "sci/fci_mo.h"
 #include "helpers/printing.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/mp2_nos.h"
@@ -153,17 +153,22 @@ void MRDSRG::startup() {
 
 void MRDSRG::print_options() {
     // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info_int{
-        {"Number of T amplitudes", ntamp_},
-        {"DIIS start", diis_start_},
-        {"Min DIIS vectors", diis_min_vec_},
-        {"Max DIIS vectors", diis_max_vec_},
-        {"DIIS extrapolating freq", diis_freq_}};
+    table_printer printer;
+    printer.add_int_data({{"Number of T amplitudes", ntamp_},
+                          {"DIIS start", diis_start_},
+                          {"Min DIIS vectors", diis_min_vec_},
+                          {"Max DIIS vectors", diis_max_vec_},
+                          {"DIIS extrapolating freq", diis_freq_}});
 
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Flow parameter", s_},
-        {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"Intruder amplitudes threshold", intruder_tamp_}};
+    printer.add_double_data({{"Flow parameter", s_},
+                             {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+                             {"Intruder amplitudes threshold", intruder_tamp_}});
+
+    printer.add_bool_data({{"Restart amplitudes", restart_amps_},
+                           {"Sequential DSRG transformation", sequential_Hbar_},
+                           {"Omit blocks of >= 3 virtual indices", nivo_},
+                           {"Read amplitudes from current dir", read_amps_cwd_},
+                           {"Write amplitudes to current dir", dump_amps_cwd_}});
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Correlation level", corrlv_string_},
@@ -178,17 +183,9 @@ void MRDSRG::print_options() {
     if (corrlv_string_ == "PT2") {
         calculation_info_string.emplace_back("PT2 0-order Hamiltonian", pt2_h0th_);
     }
-
-    std::vector<std::pair<std::string, bool>> calculation_info_bool{
-        {"Restart amplitudes", restart_amps_},
-        {"Sequential DSRG transformation", sequential_Hbar_},
-        {"Omit blocks of >= 3 virtual indices", nivo_},
-        {"Read amplitudes from current dir", read_amps_cwd_},
-        {"Write amplitudes to current dir", dump_amps_cwd_}};
-
-    // print information
-    print_selected_options("Calculation Information", calculation_info_string,
-                           calculation_info_bool, calculation_info_double, calculation_info_int);
+    printer.add_string_data(calculation_info_string);
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 void MRDSRG::build_ints() {
@@ -376,7 +373,7 @@ void MRDSRG::print_cumulant_summary() {
     // 2-body
     std::vector<double> maxes, norms;
 
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         maxes.push_back(Lambda2_.block(block).norm(0));
         norms.push_back(Lambda2_.block(block).norm(2));
     }
@@ -452,17 +449,17 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
     int n = labels.size();
     std::string sep(10 + 13 * n, '-');
     std::string indent = "\n    ";
-    std::string output = indent + str(boost::format("%-10s") % name);
+    std::string output = indent + fmt::format("{:<10}", name);
     for (int i = 0; i < n; ++i)
-        output += str(boost::format(" %12s") % labels[i]);
+        output += fmt::format(" {:<12}", labels[i]);
     output += indent + sep;
 
-    output += indent + str(boost::format("%-10s") % "max");
+    output += indent + fmt::format("{:<10}", "max");
     for (int i = 0; i < n; ++i)
-        output += str(boost::format(" %12.6f") % maxes[i]);
-    output += indent + str(boost::format("%-10s") % "norm");
+        output += fmt::format(" {:<12.6f}", maxes[i]);
+    output += indent + fmt::format("{:<10}", "norm");
     for (int i = 0; i < n; ++i)
-        output += str(boost::format(" %12.6f") % norms[i]);
+        output += fmt::format("{:<12.6f}", norms[i]);
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
 }

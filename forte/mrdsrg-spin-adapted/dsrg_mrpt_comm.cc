@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -48,7 +48,7 @@ void DSRG_MRPT::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alp
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T1] -> C0 : %10.3f", timer.get());
     }
     dsrg_time_.add("110", timer.get());
@@ -68,7 +68,7 @@ void DSRG_MRPT::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alp
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C0 : %10.3f", timer.get());
     }
     dsrg_time_.add("120", timer.get());
@@ -88,7 +88,7 @@ void DSRG_MRPT::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alp
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C0 : %10.3f", timer.get());
     }
     dsrg_time_.add("210", timer.get());
@@ -107,7 +107,7 @@ void DSRG_MRPT::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alp
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C0 : %10.3f", timer.get());
     }
     dsrg_time_.add("220", timer.get());

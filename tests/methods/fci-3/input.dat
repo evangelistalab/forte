@@ -1,5 +1,4 @@
-#! Generated using commit GITCOMMIT
-
+# LiH singlet B1 state, minimal basis RHF/CASCI
 import forte
 
 refscf = -7.862246310410
@@ -22,17 +21,16 @@ set {
 }
 
 set forte {
-  active_space_solver fci
-  print 1
-  active [4,0,1,1]
-  restricted_docc [0,0,0,0]
-  root_sym 2
-  ms 0.0
+  active_space_solver genci
+  restricted_docc     [0,0,0,0]
+  active              [4,0,1,1]
+  root_sym             2
+  ms                   0.0
+  dl_guess_per_root    2
 }
 
-
 energy('scf')
-compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy")
 
 energy('forte')
-compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy")

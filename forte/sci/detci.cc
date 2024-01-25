@@ -10,6 +10,8 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "ambit/tensor.h"
+
 #include "base_classes/rdms.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
@@ -54,11 +56,6 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     auto de_maxiter = options->get_int("MAXITER");
     maxiter_ = dl_maxiter > de_maxiter ? dl_maxiter : de_maxiter;
 
-    dl_guess_size_ = options->get_int("DL_GUESS_SIZE");
-
-    ncollapse_per_root_ = options->get_int("DL_COLLAPSE_PER_ROOT");
-    nsubspace_per_root_ = options->get_int("DL_SUBSPACE_PER_ROOT");
-
     sigma_vector_type_ = string_to_sigma_vector_type(options->get_str("DIAG_ALGORITHM"));
     sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 
@@ -89,7 +86,7 @@ double DETCI::compute_energy() {
     compute_1rdms();
 
     // print CI vectors
-    if (not quiet_) {
+    if (print_ >= PrintLevel::Default) {
         print_ci_wfn();
     }
 
@@ -127,13 +124,13 @@ void DETCI::build_determinant_space() {
             "input (symmetry and multiplicity of the root, etc.)!");
     }
 
-    if (print_ > 2) {
+    if (print_ >= PrintLevel::Debug) {
         print_h2("Determinants");
         for (const auto& det : dets) {
             outfile->Printf("\n  %s", str(det, nactv_).c_str());
         }
     }
-    if (not quiet_) {
+    if (print_ >= PrintLevel::Default) {
         outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
     }
 
@@ -148,14 +145,13 @@ void DETCI::diagonalize_hamiltonian() {
 
     auto solver = prepare_ci_solver();
 
-    if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
+    if (p_space_.size() < 15 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
         sigma_vector_type_ = SigmaVectorType::Full;
     }
 
-    auto sigma_vector =
-        make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
+    sigma_vector_ = make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
     std::tie(evals_, evecs_) =
-        solver->diagonalize_hamiltonian(p_space_, sigma_vector, nroot_, multiplicity_);
+        solver->diagonalize_hamiltonian(p_space_, sigma_vector_, nroot_, multiplicity_);
 
     // add energy offset
     double energy_offset = as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy();
@@ -172,16 +168,9 @@ void DETCI::diagonalize_hamiltonian() {
 
 std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     auto solver = std::make_shared<SparseCISolver>();
-    solver->set_parallel(true);
+    solver->set_options(options_);
     solver->set_spin_project(true);
-    solver->set_print_details(not quiet_);
-
-    solver->set_e_convergence(e_convergence_);
-    solver->set_r_convergence(r_convergence_);
-    solver->set_maxiter_davidson(maxiter_);
-
-    solver->set_ncollapse_per_root(ncollapse_per_root_);
-    solver->set_nsubspace_per_root(nsubspace_per_root_);
+    solver->set_print_details(print_ >= PrintLevel::Default);
 
     if (read_wfn_guess_) {
         outfile->Printf("\n  Reading wave function from disk as initial guess:");
@@ -189,7 +178,6 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
         outfile->Printf(" %s!", status.c_str());
     }
 
-    solver->set_guess_dimension(dl_guess_size_);
     if (not initial_guess_.empty()) {
         solver->set_initial_guess(initial_guess_);
     }
@@ -207,7 +195,7 @@ void DETCI::compute_1rdms() {
     opdm_b_.resize(nroot_);
 
     for (size_t N = 0; N < nroot_; ++N) {
-        CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, N, N);
+        CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), p_space_, evecs_, N, N);
         std::vector<double> opdm_a, opdm_b;
         ci_rdms.set_print(print_ci_rdms_);
         ci_rdms.compute_1rdm_op(opdm_a, opdm_b);
@@ -341,7 +329,7 @@ void DETCI::dump_wave_function(const std::string& filename) {
     file.close();
 }
 
-std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+std::tuple<size_t, std::vector<Determinant>, std::shared_ptr<psi::Matrix>>
 DETCI::read_wave_function(const std::string& filename) {
     timer t_read("Read DETCI WFN");
     std::string line;
@@ -381,17 +369,17 @@ DETCI::read_wave_function(const std::string& filename) {
         norbs = det_str.size() - 2;
 
         // form determinant
-        std::vector<bool> alpha(norbs, false), beta(norbs, false);
+        String Ia, Ib;
         for (size_t i = 0; i < norbs; ++i) {
             char x = det_str[i + 1];
             if (x == '2' or x == '+') {
-                alpha[i] = true;
+                Ia[i] = true;
             }
             if (x == '2' or x == '-') {
-                beta[i] = true;
+                Ib[i] = true;
             }
         }
-        det_space.emplace_back(alpha, beta);
+        det_space.emplace_back(Ia, Ib);
 
         size_t last = next + 1, n = 0;
         while ((next = line.find(delimiter, last)) != string::npos) {
@@ -492,7 +480,7 @@ DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm
                     D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]));
             }
         } else {
-            CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+            CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), p_space_, evecs_, root1, root2);
             ci_rdms.set_print(print_ci_rdms_);
 
             auto D1 = ambit::Tensor::build(CoreTensor, "D1", std::vector<size_t>(2, nactv_));
@@ -539,7 +527,7 @@ std::vector<ambit::Tensor> DETCI::compute_trans_1rdms_sosd(int root1, int root2)
             offset += actv_dim_[h];
         }
     } else {
-        CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+        CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), p_space_, evecs_, root1, root2);
         ci_rdms.set_print(print_ci_rdms_);
         ci_rdms.compute_1rdm_op(a_data, b_data);
     }
@@ -555,7 +543,7 @@ std::vector<ambit::Tensor> DETCI::compute_trans_2rdms_sosd(int root1, int root2)
     auto& ab_data = ab.data();
     auto& bb_data = bb.data();
 
-    CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+    CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), p_space_, evecs_, root1, root2);
     ci_rdms.set_print(print_ci_rdms_);
     ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
 
@@ -573,7 +561,7 @@ std::vector<ambit::Tensor> DETCI::compute_trans_3rdms_sosd(int root1, int root2)
     auto& bbb_data = bbb.data();
 
     if (options_->get_str("THREEPDC") == "MK") {
-        CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+        CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), p_space_, evecs_, root1, root2);
         ci_rdms.set_print(print_ci_rdms_);
         ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
     }
@@ -632,7 +620,7 @@ DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
         size_t root1 = roots_pair.first;
         size_t root2 = roots_pair.second + nroot_;
 
-        CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
+        CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), dets, evecs, root1, root2);
         ci_rdms.set_print(false);
 
         if (rdm_type == RDMsType::spin_dependent) {
@@ -710,6 +698,109 @@ DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
     }
 
     return rdms;
+}
+
+std::vector<ambit::Tensor> DETCI::eigenvectors() {
+    size_t ndets = space_size();
+
+    std::vector<ambit::Tensor> out;
+    out.reserve(nroot_);
+
+    for (size_t root = 0; root < nroot_; ++root) {
+        auto tmp = ambit::Tensor::build(ambit::CoreTensor, "evec_" + std::to_string(root), {ndets});
+
+        for (size_t I = 0; I < ndets; ++I) {
+            tmp.data()[I] = evecs_->get(I, root);
+        }
+
+        out.push_back(tmp);
+    }
+
+    return out;
+}
+
+void DETCI::add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
+                            const std::map<std::string, double>& block_label_to_factor,
+                            std::vector<double>& sigma) {
+    auto evec = evecs_->get_column(0, root);
+
+    for (const auto& pair : block_label_to_factor) {
+        const auto factor = pair.second;
+        const auto block_label = pair.first;
+        if (not h.is_block(block_label)) {
+            throw std::runtime_error("Block " + block_label + " not available!");
+        }
+        const auto& data = h.block(block_label).data();
+
+        auto h_rank = block_label.size();
+        if (h_rank == 2) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_1(data, evec, factor, sigma, spin);
+        }
+        if (h_rank == 4) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            spin += islower(block_label[1]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_2(data, evec, factor, sigma, spin);
+        }
+        if (h_rank == 6) {
+            std::string spin = islower(block_label[0]) ? "a" : "b";
+            spin += islower(block_label[1]) ? "a" : "b";
+            spin += islower(block_label[2]) ? "a" : "b";
+            sigma_vector_->add_generalized_sigma_3(data, evec, factor, sigma, spin);
+        }
+    }
+}
+
+void DETCI::generalized_rdms(size_t root, const std::vector<double>& X, ambit::BlockedTensor& grdms,
+                             bool c_right, int rdm_level, std::vector<std::string>) {
+    // test rdm level
+    if (rdm_level > 3) {
+        throw std::runtime_error("RDM level too large!");
+    }
+
+    // test X size
+    auto ndets = space_size();
+    if (X.size() != ndets) {
+        throw std::runtime_error("Incorrect dimension for the input vector X.");
+    }
+
+    // test consistency between grdms and rdm_level
+    auto blabels = grdms.block_labels();
+    if (blabels.size() != static_cast<size_t>(rdm_level) + 1) {
+        throw std::runtime_error("Incorrect number of tensors in the result BlockedTensor.");
+    }
+
+    // test the dimension of the tensor
+    if (nactv_ != grdms.block(blabels[0]).dim(0)) {
+        throw std::runtime_error("Incorrect dimension for tensors in the result BlockedTensor.");
+    }
+
+    // prepare the expansion vectors to SharedMatrix format for CI_RDMs
+    auto evecs = std::make_shared<psi::Matrix>("CI and Multiplier Vectors", ndets, 2);
+    int col_c = c_right ? 1 : 0;
+    int col_x = c_right ? 0 : 1;
+
+    evecs->set_column(0, col_c, evecs_->get_column(0, root));
+    for (size_t i = 0; i < ndets; ++i) {
+        evecs->set(0, i, col_x, X.at(i));
+    }
+
+    // use CI_RDMs to compute the "transition" RDMs
+    CI_RDMS ci_rdms(as_ints_->active_mo_symmetry(), p_space_, evecs, 0, 1);
+
+    if (rdm_level == 3) {
+        ci_rdms.compute_3rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data(),
+                             grdms.block(blabels[2]).data(), grdms.block(blabels[3]).data());
+    } else if (rdm_level == 2) {
+        ci_rdms.compute_2rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data(),
+                             grdms.block(blabels[2]).data());
+    } else {
+        ci_rdms.compute_1rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data());
+    }
+}
+
+void DETCI::generalized_sigma(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> sigma) {
+    sigma_vector_->compute_sigma(sigma, x);
 }
 
 } // namespace forte

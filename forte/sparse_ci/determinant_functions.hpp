@@ -1,5 +1,4 @@
-#ifndef _determinant_functions_hpp_
-#define _determinant_functions_hpp_
+#pragma once
 
 #include <string>
 #include <cstddef>
@@ -36,5 +35,3 @@ void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo);
 std::vector<Determinant> find_minimum_spin_complete(std::vector<Determinant>& det_space, int nmo);
 
 } // namespace forte
-
-#endif // _determinant_functions_hpp_

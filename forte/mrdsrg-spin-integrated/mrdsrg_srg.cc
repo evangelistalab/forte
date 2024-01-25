@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -31,12 +31,12 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "base_classes/mo_space_info.h"
-#include "boost/format.hpp"
-#include "boost/numeric/odeint.hpp"
-#include "mrdsrg.h"
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 
-using namespace boost::numeric::odeint;
+#include "base_classes/mo_space_info.h"
+#include "helpers/odeint.hpp"
+#include "mrdsrg.h"
 
 using namespace psi;
 
@@ -190,12 +190,13 @@ double MRDSRG::compute_energy_lsrg2() {
     std::string title;
     std::string indent(4, ' ');
     std::string dash(79, '-');
-    title += indent + str(boost::format("%5c  %10c  %=27s  %=21s  %=8s\n") % ' ' % ' ' %
-                          "Energy (a.u.)" % "Non-Diagonal Norm" % " ");
+    title += indent + fmt::format("{:<5}  {:<10}  {:<27}  {:<21}  {:<8}\n", ' ', ' ',
+                                  "Energy (a.u.)", "Non-Diagonal Norm", " ");
     title += indent + std::string(19, ' ') + std::string(27, '-') + "  " + std::string(21, '-') +
              "  " + std::string(8, ' ') + "\n";
-    title += indent + str(boost::format("%5s  %=10s  %=16s %=10s  %=10s %=10s  %=8s\n") % "Iter." %
-                          "s" % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "Time (s)");
+    title += indent + fmt::format("{:>5}  {:<10}  {:<16} {:<10}  {:<10} {:<10}  {:<8}\n", "Iter.",
+                                  "s", "Corr.", "Delta", "Hbar1", "Hbar2", "Time (s)");
+
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
@@ -223,28 +224,14 @@ double MRDSRG::compute_energy_lsrg2() {
     });
 
     double absolute_error = foptions_->get_double("SRG_ODEINT_ABSERR");
-    double relative_error = foptions_->get_double("SRG_ODEINT_RELERR");
     srg_time_ = 0.0;
     MRSRG_ODEInt mrsrg_flow_computer(*this);
     MRSRG_Print mrsrg_printer(*this);
 
-    // start iterations
-    if (srg_odeint == "FEHLBERG78") {
-        integrate_adaptive(make_controlled(absolute_error, relative_error,
-                                           runge_kutta_fehlberg78<odeint_state_type>()),
-                           mrsrg_flow_computer, x, start_time, end_time, initial_step,
-                           mrsrg_printer);
-    } else if (srg_odeint == "CASHKARP") {
-        integrate_adaptive(make_controlled(absolute_error, relative_error,
-                                           runge_kutta_cash_karp54<odeint_state_type>()),
-                           mrsrg_flow_computer, x, start_time, end_time, initial_step,
-                           mrsrg_printer);
-    } else if (srg_odeint == "DOPRI5") {
-        integrate_adaptive(make_controlled(absolute_error, relative_error,
-                                           runge_kutta_dopri5<odeint_state_type>()),
-                           mrsrg_flow_computer, x, start_time, end_time, initial_step,
-                           mrsrg_printer);
-    }
+    runge_kutta_4_adaptive([&](const odeint_state_type& x, odeint_state_type& dxdt,
+                               const double t) { mrsrg_flow_computer(x, dxdt, t); },
+                           [&](const odeint_state_type& x, const double t) { mrsrg_printer(x, t); },
+                           x, start_time, end_time, initial_step, absolute_error);
 
     // print summary
     outfile->Printf("\n    %s", dash.c_str());
@@ -393,20 +380,25 @@ double MRDSRG::compute_energy_srgpt2() {
 
     double initial_step = foptions_->get_double("SRG_DT");
     std::string srg_odeint = foptions_->get_str("SRG_ODEINT");
+    double absolute_error = foptions_->get_double("SRG_ODEINT_ABSERR");
+    double relative_error = foptions_->get_double("SRG_ODEINT_RELERR");
+
     outfile->Printf("\n    Max s:             %10.6f", end_time);
     outfile->Printf("\n    ODE algorithm:     %10s", srg_odeint.c_str());
     outfile->Printf("\n    Initial time step: %10.6f", initial_step);
+    outfile->Printf("\n    Absolute error:    %14.12f", absolute_error);
+    outfile->Printf("\n    Relative error:    %14.12f", relative_error);
     outfile->Printf("\n");
 
     std::string title;
     std::string indent(4, ' ');
     std::string dash(79, '-');
-    title += indent + str(boost::format("%5c  %10c  %=27s  %=21s  %=8s\n") % ' ' % ' ' %
-                          "Energy (a.u.)" % "Non-Diagonal Norm" % " ");
+    title += indent + fmt::format("{:>5}  {:>10}  {:<27}  {:<21}  {:<8}\n", ' ', ' ',
+                                  "Energy (a.u.)", "Non-Diagonal Norm", " ");
     title += indent + std::string(19, ' ') + std::string(27, '-') + "  " + std::string(21, '-') +
              "  " + std::string(8, ' ') + "\n";
-    title += indent + str(boost::format("%5s  %=10s  %=16s %=10s  %=10s %=10s  %=8s\n") % "Iter." %
-                          "s" % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "Time (s)");
+    title += indent + fmt::format("{:>5}  {:<10}  {:<16} {:<10}  {:<10} {:<10}  {:<8}\n", "Iter.",
+                                  "s", "Corr.", "Delta", "Hbar1", "Hbar2", "Time (s)");
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
@@ -476,29 +468,13 @@ double MRDSRG::compute_energy_srgpt2() {
         });
     }
 
-    double absolute_error = foptions_->get_double("SRG_ODEINT_ABSERR");
-    double relative_error = foptions_->get_double("SRG_ODEINT_RELERR");
     srg_time_ = 0.0;
     SRGPT2_ODEInt mrsrg_flow_computer(*this, Hzero, relax_ref);
     MRSRG_Print mrsrg_printer(*this);
-
-    // start iterations
-    if (srg_odeint == "FEHLBERG78") {
-        integrate_adaptive(make_controlled(absolute_error, relative_error,
-                                           runge_kutta_fehlberg78<odeint_state_type>()),
-                           mrsrg_flow_computer, x, start_time, end_time, initial_step,
-                           mrsrg_printer);
-    } else if (srg_odeint == "CASHKARP") {
-        integrate_adaptive(make_controlled(absolute_error, relative_error,
-                                           runge_kutta_cash_karp54<odeint_state_type>()),
-                           mrsrg_flow_computer, x, start_time, end_time, initial_step,
-                           mrsrg_printer);
-    } else if (srg_odeint == "DOPRI5") {
-        integrate_adaptive(make_controlled(absolute_error, relative_error,
-                                           runge_kutta_dopri5<odeint_state_type>()),
-                           mrsrg_flow_computer, x, start_time, end_time, initial_step,
-                           mrsrg_printer);
-    }
+    runge_kutta_4_adaptive([&](const odeint_state_type& x, odeint_state_type& dxdt,
+                               const double t) { mrsrg_flow_computer(x, dxdt, t); },
+                           [&](const odeint_state_type& x, const double t) { mrsrg_printer(x, t); },
+                           x, start_time, end_time, initial_step, absolute_error);
 
     // print summary
     outfile->Printf("\n    %s", dash.c_str());

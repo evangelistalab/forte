@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _spin_corr_h_
-#define _spin_corr_h_
+#pragma once
 
 #include <fstream>
 #include <iomanip>
@@ -52,7 +51,7 @@ class SpinCorr {
              std::shared_ptr<MOSpaceInfo> mo_space_info,
              std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    std::pair<psi::SharedMatrix, psi::SharedMatrix> compute_nos();
+    std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> compute_nos();
 
     void spin_analysis();
 
@@ -77,5 +76,3 @@ void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOpti
                            std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 } // namespace forte
-
-#endif // _spin_corr_h_

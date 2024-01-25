@@ -1,0 +1,564 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.8a1.dev65 
+
+                         Git: Rev {socints} 64c9b12 dirty
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Sunday, 14 May 2023 03:46PM
+
+    Process ID: 61510
+    Host:       CHE-FEVANGE-01i
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte
+
+molecule li2 {
+0 1
+Li
+Li 1 1.6
+}
+
+set {
+    basis cc-pVDZ
+    reference rhf
+}
+
+set forte {
+    active_space_solver fci
+}
+
+# run a RHF computation
+E_scf, scf_wfn = energy('scf', return_wfn=True)
+# pass the RHF orbitals to Forte and run a FCI computation
+energy('forte', ref_wfn=scf_wfn)
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+*** tstart() called on CHE-FEVANGE-01i
+*** at Sun May 14 15:46:17 2023
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry LI         line    42 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         LI           0.000000000000     0.000000000000    -0.800000000000     7.016003436600
+         LI           0.000000000000     0.000000000000     0.800000000000     7.016003436600
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.87714  C =      1.87714 [cm^-1]
+  Rotational constants: A = ************  B =  56275.25047  C =  56275.25047 [MHz]
+  Nuclear repulsion =    2.976621810018749
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 6
+  Nalpha       = 3
+  Nbeta        = 3
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-06
+  Density threshold  = 1.00e-06
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 12
+    Number of basis functions: 28
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-2 entry LI         line    54 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.001 GiB; user supplied 0.366 GiB. 
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               375
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: DEF2-UNIVERSAL-JKFIT
+    Number of shells: 34
+    Number of basis functions: 102
+    Number of Cartesian functions: 120
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 2.6304853566E-03.
+  Reciprocal condition number of the overlap matrix is 7.0998147380E-04.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     Ag         7       7 
+     B1g        1       1 
+     B2g        3       3 
+     B3g        3       3 
+     Au         1       1 
+     B1u        7       7 
+     B2u        3       3 
+     B3u        3       3 
+   -------------------------
+    Total      28      28
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:   -14.59030609541130   -1.45903e+01   0.00000e+00 
+   @DF-RHF iter   1:   -14.78421017528557   -1.93904e-01   1.67905e-03 ADIIS/DIIS
+   @DF-RHF iter   2:   -14.78469248811560   -4.82313e-04   3.73213e-04 ADIIS/DIIS
+   @DF-RHF iter   3:   -14.78475854700333   -6.60589e-05   1.36034e-04 ADIIS/DIIS
+   @DF-RHF iter   4:   -14.78476910901173   -1.05620e-05   1.33281e-05 DIIS
+   @DF-RHF iter   5:   -14.78476921034362   -1.01332e-07   1.53502e-06 DIIS
+   @DF-RHF iter   6:   -14.78476921213937   -1.79575e-09   2.12083e-07 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -2.524191     1B1u   -2.497124     2Ag    -0.200551  
+
+    Virtual:                                                              
+
+       2B1u    0.014006     1B2u    0.018276     1B3u    0.018276  
+       3Ag     0.055428     1B2g    0.072265     1B3g    0.072265  
+       3B1u    0.081862     2B3u    0.121030     2B2u    0.121030  
+       4Ag     0.136968     5Ag     0.185774     2B2g    0.246526  
+       2B3g    0.246526     4B1u    0.264454     6Ag     0.299698  
+       1B1g    0.299698     5B1u    0.400777     3B3u    0.402542  
+       3B2u    0.402542     1Au     0.427228     6B1u    0.427228  
+       7Ag     0.578015     3B2g    0.770851     3B3g    0.770851  
+       7B1u    2.249465  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+    NA   [     2,    0,    0,    0,    0,    1,    0,    0 ]
+    NB   [     2,    0,    0,    0,    0,    1,    0,    0 ]
+
+  @DF-RHF Final Energy:   -14.78476921213937
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              2.9766218100187491
+    One-Electron Energy =                 -25.0790534003015182
+    Two-Electron Energy =                   7.3176623781433969
+    Total Energy =                        -14.7847692121393735
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :          0.0000000            0.0000000            0.0000000
+ Magnitude           :                                                    0.0000000
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on CHE-FEVANGE-01i at Sun May 14 15:46:17 2023
+Module time:
+	user time   =       0.36 seconds =       0.01 minutes
+	system time =       0.82 seconds =       0.01 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.36 seconds =       0.01 minutes
+	system time =       0.82 seconds =       0.01 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: saci - git commit: 3419a366
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 256 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0     0     0     0     0
+    GAS1                7     1     3     3     1     7     3     3    28
+    GAS2                0     0     0     0     0     0     0     0     0
+    GAS3                0     0     0     0     0     0     0     0     0
+    GAS4                0     0     0     0     0     0     0     0     0
+    GAS5                0     0     0     0     0     0     0     0     0
+    GAS6                0     0     0     0     0     0     0     0     0
+    RESTRICTED_UOCC     0     0     0     0     0     0     0     0     0
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               7     1     3     3     1     7     3     3    28
+  -------------------------------------------------------------------------   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry LI         line    42 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry LI         line    31 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 12
+    Number of basis functions: 28
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             50
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 165242 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         28
+  Number of correlated molecular orbitals:              28
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00886292 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB
+  Timing for conventional integral transformation:            0.077 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.077 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 3
+  Number of beta electrons      = 3
+  Number of alpha strings       = 3276
+  Number of beta strings        = 3276
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.340 s
+  Timing for OO strings     =      0.022 s
+  Timing for VVOO strings   =      0.647 s
+  Timing for 1-hole strings =      0.004 s
+  Timing for 2-hole strings =      0.006 s
+  Timing for 3-hole strings =      0.026 s
+  Total timing              =      1.009 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                     1345608
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+    Spin adapt                                   false
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 435 x 435.   Memory: 0.002820 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -14.821706304246  0.000  singlet
+      1      -14.701890096488  0.000  singlet
+      2      -14.697750811390  2.000  triplet
+      3      -14.688167598595  0.000  singlet
+      4      -14.626162130001  0.000  singlet
+      5      -14.623675382053  2.000  triplet
+      6      -14.602465254540  0.000  singlet
+      7      -14.596247593480  2.000  triplet
+      8      -14.587654055779  0.000  singlet
+      9      -14.580457611300  2.000  triplet
+     10      -14.558479572173  0.000  singlet
+     11      -14.557819074351  2.000  triplet
+     12      -14.543350818470  0.000  singlet
+     13      -14.518467626406  2.000  triplet
+     14      -14.497740476557  0.000  singlet
+     15      -14.492051461724  2.000  triplet
+     16      -14.438916423966  0.000  singlet
+     17      -14.401292576229  0.000  singlet
+     18      -14.390396592810  0.000  singlet
+     19      -14.374215745393  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.002 s
+
+  Projecting out guess roots: [2,5,7,9,11,13,15]
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-06
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -14.821706304246  -1.482e+01  +2.474e-01
+      2      -14.834596416564  -1.289e-02  +3.363e-02
+      3      -14.835056965855  -4.605e-04  +1.352e-02
+      4      -14.835126439226  -6.947e-05  +4.432e-03
+      5      -14.835135514033  -9.075e-06  +1.761e-03
+      6      -14.835137050372  -1.536e-06  +6.563e-04
+      7      -14.835137248693  -1.983e-07  +2.137e-04
+      8      -14.835137264648  -1.596e-08  +4.695e-05
+      9      -14.835137265411  -7.626e-10  +1.180e-05
+     10      -14.835137265467  -5.622e-11  +3.576e-06
+     11      -14.835137265477  -1.047e-11  +1.575e-06
+     12      -14.835137265478  -9.344e-13  +4.629e-07
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 13 iterations.
+
+  ==> Root No. 0 <==
+
+    2200000 0 000 000 0 2000000 000 000     -0.91351927
+    2000000 0 000 000 0 2000000 000 200      0.19711995
+    2000000 0 000 000 0 2000000 200 000      0.19711995
+    2000000 0 000 000 0 2000000 ab0 000      0.11601362
+    2000000 0 000 000 0 2000000 ba0 000      0.11601362
+    2000000 0 000 000 0 2000000 000 ab0      0.11601362
+    2000000 0 000 000 0 2000000 000 ba0      0.11601362
+
+    Total Energy:     -14.835137265478, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    Ag     0      -14.835137265478   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.047 s
+
+  ==> NATURAL ORBITALS <==
+
+        1Ag     1.998924      1B1u    1.998773      2Ag     1.679206  
+        1B3u    0.143579      1B2u    0.143579      2B1u    0.024482  
+        3Ag     0.009332      3B1u    0.001223      4Ag     0.000380  
+        1B2g    0.000139      1B3g    0.000139      5Ag     0.000067  
+        4B1u    0.000030      2B2u    0.000022      2B3u    0.000022  
+        5B1u    0.000020      2B3g    0.000014      2B2g    0.000014  
+        6Ag     0.000010      1B1g    0.000010      3B2u    0.000009  
+        3B3u    0.000009      6B1u    0.000005      1Au     0.000005  
+        7Ag     0.000005      7B1u    0.000000      3B3g    0.000000  
+        3B2g    0.000000  
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.047 s
+
+  ==> NATURAL ORBITALS <==
+
+        1Ag     1.998924      1B1u    1.998773      2Ag     1.679206  
+        1B3u    0.143579      1B2u    0.143579      2B1u    0.024482  
+        3Ag     0.009332      3B1u    0.001223      4Ag     0.000380  
+        1B2g    0.000139      1B3g    0.000139      5Ag     0.000067  
+        4B1u    0.000030      2B2u    0.000022      2B3u    0.000022  
+        5B1u    0.000020      2B3g    0.000014      2B2g    0.000014  
+        6Ag     0.000010      1B1g    0.000010      3B2u    0.000009  
+        3B3u    0.000009      6B1u    0.000005      1Au     0.000005  
+        7Ag     0.000005      7B1u    0.000000      3B3g    0.000000  
+        3B2g    0.000000  
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -11.40363335     0.00000000     0.00000000   -11.40363335     0.00000000    -5.46080966
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    13.71288894
+    --------------------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        0.142 seconds
+  Time to run job          :       17.981 seconds
+  Total                    :       18.122 seconds
+
+    Psi4 stopped on: Sunday, 14 May 2023 03:46PM
+    Psi4 wall time for execution: 0:00:18.44
+
+*** Psi4 exiting successfully. Buy a developer a beer!

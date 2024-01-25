@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _diskdf_integrals_h_
-#define _diskdf_integrals_h_
+#pragma once
 
 #include "psi4/lib3index/dfhelper.h"
 #include "integrals.h"
@@ -72,7 +71,8 @@ class DISKDFIntegrals : public Psi4Integrals {
     double** three_integral_pointer() override;
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
     ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
-                                       const std::vector<size_t>& q) override;
+                                       const std::vector<size_t>& q,
+                                       ThreeIntsBlockOrder order = Qpq) override;
     /// return ambit tensor of size A by q
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
                                                  const std::vector<size_t>& q) override;
@@ -97,5 +97,3 @@ class DISKDFIntegrals : public Psi4Integrals {
 };
 
 } // namespace forte
-
-#endif // _diskdf_integrals_h_

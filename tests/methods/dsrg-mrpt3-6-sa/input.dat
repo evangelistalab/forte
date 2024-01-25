@@ -39,7 +39,7 @@ set globals{
 Emcscf, wfn = energy('casscf', return_wfn=True)
 
 set forte{
-  active_space_solver       cas
+  active_space_solver       detci
   correlation_solver        dsrg-mrpt3
   frozen_docc        [2,0,0,0]
   restricted_docc    [1,0,0,0]

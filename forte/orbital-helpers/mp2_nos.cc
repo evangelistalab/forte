@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -32,12 +32,16 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/dimension.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers/helpers.h"
+#include "base_classes/scf_info.h"
+
+#include "helpers/disk_io.h"
 #include "helpers/blockedtensorfactory.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "mp2_nos.h"
@@ -59,9 +63,6 @@ namespace forte {
 MP2_NOS::MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options) {}
-
-psi::SharedMatrix MP2_NOS::get_Ua() { return Ua_; }
-psi::SharedMatrix MP2_NOS::get_Ub() { return Ub_; }
 
 void MP2_NOS::compute_transformation() {
     print_method_banner(
@@ -190,10 +191,10 @@ void MP2_NOS::compute_transformation() {
     // This will suggest a restricted_docc and an active
     // Does not take in account frozen_docc
     if (options_->get_bool("NAT_ACT")) {
-        std::vector<size_t> restricted_docc(nirrep);
-        std::vector<size_t> active(nirrep);
-        double occupied = options_->get_double("MP2NO_OCC_THRESHOLD");
-        double virtual_orb = options_->get_double("MP2NO_VIR_THRESHOLD");
+        std::vector<int> restricted_docc(nirrep);
+        std::vector<int> active(nirrep);
+        double occupied = options_->get_double("PT2NO_OCC_THRESHOLD");
+        double virtual_orb = options_->get_double("PT2NO_VIR_THRESHOLD");
         outfile->Printf("\n Suggested Active Space \n");
         outfile->Printf("\n Occupied orbitals with an occupation less than %6.4f are active",
                         occupied);
@@ -201,8 +202,8 @@ void MP2_NOS::compute_transformation() {
                         virtual_orb);
         outfile->Printf("\n Remember, these are suggestions  :-)!\n");
         for (int h = 0; h < nirrep; ++h) {
-            size_t restricted_docc_number = 0;
-            size_t active_number = 0;
+            int restricted_docc_number = 0;
+            int active_number = 0;
             for (int i = 0; i < aoccpi[h]; ++i) {
                 if (D1oo_evals.get(h, i) < occupied) {
                     active_number++;
@@ -234,6 +235,10 @@ void MP2_NOS::compute_transformation() {
             outfile->Printf("%zu ", ract);
         }
         outfile->Printf("]\n");
+
+        dump_occupations("mp2_nos_occ", {{"FROZEN_DOCC", mo_space_info_->dimension("FROZEN_DOCC")},
+                                         {"RESTRICTED_DOCC", psi::Dimension(restricted_docc)},
+                                         {"ACTIVE", psi::Dimension(active)}});
     }
 
     auto Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);

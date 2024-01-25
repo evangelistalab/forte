@@ -1,9 +1,8 @@
-#! Generated using commit GITCOMMIT
-
+# Li2 minimal basis FCI
 import forte
 
-refscf = -14.54873910108353
-reffci = -14.595808852754054
+refscf = -14.548739101084
+reffci = -14.595808852754
 
 molecule {
 0 1
@@ -20,7 +19,7 @@ set {
 }
 
 set forte {
-  active_space_solver fci 
+  active_space_solver genci
 }
 
 energy('scf')
@@ -28,3 +27,22 @@ compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
 energy('forte')
 compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+
+refvals = [
+    ("ENERGY ROOT 0 1AG"        , -14.595808852754),
+    ("NUCLEAR REPULSION ENERGY" ,   3.000000000000),
+    ("SCF TOTAL ENERGY"         , -14.548739101084),
+    ("SINGLET <0AG|DM_X|0AG>"   ,   0.000000000000),
+    ("SINGLET <0AG|DM_Y|0AG>"   ,   0.000000000000),
+    ("SINGLET <0AG|DM_Z|0AG>"   ,   0.000000000000),
+    ("SINGLET <0AG|QM_XX|0AG>"  ,  -9.216219318617),
+    ("SINGLET <0AG|QM_XY|0AG>"  ,   0.000000000000),
+    ("SINGLET <0AG|QM_XZ|0AG>"  ,   0.000000000000),
+    ("SINGLET <0AG|QM_YY|0AG>"  ,  -9.216219318617),
+    ("SINGLET <0AG|QM_YZ|0AG>"  ,   0.000000000000),
+    ("SINGLET <0AG|QM_ZZ|0AG>"  ,  -6.361472474611),
+    ("SINGLET |<0AG|DM|0AG>|"   ,   0.000000000000),
+]   
+    
+for label, val in refvals:             
+    compare_values(val, variable(label),10,label)

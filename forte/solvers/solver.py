@@ -4,7 +4,7 @@ from enum import Enum, auto
 from forte import StateInfo
 from forte.core import flog, increase_log_depth
 from forte.solvers.callback_handler import CallbackHandler
-from forte.data import Data
+from forte.data import ForteData
 from forte.results import Results
 
 import forte
@@ -15,12 +15,13 @@ class Feature(Enum):
     This enum class is used to store all possible Features needed
     or provided by a node in the computational graph
     """
+
     MODEL = auto()
     ORBITALS = auto()
     RDMS = auto()
 
 
-class Node():
+class Node:
     """
     Represents a node part of a computational graph.
 
@@ -31,6 +32,7 @@ class Node():
     The features that are needed must be part of the input node(s).
     This information is used to check the validity of a graph.
     """
+
     def __init__(self, needs, provides, input_nodes=None, data=None):
         """
         Parameters
@@ -48,7 +50,7 @@ class Node():
         input_nodes = [] if input_nodes is None else input_nodes
         self._input_nodes = input_nodes if type(input_nodes) is list else [input_nodes]
         self._check_input()
-        self._data = Data() if data is None else data
+        self._data = ForteData() if data is None else data
 
     @property
     def needs(self):
@@ -75,15 +77,16 @@ class Node():
                     need_met = True
             if not need_met:
                 raise AssertionError(
-                    f'\n\n  ** The computational graph is inconsistent ** \n\n{self.computational_graph()}'
-                    f'\n\n  The solver {self.__class__.__name__} cannot get a feature ({need}) from its input solver: '
-                    + ','.join([input.__class__.__name__ for input in self.input_nodes]) + '\n'
+                    f"\n\n  ** The computational graph is inconsistent ** \n\n{self.computational_graph()}"
+                    f"\n\n  The solver {self.__class__.__name__} cannot get a feature ({need}) from its input solver: "
+                    + ",".join([input.__class__.__name__ for input in self.input_nodes])
+                    + "\n"
                 )
 
     def computational_graph(self):
-        graph = f'{self.__class__.__name__}'
+        graph = f"{self.__class__.__name__}"
         if len(self.input_nodes) > 0:
-            graph += '\n |\n'
+            graph += "\n |\n"
             for input in self.input_nodes:
                 graph += input.computational_graph()
         return graph
@@ -107,6 +110,7 @@ class Solver(Node):
     Solver stores Forte base objects in a data attribute
     and a results object.
     """
+
     def __init__(self, needs, provides, input_nodes=None, options=None, cbh=None):
         """
         Parameters
@@ -129,7 +133,7 @@ class Solver(Node):
         self._executed = False
         self._results = Results()
         # the default psi4 output file
-        self._output_file = 'output.dat'
+        self._output_file = "output.dat"
         # self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
 
     # decorate to increase the log depth
@@ -146,13 +150,13 @@ class Solver(Node):
             A data object
         """
         # log call to run()
-        flog('info', f'{type(self).__name__}: calling run()')
+        flog("info", f"{type(self).__name__}: calling run()")
 
         # call derived class implementation of _run()
         self._run()
 
         # log end of run()
-        flog('info', f'{type(self).__name__}: run() finished executing')
+        flog("info", f"{type(self).__name__}: run() finished executing")
 
         # set executed flag
         self._executed = True
@@ -257,9 +261,9 @@ class Solver(Node):
                 elif isinstance(v, list):
                     parsed_states[k] = v
                 else:
-                    raise ValueError(f'could not parse stats input {states}')
+                    raise ValueError(f"could not parse stats input {states}")
         else:
-            raise ValueError(f'could not parse stats input {states}')
+            raise ValueError(f"could not parse stats input {states}")
         return parsed_states
 
     def make_mo_space_info(self, mo_spaces):
@@ -285,9 +289,10 @@ class Solver(Node):
         Return a ForteOptions object
         """
         import psi4
+
         # Get the option object
         psi4_options = psi4.core.get_options()
-        psi4_options.set_current_module('FORTE')
+        psi4_options.set_current_module("FORTE")
 
         # Get the forte option object
         options = forte.forte_options

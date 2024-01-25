@@ -35,7 +35,8 @@ set globals {
 set scf_type direct
 
 set forte{
-  job_type             casscf
+  job_type             mcscf_two_step
+  active_space_solver  fci
   CASSCF_REFERENCE     true
   CASSCF_MAXITER       100
   CASSCF_G_CONVERGENCE 1e-6
@@ -43,7 +44,6 @@ set forte{
   restricted_docc      [2,0,0,0]
   active               [1,0,0,1]
   int_type             conventional
-  casscf_ci_solver     FCI
   CASSCF_DO_DIIS       true
   dertype              first
 }

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _fragment_projector_h_
-#define _fragment_projector_h_
+#pragma once
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
@@ -57,7 +56,7 @@ class FragmentProjector {
     // std::shared_ptr<BasisSet> minao_basis, 	std::shared_ptr<BasisSet> prime_basis);
 
     // Build projector and return AO basis matrix Pf_AO
-    psi::SharedMatrix build_f_projector(std::shared_ptr<psi::BasisSet> basis);
+    std::shared_ptr<psi::Matrix> build_f_projector(std::shared_ptr<psi::BasisSet> basis);
 
     /// Return number of system (fragment) basis functions
     int get_nbf_A() { return nbf_A_; }
@@ -66,7 +65,7 @@ class FragmentProjector {
     int get_natom_A() { return natom_A_; }
 
     /// eturn the AO overlap matrix (S_)
-    psi::SharedMatrix get_Snn() { return S_; }
+    std::shared_ptr<psi::Matrix> get_Snn() { return S_; }
 
   private:
     /// The molecule
@@ -82,14 +81,14 @@ class FragmentProjector {
     int natom_A_;
 
     /// AO Overlap
-    psi::SharedMatrix S_;
+    std::shared_ptr<psi::Matrix> S_;
 
     /// The startup function
     void startup();
 };
 
 // Helper function
-std::pair<psi::SharedMatrix, int> make_fragment_projector(psi::SharedWavefunction ref_wfn);
+std::pair<std::shared_ptr<psi::Matrix>, int>
+make_fragment_projector(psi::SharedWavefunction ref_wfn);
 
 } // namespace forte
-#endif // _fragment_projector_h_

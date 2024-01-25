@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -25,8 +25,7 @@
  *
  * @END LICENSE
  */
-#ifndef _mrci_no_h_
-#define _mrci_no_h_
+#pragma once
 
 #include "base_classes/orbital_transform.h"
 
@@ -51,10 +50,7 @@ class MRCINO : public OrbitalTransform {
     // ==> Class Interface <==
 
     /// Compute the energy
-    void compute_transformation();
-
-    psi::SharedMatrix get_Ua();
-    psi::SharedMatrix get_Ub();
+    void compute_transformation() override;
 
   private:
     // ==> Class data <==
@@ -96,12 +92,10 @@ class MRCINO : public OrbitalTransform {
     //    psi::Dimension bvirpi_;
 
     /// The transformation matrices
-    psi::SharedMatrix Ua_;
-    psi::SharedMatrix Ub_;
+    std::shared_ptr<psi::Matrix> Ua_;
+    std::shared_ptr<psi::Matrix> Ub_;
 
     // ==> MRCINO Options <==
-    /// Add missing degenerate determinants excluded from the aimed selection?
-    bool project_out_spin_contaminants_ = true;
     /// The multiplicity of the reference
     int wavefunction_multiplicity_ = 0;
     // The number of correlated mos
@@ -124,21 +118,23 @@ class MRCINO : public OrbitalTransform {
     std::vector<Determinant> build_dets(int irrep,
                                         const std::vector<std::vector<Determinant>>& dets_cas);
 
-    std::pair<psi::SharedVector, psi::SharedMatrix>
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
-    std::pair<psi::SharedMatrix, psi::SharedMatrix>
-    build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMatrix evecs, int nroot_);
+    std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
+    build_density_matrix(const std::vector<Determinant>& dets, std::shared_ptr<psi::Matrix> evecs,
+                         int nroot_);
 
     /// Diagonalize the density matrix
-    std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
-    diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix> gamma);
+    std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
+               std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    diagonalize_density_matrix(
+        std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> gamma);
 
     /// Find optimal active space and transform the orbitals
     void find_active_space_and_transform(
-        std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
+        std::tuple<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>,
+                   std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
             no_U);
 };
 } // namespace forte
-
-#endif // MRCISNO_H

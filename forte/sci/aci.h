@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _aci_h_
-#define _aci_h_
+#pragma once
 
 #include <fstream>
 #include <iomanip>
@@ -97,8 +96,8 @@ class AdaptiveCI : public SelectedCIMethod {
         const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) override;
     /// Getters
     DeterminantHashVec get_PQ_space() override;
-    psi::SharedMatrix get_PQ_evecs() override;
-    psi::SharedVector get_PQ_evals() override;
+    std::shared_ptr<psi::Matrix> get_PQ_evecs() override;
+    std::shared_ptr<psi::Vector> get_PQ_evals() override;
     std::vector<double> get_PQ_spin2() override;
     size_t get_ref_root() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
@@ -119,8 +118,8 @@ class AdaptiveCI : public SelectedCIMethod {
 
   private:
     // Temporarily added
-    psi::SharedMatrix P_evecs_;
-    psi::SharedVector P_evals_;
+    std::shared_ptr<psi::Matrix> P_evecs_;
+    std::shared_ptr<psi::Vector> P_evals_;
     DeterminantHashVec P_space_;
     DeterminantHashVec P_ref_;
     std::vector<double> P_ref_evecs_;
@@ -131,8 +130,8 @@ class AdaptiveCI : public SelectedCIMethod {
     local_timer cycle_time_;
 
     // Temporarily added interface to ExcitedStateSolver
-    psi::SharedMatrix PQ_evecs_;
-    psi::SharedVector PQ_evals_;
+    std::shared_ptr<psi::Matrix> PQ_evecs_;
+    std::shared_ptr<psi::Vector> PQ_evals_;
     DeterminantHashVec PQ_space_;
     std::vector<double> PQ_spin2_;
 
@@ -193,7 +192,7 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Control streamlining
     bool streamline_qspace_;
     /// The CI coeffiecients
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
 
     bool build_lists_;
 
@@ -212,7 +211,7 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Form initial guess space with correct spin? ****OBSOLETE?*****
     bool do_guess_;
     /// Spin-symmetrized evecs
-    psi::SharedMatrix PQ_spin_evecs_;
+    std::shared_ptr<psi::Matrix> PQ_spin_evecs_;
     /// The unselected part of the SD space
     det_hash<double> external_wfn_;
     /// Do approximate RDM?
@@ -248,78 +247,87 @@ class AdaptiveCI : public SelectedCIMethod {
     double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);
 
     /// Basic determinant generator (threaded, no batching, all determinants stored)
-    void get_excited_determinants_avg(int nroot, psi::SharedMatrix evecs, psi::SharedVector evals,
+    void get_excited_determinants_avg(int nroot, std::shared_ptr<psi::Matrix> evecs,
+                                      std::shared_ptr<psi::Vector> evals,
                                       DeterminantHashVec& P_space,
                                       std::vector<std::pair<double, Determinant>>& F_space);
 
     /// Get excited determinants with a specified hole
-    //  void get_excited_determinants_restrict(int nroot, psi::SharedMatrix evecs, psi::SharedVector
-    //  evals,  DeterminantHashVec& P_space,
+    //  void get_excited_determinants_restrict(int nroot, std::shared_ptr<psi::Matrix> evecs,
+    //  std::shared_ptr<psi::Vector> evals,  DeterminantHashVec& P_space,
     //                                         std::vector<std::pair<double, Determinant>>&
     //                                         F_space);
     /// Get excited determinants with a specified hole
-    void get_excited_determinants_core(psi::SharedMatrix evecs, psi::SharedVector evals,
+    void get_excited_determinants_core(std::shared_ptr<psi::Matrix> evecs,
+                                       std::shared_ptr<psi::Vector> evals,
                                        DeterminantHashVec& P_space,
                                        std::vector<std::pair<double, Determinant>>& F_space);
 
     // Optimized for a single root
-    void get_excited_determinants_sr(psi::SharedMatrix evecs, psi::SharedVector evals,
+    void get_excited_determinants_sr(std::shared_ptr<psi::Matrix> evecs,
+                                     std::shared_ptr<psi::Vector> evals,
                                      DeterminantHashVec& P_space,
                                      std::vector<std::pair<double, Determinant>>& F_space);
 
     // (DEFAULT in batching) Optimized batching algorithm, prescreens the batches to significantly
     // reduce storage, based on hashes
-    double get_excited_determinants_batch(psi::SharedMatrix evecs, psi::SharedVector evals,
+    double get_excited_determinants_batch(std::shared_ptr<psi::Matrix> evecs,
+                                          std::shared_ptr<psi::Vector> evals,
                                           DeterminantHashVec& P_space,
                                           std::vector<std::pair<double, Determinant>>& F_space);
 
     // Gets excited determinants using sorting of vectors
-    double
-    get_excited_determinants_batch_vecsort(psi::SharedMatrix evecs, psi::SharedVector evals,
-                                           DeterminantHashVec& P_space,
-                                           std::vector<std::pair<double, Determinant>>& F_space);
+    double get_excited_determinants_batch_vecsort(
+        std::shared_ptr<psi::Matrix> evecs, std::shared_ptr<psi::Vector> evals,
+        DeterminantHashVec& P_space, std::vector<std::pair<double, Determinant>>& F_space);
 
     // Optimized for a single root, in GAS
-    void get_gas_excited_determinants_sr(psi::SharedMatrix evecs, psi::SharedVector evals,
+    void get_gas_excited_determinants_sr(std::shared_ptr<psi::Matrix> evecs,
+                                         std::shared_ptr<psi::Vector> evals,
                                          DeterminantHashVec& P_space,
                                          std::vector<std::pair<double, Determinant>>& F_space);
 
     /// Basic determinant generator (threaded, no batching, all determinants stored), in GAS
-    void get_gas_excited_determinants_avg(int nroot, psi::SharedMatrix evecs,
-                                          psi::SharedVector evals, DeterminantHashVec& P_space,
+    void get_gas_excited_determinants_avg(int nroot, std::shared_ptr<psi::Matrix> evecs,
+                                          std::shared_ptr<psi::Vector> evals,
+                                          DeterminantHashVec& P_space,
                                           std::vector<std::pair<double, Determinant>>& F_space);
 
-    void get_gas_excited_determinants_core(psi::SharedMatrix evecs, psi::SharedVector evals,
+    void get_gas_excited_determinants_core(std::shared_ptr<psi::Matrix> evecs,
+                                           std::shared_ptr<psi::Vector> evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space);
 
     /// (DEFAULT)  Builds excited determinants for a bin, uses all threads, hash-based
-    det_hash<double> get_bin_F_space(int bin, int nbin, double E0, psi::SharedMatrix evecs,
+    det_hash<double> get_bin_F_space(int bin, int nbin, double E0,
+                                     std::shared_ptr<psi::Matrix> evecs,
                                      DeterminantHashVec& P_space);
 
     /// Builds core excited determinants for a bin, uses all threads, hash-based
-    det_hash<double> get_bin_F_space_core(int bin, int nbin, double E0, psi::SharedMatrix evecs,
+    det_hash<double> get_bin_F_space_core(int bin, int nbin, double E0,
+                                          std::shared_ptr<psi::Matrix> evecs,
                                           DeterminantHashVec& P_space);
     /// Builds excited determinants in batch using sorting of vectors
     std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<size_t>>
-    get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
+    get_bin_F_space_vecsort(int bin, int nbin, std::shared_ptr<psi::Matrix> evecs,
                             DeterminantHashVec& P_space);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                       psi::SharedMatrix evecs);
+                       std::shared_ptr<psi::Matrix> evecs);
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,
-                           psi::SharedVector new_energies);
+                           std::shared_ptr<psi::Vector> new_energies);
 
     /// Check if the procedure is stuck
     bool check_stuck(const std::vector<std::vector<double>>& energy_history,
-                     psi::SharedVector evals);
+                     std::shared_ptr<psi::Vector> evals);
 
     /// Compute overlap for root following
     int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                    DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots);
+                    DeterminantHashVec& P_space, std::shared_ptr<psi::Matrix> P_evecs,
+                    int num_ref_roots);
 
     /// Add roots to be projected out in DL
     void add_bad_roots(DeterminantHashVec& dets);
@@ -328,10 +336,10 @@ class AdaptiveCI : public SelectedCIMethod {
     void zero_multistate_pt2_energy_correction();
 
     /// Print GAS information
-    void print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs);
+    void print_gas_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs);
 
     /// Print occ number
-    void print_occ_number(DeterminantHashVec& space, psi::SharedMatrix evecs);
+    void print_occ_number(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs);
 
     /// number of GAS
     size_t gas_num_;
@@ -355,5 +363,3 @@ class AdaptiveCI : public SelectedCIMethod {
 };
 
 } // namespace forte
-
-#endif // _aci_h_

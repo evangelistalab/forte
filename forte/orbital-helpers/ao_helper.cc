@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -28,9 +28,10 @@
  */
 
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/sieve.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libmints/integral.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 
 #include "psi4/lib3index/denominator.h"
 #include "psi4/libfock/jk.h"
@@ -40,8 +41,10 @@ using namespace psi;
 
 namespace forte {
 
-AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
-                                         psi::SharedVector eps_vir, double laplace_tolerance)
+AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
+                                         std::shared_ptr<psi::Vector> eps_occ,
+                                         std::shared_ptr<psi::Vector> eps_vir,
+                                         double laplace_tolerance)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
     psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
@@ -52,9 +55,10 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
     nbf_ = CMO_->rowspi()[0];
     shift_ = 0;
 }
-AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
-                                         psi::SharedVector eps_vir, double laplace_tolerance,
-                                         int shift)
+AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
+                                         std::shared_ptr<psi::Vector> eps_occ,
+                                         std::shared_ptr<psi::Vector> eps_vir,
+                                         double laplace_tolerance, int shift)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
       shift_(shift) {
     psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
@@ -92,12 +96,17 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density() {
     PVir_ = Yvir->clone();
 }
 void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary) {
-    ERISieve sieve(primary, 1e-10);
-    auto my_function_pair_values = sieve.function_pair_values();
-    auto AO_Screen = std::make_shared<Matrix>("Z", nbf_, nbf_);
+    auto integral = std::make_shared<IntegralFactory>(primary, primary, primary, primary);
+    auto twobodyaoints = std::shared_ptr<TwoBodyAOInt>(integral->eri());
+    // ERISieve sieve(primary, 1e-10);
+    // auto my_function_pair_values = twobodyaoints->function_pair_values();
+    auto AO_Screen = std::make_shared<psi::Matrix>("Z", nbf_, nbf_);
     for (int mu = 0; mu < nbf_; mu++)
-        for (int nu = 0; nu < nbf_; nu++)
-            AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
+        for (int nu = 0; nu < nbf_; nu++) {
+            // AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
+            double value = std::sqrt(twobodyaoints->function_ceiling2(mu, nu, mu, nu));
+            AO_Screen->set(mu, nu, value);
+        }
 
     AO_Screen_ = AO_Screen;
     AO_Screen_->set_name("ScwartzAOInts");
@@ -105,14 +114,14 @@ void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& prim
 void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
                                                   std::shared_ptr<psi::BasisSet>& auxiliary) {
     Compute_Psuedo_Density();
-    MemDFJK jk(primary, auxiliary);
+    MemDFJK jk(primary, auxiliary, psi::Process::environment.options);
     jk.initialize();
     jk.compute();
-    auto AO_Trans_Screen = std::make_shared<Matrix>("AOTrans", weights_, nbf_ * nbf_);
+    auto AO_Trans_Screen = std::make_shared<psi::Matrix>("AOTrans", weights_, nbf_ * nbf_);
 
     for (int w = 0; w < weights_; w++) {
-        auto COcc = std::make_shared<Matrix>("COcc", nbf_, nbf_);
-        auto CVir = std::make_shared<Matrix>("COcc", nbf_, nbf_);
+        auto COcc = std::make_shared<psi::Matrix>("COcc", nbf_, nbf_);
+        auto CVir = std::make_shared<psi::Matrix>("COcc", nbf_, nbf_);
         for (int mu = 0; mu < nbf_; mu++)
             for (int nu = 0; nu < nbf_; nu++) {
                 COcc->set(mu, nu, POcc_->get(w, mu * nbf_ + nu));

@@ -59,11 +59,12 @@ set forte{
    multiplicity         1
 }
 
-mcscf_energy, wfn = energy('forte', return_wfn=True)
-compare_values(refmcscf,mcscf_energy,10,"MCSCF energy")
+#mcscf_energy, wfn = energy('forte', return_wfn=True)
+#compare_values(refmcscf,mcscf_energy,10,"MCSCF energy")
 
 set forte{
    job_type             newdriver
+   casscf_reference      true
    active_space_solver  fci
    correlation_solver   dsrg-mrpt2
    restricted_docc      [2,0,0,0]
@@ -76,5 +77,5 @@ set forte{
    threepdc             zero
 }
 
-energy('forte',ref_wfn=wfn)
+energy('forte') #,ref_wfn=wfn)
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")

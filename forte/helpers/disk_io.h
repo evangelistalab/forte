@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,27 +27,22 @@
  * @END LICENSE
  */
 
-#ifndef _disk_io_h_
-#define _disk_io_h_
+#pragma once
 
 #include <algorithm>
 #include <chrono>
-#include <map>
 #include <numeric>
 #include <string>
+#include <unordered_map>
 #include <vector>
-
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
 
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
+#include "psi4/libmints/dimension.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
-
-namespace py = pybind11;
 
 namespace forte {
 
@@ -55,7 +50,7 @@ namespace forte {
  * @brief Save a vector of double to file
  * @param filename The file name
  * @param data The data to be dumped
- * @param overwrite Overwrite if the file exists
+ * @param overwrite Overwrite file if it exists?
  */
 void write_disk_vector_double(const std::string& filename, const std::vector<double>& data,
                               bool overwrite = false);
@@ -66,6 +61,26 @@ void write_disk_vector_double(const std::string& filename, const std::vector<dou
  * @param data The data to be read
  */
 void read_disk_vector_double(const std::string& filename, std::vector<double>& data);
+
+/**
+ * @brief Dump occupation numbers to disk in json format
+ *
+ * @param filename The name of the json file, e.g., filename = "abc" -> abc.json
+ * @param occ_map The map from space name to occupation numbers per irrep
+ */
+void dump_occupations(const std::string& filename,
+                      std::unordered_map<std::string, psi::Dimension> occ_map);
+
+/// @brief Write a Psi4 Matrix to disk
+/// @param filename The file name
+/// @param mat The Psi4 Matrix to be dumped
+/// @param overwrite Overwrite file if it exists?
+void write_psi_matrix(const std::string& filename, const psi::Matrix& mat, bool overwrite = false);
+
+/// @brief Read a Psi4 Matrix from disk
+/// @param filename The file name
+/// @param mat The Psi4 Matrix to be filled
+void read_psi_matrix(const std::string& filename, psi::Matrix& mat);
 
 ///**
 // * @brief Save a BlockedTensor to file
@@ -90,5 +105,3 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
 // void delete_disk_BT(const std::string& filename);
 
 } // namespace forte
-
-#endif // _disk_io_h_

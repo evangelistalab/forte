@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -47,7 +47,7 @@ LBFGS::LBFGS(std::shared_ptr<LBFGS_PARAM> param) : param_(param), p_(psi::Vector
     param_->check_param();
 }
 
-template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
+template <class Foo> double LBFGS::minimize(Foo& func, std::shared_ptr<psi::Vector> x) {
     nirrep_ = x->nirrep();
     dimpi_ = x->dimpi();
 
@@ -65,9 +65,9 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
     }
 
     // routine of diagonal Hessian
-    auto compute_h0 = [&](psi::SharedVector x) {
+    auto compute_h0 = [&](std::shared_ptr<psi::Vector> x) {
         func.hess_diag(x, h0_);
-        if (param_->print > 2) {
+        if (param_->print > 3) {
             print_h2("Diagonal Hessian at Iter. " + std::to_string(iter_));
             h0_->print();
         }
@@ -102,7 +102,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
 
         // print current iteration
         g_norm = g_->norm();
-        if (param_->print > 0)
+        if (param_->print > 2)
             outfile->Printf("\n    L-BFGS Iter:%3d; fx = %20.15f; g_norm = %12.6e; step = %9.3e",
                             iter_ + 1, fx, g_norm, step);
 
@@ -150,7 +150,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         }
     } while (iter_ < param_->maxiter);
 
-    if ((not converged_) and param_->print > 1) {
+    if ((not converged_) and param_->print > 2) {
         outfile->Printf("\n  L-BFGS Warning: No convergence in %d iterations", iter_);
     }
 
@@ -183,12 +183,12 @@ void LBFGS::update() {
     // for descent
     p_.scale(-1.0);
 
-    if (param_->print > 2)
+    if (param_->print > 3)
         p_.print();
 }
 
 template <class Foo>
-void LBFGS::next_step(Foo& foo, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::next_step(Foo& foo, std::shared_ptr<psi::Vector> x, double& fx, double& step) {
     if (param_->step_length_method == LBFGS_PARAM::STEP_LENGTH_METHOD::MAX_CORRECTION) {
         scale_direction_vector(foo, x, fx, step);
     } else if (param_->step_length_method == LBFGS_PARAM::STEP_LENGTH_METHOD::LINE_BACKTRACKING) {
@@ -200,12 +200,13 @@ void LBFGS::next_step(Foo& foo, psi::SharedVector x, double& fx, double& step) {
         throw std::runtime_error("Unknown STEP_LENGTH_METHOD");
     }
 
-    if (param_->print > 2)
+    if (param_->print > 3)
         g_->print();
 }
 
 template <class Foo>
-void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::scale_direction_vector(Foo& func, std::shared_ptr<psi::Vector> x, double& fx,
+                                   double& step) {
     double p_max = 0.0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < dimpi_[h]; ++i) {
@@ -223,7 +224,8 @@ void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, d
 }
 
 template <class Foo>
-void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::line_search_backtracking(Foo& func, std::shared_ptr<psi::Vector> x, double& fx,
+                                     double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
     psi::Vector x0(*x);
@@ -284,7 +286,8 @@ void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx,
 }
 
 template <class Foo>
-void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::line_search_bracketing_zoom(Foo& func, std::shared_ptr<psi::Vector> x, double& fx,
+                                        double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
     psi::Vector x0(*x);
@@ -299,7 +302,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
     double w1 = param_->c1 * dg0;
     double w2 = -param_->c2 * dg0;
 
-    double fx_low = fx0, fx_high = fx0;
+    double fx_low = fx0; // fx_high = fx0;
     double step_low = 0.0, step_high = 0.0;
 
     // braketing stage
@@ -309,7 +312,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
         fx = func.evaluate(x, g_);
 
         if (fx - fx0 > w1 * step or (fx >= fx_low and i > 0)) {
-            fx_high = fx;
+            // fx_high = fx;
             step_high = step;
             break;
         }
@@ -317,13 +320,13 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
         double dg = g_->vector_dot(p_);
 
         if (std::fabs(dg) <= w2) {
-            if (param_->print > 2) {
+            if (param_->print > 3) {
                 outfile->Printf("\n    Optimal step length from bracketing stage: %.15f", step);
             }
             return;
         }
 
-        fx_high = fx_low;
+        // fx_high = fx_low;
         step_high = step_low;
 
         fx_low = fx;
@@ -334,7 +337,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
         step *= 2.0;
     }
-    if (param_->print > 2) {
+    if (param_->print > 3) {
         outfile->Printf("\n    Step lengths after bracketing stage: low = %.10f, high = %.10f",
                         step_low, step_high);
     }
@@ -352,12 +355,12 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
         if (fx - fx0 > w1 * step or fx >= fx_low) {
             step_high = step;
-            fx_high = fx;
+            // fx_high = fx;
         } else {
             double dg = g_->vector_dot(p_);
 
             if (std::fabs(dg) <= w2) {
-                if (param_->print > 2) {
+                if (param_->print > 3) {
                     outfile->Printf("\n    Optimal step length from zooming stage: %.15f", step);
                 }
                 break;
@@ -365,14 +368,14 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
             if (dg * (step_high - step_low) >= 0) {
                 step_high = step_low;
-                fx_high = fx_low;
+                // fx_high = fx_low;
             }
 
             step_low = step;
             fx_low = fx;
         }
     }
-    if (param_->print > 2) {
+    if (param_->print > 3) {
         outfile->Printf("\n    Step lengths after zooming stage: low = %.10f, high = %.10f",
                         step_low, step_high);
     }
@@ -393,7 +396,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 void LBFGS::apply_h0(psi::Vector& q) {
     if (param_->h0_freq < 0) {
         double gamma = compute_gamma();
-        if (param_->print > 2)
+        if (param_->print > 3)
             outfile->Printf("\n    gamma for H0: %.15f", gamma);
         q.scale(gamma);
     } else {
@@ -423,8 +426,8 @@ double LBFGS::compute_gamma() {
 }
 
 void LBFGS::resize(int m) {
-    y_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>(0));
-    s_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>(0));
+    y_ = std::vector<std::shared_ptr<psi::Vector>>(m, std::make_shared<psi::Vector>(0));
+    s_ = std::vector<std::shared_ptr<psi::Vector>>(m, std::make_shared<psi::Vector>(0));
     alpha_.resize(m);
     rho_.resize(m);
 }
@@ -435,8 +438,8 @@ void LBFGS::reset() {
     iter_shift_ = 0;
 }
 
-template double LBFGS::minimize(ROSENBROCK& func, psi::SharedVector x);
-template double LBFGS::minimize(CASSCF_ORB_GRAD& func, psi::SharedVector x);
-template double LBFGS::minimize(CPSCF& func, psi::SharedVector x);
+template double LBFGS::minimize(ROSENBROCK& func, std::shared_ptr<psi::Vector> x);
+template double LBFGS::minimize(CASSCF_ORB_GRAD& func, std::shared_ptr<psi::Vector> x);
+template double LBFGS::minimize(CPSCF& func, std::shared_ptr<psi::Vector> x);
 
 } // namespace forte

@@ -1,0 +1,75 @@
+import forte
+
+refscf = -229.41243414162116
+refocc = {"FROZEN_DOCC": [2,1,0,0,0,0,2,1],
+          "RESTRICTED_DOCC": [3,2,0,0,0,1,2,3],
+          "ACTIVE": [1,0,1,1,0,0,1,0],
+          "FROZEN_UOCC": [0,0,0,0,0,0,0,0]}
+
+molecule pbenzyne{
+0 3
+C   0.0000000000  -2.5451795941   0.0000000000
+C   0.0000000000   2.5451795941   0.0000000000
+C  -2.2828001669  -1.3508352528   0.0000000000
+C   2.2828001669  -1.3508352528   0.0000000000
+C   2.2828001669   1.3508352528   0.0000000000
+C  -2.2828001669   1.3508352528   0.0000000000
+H  -4.0782187459  -2.3208602146   0.0000000000
+H   4.0782187459  -2.3208602146   0.0000000000
+H   4.0782187459   2.3208602146   0.0000000000
+H  -4.0782187459   2.3208602146   0.0000000000
+units bohr
+}
+
+set globals{
+  scf_type               df
+  reference              rohf
+  basis                  cc-pvdz
+  df_basis_scf           cc-pvdz-jkfit
+  df_basis_mp2           cc-pvdz-jkfit
+  e_convergence          10
+}
+escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, escf, 8, "DF-CASSCF(2,2) triplet energy")
+
+set forte{
+  job_type                none
+  orbital_type            mrpt2no
+  int_type                diskdf
+  nat_act                 true
+  nat_orbs_print          true
+  active_space_solver     detci
+  frozen_docc             [2,1,0,0,0,0,2,1]
+  restricted_docc         [3,2,1,1,0,1,2,3]
+  active                  [1,0,0,0,0,0,1,0]
+  dsrg_s                  0.5
+  pt2no_occ_threshold     0.98
+  pt2no_vir_threshold     0.02
+  multiplicity            1
+}
+Ezero = energy('forte', ref_wfn=wfn)
+
+# test DSRG-MRPT2 unrelaxed 1RDM core and virtual blocks
+D1c = variable("MRPT2 1RDM CC")
+D1v = variable("MRPT2 1RDM VV")
+
+files = {'D1c': D1c, 'D1v': D1v}
+
+## dump files
+#for name, data in files.items():
+#    with open(name + '.npz', 'wb') as f:
+#        np.savez_compressed(f, *(data.to_array()))
+
+# read files
+for name in files:
+    M_loaded = np.load(name + '.npz')
+    nirrep = len(M_loaded.files)
+    M_list = [M_loaded[f'arr_{i}'] for i in range(nirrep)]
+    M = psi4.core.Matrix.from_array(M_list)
+    compare_matrices(M, files[name], 6, 'DF-DSRG-MRPT2 unrelaxed 1RDM: ' + name.upper())
+
+# compare mrpt2 suggested active space
+import json
+compt_occ = json.load(open('mrpt2_nos_occ.json'))
+for name, occ in refocc.items():
+    compare_integers(occ, compt_occ[name], f"{name}")

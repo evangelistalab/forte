@@ -26,12 +26,14 @@
 # @END LICENSE
 #
 
-import psi4
-import forte
-import json
+import numpy as np
 import warnings
 import math
-import numpy as np
+import json
+import psi4
+
+import forte
+from forte.proc.external_active_space_solver import write_external_active_space_file
 
 
 class ProcedureDSRG:
@@ -47,12 +49,13 @@ class ProcedureDSRG:
         """
 
         # Read options
-        self.solver_type = options.get_str('CORRELATION_SOLVER')
+        self.solver_type = options.get_str("CORRELATION_SOLVER")
         if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG", "DSRG_MRPT", "DSRG-MRPT"]:
             self.rdm_type = forte.RDMsType.spin_free
         else:
-            self.rdm_type = forte.RDMsType.spin_free if options.get_bool('DSRG_RDM_MS_AVG') \
-                else forte.RDMsType.spin_dependent
+            self.rdm_type = (
+                forte.RDMsType.spin_free if options.get_bool("DSRG_RDM_MS_AVG") else forte.RDMsType.spin_dependent
+            )
 
         self.do_semicanonical = options.get_bool("SEMI_CANONICAL")
 
@@ -72,7 +75,7 @@ class ProcedureDSRG:
                 psi4.core.print_out(f"\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
                 options.set_str("DSRG_3RDM_ALGORITHM", "EXPLICIT")
 
-        self.relax_convergence = float('inf')
+        self.relax_convergence = float("inf")
         self.e_convergence = options.get_double("E_CONVERGENCE")
 
         self.restart_amps = options.get_bool("DSRG_RESTART_AMPS")
@@ -84,16 +87,21 @@ class ProcedureDSRG:
         elif self.relax_ref == "TWICE":
             self.relax_maxiter = 2
         else:
-            self.relax_maxiter = options.get_int('MAXITER_RELAX_REF')
+            self.relax_maxiter = options.get_int("MAXITER_RELAX_REF")
             self.relax_convergence = options.get_double("RELAX_E_CONVERGENCE")
 
         self.save_relax_energies = options.get_bool("DSRG_DUMP_RELAXED_ENERGIES")
+
+        # Filter out levels for analytic gradients
+        if options.get_str("DERTYPE") != "NONE":
+            if self.relax_ref != "NONE" or self.solver_type != "DSRG-MRPT2":
+                raise NotImplementedError("Analytic energy gradients are only implemented for unrelaxed DSRG-MRPT2!")
 
         # Filter out some ms-dsrg algorithms
         ms_dsrg_algorithm = options.get_str("DSRG_MULTI_STATE")
         if self.do_multi_state and ("SA" not in ms_dsrg_algorithm):
             raise NotImplementedError("MS or XMS is disabled due to the reconstruction.")
-        if ms_dsrg_algorithm == "SA_SUB" and self.relax_ref != 'ONCE':
+        if ms_dsrg_algorithm == "SA_SUB" and self.relax_ref != "ONCE":
             raise NotImplementedError("SA_SUB only supports relax once at present. Relaxed SA density not implemented.")
         self.multi_state_type = ms_dsrg_algorithm
 
@@ -110,6 +118,9 @@ class ProcedureDSRG:
         self.do_dipole = do_dipole
         self.dipoles = []
 
+        self.max_dipole_level = options.get_int("DSRG_MAX_DIPOLE_LEVEL")
+        self.max_quadrupole_level = options.get_int("DSRG_MAX_QUADRUPOLE_LEVEL")
+
         # Set up Forte objects
         self.active_space_solver = active_space_solver
         self.state_weights_map = state_weights_map
@@ -122,6 +133,7 @@ class ProcedureDSRG:
         # DSRG solver related
         self.dsrg_solver = None
         self.Heff_implemented = False
+        self.Meff_implemented = False
         self.converged = False
         self.energies = []  # energies along the relaxation steps
         self.energies_environment = {}  # energies pushed to Psi4 environment globals
@@ -143,7 +155,7 @@ class ProcedureDSRG:
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
 
     def make_dsrg_solver(self):
-        """ Make a DSRG solver. """
+        """Make a DSRG solver."""
         args = (self.rdms, self.scf_info, self.options, self.ints, self.mo_space_info)
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
@@ -156,6 +168,7 @@ class ProcedureDSRG:
             self.dsrg_solver.set_state_weights_map(self.state_weights_map)
             self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
+            self.Meff_implemented = True
         elif self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
             self.dsrg_solver = forte.make_dsrg_so_y(*args)
         elif self.solver_type == "SOMRDSRG":
@@ -166,7 +179,7 @@ class ProcedureDSRG:
             raise NotImplementedError(f"{self.solver_type} not available!")
 
     def dsrg_setup(self):
-        """ Set up DSRG parameters before computations. """
+        """Set up DSRG parameters before computations."""
 
         if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             self.dsrg_solver.set_Uactv(self.Ua)
@@ -175,12 +188,12 @@ class ProcedureDSRG:
             self.dsrg_solver.set_Uactv(self.Ua, self.Ub)
 
     def dsrg_cleanup(self):
-        """ Clean up for reference relaxation. """
+        """Clean up for reference relaxation."""
         if self.Heff_implemented:
             self.dsrg_solver.clean_checkpoints()
 
     def compute_energy(self):
-        """ Compute energy with reference relaxation and return current DSRG energy. """
+        """Compute energy with reference relaxation and return current DSRG energy."""
         # Notes (York):
         # cases to run active space solver: reference relaxation, state-average dsrg
         # cases to run contracted ci solver (will be put in ActiveSpaceSolver): contracted state-average dsrg
@@ -192,10 +205,13 @@ class ProcedureDSRG:
         # Perform the initial un-relaxed DSRG
         self.make_dsrg_solver()
         self.dsrg_setup()
+        psi4.core.print_out(f"\n  =>** Before self.dsrg_solver.compute_energy() **<=\n")
         e_dsrg = self.dsrg_solver.compute_energy()
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
-        self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items() if 'ROOT' in k}
+        psi4.core.print_out(f"\n  =>** After self.dsrg_solver.compute_energy() **<=\n")
+
+        self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items() if "ROOT" in k}
 
         # Spit out energy if reference relaxation not implemented
         if not self.Heff_implemented:
@@ -203,6 +219,7 @@ class ProcedureDSRG:
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
+            psi4.core.print_out(f"\n  =>** In reference relaxation loop **<=\n")
             # Grab the effective Hamiltonian in the active space
             # Note: The active integrals (ints_dressed) are in the original basis
             #       (before semi-canonicalization in the init function),
@@ -210,6 +227,36 @@ class ProcedureDSRG:
             #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
             #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
+            if self.Meff_implemented and (self.max_dipole_level > 0 or self.max_quadrupole_level > 0):
+                asmpints = self.dsrg_solver.compute_mp_eff_actv()
+
+            if self.options.get_str("ACTIVE_SPACE_SOLVER") == "EXTERNAL":
+                state_map = forte.to_state_nroots_map(self.state_weights_map)
+                write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
+                msg = "External solver: save DSRG dressed integrals to dsrg_ints.json"
+                print(msg)
+                psi4.core.print_out(msg)
+
+                if self.options.get_bool("EXTERNAL_PARTIAL_RELAX"):
+                    active_space_solver_2 = forte.make_active_space_solver(
+                        self.options.get_str("EXT_RELAX_SOLVER"),
+                        state_map,
+                        self.scf_info,
+                        self.mo_space_info,
+                        self.options,
+                        ints_dressed,
+                    )
+                    active_space_solver_2.set_Uactv(self.Ua, self.Ub)
+                    e_relax = list(active_space_solver_2.compute_energy().values())[0][0]
+                self.energies.append((e_dsrg, e_relax))
+                break
+
+            if self.do_multi_state and self.options.get_bool("SAVE_SA_DSRG_INTS"):
+                state_map = forte.to_state_nroots_map(self.state_weights_map)
+                write_external_active_space_file(ints_dressed, state_map, self.mo_space_info, "dsrg_ints.json")
+                msg = "\n\nSave SA-DSRG dressed integrals to dsrg_ints.json\n\n"
+                print(msg)
+                psi4.core.print_out(msg)
 
             # Spit out contracted SA-DSRG energy
             if self.do_multi_state and self.multi_state_type == "SA_SUB":
@@ -225,6 +272,14 @@ class ProcedureDSRG:
             # and the current semi-canonical basis
             self.active_space_solver.set_Uactv(self.Ua, self.Ub)
             state_energies_list = self.active_space_solver.compute_energy()
+
+            if self.Meff_implemented:
+                if self.max_dipole_level > 0:
+                    self.active_space_solver.compute_dipole_moment(asmpints)
+                if self.max_quadrupole_level > 0:
+                    self.active_space_solver.compute_quadrupole_moment(asmpints)
+                if self.max_dipole_level > 0:
+                    self.active_space_solver.compute_fosc_same_orbs(asmpints)
 
             # Reorder weights if needed
             if self.state_ci_wfn_map is not None:
@@ -245,7 +300,7 @@ class ProcedureDSRG:
                 self.dipoles.append((dm_u, dm_r))
 
             # Save energies that have been pushed to Psi4 environment
-            self.energies_environment[n + 1] = {k: v for k, v in psi4.core.variables().items() if 'ROOT' in k}
+            self.energies_environment[n + 1] = {k: v for k, v in psi4.core.variables().items() if "ROOT" in k}
             self.energies_environment[n + 1]["DSRG FIXED"] = e_dsrg
             self.energies_environment[n + 1]["DSRG RELAXED"] = e_relax
 
@@ -294,7 +349,7 @@ class ProcedureDSRG:
 
         # dump reference relaxation energies to json file
         if self.save_relax_energies:
-            with open('dsrg_relaxed_energies.json', 'w') as w:
+            with open("dsrg_relaxed_energies.json", "w") as w:
                 json.dump(self.energies_environment, w, sort_keys=True, indent=4)
 
         e_current = e_dsrg if len(self.energies) == 0 else e_relax
@@ -302,8 +357,19 @@ class ProcedureDSRG:
 
         return e_current
 
+    def compute_gradient(self, ci_vectors):
+        """
+        Compute DSRG-MRPT2 analytic gradients.
+        :param ci_vectors: the wave functions (vector of ambit::Tensor) from an ActiveSpaceSolver
+        """
+        if self.dsrg_solver is None:
+            raise ValueError("Please compute energy before calling compute_gradient")
+
+        self.dsrg_solver.set_ci_vectors(ci_vectors)
+        self.dsrg_solver.compute_gradient()
+
     def compute_dipole_relaxed(self):
-        """ Compute dipole moments. """
+        """Compute dipole moments."""
         dipole_moments = self.dsrg_solver.nuclear_dipole()
         dipole_dressed = self.dsrg_solver.deGNO_DMbar_actv()
         for i in range(3):
@@ -314,8 +380,8 @@ class ProcedureDSRG:
 
     @staticmethod
     def grab_dipole_unrelaxed():
-        """ Grab dipole moment from C++ results. """
-        dipole = psi4.core.variable('UNRELAXED DIPOLE')
+        """Grab dipole moment from C++ results."""
+        dipole = psi4.core.variable("UNRELAXED DIPOLE")
         return dipole[0], dipole[1], dipole[2], np.linalg.norm(dipole)
 
     def test_relaxation_convergence(self, n):
@@ -391,21 +457,27 @@ class ProcedureDSRG:
                 # try to fix ms < 0
                 if twice_ms > 0:
                     state_spin = forte.StateInfo(
-                        state.nb(), state.na(), state.multiplicity(), -twice_ms, state.irrep(), state.irrep_label(),
-                        state.gas_min(), state.gas_max()
+                        state.nb(),
+                        state.na(),
+                        state.multiplicity(),
+                        -twice_ms,
+                        state.irrep(),
+                        state.irrep_label(),
+                        state.gas_min(),
+                        state.gas_max(),
                     )
                     if state_spin in self.state_weights_map:
                         self.state_weights_map[state_spin] = weights_new
 
     def print_summary(self):
-        """ Print energies and dipole moment to output file. """
+        """Print energies and dipole moment to output file."""
         if self.relax_maxiter < 1:
             return
 
         if (not self.do_multi_state) or self.relax_maxiter > 1:
             psi4.core.print_out(f"\n\n  => {self.solver_type} Reference Relaxation Energy Summary <=\n")
-            indent = ' ' * 4
-            dash = '-' * 71
+            indent = " " * 4
+            dash = "-" * 71
             title = f"{indent}{' ':5}  {'Fixed Ref. (a.u.)':>31}  {'Relaxed Ref. (a.u.)':>31}\n"
             title += f"{indent}{' ' * 5}  {'-' * 31}  {'-' * 31}\n"
             title += f"{indent}{'Iter.':5}  {'Total Energy':>20} {'Delta':>10}  {'Total Energy':>20} {'Delta':>10}\n"
@@ -438,29 +510,29 @@ class ProcedureDSRG:
                 psi4.core.print_out(print_dipole("fully relaxed", self.dipoles[-1][1]))
 
     def push_to_psi4_environment(self):
-        """ Push results to Psi4 environment. """
+        """Push results to Psi4 environment."""
         if self.relax_maxiter < 1:
             return
 
-        psi4.core.set_scalar_variable('UNRELAXED ENERGY', self.energies[0][0])
-        psi4.core.set_scalar_variable('PARTIALLY RELAXED ENERGY', self.energies[0][1])
+        psi4.core.set_scalar_variable("UNRELAXED ENERGY", self.energies[0][0])
+        psi4.core.set_scalar_variable("PARTIALLY RELAXED ENERGY", self.energies[0][1])
 
         if self.do_dipole and (not self.do_multi_state):
-            psi4.core.set_scalar_variable('UNRELAXED DIPOLE', self.dipoles[0][0][-1])
-            psi4.core.set_scalar_variable('PARTIALLY RELAXED DIPOLE', self.dipoles[0][1][-1])
+            psi4.core.set_scalar_variable("UNRELAXED DIPOLE", self.dipoles[0][0][-1])
+            psi4.core.set_scalar_variable("PARTIALLY RELAXED DIPOLE", self.dipoles[0][1][-1])
 
         if self.relax_maxiter > 1:
-            psi4.core.set_scalar_variable('RELAXED ENERGY', self.energies[1][0])
+            psi4.core.set_scalar_variable("RELAXED ENERGY", self.energies[1][0])
             if self.do_dipole and (not self.do_multi_state):
-                psi4.core.set_scalar_variable('RELAXED DIPOLE', self.dipoles[1][0][-1])
+                psi4.core.set_scalar_variable("RELAXED DIPOLE", self.dipoles[1][0][-1])
 
             if self.relax_ref == "ITERATE":
                 if not self.converged:
-                    psi4.core.set_scalar_variable('CURRENT UNRELAXED ENERGY', self.energies[-1][0])
-                    psi4.core.set_scalar_variable('CURRENT RELAXED ENERGY', self.energies[-1][1])
+                    psi4.core.set_scalar_variable("CURRENT UNRELAXED ENERGY", self.energies[-1][0])
+                    psi4.core.set_scalar_variable("CURRENT RELAXED ENERGY", self.energies[-1][1])
                     raise psi4.p4util.PsiException(f"DSRG relaxation does not converge in {self.relax_maxiter} cycles")
                 else:
-                    psi4.core.set_scalar_variable('FULLY RELAXED ENERGY', self.energies[-1][1])
+                    psi4.core.set_scalar_variable("FULLY RELAXED ENERGY", self.energies[-1][1])
 
                     if self.do_dipole and (not self.do_multi_state):
-                        psi4.core.set_scalar_variable('FULLY RELAXED DIPOLE', self.dipoles[-1][1][-1])
+                        psi4.core.set_scalar_variable("FULLY RELAXED DIPOLE", self.dipoles[-1][1][-1])

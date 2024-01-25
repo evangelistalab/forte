@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _atomic_orbital_h_
-#define _atomic_orbital_h_
+#pragma once
 
 #include "psi4/psi4-dec.h"
 #include "psi4/lib3index/denominator.h"
@@ -36,20 +35,20 @@ namespace forte {
 
 class AtomicOrbitalHelper {
   protected:
-    psi::SharedMatrix AO_Screen_;
-    psi::SharedMatrix TransAO_Screen_;
+    std::shared_ptr<psi::Matrix> AO_Screen_;
+    std::shared_ptr<psi::Matrix> TransAO_Screen_;
 
-    psi::SharedMatrix CMO_;
-    psi::SharedVector eps_rdocc_;
-    psi::SharedVector eps_virtual_;
+    std::shared_ptr<psi::Matrix> CMO_;
+    std::shared_ptr<psi::Vector> eps_rdocc_;
+    std::shared_ptr<psi::Vector> eps_virtual_;
 
-    psi::SharedMatrix POcc_;
-    psi::SharedMatrix PVir_;
+    std::shared_ptr<psi::Matrix> POcc_;
+    std::shared_ptr<psi::Matrix> PVir_;
     void Compute_Psuedo_Density();
 
     // LaplaceDenominator Laplace_;
-    psi::SharedMatrix Occupied_Laplace_;
-    psi::SharedMatrix Virtual_Laplace_;
+    std::shared_ptr<psi::Matrix> Occupied_Laplace_;
+    std::shared_ptr<psi::Matrix> Virtual_Laplace_;
     double laplace_tolerance_ = 1e-10;
 
     int weights_;
@@ -61,18 +60,18 @@ class AtomicOrbitalHelper {
     int shift_;
 
   public:
-    psi::SharedMatrix AO_Screen() { return AO_Screen_; }
-    psi::SharedMatrix TransAO_Screen() { return TransAO_Screen_; }
-    psi::SharedMatrix Occupied_Laplace() { return Occupied_Laplace_; }
-    psi::SharedMatrix Virtual_Laplace() { return Virtual_Laplace_; }
-    psi::SharedMatrix POcc() { return POcc_; }
-    psi::SharedMatrix PVir() { return PVir_; }
+    std::shared_ptr<psi::Matrix> AO_Screen() { return AO_Screen_; }
+    std::shared_ptr<psi::Matrix> TransAO_Screen() { return TransAO_Screen_; }
+    std::shared_ptr<psi::Matrix> Occupied_Laplace() { return Occupied_Laplace_; }
+    std::shared_ptr<psi::Matrix> Virtual_Laplace() { return Virtual_Laplace_; }
+    std::shared_ptr<psi::Matrix> POcc() { return POcc_; }
+    std::shared_ptr<psi::Matrix> PVir() { return PVir_; }
     int Weights() { return weights_; }
 
-    AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
-                        double laplace_tolerance);
-    AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
-                        double laplace_tolerance, int shift);
+    AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO, std::shared_ptr<psi::Vector> eps_occ,
+                        std::shared_ptr<psi::Vector> eps_vir, double laplace_tolerance);
+    AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO, std::shared_ptr<psi::Vector> eps_occ,
+                        std::shared_ptr<psi::Vector> eps_vir, double laplace_tolerance, int shift);
     /// Compute (mu nu | mu nu)^{(1/2)}
     void Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary);
     void Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
@@ -81,5 +80,3 @@ class AtomicOrbitalHelper {
     ~AtomicOrbitalHelper();
 };
 } // namespace forte
-
-#endif

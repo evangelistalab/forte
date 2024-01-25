@@ -33,8 +33,7 @@ set forte {
    semi_canonical          true
    int_type                df
    correlation_solver      three-dsrg-mrpt2
-   ntrial_per_root         100
-   active_space_solver     cas
+   active_space_solver     detci
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

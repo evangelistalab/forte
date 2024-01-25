@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,6 +34,8 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsio/psio.hpp"
+
+#include "integrals/active_space_integrals.h"
 
 #include "forte-def.h"
 #include "helpers/helpers.h"
@@ -77,6 +79,15 @@ SADSRG::~SADSRG() {
         }
         outfile->Printf("\n  %s", std::string(100, '-').c_str());
         outfile->Printf("\n\n");
+    }
+
+    // delete canonicalized B(Q|pq) files
+    for (const auto& pair : Bcan_files_) {
+        const auto& [block, filename] = pair;
+        if (remove(filename.c_str()) != 0) {
+            std::string msg = "Error when deleting Bcan." + block + ".bin";
+            perror(msg.c_str());
+        }
     }
 }
 
@@ -123,6 +134,12 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
+
+    // setup checkpoint filename prefix
+    chk_filename_prefix_ = PSIOManager::shared_object()->get_default_path();
+    chk_filename_prefix_ += "forte." + std::to_string(getpid());
+    chk_filename_prefix_ += "." + psi::Process::environment.molecule()->name();
+    Bcan_files_.clear();
 }
 
 void SADSRG::build_fock_from_ints() {
@@ -186,6 +203,23 @@ void SADSRG::read_options() {
 
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
+
+    max_dipole_level_ = foptions_->get_int("DSRG_MAX_DIPOLE_LEVEL");
+    if (max_dipole_level_ > 2) {
+        outfile->Printf("\n  Warning: DSRG_MAX_DIPOLE_LEVEL option >2 is not implemented.");
+        outfile->Printf("\n  Changed DSRG_MAX_DIPOLE_LEVEL option to 2");
+        max_dipole_level_ = 2;
+        warnings_.push_back(std::make_tuple("Unsupported DSRG_MAX_DIPOLE_LEVEL", "Changed to 2",
+                                            "Change options in input.dat"));
+    }
+    max_quadrupole_level_ = foptions_->get_int("DSRG_MAX_QUADRUPOLE_LEVEL");
+    if (max_quadrupole_level_ > 2) {
+        outfile->Printf("\n  Warning: DSRG_MAX_QUADRUPOLE_LEVEL option >2 is not implemented.");
+        outfile->Printf("\n  Changed DSRG_MAX_QUADRUPOLE_LEVEL option to 2");
+        max_dipole_level_ = 2;
+        warnings_.push_back(std::make_tuple("Unsupported DSRG_MAX_QUADRUPOLE_LEVEL", "Changed to 2",
+                                            "Change options in input.dat"));
+    }
 
     print_done(lt.get());
 }
@@ -413,11 +447,12 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     double Edsrg = Eref_ + Hbar0_;
     if (foptions_->get_bool("FORM_HBAR3")) {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);
-        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_, Hbar3_);
+        rotate_three_ints_to_original(Hbar3_);
     } else {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
-        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
     }
+    rotate_one_ints_to_original(Hbar1_);
+    rotate_two_ints_to_original(Hbar2_);
 
     // create FCIIntegral shared_ptr
     auto fci_ints =
@@ -433,8 +468,117 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     return fci_ints;
 }
 
+std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
+    /**
+     * DSRG transform multipole integrals: Mbar = e^{-A} M e^{A}
+     *
+     * Mbar0 is equivalent to computing the M moment using unrelaxed 1-RDM.
+     * The results from Mbar0 are usually considered bad and
+     * response terms must be included to improve the results.
+     *
+     * It might be useful to use Mbar1 and/or Mbar2 for transition M moment.
+     */
+
+    auto mpints = std::make_shared<MultipoleIntegrals>(ints_, mo_space_info_);
+    auto as_mpints = std::make_shared<ActiveMultipoleIntegrals>(mpints);
+
+    if (max_dipole_level_ == 0 and max_quadrupole_level_ == 0)
+        return as_mpints;
+
+    std::vector<std::string> dp_dirs{"X", "Y", "Z"};
+    std::vector<std::string> qp_dirs{"XX", "XY", "XZ", "YY", "YZ", "ZZ"};
+
+    // prepare multipole integrals to be transformed
+    std::vector<ambit::BlockedTensor> M1;
+    std::vector<int> max_levels;
+    std::vector<double> scalars;
+
+    // bare dipoles
+    if (max_dipole_level_ > 0) {
+        auto fdocc = as_mpints->dp_scalars_fdocc();
+        auto nuc = as_mpints->nuclear_dipole();
+        for (int z = 0; z < 3; ++z) {
+            std::string name = "DIPOLE " + dp_dirs[z];
+            ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
+            m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                           double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
+            M1.push_back(m1);
+            max_levels.push_back(max_dipole_level_);
+            scalars.push_back(fdocc->get(z) + nuc->get(z));
+        }
+        as_mpints->set_dp_name("DSRG Dressed");
+    }
+
+    // bare quadrupoles
+    if (max_quadrupole_level_ > 0) {
+        auto fdocc = as_mpints->qp_scalars_fdocc();
+        auto nuc = as_mpints->nuclear_quadrupole();
+        for (int z = 0; z < 6; ++z) {
+            std::string name = "QUADRUPOLE " + qp_dirs[z];
+            ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, {"gg"});
+            m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                           double& value) { value = mpints->qp_ints_corr(z, i[0], i[1]); });
+            M1.push_back(m1);
+            max_levels.push_back(max_quadrupole_level_);
+            scalars.push_back(fdocc->get(z) + nuc->get(z));
+        }
+        as_mpints->set_qp_name("DSRG Dressed");
+    }
+
+    // transform one-electron integrals
+    transform_one_body(M1, max_levels);
+
+    // print scalar part of the multipoles
+    print_h2("Expectation Values of the DSRG Transformed One-Body Operators [a.u.]");
+    for (int i = 0, size = M1.size(); i < size; ++i) {
+        auto name = M1[i].name();
+        outfile->Printf("\n    %s: %12.8f", name.c_str(), Mbar0_[i] + scalars[i]);
+    }
+
+    // de-normal-order transformed integrals
+    for (int i = 0, size = M1.size(); i < size; ++i) {
+        auto name = M1[i].name();
+        auto max_level = max_levels[i];
+
+        if (max_level == 2) {
+            deGNO_ints(name, Mbar0_[i], Mbar1_[i], Mbar2_[i]);
+            rotate_two_ints_to_original(Mbar2_[i]);
+        } else {
+            deGNO_ints(name, Mbar0_[i], Mbar1_[i]);
+        }
+        rotate_one_ints_to_original(Mbar1_[i]);
+
+        // set active-space multipole integrals
+        if (name.find("DIPOLE") != std::string::npos) {
+            auto dir = name.substr(7, 1); // X, Y, Z
+            size_t z = std::find(dp_dirs.begin(), dp_dirs.end(), dir) - dp_dirs.begin();
+            as_mpints->set_dp_scalar_rdocc(z, Mbar0_[i]);
+            as_mpints->set_dp1_ints(z, Mbar1_[i].block("aa"));
+            if (max_level == 2)
+                as_mpints->set_dp2_ints(z, Mbar2_[i].block("aaaa"));
+        } else {
+            auto dir = name.substr(11, 2); // XX, XY, XZ, YY, YZ, ZZ
+            size_t z = std::find(qp_dirs.begin(), qp_dirs.end(), dir) - qp_dirs.begin();
+            as_mpints->set_qp_scalar_rdocc(z, Mbar0_[i]);
+            as_mpints->set_qp1_ints(z, Mbar1_[i].block("aa"));
+            if (max_level == 2)
+                as_mpints->set_qp2_ints(z, Mbar2_[i].block("aaaa"));
+        }
+    }
+
+    return as_mpints;
+}
+
+void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1) {
+    print_h2("De-Normal-Order 1-Body DSRG Transformed " + name);
+    local_timer t0;
+    print_contents("Computing the scalar term");
+    H0 -= H1["vu"] * L1_["uv"];
+    print_done(t0.get());
+}
+
 void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2) {
-    print_h2("De-Normal-Order DSRG Transformed " + name);
+    print_h2("De-Normal-Order 2-Body DSRG Transformed " + name);
 
     // compute scalar
     local_timer t0;
@@ -471,7 +615,7 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
                         BlockedTensor& /*H3*/) {
     throw psi::PSIEXCEPTION("Not yet implemented when forming Hbar3.");
 
-    print_h2("De-Normal-Order DSRG Transformed " + name);
+    print_h2("De-Normal-Order 3-Body DSRG Transformed " + name);
 
     // build a temp["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
     auto temp = H2.block("aaaa").clone();
@@ -575,49 +719,23 @@ void SADSRG::set_Uactv(ambit::Tensor& U) {
     Uactv_.block("aa")("pq") = U("pq");
 }
 
-void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
-                                        BlockedTensor& H2) {
-    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
-    ambit::Tensor temp;
-    ambit::Tensor Ua = Uactv_.block("aa");
-
-    local_timer timer;
-    print_contents("Rotating 1-body term to original basis");
-    temp = H1.block("aa").clone(tensor_type_);
+void SADSRG::rotate_one_ints_to_original(BlockedTensor& H1) {
+    auto Ua = Uactv_.block("aa");
+    auto temp = H1.block("aa").clone(tensor_type_);
     H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
-    print_done(timer.get());
-
-    timer.reset();
-    print_contents("Rotating 2-body term to original basis");
-    temp = H2.block("aaaa").clone(tensor_type_);
-    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
-    print_done(timer.get());
 }
 
-void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
-                                        BlockedTensor& H2, BlockedTensor& H3) {
-    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
-    ambit::Tensor temp;
-    ambit::Tensor Ua = Uactv_.block("aa");
-
-    local_timer timer;
-    print_contents("Rotating 1-body term to original basis");
-    temp = H1.block("aa").clone(tensor_type_);
-    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
-    print_done(timer.get());
-
-    timer.reset();
-    print_contents("Rotating 2-body term to original basis");
-    temp = H2.block("aaaa").clone(tensor_type_);
+void SADSRG::rotate_two_ints_to_original(BlockedTensor& H2) {
+    auto Ua = Uactv_.block("aa");
+    auto temp = H2.block("aaaa").clone(tensor_type_);
     H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
-    print_done(timer.get());
+}
 
-    timer.reset();
-    print_contents("Rotating 3-body term to original basis");
-    temp = H3.block("aaaaaa").clone(tensor_type_);
+void SADSRG::rotate_three_ints_to_original(BlockedTensor& H3) {
+    auto Ua = Uactv_.block("aa");
+    auto temp = H3.block("aaaaaa").clone(tensor_type_);
     H3.block("aaaaaa")("pqrstu") =
         Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");
-    print_done(timer.get());
 }
 
 bool SADSRG::check_semi_orbs() {
@@ -653,9 +771,12 @@ bool SADSRG::check_semi_orbs() {
         Fcheck.emplace_back(space, fmax, fmean);
     }
 
+    bool semi_actv = true;
     auto nactv = actv_mos_.size();
-    for (const std::string& space : mo_space_info_->space_names()) {
-        if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
+    auto& Faa_data = Fd.block("aa").data();
+    auto actv_subspace = mo_space_info_->composite_space_names().at("ACTIVE");
+    for (const auto& space : actv_subspace) {
+        if (mo_space_info_->size(space) == 0)
             continue;
 
         auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");
@@ -665,8 +786,7 @@ bool SADSRG::check_semi_orbs() {
         for (size_t p = 0; p < size; ++p) {
             auto np = rel_indices[p];
             for (size_t q = p + 1; q < size; ++q) {
-                auto nq = rel_indices[q];
-                double v = std::fabs(Fd.block("aa").data()[np * nactv + nq]);
+                double v = std::fabs(Faa_data[np * nactv + rel_indices[q]]);
                 if (v > fmax)
                     fmax = v;
                 fmean += v;
@@ -675,9 +795,12 @@ bool SADSRG::check_semi_orbs() {
         fmean /= size * size * 0.5; // roughly correct
 
         semi_checked_results_[space] = fmax <= threshold_max and fmean <= e_conv;
+        if (not semi_checked_results_[space])
+            semi_actv = false;
 
         Fcheck.emplace_back(space, fmax, fmean);
     }
+    semi_checked_results_["ACTIVE"] = semi_actv; // manually add key "ACTIVE"
 
     std::string dash(8 + 32, '-');
     outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "Mean");
@@ -801,6 +924,288 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     return Fdiag;
 }
 
+void SADSRG::canonicalize_B(const std::unordered_set<std::string>& blocks) {
+    /**
+     * Transform 3-index integrals to semicanonical basis and dump to disk.
+     *
+     * The order of B is Qpq and each block will be stored separately.
+     *
+     * For each index Q and block cv with block indices m and e:
+     * B["me"] = B["nf"] * U["mn"] * U["ef"]
+     */
+    if (!eri_df_)
+        throw std::runtime_error("For DF/CD integrals ONLY!");
+
+    print_h2("Canonicalize 3-Index B Integrals & Dump to Disk");
+
+    for (const std::string& block : blocks) {
+        local_timer LT;
+        print_contents("Canonicalizing block " + block);
+
+        if (block.size() != 2)
+            throw std::runtime_error("Incorrect block labels: " + block);
+        std::string U1_block(2, block[0]);
+        std::string U2_block(2, block[1]);
+        if (!U_.is_block(U1_block))
+            throw std::runtime_error("U_ block(" + U1_block + ") not available!");
+        if (!U_.is_block(U2_block))
+            throw std::runtime_error("U_ block(" + U2_block + ") not available!");
+        const auto& U1 = U_.block(U1_block);
+        const auto& U2 = U_.block(U2_block);
+
+        // determine largest chunk of B to be transformed
+        const auto& mos1 = label_to_spacemo_[block[0]];
+        const auto& mos2 = label_to_spacemo_[block[1]];
+        auto n1 = mos1.size();
+        auto n2 = mos2.size();
+        if (n1 == 0 or n2 == 0)
+            continue;
+        auto N = n1 * n2;
+        auto nQ = aux_mos_.size();
+
+        size_t memory_avai = dsrg_mem_.available();
+        if (2 * N * sizeof(double) > memory_avai) {
+            outfile->Printf(
+                "\n  Error: Not enough memory to transform B(P|pq) to canonical basis.");
+            outfile->Printf(" Need at least %zu Bytes more!", 2 * N * sizeof(double) - memory_avai);
+            throw std::runtime_error("Not enough memory to transform B(P|pq) to canonical basis!");
+        }
+
+        size_t max_nQ = memory_avai / sizeof(double) / (2 * N);
+        if (max_nQ < nQ) {
+            outfile->Printf("\n -> B(P|pq) to Bcan(P|pq) to be run in batches: max Q size = %zu",
+                            max_nQ);
+        } else {
+            max_nQ = nQ;
+        }
+
+        // batches of virtual indices
+        auto batch_Q = split_vector(aux_mos_, max_nQ);
+        auto nbatches = batch_Q.size();
+
+        // create file
+        std::string filename = chk_filename_prefix_ + ".Bcan." + block + ".bin";
+        FILE* fp = fopen(filename.c_str(), "wb");
+
+        // loop over auxiliary index
+        for (size_t n = 0; n < nbatches; ++n) {
+            auto B = ints_->three_integral_block(batch_Q[n], mos1, mos2);
+            auto C = ambit::Tensor::build(tensor_type_, "Btemp", {batch_Q[n].size(), n1, n2});
+            C("Qps") = B("Qrs") * U1("pr");
+            B("Qpq") = C("Qps") * U2("qs");
+
+            // write to disk
+            fwrite(B.data().data(), sizeof(double), batch_Q[n].size() * n1 * n2, fp);
+        }
+
+        // close file
+        fflush(fp);
+        fclose(fp);
+
+        Bcan_files_[block] = filename;
+        print_done(LT.get());
+    }
+}
+
+ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
+                                      const std::pair<size_t, size_t>& mos1_range,
+                                      const std::pair<size_t, size_t>& mos2_range,
+                                      ThreeIntsBlockOrder order) {
+    /**
+     * Read canonicalized 3-index integrals from disk.
+     *
+     * On disk, the order of B is Qpq, i.e., the first index is auxiliary index.
+     *
+     * If block is available (i.e., created by canonicalize_B), we just load a chunk of data
+     * depending on the contiguity of the fastest indices. Otherwise, this function tries to
+     * load the transpose block {block[1], block[0]} before it throws an error.
+     *
+     * If the auxiliary index is desired to be the last (i.e., pqQ), we will still load data
+     * in the order of Qpq. Then, an in-place matrix transpose is performed to give the correct
+     * ordering of data storage in memory.
+     */
+    if (!eri_df_)
+        throw std::runtime_error("For DF/CD integrals ONLY!");
+
+    auto n1 = label_to_spacemo_[block[0]].size();
+    auto n2 = label_to_spacemo_[block[1]].size();
+    auto nQ = aux_mos_.size();
+
+    auto [mos1_start, mos1_end] = mos1_range;
+    auto [mos2_start, mos2_end] = mos2_range;
+    auto s1 = mos1_end - mos1_start;
+    auto s2 = mos2_end - mos2_start;
+    auto S = s1 * s2;
+
+    auto d1 = std::make_signed_t<std::size_t>(n1 - s1);
+    auto d2 = std::make_signed_t<std::size_t>(n2 - s2);
+    if (d1 < 0 or d2 < 0)
+        throw std::runtime_error("Incorrect MO indices! Check mos1_range and mos2_range!");
+
+    ambit::Tensor T;
+    if (order == pqQ)
+        T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {s1, s2, nQ});
+    else
+        T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {nQ, s1, s2});
+
+    if (s1 == 0 or s2 == 0)
+        return T;
+
+    auto& Tdata = T.data();
+
+    if (Bcan_files_.find(block) != Bcan_files_.end()) {
+        FILE* fp = fopen(Bcan_files_.at(block).c_str(), "rb");
+
+        // everything contiguous: read the entire file
+        if (d1 == 0 and d2 == 0) {
+            fread(Tdata.data(), sizeof(double), nQ * n1 * n2, fp);
+        } else if (d2 == 0) { // fastest index is contiguous
+            auto error_msg = [&](const size_t Q) {
+                std::stringstream ss;
+                ss << "Read error of Bcan." << block << ".bin on Q = " << Q;
+                throw std::runtime_error(ss.str());
+            };
+
+            // locate first element to be read
+            fseek(fp, (mos1_start * n2) * sizeof(double), SEEK_SET);
+
+            for (size_t Q = 0; Q < nQ - 1; ++Q) {
+                if (!fread(&Tdata[Q * S], sizeof(double), S, fp)) {
+                    error_msg(Q);
+                }
+                fseek(fp, d1 * n2 * sizeof(double), SEEK_CUR);
+            }
+            if (!fread(&Tdata[(nQ - 1) * S], sizeof(double), S, fp)) {
+                error_msg(nQ - 1);
+            }
+        } else { // fastest index is not contiguous
+            auto error_msg = [&](const size_t Q, const size_t p) {
+                std::stringstream ss;
+                ss << "Read error of Bcan." << block << ".bin on Q = " << Q << " p = " << p;
+                throw std::runtime_error(ss.str());
+            };
+
+            // locate first element to be read
+            fseek(fp, (mos1_start * n2 + mos2_start) * sizeof(double), SEEK_CUR);
+
+            for (size_t Q = 0; Q < nQ - 1; ++Q) {
+                // read data on this page
+                for (size_t p = 0, QS = Q * S; p < s1; ++p) {
+                    if (!fread(&Tdata[QS + p * s2], sizeof(double), s2, fp)) {
+                        error_msg(Q, p);
+                    }
+                    fseek(fp, d2 * sizeof(double), SEEK_CUR);
+                }
+
+                // advance to the first element to be read on the next page
+                fseek(fp, d1 * n2 * sizeof(double), SEEK_CUR);
+            }
+
+            // read data on the last page
+            for (size_t p = 0; p < s1 - 1; ++p) {
+                if (!fread(&Tdata[(nQ - 1) * S + p * s2], sizeof(double), s2, fp)) {
+                    error_msg(nQ - 1, p);
+                }
+                fseek(fp, d2 * sizeof(double), SEEK_CUR);
+            }
+
+            // read data of the last row
+            if (!fread(&Tdata[(nQ - 1) * S + (s1 - 1) * s2], sizeof(double), s2, fp)) {
+                error_msg(nQ - 1, s1 - 1);
+            }
+        }
+
+        fclose(fp);
+    } else if (Bcan_files_.find({block[1], block[0]}) != Bcan_files_.end()) {
+        std::string rblock{block[1], block[0]};
+        FILE* fp = fopen(Bcan_files_.at(rblock).c_str(), "rb");
+
+        auto tmp = ambit::Tensor::build(tensor_type_, "Bcan_tmp", {s2, s1});
+        double* tmp_ptr = tmp.data().data();
+
+        auto P = ambit::Tensor::build(tensor_type_, "Bcan_P", {s1, s2});
+        double* P_ptr = P.data().data();
+
+        if (d1 == 0) { // fastest index is contiguous
+            auto error_msg = [&](const size_t Q) {
+                std::stringstream ss;
+                ss << "Read error of Bcan." << block << ".bin (transpose) on Q = " << Q;
+                throw std::runtime_error(ss.str());
+            };
+
+            // locate first element to be read
+            fseek(fp, (mos2_start * n1) * sizeof(double), SEEK_SET);
+
+            for (size_t Q = 0; Q < nQ - 1; ++Q) {
+                if (!fread(tmp_ptr, sizeof(double), S, fp)) {
+                    error_msg(Q);
+                }
+                P("pq") = tmp("qp");
+                psi::C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
+                fseek(fp, d2 * n1 * sizeof(double), SEEK_CUR);
+            }
+            if (!fread(tmp_ptr, sizeof(double), S, fp)) {
+                error_msg(nQ - 1);
+            }
+            P("pq") = tmp("qp");
+            psi::C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
+        } else { // fastest index is not contiguous
+            auto error_msg = [&](const size_t Q, const size_t p) {
+                std::stringstream ss;
+                ss << "Read error of Bcan." << block << ".bin (transpose) on Q = " << Q
+                   << " p = " << p;
+                throw std::runtime_error(ss.str());
+            };
+
+            // locate first element to be read
+            fseek(fp, (mos2_start * n1 + mos1_start) * sizeof(double), SEEK_CUR);
+
+            for (size_t Q = 0; Q < nQ - 1; ++Q) {
+                // read data on this page
+                for (size_t p = 0; p < s2; ++p) {
+                    if (!fread(&tmp_ptr[p * s1], sizeof(double), s1, fp)) {
+                        error_msg(Q, p);
+                    }
+                    fseek(fp, d1 * sizeof(double), SEEK_CUR);
+                }
+
+                // transpose and copy to T
+                P("pq") = tmp("qp");
+                psi::C_DCOPY(S, P_ptr, 1, &Tdata[Q * S], 1);
+
+                // advance to the first element to be read on the next page
+                fseek(fp, d2 * n1 * sizeof(double), SEEK_CUR);
+            }
+
+            // read data on the last page
+            for (size_t p = 0; p < s2 - 1; ++p) {
+                if (!fread(&tmp_ptr[p * s1], sizeof(double), s1, fp)) {
+                    error_msg(nQ - 1, p);
+                }
+                fseek(fp, d1 * sizeof(double), SEEK_CUR);
+            }
+            if (!fread(&tmp_ptr[(s2 - 1) * s1], sizeof(double), s1, fp)) {
+                error_msg(nQ - 1, s2 - 1);
+            }
+
+            // transpose and copy to T
+            P("pq") = tmp("qp");
+            psi::C_DCOPY(S, P_ptr, 1, &Tdata[(nQ - 1) * S], 1);
+        }
+
+        fclose(fp);
+    } else {
+        throw std::runtime_error("Bcan." + block + ".bin not available on disk!");
+    }
+
+    // in-place matrix transpose
+    if (order == pqQ) {
+        matrix_transpose_in_place(Tdata, nQ, S);
+    }
+
+    return T;
+}
+
 void SADSRG::print_contents(const std::string& str, size_t size) {
     if (str.size() + 4 > size)
         size = str.size() + 4;
@@ -808,5 +1213,7 @@ void SADSRG::print_contents(const std::string& str, size_t size) {
     outfile->Printf("\n    %s %s", str.c_str(), padding.c_str());
 }
 
-void SADSRG::print_done(double t) { outfile->Printf(" Done. Timing %10.3f s", t); }
+void SADSRG::print_done(double t, const std::string& done) {
+    outfile->Printf(" %s. Timing %10.3f s", done.c_str(), t);
+}
 } // namespace forte

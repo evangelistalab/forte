@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _localize_h_
-#define _localize_h_
+#pragma once
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
@@ -50,11 +49,7 @@ class Localize : public OrbitalTransform {
              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // Compute the rotation matrices
-    void compute_transformation();
-
-    // Return the matrices
-    psi::SharedMatrix get_Ua();
-    psi::SharedMatrix get_Ub();
+    void compute_transformation() override;
 
     // Sets the orbitals to localize by first/last indices
     void set_orbital_space(std::vector<int>& orbital_spaces);
@@ -63,9 +58,6 @@ class Localize : public OrbitalTransform {
     void set_orbital_space(std::vector<std::string>& labels);
 
   private:
-    psi::SharedMatrix Ua_;
-    psi::SharedMatrix Ub_;
-
     // orbitals to localize
     std::vector<int> orbital_spaces_;
 
@@ -73,5 +65,3 @@ class Localize : public OrbitalTransform {
     std::string local_method_;
 };
 } // namespace forte
-
-#endif

@@ -25,7 +25,7 @@ compare_values(Efci_ref, Efci_psi4, 7, "Psi4 FCI energy")
 
 set forte{
   job_type                mcscf_two_step
-  casscf_ci_solver        fci
+  active_space_solver     fci
 }
 Efci_forte = energy('forte')
 compare_values(Efci_psi4, Efci_forte, 7, "FORTE FCI using MCSCF_2STEP")

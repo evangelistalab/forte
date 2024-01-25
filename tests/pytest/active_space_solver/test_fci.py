@@ -17,20 +17,20 @@ def test_fci():
     """
 
     # create a molecular model
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = solver_factory(molecule=xyz, basis="cc-pVDZ")
 
     # specify the electronic state and the active orbitals
-    state = input.state(charge=0, multiplicity=1, sym='ag')
+    state = input.state(charge=0, multiplicity=1, sym="ag")
     mo_spaces = input.mo_spaces(active=[1, 0, 0, 0, 0, 1, 0, 0])
 
     # create a HF object
     hf = HF(input, state=state)
     # create a FCI object that grabs the MOs from the HF object (hf)
-    fci = ActiveSpaceSolver(hf, type='FCI', states={state: 2}, mo_spaces=mo_spaces)
+    fci = ActiveSpaceSolver(hf, type="FCI", states={state: 2}, mo_spaces=mo_spaces)
     # run the computation
     fci.run()
     # check the FCI energy
-    assert fci.value('active space energy')[state] == pytest.approx(ref_energy, 1.0e-10)
+    assert fci.value("active space energy")[state] == pytest.approx(ref_energy, 1.0e-10)
 
 
 if __name__ == "__main__":

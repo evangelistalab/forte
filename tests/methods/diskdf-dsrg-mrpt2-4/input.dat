@@ -21,8 +21,8 @@ set globals{
    df_basis_scf            cc-pvdz-jkfit
    reference               rhf
    scf_type                df
-   d_convergence           10
-   e_convergence           12
+   d_convergence           8
+   e_convergence           13
 }
 
 set forte {
@@ -34,8 +34,8 @@ set forte {
   root_sym                    0
   nroot                       1
   dsrg_s                      1.0
-  ntrial_per_root             100
-  active_space_solver         cas
+  r_convergence               8
+  active_space_solver         detci
   relax_ref                   once
   semi_canonical_mix_inactive true
 }

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -32,8 +32,14 @@
 #include <vector>
 
 #include "psi4/libpsi4util/process.h"
-#include "boost/format.hpp"
+
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
+
+#include "integrals/active_space_integrals.h"
+#include "base_classes/state_info.h"
 #include "helpers/printing.h"
+
 #include "dsrg_mrpt.h"
 
 using namespace psi;
@@ -110,24 +116,22 @@ void DSRG_MRPT::read_options() {
 }
 
 void DSRG_MRPT::print_options() {
-    // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info_int{{"ntamp", ntamp_}};
-
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"flow parameter", s_},
-        {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"intruder_tamp", intruder_tamp_}};
-
-    std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"corr_level", corr_lv_},
-        {"int_type", foptions_->get_str("INT_TYPE")},
-        {"source operator", source_},
-        {"reference relaxation", ref_relax_},
-        {"core virtual source type", ccvv_source_}};
-
     // print information
-    print_selected_options("Calculation Information", calculation_info_string, {},
-                           calculation_info_double, calculation_info_int);
+    table_printer printer;
+    printer.add_int_data({{"ntamp", ntamp_}});
+
+    printer.add_double_data({{"flow parameter", s_},
+                             {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+                             {"intruder_tamp", intruder_tamp_}});
+
+    printer.add_string_data({{"corr_level", corr_lv_},
+                             {"int_type", foptions_->get_str("INT_TYPE")},
+                             {"source operator", source_},
+                             {"reference relaxation", ref_relax_},
+                             {"core virtual source type", ccvv_source_}});
+
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 void DSRG_MRPT::startup() {
@@ -322,7 +326,7 @@ bool DSRG_MRPT::check_semicanonical() {
     });
 
     // compute norm and max values
-    for (auto& block : {"cc", "aa", "vv"}) {
+    for (auto block : {"cc", "aa", "vv"}) {
         ambit::Tensor diff_block = diff.block(block);
         Fd_od_norm.emplace_back(diff_block.norm(1));
         Fd_od_max.emplace_back(diff_block.norm(0));
@@ -427,7 +431,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
         for (auto& XB : to_XB) {
             double xb = bytes / XB.second;
             if (xb >= 0.1 && xb < 100.0) {
-                out = str(boost::format("%5.1f") % xb);
+                out = fmt::format("{:<5.1f}", xb);
                 out += (XB.first == "B" ? "  " : " ") + XB.first;
                 break;
             }
