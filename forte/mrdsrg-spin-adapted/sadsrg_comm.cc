@@ -29,6 +29,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "forte-def.h"
 #include "helpers/timer.h"
 #include "sadsrg.h"
 
@@ -797,24 +798,8 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
     C2["jfkb"] += alpha * temp["jfkb"];
     C2["fjbk"] += alpha * temp["jfkb"];
 
-    // v = ambit::BlockedTensor::build(tensor_type_, "V_aefi", {"pvvh"});
-    // v["aefi"] = B["gae"] * B["gfi"];
-    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhva"});
-    // temp["fjeb"] -= v["aefm"] * T2["mjab"];
-    // temp["fjeb"] -= 0.5 * t2_h["xjab"] * v["aefx"];
-    // temp["fjeb"] += 0.5 * t2_p["jiby"] * v["yefi"];
-    // C2["fjeb"] += alpha * temp["fjeb"];
-    // C2["jfbe"] += alpha * temp["fjeb"];
-    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hvva"});
-    // temp["jfeb"] -= v["aefm"] * T2["mjba"];
-    // temp["jfeb"] -= 0.5 * t2_h["xjba"] * v["aefx"];
-    // temp["jfeb"] += 0.5 * t2_p["ijby"] * v["yefi"];
-    // C2["jfeb"] += alpha * temp["jfeb"];
-    // C2["fjbe"] += alpha * temp["jfeb"];
-
     v = ambit::BlockedTensor::build(tensor_type_, "V_aefi", {"avvh"});
     v["zefi"] = B["gze"] * B["gfi"];
-
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhva", "hvva"});
     temp["fjew"] -= v["zefm"] * T2["mjzw"];
     temp["fjew"] -= 0.5 * t2_h["xjzw"] * v["zefx"];
@@ -822,6 +807,11 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
     temp["jfew"] -= v["zefm"] * T2["mjwz"];
     temp["jfew"] -= 0.5 * t2_h["xjwz"] * v["zefx"];
     temp["jfew"] += 0.5 * t2_p["ijwy"] * v["yefi"];
+
+    // free memory for v
+    for (const std::string& block : v.block_labels()) {
+        v.block(block).reset();
+    }
 
     // auto v2 = ambit::BlockedTensor::build(tensor_type_, "V_aefi", {"vhvv"});
     // v2["f,i,v0,e"] = B["g,v0,e"] * B["gfi"];
@@ -837,6 +827,7 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
          {"vcva", "vava", "cvva", "avva", "cvav", "avav", "vcav", "vaav"}) {
         if (std::find(C2blocks.begin(), C2blocks.end(), block) != C2blocks.end()) {
             batching = true;
+            break;
         }
     }
     if (batching) {
@@ -844,71 +835,82 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
         auto nv = virt_mos_.size();
         auto nc = core_mos_.size();
         auto na = actv_mos_.size();
-        auto nQc = nQ * nc;
-        auto nQa = nQ * na;
+        auto nh = nc + na;
+        auto np = na + nv;
         auto nvv = nv * nv;
         auto nav = na * nv;
         auto ncav = nc * nav;
         auto naav = na * nav;
 
+        size_t memory_avai = dsrg_mem_.available();
+        memory_avai -= sizeof(double) * (nv * nh * nQ + na * nh * np * np + nh * nh * na * np +
+                                         nv * nh * nv * na * 2);
+        size_t memory_min = sizeof(double) * (nh * nv * nv + nh * nv * na);
+        if (memory_min > memory_avai) {
+            outfile->Printf("\n  Error: Not enough memory for DF-DSRG V_T2_C2_DF_PH_X.");
+            outfile->Printf(" Need at least %zu Bytes more!", memory_min - memory_avai);
+            throw std::runtime_error("Not enough memory to run DF-DSRG V_T2_C2_DF_PH_X!");
+        }
+
+        int nthreads = std::min(n_threads_, int(nv));
+        int nthreads_max = static_cast<int>(memory_avai * 0.9 / memory_min);
+        if (nthreads > nthreads_max) {
+            outfile->Printf("\n -> DF-DSRG V_T2_C2_DF_PH_X to be run in %zu threads", nthreads_max);
+            nthreads = nthreads_max;
+        }
+
         auto Bh = ambit::BlockedTensor::build(tensor_type_, "Bh", {"vhL"});
         Bh["eig"] = B["gei"];
-        // auto Bc = ambit::Tensor::build(tensor_type_, "Bc", {nv, nc, nQ});
-        // auto Ba = ambit::Tensor::build(tensor_type_, "Ba", {nv, na, nQ});
-        // Bc("emQ") = B.block("Lvc")("Qem");
-        // Ba("exQ") = B.block("Lva")("Qex");
         auto Bt = B.block("Lvv");
 
         auto& Bc_data = Bh.block("vcL").data();
         auto& Ba_data = Bh.block("vaL").data();
         auto& Bt_data = Bt.data();
 
-        auto V = ambit::BlockedTensor::build(tensor_type_, "V", {"hvv"});
-
-        auto& Vc_data = V.block("cvv").data();
-        auto& Va_data = V.block("avv").data();
-
-        auto Rjew_d = ambit::BlockedTensor::build(tensor_type_, "Rjew_d", {"hva"});
-        auto Rjew_x = ambit::BlockedTensor::build(tensor_type_, "Rjew_x", {"hva"});
-
         auto& vcva_data = temp.block("vcva").data();
         auto& vava_data = temp.block("vava").data();
         auto& cvva_data = temp.block("cvva").data();
         auto& avva_data = temp.block("avva").data();
 
+        // temp tensors for each thread
+        std::vector<ambit::BlockedTensor> V_vec(nthreads), Rjew_vec(nthreads);
+        for (int i = 0; i < nthreads; ++i) {
+            std::string t = std::to_string(i);
+            V_vec[i] = ambit::BlockedTensor::build(CoreTensor, "V_thread" + t, {"hvv"});
+            Rjew_vec[i] = ambit::BlockedTensor::build(CoreTensor, "Rjew_thread" + t, {"hva"});
+        }
+
+#pragma omp parallel for num_threads(nthreads)
         for (size_t f = 0; f < nv; ++f) {
+            int thread = omp_get_thread_num();
+
             // build (fm|ae) and (fx|ae) for a given index f
-            double* Bfm_ptr = &Bc_data[f * nQc];
-            double* Bfx_ptr = &Ba_data[f * nQa];
+            double* Bfm_ptr = &Bc_data[f * nQ * nc];
+            double* Bfx_ptr = &Ba_data[f * nQ * na];
             psi::C_DGEMM('N', 'N', nc, nvv, nQ, 1.0, Bfm_ptr, nQ, Bt_data.data(), nvv, 0.0,
-                         Vc_data.data(), nvv);
+                         V_vec[thread].block("cvv").data().data(), nvv);
             psi::C_DGEMM('N', 'N', na, nvv, nQ, 1.0, Bfx_ptr, nQ, Bt_data.data(), nvv, 0.0,
-                         Va_data.data(), nvv);
+                         V_vec[thread].block("avv").data().data(), nvv);
 
-            // double* Vc_ptr = &v2.block("vcvv").data()[f * nc * nv * nv];
-            // double* Va_ptr = &v2.block("vavv").data()[f * na * nv * nv];
-            // psi::C_DAXPY(nc * nv * nv, -1.0, Vc_data.data(), 1, Vc_ptr, 1);
-            // psi::C_DAXPY(na * nv * nv, -1.0, Va_data.data(), 1, Va_ptr, 1);
-
-            Rjew_d["jew"] = -1.0 * V["m,v0,e"] * T2["m,j,v0,w"];
-            Rjew_d["jew"] -= 0.5 * V["x,v0,e"] * t2_h["x,j,v0,w"];
+            Rjew_vec[thread]["jew"] = -1.0 * V_vec[thread]["m,v0,e"] * T2["m,j,v0,w"];
+            Rjew_vec[thread]["jew"] -= 0.5 * V_vec[thread]["x,v0,e"] * t2_h["x,j,v0,w"];
 
             double* Cc_ptr = &vcva_data[f * ncav];
             double* Ca_ptr = &vava_data[f * naav];
-            psi::C_DAXPY(ncav, 1.0, Rjew_d.block("cva").data().data(), 1, Cc_ptr, 1);
-            psi::C_DAXPY(naav, 1.0, Rjew_d.block("ava").data().data(), 1, Ca_ptr, 1);
+            psi::C_DAXPY(ncav, 1.0, Rjew_vec[thread].block("cva").data().data(), 1, Cc_ptr, 1);
+            psi::C_DAXPY(naav, 1.0, Rjew_vec[thread].block("ava").data().data(), 1, Ca_ptr, 1);
 
-            Rjew_x["jew"] = -1.0 * V["m,v0,e"] * T2["m,j,w,v0"];
-            Rjew_x["jew"] -= 0.5 * V["x,v0,e"] * t2_h["x,j,w,v0"];
+            Rjew_vec[thread]["jew"] = -1.0 * V_vec[thread]["m,v0,e"] * T2["m,j,w,v0"];
+            Rjew_vec[thread]["jew"] -= 0.5 * V_vec[thread]["x,v0,e"] * t2_h["x,j,w,v0"];
 
             for (size_t j = 0; j < nc; ++j) {
                 double* Cc_ptr = &cvva_data[j * nav * nv + f * nav];
-                double* Rc_ptr = &Rjew_x.block("cva").data()[j * nav];
+                double* Rc_ptr = &Rjew_vec[thread].block("cva").data()[j * nav];
                 psi::C_DAXPY(nav, 1.0, Rc_ptr, 1, Cc_ptr, 1);
             }
             for (size_t j = 0; j < na; ++j) {
                 double* Ca_ptr = &avva_data[j * nav * nv + f * nav];
-                double* Ra_ptr = &Rjew_x.block("ava").data()[j * nav];
+                double* Ra_ptr = &Rjew_vec[thread].block("ava").data()[j * nav];
                 psi::C_DAXPY(nav, 1.0, Ra_ptr, 1, Ca_ptr, 1);
             }
         }
@@ -918,27 +920,6 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
     C2["jfwe"] += alpha * temp["fjew"];
     C2["jfew"] += alpha * temp["jfew"];
     C2["fjwe"] += alpha * temp["jfew"];
-
-    // outfile->Printf("\n v2 norm = %20.15f", v2.norm());
-
-    // v = ambit::BlockedTensor::build(tensor_type_, "V_zefi", {"avvh"});
-    // v["zefi"] = B["gze"] * B["gfi"];
-    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhva"});
-    // temp["fjew"] -= v["zefm"] * T2["mjzw"];
-    // temp["fjew"] -= batched("e", B["g,v0,e"] * B["gfm"] * T2["m,j,v0,w"]);
-    // temp["fjew"] -= 0.5 * t2_h["xjzw"] * v["zefx"];
-    // temp["fjew"] -= batched("e", 0.5 * B["g,v0,e"] * B["gfx"] * T2["x,j,v0,w"]);
-    // temp["fjew"] += 0.5 * t2_p["ijyw"] * v["yefi"];
-    // C2["fjew"] += alpha * temp["fjew"];
-    // C2["jfwe"] += alpha * temp["fjew"];
-    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hvva"});
-    // temp["jfew"] -= v["zefm"] * T2["mjwz"];
-    // temp["jfew"] -= batched("e", B["g,v0,e"] * B["gfm"] * T2["m,j,w,v0"]);
-    // temp["jfew"] -= 0.5 * t2_h["xjwz"] * v["zefx"];
-    // temp["jfew"] -= batched("e", 0.5 * B["g,v0,e"] * B["gfx"] * T2["x,j,w,v0"]);
-    // temp["jfew"] += 0.5 * t2_p["ijwy"] * v["yefi"];
-    // C2["jfew"] += alpha * temp["jfew"];
-    // C2["fjwe"] += alpha * temp["jfew"];
 
     // auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", qjsb_small);
     // temp["qjsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjab"];
