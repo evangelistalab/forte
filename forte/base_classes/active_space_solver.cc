@@ -466,7 +466,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
         if (core_guess_list.empty()){
             core_guess = false;
-        } else if (core_guess_list[0] != 0 || core_guess_list[0] != 1) {
+        } else if (!(core_guess_list[0] != 0 || core_guess_list[0] != 1)) {
             psi::outfile->Printf("\n  Error: wrong entry value for CORE_GUESS (%d). "
                                     "Only values of 0 or 1 are acceptable",
                                         core_guess_list[0]);

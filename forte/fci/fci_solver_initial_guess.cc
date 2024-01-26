@@ -72,12 +72,13 @@ std::vector<Determinant> FCISolver::initial_guess_generate_dets(std::shared_ptr<
 
     std::vector<Determinant> guess_dets;
     for (const auto& [e, I] : vec_e_I) {
+        const auto& det = lists_->determinant(I, symmetry_);
         if (core_guess_){
-            if (!(lists_->determinant(I, symmetry_).get_alfa_bit(0) and lists_->determinant(I, symmetry_).get_beta_bit(0))){
-                guess_dets.push_back(lists_->determinant(I, symmetry_));
+            if (!(det.get_alfa_bit(0) and det.get_beta_bit(0))){
+                guess_dets.push_back(det);
             }
         } else {
-            guess_dets.push_back(lists_->determinant(I, symmetry_));
+            guess_dets.push_back(det);
         }
     }
 
