@@ -753,21 +753,208 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
         }
     }
 
-    auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", qjsb_small);
-    temp["qjsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjab"];
-    temp["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * B["gas"] * B["gqx"];
-    temp["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gys"] * B["gqi"];
+    auto t2_h = ambit::BlockedTensor::build(tensor_type_, "t2_h", {"ahpp"});
+    auto t2_p = ambit::BlockedTensor::build(tensor_type_, "t2_p", {"hhpa"});
+    t2_h["xjab"] = L1_["xy"] * T2["yjab"];
+    t2_p["ijby"] = L1_["xy"] * T2["ijbx"];
 
-    C2["qjsb"] += temp["qjsb"];
-    C2["jqbs"] += temp["qjsb"];
+    auto v = ambit::BlockedTensor::build(tensor_type_, "V_alki", {"phhh"});
+    v["alki"] = B["gal"] * B["gki"];
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hhhp"});
+    temp["kjlb"] -= v["alkm"] * T2["mjab"];
+    temp["kjlb"] -= 0.5 * t2_h["xjab"] * v["alkx"];
+    temp["kjlb"] += 0.5 * t2_p["jiby"] * v["ylki"];
+    temp["jlkb"] -= v["aklm"] * T2["mjba"];
+    temp["jlkb"] -= 0.5 * t2_h["xjba"] * v["aklx"];
+    temp["jlkb"] += 0.5 * t2_p["ijby"] * v["ykli"];
+    C2["kjlb"] += alpha * temp["kjlb"];
+    C2["jkbl"] += alpha * temp["kjlb"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", jqsb_small);
-    temp["jqsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjba"];
-    temp["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * B["gas"] * B["gqx"];
-    temp["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * B["gys"] * B["gqi"];
+    v = ambit::BlockedTensor::build(tensor_type_, "V_aeki", {"pvhh"});
+    v["aeki"] = B["gae"] * B["gki"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hhvp"});
+    temp["kjeb"] -= v["aekm"] * T2["mjab"];
+    temp["kjeb"] -= 0.5 * t2_h["xjab"] * v["aekx"];
+    temp["kjeb"] += 0.5 * t2_p["jiby"] * v["yeki"];
+    temp["jleb"] -= v["aelm"] * T2["mjba"];
+    temp["jleb"] -= 0.5 * t2_h["xjba"] * v["aelx"];
+    temp["jleb"] += 0.5 * t2_p["ijby"] * v["yeli"];
+    C2["kjeb"] += alpha * temp["kjeb"];
+    C2["jkbe"] += alpha * temp["kjeb"];
 
-    C2["jqsb"] += temp["jqsb"];
-    C2["qjbs"] += temp["jqsb"];
+    v = ambit::BlockedTensor::build(tensor_type_, "V_alfi", {"phvh"});
+    v["alfi"] = B["gal"] * B["gfi"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhhp"});
+    temp["fjlb"] -= v["alfm"] * T2["mjab"];
+    temp["fjlb"] -= 0.5 * t2_h["xjab"] * v["alfx"];
+    temp["fjlb"] += 0.5 * t2_p["jiby"] * v["ylfi"];
+    C2["fjlb"] += alpha * temp["fjlb"];
+    C2["jfbl"] += alpha * temp["fjlb"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hvhp"});
+    temp["jfkb"] -= v["akfm"] * T2["mjba"];
+    temp["jfkb"] -= 0.5 * t2_h["xjba"] * v["akfx"];
+    temp["jfkb"] += 0.5 * t2_p["ijby"] * v["ykfi"];
+    C2["jfkb"] += alpha * temp["jfkb"];
+    C2["fjbk"] += alpha * temp["jfkb"];
+
+    // v = ambit::BlockedTensor::build(tensor_type_, "V_aefi", {"pvvh"});
+    // v["aefi"] = B["gae"] * B["gfi"];
+    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhva"});
+    // temp["fjeb"] -= v["aefm"] * T2["mjab"];
+    // temp["fjeb"] -= 0.5 * t2_h["xjab"] * v["aefx"];
+    // temp["fjeb"] += 0.5 * t2_p["jiby"] * v["yefi"];
+    // C2["fjeb"] += alpha * temp["fjeb"];
+    // C2["jfbe"] += alpha * temp["fjeb"];
+    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hvva"});
+    // temp["jfeb"] -= v["aefm"] * T2["mjba"];
+    // temp["jfeb"] -= 0.5 * t2_h["xjba"] * v["aefx"];
+    // temp["jfeb"] += 0.5 * t2_p["ijby"] * v["yefi"];
+    // C2["jfeb"] += alpha * temp["jfeb"];
+    // C2["fjbe"] += alpha * temp["jfeb"];
+
+    v = ambit::BlockedTensor::build(tensor_type_, "V_aefi", {"avvh"});
+    v["zefi"] = B["gze"] * B["gfi"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhva", "hvva"});
+    temp["fjew"] -= v["zefm"] * T2["mjzw"];
+    temp["fjew"] -= 0.5 * t2_h["xjzw"] * v["zefx"];
+    temp["fjew"] += 0.5 * t2_p["jiwy"] * v["yefi"];
+    temp["jfew"] -= v["zefm"] * T2["mjwz"];
+    temp["jfew"] -= 0.5 * t2_h["xjwz"] * v["zefx"];
+    temp["jfew"] += 0.5 * t2_p["ijwy"] * v["yefi"];
+
+    // auto v2 = ambit::BlockedTensor::build(tensor_type_, "V_aefi", {"vhvv"});
+    // v2["f,i,v0,e"] = B["g,v0,e"] * B["gfi"];
+    // temp["fjew"] -= v2["f,m,v0,e"] * T2["m,j,v0,w"];
+    // temp["fjew"] -= 0.5 * t2_h["x,j,v0,w"] * v2["f,x,v0,e"];
+    // temp["jfew"] -= v2["f,m,v0,e"] * T2["m,j,w,v0"];
+    // temp["jfew"] -= 0.5 * t2_h["x,j,w,v0"] * v2["f,x,v0,e"];
+
+    // batch over index f
+    bool batching = false;
+    auto C2blocks = C2.block_labels();
+    for (const std::string& block :
+         {"vcva", "vava", "cvva", "avva", "cvav", "avav", "vcav", "vaav"}) {
+        if (std::find(C2blocks.begin(), C2blocks.end(), block) != C2blocks.end()) {
+            batching = true;
+        }
+    }
+    if (batching) {
+        auto nQ = aux_mos_.size();
+        auto nv = virt_mos_.size();
+        auto nc = core_mos_.size();
+        auto na = actv_mos_.size();
+        auto nQc = nQ * nc;
+        auto nQa = nQ * na;
+        auto nvv = nv * nv;
+        auto nav = na * nv;
+        auto ncav = nc * nav;
+        auto naav = na * nav;
+
+        auto Bh = ambit::BlockedTensor::build(tensor_type_, "Bh", {"vhL"});
+        Bh["eig"] = B["gei"];
+        // auto Bc = ambit::Tensor::build(tensor_type_, "Bc", {nv, nc, nQ});
+        // auto Ba = ambit::Tensor::build(tensor_type_, "Ba", {nv, na, nQ});
+        // Bc("emQ") = B.block("Lvc")("Qem");
+        // Ba("exQ") = B.block("Lva")("Qex");
+        auto Bt = B.block("Lvv");
+
+        auto& Bc_data = Bh.block("vcL").data();
+        auto& Ba_data = Bh.block("vaL").data();
+        auto& Bt_data = Bt.data();
+
+        auto V = ambit::BlockedTensor::build(tensor_type_, "V", {"hvv"});
+
+        auto& Vc_data = V.block("cvv").data();
+        auto& Va_data = V.block("avv").data();
+
+        auto Rjew_d = ambit::BlockedTensor::build(tensor_type_, "Rjew_d", {"hva"});
+        auto Rjew_x = ambit::BlockedTensor::build(tensor_type_, "Rjew_x", {"hva"});
+
+        auto& vcva_data = temp.block("vcva").data();
+        auto& vava_data = temp.block("vava").data();
+        auto& cvva_data = temp.block("cvva").data();
+        auto& avva_data = temp.block("avva").data();
+
+        for (size_t f = 0; f < nv; ++f) {
+            // build (fm|ae) and (fx|ae) for a given index f
+            double* Bfm_ptr = &Bc_data[f * nQc];
+            double* Bfx_ptr = &Ba_data[f * nQa];
+            psi::C_DGEMM('N', 'N', nc, nvv, nQ, 1.0, Bfm_ptr, nQ, Bt_data.data(), nvv, 0.0,
+                         Vc_data.data(), nvv);
+            psi::C_DGEMM('N', 'N', na, nvv, nQ, 1.0, Bfx_ptr, nQ, Bt_data.data(), nvv, 0.0,
+                         Va_data.data(), nvv);
+
+            // double* Vc_ptr = &v2.block("vcvv").data()[f * nc * nv * nv];
+            // double* Va_ptr = &v2.block("vavv").data()[f * na * nv * nv];
+            // psi::C_DAXPY(nc * nv * nv, -1.0, Vc_data.data(), 1, Vc_ptr, 1);
+            // psi::C_DAXPY(na * nv * nv, -1.0, Va_data.data(), 1, Va_ptr, 1);
+
+            Rjew_d["jew"] = -1.0 * V["m,v0,e"] * T2["m,j,v0,w"];
+            Rjew_d["jew"] -= 0.5 * V["x,v0,e"] * t2_h["x,j,v0,w"];
+
+            double* Cc_ptr = &vcva_data[f * ncav];
+            double* Ca_ptr = &vava_data[f * naav];
+            psi::C_DAXPY(ncav, 1.0, Rjew_d.block("cva").data().data(), 1, Cc_ptr, 1);
+            psi::C_DAXPY(naav, 1.0, Rjew_d.block("ava").data().data(), 1, Ca_ptr, 1);
+
+            Rjew_x["jew"] = -1.0 * V["m,v0,e"] * T2["m,j,w,v0"];
+            Rjew_x["jew"] -= 0.5 * V["x,v0,e"] * t2_h["x,j,w,v0"];
+
+            for (size_t j = 0; j < nc; ++j) {
+                double* Cc_ptr = &cvva_data[j * nav * nv + f * nav];
+                double* Rc_ptr = &Rjew_x.block("cva").data()[j * nav];
+                psi::C_DAXPY(nav, 1.0, Rc_ptr, 1, Cc_ptr, 1);
+            }
+            for (size_t j = 0; j < na; ++j) {
+                double* Ca_ptr = &avva_data[j * nav * nv + f * nav];
+                double* Ra_ptr = &Rjew_x.block("ava").data()[j * nav];
+                psi::C_DAXPY(nav, 1.0, Ra_ptr, 1, Ca_ptr, 1);
+            }
+        }
+    }
+
+    C2["fjew"] += alpha * temp["fjew"];
+    C2["jfwe"] += alpha * temp["fjew"];
+    C2["jfew"] += alpha * temp["jfew"];
+    C2["fjwe"] += alpha * temp["jfew"];
+
+    // outfile->Printf("\n v2 norm = %20.15f", v2.norm());
+
+    // v = ambit::BlockedTensor::build(tensor_type_, "V_zefi", {"avvh"});
+    // v["zefi"] = B["gze"] * B["gfi"];
+    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhva"});
+    // temp["fjew"] -= v["zefm"] * T2["mjzw"];
+    // temp["fjew"] -= batched("e", B["g,v0,e"] * B["gfm"] * T2["m,j,v0,w"]);
+    // temp["fjew"] -= 0.5 * t2_h["xjzw"] * v["zefx"];
+    // temp["fjew"] -= batched("e", 0.5 * B["g,v0,e"] * B["gfx"] * T2["x,j,v0,w"]);
+    // temp["fjew"] += 0.5 * t2_p["ijyw"] * v["yefi"];
+    // C2["fjew"] += alpha * temp["fjew"];
+    // C2["jfwe"] += alpha * temp["fjew"];
+    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hvva"});
+    // temp["jfew"] -= v["zefm"] * T2["mjwz"];
+    // temp["jfew"] -= batched("e", B["g,v0,e"] * B["gfm"] * T2["m,j,w,v0"]);
+    // temp["jfew"] -= 0.5 * t2_h["xjwz"] * v["zefx"];
+    // temp["jfew"] -= batched("e", 0.5 * B["g,v0,e"] * B["gfx"] * T2["x,j,w,v0"]);
+    // temp["jfew"] += 0.5 * t2_p["ijwy"] * v["yefi"];
+    // C2["jfew"] += alpha * temp["jfew"];
+    // C2["fjwe"] += alpha * temp["jfew"];
+
+    // auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", qjsb_small);
+    // temp["qjsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjab"];
+    // temp["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * B["gas"] * B["gqx"];
+    // temp["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gys"] * B["gqi"];
+
+    // C2["qjsb"] += temp["qjsb"];
+    // C2["jqbs"] += temp["qjsb"];
+
+    // temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", jqsb_small);
+    // temp["jqsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjba"];
+    // temp["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * B["gas"] * B["gqx"];
+    // temp["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * B["gys"] * B["gqi"];
+
+    // C2["jqsb"] += temp["jqsb"];
+    // C2["qjbs"] += temp["jqsb"];
 
     if (!qjsb_large.empty()) {
         C2["e,j,f,v0"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,a,v0"]);
