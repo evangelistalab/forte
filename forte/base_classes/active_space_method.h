@@ -382,7 +382,7 @@ class ActiveSpaceMethod {
     /// The maximum number of iterations
     size_t maxiter_ = 100;
 
-    /// Use core determinants as initial guess?
+    /// Use core determinants as initial guess for Davidson-Liu?
     bool core_guess_ = false;
 
     /// The root used to compute properties (zero based, default = 0)

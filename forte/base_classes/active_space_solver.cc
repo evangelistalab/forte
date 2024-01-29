@@ -142,7 +142,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
         method->set_maxiter(maxiter_);
-        // set boolean for using core determinants in Davidson-Liu algorithm.
+        
+        // set boolean for using core determinants in Davidson-Liu algorithm
         method->set_core_guess(state.core_guess());
 
         if (read_initial_guess_) {
@@ -464,6 +465,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
         }
 
+        // if 'CORE_GUESS' list is given convert valid first 'CORE_GUESS' entry to boolean
         if (core_guess_list.empty()){
             core_guess = false;
         } else if (!(core_guess_list[0] != 0 || core_guess_list[0] != 1)) {
@@ -577,6 +579,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                 }
             }
 
+            // if 'CORE_GUESS' list is given convert valid 'CORE_GUESS' entries to boolean
             if (core_guess_list.empty()){
                 core_guess = false;
             } else if (core_guess_list.size() != nentry) {
