@@ -1863,6 +1863,14 @@ Type: int
 
 Default value: 10
 
+**CORE_GUESS**
+
+Integer boolean. Include determinants with single- and none-occupation in the first orbital position as the initial guess space for the DL solver
+
+Type: int_list
+
+Default value: [0]
+
 **PRINT_NO**
 
 Print the NO from the rdm of FCI

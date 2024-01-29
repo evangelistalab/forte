@@ -62,7 +62,7 @@ class StateInfo {
     int twice_ms() const;
     /// return the irrep
     int irrep() const;
-    /// return the core guess bool
+    /// return the bool value for running Davidson-Liu with core determinants
     bool core_guess() const;
     /// return the multiplicity symbol
     const std::string& multiplicity_label() const;
@@ -100,7 +100,7 @@ class StateInfo {
     int twice_ms_;
     // Irrep
     int irrep_;
-    // core guess
+    /// Use core determinants as initial guess for Davidson-Liu?
     bool core_guess_;
     // Irrep label
     std::string irrep_label_;

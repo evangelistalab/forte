@@ -63,6 +63,7 @@ std::vector<Determinant> GenCISolver::initial_guess_generate_dets(std::shared_pt
                 vec_e_I.begin(), vec_e_I.end(),
                 [&e](const std::tuple<double, size_t>& t) { return e < std::get<0>(t); });
             vec_e_I.insert(it, std::make_tuple(e, I));
+            // Do not update the maximum energy threshold if using core determinants as initial guess
             if (!(core_guess_)){
                 emax = std::get<0>(vec_e_I.back());
             }
@@ -73,6 +74,8 @@ std::vector<Determinant> GenCISolver::initial_guess_generate_dets(std::shared_pt
     std::vector<Determinant> guess_dets;
     for (const auto& [e, I] : vec_e_I) {
         const auto& det = lists_->determinant(I);
+        // If using core determinants as initial guess include those with
+        // single and double holes in first bit position
         if (core_guess_){
             if (!(det.get_alfa_bit(0) and det.get_beta_bit(0))){
                 guess_dets.push_back(det);
@@ -108,7 +111,8 @@ GenCISolver::initial_guess_det(std::shared_ptr<psi::Vector> diag, size_t num_gue
     // here we use a standard guess procedure
     return find_initial_guess_det(guess_dets, guess_dets_pos, num_guess_states, fci_ints,
                                   state().multiplicity(), true, print_ >= PrintLevel::Default,
-                                  std::vector<std::vector<std::pair<size_t, double>>>());
+                                  std::vector<std::vector<std::pair<size_t, double>>>(),
+                                  core_guess_);
 }
 
 sparse_mat GenCISolver::initial_guess_csf(std::shared_ptr<psi::Vector> diag,

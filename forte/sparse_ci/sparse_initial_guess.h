@@ -66,7 +66,8 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
                        const std::vector<size_t>& guess_dets_pos, size_t num_guess_states,
                        const std::shared_ptr<ActiveSpaceIntegrals>& as_ints, int multiplicity,
                        bool do_spin_project, bool print,
-                       const std::vector<std::vector<std::pair<size_t, double>>>& user_guess);
+                       const std::vector<std::vector<std::pair<size_t, double>>>& user_guess,
+                       bool core_guess = false);
 
 /// @brief Generate initial guess vectors for the Davidson-Liu solver starting from a set of guess
 /// configurations
