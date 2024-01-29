@@ -51,9 +51,6 @@ FCIStringLists::FCIStringLists(psi::Dimension cmopi, std::vector<size_t> core_mo
 }
 
 void FCIStringLists::startup() {
-
-    auto start_time_sut = std::clock();
-
     cmopi_offset_.push_back(0);
     for (size_t h = 1; h < nirrep_; ++h) {
         cmopi_offset_.push_back(cmopi_offset_[h - 1] + cmopi_[h - 1]);
@@ -82,54 +79,33 @@ void FCIStringLists::startup() {
     std::vector<std::array<int, 6>> alfa_3h_occupation({{static_cast<int>(na_ - 3)}});
     std::vector<std::array<int, 6>> beta_3h_occupation({{static_cast<int>(nb_ - 3)}});
 
-    auto stop_time_sut = std::clock();
-    auto duration_sut = (stop_time_sut - start_time_sut);
-
     string_class_ = std::make_shared<FCIStringClass>(cmopi_int);
 
     if (na_ >= 1) {
-        auto start_time_a1 = std::clock();
         auto alfa_1h_strings = make_fci_strings(ncmo_, na_ - 1);
         alfa_address_1h_ = std::make_shared<FCIStringAddress>(ncmo_, na_ - 1, alfa_1h_strings);
-        auto stop_time_a1 = std::clock();
-        auto duration_a1 = (stop_time_a1 - start_time_a1);
     }
     if (nb_ >= 1) {
-        auto start_time_b1 = std::clock();
         auto beta_1h_strings = make_fci_strings(ncmo_, nb_ - 1);
         beta_address_1h_ = std::make_shared<FCIStringAddress>(ncmo_, nb_ - 1, beta_1h_strings);
-        auto stop_time_b1 = std::clock();
-        auto duration_b1 = (stop_time_b1 - start_time_b1);
     }
 
     if (na_ >= 2) {
-        auto start_time_a2 = std::clock();
         auto alfa_2h_strings = make_fci_strings(ncmo_, na_ - 2);
         alfa_address_2h_ = std::make_shared<FCIStringAddress>(ncmo_, na_ - 2, alfa_2h_strings);
-        auto stop_time_a2 = std::clock();
-        auto duration_a2 = (stop_time_a2 - start_time_a2);
     }
     if (nb_ >= 2) {
-        auto start_time_b2 = std::clock();
         auto beta_2h_strings = make_fci_strings(ncmo_, nb_ - 2);
         beta_address_2h_ = std::make_shared<FCIStringAddress>(ncmo_, nb_ - 2, beta_2h_strings);
-        auto stop_time_b2 = std::clock();
-        auto duration_b2 = (stop_time_b2 - start_time_b2);
     }
 
     if (na_ >= 3) {
-        auto start_time_a3 = std::clock();
         auto alfa_3h_strings = make_fci_strings(ncmo_, na_ - 3);
         alfa_address_3h_ = std::make_shared<FCIStringAddress>(ncmo_, na_ - 3, alfa_3h_strings);
-        auto stop_time_a3 = std::clock();
-        auto duration_a3 = (stop_time_a3 - start_time_a3);
     }
     if (nb_ >= 3) {
-        auto start_time_b3 = std::clock();
         auto beta_3h_strings = make_fci_strings(ncmo_, nb_ - 3);
         beta_address_3h_ = std::make_shared<FCIStringAddress>(ncmo_, nb_ - 3, beta_3h_strings);
-        auto stop_time_b3 = std::clock();
-        auto duration_b3 = (stop_time_b3 - start_time_b3);
     }
 
     // local_timers
@@ -144,7 +120,6 @@ void FCIStringLists::startup() {
     double vvoo_list_timer = 0.0;
 
     {
-        auto start_time_mkfci = std::clock();
         local_timer t;
         alfa_strings_ = make_fci_strings(ncmo_, na_);
         beta_strings_ = make_fci_strings(ncmo_, nb_);
@@ -153,81 +128,55 @@ void FCIStringLists::startup() {
         beta_address_ = std::make_shared<FCIStringAddress>(ncmo_, nb_, beta_strings_);
 
         str_list_timer += t.get();
-        auto stop_time_mkfci = std::clock();
-        auto duration_mkfci = (stop_time_mkfci - start_time_mkfci);
     }
 
     nas_ = 0;
     nbs_ = 0;
     for (size_t h = 0; h < nirrep_; ++h) {
-        auto start_time_strpcls = std::clock();
         nas_ += alfa_address_->strpcls(h);
         nbs_ += beta_address_->strpcls(h);
-        auto stop_time_strpcls = std::clock();
-        auto duration_strpcls = (stop_time_strpcls - start_time_strpcls);
     }
 
     {
-        auto start_time_pair = std::clock();
         local_timer t;
         make_pair_list(pair_list_);
         nn_list_timer += t.get();
-        auto stop_time_pair = std::clock();
-        auto duration_pair = (stop_time_pair - start_time_pair);
     }
     {
-        auto start_time_vo = std::clock();
         local_timer t;
         make_vo_list(alfa_address_, alfa_vo_list);
         make_vo_list(beta_address_, beta_vo_list);
         vo_list_timer += t.get();
-        auto stop_time_vo = std::clock();
-        auto duration_vo = (stop_time_vo - start_time_vo);
     }
     {
-        auto start_time_oo = std::clock();
         local_timer t;
         make_oo_list(alfa_address_, alfa_oo_list);
         make_oo_list(beta_address_, beta_oo_list);
         oo_list_timer += t.get();
-        auto stop_time_oo = std::clock();
-        auto duration_oo = (stop_time_oo - start_time_oo);
     }
     {
-        auto start_time_1h = std::clock();
         local_timer t;
         make_1h_list(alfa_address_, alfa_address_1h_, alfa_1h_list);
         make_1h_list(beta_address_, beta_address_1h_, beta_1h_list);
         h1_list_timer += t.get();
-        auto stop_time_1h = std::clock();
-        auto duration_1h = (stop_time_1h - start_time_1h);
     }
     {
-        auto start_time_2h = std::clock();
         local_timer t;
         make_2h_list(alfa_address_, alfa_address_2h_, alfa_2h_list);
         make_2h_list(beta_address_, beta_address_2h_, beta_2h_list);
         h2_list_timer += t.get();
-        auto stop_time_2h = std::clock();
-        auto duration_2h = (stop_time_2h - start_time_2h);
     }
     {
-        auto start_time_3h = std::clock();
         local_timer t;
         make_3h_list(alfa_address_, alfa_address_3h_, alfa_3h_list);
         make_3h_list(beta_address_, beta_address_3h_, beta_3h_list);
         h3_list_timer += t.get();
-        auto stop_time_3h = std::clock();
-        auto duration_3h = (stop_time_3h - start_time_3h);
     }
     {
-        auto start_time_vvoo = std::clock();
         local_timer t;
         make_vvoo_list(alfa_address_, alfa_vvoo_list);
         make_vvoo_list(beta_address_, beta_vvoo_list);
         vvoo_list_timer += t.get();
-        auto stop_time_vvoo = std::clock();
-        auto duration_vvoo = (stop_time_vvoo - start_time_vvoo);
     }
 
     double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer +
