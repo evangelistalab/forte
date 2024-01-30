@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'Forte'
-copyright = '2021, Forte Developers'
+copyright = '2023, Forte Developers'
 author = 'Forte Developers'
 
 # The full version, including alpha/beta/rc tags
