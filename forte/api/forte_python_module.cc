@@ -382,7 +382,9 @@ PYBIND11_MODULE(_forte, m) {
              "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
-        .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
+        .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files")
+        .def("epsilon", &SADSRG::epsilon,
+             "A vector of semicanonical orbital energies in Pitzer order");
 
     // export spin-adapted DSRG-MRPT2
     py::class_<SA_MRPT2, SADSRG>(m, "SA_MRPT2")

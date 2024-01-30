@@ -69,6 +69,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& U);
 
+    /// Get the semicanonical orbital energies in Pitzer order
+    std::vector<double> epsilon(char block);
+
   protected:
     /// Startup function called in constructor
     void startup();

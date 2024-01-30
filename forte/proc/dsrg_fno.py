@@ -55,6 +55,14 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
         if options.get_str("CALC_TYPE") != "SS" or options.get_str("RELAX_REF") != "NONE":
             dhpt2 = pt2_solver.compute_Heff_actv()
 
+        # save orbital energies to file
+        epsilon = pt2_solver.epsilon('v')
+        with open('epsilon_full.txt', 'w') as w:
+            w.write("# Semicanonical orbital energies w/o FNO: irrep, index, value")
+            virt_mos = mo_space_info.relative_mo("RESTRICTED_UOCC")
+            for (h, i), v in zip(virt_mos, epsilon):
+                w.write(f"\n {h} {i:4}  {v:20.15f}")
+
     fnopi, Va = pt2_solver.build_fno()
     pt2_solver = None  # clean up
 
@@ -80,6 +88,15 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
         dept2 -= pt2_solver.compute_energy()
         if options.get_str("CALC_TYPE") != "SS" or options.get_str("RELAX_REF") != "NONE":
             dhpt2.add(pt2_solver.compute_Heff_actv(), -1.0)
+
+        # save orbital energies to file
+        epsilon = pt2_solver.epsilon('v')
+        with open('epsilon_fno.txt', 'w') as w:
+            w.write("# Semicanonical orbital energies w/ FNO: irrep, index, value")
+            virt_mos = mo_space_info.relative_mo("RESTRICTED_UOCC")
+            for (h, i), v in zip(virt_mos, epsilon):
+                w.write(f"\n {h} {i:4}  {v:20.15f}")
+
         pt2_solver = None  # clean up
 
     # reset flow parameter
