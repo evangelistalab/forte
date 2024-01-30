@@ -69,6 +69,7 @@ avas:
       - avas-8
 casscf:
    short:
+      - casscf-1
       - casscf-7
       - df-casscf-1
       - df-casscf-2-rdm
@@ -78,7 +79,6 @@ casscf:
       - casscf-gradient-3
       - casscf-opt-3
    medium:
-      - casscf-1
       - casscf-2
       - casscf-3
       - casscf-4
