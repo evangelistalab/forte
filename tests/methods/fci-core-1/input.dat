@@ -21,8 +21,8 @@ set {
 }
 
 set forte {
-  active_space_solver genci
-  core_guess          1
+  active_space_solver   genci
+  dl_core_initial_guess 1
 }
 
 energy('scf')
@@ -32,9 +32,9 @@ energy('forte')
 compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
 
 set forte {
-  active_space_solver genci
-  avg_state           [[1,1,3]]
-  core_guess          [1]
+  active_space_solver   genci
+  avg_state             [[1,1,3]]
+  dl_core_initial_guess [1]
 }
 
 energy('forte')

@@ -197,11 +197,7 @@ std::size_t StateInfo::hash() const {
     for (size_t i : gas_max_)
         repr += "_" + std::to_string(i);
 
-    if (core_guess_) {
-        repr += "_" + std::to_string(1);
-    } else {
-        repr += "_" + std::to_string(0);
-    }
+    repr += "" + std::to_string(core_guess_ ? 1 : 0);
 
     return std::hash<std::string>{}(repr);
 }

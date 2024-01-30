@@ -427,7 +427,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
     bool core_guess;
-    auto core_guess_list = options->get_int_list("CORE_GUESS");
+    auto core_guess_list = options->get_int_list("DL_CORE_INITIAL_GUESS");
 
     std::vector<size_t> gas_min(6, 0);
     std::vector<size_t> gas_max(6);
@@ -465,14 +465,14 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
         }
 
-        // if 'CORE_GUESS' list is given convert valid first 'CORE_GUESS' entry to boolean
+        // if 'DL_CORE_INITIAL_GUESS' list is given convert valid first 'DL_CORE_INITIAL_GUESS' entry to boolean
         if (core_guess_list.empty()){
             core_guess = false;
         } else if (!(core_guess_list[0] != 0 || core_guess_list[0] != 1)) {
-            psi::outfile->Printf("\n  Error: wrong entry value for CORE_GUESS (%d). "
+            psi::outfile->Printf("\n  Error: wrong entry value for DL_CORE_INITIAL_GUESS (%d). "
                                     "Only values of 0 or 1 are acceptable",
                                         core_guess_list[0]);
-            throw std::runtime_error("Wrong input value for CORE_GUESS.");
+            throw std::runtime_error("Wrong input value for DL_CORE_INITIAL_GUESS.");
         } else {
             core_guess = static_cast<bool>(core_guess_list[0]);
         }
@@ -579,20 +579,20 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                 }
             }
 
-            // if 'CORE_GUESS' list is given convert valid 'CORE_GUESS' entries to boolean
+            // if 'DL_CORE_INITIAL_GUESS' list is given convert valid 'DL_CORE_INITIAL_GUESS' entries to boolean
             if (core_guess_list.empty()){
                 core_guess = false;
             } else if (core_guess_list.size() != nentry) {
                 psi::outfile->Printf("\n  Error: mismatched number of entries in AVG_STATE "
-                                        "(%d) and CORE_GUESS (%d).",
+                                        "(%d) and DL_CORE_INITIAL_GUESS (%d).",
                                         nentry, core_guess_list.size());
                 throw std::runtime_error(
-                    "Mismatched number of entries in AVG_STATE and CORE_GUESS.");
+                    "Mismatched number of entries in AVG_STATE and DL_CORE_INITIAL_GUESS.");
             } else if (!(core_guess_list[i] == 0 || core_guess_list[i] == 1)) {
-                psi::outfile->Printf("\n  Error: wrong entry value for CORE_GUESS (%d). "
+                psi::outfile->Printf("\n  Error: wrong entry value for DL_CORE_INITIAL_GUESS (%d). "
                                         "Only values of 0 or 1 are acceptable",
                                           core_guess_list[i]);
-                throw std::runtime_error("Wrong input value for CORE_GUESS.");
+                throw std::runtime_error("Wrong input value for DL_CORE_INITIAL_GUESS.");
             } else {
                 core_guess = static_cast<bool>(core_guess_list[i]);
             }

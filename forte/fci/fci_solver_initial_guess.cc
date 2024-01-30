@@ -78,10 +78,10 @@ std::vector<Determinant> FCISolver::initial_guess_generate_dets(std::shared_ptr<
         // single and double holes in first bit position
         if (core_guess_){
             if (!(det.get_alfa_bit(0) and det.get_beta_bit(0))){
-                guess_dets.push_back(det);
+                guess_dets.emplace_back(det);
             }
         } else {
-            guess_dets.push_back(det);
+            guess_dets.emplace_back(det);
         }
     }
 
