@@ -28,7 +28,6 @@
 #
 
 import time
-import os
 
 import psi4
 import psi4.driver.p4util as p4util
@@ -54,6 +53,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.proc.dsrg import ProcedureDSRG
+from forte.proc.orbital_helpers import dump_orbitals
 
 
 def forte_driver(data: ForteData):
@@ -97,15 +97,15 @@ def forte_driver(data: ForteData):
     if options.get_bool("WRITE_RDM"):
         max_rdm_level = 3  # TODO allow the user to change this variable
         data = ActiveSpaceRDMs(max_rdm_level=max_rdm_level).run(data)
-        write_external_rdm_file(data.rdms)
+        write_external_rdm_file(data.rdms, data.active_space_solver)
 
     if options.get_bool("SPIN_ANALYSIS"):
         data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
         forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
-    correlation_solver_type = options.get_str("CORRELATION_SOLVER")
-    if correlation_solver_type != "NONE":
+    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
+    if correlation_solver_type != 'NONE':
         dsrg_proc = ProcedureDSRG(data.active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
         return_en = dsrg_proc.compute_energy()
         dsrg_proc.print_summary()

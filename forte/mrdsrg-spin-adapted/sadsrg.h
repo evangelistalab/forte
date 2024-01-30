@@ -69,6 +69,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& U);
 
+    /// Get the semicanonical orbital energies in Pitzer order
+    std::vector<double> epsilon(char block);
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -239,7 +242,7 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Eta1_;
     /// Two-body density cumulant
     ambit::BlockedTensor L2_;
-    /// Two-body density cumulant
+    /// Three-body density cumulant
     ambit::Tensor L3_;
 
     // ==> Fock matrix related <==
