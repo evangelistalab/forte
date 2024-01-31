@@ -232,6 +232,8 @@ external_solver:
 fci:
    short:
       - fci-1 # moved to pytest
+      - fci-core-1
+      - fci-core-2
    medium:
       - fci-2
       - fci-3

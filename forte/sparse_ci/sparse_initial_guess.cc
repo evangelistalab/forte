@@ -74,12 +74,17 @@ find_initial_guess_det(const std::vector<Determinant>& guess_dets,
                        const std::vector<size_t>& guess_dets_pos, size_t num_guess_states,
                        const std::shared_ptr<ActiveSpaceIntegrals>& as_ints, int multiplicity,
                        bool do_spin_project, bool print,
-                       const std::vector<std::vector<std::pair<size_t, double>>>& user_guess) {
+                       const std::vector<std::vector<std::pair<size_t, double>>>& user_guess, 
+                       bool core_guess) {
     size_t num_guess_dets = guess_dets.size();
 
     if (print) {
         print_h2("Initial Guess");
-        psi::outfile->Printf("\n  Initial guess determinants:         %zu", guess_dets.size());
+        std::string guess = "guess";
+        if (core_guess) {
+            guess = "(core) guess";
+        }
+        psi::outfile->Printf("\n  Initial %s determinants:         %zu", guess.c_str(), guess_dets.size());
     }
 
     auto [HS2full, S2evals, S2evecs] =

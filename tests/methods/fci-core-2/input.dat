@@ -1,0 +1,49 @@
+# LiH 6-31g basis FCI lowest core excited root for each irrep
+import forte
+
+refscf   = -7.9791777935853272
+reffci   = -7.9981415340890000
+reffciC1 = -5.8513959935580000
+reffciC2 = -5.5724567435310000
+reffciC3 = -5.7763575117780000
+reffciC4 = -5.7763575117780000
+
+
+molecule {
+0 1
+Li
+H 1 R
+
+R = 3.0
+units bohr 
+}
+
+set {
+  basis 6-31g
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  active_space_solver   genci
+  avg_state             [[0,1,1], [0,1,1], [1,1,1], [2,1,1], [3,1,1]]
+  dl_core_initial_guess [0, 1, 1, 1, 1]
+}
+
+energy('scf')
+compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(reffciC1, variable("ENERGY ROOT 0 1A1"),11, "FCI energy core 0A1") #TEST
+compare_values(reffciC2, variable("ENERGY ROOT 0 1A2"),11, "FCI energy core 0A2") #TEST
+compare_values(reffciC3, variable("ENERGY ROOT 0 1B1"),11, "FCI energy core 0B1") #TEST
+compare_values(reffciC4, variable("ENERGY ROOT 0 1B2"),11, "FCI energy core 0B2") #TEST
+
+set forte {
+  active_space_solver   genci
+  avg_state             [[0,1,1]]
+  dl_core_initial_guess [0]
+}
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST

@@ -45,7 +45,7 @@ class StateInfo {
     StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep,
               const std::string& irrep_label = "",
               const std::vector<size_t> gas_min = std::vector<size_t>(),
-              const std::vector<size_t> gas_max = std::vector<size_t>());
+              const std::vector<size_t> gas_max = std::vector<size_t>(), bool core_guess = false);
 
     StateInfo() = default;
 
@@ -62,6 +62,8 @@ class StateInfo {
     int twice_ms() const;
     /// return the irrep
     int irrep() const;
+    /// return the bool value for running Davidson-Liu with core determinants
+    bool core_guess() const;
     /// return the multiplicity symbol
     const std::string& multiplicity_label() const;
     /// return the irrep symbol
@@ -98,6 +100,8 @@ class StateInfo {
     int twice_ms_;
     // Irrep
     int irrep_;
+    /// Use core determinants as initial guess for Davidson-Liu?
+    bool core_guess_;
     // Irrep label
     std::string irrep_label_;
     // minimum number of electrons in each gas space

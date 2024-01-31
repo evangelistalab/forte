@@ -39,9 +39,9 @@ namespace forte {
 
 StateInfo::StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep,
                      const std::string& irrep_label, const std::vector<size_t> gas_min,
-                     const std::vector<size_t> gas_max)
+                     const std::vector<size_t> gas_max, bool core_guess)
     : na_(na), nb_(nb), multiplicity_(multiplicity), twice_ms_(twice_ms), irrep_(irrep),
-      irrep_label_(irrep_label), gas_min_(gas_min), gas_max_(gas_max) {}
+      irrep_label_(irrep_label), gas_min_(gas_min), gas_max_(gas_max), core_guess_(core_guess) {}
 
 const std::vector<std::string> StateInfo::multiplicity_labels{
     "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
@@ -58,6 +58,8 @@ int StateInfo::twice_ms() const { return twice_ms_; }
 
 int StateInfo::irrep() const { return irrep_; }
 
+bool StateInfo::core_guess() const { return core_guess_; }
+
 const std::string& StateInfo::irrep_label() const { return irrep_label_; }
 
 const std::string& StateInfo::multiplicity_label() const {
@@ -71,8 +73,8 @@ const std::vector<size_t>& StateInfo::gas_max() const { return gas_max_; }
 bool StateInfo::operator<(const StateInfo& rhs) const {
     // Make sure the roots are in increasing energy order for core-excited state calcualtions
     if ((gas_min_ == rhs.gas_min_) && (gas_max_ == rhs.gas_max_)) {
-        return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) <
-               std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
+        return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, core_guess_) <
+               std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_, rhs.core_guess_);
     } else if (gas_max_ == rhs.gas_max_) {
         // The state with a smaller gas occupation in the first gas space is 'bigger'.
         // Ground state is smaller than core-excited state under this definition.
@@ -83,15 +85,15 @@ bool StateInfo::operator<(const StateInfo& rhs) const {
 }
 
 bool StateInfo::operator!=(const StateInfo& rhs) const {
-    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_) !=
+    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_, core_guess_) !=
            std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_, rhs.gas_min_,
-                    rhs.gas_max_);
+                    rhs.gas_max_, rhs.core_guess_);
 }
 
 bool StateInfo::operator==(const StateInfo& rhs) const {
-    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_) ==
+    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_, core_guess_) ==
            std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_, rhs.gas_min_,
-                    rhs.gas_max_);
+                    rhs.gas_max_, rhs.core_guess_);
 }
 
 StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
@@ -194,6 +196,9 @@ std::size_t StateInfo::hash() const {
         repr += "_" + std::to_string(i);
     for (size_t i : gas_max_)
         repr += "_" + std::to_string(i);
+
+    repr += "" + std::to_string(core_guess_ ? 1 : 0);
+
     return std::hash<std::string>{}(repr);
 }
 
