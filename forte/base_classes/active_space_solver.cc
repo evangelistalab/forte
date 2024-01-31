@@ -382,23 +382,19 @@ void ActiveSpaceSolver::dump_spectra_results() {
     outFile << "State1, State2, E1, E2, (E2-E1), (E2-E1)[eV], Osc.[a.u.]" << std::endl;
 
     for (const auto& m : state_method_map_) {
-        auto comp = m.second;
-        auto spectra = comp->get_spectra_results();
-        std::string line;
+        auto calculation = m.second;
+        auto spectra = calculation->get_spectra_results();
+        std::string out;
 
-        for (size_t j = 1; j <= spectra.size(); j++) {
-            line += spectra[j-1];
-            if (j % 7 == 0){
-                if (j == spectra.size()){
-                    outFile << line;
-                } else {
-                    outFile << line << std::endl;
-                }
-                line = "";
-            } else {
-                line += ", ";
-            }
+        for (const auto& s : spectra) {
+            out += s.first + ", ";
+            out += std::accumulate(s.second.begin(), s.second.end(), std::string{}, 
+                                [](const std::string& a, const std::string& b) {
+                                    return a + (a.empty() ? "" : ", ") + b;
+                                    });
+            out += '\n';
         }
+        outFile << out;
     }
     outFile.close();
 }
