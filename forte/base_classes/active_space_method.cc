@@ -315,7 +315,7 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
         psi::outfile->Printf("\n    %6s %6s", name1.c_str(), name2.c_str());
         psi::outfile->Printf("%15.8f%15.8f%15.8f", e_diff, e_diff * pc_hartree2ev, out[i]);
 
-        // push to spectra results vector
+        // push to results to spectra_results_ vector
         std::vector<std::string> data {name1, name2, std::to_string(energies_[root1]),
                                        std::to_string(energies2[root2]), std::to_string(e_diff),
                                        std::to_string(e_diff * pc_hartree2ev), std::to_string(out[i])};

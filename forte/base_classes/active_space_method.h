@@ -249,7 +249,7 @@ class ActiveSpaceMethod {
                                           const std::vector<std::pair<size_t, size_t>>& root_list,
                                           std::shared_ptr<ActiveSpaceMethod> method2);
 
-    /// Store spectra results from calculation
+    /// Store spectra results of calculation
     void add_spectra_results(const std::vector<std::string>& data);
 
     /// Dump the wave function to file
@@ -339,7 +339,7 @@ class ActiveSpaceMethod {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quiet_mode();
 
-    // Get map with spectra data
+    // Get map of state_i->state_f and the spectroscopic results
     std::map<std::string, std::vector<std::string>> get_spectra_results();
 
     /// Get the model space

@@ -369,17 +369,16 @@ void ActiveSpaceSolver::generalized_sigma(const StateInfo& state, std::shared_pt
 }
 
 void ActiveSpaceSolver::dump_spectra_results() {
-
     std::filesystem::path currentPath = std::filesystem::current_path();
     std::string filename = (currentPath / "spectra.dat").string();
     std::ofstream outFile(filename);
 
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open output file." << std::endl;
+        std::cerr << "Error: Unable to open spectra.dat file." << std::endl;
         return;
     }
 
-    outFile << "State1, State2, E1, E2, (E2-E1), (E2-E1)[eV], Osc.[a.u.]" << std::endl;
+    outFile << "State1, State2, E1, E2, E2_minus_E1, E2_minus_E1_eV, Osc_au" << std::endl;
 
     for (const auto& m : state_method_map_) {
         auto calculation = m.second;
