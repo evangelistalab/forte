@@ -219,6 +219,9 @@ class MOSpaceInfo {
     /// Reorder MOs according to the input indexing vector
     void set_reorder(const std::vector<size_t>& reorder);
 
+    /// @return The reordering array
+    const std::vector<size_t>& reorder() const { return reorder_; }
+
     /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
 
