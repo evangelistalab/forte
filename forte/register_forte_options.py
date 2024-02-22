@@ -536,6 +536,8 @@ def register_aci_options(options):
 
     options.add_bool("SPIN_ANALYSIS", False, "Do spin correlation analysis?")
 
+    options.add_list("POST_PROCESS", "List of post-processing items")
+
     options.add_bool("SPIN_TEST", False, "Do test validity of correlation analysis")
 
     options.add_bool("ACI_RELAXED_SPIN", False, "Do spin correlation analysis for relaxed wave function?")

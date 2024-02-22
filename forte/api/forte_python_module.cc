@@ -65,7 +65,7 @@
 #include "sci/tdci.h"
 #include "genci/ci_occupation.h"
 
-#include "post_process/spin_corr.h"
+#include "post_process/post_process.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -217,7 +217,7 @@ PYBIND11_MODULE(_forte, m) {
           "Make an object that holds the molecular orbital integrals for the active orbitals");
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
-    m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");
+    m.def("perform_post_processing", &perform_post_processing, "Do wave function post processing");
     m.def("make_dsrg_method", &make_dsrg_method,
           "Make a DSRG method (spin-integrated implementation)");
     m.def("make_sadsrg_method", &make_sadsrg_method,
