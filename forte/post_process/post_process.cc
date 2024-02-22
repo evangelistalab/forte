@@ -343,17 +343,18 @@ void PostProcess::unpaired_density() {
 
     std::vector<double> nus(nact);
 
-    outfile->Printf("\n    N.O.      nu_i  ");
-    outfile->Printf("\n  --------  --------");
+    outfile->Printf("\n    N.O.      occ        nu_i  ");
+    outfile->Printf("\n  --------  ---------  --------");
 
     // the total unpaired electrons (alpha only)
     double nu_total = 0.0;
     for (size_t i = 0; i < nact; ++i){
         double ni = OCC_A->get(i);// + OCC_B->get(i);
-        double nu_i = (ni*ni)*(1.0-ni)*(1.0-ni);
+        //double nu_i = (ni*ni)*(1.0-ni)*(1.0-ni);
+        double nu_i = (ni)*(1.0-ni);
         nus[i] = nu_i;
         nu_total += nu_i;
-        outfile->Printf("\n    %2d     \t %7.5f ", i, nu_i);
+        outfile->Printf("\n    %2d  \t %7.5f   \t %7.5f ", i, ni,nu_i);
     }
 
     outfile->Printf("\n  total: %5.3f", nu_total);
