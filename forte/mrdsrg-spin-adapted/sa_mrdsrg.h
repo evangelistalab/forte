@@ -161,7 +161,7 @@ class SA_MRDSRG : public SADSRG {
     /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator
     void compute_hbar_qc();
     /// Compute EOM-LDSRG2 hbar <\Psi|a_i^{\dagger} Hbar a_j|\Psi>
-    std::make_shared<psi::Matrix> compute_eom_hbar();
+    std::shared_ptr<psi::Matrix> compute_eom_hbar();
 
     /// Add H2's Hermitian conjugate to itself, H2 need to contain gGgG block
     void add_hermitian_conjugate(BlockedTensor& H2);

@@ -31,15 +31,37 @@
 #include "sa_mrdsrg.h"
 using namespace psi;
 namespace forte {
-ambit::BlockedTensor SA_MRDSRG::compute_eom_hbar() {
+std::shared_ptr<psi::Matrix> SA_MRDSRG::compute_eom_hbar() {
     // IP singles. Should add foptions.
-    EOM_Hbar_ = BTF_->build(tensor_type_, "EOM-Hbar", {"hh"}, true);
-
-    EOM_Hbar["mn"] = -Hbar1_["mn"];
-    E0M_Hbar["mv"] = -Hbar1_["mu"] * L1_["uv"] + Hbar2_["mwuv"] * L2_["uvwx"];
+    size_t nhole = mo_space_info_->dimension("GENERALIZED HOLE").sum();
+    size_t nocc = mo_space_info_->dimension("RESTRICTED_DOCC").sum();
+    size_t nact = mo_space_info_->dimension("ACTIVE").sum();
+    ambit::BlockedTensor EOM_Hbar = BTF_->build(tensor_type_, "EOM-Hbar", {"hh"}, true);
+    EOM_Hbar_mat_ = std::make_shared<psi::Matrix>("EOM-Hbar-Matrx", nhole, nhole);
+    /// Should do spin adaptation.
+    EOM_Hbar["nm"] = -Hbar1_["nm"];
+    E0M_Hbar["mv"] = -Hbar1_["mu"] * L1_["uv"] + Hbar2_["mwux"] * L2_["uxwv"];
     EOM_Hbar["wx"] = -Hbar1_["vu"] * L1_["ux"] * L1_["wv"] + Hbar1_["vu"] * L2_["uwvx"] +
-                     0.5 * Hbar2_["wxuv"] * L1_["yw"] * L2_["uvxz"] -
-                     0.5 * Hbar2_["wxuv"] * L1_["uz"] * L2_["uywx"] +
-                     0.25 * Hbar2_["wxuv"] * L3_["uvywxz"];
+                     0.5 * Hbar2_["yzuv"] * L1_["wy"] * L2_["uvzx"] -
+                     0.5 * Hbar2_["yzuv"] * L1_["vx"] * L2_["uwyz"] +
+                     0.25 * Hbar2_["yzuv"] * L3_["uvwyzx"];
+
+    EOM_Hbar.iterate([&](const std::vector<size_t>& i, double& value) {
+        EOM_Hbar_mat_->set(i[0], i[1], value);
+    });
+
+    /// Overlap matrix
+    std::shared_ptr<psi::Matrix> S = std::make_shared<psi::Matrix>("EOM-S-sub", nhole, nhole);
+    std::shared_ptr<psi::Matrix> Sevec = std::make_shared<psi::Matrix>("S-evec", nhole, nhole);
+    std::shared_ptr<psi::Vector> Seval = std::make_shared<psi::Vector>("S-eval", nhole);
+    S->identity();
+    L1_.iterate([&](const std::vector<size_t>& i, double& value) {
+        S->set(i[0] + nocc, i[1] + nocc, value);
+    });
+    S->diagonalize(Sevec, Seval);
+
+    EOM_Hbar_mat_ = Sevec->transpose() * EOM_Hbar_mat_ * Sevec;
+
+    return EOM_Hbar_mat_;
 }
 } // namespace forte
