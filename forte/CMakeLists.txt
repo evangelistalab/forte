@@ -168,6 +168,7 @@ mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
 mrdsrg-spin-adapted/sa_mrpt2.cc
 mrdsrg-spin-adapted/sa_mrpt2_oeprop.cc
 mrdsrg-spin-adapted/sa_mrpt3.cc
+mrdsrg-spin-adapted/eom_dsrg.cc
 mrdsrg-spin-integrated/dsrg_mrpt2.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_gradient.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_write_rdms.cc

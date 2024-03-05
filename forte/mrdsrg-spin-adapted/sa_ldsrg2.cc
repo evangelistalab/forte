@@ -183,6 +183,13 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     final.stop();
 
     Hbar0_ = Ecorr;
+
+    bool do_eom = false;
+    do_eom = foptions_->get_bool("DO_EOM");
+    if (do_eom) {
+        Ecorr = compute_eom();
+    }
+
     return Ecorr;
 }
 
