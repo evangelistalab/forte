@@ -160,6 +160,8 @@ class SA_MRDSRG : public SADSRG {
     void compute_hbar_sequential();
     /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator
     void compute_hbar_qc();
+    /// Compute EOM-LDSRG2 hbar <\Psi|a_i^{\dagger} Hbar a_j|\Psi>
+    std::make_shared<psi::Matrix> compute_eom_hbar();
 
     /// Add H2's Hermitian conjugate to itself, H2 need to contain gGgG block
     void add_hermitian_conjugate(BlockedTensor& H2);
@@ -188,7 +190,7 @@ class SA_MRDSRG : public SADSRG {
     /// Clean up for pointers used for DIIS
     void diis_manager_cleanup();
 
-    /// Compute MR-LDSRG(2)
+    /// Compute MR-LDSRG(2)s
     double compute_energy_ldsrg2();
 
     /// Compute DSRG-transformed multipoles
