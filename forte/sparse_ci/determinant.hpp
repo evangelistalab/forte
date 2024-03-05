@@ -73,6 +73,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     using BitArray<N>::operator&;
     using BitArray<N>::fast_a_xor_b_count;
     using BitArray<N>::fast_a_and_b_eq_zero;
+    using BitArray<N>::find_first_one;
 
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;
@@ -402,6 +403,16 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
             return count(nwords_half, nwords_);
         }
     };
+
+    /// Find the index of the first alpha bit set to 1
+    uint64_t find_first_one_alfa() const { return find_first_one(0, nwords_half); }
+
+    /// Find the index of the first beta bit set to 1 (spatial orbital index)
+    uint64_t find_first_one_beta() const {
+        if (auto res = find_first_one(nwords_half, nwords_); res != ~uint64_t(0))
+            return res - norb();
+        return ~uint64_t(0);
+    }
 
     /// Return the number of alpha/beta pairs
     int npair() const {

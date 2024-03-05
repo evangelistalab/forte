@@ -98,8 +98,13 @@ class SQOperator {
     const Determinant& cre() const;
     /// @return a Determinant object that represents the annihilation operators
     const Determinant& ann() const;
+    /// @return true if this operator is a number operator (i.e. it contains no creation or
+    /// annihilation  operators)
+    bool is_number() const;
     /// @param value set the coefficient associated with this operator
     void set_coefficient(double& value);
+    /// @return compare this operator with another operator
+    bool operator==(const SQOperator& other) const;
     /// @return a string representation of this operator
     std::string str() const;
     /// @return a latex representation of this operator
@@ -115,5 +120,10 @@ class SQOperator {
     /// a Determinant that represents the annihilation operators
     Determinant ann_;
 };
+
+std::vector<SQOperator> operator*(const SQOperator& lhs, const SQOperator& rhs);
+
+SQOperator make_sq_operator(const std::string& s, double coefficient = 1.0,
+                            bool allow_reordering = false);
 
 } // namespace forte

@@ -46,24 +46,6 @@ void SparseOperator::add_term(const std::vector<std::tuple<bool, bool, int>>& op
 
 void SparseOperator::add_term(const SQOperator& sqop) { op_list_.push_back(sqop); }
 
-std::vector<std::tuple<bool, bool, int>> sparse_parse_ops(const std::string& s) {
-    // reverse the operator order
-    auto clean_s = s.substr(1, s.size() - 2);
-
-    auto ops_str = split_string(clean_s, " ");
-    std::reverse(ops_str.begin(), ops_str.end());
-
-    std::vector<std::tuple<bool, bool, int>> ops_vec_tuple;
-    for (auto op_str : ops_str) {
-        size_t len = op_str.size();
-        bool creation = op_str[len - 1] == '+' ? true : false;
-        bool alpha = op_str[len - 2] == 'a' ? true : false;
-        int orb = stoi(op_str.substr(0, len - 2));
-        ops_vec_tuple.push_back(std::make_tuple(creation, alpha, orb));
-    }
-    return ops_vec_tuple;
-}
-
 void SparseOperator::add_term_from_str(std::string str, double coefficient, bool allow_reordering) {
     // the regex to parse the entries
     std::regex re("\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
@@ -75,15 +57,15 @@ void SparseOperator::add_term_from_str(std::string str, double coefficient, bool
     //
     if (std::regex_match(str, m, re)) {
         if (m.ready()) {
-            auto ops_vec_tuple = sparse_parse_ops(m[1]);
+            auto sq_operator = make_sq_operator(m[1], coefficient, allow_reordering);
             if (is_antihermitian()) {
-                if (ops_vec_tuple.size() == 0) {
+                if (sq_operator.is_number()) {
                     throw std::runtime_error("SparseOperator: the operator " + str +
-                                             " contains a number component.\nThis is not allowed "
+                                             " contains a number component.\nThis is not allowed"
                                              "for anti-Hermitian operators");
                 }
             }
-            add_term(ops_vec_tuple, coefficient, allow_reordering);
+            add_term(sq_operator);
         }
     } else {
         std::string msg =

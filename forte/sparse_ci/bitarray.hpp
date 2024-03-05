@@ -368,11 +368,11 @@ template <size_t N> class BitArray {
 
     /// Find the first bit set to one (starting from the lowest index)
     /// @return the index of the the first bit, or if all bits are zero, returns ~0
-    uint64_t find_first_one() const {
-        for (size_t n = 0; n < nwords_; n++) {
+    uint64_t find_first_one(size_t begin = 0, size_t end = nwords_) const {
+        for (; begin < end; ++begin) {
             // find the first word != 0
-            if (words_[n] != word_t(0)) {
-                return ui64_find_lowest_one_bit(words_[n]) + n * bits_per_word;
+            if (words_[begin] != word_t(0)) {
+                return ui64_find_lowest_one_bit(words_[begin]) + begin * bits_per_word;
             }
         }
         return ~word_t(0);

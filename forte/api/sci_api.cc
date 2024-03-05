@@ -292,8 +292,20 @@ void export_Determinant(py::module& m) {
         .def("str", &SQOperator::str)
         .def("latex", &SQOperator::latex)
         .def("adjoint", &SQOperator::adjoint)
+        .def("is_number", &SQOperator::is_number)
+        .def("__eq__", &SQOperator::operator==)
+        .def(
+            "__mul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs * rhs; },
+            "Multiply two SQOperators")
         .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
         .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
+
+    m.def(
+        "make_sq_operator",
+        [](const std::string& s, double coefficient, bool allow_reordering) {
+            return make_sq_operator(s, coefficient, allow_reordering);
+        },
+        "s"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false);
 
     py::class_<StateVector, std::shared_ptr<StateVector>>(
         m, "StateVector", "A class to represent a vector of determinants")
