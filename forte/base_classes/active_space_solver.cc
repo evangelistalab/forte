@@ -168,7 +168,9 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         compute_quadrupole_moment(as_mp_ints_);
         if (options_->get_bool("TRANSITION_DIPOLES")) {
             compute_fosc_same_orbs(as_mp_ints_);
-            dump_spectra_results();
+            if (options_->get_bool("SPECTRA")) {
+                dump_spectra_results();
+            }
         }
     }
 
@@ -373,29 +375,38 @@ void ActiveSpaceSolver::dump_spectra_results() {
     std::string filename = (currentPath / "spectra.dat").string();
     std::ofstream outFile(filename);
 
-    if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open spectra.dat file." << std::endl;
+    std::string filename2 = (currentPath / "dm.dat").string();
+    std::ofstream outFile2(filename2);
+
+    if (!outFile.is_open() || !outFile2.is_open()) {
+        std::cerr << "Error: Unable to open spectra.dat or dm.dat file." << std::endl;
         return;
     }
 
-    outFile << "State1, State2, E1, E2, E2_minus_E1, E2_minus_E1_eV, Osc_au" << std::endl;
+    outFile << "Label, State1, State2, E1, E2, E2_minus_E1, E2_minus_E1_eV, Osc_au, TDM_X, TDM_Y, TDM_Z" << std::endl;
+    outFile2 << "Label, State1, State2, DM_X, DM_Y, DM_Z" << std::endl;
 
     for (const auto& m : state_method_map_) {
         auto calculation = m.second;
         auto spectra = calculation->get_spectra_results();
-        std::string out;
 
         for (const auto& s : spectra) {
+            std::string out;
             out += s.first + ", ";
             out += std::accumulate(s.second.begin(), s.second.end(), std::string{}, 
                                 [](const std::string& a, const std::string& b) {
                                     return a + (a.empty() ? "" : ", ") + b;
                                     });
             out += '\n';
+            if (!(s.second[0] == s.second[1])) {
+                outFile << out;
+            } else {
+                outFile2 << out;
+            }
         }
-        outFile << out;
     }
     outFile.close();
+    outFile2.close();
 }
 
 void ActiveSpaceSolver::print_options() {

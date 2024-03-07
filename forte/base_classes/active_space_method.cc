@@ -270,6 +270,11 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
             auto dz = dipole->get(2);
             auto dm = dipole->norm();
             psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dx, dy, dz, dm);
+
+            std::string name0 = std::to_string(root2) + upper_string(irrep_label);
+            // push to results to spectra_results_ vector
+            std::vector<std::string> data {name0, name, std::to_string(dx), std::to_string(dy), std::to_string(dz)};
+            add_spectra_results(data);
         }
         psi::outfile->Printf("\n    %s", dash.c_str());
 
@@ -318,7 +323,10 @@ std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
         // push to results to spectra_results_ vector
         std::vector<std::string> data {name1, name2, std::to_string(energies_[root1]),
                                        std::to_string(energies2[root2]), std::to_string(e_diff),
-                                       std::to_string(e_diff * pc_hartree2ev), std::to_string(out[i])};
+                                       std::to_string(e_diff * pc_hartree2ev), std::to_string(out[i]), 
+                                       std::to_string(trans_dipoles[i]->get(0)), 
+                                       std::to_string(trans_dipoles[i]->get(1)), 
+                                       std::to_string(trans_dipoles[i]->get(2))};
         add_spectra_results(data);
 
         // push to psi4 environment globals

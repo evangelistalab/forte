@@ -299,7 +299,9 @@ def register_active_space_solver_options(options):
 
     options.add_bool("READ_ACTIVE_WFN_GUESS", False, "Read CI wave function of ActiveSpaceSolver from disk")
 
-    options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole moments and oscillator strengths, then generate 'spectra.dat' file containing the final results.")
+    options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole moments and oscillator strengths")
+
+    options.add_bool("SPECTRA", False, "Generate 'spectra.dat' file containing the final results.")
 
     options.add_bool(
         "PRINT_DIFFERENT_GAS_ONLY",
