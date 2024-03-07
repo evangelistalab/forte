@@ -378,6 +378,18 @@ template <size_t N> class BitArray {
         return ~word_t(0);
     }
 
+    /// Find the first bit set to one (starting from the lowest index)
+    /// @return the index of the the last bit, or if all bits are one, returns ~0
+    uint64_t find_last_one(size_t begin = 0, size_t end = nwords_) const {
+        for (; begin + 1 < end; end--) {
+            // find the last word != 0
+            if (words_[end - 1] != word_t(0)) {
+                return ui64_find_highest_one_bit(words_[end - 1]) + (end - 1) * bits_per_word;
+            }
+        }
+        return ui64_find_highest_one_bit(words_[begin]) + begin * bits_per_word;
+    }
+
     /// Clear the first bit set to one (starting from the lowest index)
     void clear_first_one() {
         for (size_t n = 0; n < nwords_; n++) {

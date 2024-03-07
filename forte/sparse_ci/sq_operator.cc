@@ -129,6 +129,7 @@ const Determinant& SQOperator::cre() const { return cre_; }
 const Determinant& SQOperator::ann() const { return ann_; }
 void SQOperator::set_coefficient(double& value) { coefficient_ = value; }
 bool SQOperator::is_number() const { return (cre().count() == 0) and (ann().count() == 0); }
+int SQOperator::count() const { return cre().count() + ann().count(); }
 
 bool SQOperator::operator==(const SQOperator& other) const {
     return (coefficient() == other.coefficient()) and (cre() == other.cre()) and
@@ -257,7 +258,7 @@ void process_alfa_cre(const SQOperator& lhs, const SQOperator& rhs,
         auto new_lhs_cre = lhs.cre();
         new_lhs_cre.set_alfa_bit(i, true);
         // compute the sign of the permutation to the very left
-        auto sign = (lhs.ann().count() + lhs.cre().count()) % 2 == 0 ? 1.0 : -1.0;
+        auto sign = (lhs.count()) % 2 == 0 ? 1.0 : -1.0;
         // correct the sign for the permutation in place
         sign *= lhs.cre().slater_sign_a(i);
         auto coefficient = sign * lhs.coefficient();
@@ -271,27 +272,26 @@ void process_alfa_cre(const SQOperator& lhs, const SQOperator& rhs,
 
 void process_beta_cre(const SQOperator& lhs, const SQOperator& rhs,
                       std::vector<SQOperator>& result) {
-    //              Left             |              Right
-    // a cre | b cre | b ann | a ann | a cre | b cre | b ann | a ann |
-    //           ^        ^                      ^
-    //           3        2                      1
+    //              Left             |         Right
+    // a cre | b cre | b ann | a ann | b cre | b ann | a ann |
+    //           ^        ^               ^
+    //           3        2               1
     //
     // 1. take the first beta creation operator on the right
-    // 2. contract it with the first alpha annihilation operator on the left
+    // 2. contract it with the first beta annihilation operator on the left
     // 3. move the operator to the left
 
-    // find the first right alpha creation operator to move
+    // find the first right beta creation operator to move
     auto i = rhs.cre().find_first_one_beta();
     // remove the operator from the right
-    // if a corresponding left alpha annihilation operator exists, permute the operators and
+    // if a corresponding left beta annihilation operator exists, permute the operators and
     // introduce a contraction
     if (lhs.ann().get_beta_bit(i) == true) {
         auto new_lhs_ann = lhs.ann();
         new_lhs_ann.set_beta_bit(i, false);
         // compute the sign of the transposition
-        // count all the alpha annihilators on the left before the one we are creating
-        auto sign = (lhs.ann().count_alfa() + rhs.cre().count_alfa()) % 2 == 0 ? 1.0 : -1.0;
-        sign *= lhs.ann().slater_sign_b(i);
+        auto sign = lhs.ann().slater_sign_b(i);
+        std::cout << "\nsign b c: " << sign << std::endl;
         auto coefficient = sign * lhs.coefficient();
         SQOperator new_lhs(coefficient, lhs.cre(), new_lhs_ann);
         auto new_rhs_cre = rhs.cre();
@@ -299,15 +299,13 @@ void process_beta_cre(const SQOperator& lhs, const SQOperator& rhs,
         SQOperator new_rhs(rhs.coefficient(), new_rhs_cre, rhs.ann());
         generate_wick_contractions(new_lhs, new_rhs, result);
     }
-    // if the left alpha creation operator does not exist, move the operator in place
+    // if the left beta creation operator does not exist, move the operator in place
     // otherwise we get a collision and the operator is removed
     if (lhs.cre().get_beta_bit(i) == false) {
         auto new_lhs_cre = lhs.cre();
         new_lhs_cre.set_beta_bit(i, true);
         // compute the sign of the permutation to the very left
-        auto sign = (lhs.ann().count() + lhs.cre().count_beta() + rhs.cre().count_alfa()) % 2 == 0
-                        ? 1.0
-                        : -1.0;
+        auto sign = (lhs.count()) % 2 == 0 ? 1.0 : -1.0;
         // correct the sign for the permutation in place
         sign *= lhs.cre().slater_sign_b(i);
         auto coefficient = sign * lhs.coefficient();
@@ -319,29 +317,166 @@ void process_beta_cre(const SQOperator& lhs, const SQOperator& rhs,
     }
 }
 
+void process_beta_ann(const SQOperator& lhs, const SQOperator& rhs,
+                      std::vector<SQOperator>& result) {
+    // Here we assume that the operators are in the canonical form
+    // and that the right alpha and beta creation have been alredy removed
+    //              Left             |     Right
+    // a cre | b cre | b ann | a ann | b ann | a ann |
+    //                    ^               ^
+    //                    2               1
+    //
+    // 1. take the last beta annihilation operator on the right
+    // 2. move the operator to the left
+
+    // find the last right beta annihilation operator to move
+    // (note that annihilation operators are in reversed order)
+    auto i = rhs.ann().find_last_one_beta();
+    // if the left beta annihilation operator does not exist, move the operator in place
+    // otherwise we get a collision and the operator is removed
+    if (lhs.ann().get_beta_bit(i) == false) {
+        auto new_lhs_ann = lhs.ann();
+        new_lhs_ann.set_beta_bit(i, true);
+        // correct the sign for the permutation in place
+        auto sign = lhs.ann().slater_sign_b(i);
+        auto coefficient = sign * lhs.coefficient();
+        SQOperator new_lhs(coefficient, lhs.cre(), new_lhs_ann);
+        auto new_rhs_ann = rhs.ann();
+        new_rhs_ann.set_beta_bit(i, false);
+        SQOperator new_rhs(rhs.coefficient(), rhs.cre(), new_rhs_ann);
+        generate_wick_contractions(new_lhs, new_rhs, result);
+    }
+}
+
+void process_alfa_ann(const SQOperator& lhs, const SQOperator& rhs,
+                      std::vector<SQOperator>& result) {
+    // Here we assume that the operators are in the canonical form
+    // and that the right alpha and beta creation have been alredy removed
+    //              Left             | Right
+    // a cre | b cre | b ann | a ann | a ann |
+    //                            ^       ^
+    //                            2       1
+    //
+    // 1. take the last alpha annihilation operator on the right
+    // 2. move the operator to the left
+
+    // find the last right alpha annihilation operator to move
+    // (note that annihilation operators are in reversed order)
+    auto i = rhs.ann().find_last_one_alfa();
+    // if the left alfa annihilation operator does not exist, move the operator in place
+    // otherwise we get a collision and the operator is removed
+    if (lhs.ann().get_alfa_bit(i) == false) {
+        auto new_lhs_ann = lhs.ann();
+        new_lhs_ann.set_alfa_bit(i, true);
+        // correct the sign for the permutation in place
+        auto sign = lhs.ann().slater_sign_a(i);
+        auto coefficient = sign * lhs.coefficient();
+        SQOperator new_lhs(coefficient, lhs.cre(), new_lhs_ann);
+        auto new_rhs_ann = rhs.ann();
+        new_rhs_ann.set_alfa_bit(i, false);
+        SQOperator new_rhs(rhs.coefficient(), rhs.cre(), new_rhs_ann);
+        generate_wick_contractions(new_lhs, new_rhs, result);
+    }
+}
+
+void process_cre(const SQOperator& lhs, const SQOperator& rhs, std::vector<SQOperator>& result) {
+    //    Left   |   Right
+    // cre | ann | cre | ann |
+    //  ^     ^     ^
+    //  3     2     1
+    //
+    // 1. take the first creation operator on the right
+    // 2. contract it with the corresponding annihilation operator on the left
+    // 3. move the operator to the left creation part
+
+    // find the first right alpha creation operator to move
+    auto i = rhs.cre().find_first_one();
+    // remove the operator from the right
+    // if a corresponding left annihilation operator exists, permute the operators and
+    // introduce a contraction
+    if (lhs.ann().get_bit(i) == true) {
+        auto new_lhs_ann = lhs.ann();
+        new_lhs_ann.set_bit(i, false);
+        const auto coefficient = lhs.ann().slater_sign(i) * lhs.coefficient();
+        SQOperator new_lhs(coefficient, lhs.cre(), new_lhs_ann);
+
+        auto new_rhs_cre = rhs.cre();
+        new_rhs_cre.set_bit(i, false);
+        SQOperator new_rhs(rhs.coefficient(), new_rhs_cre, rhs.ann());
+
+        generate_wick_contractions(new_lhs, new_rhs, result);
+    }
+    // if the left creation operator does not exist, move the operator in place
+    // otherwise we get a collision and the operator is removed
+    if (lhs.cre().get_bit(i) == false) {
+        auto new_lhs_cre = lhs.cre();
+        new_lhs_cre.set_bit(i, true);
+        const auto sign =
+            (lhs.count()) % 2 == 0 ? lhs.cre().slater_sign(i) : -lhs.cre().slater_sign(i);
+        const auto coefficient = sign * lhs.coefficient();
+        SQOperator new_lhs(coefficient, new_lhs_cre, lhs.ann());
+
+        auto new_rhs_cre = rhs.cre();
+        new_rhs_cre.set_bit(i, false);
+        SQOperator new_rhs(rhs.coefficient(), new_rhs_cre, rhs.ann());
+
+        generate_wick_contractions(new_lhs, new_rhs, result);
+    }
+}
+
+void process_ann(const SQOperator& lhs, const SQOperator& rhs, std::vector<SQOperator>& result) {
+    // Here we assume that the operators are in the canonical form
+    // and that the right alpha and beta creation have been alredy removed
+    //    Left   |   Right
+    // cre | ann | ann |
+    //        ^     ^
+    //        2     1
+    //
+    // 1. take the last annihilation operator on the right
+    // 2. move the operator to the left annihilation part
+
+    // find the last right annihilation operator to move
+    auto i = rhs.ann().find_last_one();
+    // if the left annihilation operator does not exist, move the operator in place
+    // otherwise we get a collision and the operator is removed
+    if (lhs.ann().get_bit(i) == false) {
+        auto new_lhs_ann = lhs.ann();
+        new_lhs_ann.set_bit(i, true);
+        const auto coefficient = lhs.ann().slater_sign(i) * lhs.coefficient();
+        SQOperator new_lhs(coefficient, lhs.cre(), new_lhs_ann);
+
+        auto new_rhs_ann = rhs.ann();
+        new_rhs_ann.set_bit(i, false);
+        SQOperator new_rhs(rhs.coefficient(), rhs.cre(), new_rhs_ann);
+
+        generate_wick_contractions(new_lhs, new_rhs, result);
+    }
+}
+
 void generate_wick_contractions(const SQOperator& lhs, const SQOperator& rhs,
                                 std::vector<SQOperator>& result) {
     // if there are no operators on the right then we return
-    if (rhs.cre().count() == 0 and rhs.ann().count() == 0) {
+    if (rhs.count() == 0) {
         result.push_back(lhs);
         return;
     }
     // else we pick the first creation operator on the right and try to contract it with the
     // first annihilation operator on the left
-    if (rhs.cre().count_alfa() > 0) {
-        process_alfa_cre(lhs, rhs, result);
-    } else if (rhs.cre().count_beta() > 0) {
-        process_beta_cre(lhs, rhs, result);
+    // if (rhs.cre().count_alfa() > 0) {
+    //     process_alfa_cre(lhs, rhs, result);
+    // } else if (rhs.cre().count_beta() > 0) {
+    //     process_beta_cre(lhs, rhs, result);
+    // } else if (rhs.ann().count_beta() > 0) {
+    //     process_beta_ann(lhs, rhs, result);
+    // } else if (rhs.ann().count_alfa() > 0) {
+    //     process_alfa_ann(lhs, rhs, result);
+    // }
+    if (rhs.cre().count() > 0) {
+        process_cre(lhs, rhs, result);
+    } else if (rhs.ann().count() > 0) {
+        process_ann(lhs, rhs, result);
     }
 }
-
-/*     a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
- *     alpha creation   beta creation    beta annihilation  alpha annihilation
- *
- * with indices sorted as
- *
- *     (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
- */
 
 std::vector<SQOperator> operator*(const SQOperator& lhs, const SQOperator& rhs) {
     std::vector<SQOperator> result;

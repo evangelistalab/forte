@@ -111,6 +111,8 @@ class SQOperator {
     std::string latex() const;
     /// @return a sq_operator that is thea djoint of this operator
     SQOperator adjoint() const;
+    /// @return the number of creation + annihilation operators in this operator
+    int count() const;
 
   private:
     /// a numerical coefficient associated with this product of sq operators

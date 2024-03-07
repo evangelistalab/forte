@@ -52,10 +52,19 @@ inline uint64_t ui64_bit_count(uint64_t x) { return std::popcount(x); }
 /// @return parity = (-1)^(number of bits set to 1)
 inline double ui64_bit_parity(uint64_t x) { return 1 - 2 * ((std::popcount(x) & 1) == 1); }
 
-/// @brief Bit-scan to find next set bit
+/// @brief Bit-scan to find the first set bit (least significant bit)
 /// @param x the uint64_t integer to test
 /// @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
-inline uint64_t ui64_find_lowest_one_bit(uint64_t x) { return std::countr_zero(x); }
+inline uint64_t ui64_find_lowest_one_bit(uint64_t x) {
+    return (x == 0) ? ~uint64_t(0) : std::countr_zero(x);
+}
+
+/// @brief Bit-scan to find the last set bit (most significant bit)
+/// @param x the uint64_t integer to test
+/// @return the index of the least significant 1-bit of x, or if x is ~0, returns ~0
+inline uint64_t ui64_find_highest_one_bit(uint64_t x) {
+    return (x == ~uint64_t(0)) ? x : 63 - std::countl_zero(x);
+}
 
 /// @brief Bit-scan to find next set bit after position pos
 /// @param x the uint64_t integer to test
