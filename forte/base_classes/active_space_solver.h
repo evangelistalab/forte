@@ -180,6 +180,9 @@ class ActiveSpaceSolver {
     /// Return the map of StateInfo to the wave function file name
     std::map<StateInfo, std::string> state_filename_map() const { return state_filename_map_; }
 
+    /// Save spectra data to spectra.dat file
+    void dump_spectra_results();
+
     /// Save the wave function to disk
     void dump_wave_function();
 

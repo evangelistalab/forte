@@ -739,7 +739,15 @@ Default value: 0.25
 
 **TRANSITION_DIPOLES**
 
-Compute the transition dipole moments and oscillator strengths
+Compute the transition dipole moments and oscillator strengths.
+
+Type: bool
+
+Default value: False
+
+**SPECTRA**
+
+Generate 'spectra.dat' file containing the final results.
 
 Type: bool
 

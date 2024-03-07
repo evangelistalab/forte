@@ -249,6 +249,9 @@ class ActiveSpaceMethod {
                                           const std::vector<std::pair<size_t, size_t>>& root_list,
                                           std::shared_ptr<ActiveSpaceMethod> method2);
 
+    /// Store spectra results of calculation
+    void add_spectra_results(const std::vector<std::string>& data);
+
     /// Dump the wave function to file
     /// @param file name
     virtual void dump_wave_function(const std::string&) {
@@ -336,6 +339,9 @@ class ActiveSpaceMethod {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quiet_mode();
 
+    // Get map of state_i->state_f and the spectroscopic results
+    std::map<std::string, std::vector<std::string>> get_spectra_results();
+
     /// Get the model space
     DeterminantHashVec get_PQ_space();
 
@@ -393,6 +399,9 @@ class ActiveSpaceMethod {
 
     /// The average value of S^2 of all the states. If empty this quantity will not be checked
     std::vector<double> spin2_;
+
+    /// Map of state_i->state_f and the spectroscopic results
+    std::map<std::string, std::vector<std::string>> spectra_results_;
 
     /// Read wave function from disk as initial guess?
     bool read_wfn_guess_ = false;

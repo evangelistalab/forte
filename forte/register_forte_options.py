@@ -301,6 +301,8 @@ def register_active_space_solver_options(options):
 
     options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole moments and oscillator strengths")
 
+    options.add_bool("SPECTRA", False, "Generate 'spectra.dat' file containing the final results.")
+
     options.add_bool(
         "PRINT_DIFFERENT_GAS_ONLY",
         False,
