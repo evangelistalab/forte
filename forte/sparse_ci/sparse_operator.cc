@@ -103,7 +103,7 @@ std::vector<std::string> SparseOperator::str() const {
             continue;
         v.push_back(sqop.str());
         if (is_antihermitian()) {
-            auto sqop_dagger = SQOperator(-sqop.coefficient(), sqop.ann(), sqop.cre());
+            auto sqop_dagger = SQOperator(-sqop.coefficient(), sqop.sqop_str());
             v.push_back(sqop_dagger.str());
         }
     }
@@ -115,7 +115,7 @@ std::string SparseOperator::latex() const {
     for (const SQOperator& sqop : op_list_) {
         v.push_back(sqop.latex());
         if (is_antihermitian()) {
-            auto sqop_dagger = SQOperator(-sqop.coefficient(), sqop.ann(), sqop.cre());
+            auto sqop_dagger = SQOperator(-sqop.coefficient(), sqop.sqop_str());
             v.push_back(sqop_dagger.latex());
         }
     }

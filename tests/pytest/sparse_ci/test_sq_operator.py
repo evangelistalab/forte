@@ -35,12 +35,16 @@ def test_sq_operator():
 
     op1 = forte.make_sq_operator("[0a+ 1a-]")
     op2 = forte.make_sq_operator("[1a+]")
-    op3_test = [
-        forte.make_sq_operator("[0a+]", 1.0),
-        forte.make_sq_operator("[0a+ 1a+ 1a-]", -1.0),
-    ]
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[0a+]", 1.0),
+            forte.make_sq_operator("[0a+ 1a+ 1a-]", -1.0),
+        ]
+    )
     op3 = op1 * op2
-    assert op3 == op3_test
+    print(op3)
+    print(op3_test)
+    assert sorted(op3) == sorted(op3_test)
 
     op1 = forte.make_sq_operator("[0b+ 0b-]")
     op2 = forte.make_sq_operator("[1b+]")
@@ -58,81 +62,97 @@ def test_sq_operator():
     print("[2a+ 1b+ 3b- 3a-] [3a+]")
     op1 = forte.make_sq_operator("[2a+ 1b+ 3b- 3a-]")
     op2 = forte.make_sq_operator("[3a+]")
-    op3 = op1 * op2
-    op3_test = [
-        forte.make_sq_operator("[2a+ 1b+ 3b-]", 1.0),
-        forte.make_sq_operator("[2a+ 3a+ 1b+ 3b- 3a-]", -1.0),
-    ]
+    op3 = sorted(op1 * op2)
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[2a+ 1b+ 3b-]", 1.0),
+            forte.make_sq_operator("[2a+ 3a+ 1b+ 3b- 3a-]", -1.0),
+        ]
+    )
     assert op3 == op3_test
 
     print("[3b- 3a-] [3b+]")
     op1 = forte.make_sq_operator("[3b- 3a-]")
     op2 = forte.make_sq_operator("[3b+]")
-    op3 = op1 * op2
-    op3_test = [
-        forte.make_sq_operator("[3a-]", -1.0),
-        forte.make_sq_operator("[3b+ 3b- 3a-]", 1.0),
-    ]
+    op3 = sorted(op1 * op2)
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[3a-]", -1.0),
+            forte.make_sq_operator("[3b+ 3b- 3a-]", 1.0),
+        ]
+    )
     assert op3 == op3_test
 
     print("[2a+ 1b+ 3b- 3a-] [3b+]")
     op1 = forte.make_sq_operator("[2a+ 1b+ 3b- 3a-]")
     op2 = forte.make_sq_operator("[3b+]")
-    op3 = op1 * op2
-    op3_test = [
-        forte.make_sq_operator("[2a+ 1b+ 3a-]", -1.0),
-        forte.make_sq_operator("[2a+ 1b+ 3b+ 3b- 3a-]", 1.0),
-    ]
+    op3 = sorted(op1 * op2)
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[2a+ 1b+ 3a-]", -1.0),
+            forte.make_sq_operator("[2a+ 1b+ 3b+ 3b- 3a-]", 1.0),
+        ]
+    )
     assert op3 == op3_test
 
     print("[2a+ 1b+ 3b- 3a-] [3a+ 3b+]")
     op1 = forte.make_sq_operator("[2a+ 1b+ 3b- 3a-]")
     op2 = forte.make_sq_operator("[3a+ 3b+]")
-    op3 = op1 * op2
-    op3_test = [
-        forte.make_sq_operator("[2a+ 1b+]", 1.0),
-        forte.make_sq_operator("[2a+ 1b+ 3b+ 3b-]", -1.0),
-        forte.make_sq_operator("[2a+ 3a+ 1b+ 3a-]", +1.0),
-        forte.make_sq_operator("[2a+ 3a+ 1b+ 3b+ 3b- 3a-]", -1.0),
-    ]
+    op3 = sorted(op1 * op2)
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[2a+ 1b+]", 1.0),
+            forte.make_sq_operator("[2a+ 1b+ 3b+ 3b-]", -1.0),
+            forte.make_sq_operator("[2a+ 3a+ 1b+ 3a-]", +1.0),
+            forte.make_sq_operator("[2a+ 3a+ 1b+ 3b+ 3b- 3a-]", -1.0),
+        ]
+    )
     assert op3 == op3_test
 
     print("[2a+ 3a-] [3a+ 2a-]")
     op1 = forte.make_sq_operator("[2a+ 3a-]")
     op2 = forte.make_sq_operator("[3a+ 2a-]")
-    op3 = op1 * op2
-    op3_test = [
-        forte.make_sq_operator("[2a+ 2a-]", 1.0),
-        forte.make_sq_operator("[2a+ 3a+ 3a- 2a-]", -1.0),
-    ]
+    op3 = sorted(op1 * op2)
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[2a+ 2a-]", 1.0),
+            forte.make_sq_operator("[2a+ 3a+ 3a- 2a-]", -1.0),
+        ]
+    )
     assert op3 == op3_test
 
     print("[2b+ 3b-] [3b+ 2b-]")
     op1 = forte.make_sq_operator("[2b+ 3b-]")
     op2 = forte.make_sq_operator("[3b+ 2b-]")
-    op3 = op1 * op2
-    op3_test = [
-        forte.make_sq_operator("[2b+ 2b-]", 1.0),
-        forte.make_sq_operator("[2b+ 3b+ 3b- 2b-]", -1.0),
-    ]
+    op3 = sorted(op1 * op2)
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[2b+ 2b-]", 1.0),
+            forte.make_sq_operator("[2b+ 3b+ 3b- 2b-]", -1.0),
+        ]
+    )
     assert op3 == op3_test
 
     print("[5a+ 2b+ 3b- 7a-] [2a+ 1b+ 1b- 1a-]")
     op1 = forte.make_sq_operator("[5a+ 2b+ 3b- 7a-]")
     op2 = forte.make_sq_operator("[2a+ 1b+ 1b- 1a-]")
-    op3 = op1 * op2
-    op3_test = [
-        forte.make_sq_operator("[2a+ 5a+ 1b+ 2b+ 3b- 1b- 7a- 1a-]", 1.0),
-    ]
+    op3 = sorted(op1 * op2)
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[2a+ 5a+ 1b+ 2b+ 3b- 1b- 7a- 1a-]", 1.0),
+        ]
+    )
     assert op3 == op3_test
 
     print("[5a+ 2b+ 3b- 7a-] [6a+ 1b+ 1b- 1a-]")
     op1 = forte.make_sq_operator("[5a+ 2b+ 3b- 7a-]")
     op2 = forte.make_sq_operator("[6a+ 1b+ 1b- 1a-]")
-    op3 = op1 * op2
-    op3_test = [
-        forte.make_sq_operator("[5a+ 6a+ 1b+ 2b+ 3b- 1b- 7a- 1a-]", -1.0),
-    ]
+    op3 = sorted(op1 * op2)
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[5a+ 6a+ 1b+ 2b+ 3b- 1b- 7a- 1a-]", -1.0),
+        ]
+    )
     assert op3 == op3_test
 
     print("[5a+ 2b+ 3b- 7a-] [6a+ 4b+ 1b- 1a-]")

@@ -285,20 +285,27 @@ void export_Determinant(py::module& m) {
 
     py::class_<SQOperator>(m, "SQOperator",
                            "A class to represent a string of creation/annihilation operators")
-        .def(py::init<double, const Determinant&, const Determinant&>())
+        .def(py::init<double, const SQOperatorString&>())
         .def("coefficient", &SQOperator::coefficient)
-        .def("cre", &SQOperator::cre)
-        .def("ann", &SQOperator::ann)
+        .def("cre", [](const SQOperator& sqop) { return sqop.sqop_str().cre(); })
+        .def("ann", [](const SQOperator& sqop) { return sqop.sqop_str().ann(); })
         .def("str", &SQOperator::str)
         .def("latex", &SQOperator::latex)
         .def("adjoint", &SQOperator::adjoint)
-        .def("is_number", &SQOperator::is_number)
         .def("__eq__", &SQOperator::operator==)
+        .def("__lt__", &SQOperator::operator<)
         .def(
             "__mul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs * rhs; },
             "Multiply two SQOperators")
         .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
         .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
+
+    py::class_<SQOperatorString>(m, "SQOperatorString",
+                                 "A class to represent a string of creation/annihilation operators")
+        .def(py::init<const Determinant&, const Determinant&>())
+        .def("cre", &SQOperatorString::cre)
+        .def("ann", &SQOperatorString::ann)
+        .def("__lt__", &SQOperatorString::operator<);
 
     m.def(
         "make_sq_operator",

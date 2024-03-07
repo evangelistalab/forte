@@ -77,9 +77,44 @@ using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
  * The creation and annihilation operators are stored separately as bit arrays
  * using the Determinant class
  */
+class SQOperatorString {
+  public:
+    /// default constructor
+    SQOperatorString();
+    /// constructor from a pair of Determinant objects
+    SQOperatorString(const Determinant& cre, const Determinant& ann);
+    /// @return a Determinant object that represents the creation operators
+    const Determinant& cre() const;
+    /// @return a Determinant object that represents the annihilation operators
+    const Determinant& ann() const;
+    /// @return true if this operator is a number operator (i.e. it contains no creation or
+    /// annihilation  operators)
+    bool is_number() const;
+    /// @return the number of creation + annihilation operators in this operator
+    int count() const;
+    /// @return compare this operator with another operator
+    bool operator==(const SQOperatorString& other) const;
+    /// @return compare this operator with another operator
+    bool operator<(const SQOperatorString& other) const;
+
+    struct Hash {
+        std::size_t operator()(const SQOperatorString& sqop_str) const {
+            std::uint64_t seed = Determinant::Hash()(sqop_str.cre());
+            std::uint64_t w = Determinant::Hash()(sqop_str.ann());
+            hash_combine_uint64(seed, w);
+            return seed;
+        }
+    };
+
+    /// a Determinant that represents the creation operators
+    Determinant cre_;
+    /// a Determinant that represents the annihilation operators
+    Determinant ann_;
+};
+
 class SQOperator {
   public:
-    SQOperator(double coefficient, const Determinant& cre, const Determinant& ann);
+    SQOperator(double coefficient, const SQOperatorString& sqop_str);
 
     /**
      * @brief Create a second quantized operator
@@ -94,36 +129,42 @@ class SQOperator {
     SQOperator(const op_tuple_t& ops, double coefficient = 0.0, bool allow_reordering = false);
     /// @return the numerical coefficient associated with this operator
     double coefficient() const;
+    /// @return the string of creation and annihilation operators associated with this operator
+    const SQOperatorString& sqop_str() const;
     /// @return a Determinant object that represents the creation operators
     const Determinant& cre() const;
     /// @return a Determinant object that represents the annihilation operators
     const Determinant& ann() const;
-    /// @return true if this operator is a number operator (i.e. it contains no creation or
-    /// annihilation  operators)
-    bool is_number() const;
-    /// @param value set the coefficient associated with this operator
-    void set_coefficient(double& value);
     /// @return compare this operator with another operator
     bool operator==(const SQOperator& other) const;
+    /// @return compare this operator with another operator
+    bool operator<(const SQOperator& other) const;
+    /// @return true if this operator is a number operator (i.e. it contains no creation or
+    bool is_number() const;
+    /// @return the number of creation + annihilation operators in this operator
+    int count() const;
+    /// @param value set the coefficient associated with this operator
+    void set_coefficient(double& value);
     /// @return a string representation of this operator
     std::string str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
-    /// @return a sq_operator that is thea djoint of this operator
+    /// @return a sq_operator that is the adjoint of this operator
     SQOperator adjoint() const;
-    /// @return the number of creation + annihilation operators in this operator
-    int count() const;
 
   private:
     /// a numerical coefficient associated with this product of sq operators
     double coefficient_;
-    /// a Determinant that represents the creation operators
-    Determinant cre_;
-    /// a Determinant that represents the annihilation operators
-    Determinant ann_;
+    /// a string representation of the product of creation and annihilation operators
+    SQOperatorString sqop_str_;
 };
 
+std::vector<std::pair<double, SQOperatorString>> operator*(const SQOperatorString& lhs,
+                                                           const SQOperatorString& rhs);
+
 std::vector<SQOperator> operator*(const SQOperator& lhs, const SQOperator& rhs);
+
+SQOperatorString make_sq_operator_string(const std::string& s, bool allow_reordering = false);
 
 SQOperator make_sq_operator(const std::string& s, double coefficient = 1.0,
                             bool allow_reordering = false);
