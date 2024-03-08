@@ -41,7 +41,7 @@ namespace forte {
 
 void SparseOperator::add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
                               double coefficient, bool allow_reordering) {
-    op_list_.push_back(SQOperator(op_list, coefficient, allow_reordering));
+    op_list_.push_back(make_sq_operator(op_list, coefficient, allow_reordering));
 }
 
 void SparseOperator::add_term(const SQOperator& sqop) { op_list_.push_back(sqop); }

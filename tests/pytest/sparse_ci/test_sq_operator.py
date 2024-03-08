@@ -165,5 +165,35 @@ def test_sq_operator():
     assert op3 == op3_test
 
 
+def test_sq_operator_commutator():
+    print("[[1a+ 0a-],[2a+ 3a-]]")
+    op1 = forte.make_sq_operator("[1a+ 0a-]")
+    op2 = forte.make_sq_operator("[2a+ 3a-]")
+    op3 = op1.commutator(op2)
+    assert len(op3) == 0
+
+    print("[[1a+ 0b-],[0b+ 3a-]]")
+    op1 = forte.make_sq_operator("[1a+ 0b-]")
+    op2 = forte.make_sq_operator("[0b+ 3a-]")
+    op3 = op1.commutator(op2)
+    op3_test = [
+        forte.make_sq_operator("[1a+ 3a-]", 1.0),
+    ]
+    assert op3 == op3_test
+
+    print("[[1a+ 0b-],[0b+ 1a-]]")
+    op1 = forte.make_sq_operator("[1a+ 0b-]")
+    op2 = forte.make_sq_operator("[0b+ 1a-]")
+    op3 = sorted(op1.commutator(op2))
+    op3_test = sorted(
+        [
+            forte.make_sq_operator("[0b+ 0b-]", -1.0),
+            forte.make_sq_operator("[1a+ 1a-]", 1.0),
+        ]
+    )
+    assert op3 == op3_test
+
+
 if __name__ == "__main__":
     test_sq_operator()
+    test_sq_operator_commutator()

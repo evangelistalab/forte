@@ -254,6 +254,7 @@ sparse_ci/sparse_exp.cc
 sparse_ci/sparse_fact_exp.cc
 sparse_ci/sparse_hamiltonian.cc
 sparse_ci/sq_operator.cc
+sparse_ci/sq_operator_string.cc
 sparse_ci/sparse_state_vector.cc
 v2rdm/v2rdm.cc
 )

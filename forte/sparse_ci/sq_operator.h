@@ -31,10 +31,9 @@
 #include <vector>
 
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/sq_operator_string.h"
 
 namespace forte {
-
-class ActiveSpaceIntegrals;
 
 /**
  * A data structure used to represent a second quantized operator string like
@@ -63,55 +62,6 @@ class ActiveSpaceIntegrals;
  */
 using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
 
-/**
- * @brief A class to represent a second quantized operator.
- *
- * This class stores operators in the following canonical form
- *     a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
- *     alpha creation   beta creation    beta annihilation  alpha annihilation
- *
- * with indices sorted as
- *
- *     (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
- *
- * The creation and annihilation operators are stored separately as bit arrays
- * using the Determinant class
- */
-class SQOperatorString {
-  public:
-    /// default constructor
-    SQOperatorString();
-    /// constructor from a pair of Determinant objects
-    SQOperatorString(const Determinant& cre, const Determinant& ann);
-    /// @return a Determinant object that represents the creation operators
-    const Determinant& cre() const;
-    /// @return a Determinant object that represents the annihilation operators
-    const Determinant& ann() const;
-    /// @return true if this operator is a number operator (i.e. it contains no creation or
-    /// annihilation  operators)
-    bool is_number() const;
-    /// @return the number of creation + annihilation operators in this operator
-    int count() const;
-    /// @return compare this operator with another operator
-    bool operator==(const SQOperatorString& other) const;
-    /// @return compare this operator with another operator
-    bool operator<(const SQOperatorString& other) const;
-
-    struct Hash {
-        std::size_t operator()(const SQOperatorString& sqop_str) const {
-            std::uint64_t seed = Determinant::Hash()(sqop_str.cre());
-            std::uint64_t w = Determinant::Hash()(sqop_str.ann());
-            hash_combine_uint64(seed, w);
-            return seed;
-        }
-    };
-
-    /// a Determinant that represents the creation operators
-    Determinant cre_;
-    /// a Determinant that represents the annihilation operators
-    Determinant ann_;
-};
-
 class SQOperator {
   public:
     SQOperator(double coefficient, const SQOperatorString& sqop_str);
@@ -126,7 +76,6 @@ class SQOperator {
      * canonical order adjusting the coefficient to account for the number of permutations. If set
      * to false, this function will only accept operators that are already in the canonical order
      */
-    SQOperator(const op_tuple_t& ops, double coefficient = 0.0, bool allow_reordering = false);
     /// @return the numerical coefficient associated with this operator
     double coefficient() const;
     /// @return the string of creation and annihilation operators associated with this operator
@@ -159,14 +108,18 @@ class SQOperator {
     SQOperatorString sqop_str_;
 };
 
-std::vector<std::pair<double, SQOperatorString>> operator*(const SQOperatorString& lhs,
-                                                           const SQOperatorString& rhs);
-
+/// @return The product of two second quantized operators
 std::vector<SQOperator> operator*(const SQOperator& lhs, const SQOperator& rhs);
 
-SQOperatorString make_sq_operator_string(const std::string& s, bool allow_reordering = false);
+/// @return The product of a second quantized operator and a numerical factor
+std::vector<SQOperator> operator*(const double factor, const SQOperator& sqop);
+
+std::vector<SQOperator> commutator(const SQOperator& lhs, const SQOperator& rhs);
 
 SQOperator make_sq_operator(const std::string& s, double coefficient = 1.0,
+                            bool allow_reordering = false);
+
+SQOperator make_sq_operator(const op_tuple_t& ops, double coefficient = 1.0,
                             bool allow_reordering = false);
 
 } // namespace forte

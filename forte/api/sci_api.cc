@@ -292,11 +292,16 @@ void export_Determinant(py::module& m) {
         .def("str", &SQOperator::str)
         .def("latex", &SQOperator::latex)
         .def("adjoint", &SQOperator::adjoint)
+        .def("commutator",
+             [](const SQOperator& lhs, const SQOperator& rhs) { return commutator(lhs, rhs); })
         .def("__eq__", &SQOperator::operator==)
         .def("__lt__", &SQOperator::operator<)
         .def(
             "__mul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs * rhs; },
             "Multiply two SQOperators")
+        .def(
+            "__mul__", [](const double factor, const SQOperator& sqop) { return factor * sqop; },
+            "Multiply a scalar and a SQOperator")
         .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
         .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
 
@@ -305,6 +310,7 @@ void export_Determinant(py::module& m) {
         .def(py::init<const Determinant&, const Determinant&>())
         .def("cre", &SQOperatorString::cre)
         .def("ann", &SQOperatorString::ann)
+        .def("__eq__", &SQOperatorString::operator==)
         .def("__lt__", &SQOperatorString::operator<);
 
     m.def(
