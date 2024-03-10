@@ -269,16 +269,22 @@ void export_Determinant(py::module& m) {
              py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
                  &SparseOperator::add_term),
              "op_list"_a, "value"_a = 0.0, "allow_reordering"_a = false)
-        .def("add_term", py::overload_cast<const SQOperator&>(&SparseOperator::add_term))
+        .def("add_term",
+             py::overload_cast<const SQOperatorString&, double>(&SparseOperator::add_term))
         .def("add_term_from_str", &SparseOperator::add_term_from_str, "str"_a,
              "coefficient"_a = 0.0, "allow_reordering"_a = false)
+        .def(
+            "__matmul__",
+            [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs * rhs; },
+            "Multiply two SparseOperator")
+        .def("__iadd__", &SparseOperator::operator+=, "Add a SparseOperator to this SparseOperator")
         .def("pop_term", &SparseOperator::pop_term)
         .def("term", &SparseOperator::term)
         .def("size", &SparseOperator::size)
         .def("coefficients", &SparseOperator::coefficients)
         .def("set_coefficients", &SparseOperator::set_coefficients)
         .def("set_coefficient", &SparseOperator::set_coefficient)
-        .def("op_list", &SparseOperator::op_list)
+        // .def("op_list", &SparseOperator::op_list)
         .def("str", &SparseOperator::str)
         .def("latex", &SparseOperator::latex)
         .def("adjoint", &SparseOperator::adjoint);
@@ -297,10 +303,10 @@ void export_Determinant(py::module& m) {
         .def("__eq__", &SQOperator::operator==)
         .def("__lt__", &SQOperator::operator<)
         .def(
-            "__mul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs * rhs; },
+            "__matmul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs * rhs; },
             "Multiply two SQOperators")
         .def(
-            "__mul__", [](const double factor, const SQOperator& sqop) { return factor * sqop; },
+            "__mul__", [](const SQOperator& sqop, const double factor) { return factor * sqop; },
             "Multiply a scalar and a SQOperator")
         .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
         .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });

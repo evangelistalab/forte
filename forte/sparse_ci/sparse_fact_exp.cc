@@ -81,7 +81,7 @@ StateVector SparseFactExp::compute_cached(const SparseOperator& sop, const State
 void SparseFactExp::compute_couplings(const SparseOperator& sop, const StateVector& state0,
                                       bool inverse) {
     local_timer t;
-    const auto& op_list = sop.op_list();
+    // const auto& op_map = sop.op_map();
 
     // initialize a state object
     StateVector state(state0);
@@ -96,7 +96,9 @@ void SparseFactExp::compute_couplings(const SparseOperator& sop, const StateVect
         // zero the new terms
         new_terms.clear();
 
-        const SQOperator& sqop = op_list[n];
+        // const SQOperator& sqop = op_list[n];
+        const auto& sqop = sop.term_operator(n);
+
         const Determinant ucre = sqop.cre() - sqop.ann();
         const Determinant uann = sqop.ann() - sqop.cre();
         const double sign = inverse ? -1.0 : 1.0;
@@ -181,7 +183,7 @@ StateVector SparseFactExp::compute_exp(const SparseOperator& sop, const StateVec
     for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
         size_t n = inverse ? nterms - m - 1 : m;
 
-        double amp = sop.term(n).coefficient();
+        double amp = sop.coefficient(n);
 
         const std::vector<std::tuple<size_t, size_t, double>>& d_couplings =
             inverse ? inverse_couplings_[m] : couplings_[m];
@@ -241,7 +243,6 @@ StateVector SparseFactExp::compute_on_the_fly_antihermitian(const SparseOperator
                                                             const StateVector& state0, bool inverse,
                                                             double screen_thresh) {
     local_timer t;
-    const auto& op_list = sop.op_list();
 
     // initialize a state object
     StateVector state(state0);
@@ -253,10 +254,10 @@ StateVector SparseFactExp::compute_on_the_fly_antihermitian(const SparseOperator
         // zero the new terms
         new_terms.clear();
 
-        const SQOperator& sqop = op_list[n];
+        const auto [sqop, coefficient] = sop.term(n);
         const Determinant ucre = sqop.cre() - sqop.ann();
         const Determinant uann = sqop.ann() - sqop.cre();
-        const double tau = (inverse ? -1.0 : 1.0) * sqop.coefficient();
+        const double tau = (inverse ? -1.0 : 1.0) * coefficient;
         Determinant new_d;
         // loop over all determinants
         for (const auto& det_c : state) {
@@ -287,7 +288,6 @@ StateVector SparseFactExp::compute_on_the_fly_excitation(const SparseOperator& s
                                                          const StateVector& state0, bool inverse,
                                                          double screen_thresh) {
     local_timer t;
-    const auto& op_list = sop.op_list();
 
     // initialize a state object
     StateVector state(state0);
@@ -304,9 +304,9 @@ StateVector SparseFactExp::compute_on_the_fly_excitation(const SparseOperator& s
         // zero the new terms
         new_terms.clear();
 
-        const SQOperator& sqop = op_list[n];
+        const auto [sqop, coefficient] = sop.term(n);
         const Determinant ucre = sqop.cre() - sqop.ann();
-        const double tau = (inverse ? -1.0 : 1.0) * sqop.coefficient();
+        const double tau = (inverse ? -1.0 : 1.0) * coefficient;
         Determinant new_d;
         // loop over all determinants
         for (const auto& det_c : state) {

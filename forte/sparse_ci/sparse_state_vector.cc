@@ -72,15 +72,15 @@ std::string StateVector::str(int n) const {
 
 StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state) {
     StateVector new_state;
-    const auto& op_list = sop.op_list();
     Determinant d;
     for (const auto& det_c : state) {
         const double c = det_c.second;
-        for (const SQOperator& sqop : op_list) {
+        for (size_t n = 0, maxn = sop.size(); n < maxn; n++) {
+            const auto [sqop, coefficient] = sop.term(n);
             d = det_c.first;
             double sign = apply_op(d, sqop.cre(), sqop.ann());
             if (sign != 0.0) {
-                new_state[d] += sqop.coefficient() * sign * c;
+                new_state[d] += coefficient * sign * c;
             }
         }
     }
@@ -99,31 +99,25 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
     }
     std::sort(state_sorted.rbegin(), state_sorted.rend());
 
-    const auto& op_list = sop.op_list();
-
     StateVector new_terms;
 
     Determinant d;
-    double c;
-    double absc;
-
-    // loop over all the operators
-    for (const SQOperator& sqop : op_list) {
-        if (sqop.coefficient() == 0.0)
+    // loop over all the operators (order does not matter)
+    for (const auto& [sqop, coefficient] : sop.op_map()) {
+        if (coefficient == 0.0)
             continue;
         // create a mask for screening determinants according to the creation operators
         // this mask looks only at creation operators that are not preceeded by annihilation
         // operators
         const Determinant ucre = sqop.cre() - sqop.ann();
         // loop over all determinants
-        for (const auto& absc_c_det : state_sorted) {
-            std::tie(absc, c, d) = absc_c_det;
+        for (const auto& [absc, c, det] : state_sorted) {
             // screen according to the product tau * c
-            if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
+            if (std::fabs(coefficient * c) > screen_thresh) {
                 // check if this operator can be applied
-                if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
-                    double value =
-                        apply_op_safe(d, sqop.cre(), sqop.ann()) * sqop.coefficient() * c;
+                if (det.fast_a_and_b_equal_b(sqop.ann()) and det.fast_a_and_b_eq_zero(ucre)) {
+                    d = det;
+                    double value = apply_op_safe(d, sqop.cre(), sqop.ann()) * coefficient * c;
                     new_terms[d] += value;
                 }
             } else {
@@ -134,22 +128,21 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
 
     if (sop.is_antihermitian()) {
         // loop over all the operators
-        for (const SQOperator& sqop : op_list) {
-            if (sqop.coefficient() == 0.0)
+        for (const auto& [sqop, coefficient] : sop.op_map()) {
+            if (coefficient == 0.0)
                 continue;
             // create a mask for screening determinants according to the creation operators
             // this mask looks only at creation operators that are not preceeded by annihilation
             // operators
             const Determinant ucre = sqop.ann() - sqop.cre();
             // loop over all determinants
-            for (const auto& absc_c_det : state_sorted) {
-                std::tie(absc, c, d) = absc_c_det;
+            for (const auto& [absc, c, det] : state_sorted) {
                 // screen according to the product tau * c
-                if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
+                if (std::fabs(coefficient * c) > screen_thresh) {
                     // check if this operator can be applied
-                    if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
-                        double value =
-                            apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.coefficient() * c;
+                    if (det.fast_a_and_b_equal_b(sqop.cre()) and det.fast_a_and_b_eq_zero(ucre)) {
+                        d = det;
+                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * coefficient * c;
                         new_terms[d] -= value;
                     }
                 } else {
@@ -166,21 +159,17 @@ std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
     local_timer t;
     std::vector<double> proj(sop.size(), 0.0);
 
-    const auto& op_list = sop.op_list();
-
     Determinant d;
 
     // loop over all the operators
     for (size_t n = 0, nterms = sop.size(); n < nterms; n++) {
         double value = 0.0;
-        const SQOperator& sqop = op_list[n];
+        const SQOperatorString& sqop = sop.term_operator(n);
 
         // apply the operator op_n
-        for (const auto& det_c : ref) {
-            const double c = det_c.second;
-            d = det_c.first;
-
-            const double sign = apply_op(d, sqop.cre(), sqop.ann());
+        for (const auto& [det, c] : ref) {
+            d = det;
+            const double sign = apply_op(d, sqop);
             if (sign != 0.0) {
                 auto search = state.find(d);
                 if (search != state.end()) {

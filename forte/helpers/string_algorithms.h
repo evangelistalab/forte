@@ -56,6 +56,16 @@ template <typename T> std::string to_string_with_precision(const T val, const in
     return out.str();
 }
 
+inline std::string double_to_string_latex(double value) {
+    if (value == -1.0) {
+        return "-";
+    }
+    if (value == 1.0) {
+        return "+";
+    }
+    return (value > 0.0 ? "+" : "") + std::to_string(value);
+}
+
 /// Find a string in a vector of strings in a case insensitive
 std::vector<std::string>::const_iterator find_case_insensitive(const std::string& str,
                                                                const std::vector<std::string>& vec);

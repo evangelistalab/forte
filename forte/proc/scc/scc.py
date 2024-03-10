@@ -25,7 +25,7 @@ def run_cc(
     on_the_fly=False,
     linked=True,
     maxk=19,
-    diis_start=3
+    diis_start=3,
 ):
     """This function implements various CC methods
 
@@ -65,7 +65,7 @@ def run_cc(
     nirrep = mo_space_info.nirrep()
 
     if cc_type == None:
-        raise ValueError('No type of CC computation was selected. Specify a valid value for the cc_type option.')
+        raise ValueError("No type of CC computation was selected. Specify a valid value for the cc_type option.")
 
     nmo = mo_space_info.size("CORRELATED")
     nmopi = mo_space_info.dimension("CORRELATED").to_tuple()
@@ -84,7 +84,7 @@ def run_cc(
     if max_exc is None:
         max_exc = min(naelpi + nbelpi, nmo - naelpi + nbelpi)
 
-    antihermitian = (cc_type != 'cc') and (cc_type != 'dcc')
+    antihermitian = (cc_type != "cc") and (cc_type != "dcc")
 
     # create the operator pool
     op, denominators = make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, scf_info)
@@ -96,7 +96,7 @@ def run_cc(
         t = [0.0] * op.size()
         print(f"\n The excitation operator pool contains {op.size()} elements")
     else:
-        raise RuntimeError('Selected CC methods are not implemented yet')
+        raise RuntimeError("Selected CC methods are not implemented yet")
         print(f"\n Selecting operators using the {selec_type} scheme")
         t = []
         op_pool = []
@@ -127,8 +127,21 @@ def run_cc(
 
         # solve the cc equations and update the amplitudes
         t, e, e_proj, micro_iter, timing = solve_cc_equations(
-            cc_type, t, op, op, op_pool, denominators, ref, as_ints, compute_threshold, e_convergence, r_convergence,
-            on_the_fly, linked, maxk, diis_start
+            cc_type,
+            t,
+            op,
+            op,
+            op_pool,
+            denominators,
+            ref,
+            as_ints,
+            compute_threshold,
+            e_convergence,
+            r_convergence,
+            on_the_fly,
+            linked,
+            maxk,
+            diis_start,
         )
 
         print(
@@ -350,7 +363,7 @@ def solve_cc_equations(
         residual_norm = 0.0
         for l in range(selected_op.size()):
             t[l] -= residual[op_pool[l]] / denominators[op_pool[l]]
-            residual_norm += residual[op_pool[l]]**2
+            residual_norm += residual[op_pool[l]] ** 2
 
         residual_norm = math.sqrt(residual_norm)
 
@@ -363,7 +376,7 @@ def solve_cc_equations(
             flush=True,
         )
 
-        if (micro_iter > 2 and (abs(delta_e_micro) < e_convergence) and (residual_norm < r_convergence)):
+        if micro_iter > 2 and (abs(delta_e_micro) < e_convergence) and (residual_norm < r_convergence):
             break
 
         old_e_micro = e
@@ -401,15 +414,15 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on
     c0 = 0.0
     if on_the_fly:
         if cc_type == "cc" or cc_type == "ucc":
-            wfn = exp.compute(sop, ref, algorithm='onthefly', screen_thresh=compute_threshold, maxk=maxk)
+            wfn = exp.compute(sop, ref, algorithm="onthefly", screen_thresh=compute_threshold, maxk=maxk)
             Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
             R = exp.compute(
-                sop, Hwfn, scaling_factor=-1.0, algorithm='onthefly', screen_thresh=compute_threshold, maxk=maxk
+                sop, Hwfn, scaling_factor=-1.0, algorithm="onthefly", screen_thresh=compute_threshold, maxk=maxk
             )
         elif cc_type == "dcc" or cc_type == "ducc":
-            wfn = exp.compute(sop, ref, algorithm='onthefly', screen_thresh=compute_threshold)
+            wfn = exp.compute(sop, ref, algorithm="onthefly", screen_thresh=compute_threshold)
             Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, inverse=True, algorithm='onthefly', screen_thresh=compute_threshold)
+            R = exp.compute(sop, Hwfn, inverse=True, algorithm="onthefly", screen_thresh=compute_threshold)
         else:
             raise ValueError("Incorrect value for cc_type")
     else:
@@ -457,13 +470,14 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on
 
 
 class DIIS:
-    """A class that implements DIIS for CC theory 
+    """A class that implements DIIS for CC theory
 
         Parameters
     ----------
     diis_start : int
         Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
     """
+
     def __init__(self, t, diis_start=3):
         self.t_diis = [t]
         self.e_diis = []
@@ -477,7 +491,7 @@ class DIIS:
         t : list
             The updated amplitudes
         t_old : list
-            The previous set of amplitudes            
+            The previous set of amplitudes
         Returns
         -------
         list

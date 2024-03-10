@@ -58,7 +58,10 @@ class ActiveSpaceIntegrals;
  */
 class SparseOperator {
   public:
-    SparseOperator(bool antihermitian = false) { antihermitian_ = antihermitian; }
+    SparseOperator(
+        bool antihermitian = false,
+        const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map = {});
+
     /// add a term to this operator (python-friendly version) of the form
     ///
     ///     coefficient * [... q_2 q_1 q_0]
@@ -77,7 +80,7 @@ class SparseOperator {
     void add_term(const std::vector<std::tuple<bool, bool, int>>& op_list, double coefficient = 0.0,
                   bool allow_reordering = false);
     /// add a term to this operator
-    void add_term(const SQOperator& sqop);
+    void add_term(const SQOperatorString& sqop, double c);
     /// add a term to this operator of the form
     ///
     ///     coefficient * [... q_2 q_1 q_0]
@@ -101,31 +104,51 @@ class SparseOperator {
     /// remove the last term from this operator
     void pop_term();
     /// @return a term
-    const SQOperator& term(size_t n) const;
+    // const std::pair<SQOperatorString, double>& term(size_t n) const;
+    std::pair<SQOperatorString, double> term(size_t n) const;
+    /// @return the operator component of a term
+    const SQOperatorString& term_operator(size_t n) const;
+
     /// @return the number of terms
-    size_t size() const { return op_list_.size(); }
+    size_t size() const;
     /// set the value of the coefficients
     std::vector<double> coefficients() const;
+    /// @return the value of the coefficient
+    double coefficient(size_t n) const;
     /// set the value of the coefficients
-    void set_coefficients(std::vector<double>& values);
+    void set_coefficients(const std::vector<double>& values);
     /// set the value of one coefficient
-    void set_coefficient(size_t n, double value) { op_list_[n].set_coefficient(value); }
+    void set_coefficient(size_t n, double value);
     /// is this operator antihermitian?
     bool is_antihermitian() const { return antihermitian_; }
     /// @return the list of operators
-    const std::vector<SQOperator>& op_list() const { return op_list_; }
+    const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map() const {
+        return op_map_;
+    }
     /// @return a string representation of this operator
     std::vector<std::string> str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
     /// @return the sparse operator that is the adjoint of this operator
     SparseOperator adjoint() const;
+    /// @brief Add another operator to this operator
+    SparseOperator& operator+=(const SparseOperator& other);
 
   private:
     /// is this an antihermitian operator?
     bool antihermitian_ = false;
     /// a vector of SQOperator objects
-    std::vector<SQOperator> op_list_;
+    std::vector<SQOperatorString> op_insertion_list_;
+    std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> op_map_;
 };
+
+/// @return The product of two second quantized operators
+SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs);
+
+// /// @return The product of a second quantized operator and a numerical factor
+// std::vector<SparseOperator> operator*(const double factor, const SQOperator& sqop);
+
+// /// @return The commutator of two second quantized operators
+// std::vector<SparseOperator> commutator(const SQOperator& lhs, const SQOperator& rhs);
 
 } // namespace forte

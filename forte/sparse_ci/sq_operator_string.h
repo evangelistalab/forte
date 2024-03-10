@@ -31,7 +31,6 @@
 #include <vector>
 
 #include "sparse_ci/determinant.h"
-#include "sparse_ci/sq_operator_string.h"
 
 namespace forte {
 
@@ -62,65 +61,79 @@ namespace forte {
  */
 using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
 
-class SQOperator {
+/**
+ * @brief A class to represent a second quantized operator.
+ *
+ * This class stores operators in the following canonical form
+ *     a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
+ *     alpha creation   beta creation    beta annihilation  alpha annihilation
+ *
+ * with indices sorted as
+ *
+ *     (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
+ *
+ * The creation and annihilation operators are stored separately as bit arrays
+ * using the Determinant class
+ */
+class SQOperatorString {
   public:
-    SQOperator(double coefficient, const SQOperatorString& sqop_str);
-
-    /**
-     * @brief Create a second quantized operator
-     *
-     * @param ops a vector of triplets (is_creation, is_alpha, orb) that specify
-     *        the second quantized operators
-     * @param coefficient of the coefficient associated with this operator
-     * @param allow_reordering if true this function will reorder all terms and put them in
-     * canonical order adjusting the coefficient to account for the number of permutations. If set
-     * to false, this function will only accept operators that are already in the canonical order
-     */
-    /// @return the numerical coefficient associated with this operator
-    double coefficient() const;
-    /// @return the string of creation and annihilation operators associated with this operator
-    const SQOperatorString& sqop_str() const;
+    /// default constructor
+    SQOperatorString();
+    /// constructor from a pair of Determinant objects
+    SQOperatorString(const Determinant& cre, const Determinant& ann);
     /// @return a Determinant object that represents the creation operators
     const Determinant& cre() const;
     /// @return a Determinant object that represents the annihilation operators
     const Determinant& ann() const;
-    /// @return compare this operator with another operator
-    bool operator==(const SQOperator& other) const;
-    /// @return compare this operator with another operator
-    bool operator<(const SQOperator& other) const;
     /// @return true if this operator is a number operator (i.e. it contains no creation or
+    /// annihilation  operators)
     bool is_number() const;
     /// @return the number of creation + annihilation operators in this operator
     int count() const;
-    /// @param value set the coefficient associated with this operator
-    void set_coefficient(double& value);
+    /// @return compare this operator with another operator
+    bool operator==(const SQOperatorString& other) const;
+    /// @return compare this operator with another operator
+    bool operator<(const SQOperatorString& other) const;
     /// @return a string representation of this operator
     std::string str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
     /// @return a sq_operator that is the adjoint of this operator
-    SQOperator adjoint() const;
+    SQOperatorString adjoint() const;
 
-  private:
-    /// a numerical coefficient associated with this product of sq operators
-    double coefficient_;
-    /// a string representation of the product of creation and annihilation operators
-    SQOperatorString sqop_str_;
+    struct Hash {
+        std::size_t operator()(const SQOperatorString& sqop_str) const {
+            std::uint64_t seed = Determinant::Hash()(sqop_str.cre());
+            std::uint64_t w = Determinant::Hash()(sqop_str.ann());
+            hash_combine_uint64(seed, w);
+            return seed;
+        }
+    };
+
+    /// a Determinant that represents the creation operators
+    Determinant cre_;
+    /// a Determinant that represents the annihilation operators
+    Determinant ann_;
 };
 
-/// @return The product of two second quantized operators
-std::vector<SQOperator> operator*(const SQOperator& lhs, const SQOperator& rhs);
+std::vector<std::pair<double, SQOperatorString>> operator*(const SQOperatorString& lhs,
+                                                           const SQOperatorString& rhs);
 
-/// @return The product of a second quantized operator and a numerical factor
-std::vector<SQOperator> operator*(const double factor, const SQOperator& sqop);
+/// @return a SQOperatorString from a string and the corresponding phase (+1 or -1) due to
+/// reordering, if reordering is allowed
+std::pair<double, SQOperatorString> make_sq_operator_string(const std::string& s,
+                                                            bool allow_reordering);
 
-/// @return The commutator of two second quantized operators
-std::vector<SQOperator> commutator(const SQOperator& lhs, const SQOperator& rhs);
+std::pair<double, SQOperatorString> make_sq_operator_string_from_list(const op_tuple_t& ops,
 
-SQOperator make_sq_operator(const std::string& s, double coefficient = 1.0,
-                            bool allow_reordering = false);
+                                                                      bool allow_reordering);
 
-SQOperator make_sq_operator(const op_tuple_t& ops, double coefficient = 1.0,
-                            bool allow_reordering = false);
+template <size_t N> double apply_op(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
+    return apply_op(d, sqop.cre(), sqop.ann());
+}
+
+template <size_t N> double apply_op_safe(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
+    return apply_op_safe(d, sqop.cre(), sqop.ann());
+}
 
 } // namespace forte

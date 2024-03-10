@@ -68,21 +68,11 @@ std::string SQOperator::str() const {
     return to_string_with_precision(coefficient(), 12) + " * " + sqop_str().str();
 }
 
-std::string sq_double_to_string(double value) {
-    if (value == -1.0) {
-        return "-";
-    }
-    if (value == 1.0) {
-        return "+";
-    }
-    return (value > 0.0 ? "+" : "") + std::to_string(value);
-}
-
 std::string SQOperator::latex() const {
-    return sq_double_to_string(coefficient()) + "\\;" + sqop_str().latex();
+    return double_to_string_latex(coefficient()) + "\\;" + sqop_str().latex();
 }
 
-SQOperator SQOperator::adjoint() const { return SQOperator(coefficient_, sqop_str_); }
+SQOperator SQOperator::adjoint() const { return SQOperator(coefficient_, sqop_str_.adjoint()); }
 
 SQOperator make_sq_operator(const std::string& s, double coefficient, bool allow_reordering) {
     auto [phase, sqop_str] = make_sq_operator_string(s, allow_reordering);
@@ -118,9 +108,23 @@ std::vector<SQOperator> operator*(const SQOperator& lhs, const SQOperator& rhs) 
 }
 
 std::vector<SQOperator> commutator(const SQOperator& lhs, const SQOperator& rhs) {
-    auto lr_prod = lhs.sqop_str() * rhs.sqop_str();
-    auto rl_prod = rhs.sqop_str() * lhs.sqop_str();
-    auto coefficient = lhs.coefficient() * rhs.coefficient();
+    const auto common_l_cre_r_cre = lhs.sqop_str().cre().fast_a_and_b_count(rhs.sqop_str().cre());
+    const auto common_l_ann_r_ann = lhs.sqop_str().ann().fast_a_and_b_count(rhs.sqop_str().ann());
+    const auto common_l_ann_r_cre = lhs.sqop_str().ann().fast_a_and_b_count(rhs.sqop_str().cre());
+    const auto nl = lhs.sqop_str().count();
+    const auto nr = rhs.sqop_str().count();
+    if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0) {
+        if (nl * nr % 2 == 0) {
+            return {};
+        }
+        const auto prod = lhs.sqop_str() * rhs.sqop_str();
+        const auto coefficient = 2.0 * prod[0].first * lhs.coefficient() * rhs.coefficient();
+        return {SQOperator(coefficient, prod[0].second)};
+    }
+
+    const auto lr_prod = lhs.sqop_str() * rhs.sqop_str();
+    const auto rl_prod = rhs.sqop_str() * lhs.sqop_str();
+    const auto coefficient = lhs.coefficient() * rhs.coefficient();
 
     // aggregate the terms
     std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
