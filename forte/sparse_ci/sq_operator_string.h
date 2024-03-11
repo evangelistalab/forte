@@ -119,6 +119,9 @@ class SQOperatorString {
 std::vector<std::pair<double, SQOperatorString>> operator*(const SQOperatorString& lhs,
                                                            const SQOperatorString& rhs);
 
+std::vector<std::pair<double, SQOperatorString>> commutator(const SQOperatorString& lhs,
+                                                            const SQOperatorString& rhs);
+
 /// @return a SQOperatorString from a string and the corresponding phase (+1 or -1) due to
 /// reordering, if reordering is allowed
 std::pair<double, SQOperatorString> make_sq_operator_string(const std::string& s,

@@ -322,6 +322,48 @@ std::vector<std::pair<double, SQOperatorString>> operator*(const SQOperatorStrin
     return result;
 }
 
+std::vector<std::pair<double, SQOperatorString>> commutator(const SQOperatorString& lhs,
+                                                            const SQOperatorString& rhs) {
+    const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
+    const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
+    const auto common_l_ann_r_cre = lhs.ann().fast_a_and_b_count(rhs.cre());
+    const auto nl = lhs.count();
+    const auto nr = rhs.count();
+    // if the operators do not have any common creation or annihilation operators
+    if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0) {
+        // if the number of operators is even, the commutator is zero
+        if (nl * nr % 2 == 0) {
+            return {};
+        }
+        // if the number of operators is odd, the commutator is the product of the operators
+        // and we get a factor of two because both terms in the commutator are the same
+        const auto prod = lhs * rhs;
+        const auto coefficient = 2.0 * prod[0].first;
+        return {{coefficient, prod[0].second}};
+    }
+
+    const auto lr_prod = lhs * rhs;
+    const auto rl_prod = rhs * lhs;
+
+    // aggregate the terms
+    std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
+    for (const auto& [c, sqop_str] : lr_prod) {
+        result_map[sqop_str] += c;
+    }
+    for (const auto& [c, sqop_str] : rl_prod) {
+        result_map[sqop_str] -= c;
+    }
+
+    std::vector<std::pair<double, SQOperatorString>> result;
+    // result.reserve(result_map.size());
+    for (const auto& [sqop_str, c] : result_map) {
+        if (c != 0.0) {
+            result.emplace_back(c, sqop_str);
+        }
+    }
+    return result;
+}
+
 } // namespace forte
 
 // void process_alfa_cre(const SQOperator& lhs, const SQOperator& rhs,

@@ -31,7 +31,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "sparse_ci/sq_operator.h"
+#include "sparse_ci/sq_operator_string.h"
 
 namespace forte {
 
@@ -133,6 +133,10 @@ class SparseOperator {
     SparseOperator adjoint() const;
     /// @brief Add another operator to this operator
     SparseOperator& operator+=(const SparseOperator& other);
+    /// @brief Add another operator to this operator
+    SparseOperator& operator*=(double factor);
+    /// @brief Compare this operator with another operator
+    bool operator==(const SparseOperator& other) const;
 
   private:
     /// is this an antihermitian operator?
@@ -148,7 +152,7 @@ SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs);
 // /// @return The product of a second quantized operator and a numerical factor
 // std::vector<SparseOperator> operator*(const double factor, const SQOperator& sqop);
 
-// /// @return The commutator of two second quantized operators
-// std::vector<SparseOperator> commutator(const SQOperator& lhs, const SQOperator& rhs);
+/// @return The commutator of two second quantized operators
+SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs);
 
 } // namespace forte

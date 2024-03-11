@@ -366,12 +366,12 @@ def test_sparse_operator():
 
     ### Adjoint tests
     # test adjoint of SqOperator is idempotent
-    sqop = forte.make_sq_operator("[0a+ 1a+ 0b+ 2b- 2a-]", 1.0)
+    sqop = forte.make_sparse_operator("[0a+ 1a+ 0b+ 2b- 2a-]", 1.0)
     sqopd = sqop.adjoint()
     sqopdd = sqopd.adjoint()
     assert sqop.str() == sqopdd.str()
     # test adjoint of SqOperator
-    ref = forte.make_sq_operator("[2a+ 2b+ 0b- 1a- 0a-]", 1.0)
+    ref = forte.make_sparse_operator("[2a+ 2b+ 0b- 1a- 0a-]", 1.0)
     assert sqopd.str() == ref.str()
     # test adjoint of SparseOperator is idempotent
     sop = forte.SparseOperator()

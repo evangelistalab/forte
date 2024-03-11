@@ -198,6 +198,31 @@ SparseOperator& SparseOperator::operator+=(const SparseOperator& other) {
     return *this;
 }
 
+SparseOperator& SparseOperator::operator*=(double factor) {
+    for (auto& [sqop_str, c] : op_map_) {
+        c *= factor;
+    }
+    return *this;
+}
+
+bool SparseOperator::operator==(const SparseOperator& other) const {
+    if (antihermitian_ != other.antihermitian_) {
+        return false;
+    }
+    if (op_insertion_list_.size() != other.op_insertion_list_.size()) {
+        return false;
+    }
+    for (const auto& sqop_str : op_insertion_list_) {
+        if (other.op_map_.find(sqop_str) == other.op_map_.end()) {
+            return false;
+        }
+        if (std::fabs(op_map_.at(sqop_str) - other.op_map_.at(sqop_str)) > 1.0e-14) {
+            return false;
+        }
+    }
+    return true;
+}
+
 SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs) {
     // this implementation only works for non-antihermitian operators
     if (lhs.is_antihermitian() or rhs.is_antihermitian()) {
@@ -211,7 +236,31 @@ SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs) {
         for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
             const auto prod = sqop_lhs * sqop_rhs;
             for (const auto& [c, sqop_str] : prod) {
-                result_map[sqop_str] += c * c_lhs * c_rhs;
+                if (c * c_lhs * c_rhs != 0.0) {
+                    result_map[sqop_str] += c * c_lhs * c_rhs;
+                }
+            }
+        }
+    }
+    return SparseOperator(lhs.is_antihermitian(), result_map);
+}
+
+SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) {
+    // this implementation only works for non-antihermitian operators
+    if (lhs.is_antihermitian() or rhs.is_antihermitian()) {
+        throw std::runtime_error("SparseOperator: operator* is not implemented for antihermitian "
+                                 "operators");
+    }
+
+    std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
+
+    for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
+        for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
+            const auto prod = commutator(sqop_lhs, sqop_rhs);
+            for (const auto& [c, sqop_str] : prod) {
+                if (c * c_lhs * c_rhs != 0.0) {
+                    result_map[sqop_str] += c * c_lhs * c_rhs;
+                }
             }
         }
     }

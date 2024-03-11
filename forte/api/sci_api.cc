@@ -277,7 +277,14 @@ void export_Determinant(py::module& m) {
             "__matmul__",
             [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs * rhs; },
             "Multiply two SparseOperator")
+        .def(
+            "commutator",
+            [](const SparseOperator& lhs, const SparseOperator& rhs) {
+                return commutator(lhs, rhs);
+            },
+            "Compute the commutator of two SparseOperators")
         .def("__iadd__", &SparseOperator::operator+=, "Add a SparseOperator to this SparseOperator")
+        .def("__imul__", &SparseOperator::operator*=, "Multiply this SparseOperator by a scalar")
         .def("pop_term", &SparseOperator::pop_term)
         .def("term", &SparseOperator::term)
         .def("size", &SparseOperator::size)
@@ -287,29 +294,30 @@ void export_Determinant(py::module& m) {
         // .def("op_list", &SparseOperator::op_list)
         .def("str", &SparseOperator::str)
         .def("latex", &SparseOperator::latex)
-        .def("adjoint", &SparseOperator::adjoint);
+        .def("adjoint", &SparseOperator::adjoint)
+        .def("__eq__", &SparseOperator::operator==);
 
-    py::class_<SQOperator>(m, "SQOperator",
-                           "A class to represent a string of creation/annihilation operators")
-        .def(py::init<double, const SQOperatorString&>())
-        .def("coefficient", &SQOperator::coefficient)
-        .def("cre", [](const SQOperator& sqop) { return sqop.sqop_str().cre(); })
-        .def("ann", [](const SQOperator& sqop) { return sqop.sqop_str().ann(); })
-        .def("str", &SQOperator::str)
-        .def("latex", &SQOperator::latex)
-        .def("adjoint", &SQOperator::adjoint)
-        .def("commutator",
-             [](const SQOperator& lhs, const SQOperator& rhs) { return commutator(lhs, rhs); })
-        .def("__eq__", &SQOperator::operator==)
-        .def("__lt__", &SQOperator::operator<)
-        .def(
-            "__matmul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs * rhs; },
-            "Multiply two SQOperators")
-        .def(
-            "__mul__", [](const SQOperator& sqop, const double factor) { return factor * sqop; },
-            "Multiply a scalar and a SQOperator")
-        .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
-        .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
+    // py::class_<SQOperator>(m, "SQOperator",
+    //                        "A class to represent a string of creation/annihilation operators")
+    //     .def(py::init<double, const SQOperatorString&>())
+    //     .def("coefficient", &SQOperator::coefficient)
+    //     .def("cre", [](const SQOperator& sqop) { return sqop.sqop_str().cre(); })
+    //     .def("ann", [](const SQOperator& sqop) { return sqop.sqop_str().ann(); })
+    //     .def("str", &SQOperator::str)
+    //     .def("latex", &SQOperator::latex)
+    //     .def("adjoint", &SQOperator::adjoint)
+    //     .def("commutator",
+    //          [](const SQOperator& lhs, const SQOperator& rhs) { return commutator(lhs, rhs); })
+    //     .def("__eq__", &SQOperator::operator==)
+    //     .def("__lt__", &SQOperator::operator<)
+    //     .def(
+    //         "__matmul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs * rhs; },
+    //         "Multiply two SQOperators")
+    //     .def(
+    //         "__mul__", [](const SQOperator& sqop, const double factor) { return factor * sqop; },
+    //         "Multiply a scalar and a SQOperator")
+    //     .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
+    //     .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
 
     py::class_<SQOperatorString>(m, "SQOperatorString",
                                  "A class to represent a string of creation/annihilation operators")
@@ -320,11 +328,24 @@ void export_Determinant(py::module& m) {
         .def("__lt__", &SQOperatorString::operator<);
 
     m.def(
-        "make_sq_operator",
+        "make_sparse_operator",
         [](const std::string& s, double coefficient, bool allow_reordering) {
-            return make_sq_operator(s, coefficient, allow_reordering);
+            SparseOperator sop;
+            sop.add_term_from_str(s, coefficient, allow_reordering);
+            return sop;
         },
         "s"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false);
+
+    m.def(
+        "make_sparse_operator",
+        [](const std::vector<std::pair<std::string, double>>& list, bool allow_reordering) {
+            SparseOperator sop;
+            for (const auto& [s, coefficient] : list) {
+                sop.add_term_from_str(s, coefficient, allow_reordering);
+            }
+            return sop;
+        },
+        "list"_a, "allow_reordering"_a = false);
 
     py::class_<StateVector, std::shared_ptr<StateVector>>(
         m, "StateVector", "A class to represent a vector of determinants")
