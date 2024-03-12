@@ -94,7 +94,7 @@
 
 //     // aggregate the terms
 //     std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
-//     for (const auto& [c, sqop_str] : prod) {
+//     for (const auto& [sqop_str, c] : prod) {
 //         result_map[sqop_str] += coefficient * c;
 //     }
 
@@ -128,10 +128,10 @@
 
 //     // aggregate the terms
 //     std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
-//     for (const auto& [c, sqop_str] : lr_prod) {
+//     for (const auto& [sqop_str, c] : lr_prod) {
 //         result_map[sqop_str] += coefficient * c;
 //     }
-//     for (const auto& [c, sqop_str] : rl_prod) {
+//     for (const auto& [sqop_str, c] : rl_prod) {
 //         result_map[sqop_str] -= coefficient * c;
 //     }
 

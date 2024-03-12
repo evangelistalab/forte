@@ -37,7 +37,7 @@
 namespace forte {
 
 void generate_wick_contractions(const SQOperatorString& lhs, const SQOperatorString& rhs,
-                                std::vector<std::pair<double, SQOperatorString>>& result,
+                                std::vector<std::pair<SQOperatorString, double>>& result,
                                 const double sign);
 
 std::tuple<bool, bool, int> flip_spin(const std::tuple<bool, bool, int>& t) {
@@ -149,7 +149,7 @@ std::vector<std::tuple<bool, bool, int>> parse_sq_operator(const std::string& s)
     return ops_vec_tuple;
 }
 
-std::pair<double, SQOperatorString> make_sq_operator_string_from_list(const op_tuple_t& ops,
+std::pair<SQOperatorString, double> make_sq_operator_string_from_list(const op_tuple_t& ops,
                                                                       bool allow_reordering) {
     double coefficient = 1.0;
     const std::vector<std::tuple<bool, bool, int>>& creation_alpha_orb_vec = ops;
@@ -216,17 +216,17 @@ std::pair<double, SQOperatorString> make_sq_operator_string_from_list(const op_t
         throw std::runtime_error("Trying to initialize a SQOperator object with a product of\n"
                                  "operators that contains repeated operators.\n");
     }
-    return std::make_pair(coefficient, SQOperatorString(cre, ann));
+    return std::make_pair(SQOperatorString(cre, ann), coefficient);
 }
 
-std::pair<double, SQOperatorString> make_sq_operator_string(const std::string& s,
+std::pair<SQOperatorString, double> make_sq_operator_string(const std::string& s,
                                                             bool allow_reordering) {
     auto ops_vec_tuple = parse_sq_operator(s);
     return make_sq_operator_string_from_list(ops_vec_tuple, allow_reordering);
 }
 
 void process_cre(const SQOperatorString& lhs, const SQOperatorString& rhs,
-                 std::vector<std::pair<double, SQOperatorString>>& result, const double sign) {
+                 std::vector<std::pair<SQOperatorString, double>>& result, const double sign) {
     //    Left   |   Right
     // cre | ann | cre | ann |
     //  ^     ^     ^
@@ -271,7 +271,7 @@ void process_cre(const SQOperatorString& lhs, const SQOperatorString& rhs,
 }
 
 void process_ann(const SQOperatorString& lhs, const SQOperatorString& rhs,
-                 std::vector<std::pair<double, SQOperatorString>>& result, const double sign) {
+                 std::vector<std::pair<SQOperatorString, double>>& result, const double sign) {
     // Here we assume that the operators are in the canonical form
     // and that the right alpha and beta creation have been alredy removed
     //    Left   |   Right
@@ -301,11 +301,11 @@ void process_ann(const SQOperatorString& lhs, const SQOperatorString& rhs,
 }
 
 void generate_wick_contractions(const SQOperatorString& lhs, const SQOperatorString& rhs,
-                                std::vector<std::pair<double, SQOperatorString>>& result,
+                                std::vector<std::pair<SQOperatorString, double>>& result,
                                 double sign) {
     // if there are no operators on the right then we return
     if (rhs.count() == 0) {
-        result.push_back({sign, lhs});
+        result.push_back({lhs, sign});
         return;
     }
     if (rhs.cre().count() > 0) {
@@ -315,14 +315,14 @@ void generate_wick_contractions(const SQOperatorString& lhs, const SQOperatorStr
     }
 }
 
-std::vector<std::pair<double, SQOperatorString>> operator*(const SQOperatorString& lhs,
+std::vector<std::pair<SQOperatorString, double>> operator*(const SQOperatorString& lhs,
                                                            const SQOperatorString& rhs) {
-    std::vector<std::pair<double, SQOperatorString>> result;
+    std::vector<std::pair<SQOperatorString, double>> result;
     generate_wick_contractions(lhs, rhs, result, 1.0);
     return result;
 }
 
-std::vector<std::pair<double, SQOperatorString>> commutator(const SQOperatorString& lhs,
+std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorString& lhs,
                                                             const SQOperatorString& rhs) {
     const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
     const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
@@ -338,8 +338,7 @@ std::vector<std::pair<double, SQOperatorString>> commutator(const SQOperatorStri
         // if the number of operators is odd, the commutator is the product of the operators
         // and we get a factor of two because both terms in the commutator are the same
         const auto prod = lhs * rhs;
-        const auto coefficient = 2.0 * prod[0].first;
-        return {{coefficient, prod[0].second}};
+        return {{prod[0].first, 2.0 * prod[0].second}};
     }
 
     const auto lr_prod = lhs * rhs;
@@ -347,18 +346,18 @@ std::vector<std::pair<double, SQOperatorString>> commutator(const SQOperatorStri
 
     // aggregate the terms
     std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
-    for (const auto& [c, sqop_str] : lr_prod) {
+    for (const auto& [sqop_str, c] : lr_prod) {
         result_map[sqop_str] += c;
     }
-    for (const auto& [c, sqop_str] : rl_prod) {
+    for (const auto& [sqop_str, c] : rl_prod) {
         result_map[sqop_str] -= c;
     }
 
-    std::vector<std::pair<double, SQOperatorString>> result;
+    std::vector<std::pair<SQOperatorString, double>> result;
     // result.reserve(result_map.size());
     for (const auto& [sqop_str, c] : result_map) {
         if (c != 0.0) {
-            result.emplace_back(c, sqop_str);
+            result.emplace_back(sqop_str, c);
         }
     }
     return result;

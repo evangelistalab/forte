@@ -51,7 +51,7 @@ SparseOperator::SparseOperator(
 
 void SparseOperator::add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
                               double coefficient, bool allow_reordering) {
-    auto [phase, sqop_str] = make_sq_operator_string_from_list(op_list, allow_reordering);
+    auto [sqop_str, phase] = make_sq_operator_string_from_list(op_list, allow_reordering);
     add_term(sqop_str, phase * coefficient);
 }
 
@@ -96,7 +96,7 @@ void SparseOperator::add_term_from_str(std::string str, double coefficient, bool
     //
     if (std::regex_match(str, m, re)) {
         if (m.ready()) {
-            auto [phase, sqop_str] = make_sq_operator_string(m[1], allow_reordering);
+            auto [sqop_str, phase] = make_sq_operator_string(m[1], allow_reordering);
             if (is_antihermitian()) {
                 if (sqop_str.is_number()) {
                     throw std::runtime_error("SparseOperator: the operator " + str +
@@ -191,9 +191,24 @@ SparseOperator SparseOperator::adjoint() const {
     return adjoint_operator;
 }
 
+SparseOperator SparseOperator::operator*(double scalar) const {
+    SparseOperator result;
+    for (const auto& [sqop_str, c] : op_map()) {
+        result.add_term(sqop_str, scalar * c);
+    }
+    return result;
+}
+
 SparseOperator& SparseOperator::operator+=(const SparseOperator& other) {
     for (const auto& [sqop_str, c] : other.op_map()) {
         this->add_term(sqop_str, c);
+    }
+    return *this;
+}
+
+SparseOperator& SparseOperator::operator-=(const SparseOperator& other) {
+    for (const auto& [sqop_str, c] : other.op_map()) {
+        this->add_term(sqop_str, -c);
     }
     return *this;
 }
@@ -202,6 +217,11 @@ SparseOperator& SparseOperator::operator*=(double factor) {
     for (auto& [sqop_str, c] : op_map_) {
         c *= factor;
     }
+    return *this;
+}
+
+SparseOperator& SparseOperator::operator/=(double factor) {
+    *this *= 1.0 / factor;
     return *this;
 }
 
@@ -223,6 +243,32 @@ bool SparseOperator::operator==(const SparseOperator& other) const {
     return true;
 }
 
+SparseOperator operator+(SparseOperator lhs, const SparseOperator& rhs) {
+    lhs += rhs;
+    return lhs;
+}
+
+SparseOperator operator-(SparseOperator lhs, const SparseOperator& rhs) {
+    lhs -= rhs;
+    return lhs;
+}
+
+SparseOperator operator*(double scalar, const SparseOperator& op) {
+    return op * scalar; // Reuse the member operator* for scalar multiplication
+}
+
+SparseOperator operator/(double scalar, const SparseOperator& op) {
+    return op * (1.0 / scalar); // Reuse the member operator* for scalar multiplication
+}
+
+double norm(const SparseOperator& op) {
+    double norm = 0.0;
+    for (const auto& [_, c] : op.op_map()) {
+        norm += c * c;
+    }
+    return std::sqrt(norm);
+}
+
 SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs) {
     // this implementation only works for non-antihermitian operators
     if (lhs.is_antihermitian() or rhs.is_antihermitian()) {
@@ -235,7 +281,7 @@ SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs) {
     for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
         for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
             const auto prod = sqop_lhs * sqop_rhs;
-            for (const auto& [c, sqop_str] : prod) {
+            for (const auto& [sqop_str, c] : prod) {
                 if (c * c_lhs * c_rhs != 0.0) {
                     result_map[sqop_str] += c * c_lhs * c_rhs;
                 }
@@ -257,7 +303,9 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) 
     for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
         for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
             const auto prod = commutator(sqop_lhs, sqop_rhs);
-            for (const auto& [c, sqop_str] : prod) {
+            if (prod.size() == 0)
+                continue;
+            for (const auto& [sqop_str, c] : prod) {
                 if (c * c_lhs * c_rhs != 0.0) {
                     result_map[sqop_str] += c * c_lhs * c_rhs;
                 }
@@ -265,6 +313,24 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) 
         }
     }
     return SparseOperator(lhs.is_antihermitian(), result_map);
+}
+
+void similarity_transform(SparseOperator& op, const SQOperatorString& sqop, double theta) {
+    SparseOperator A;
+    A.add_term(sqop, 1.0);
+    A.add_term(sqop.adjoint(), -1.0);
+    auto cOA = commutator(op, A);
+    auto cOAA = commutator(cOA, A);
+    auto N = -1.0 * A * A;
+    auto aNO = N * op + op * N;
+    auto aNcOA = N * cOA + cOA * N;
+    auto NON = N * op * N;
+
+    op += std::sin(theta) * (2 - std::cos(theta)) * cOA;
+    op += 0.5 * std::pow(std::sin(theta), 2.0) * cOAA;
+    op += -2.0 * std::pow(std::sin(theta / 2), 4.0) * aNO;
+    op += std::sin(theta) * (std::cos(theta) - 1) * aNcOA;
+    op += 4.0 * std::pow(std::sin(theta / 2), 4.0) * NON;
 }
 
 } // namespace forte

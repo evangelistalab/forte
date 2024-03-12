@@ -116,18 +116,18 @@ class SQOperatorString {
     Determinant ann_;
 };
 
-std::vector<std::pair<double, SQOperatorString>> operator*(const SQOperatorString& lhs,
+std::vector<std::pair<SQOperatorString, double>> operator*(const SQOperatorString& lhs,
                                                            const SQOperatorString& rhs);
 
-std::vector<std::pair<double, SQOperatorString>> commutator(const SQOperatorString& lhs,
+std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorString& lhs,
                                                             const SQOperatorString& rhs);
 
 /// @return a SQOperatorString from a string and the corresponding phase (+1 or -1) due to
 /// reordering, if reordering is allowed
-std::pair<double, SQOperatorString> make_sq_operator_string(const std::string& s,
+std::pair<SQOperatorString, double> make_sq_operator_string(const std::string& s,
                                                             bool allow_reordering);
 
-std::pair<double, SQOperatorString> make_sq_operator_string_from_list(const op_tuple_t& ops,
+std::pair<SQOperatorString, double> make_sq_operator_string_from_list(const op_tuple_t& ops,
 
                                                                       bool allow_reordering);
 

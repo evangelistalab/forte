@@ -131,10 +131,16 @@ class SparseOperator {
     std::string latex() const;
     /// @return the sparse operator that is the adjoint of this operator
     SparseOperator adjoint() const;
+    /// @return the a scaled version of this operator
+    SparseOperator operator*(double scalar) const;
     /// @brief Add another operator to this operator
     SparseOperator& operator+=(const SparseOperator& other);
     /// @brief Add another operator to this operator
+    SparseOperator& operator-=(const SparseOperator& other);
+    /// @brief Add another operator to this operator
     SparseOperator& operator*=(double factor);
+    /// @brief Add another operator to this operator
+    SparseOperator& operator/=(double factor);
     /// @brief Compare this operator with another operator
     bool operator==(const SparseOperator& other) const;
 
@@ -146,13 +152,23 @@ class SparseOperator {
     std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> op_map_;
 };
 
+double norm(const SparseOperator& op);
+
+/// @return The product of two second quantized operators
+SparseOperator operator+(SparseOperator lhs, const SparseOperator& rhs);
+
+/// @return The product of two second quantized operators
+SparseOperator operator-(SparseOperator lhs, const SparseOperator& rhs);
+
 /// @return The product of two second quantized operators
 SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs);
 
-// /// @return The product of a second quantized operator and a numerical factor
-// std::vector<SparseOperator> operator*(const double factor, const SQOperator& sqop);
+/// @return The product of a second quantized operator and a numerical factor
+SparseOperator operator*(double scalar, const SparseOperator& op);
 
 /// @return The commutator of two second quantized operators
 SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs);
+
+void similarity_transform(SparseOperator& op, const SQOperatorString& A, double theta);
 
 } // namespace forte
