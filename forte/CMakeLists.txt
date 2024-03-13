@@ -317,6 +317,32 @@ install(
     PATTERN "*.py"
     PATTERN "__pycache__" EXCLUDE
     PATTERN "*pyc" EXCLUDE
+    # installs harmless empty dirs for c++ unless excluded below
+    PATTERN "api" EXCLUDE
+    PATTERN "attic" EXCLUDE
+    PATTERN "base_classes" EXCLUDE
+    PATTERN "casscf" EXCLUDE
+    PATTERN "ci_ex_states" EXCLUDE
+    PATTERN "ci_rdm" EXCLUDE
+    PATTERN "cmake" EXCLUDE
+    PATTERN "dmrg" EXCLUDE
+    PATTERN "external" EXCLUDE
+    PATTERN "fci" EXCLUDE
+    PATTERN "genci" EXCLUDE
+    PATTERN "gradient_tpdm" EXCLUDE
+    PATTERN "helpers" EXCLUDE
+    PATTERN "integrals" EXCLUDE
+    PATTERN "lib" EXCLUDE
+    PATTERN "mrdsrg-helper" EXCLUDE
+    PATTERN "mrdsrg-so" EXCLUDE
+    PATTERN "mrdsrg-spin-adapted" EXCLUDE
+    PATTERN "mrdsrg-spin-integrated" EXCLUDE
+    PATTERN "orbital-helpers" EXCLUDE
+    PATTERN "pci" EXCLUDE
+    PATTERN "post_process" EXCLUDE
+    PATTERN "sci" EXCLUDE
+    PATTERN "sparse_ci" EXCLUDE
+    PATTERN "v2rdm" EXCLUDE
   )
 
 install(
