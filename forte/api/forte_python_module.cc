@@ -173,6 +173,7 @@ PYBIND11_MODULE(_forte, m) {
     // This line is how pb11 knows what pieces of ambit have already been exposed,
     // and can be sent Py-side by Forte.
     py::module::import("ambit");
+    py::module::import("psi4");
 
     m.doc() = "pybind11 Forte module"; // module docstring
 
