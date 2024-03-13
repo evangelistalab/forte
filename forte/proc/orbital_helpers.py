@@ -251,7 +251,7 @@ def ortho_orbs_psi4(wfn1, wfn2, semi=True):
 
 
 def projectout(C, CP, S):
-    """
+    r"""
     Project out CP contributions from C (Schmidt orthogonalization):
     Cp = (1 - P) C = C - CP (CP^T S C),
     where P = \sum_{q} |q><q| with q being the new MO of geometry 2.

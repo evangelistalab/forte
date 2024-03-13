@@ -15,7 +15,11 @@ endif()
 
 if (ENABLE_ForteTests)
   project (forte_tests)
-  include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/forte/catch2/single_include)
+  include_directories(
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}/catch2/forte/catch2/single_include
+    ${CMAKE_SOURCE_DIR}
+    )
   add_executable(forte_tests
     tests/code/catch_amalgamated.cpp
     tests/code/test_determinant.cc
