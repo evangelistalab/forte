@@ -637,8 +637,6 @@ def register_dsrg_options(options):
         "LDSRG2_P3 and QDSRG2_P3 not implemented)"
     )
 
-    options.add_bool("DO_EOM", False)
-
     options.add_str(
         "SOURCE", "STANDARD", ["STANDARD", "LABS", "DYSON", "AMP", "EMP2", "LAMP", "LEMP2"],
         "Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 "

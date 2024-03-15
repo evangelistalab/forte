@@ -33,6 +33,9 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+
 #include "integrals/active_space_integrals.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/state_info.h"
@@ -50,6 +53,7 @@ MRDSRG_SO::MRDSRG_SO(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_in
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(std::make_shared<BlockedTensorFactory>()), tensor_type_(ambit::CoreTensor) {
+    BlockedTensor::reset_mo_spaces();
     print_method_banner(
         {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     startup();
@@ -639,9 +643,72 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n\n\n    MR-DSRG(2) correlation energy      = %25.15f", Etotal - Eref);
     outfile->Printf("\n  * MR-DSRG(2) total energy            = %25.15f\n", Etotal);
 
+    compute_eom();
+
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     return Etotal;
+}
+
+double MRDSRG_SO::compute_eom() {
+    // IP singles
+    size_t ncore = nc_ / 2;
+    size_t nactv = na_ / 2;
+
+    auto EOM_Hbar = BTF_->build(tensor_type_, "EOM-Hbar", {"hh"});
+    std::shared_ptr<psi::Matrix> EOM_Hbar_mat_ =
+        std::make_shared<psi::Matrix>("EOM-Hbar-Matrx", nh_, nh_);
+
+    EOM_Hbar["nm"] = -Hbar1["nm"];
+    EOM_Hbar["mv"] = -Hbar1["mu"] * Gamma1["uv"];
+    EOM_Hbar["mv"] += 0.5 * Hbar2["mwux"] * Lambda2["uxwv"];
+    EOM_Hbar["vm"] = EOM_Hbar["mv"];
+    EOM_Hbar["wx"] = -Hbar1["vu"] * Gamma1["ux"] * Gamma1["wv"];
+    EOM_Hbar["wx"] += Hbar1["vu"] * Lambda2["uwvx"];
+    EOM_Hbar["wx"] += 0.5 * Hbar2["yzuv"] * Gamma1["wy"] * Lambda2["uvzx"];
+    EOM_Hbar["wx"] -= 0.5 * Hbar2["yzuv"] * Gamma1["vx"] * Lambda2["uwyz"];
+    EOM_Hbar["wx"] += 0.25 * Hbar2["yzuv"] * Lambda3["uvwyzx"];
+
+    EOM_Hbar.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                         double& value) { EOM_Hbar_mat_->set(i[0], i[1], value); });
+
+    /// Overlap matrix
+    std::shared_ptr<psi::Matrix> S = std::make_shared<psi::Matrix>("EOM-S-sub", nh_, nh_);
+    std::shared_ptr<psi::Matrix> Sevec = std::make_shared<psi::Matrix>("S-evec", nh_, nh_);
+    std::shared_ptr<psi::Vector> Seval = std::make_shared<psi::Vector>("S-eval", nh_);
+    std::shared_ptr<psi::Matrix> Eevec = std::make_shared<psi::Matrix>("E-evec", nh_, nh_);
+    std::shared_ptr<psi::Vector> Eeval = std::make_shared<psi::Vector>("E-eval", nh_);
+    S->identity();
+    S->print();
+    (rdms_->g1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        S->set(i[0] + ncore, i[1] + ncore, value);
+    });
+    (rdms_->g1b()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        std::cout << value << std::endl;
+        S->set(i[0] + 2 * ncore + nactv, i[1] + 2 * ncore + nactv, value);
+    });
+    S->print();
+    S->diagonalize(Sevec, Seval);
+
+    for (size_t i = 0; i < Sevec->coldim(); i++) {
+        for (size_t j = 0; j < Sevec->rowdim(); j++) {
+            double value = Sevec->get(j, i) / std::sqrt(Seval->get(i));
+            Sevec->set(j, i, value);
+        }
+    }
+
+    EOM_Hbar_mat_ = psi::linalg::triplet(Sevec, EOM_Hbar_mat_, Sevec, true, false, false);
+
+    EOM_Hbar_mat_->diagonalize(Eevec, Eeval);
+
+    outfile->Printf("\n    "
+                    "----------------------------------------------------------"
+                    "----------------------------------------");
+    outfile->Printf("\n\n\n   EOM-DSRG          ");
+
+    Eeval->print();
+
+    return Eeval->get(0);
 }
 
 void MRDSRG_SO::compute_hbar() {

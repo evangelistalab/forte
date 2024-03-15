@@ -279,6 +279,8 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
 
+    double compute_eom();
+
     /// DSRG transformed Hamiltonian (not implemented)
     std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
