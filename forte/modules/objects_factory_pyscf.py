@@ -38,25 +38,59 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
     nmo = pyscf_obj.mol.nao_nr()
     
     irrep_size = {"c1": 1, "ci": 2, "c2": 2, "cs": 2, "d2": 4, "c2v": 4, "c2h": 4, "d2h": 8}
+    orbsym = pyscf_obj.mo_coeff.orbsym
     
-    if pyscf_obj.mol.symmetry is not None:
-        nirrep = None
-        nmopi_list = None
+    if pyscf_obj.mol.symmetry is None:
+        nirrep = 1
+        nmopi_list = [nmo]
     else:
-        if pyscf_obj.mol.symmetry.lower() is bool:
-            raise Exception(f"Forte: the value of pyscf_obj.mol.symmetry ({pyscf_obj.mol.symmetry}) is a boolean")
-        nirrep = irrep_size[pyscf_obj.mol.symmetry.lower()]
-        if isinstance(pyscf_obj, pyscf.scf.hf.SCF): 
-            nmopi_list = np.zeros(nirrep)
-            for i in pyscf_obj.orbsymm:
-                symm = pyscf_obj.orbsymm[i]
-                nmopi_list[symm] += 1
-    
-    nmopi_offset = [sum(nmopi_list[0:h]) for h in range(nirrep)]
-    
-    nmopi = 
-    
+        if pyscf_obj.mol.groupname.lower() in ['coov', 'dooh', 'so3']:
+            raise Exception(f"Forte: the value ({pyscf_obj.mol.groupname.lower()}) is not supported. Use an Abelian group.")
+        nirrep = irrep_size[pyscf_obj.mol.groupname.lower()]
+        nmopi_list = np.zeros(nirrep, dtype = int)
+        for i in orbsym:
+            symm = orbsym[i]
+            nmopi_list[symm] += 1
         
+    # nmopi_offset = [sum(nmopi_list[0:h]) for h in range(nirrep)]
+    
+    nmopi = psi4.core.Dimension(list(nmopi_list))
+    
+    # Create the MOSpaceInfo object
+    data.mo_space_info = forte.make_mo_space_info(nmopi, pyscf_obj.mol.groupname.lower(), options)
+    
+    # manufacture a SCFInfo object from the PySCF object.
+    nel = pyscf_obj.mol.nelectron
+    ms2 = pyscf_obj.mol.spin
+    na = (nel + ms2) // 2
+    nb = nel - na
+    
+    if pyscf_obj.mol.groupname.lower() == "c1":
+        doccpi = psi4.core.Dimension([nb])
+        soccpi = psi4.core.Dimension([ms2])
+    else:
+        mo_occ = pyscf_obj.mo_occ
+        doccpi = np.zeros(nirrep, dtype = int)
+        soccpi = np.zeros(nirrep, dtype = int)
+        for i in mo_occ:
+            symm = orbsym[i]
+            if mo_occ[i] == 2:
+                doccpi[symm] += 1
+            elif mo_occ[i] == 1:
+                soccpi[symm] += 1
+        
+        doccpi = psi4.core.Dimension(list(doccpi))
+        soccpi = psi4.core.Dimension(list(soccpi))  
+    
+    epsilon_a = psi4.core.Vector.from_array(list(pyscf_obj.mo_energy))
+    epsilon_b = psi4.core.Vector.from_array(list(pyscf_obj.mo_energy))
+    
+    data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
+    
+    state_info = _make_state_info_from_pyscf(pyscf_obj, options)
+    data.state_weights_map = {state_info: [1.0]}
+    data.psi_wfn = None
+    
     return data, pyscf_obj
 
 class ObjectsFromPySCF(Module):
