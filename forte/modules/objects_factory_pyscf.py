@@ -29,7 +29,22 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData):
     return data
 
 def _make_state_info_from_pyscf(pyscf_obj, options):
-    pass
+    nel = pyscf_obj.mol.nelectron
+    multiplicity = pyscf_obj.mol.spin + 1
+    
+    twice_ms = (multiplicity + 1) % 2
+    
+    na = (nel + twice_ms) // 2
+    nb = nel - na
+
+    if isinstance(pyscf_obj, pyscf.mcscf.casci.CASCI):
+        irrep = pyscf_obj.fcisolver.wfnsym
+    elif not options.is_none("ROOT_SYM"):
+        irrep = options.get_int("ROOT_SYM")
+    else:
+        psi4.core.print_out(f"\n  Should run CASCI or CASSCF in Forte! Set Root_sym to 0 by default.")
+        irrep = 0
+    
     return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
 
 def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
