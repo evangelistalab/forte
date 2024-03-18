@@ -15,12 +15,34 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData):
     """
     Make custom integrals from the PySCF wavefunction object
     """
+    int_ao = pyscf_obj.mol.intor("int2e", aosym="s1")
+    mo_coeff = pyscf_obj.mo_coeff
+    eri = pyscf.ao2mo.incore.full(int_ao, mo_coeff)
+    nmo = pyscf_obj.mol.nao_nr()
+    
+    eri_aa = np.zeros((nmo, nmo, nmo, nmo))
+    eri_ab = np.zeros((nmo, nmo, nmo, nmo))
+    eri_bb = np.zeros((nmo, nmo, nmo, nmo))
+    # <ij||kl> = (ik|jl) - (il|jk)
+    eri_aa += np.einsum("ikjl->ijkl", eri)
+    eri_aa -= np.einsum("iljk->ijkl", eri)
+    # <ij|kl> = (ik|jl)
+    eri_ab = np.einsum("ikjl->ijkl", eri)
+    # <ij||kl> = (ik|jl) - (il|jk)
+    eri_bb += np.einsum("ikjl->ijkl", eri)
+    eri_bb -= np.einsum("iljk->ijkl", eri)
+    
+    enuc = pyscf_obj.mol.energy_nuc()
+    hcore_ao = pyscf_obj.get_hcore()
+    
+    hcore = np.einsum("uv,up,vq->pq", hcore_ao, mo_coeff.conj(), mo_coeff, optimize="optimal")
+    
     ints = forte.make_custom_ints(
         data.options,
         data.mo_space_info,
-        fcidump["enuc"],
-        fcidump["hcore"].flatten(),
-        fcidump["hcore"].flatten(),
+        enuc,
+        hcore.flatten(),
+        hcore.flatten(),
         eri_aa.flatten(),
         eri_ab.flatten(),
         eri_bb.flatten(),
