@@ -321,8 +321,8 @@ class SADSRG : public DynamicCorrelationSolver {
     /// DSRG transformed 3-body Hamiltonian (active only in DSRG-PT, but full in MRDSRG)
     ambit::BlockedTensor Hbar3_;
 
-    /// EOM-LDSRG2 Hamiltonian:
-    std::shared_ptr<psi::Matrix> EOM_Hbar_mat_;
+    // /// EOM-LDSRG2 Hamiltonian:
+    // std::shared_ptr<psi::Matrix> EOM_Hbar_mat_;
 
     /// Scalar of the DSRG transformed multipoles
     std::vector<double> Mbar0_;

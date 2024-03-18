@@ -684,6 +684,8 @@ def register_dsrg_options(options):
     options.add_bool(
         "DSRG_DUMP_RELAXED_ENERGIES", False, "Dump the energies after each reference relaxation step to JSON."
     )
+   
+    options.add_bool("DO_EOM", False, "EOM-LDSRG(2).")
 
     options.add_int("TAYLOR_THRESHOLD", 3, "DSRG Taylor expansion threshold for small denominator")
 

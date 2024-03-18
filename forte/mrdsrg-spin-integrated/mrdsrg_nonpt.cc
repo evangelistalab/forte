@@ -836,6 +836,112 @@ double MRDSRG::compute_energy_ldsrg2() {
     return Ecorr;
 }
 
+void MRDSRG::compute_eom() {
+    // IP singles
+    size_t ncore = core_mos_.size();
+    size_t nactv = actv_mos_.size();
+    size_t nh = ncore + nactv;
+
+    ambit::BlockedTensor EOM_Hbar = BTF_->build(tensor_type_, "EOM-Hbar", spin_cases({"hh"}));
+    ambit::BlockedTensor S = BTF_->build(tensor_type_, "S", spin_cases({"hh"}));
+    S["uv"] = Gamma1_["uv"];
+    S["UV"] = Gamma1_["UV"];
+    (S.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = (i[0] == i[1] ? 1.0 : 0.0);
+    });
+    (S.block("CC")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = (i[0] == i[1] ? 1.0 : 0.0);
+    });
+    std::shared_ptr<psi::Matrix> EOM_Hbar_mat_ =
+        std::make_shared<psi::Matrix>("EOM-Hbar-Matrx", 2 * nh, 2 * nh); // Spin orbital.
+
+    // The first term
+    EOM_Hbar["nm"] = -Hbar1_["nm"];
+    EOM_Hbar["NM"] = -Hbar1_["NM"];
+    // The second term
+    EOM_Hbar["mv"] = -Hbar1_["mu"] * Gamma1_["uv"];
+    EOM_Hbar["mv"] += 0.5 * Hbar2_["mwux"] * Lambda2_["uxwv"];
+    EOM_Hbar["mv"] -= Hbar2_["mWuX"] * Lambda2_["uXvW"];
+    EOM_Hbar["vm"] = EOM_Hbar["mv"];
+
+    EOM_Hbar["MV"] = -Hbar1_["MU"] * Gamma1_["UV"];
+    EOM_Hbar["MV"] += 0.5 * Hbar2_["MWUX"] * Lambda2_["UXWV"];
+    EOM_Hbar["MV"] -= Hbar2_["wMxU"] * Lambda2_["xUwV"];
+    EOM_Hbar["VM"] = EOM_Hbar["MV"];
+
+    // The third term
+    EOM_Hbar["wx"] = Hbar1_["vu"] * Gamma1_["ux"] * Gamma1_["wv"];
+    EOM_Hbar["wx"] += Hbar1_["vu"] * Lambda2_["uwvx"];
+    EOM_Hbar["wx"] += Hbar1_["VU"] * Lambda2_["wUxV"];
+    EOM_Hbar["wx"] += 0.5 * Hbar2_["yzuv"] * Gamma1_["wy"] * Lambda2_["uvzx"];
+    EOM_Hbar["wx"] -= Hbar2_["yZvU"] * Gamma1_["wy"] * Lambda2_["vUxZ"];
+    EOM_Hbar["wx"] -= 0.5 * Hbar2_["yzuv"] * Gamma1_["vx"] * Lambda2_["uwyz"];
+    EOM_Hbar["wx"] -= Hbar2_["zYvU"] * Gamma1_["vx"] * Lambda2_["wUzY"];
+    // EOM_Hbar["wx"] += 0.25 * Hbar2_.block("aaaa")("yzuv") * L3aaa_("uvwyzx");
+    // auto temp2 = 0.25 * Hbar2_.block("AAAA")("YZUV") * L3abb_("wUVxYZ");
+    // auto temp3 = 0.5 * Hbar2_.block("aAaA")("yZuV") * L3aab_("uwVyxZ");
+    // // EOM_Hbar["wx"] = temp1;
+    // // EOM_Hbar["wx"] += temp2;
+    // // EOM_Hbar["wx"] += temp3;
+
+    EOM_Hbar["WX"] = Hbar1_["VU"] * Gamma1_["UX"] * Gamma1_["WV"];
+    EOM_Hbar["WX"] += Hbar1_["VU"] * Lambda2_["UWVX"];
+    EOM_Hbar["WX"] += Hbar1_["vu"] * Lambda2_["uWvX"];
+    EOM_Hbar["WX"] += 0.5 * Hbar2_["YZUV"] * Gamma1_["WY"] * Lambda2_["UVZX"];
+    EOM_Hbar["WX"] -= Hbar2_["zYuV"] * Gamma1_["WY"] * Lambda2_["uVzX"];
+    EOM_Hbar["WX"] -= 0.5 * Hbar2_["YZUV"] * Gamma1_["VX"] * Lambda2_["UWYZ"];
+    EOM_Hbar["WX"] -= Hbar2_["yZuV"] * Gamma1_["VX"] * Lambda2_["uWyZ"];
+    // EOM_Hbar["WX"] += 0.25 * Hbar2_["YZUV"] * L3bbb_("UVWYZX");
+    // EOM_Hbar["WX"] += 0.25 * Hbar2_["yzuv"] * L3aab_("uvWyzX");
+    // EOM_Hbar["WX"] += 0.5 * Hbar2_["zYvU"] * L3abb_("vUWzYX");
+
+    EOM_Hbar.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                EOM_Hbar_mat_->set(i[0], i[1], value);
+            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                EOM_Hbar_mat_->set(i[0] + nh, i[1] + nh, value);
+            }
+        });
+
+    /// Overlap matrix
+    std::shared_ptr<psi::Matrix> S_mat = std::make_shared<psi::Matrix>("EOM-S-sub", 2 * nh, 2 * nh);
+    std::shared_ptr<psi::Matrix> Sevec = std::make_shared<psi::Matrix>("S-evec", 2 * nh, 2 * nh);
+    std::shared_ptr<psi::Vector> Seval = std::make_shared<psi::Vector>("S-eval", 2 * nh);
+    // S_mat->identity();
+    // Construct S
+
+    S.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+            S_mat->set(i[0], i[1], value);
+        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+            S_mat->set(i[0] + nh, i[1] + nh, value);
+        }
+    });
+
+    S_mat->print();
+    S_mat->diagonalize(Sevec, Seval);
+
+    // We need a threshold.
+    for (size_t i = 0; i < Sevec->coldim(); i++) {
+        for (size_t j = 0; j < Sevec->rowdim(); j++) {
+            double value = Sevec->get(j, i) / std::sqrt(Seval->get(i));
+            Sevec->set(j, i, value);
+        }
+    }
+
+    EOM_Hbar_mat_ = psi::linalg::triplet(Sevec, EOM_Hbar_mat_, Sevec, true, false, false);
+
+    EOM_Hbar_mat_->diagonalize(Sevec, Seval);
+
+    outfile->Printf("\n    "
+                    "----------------------------------------------------------"
+                    "----------------------------------------");
+    outfile->Printf("\n\n\n   EOM-DSRG          ");
+
+    Seval->print();
+}
+
 void MRDSRG::compute_hbar_qc() {
     std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 

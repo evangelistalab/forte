@@ -348,6 +348,9 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
 
+    /// Compute EOM-LDSRG(2)
+    void compute_eom();
+
     /// Zeroth-order Hamiltonian
     ambit::BlockedTensor H0th_;
     /// DSRG-MRPT2 zeroth-order Hamiltonian
