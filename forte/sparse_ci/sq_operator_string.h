@@ -139,4 +139,9 @@ template <size_t N> double apply_op_safe(DeterminantImpl<N>& d, const SQOperator
     return apply_op_safe(d, sqop.cre(), sqop.ann());
 }
 
+bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs);
+
+std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperatorString& lhs,
+                                                                 const SQOperatorString& rhs);
+
 } // namespace forte

@@ -139,8 +139,8 @@ double SparseOperator::coefficient(size_t n) const { return op_map_.at(op_insert
 
 void SparseOperator::pop_term() {
     if (!op_insertion_list_.empty()) {
-        const auto& last_sqop_str = op_insertion_list_.back();
-        op_map_.erase(last_sqop_str);
+        const auto& last_op_str = op_insertion_list_.back();
+        op_map_.erase(last_op_str);
         op_insertion_list_.pop_back();
     }
 }
@@ -317,20 +317,268 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) 
 
 void similarity_transform(SparseOperator& op, const SQOperatorString& sqop, double theta) {
     SparseOperator A;
+    SparseOperator T;
+    SparseOperator Td;
     A.add_term(sqop, 1.0);
     A.add_term(sqop.adjoint(), -1.0);
+    T.add_term(sqop, 1.0);
+    Td.add_term(sqop.adjoint(), 1.0);
     auto cOA = commutator(op, A);
+    auto cOT = commutator(op, T);
+    auto cOTd = commutator(op, Td);
     auto cOAA = commutator(cOA, A);
     auto N = -1.0 * A * A;
     auto aNO = N * op + op * N;
     auto aNcOA = N * cOA + cOA * N;
     auto NON = N * op * N;
+    auto AOA = A * op * A;
+    auto NOA_AON = N * op * A - A * op * N;
+    auto TOT = T * op * T;
+    auto TdOTd = Td * op * Td;
 
-    op += std::sin(theta) * (2 - std::cos(theta)) * cOA;
-    op += 0.5 * std::pow(std::sin(theta), 2.0) * cOAA;
-    op += -2.0 * std::pow(std::sin(theta / 2), 4.0) * aNO;
-    op += std::sin(theta) * (std::cos(theta) - 1) * aNcOA;
-    op += 4.0 * std::pow(std::sin(theta / 2), 4.0) * NON;
+    auto Td_cOT_T = Td * cOT * T;
+    auto Td_cOT_Td = Td * cOT * Td;
+    auto T_cOT_Td = T * cOT * Td;
+
+    auto T_cOTd_T = T * cOTd * T;
+    auto T_cOTd_Td = T * cOTd * Td;
+    auto Td_cOTd_T = Td * cOTd * T;
+
+    op += std::sin(theta) * cOA;
+    op += -std::pow(std::sin(theta), 2.0) * AOA;
+    op += (std::cos(theta) - 1) * aNO;
+    op += std::pow(std::cos(theta) - 1, 2.0) * NON;
+
+    // op += std::sin(theta) * (std::cos(theta) - 1) * NOA_AON;
+    op += -std::sin(theta) * (std::cos(theta) - 1) * Td_cOT_T;
+    op += -std::sin(theta) * (std::cos(theta) - 1) * T_cOT_Td;
+    op += +std::sin(theta) * (std::cos(theta) - 1) * Td_cOT_Td;
+    op += -std::sin(theta) * (std::cos(theta) - 1) * T_cOTd_T;
+    op += +std::sin(theta) * (std::cos(theta) - 1) * Td_cOTd_T;
+    op += +std::sin(theta) * (std::cos(theta) - 1) * T_cOTd_Td;
+}
+
+void similarity_transform(SparseOperator& O, const SparseOperator& T, bool reverse) {
+    if (T.is_antihermitian()) {
+        for (size_t m = 0, mmax = T.size(); m < mmax; ++m) {
+            auto n = reverse ? mmax - m - 1 : m;
+            similarity_transform_antihermitian(O, T.term_operator(n), T.coefficient(n));
+        }
+    } else {
+        for (size_t m = 0, mmax = T.size(); m < mmax; ++m) {
+            auto n = reverse ? mmax - m - 1 : m;
+            similarity_transform_nilpotent(O, T.term_operator(n), T.coefficient(n));
+        }
+    }
+}
+
+void similarity_transform_antihermitian(SparseOperator& O, const SQOperatorString& T_op,
+                                        double theta) {
+    // sanity check to make sure all indices are distinct
+    if (not T_op.cre().fast_a_and_b_eq_zero(T_op.ann())) {
+        throw std::runtime_error("similarity_transform_fast: the operator " + T_op.str() +
+                                 " contains repeated indices.\nThis is not allowed for the "
+                                 "similarity transformation.");
+    }
+    // Td = T^dagger
+    auto Td_op = T_op.adjoint();
+    // TTd = T T^dagger (gives a number operator if there are no repeated indices)
+    auto TTd = T_op * Td_op;
+    // TdT = T^dagger T (gives a number operator if there are no repeated indices)
+    auto TdT = Td_op * T_op;
+
+    SparseOperator T;
+    auto sin_theta = std::sin(theta);
+    auto sin_theta_2 = std::pow(std::sin(theta), 2.0);
+    auto sin_theta_half_4 = std::pow(std::sin(0.5 * theta), 4.0);
+    auto cos_theta_minus_1_2 = std::pow(std::cos(theta) - 1.0, 2.0);
+    auto sin_theta_cos_theta_minus_1 = std::sin(theta) * (std::cos(theta) - 1.0);
+
+    for (const auto& [O_op, O_c] : O.op_map()) {
+        const bool do_O_T_commute = do_ops_commute(O_op, T_op);
+        const bool do_O_Td_commute = do_ops_commute(O_op, Td_op);
+        // if both commutators are zero, then we can skip this term
+        if (do_O_T_commute and do_O_Td_commute) {
+            continue;
+        }
+        if (not do_O_T_commute) {
+            // [O, T]
+            auto cOT = commutator_fast(O_op, T_op);
+            for (const auto& [cOT_op, cOT_c] : cOT) {
+                // sin(theta) [O, T]
+                T.add_term(cOT_op, sin_theta * cOT_c * O_c);
+                // -sin(theta)^2 T [O,T]
+                auto T_cOT = T_op * cOT_op;
+                for (const auto& [T_cOT_op, T_cOT_c] : T_cOT) {
+                    T.add_term(T_cOT_op, -sin_theta_2 * T_cOT_c * cOT_c * O_c);
+                }
+                // +1/2 sin(theta)^2 [T^dagger, [O,T]]
+                auto cTdcOT = commutator_fast(Td_op, cOT_op);
+                for (const auto& [cTdcOT_op, cTdcOT_c] : cTdcOT) {
+                    T.add_term(cTdcOT_op, 0.5 * sin_theta_2 * cTdcOT_c * cOT_c * O_c);
+                }
+
+                auto TdcOT = Td_op * cOT_op;
+                for (const auto& [TdcOT_op, TdcOT_c] : TdcOT) {
+                    // -sin(theta) (cos(theta) - 1) T^dagger [O,T] T
+                    auto TdcOTT = TdcOT_op * T_op;
+                    for (const auto& [TdcOTT_op, TdcOTT_c] : TdcOTT) {
+                        T.add_term(TdcOTT_op,
+                                   -sin_theta_cos_theta_minus_1 * TdcOTT_c * TdcOT_c * cOT_c * O_c);
+                    }
+                    // sin(theta) (cos(theta) - 1) T^dagger [O,T] T^dagger
+                    auto TdcOTd = TdcOT_op * Td_op;
+                    for (const auto& [TdcOTTd_op, TdcOTTd_c] : TdcOTd) {
+                        T.add_term(TdcOTTd_op,
+                                   sin_theta_cos_theta_minus_1 * TdcOTTd_c * TdcOT_c * cOT_c * O_c);
+                    }
+                }
+                // -sin(theta) (cos(theta) - 1) T [O,T] T^dagger
+                for (const auto& [TcOT_op, TcOT_c] : T_cOT) {
+                    auto TcOTTd = TcOT_op * Td_op;
+                    for (const auto& [TcOTTd_op, TcOTTd_c] : TcOTTd) {
+                        T.add_term(TcOTTd_op,
+                                   -sin_theta_cos_theta_minus_1 * TcOTTd_c * TcOT_c * cOT_c * O_c);
+                    }
+                }
+            }
+        }
+        if (not do_O_Td_commute) {
+            // [O, T^dagger]
+            auto cOTd = commutator_fast(O_op, Td_op);
+            for (const auto& [cOTd_op, cOTd_c] : cOTd) {
+                // -sin(theta)[O, T^dagger]
+                T.add_term(cOTd_op, -sin_theta * cOTd_c * O_c);
+                // -sin(theta)^2 T^dagger [O,T^dagger]
+                auto TdcOTd = Td_op * cOTd_op;
+                for (const auto& [TdcOTd_op, TdcOTd_c] : TdcOTd) {
+                    T.add_term(TdcOTd_op, -sin_theta_2 * TdcOTd_c * cOTd_c * O_c);
+                }
+                // +1/2 sin(theta)^2 [T, [O,T^dagger]]
+                auto cTcOTd = commutator_fast(T_op, cOTd_op);
+                for (const auto& [cTcOTd_op, cTcOTd_c] : cTcOTd) {
+                    T.add_term(cTcOTd_op, 0.5 * sin_theta_2 * cTcOTd_c * cOTd_c * O_c);
+                }
+
+                auto TcOTd = T_op * cOTd_op;
+                for (const auto& [TcOTd_op, TcOTd_c] : TcOTd) {
+                    // -sin(theta) (cos(theta) - 1) T [O,T^dagger] T
+                    auto TcOTdT = TcOTd_op * T_op;
+                    for (const auto& [TcOTdT_op, TcOTdT_c] : TcOTdT) {
+                        T.add_term(TcOTdT_op, -sin_theta_cos_theta_minus_1 * TcOTdT_c * TcOTd_c *
+                                                  cOTd_c * O_c);
+                    }
+                    // +sin(theta) (cos(theta) - 1) T [O,T^dagger] T^dagger
+                    auto TcOTdTd = TcOTd_op * Td_op;
+                    for (const auto& [TcOTdTd_op, TcOTdTd_c] : TcOTdTd) {
+                        T.add_term(TcOTdTd_op, sin_theta_cos_theta_minus_1 * TcOTdTd_c * TcOTd_c *
+                                                   cOTd_c * O_c);
+                    }
+                }
+
+                for (const auto& [TdcOTd_op, TdcOTd_c] : TdcOTd) {
+                    // +sin(theta) (cos(theta) - 1) T^dagger [O,T^dagger] T
+                    auto TdcOTdT = TdcOTd_op * T_op;
+                    for (const auto& [TdcOTdT_op, TdcOTdT_c] : TdcOTdT) {
+                        T.add_term(TdcOTdT_op, sin_theta_cos_theta_minus_1 * TdcOTdT_c * TdcOTd_c *
+                                                   cOTd_c * O_c);
+                    }
+                }
+            }
+        }
+        for (const auto& [TdT_op, TdT_c] : TdT) {
+            // + 1/2 sin(theta)^2 T^dagger T O
+            auto TdTO = TdT_op * O_op;
+            for (const auto& [TdTO_op, TdTO_c] : TdTO) {
+                T.add_term(TdTO_op, -2.0 * sin_theta_half_4 * TdTO_c * TdT_c * O_c);
+
+                // + (cos(theta) - 1)^2 T^dagger T O T^dagger T
+                for (const auto& [TdT_op2, TdT_c2] : TdT) {
+                    auto TdTOTdT = TdTO_op * TdT_op2;
+                    for (const auto& [TdTOTdT_op, TdTOTdT_c] : TdTOTdT) {
+                        T.add_term(TdTOTdT_op,
+                                   cos_theta_minus_1_2 * TdTOTdT_c * TdT_c2 * TdTO_c * TdT_c * O_c);
+                    }
+                }
+                // + (cos(theta) - 1)^2 T^dagger T O T T^dagger
+                for (const auto& [TTd_op, TTd_c] : TTd) {
+                    auto TdTOTTd = TdTO_op * TTd_op;
+                    for (const auto& [TdTOTTd_op, TdTOTTd_c] : TdTOTTd) {
+                        T.add_term(TdTOTTd_op,
+                                   cos_theta_minus_1_2 * TdTOTTd_c * TTd_c * TdTO_c * TdT_c * O_c);
+                    }
+                }
+            }
+            // + 1/2 sin(theta)^2 O T^dagger T
+            auto OTdT = O_op * TdT_op;
+            for (const auto& [OTdT_op, OTdT_c] : OTdT) {
+                T.add_term(OTdT_op, -2.0 * sin_theta_half_4 * OTdT_c * TdT_c * O_c);
+            }
+        }
+        for (const auto& [TTd_op, TTd_c] : TTd) {
+            // sin(theta)^2 T T^dagger O
+            auto TTdO = TTd_op * O_op;
+            for (const auto& [TTdO_op, TTdO_c] : TTdO) {
+                T.add_term(TTdO_op, -2.0 * sin_theta_half_4 * TTdO_c * TTd_c * O_c);
+                // + (cos(theta) - 1)^2 T T^dagger O T^dagger T
+                for (const auto& [TdT_op, TdT_c] : TdT) {
+                    auto TTdOTdT = TTdO_op * TdT_op;
+                    for (const auto& [TTdOTdT_op, TTdOTdT_c] : TTdOTdT) {
+                        T.add_term(TTdOTdT_op,
+                                   cos_theta_minus_1_2 * TTdOTdT_c * TdT_c * TTdO_c * TTd_c * O_c);
+                    }
+                }
+                // + (cos(theta) - 1)^2 T T^dagger O T T^dagger
+                for (const auto& [TTd_op2, TTd_c2] : TTd) {
+                    auto TTdOTTd = TTdO_op * TTd_op2;
+                    for (const auto& [TTdOTTd_op, TTdOTTd_c] : TTdOTTd) {
+                        T.add_term(TTdOTTd_op,
+                                   cos_theta_minus_1_2 * TTdOTTd_c * TTd_c2 * TTdO_c * TTd_c * O_c);
+                    }
+                }
+            }
+            // sin(theta)^2 O T T^dagger
+            auto OTTd = O_op * TTd_op;
+            for (const auto& [OTTd_op, OTTd_c] : OTTd) {
+                T.add_term(OTTd_op, -2.0 * sin_theta_half_4 * OTTd_c * TTd_c * O_c);
+            }
+        }
+    }
+    O += T;
+}
+
+void similarity_transform_nilpotent(SparseOperator& O, const SparseOperator& T) {
+    for (const auto& [T_op, T_c] : T.op_map()) {
+        similarity_transform_nilpotent(O, T_op, T_c);
+    }
+}
+
+void similarity_transform_nilpotent(SparseOperator& O, const SQOperatorString& T_op, double theta) {
+    // sanity check to make sure all indices are distinct
+    if (not T_op.cre().fast_a_and_b_eq_zero(T_op.ann())) {
+        throw std::runtime_error("similarity_transform_fast: the operator " + T_op.str() +
+                                 " contains repeated indices.\nThis is not allowed for the "
+                                 "similarity transformation.");
+    }
+    SparseOperator T;
+    for (const auto& [O_op, O_c] : O.op_map()) {
+        const bool do_O_T_commute = do_ops_commute(O_op, T_op);
+        // if the commutator is zero, then we can skip this term
+        if (do_O_T_commute) {
+            continue;
+        }
+        auto cOT = commutator_fast(O_op, T_op);
+        for (const auto& [cOT_op, cOT_c] : cOT) {
+            // + [O, T]
+            T.add_term(cOT_op, theta * cOT_c * O_c);
+            // - T [O,T]
+            auto T_cOT = T_op * cOT_op;
+            for (const auto& [T_cOT_op, T_cOT_c] : T_cOT) {
+                T.add_term(T_cOT_op, -theta * theta * T_cOT_c * cOT_c * O_c);
+            }
+        }
+    }
+    O += T;
 }
 
 } // namespace forte

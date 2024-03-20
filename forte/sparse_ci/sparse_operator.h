@@ -171,4 +171,12 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs);
 
 void similarity_transform(SparseOperator& op, const SQOperatorString& A, double theta);
 
+void similarity_transform(SparseOperator& op, const SparseOperator& T, bool reverse = false);
+
+void similarity_transform_antihermitian(SparseOperator& O, const SQOperatorString& T_sqop,
+                                        double theta);
+
+void similarity_transform_nilpotent(SparseOperator& O, const SQOperatorString& T_sqop,
+                                    double theta);
+
 } // namespace forte

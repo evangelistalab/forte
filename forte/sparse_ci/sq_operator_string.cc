@@ -322,6 +322,47 @@ std::vector<std::pair<SQOperatorString, double>> operator*(const SQOperatorStrin
     return result;
 }
 
+bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs) {
+    const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
+    const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
+    const auto common_l_ann_r_cre = lhs.ann().fast_a_and_b_count(rhs.cre());
+    if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0) {
+        // if the number of operators is even, the commutator is zero
+        const auto nl = lhs.count();
+        const auto nr = rhs.count();
+        // if the operators do not have any common creation or annihilation operators
+        if ((nl * nr) % 2 == 0) {
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
+std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperatorString& lhs,
+                                                                 const SQOperatorString& rhs) {
+    const auto lr_prod = lhs * rhs;
+    const auto rl_prod = rhs * lhs;
+
+    // aggregate the terms
+    std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
+    for (const auto& [sqop_str, c] : lr_prod) {
+        result_map[sqop_str] += c;
+    }
+    for (const auto& [sqop_str, c] : rl_prod) {
+        result_map[sqop_str] -= c;
+    }
+
+    std::vector<std::pair<SQOperatorString, double>> result;
+    // result.reserve(result_map.size());
+    for (const auto& [sqop_str, c] : result_map) {
+        if (c != 0.0) {
+            result.emplace_back(sqop_str, c);
+        }
+    }
+    return result;
+}
+
 std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorString& lhs,
                                                             const SQOperatorString& rhs) {
     const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
@@ -332,7 +373,7 @@ std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorStri
     // if the operators do not have any common creation or annihilation operators
     if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0) {
         // if the number of operators is even, the commutator is zero
-        if (nl * nr % 2 == 0) {
+        if ((nl * nr) % 2 == 0) {
             return {};
         }
         // if the number of operators is odd, the commutator is the product of the operators

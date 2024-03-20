@@ -284,6 +284,8 @@ void export_Determinant(py::module& m) {
                 return commutator(lhs, rhs);
             },
             "Compute the commutator of two SparseOperators")
+        .def("is_antihermitian", &SparseOperator::is_antihermitian,
+             "Is this operator antihermitian?")
         .def("__iadd__", &SparseOperator::operator+=, "Add a SparseOperator to this SparseOperator")
         .def("__isub__", &SparseOperator::operator-=,
              "Subtract a SparseOperator from this SparseOperator")
@@ -355,36 +357,34 @@ void export_Determinant(py::module& m) {
 
     m.def(
         "make_sparse_operator",
-        [](const std::string& s, double coefficient, bool allow_reordering) {
-            SparseOperator sop;
+        [](const std::string& s, double coefficient, bool allow_reordering, bool antihermitian) {
+            SparseOperator sop(antihermitian);
             sop.add_term_from_str(s, coefficient, allow_reordering);
             return sop;
         },
-        "s"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false);
+        "s"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false, "antihermitian"_a = false);
 
     m.def(
         "make_sparse_operator",
-        [](const std::vector<std::pair<std::string, double>>& list, bool allow_reordering) {
-            SparseOperator sop;
+        [](const std::vector<std::pair<std::string, double>>& list, bool allow_reordering,
+           bool antihermitian) {
+            SparseOperator sop(antihermitian);
             for (const auto& [s, coefficient] : list) {
                 sop.add_term_from_str(s, coefficient, allow_reordering);
             }
             return sop;
         },
-        "list"_a, "allow_reordering"_a = false);
-
-    m.def(
-        "similarity_transforms",
-        [](SparseOperator& op, const SQOperatorString& sqop, double theta) {
-            return similarity_transform(op, sqop, theta);
-        },
-        "op"_a, "sqop"_a, "theta"_a);
+        "list"_a, "allow_reordering"_a = false, "antihermitian"_a = false);
 
     m.def(
         "similarity_transform",
         [](SparseOperator& op, const SparseOperator& A) {
-            auto [sqop, theta] = A.term(0);
-            return similarity_transform(op, sqop, theta);
+            // time this call and print to std::cout
+            auto start = std::chrono::high_resolution_clock::now();
+            similarity_transform(op, A);
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end - start;
+            std::cout << "similarity_transform took " << elapsed_seconds.count() << "s\n";
         },
         "op"_a, "A"_a);
 
