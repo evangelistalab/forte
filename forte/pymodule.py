@@ -130,7 +130,7 @@ def forte_driver(data: ForteData):
     return return_en
 
 
-def energy_forte(name, **kwargs):
+def energy_forte(name, pyscf_obj, **kwargs):
     """
     This function is called when the user calls energy('forte').
     It sets up the computation and calls the Forte driver.
@@ -159,8 +159,8 @@ def energy_forte(name, **kwargs):
     # Prepare Forte objects
     if "FCIDUMP" in data.options.get_str("INT_TYPE"):
         data = ObjectsFromFCIDUMP(options=kwargs).run(data)
-    elif data.options.get_str("INT_TYPE") == "PySCF":
-        data = ObjectsFromPySCF(options=kwargs).run(data)
+    elif data.options.get_str("INT_TYPE") == "PYSCF":
+        data = ObjectsFromPySCF(pyscf_obj, options=kwargs).run(data)
     else:
         data = ObjectsFromPsi4(**kwargs).run(data)
 

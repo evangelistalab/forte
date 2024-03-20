@@ -90,7 +90,7 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
             nmopi_list[symm] += 1
         
     # nmopi_offset = [sum(nmopi_list[0:h]) for h in range(nirrep)]
-    
+
     nmopi = psi4.core.Dimension(list(nmopi_list))
     
     # Create the MOSpaceInfo object
@@ -106,10 +106,16 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
         doccpi = psi4.core.Dimension([nb])
         soccpi = psi4.core.Dimension([ms2])
     else:
-        mo_occ = pyscf_obj.mo_occ
+        if isinstance(pyscf_obj, pyscf.mcscf.casci.CASCI):
+            mo_occ = pyscf_obj._scf.mo_occ
+        elif isinstance(pyscf_obj, pyscf.scf.hf.SCF):
+            mo_occ = pyscf_obj.mo_occ
+        else:
+            raise Exception(f"Forte: the object ({pyscf_obj}) is not supported. Use CASCI or SCF.")
         doccpi = np.zeros(nirrep, dtype = int)
         soccpi = np.zeros(nirrep, dtype = int)
         for i in mo_occ:
+            i = int(i)
             symm = orbsym[i]
             if mo_occ[i] == 2:
                 doccpi[symm] += 1
@@ -119,8 +125,8 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
         doccpi = psi4.core.Dimension(list(doccpi))
         soccpi = psi4.core.Dimension(list(soccpi))  
     
-    epsilon_a = psi4.core.Vector.from_array(list(pyscf_obj.mo_energy))
-    epsilon_b = psi4.core.Vector.from_array(list(pyscf_obj.mo_energy))
+    epsilon_a = psi4.core.Vector.from_array(pyscf_obj.mo_energy)
+    epsilon_b = psi4.core.Vector.from_array(pyscf_obj.mo_energy)
     
     data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
     
