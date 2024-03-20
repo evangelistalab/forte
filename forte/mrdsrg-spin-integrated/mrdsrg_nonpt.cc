@@ -870,30 +870,27 @@ void MRDSRG::compute_eom() {
     EOM_Hbar["VM"] = EOM_Hbar["MV"];
 
     // The third term
-    EOM_Hbar["wx"] = Hbar1_["vu"] * Gamma1_["ux"] * Gamma1_["wv"];
+    EOM_Hbar["wx"] = -Hbar1_["vu"] * Gamma1_["ux"] * Gamma1_["wv"];
     EOM_Hbar["wx"] += Hbar1_["vu"] * Lambda2_["uwvx"];
     EOM_Hbar["wx"] += Hbar1_["VU"] * Lambda2_["wUxV"];
     EOM_Hbar["wx"] += 0.5 * Hbar2_["yzuv"] * Gamma1_["wy"] * Lambda2_["uvzx"];
     EOM_Hbar["wx"] -= Hbar2_["yZvU"] * Gamma1_["wy"] * Lambda2_["vUxZ"];
     EOM_Hbar["wx"] -= 0.5 * Hbar2_["yzuv"] * Gamma1_["vx"] * Lambda2_["uwyz"];
     EOM_Hbar["wx"] -= Hbar2_["zYvU"] * Gamma1_["vx"] * Lambda2_["wUzY"];
-    // EOM_Hbar["wx"] += 0.25 * Hbar2_.block("aaaa")("yzuv") * L3aaa_("uvwyzx");
-    // auto temp2 = 0.25 * Hbar2_.block("AAAA")("YZUV") * L3abb_("wUVxYZ");
-    // auto temp3 = 0.5 * Hbar2_.block("aAaA")("yZuV") * L3aab_("uwVyxZ");
-    // // EOM_Hbar["wx"] = temp1;
-    // // EOM_Hbar["wx"] += temp2;
-    // // EOM_Hbar["wx"] += temp3;
+    EOM_Hbar.block("aa")("wx") += 0.25 * Hbar2_.block("aaaa")("yzuv") * L3aaa_("uvwyzx");
+    EOM_Hbar.block("aa")("wx") += 0.25 * Hbar2_.block("AAAA")("YZUV") * L3abb_("wUVxYZ");
+    EOM_Hbar.block("aa")("wx") += Hbar2_.block("aAaA")("yZuV") * L3aab_("uwVyxZ");
 
-    EOM_Hbar["WX"] = Hbar1_["VU"] * Gamma1_["UX"] * Gamma1_["WV"];
+    EOM_Hbar["WX"] = -Hbar1_["VU"] * Gamma1_["UX"] * Gamma1_["WV"];
     EOM_Hbar["WX"] += Hbar1_["VU"] * Lambda2_["UWVX"];
     EOM_Hbar["WX"] += Hbar1_["vu"] * Lambda2_["uWvX"];
     EOM_Hbar["WX"] += 0.5 * Hbar2_["YZUV"] * Gamma1_["WY"] * Lambda2_["UVZX"];
     EOM_Hbar["WX"] -= Hbar2_["zYuV"] * Gamma1_["WY"] * Lambda2_["uVzX"];
     EOM_Hbar["WX"] -= 0.5 * Hbar2_["YZUV"] * Gamma1_["VX"] * Lambda2_["UWYZ"];
     EOM_Hbar["WX"] -= Hbar2_["yZuV"] * Gamma1_["VX"] * Lambda2_["uWyZ"];
-    // EOM_Hbar["WX"] += 0.25 * Hbar2_["YZUV"] * L3bbb_("UVWYZX");
-    // EOM_Hbar["WX"] += 0.25 * Hbar2_["yzuv"] * L3aab_("uvWyzX");
-    // EOM_Hbar["WX"] += 0.5 * Hbar2_["zYvU"] * L3abb_("vUWzYX");
+    EOM_Hbar.block("AA")("WX") += 0.25 * Hbar2_.block("AAAA")("YZUV") * L3bbb_("UVWYZX");
+    EOM_Hbar.block("AA")("WX") += 0.25 * Hbar2_.block("aaaa")("yzuv") * L3aab_("uvWyzX");
+    EOM_Hbar.block("AA")("WX") += Hbar2_.block("aAaA")("zYvU") * L3abb_("vUWzYX");
 
     EOM_Hbar.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -903,11 +900,12 @@ void MRDSRG::compute_eom() {
                 EOM_Hbar_mat_->set(i[0] + nh, i[1] + nh, value);
             }
         });
+    EOM_Hbar_mat_->print();
 
     /// Overlap matrix
     std::shared_ptr<psi::Matrix> S_mat = std::make_shared<psi::Matrix>("EOM-S-sub", 2 * nh, 2 * nh);
-    std::shared_ptr<psi::Matrix> Sevec = std::make_shared<psi::Matrix>("S-evec", 2 * nh, 2 * nh);
-    std::shared_ptr<psi::Vector> Seval = std::make_shared<psi::Vector>("S-eval", 2 * nh);
+    // std::shared_ptr<psi::Matrix> Sevec = std::make_shared<psi::Matrix>("S-evec", 2 * nh, 2 * nh);
+    // std::shared_ptr<psi::Vector> Seval = std::make_shared<psi::Vector>("S-eval", 2 * nh);
     // S_mat->identity();
     // Construct S
 
@@ -920,15 +918,19 @@ void MRDSRG::compute_eom() {
     });
 
     S_mat->print();
-    S_mat->diagonalize(Sevec, Seval);
+    // S_mat->diagonalize(Sevec, Seval);
+    // Seval->print();
 
-    // We need a threshold.
-    for (size_t i = 0; i < Sevec->coldim(); i++) {
-        for (size_t j = 0; j < Sevec->rowdim(); j++) {
-            double value = Sevec->get(j, i) / std::sqrt(Seval->get(i));
-            Sevec->set(j, i, value);
-        }
-    }
+    // // We need a threshold. Also, inefficient.
+    // for (size_t i = 0; i < Sevec->coldim(); i++) {
+    //     for (size_t j = 0; j < Sevec->rowdim(); j++) {
+    //         double value = Sevec->get(j, i) / std::sqrt(Seval->get(i));
+    //         Sevec->set(j, i, value);
+    //     }
+    // }
+    auto Sevec = S_mat->partial_cholesky_factorize(1e-10);
+
+    auto Seval = std::make_shared<psi::Vector>("S-eval", Sevec->rowdim());
 
     EOM_Hbar_mat_ = psi::linalg::triplet(Sevec, EOM_Hbar_mat_, Sevec, true, false, false);
 
