@@ -41,9 +41,9 @@ compare_values(ref_scf, escf, 8, "DF-RHF/def2-SVP Energy")
 set forte {
 int_type                  df
 job_type                  mcscf_two_step
-active_space_solver       dmrg
 restricted_docc           [9,6,0,0,0,0,7,7]
 active                    [0,0,2,3,2,3,0,0]
+casscf_ci_solver          dmrg
 dmrg_sweep_states         [  200,  500, 1000,  2000 ]
 dmrg_sweep_energy_conv    [ 1e-6, 1e-8, 1e-8, 1e-10 ]
 dmrg_sweep_max_sweeps     [    5,    5,    5,   100 ]

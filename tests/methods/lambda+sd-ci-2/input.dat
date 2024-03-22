@@ -1,0 +1,35 @@
+# HF, RHF canonical orbitals, CAS-CI(2,2)
+
+
+import libadaptive
+
+refscf = -99.983408932712
+reflci = -100.10744547079
+
+molecule hf{
+   F
+   H 1 1.732878731527
+units bohr
+}
+
+set {
+  basis 6-31G
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+}
+
+set libadaptive {
+  det_threshold 1.00
+  den_threshold 6.00
+  energy_type lmrcisd_sparse
+  select_type energy
+  t2_threshold 1.0e-4
+  charge 0
+}
+
+energy('mcscf')
+energy('libadaptive')
+
+compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
+compare_values(reflci, variable("LAMBDA+SD-CI ENERGY"),10, "Lambda-CI energy") #TEST

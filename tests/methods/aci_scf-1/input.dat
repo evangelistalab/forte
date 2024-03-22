@@ -17,6 +17,7 @@ molecule HF{
 }
 
 set globals{
+#   basis                   cc-pvtz
    basis                   cc-pvdz
    reference               ROHF
    d_convergence           10
@@ -25,14 +26,14 @@ set globals{
    restricted_docc         [1, 0, 1, 1]
    active                  [2, 0, 0, 0]
    scf_type                out_of_core
+   guess gwh
 }
 refmcscf = energy('casscf')
 energy('scf')
 
-set scf_type direct
 
+set scf_type direct
 set forte{
-   job_type                mcscf_two_step
    frozen_docc             [1,0,0,0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]
@@ -40,13 +41,15 @@ set forte{
    nroot                   1
    ms                      0.0
    multiplicity            1
-   active_space_solver     aci
+   ACTIVE_SPACE_SOLVER     ACI
    int_type                conventional
-   CASSCF_MAXITER          25
-   print                   0
-   CASSCF_DO_DIIS          false
-   sigma                   0.0
-   gamma                   0.0
+   CASSCF_MAXITER        25
+   print                    0
+   CASSCF_DO_DIIS           false
+   casscf_ci_solver         aci
+   sigma                    0.0
+   gamma                    0.0
+   job_type                 CASSCF
 }
 
 casscf = energy('forte')

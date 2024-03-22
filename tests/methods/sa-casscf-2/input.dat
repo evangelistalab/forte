@@ -1,0 +1,47 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 1.50
+}
+
+set globals{
+  basis                   cc-pvdz
+  reference               rohf
+  d_convergence           8
+  e_convergence           12
+  mcscf_e_convergence     12
+  mcscf_r_convergence     8
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  scf_type                out_of_core
+  num_roots               2
+  avg_states              [0, 1]
+}
+refmcscf = energy('casscf')
+
+set scf_type direct
+set forte{
+  job_type                casscf
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  active_space_solver     fci
+  casscf_maxiter          25
+  print                   1
+  avg_state               [[0, 1, 2]]
+  casscf_debug_printing   false
+  fci_maxiter             60
+  casscf_e_convergence    1e-12
+  casscf_g_convergence    1e-8
+}
+
+casscf = energy('forte')
+compare_values(refmcscf,casscf,6,"CASSCF energy")

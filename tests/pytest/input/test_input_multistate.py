@@ -23,13 +23,13 @@ def test_input_multistate():
     forte.clean_options()
 
     psi4.set_options({'basis': 'DZ', 'scf_type': 'pk', 'e_convergence': 12})
-    psi4.set_options(
-        {
-            'forte__active_space_solver': 'fci',
-            'forte__active': [8, 0, 2, 2],
-            'forte__restricted_docc': [0, 0, 0, 0],
-            'forte__avg_state': [[0, 1, 3], [1, 1, 3], [2, 1, 3], [3, 1, 3]],
-            'forte__ms': 0.0
+    psi4.set_module_options(
+        'FORTE', {
+            'active_space_solver': 'fci',
+            'active': [8, 0, 2, 2],
+            'restricted_docc': [0, 0, 0, 0],
+            'avg_state': [[0, 1, 3], [1, 1, 3], [2, 1, 3], [3, 1, 3]],
+            'ms': 0.0
         }
     )
     efci = psi4.energy('forte')

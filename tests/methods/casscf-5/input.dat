@@ -42,9 +42,8 @@ set globals{
 
 set scf_type  direct
 set forte {
-   job_type                mcscf_two_step
+   job_type               CASSCF
    CASSCF_DEBUG_PRINTING   false
-   active_space_solver     fci
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
@@ -52,6 +51,8 @@ set forte {
    nroot                   1
    multiplicity            1
    int_type                conventional
+   casscf_ci_solver        FCI
+   casscf_reference        true
    CASSCF_MAXITER       50
    print                    0
 }

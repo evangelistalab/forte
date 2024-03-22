@@ -41,13 +41,14 @@ Ecas, wfn_cas = energy('casscf', return_wfn=True)
 compare_values(E2_cas, Ecas, 7, "CASSCF energy of N2")
 
 set forte {
-  active_space_solver detci
+  active_space_solver cas
   correlation_solver  dsrg-mrpt2
   frozen_docc         [1,0,0,0,0,1,0,0]
   frozen_uocc         [0,0,0,0,0,0,0,0]
   restricted_docc     [1,0,0,0,0,1,0,0]
   active              [1,0,1,1,0,1,1,1]
   dsrg_s              0.5
+  ntrial_per_root     56
   relax_ref           once
 }
 Eforte2, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)

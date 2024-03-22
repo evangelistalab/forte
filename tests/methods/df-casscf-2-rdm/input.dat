@@ -30,7 +30,7 @@ set forte {
   int_type             df
   active               [4,0,2,2]
   restricted_docc      [2,0,0,0]
-  active_space_solver  detci
+  casscf_ci_solver     cas
   casscf_g_convergence 10
   casscf_e_convergence 10
   casscf_diis_start    2
@@ -46,25 +46,19 @@ set forte job_type newdriver
 
 # I just want to test the RDMs!
 # - rerun a CASCI, copied from pymodule
+from forte.pymodule import prepare_forte_options, prepare_forte_objects
 
-from forte.modules import OptionsFactory, ObjectsFromPsi4
-data = OptionsFactory().run()
-data = ObjectsFromPsi4(ref_wfn=wfn).run(data)
+options = prepare_forte_options()
+ref_wfn, state_weights_map, mo_space_info, scf_info, _ = forte_objects = prepare_forte_objects(options, 'FORTE', ref_wfn=wfn)
+ints = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
 
-
-#from forte.pymodule import prepare_forte_options, prepare_forte_objects
-
-#options = prepare_forte_options()
-#ref_wfn, state_weights_map, mo_space_info, scf_info, _ = forte_objects = prepare_forte_objects(options, 'FORTE', ref_wfn=wfn)
-#ints = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
-
-state_map = forte.to_state_nroots_map(data.state_weights_map)
-as_ints = forte.make_active_space_ints(data.mo_space_info, data.ints, "ACTIVE", ["RESTRICTED_DOCC"])
-as_solver = forte.make_active_space_solver("FCI", state_map, data.scf_info, data.mo_space_info, data.options, as_ints)
+state_map = forte.to_state_nroots_map(state_weights_map)
+as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+as_solver = forte.make_active_space_solver("FCI", state_map, scf_info, mo_space_info, as_ints, options)
 as_solver.compute_energy()
 
 # - now compute the 1-RDM and test the off-diagonal
-rdms = as_solver.compute_average_rdms(data.state_weights_map, 1, forte.RDMsType.spin_free)
+rdms = as_solver.compute_average_rdms(state_weights_map, 1, forte.RDMsType.spin_free)
 d1 = rdms.SF_G1mat()
 d1.print_out()  # Let's print out and see
 d1.zero_diagonal()

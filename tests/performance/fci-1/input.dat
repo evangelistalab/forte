@@ -21,7 +21,7 @@ set {
 }
 
 set forte {
-  active_space_solver fci
+  job_type fci
 }
 
 energy('scf')

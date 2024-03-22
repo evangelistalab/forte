@@ -45,8 +45,8 @@ int_type diskdf
 orbital_type mp2no
 nat_act true
 nat_orbs_print true
-pt2no_occ_threshold 0.98
-pt2no_vir_threshold 0.02
+mp2no_occ_threshold 0.98
+mp2no_vir_threshold 0.02
 frozen_docc [14,0]
 }
 

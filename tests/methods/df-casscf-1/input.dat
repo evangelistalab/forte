@@ -31,12 +31,12 @@ Ecas, wfn = energy('casscf', return_wfn=True)
 compare_values(Ecas, psi4_casscf_1, 8, "PSI4 CASSCF energy @ 1.5")
 
 set forte{
-  job_type                mcscf_two_step
+  job_type                casscf
   int_type                df
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
-  active_space_solver     fci
+  casscf_ci_solver        fci
   casscf_maxiter          25
   casscf_e_convergence    7
   casscf_g_convergence    7
@@ -57,7 +57,7 @@ compare_values(psi4_casscf_2, Ecas_2, 6, "FORTE 2-step MCSCF energy @ 1.6")
 set forte {
   job_type                newdriver
   df_basis_mp2            cc-pvdz-jkfit
-  active_space_solver     detci
+  active_space_solver     cas
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
 }

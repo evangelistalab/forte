@@ -19,19 +19,24 @@ def test_ccsdtq_2():
      H 0.0 0.0 3.0     
     """
 
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="cc-pVDZ", reference="RHF")
-    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn, mo_spaces={}).run()
+    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='cc-pVDZ', reference='RHF')
+    forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
     calc_data = scc.run_cc(
-        data.as_ints, data.scf_info, data.mo_space_info, cc_type="cc", max_exc=4, e_convergence=1.0e-12
+        forte_objs['as_ints'],
+        forte_objs['scf_info'],
+        forte_objs['mo_space_info'],
+        cc_type='cc',
+        max_exc=4,
+        e_convergence=1.0e-12
     )
 
     psi4.core.clean()
 
     energy = calc_data[-1][1]
 
-    print(f"  HF energy:     {scf_energy}")
-    print(f"  CCSDTQ energy: {energy}")
-    print(f"  E - Eref:      {energy - ref_energy}")
+    print(f'  HF energy:     {scf_energy}')
+    print(f'  CCSDTQ energy: {energy}')
+    print(f'  E - Eref:      {energy - ref_energy}')
 
     assert energy == pytest.approx(ref_energy, 1.0e-11)
 

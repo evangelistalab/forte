@@ -1,7 +1,10 @@
+#! Generated using commit GITCOMMIT
+
 import forte
 
-refcasscf    = -112.88148148929
-refpt2       = -113.11005783259
+refcasscf    = -112.881481489289456
+refpt2       = -113.110057830915 
+#-113.10564937040 #-113.10564937477
 refpt2_relax = -113.10890275212
 refdm        =    0.078159
 refdm_relax  =    0.008678
@@ -19,9 +22,9 @@ set forte {
   dsrg_s             0.5
   relax_ref          once
   e_convergence      12
-  r_convergence      6
+  r_convergence      10
 }
 
 Eforte = energy('forte')
-compare_values(refpt2,variable("UNRELAXED ENERGY"),8,"DSRG-MRPT2 unrelaxed energy")
+compare_values(refpt2,variable("UNRELAXED ENERGY"),9,"DSRG-MRPT2 unrelaxed energy")
 

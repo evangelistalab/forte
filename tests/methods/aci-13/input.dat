@@ -1,3 +1,4 @@
+#! Generated using commit GITCOMMIT
 # Tests mp2_nos with spin projected system for multiple roots
 
 import forte
@@ -10,21 +11,30 @@ molecule C2{
 0 1
 C
 C 1 2.6
+units angstrom
 }
 
 set {
   basis DZ
   scf_type pk
+  freeze_core true
+  reference rohf
   e_convergence 10
-  d_convergence 6
+  d_convergence 10
+  r_convergence 7
   docc [2,0,0,0,0,2,1,1]
+  guess gwh
 }
 
 set forte {
   active_space_solver aci
+  multiplicity 1
+  m_s 0.0
   frozen_docc [1,0,0,0,0,1,0,0]
-  r_convergence 5
+  root_sym 0
   sigma 0.02
+  nroot 1
+  charge 0
   sci_enforce_spin_complete true
   diag_algorithm sparse
   active_ref_type hf

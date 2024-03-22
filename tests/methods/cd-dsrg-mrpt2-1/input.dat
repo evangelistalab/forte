@@ -1,15 +1,43 @@
+#! Generated using commit GITCOMMIT
+
 import forte
 
-refmcscf     = -15.569761360884 #TEST
-refdsrgpt2   = -15.627184888271 #TEST
+refmcscf     = -15.569761360883527 #TEST
+refdsrgpt2   = -15.627184888920119 #TEST
 
 molecule {
   0 1
-  Be        0.000000000000     0.000000000000     0.000000000000
+  BE        0.000000000000     0.000000000000     0.000000000000
   H         0.000000000000     1.390000000000     2.500000000000
   H         0.000000000000    -1.390000000000     2.500000000000
   units bohr
   no_reorient
+}
+
+set globals{
+   reference            twocon
+   scf_type             pk
+   d_convergence        10
+   e_convergence        12
+}
+
+set mcscf{
+   docc                 [2,0,0,0]
+   socc                 [1,0,0,1]
+   maxiter              1000
+}
+
+set forte{
+   active_space_solver  fci
+   correlation_solver   three-dsrg-mrpt2
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
+   root_sym             0
+   nroot                1
+   dsrg_s               1.0e10
+   int_type             cholesky
+   cholesky_tolerance   1e-14
+   print_denom2         true
 }
 
 basis {
@@ -45,21 +73,8 @@ S   1   1.00
 ****
 }
 
-set forte{
-   casscf_reference     true
-   casscf_e_convergence 12   
-   active_space_solver  fci
-   correlation_solver   three-dsrg-mrpt2
-   restricted_docc      [2,0,0,0]
-   active               [1,0,0,1]
-   root_sym             0
-   nroot                1
-   dsrg_s               1.0e10
-   int_type             cholesky
-   cholesky_tolerance   1e-14
-   print_denom2         true
-}
+scf_energy,scf_wfn = energy('mcscf', return_wfn = True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 
-energy('forte')
-compare_values(refmcscf,variable("DSRG REFERENCE ENERGY"),10,"CASSCF energy")
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+energy('forte', ref_wfn = scf_wfn)
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy") #TEST

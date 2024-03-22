@@ -35,7 +35,9 @@ set forte {
    int_type                df
    correlation_solver      three-dsrg-mrpt2
    active_space_solver     fci
+   ntrial_per_root         100
    relax_ref               once
+   fci_maxiter             50
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

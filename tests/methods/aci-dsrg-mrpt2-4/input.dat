@@ -40,7 +40,7 @@ set {
   maxiter 500
   e_convergence 10
   d_convergence 10
-  r_convergence 7
+  r_convergence 10
   reference rhf
   ints_tolerance 0.0
 }
@@ -70,4 +70,4 @@ e, scf_wfn = energy('scf', return_wfn=True)
 compare_values(escf, variable("CURRENT ENERGY"), 9, "SCF energy")
 
 energy('forte', ref_wfn=scf_wfn)
-compare_values(eacidsrg, variable("CURRENT ENERGY"), 8, "ACI-DSRG-MRPT2 energy")
+compare_values(eacidsrg, variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")

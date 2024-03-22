@@ -1,3 +1,4 @@
+#! Generated using commit GITCOMMIT 
 # Basic ACI calculation with energy threshold selection
 
 import forte
@@ -6,7 +7,7 @@ refscf = -76.02665366188849 #TEST
 refaci = -76.026653661888 #TEST
 refacipt2 = -76.285659666305 #TEST
 
-molecule h2o{
+molecule li2{
 0 1
  O
  H 1 0.96
@@ -15,10 +16,16 @@ molecule h2o{
 
 set {
   basis cc-pvdz
-  scf_type pk
   e_convergence 10
-  d_convergence 6
+  d_convergence 10
   r_convergence 10
+  guess gwh
+}
+
+set scf {
+  scf_type pk
+  reference rohf
+#  docc = [2,0,0,0,0,1,0,0]
 }
 
 set forte {
@@ -35,6 +42,7 @@ set forte {
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
+
 compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)

@@ -32,6 +32,7 @@ set forte{
    root_sym               0
    nroot                  1
    dsrg_s                 1.0
+   ntrial_per_root        10
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

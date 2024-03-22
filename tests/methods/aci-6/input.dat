@@ -19,6 +19,7 @@ symmetry c2v
 set {
   basis DZ
   scf_type pk
+  reference rohf
   e_convergence 11
   d_convergence 11
   r_convergence 11

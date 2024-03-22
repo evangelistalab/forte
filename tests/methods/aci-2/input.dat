@@ -1,4 +1,6 @@
-# This tests the Adaptive-CI procedure using energy selection
+#! This tests the Adaptive-CI procedure using energy selection
+#! Generated using commit GITCOMMIT
+#
 
 import forte
 
@@ -14,21 +16,29 @@ molecule li2{
 
 set {
   basis DZ
-  scf_type pk
-  docc [2,0,0,0,0,1,0,0]
   e_convergence 10
-  d_convergence 6
+  d_convergence 10
   r_convergence 10
+  guess gwh
+}
+
+set mcscf {
+  reference rhf
+  docc = [2,0,0,0,0,1,0,0]
 }
 
 set forte {
   active_space_solver aci
+  frozen_docc = [0,0,0,0,0,0,0,0]
   sigma 0.001
   sci_enforce_spin_complete false
+  nroot 1
+  charge 0
   diag_algorithm full 
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
+Escf, wfn = energy('mcscf', return_wfn=True)
+
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)

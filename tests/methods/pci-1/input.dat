@@ -1,4 +1,5 @@
 #! This tests the Adaptive Path-Integral FCI procedure with no prescreening
+#! Generated using commit GITCOMMIT
 
 import forte
 

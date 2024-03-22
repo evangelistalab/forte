@@ -1,0 +1,51 @@
+#! Generated using commit GITCOMMIT
+#! CASSCF on HF with no symmetry
+
+import forte
+
+#refmcscf     =  -99.972055826365903 # cc-pVTZ
+#refdsrgpt2   = -100.200752137944022 # cc-pVTZ
+refscf          = -99.87285247289
+refcasscf       = -99.939316381644
+
+memory 500 mb
+
+molecule He{
+0   1
+    He
+}
+
+set globals {
+    basis          cc-pvdz
+    scf_type       out_of_core
+    mcscf_type     conv
+    reference      ROHF
+    e_convergence   1e-10
+    d_convergence   1e-10
+    active          [2, 0, 0, 0, 0, 0, 0, 0]
+    S               1.0
+}
+energy('scf')
+casscf = energy('casscf')
+#scf = energy('scf')
+#compare_values(refscf, scf, 8, "SCF ENERGY")
+
+set scf_type  direct
+set forte{
+   CASSCF_REFERENCE        true
+   int_type                conventional
+   CASSCF_MAXITER       36
+   active                  [2, 0, 0, 0, 0, 0, 0, 0]
+   active_space_solver                 CAS
+   multiplicity             3
+   ms                       0.0
+   CASSCF_G_CONVERGENCE     1e-6
+   CASSCF_E_CONVERGENCE     1e-8
+   CASSCF_DO_DIIS           true
+   print                    1
+   ACTIVE_SPACE_TYPE        CIS
+}
+e_casscf = energy('forte')
+#
+compare_values(casscf, e_casscf, 8, "CISSCF_ENERGY")
+

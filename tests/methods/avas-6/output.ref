@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.8a1.dev5 
+                               Psi4 1.7a1.dev8 
 
-                         Git: Rev {master} 4d94910 
+                         Git: Rev {master} d725195 
 
 
     D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
@@ -19,8 +19,7 @@
                             Additional Code Authors
     E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
     J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
-    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
-    M. F. Herbst, and D. L. Poole
+    P. Verma, M. H. Lechner, and A. Jiang
 
              Previous Authors, Complete List of Code Contributors,
                        and Citations for Specific Modules
@@ -31,26 +30,26 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sunday, 15 January 2023 11:25PM
+    Psi4 started on: Tuesday, 14 June 2022 11:17AM
 
-    Process ID: 99981
-    Host:       CHE-FEVANGE-01i
-    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Process ID: 8175
+    Host:       Yorks-Mac.local
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
-    Threads:    1
+    Threads:    8
     
   ==> Input File <==
 
 --------------------------------------------------------------------------
 #! Test AO Subspace regular expression on 3d orbitals
 
-refscf = -1646.62615747649124 
+refscf = -1646.626157157988700
 ref_occ = {
     'RESTRICTED_DOCC': np.array([14, 6, 8, 11]),
     'ACTIVE': np.array([7, 3, 4, 4]),
     'RESTRICTED_UOCC': np.array([33, 19, 23, 27])
 }
-reffci = -1646.6659910518
+reffci = -1646.665990803128580
 
 import forte
 memory 2 gb
@@ -95,7 +94,7 @@ df_fitting_condition 1.0e-15
 ints_tolerance       1.0e-15
 }
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, Escf, 8, "SCF energy")
+compare_values(refscf, Escf, 7, "SCF energy")
 
 set forte {
 job_type            none
@@ -128,24 +127,24 @@ restricted_docc     [16,6,9,12]
 active              [2,2,1,2]
 }
 Ecasci, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(reffci, Ecasci, 8, "CASCI(10e,7o) energy")
+compare_values(reffci, Ecasci, 7, "CASCI(10e,7o) energy")
 --------------------------------------------------------------------------
 
   Memory set to   1.863 GiB by Python driver.
 
-Scratch directory: /tmp/
+Scratch directory: /Users/york/scratch/psi4/
 
-*** tstart() called on CHE-FEVANGE-01i
-*** at Sun Jan 15 23:25:18 2023
+*** tstart() called on Yorks-Mac.local
+*** at Tue Jun 14 11:17:38 2022
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUS147464B8
+    Name: ANONYMOUSEFD52072
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1           entry FE         line  1835 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2-6, 12-16  entry C          line    87 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
-    atoms 7-11, 17-21 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2-6, 12-16  entry C          line    87 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31g.gbs 
+    atoms 7-11, 17-21 entry H          line    26 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31g.gbs 
 
 
          ---------------------------------------------------------
@@ -153,7 +152,7 @@ Scratch directory: /tmp/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                               RHF Reference
-                        1 Threads,   1907 MiB Core
+                        8 Threads,   1907 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -212,7 +211,7 @@ Scratch directory: /tmp/
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUS147464B8
+  Basis Set: ANONYMOUSEFD52072
     Blend: 6-31G + CC-PVDZ
     Number of shells: 85
     Number of basis functions: 159
@@ -222,23 +221,23 @@ Scratch directory: /tmp/
 
    => Loading Basis Set <=
 
-    Name: (ANONYMOUS147464B8 AUX)
+    Name: (ANONYMOUSEFD52072 AUX)
     Role: JKFIT
     Keyword: DF_BASIS_SCF
-    atoms 1           entry FE         line  1978 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
-    atoms 2-6, 12-16  entry C          line   121 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
-    atoms 7-11, 17-21 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 1           entry FE         line  1978 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-universal-jkfit.gbs 
+    atoms 2-6, 12-16  entry C          line   121 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 7-11, 17-21 entry H          line    51 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
 
   ==> Integral Setup <==
 
-  DFHelper Memory: AOs need 0.301 GiB; user supplied 1.397 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.302 GiB; user supplied 1.397 GiB. Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               1
+    OpenMP threads:               8
     Memory [MiB]:              1430
     Algorithm:                 Core
     Schwarz Cutoff:           1E-15
@@ -247,7 +246,7 @@ Scratch directory: /tmp/
 
    => Auxiliary Basis Set <=
 
-  Basis Set: (ANONYMOUS147464B8 AUX)
+  Basis Set: (ANONYMOUSEFD52072 AUX)
     Blend: CC-PVDZ-JKFIT + DEF2-UNIVERSAL-JKFIT
     Number of shells: 388
     Number of basis functions: 1437
@@ -256,7 +255,7 @@ Scratch directory: /tmp/
     Max angular momentum: 6
 
   Minimum eigenvalue in the overlap matrix is 2.8301068994E-05.
-  Reciprocal condition number of the overlap matrix is 3.9895014893E-06.
+  Reciprocal condition number of the overlap matrix is 3.9895014894E-06.
     Using symmetric orthogonalization.
 
   ==> Pre-Iterations <==
@@ -278,21 +277,21 @@ Scratch directory: /tmp/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD: -1647.26163780699335   -1.64726e+03   0.00000e+00 
-   @DF-RHF iter   1: -1640.83009006466750    6.43155e+00   5.54633e-02 ADIIS/DIIS
-   @DF-RHF iter   2: -1621.93413624348659    1.88960e+01   9.60300e-02 ADIIS/DIIS
-   @DF-RHF iter   3: -1644.60092770332380   -2.26668e+01   3.54632e-02 ADIIS/DIIS
-   @DF-RHF iter   4: -1646.53730770708012   -1.93638e+00   2.85669e-03 ADIIS/DIIS
-   @DF-RHF iter   5: -1646.59683559885116   -5.95279e-02   1.38168e-03 ADIIS/DIIS
-   @DF-RHF iter   6: -1646.61732195053219   -2.04864e-02   8.34024e-04 ADIIS/DIIS
-   @DF-RHF iter   7: -1646.62597436830106   -8.65242e-03   2.50032e-04 ADIIS/DIIS
-   @DF-RHF iter   8: -1646.62613959758414   -1.65229e-04   3.62967e-05 DIIS
-   @DF-RHF iter   9: -1646.62615647522534   -1.68776e-05   1.32417e-05 DIIS
-   @DF-RHF iter  10: -1646.62615738802924   -9.12804e-07   3.43310e-06 DIIS
-   @DF-RHF iter  11: -1646.62615746642678   -7.83975e-08   2.11472e-06 DIIS
-   @DF-RHF iter  12: -1646.62615747561131   -9.18453e-09   4.91987e-07 DIIS
-   @DF-RHF iter  13: -1646.62615747647874   -8.67431e-10   5.43351e-08 DIIS
-   @DF-RHF iter  14: -1646.62615747649124   -1.25056e-11   5.55379e-09 DIIS
+   @DF-RHF iter SAD: -1647.26163746259340   -1.64726e+03   0.00000e+00 
+   @DF-RHF iter   1: -1640.83009001259597    6.43155e+00   5.54633e-02 DIIS/ADIIS
+   @DF-RHF iter   2: -1621.93413826884989    1.88960e+01   9.60299e-02 DIIS/ADIIS
+   @DF-RHF iter   3: -1644.60092862582792   -2.26668e+01   3.54631e-02 DIIS/ADIIS
+   @DF-RHF iter   4: -1646.53730742239304   -1.93638e+00   2.85669e-03 DIIS/ADIIS
+   @DF-RHF iter   5: -1646.59683528928599   -5.95279e-02   1.38168e-03 DIIS/ADIIS
+   @DF-RHF iter   6: -1646.61732163243892   -2.04863e-02   8.34024e-04 DIIS/ADIIS
+   @DF-RHF iter   7: -1646.62597404998542   -8.65242e-03   2.50032e-04 DIIS/ADIIS
+   @DF-RHF iter   8: -1646.62613927908092   -1.65229e-04   3.62967e-05 DIIS
+   @DF-RHF iter   9: -1646.62615615671962   -1.68776e-05   1.32418e-05 DIIS
+   @DF-RHF iter  10: -1646.62615706952556   -9.12806e-07   3.43311e-06 DIIS
+   @DF-RHF iter  11: -1646.62615714792196   -7.83964e-08   2.11472e-06 DIIS
+   @DF-RHF iter  12: -1646.62615715710990   -9.18794e-09   4.91986e-07 DIIS
+   @DF-RHF iter  13: -1646.62615715797756   -8.67658e-10   5.43357e-08 DIIS
+   @DF-RHF iter  14: -1646.62615715798938   -1.18234e-11   5.53090e-09 DIIS
   Energy and wave function converged.
 
 
@@ -317,7 +316,7 @@ Scratch directory: /tmp/
        5A2    -0.563489    14A1    -0.557662     7B1    -0.557662  
        8B1    -0.528217    15A1    -0.528217     6A2    -0.518956  
       11B2    -0.518956    16A1    -0.513742    12B2    -0.496249  
-       9B1    -0.423380    17A1    -0.423380    18A1    -0.340806  
+      17A1    -0.423380     9B1    -0.423380    18A1    -0.340806  
       10B1    -0.340806    13B2    -0.338837     7A2    -0.338837  
 
     Virtual:                                                              
@@ -332,7 +331,7 @@ Scratch directory: /tmp/
       12A2     0.423876    20B2     0.423876    26A1     0.437503  
       15B1     0.437503    27A1     0.439638    16B1     0.439638  
       28A1     0.484159    29A1     0.494838    17B1     0.494838  
-      21B2     0.529173    13A2     0.529174    30A1     0.579382  
+      21B2     0.529174    13A2     0.529174    30A1     0.579382  
       18B1     0.579382    19B1     0.634821    22B2     0.649606  
       23B2     0.651024    14A2     0.651024    15A2     0.652993  
       31A1     0.658526    32A1     0.759541    20B1     0.759541  
@@ -350,30 +349,28 @@ Scratch directory: /tmp/
       28B1     1.432332    42A1     1.432332    43A1     1.523144  
       29B1     1.523145    34B2     1.551240    23A2     1.551241  
       24A2     1.566294    35B2     1.566294    44A1     1.616841  
-      30B1     1.616842    45A1     1.782512    36B2     1.863419  
+      30B1     1.616842    45A1     1.782511    36B2     1.863419  
       25A2     1.863420    37B2     2.026456    26A2     2.026456  
-      46A1     2.186974    31B1     2.186975    38B2     2.188077  
-      47A1     2.266692    48A1     2.409218    32B1     2.409218  
-      49A1     2.433426    39B2     2.562775    27A2     2.562776  
+      46A1     2.186974    31B1     2.186975    38B2     2.188083  
+      47A1     2.266692    32B1     2.409218    48A1     2.409218  
+      49A1     2.433423    39B2     2.562775    27A2     2.562776  
       50A1     3.314362    40B2     3.461163    51A1     3.487911  
-      33B1     3.487911    52A1     3.639983    34B1     3.639983  
+      33B1     3.487911    34B1     3.639983    52A1     3.639983  
       41B2     3.724901    28A2     3.724901    53A1     5.882055  
-      35B1     5.882056    42B2     8.931144    54A1    38.507944  
+      35B1     5.882056    42B2     8.931150    54A1    38.507944  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
     DOCC [    18,    7,   10,   13 ]
-    NA   [    18,    7,   10,   13 ]
-    NB   [    18,    7,   10,   13 ]
 
-  @DF-RHF Final Energy: -1646.62615747649124
+  @DF-RHF Final Energy: -1646.62615715798938
 
    => Energetics <=
 
     Nuclear Repulsion Energy =            919.0508334365242717
-    One-Electron Energy =               -4094.3034538777192211
-    Two-Electron Energy =                1528.6264629647039328
-    Total Energy =                      -1646.6261574764912439
+    One-Electron Energy =               -4094.3034534404919214
+    Two-Electron Energy =                1528.6264628459780397
+    Total Energy =                      -1646.6261571579893825
 
 Computation Completed
 
@@ -391,30 +388,30 @@ Properties computed using the SCF density matrix
 
  L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
  Dipole X            :          0.0000000            0.0000000            0.0000000
- Dipole Y            :         -0.0000033            0.0000025           -0.0000007
+ Dipole Y            :         -0.0000032            0.0000025           -0.0000007
  Dipole Z            :          0.0000000            0.0000000            0.0000000
  Magnitude           :                                                    0.0000007
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on CHE-FEVANGE-01i at Sun Jan 15 23:25:26 2023
+*** tstop() called on Yorks-Mac.local at Tue Jun 14 11:18:11 2022
 Module time:
-	user time   =       8.57 seconds =       0.14 minutes
-	system time =       0.82 seconds =       0.01 minutes
-	total time  =          8 seconds =       0.13 minutes
+	user time   =      51.50 seconds =       0.86 minutes
+	system time =       7.67 seconds =       0.13 minutes
+	total time  =         33 seconds =       0.55 minutes
 Total time:
-	user time   =       8.57 seconds =       0.14 minutes
-	system time =       0.82 seconds =       0.01 minutes
-	total time  =          8 seconds =       0.13 minutes
+	user time   =      51.50 seconds =       0.86 minutes
+	system time =       7.67 seconds =       0.13 minutes
+	total time  =         33 seconds =       0.55 minutes
     SCF energy............................................................................PASSED
 
-Scratch directory: /tmp/
+Scratch directory: /Users/york/scratch/psi4/
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 4225e1f0
+    git branch: fix_mcscf_final_orbs - git commit: 8d32180c
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -444,12 +441,12 @@ Scratch directory: /tmp/
     Total              54    28    35    42   159
   -------------------------------------------------   => Loading Basis Set <=
 
-    Name: ANONYMOUS147464B8
+    Name: ANONYMOUSEFD52072
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1           entry FE         line  1835 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2-6, 12-16  entry C          line    87 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
-    atoms 7-11, 17-21 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2-6, 12-16  entry C          line    87 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31g.gbs 
+    atoms 7-11, 17-21 entry H          line    26 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31g.gbs 
 
 
   Checking orbital orthonormality against current geometry ... Done (OK)
@@ -459,9 +456,9 @@ Scratch directory: /tmp/
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1           entry FE         line   369 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
-    atoms 2-6, 12-16  entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
-    atoms 7-11, 17-21 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 1           entry FE         line   369 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2-6, 12-16  entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 7-11, 17-21 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
 
 
 
@@ -689,13 +686,13 @@ Scratch directory: /tmp/
     AVAS ACTIVE...........................................................................PASSED
     AVAS RESTRICTED_UOCC..................................................................PASSED
 
-Scratch directory: /tmp/
+Scratch directory: /Users/york/scratch/psi4/
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 4225e1f0
+    git branch: fix_mcscf_final_orbs - git commit: 8d32180c
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -728,33 +725,33 @@ Scratch directory: /tmp/
     Total              54    28    35    42   159
   -------------------------------------------------   => Loading Basis Set <=
 
-    Name: ANONYMOUS147464B8
+    Name: ANONYMOUSEFD52072
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1           entry FE         line  1835 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2-6, 12-16  entry C          line    87 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
-    atoms 7-11, 17-21 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2-6, 12-16  entry C          line    87 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31g.gbs 
+    atoms 7-11, 17-21 entry H          line    26 file /Users/york/src/psi4new/psi4/share/psi4/basis/6-31g.gbs 
 
 
   Checking orbital orthonormality against current geometry ... Done (OK)
 
    => Loading Basis Set <=
 
-    Name: (ANONYMOUS147464B8 AUX)
+    Name: (ANONYMOUSEFD52072 AUX)
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1           entry FE         line  2102 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/def2-qzvpp-ri.gbs 
-    atoms 2-6, 12-16  entry C          line   159 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
-    atoms 7-11, 17-21 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 1           entry FE         line  2102 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-ri.gbs 
+    atoms 2-6, 12-16  entry C          line   159 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 7-11, 17-21 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-ri.gbs 
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1           entry FE         line   369 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
-    atoms 2-6, 12-16  entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
-    atoms 7-11, 17-21 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 1           entry FE         line   369 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2-6, 12-16  entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 7-11, 17-21 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
 
 
 
@@ -882,7 +879,7 @@ Scratch directory: /tmp/
 
   ==> Primary Basis Set Summary <==
 
-  Basis Set: ANONYMOUS147464B8
+  Basis Set: ANONYMOUSEFD52072
     Blend: 6-31G + CC-PVDZ
     Number of shells: 85
     Number of basis functions: 159
@@ -892,14 +889,14 @@ Scratch directory: /tmp/
 
 
   JK created using MemDF integrals
-  DFHelper Memory: AOs need 0.268 GiB; user supplied 1.490 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.269 GiB; user supplied 1.490 GiB. Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               1
+    OpenMP threads:               8
     Memory [MiB]:              1525
     Algorithm:                 Core
     Schwarz Cutoff:           1E-15
@@ -908,7 +905,7 @@ Scratch directory: /tmp/
 
    => Auxiliary Basis Set <=
 
-  Basis Set: (ANONYMOUS147464B8 AUX)
+  Basis Set: (ANONYMOUSEFD52072 AUX)
     Blend: CC-PVDZ-RI + DEF2-QZVPP-RI
     Number of shells: 301
     Number of basis functions: 1276
@@ -931,15 +928,15 @@ Scratch directory: /tmp/
 
   Number of auxiliary basis functions:  1276
   Need 258.07 MB to store DF integrals
-  DFHelper Memory: AOs need 0.268 GiB; user supplied 1.409 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.269 GiB; user supplied 1.407 GiB. Using in-core AOs.
 
   ==> DFHelper <==
     NBF:                             159
     NAux:                           1276
     Schwarz Cutoff:                1E-15
     Mask sparsity (%):                 0
-    DFH Avail. Memory [GiB]:       1.409
-    OpenMP threads:                    1
+    DFH Avail. Memory [GiB]:       1.407
+    OpenMP threads:                    8
     Algorithm:                     STORE
     AO Core:                        True
     MO Core:                       False
@@ -951,10 +948,10 @@ Scratch directory: /tmp/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  1.532 s.
+  Timing for density-fitting transformation:                  6.956 s.
 
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing density-fitted integrals:              6.378 s.
+  Timing for computing density-fitted integrals:             27.045 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -978,14 +975,14 @@ Scratch directory: /tmp/
   Number of beta strings (N-3)  = 21
   Timing for strings        =      0.000 s
   Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.000 s
-  Timing for OO strings     =      0.000 s
-  Timing for VVOO strings   =      0.000 s
+  Timing for VO strings     =      0.001 s
+  Timing for OO strings     =      0.001 s
+  Timing for VVOO strings   =      0.001 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
-  Timing for 2-hole strings =      0.000 s
-  Timing for 3-hole strings =      0.000 s
-  Total timing              =      0.000 s
+  Timing for 2-hole strings =      0.001 s
+  Timing for 3-hole strings =      0.002 s
+  Total timing              =      0.003 s
 
   ==> FCI Solver <==
 
@@ -1003,28 +1000,28 @@ Scratch directory: /tmp/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0    -1646.645011652517  0.000  singlet
-      1    -1646.546188168347  6.000  quintet
-      2    -1646.519128128182  6.000  quintet
-      3    -1646.446723622111  2.000  triplet
-      4    -1646.443352541112  2.000  triplet
-      5    -1646.429774607879  2.000  triplet
-      6    -1646.421190573482  2.000  triplet
-      7    -1646.418742689032  2.000  triplet
-      8    -1646.403069897302  2.000  triplet
-      9    -1646.398067402368  0.000  singlet
-     10    -1646.392111401938  0.000  singlet
-     11    -1646.387179504760  2.000  triplet
-     12    -1646.380635751745  0.000  singlet
-     13    -1646.369640366691  0.000  singlet
-     14    -1646.355459591323  0.000  singlet
-     15    -1646.330168597309  0.000  singlet
-     16    -1646.320002866743  2.000  triplet
-     17    -1646.293684301316  0.000  singlet
-     18    -1646.234233711961  0.000  singlet
-     19    -1646.204486000027  0.000  singlet
+      0    -1646.645011403392  0.000  singlet
+      1    -1646.546187921135  6.000  quintet
+      2    -1646.519127879126  6.000  quintet
+      3    -1646.446723375020  2.000  triplet
+      4    -1646.443352293827  2.000  triplet
+      5    -1646.429774360797  2.000  triplet
+      6    -1646.421190326206  2.000  triplet
+      7    -1646.418742441092  2.000  triplet
+      8    -1646.403069649747  2.000  triplet
+      9    -1646.398067155267  0.000  singlet
+     10    -1646.392111154601  0.000  singlet
+     11    -1646.387179256927  2.000  triplet
+     12    -1646.380635503301  0.000  singlet
+     13    -1646.369640119140  0.000  singlet
+     14    -1646.355459343519  0.000  singlet
+     15    -1646.330168348977  0.000  singlet
+     16    -1646.320002619936  2.000  triplet
+     17    -1646.293684054584  0.000  singlet
+     18    -1646.234233465072  0.000  singlet
+     19    -1646.204485753681  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.001 s
+  Timing for initial guess  =      0.005 s
 
   Projecting out root 1
   Projecting out root 2
@@ -1044,16 +1041,16 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1    -1646.645011652519  -1.647e+03  +1.663e-01
-      2    -1646.661993861590  -1.698e-02  +8.085e-02
-      3    -1646.665779056970  -3.785e-03  +1.983e-02
-      4    -1646.665975600141  -1.965e-04  +5.137e-03
-      5    -1646.665990338296  -1.474e-05  +8.286e-04
-      6    -1646.665990998442  -6.601e-07  +2.212e-04
-      7    -1646.665991049867  -5.143e-08  +3.997e-05
-      8    -1646.665991051769  -1.902e-09  +8.509e-06
-      9    -1646.665991051844  -7.503e-11  +1.866e-06
-     10    -1646.665991051847  -2.274e-12  +3.492e-07
+      1    -1646.645011403392  -1.647e+03  +1.663e-01
+      2    -1646.661993612925  -1.698e-02  +8.085e-02
+      3    -1646.665778808249  -3.785e-03  +1.983e-02
+      4    -1646.665975351416  -1.965e-04  +5.137e-03
+      5    -1646.665990089571  -1.474e-05  +8.286e-04
+      6    -1646.665990749716  -6.601e-07  +2.212e-04
+      7    -1646.665990801142  -5.143e-08  +3.997e-05
+      8    -1646.665990803046  -1.904e-09  +8.509e-06
+      9    -1646.665990803119  -7.321e-11  +1.866e-06
+     10    -1646.665990803121  -2.274e-12  +3.492e-07
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 11 iterations.
 
@@ -1061,13 +1058,13 @@ Scratch directory: /tmp/
 
     22 20 2 20      0.97638181
 
-    Total Energy:   -1646.665991051847, <S^2>: -0.000000
+    Total Energy:   -1646.665990803121, <S^2>: 0.000000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    A1     0    -1646.665991051847  -0.000000
+       1  (  0)    A1     0    -1646.665990803121   0.000000
     --------------------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
@@ -1085,15 +1082,15 @@ Scratch directory: /tmp/
 
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-         0A1     0.00000000    -0.00000074     0.00000000     0.00000074
+         0A1    -0.00000000    -0.00000067     0.00000000     0.00000067
     --------------------------------------------------------------------
 
-  Time to prepare integrals:       11.029 seconds
-  Time to run job          :        0.786 seconds
-  Total                    :       11.815 seconds
+  Time to prepare integrals:       45.672 seconds
+  Time to run job          :        1.198 seconds
+  Total                    :       46.870 seconds
     CASCI(10e,7o) energy..................................................................PASSED
 
-    Psi4 stopped on: Sunday, 15 January 2023 11:25PM
-    Psi4 wall time for execution: 0:00:20.60
+    Psi4 stopped on: Tuesday, 14 June 2022 11:18AM
+    Psi4 wall time for execution: 0:01:22.05
 
 *** Psi4 exiting successfully. Buy a developer a beer!

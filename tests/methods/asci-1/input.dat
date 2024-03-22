@@ -19,6 +19,7 @@ C 1 1.27273
 set {                                    
   scf_type pk                            
   basis cc-pvdz                      
+  reference rohf
   e_convergence 10
 }                                        
                                          
@@ -42,6 +43,5 @@ set forte {
                                          
 Escf, scf_wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy")
-
 energy('forte', ref_wfn = scf_wfn) 
 compare_values(refasci,variable("CURRENT ENERGY"),5,"ASCI ENERGY")

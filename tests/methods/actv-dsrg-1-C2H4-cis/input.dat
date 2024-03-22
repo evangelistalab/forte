@@ -1,0 +1,49 @@
+#! Generated using commit GITCOMMIT
+
+Ept2_B1u = -77.9951530298
+
+import forte
+
+molecule C2H4{
+0 1
+H  0.000000  0.923274  1.238289
+H  0.000000 -0.923274  1.238289
+H  0.000000  0.923274 -1.238289
+H  0.000000 -0.923274 -1.238289
+C  0.000000  0.000000  0.668188
+C  0.000000  0.000000 -0.668188
+}
+
+set {
+  reference     rhf
+  scf_type      out_of_core
+  basis         cc-pvdz
+  docc          [3,0,0,1,0,2,1,1]
+  e_convergence 10
+  d_convergence 12
+  maxiter       100
+}
+Escf, wfn = energy('scf', return_wfn=True)
+
+set forte{
+  job_type             active-dsrgpt2
+  frozen_docc          [1,0,0,0,0,1,0,0]
+  restricted_docc      [1,0,0,1,0,1,1,0]
+  active               [1,0,1,1,0,1,1,1]
+  dsrg_s               0.5
+  active_space_solver  cas
+  fcimo_actv_type      cis
+  nrootpi              [1,0,0,0,0,1,0,0]
+  d_convergence        10
+  internal_amp         singles_doubles
+  internal_amp_select  auto
+}
+Econv = energy('forte', ref_wfn = wfn)
+compare_values(Econv, Ept2_B1u, 8, "VCIS-DSRG-MRPT2 energy")
+
+set forte{
+  int_type             cholesky
+  cholesky_tolerance   10
+}
+Ecd = energy('forte', ref_wfn = wfn)
+compare_values(Econv, Ecd, 8, "DSRG-MRPT2 vs CD-DSRG-MRPT2")

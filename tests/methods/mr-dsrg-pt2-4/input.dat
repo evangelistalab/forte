@@ -1,0 +1,78 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refmcscf     = -15.569761360883527 # MCSCF
+refdsrgpt2   = -15.608881064520787 # GROUND
+refdsrgpt2   = -15.482450637054653 # EXCITED A1
+refdsrgpt2   = -15.579785477883162 # EXCITED B2
+
+molecule {
+  0 1
+  BE        0.000000000000     0.000000000000     0.000000000000
+  H         0.000000000000     1.390000000000     2.500000000000
+  H         0.000000000000    -1.390000000000     2.500000000000
+  units bohr
+  no_reorient
+}
+
+set globals{
+   reference            twocon
+   scf_type             pk
+   d_convergence        10
+   e_convergence        12
+}
+
+set mcscf{
+   docc                 [2,0,0,0]
+   socc                 [1,0,0,1]
+   maxiter              1000
+}
+
+set forte{
+   job_type             active-dsrgpt2
+   frozen_docc          [1,0,0,0]
+   restricted_docc      [1,0,0,0]
+   active               [1,0,0,1]
+   dsrg_s               1.0e10
+   active_space_solver  cas
+}
+
+basis {
+spherical
+****
+Be     0
+S   6   1.00
+   1267.070000     0.001940
+    190.356000     0.014786
+     43.295900     0.071795
+     12.144200     0.236348
+      3.809230     0.471763
+      1.268470     0.355183
+S   3   1.00
+      5.693880    -0.028876
+      1.555630    -0.177565
+      0.171855     1.071630
+S   1   1.00
+      0.057181     1.000000
+P   2   1.00
+      1.555630     0.144045
+      0.171855     0.949692
+P   1   1.00
+      5.693880     1.000000
+****
+H      0
+S   3   1.00
+     19.240600     0.032828
+      2.899200     0.231208
+      0.653400     0.817238
+S   1   1.00
+      0.177600     1.000000
+****
+}
+
+Emcscf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

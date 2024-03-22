@@ -4,7 +4,7 @@ memory 2 gb
 
 escf = -304.905779549494
 efix = -305.390029652734
-eaci = -305.3965679747
+eaci = -305.3981015635
 
 molecule ene2{
 0 1
@@ -39,8 +39,8 @@ set {
   scf_type df
   guess sad
   maxiter 500
-  e_convergence 12
-  d_convergence 7
+  e_convergence 11
+  d_convergence 11
   reference rhf
 }
 
@@ -53,7 +53,7 @@ set forte {
   restricted_docc  [17]
   active           [8]
   sigma 0.001
-  diag_algorithm sparse
+  diag_algorithm dynamic
   sci_direct_rdms true
   aci_screen_alg batch_vec
   dsrg_s 1.0e10

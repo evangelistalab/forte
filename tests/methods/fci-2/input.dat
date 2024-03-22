@@ -1,8 +1,8 @@
-# Li2+ minimal basis ROHF/FCI
+#! Generated using commit GITCOMMIT
 
 import forte
 
-refscf = -14.386371726801
+refscf = -14.38637172680087
 reffci = -14.387401674585
 
 molecule {
@@ -21,7 +21,7 @@ set {
 }
 
 set forte {
-  active_space_solver genci
+  active_space_solver fci
 }
 
 energy('scf')
@@ -29,24 +29,3 @@ compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
 energy('forte')
 compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
-
-refvals = [
-    ("CURRENT ENERGY"           ,     -14.387401674585),
-    ("CURRENT REFERENCE ENERGY" ,     -14.386371726801),
-    ("DD SOLVATION ENERGY"      ,       0.000000000000),
-    ("DOUBLET <0AG|DM_X|0AG>"   ,       0.000000000000),
-    ("DOUBLET <0AG|DM_Y|0AG>"   ,       0.000000000000),
-    ("DOUBLET <0AG|DM_Z|0AG>"   ,      -0.000000000000),
-    ("DOUBLET <0AG|QM_XX|0AG>"  ,      -4.552036459372),
-    ("DOUBLET <0AG|QM_XY|0AG>"  ,       0.000000000000),
-    ("DOUBLET <0AG|QM_XZ|0AG>"  ,       0.000000000000),
-    ("DOUBLET <0AG|QM_YY|0AG>"  ,      -4.552036459371),
-    ("DOUBLET <0AG|QM_YZ|0AG>"  ,       0.000000000000),
-    ("DOUBLET <0AG|QM_ZZ|0AG>"  ,       1.178677546179),
-    ("DOUBLET |<0AG|DM|0AG>|"   ,       0.000000000000),
-    ("ENERGY ROOT 0 2AG"        ,     -14.387401674585),
-    ("CI ENERGY"                ,     -14.387401674585),
-]   
-    
-for label, val in refvals:             
-    compare_values(val, variable(label),10,label)

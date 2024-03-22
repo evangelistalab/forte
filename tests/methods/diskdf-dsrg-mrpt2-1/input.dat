@@ -32,7 +32,7 @@ set forte{
   dsrg_s               0.5
   int_type             diskdf
   correlation_solver   three-dsrg-mrpt2
-  active_space_solver  detci
+  active_space_solver  cas
   print                0
 }
 

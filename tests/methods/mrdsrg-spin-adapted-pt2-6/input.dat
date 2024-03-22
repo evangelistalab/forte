@@ -33,7 +33,7 @@ set {
   reference      rhf
   scf_type       df
   basis          def2-svp
-  df_basis_scf   def2-universal-jkfit
+  df_basis_scf   def2-svp-jkfit
   df_basis_mp2   def2-svp-ri
   e_convergence  12
   d_convergence  10
@@ -45,7 +45,7 @@ compare_values(Escf, variable("CURRENT ENERGY"), 8, "DF-SCF(RHF) energy")
 
 set forte{
   int_type             df
-  active_space_solver  detci
+  active_space_solver  cas
   correlation_solver   sa-mrdsrg
   corr_level           pt2
   calc_type            sa
