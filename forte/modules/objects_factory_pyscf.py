@@ -61,6 +61,8 @@ def _make_state_info_from_pyscf(pyscf_obj, options):
 
     if isinstance(pyscf_obj, pyscf.mcscf.casci.CASCI):
         irrep = pyscf_obj.fcisolver.wfnsym
+        if irrep is None:
+            irrep = 0
     elif not options.is_none("ROOT_SYM"):
         irrep = options.get_int("ROOT_SYM")
     else:
@@ -75,7 +77,11 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
     nmo = pyscf_obj.mol.nao_nr()
     
     irrep_size = {"c1": 1, "ci": 2, "c2": 2, "cs": 2, "d2": 4, "c2v": 4, "c2h": 4, "d2h": 8}
-    orbsym = pyscf_obj.mo_coeff.orbsym
+    
+    try:
+        orbsym = pyscf_obj.mo_coeff.orbsym
+    except:
+        orbsym = np.zeros(nmo, dtype = int)
     
     if pyscf_obj.mol.symmetry is None:
         nirrep = 1
