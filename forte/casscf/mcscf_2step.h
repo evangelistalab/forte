@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mcscf_2step_h_
-#define _mcscf_2step_h_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -55,7 +54,8 @@ class MCSCF_2STEP {
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
-    MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+    MCSCF_2STEP(std::shared_ptr<ActiveSpaceSolver> as_solver,
+                const std::map<StateInfo, std::vector<double>>& state_weights_map,
                 std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                 std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteIntegrals> ints);
 
@@ -63,6 +63,9 @@ class MCSCF_2STEP {
     double compute_energy();
 
   private:
+    /// The ActiveSpaceSolver object
+    std::shared_ptr<ActiveSpaceSolver> as_solver_;
+
     /// The list of states to computed. Passed to the ActiveSpaceSolver
     std::map<StateInfo, std::vector<double>> state_weights_map_;
 
@@ -96,7 +99,7 @@ class MCSCF_2STEP {
     std::string der_type_;
 
     /// The printing level
-    int print_;
+    PrintLevel print_ = PrintLevel::Default;
     /// Enable debug printing or not
     bool debug_print_;
 
@@ -144,11 +147,11 @@ class MCSCF_2STEP {
     /// Solve CI coefficients for the current orbitals
     /// @param as_solver the pointer of ActiveSpaceSolver
     /// @param fci_ints the pointer of ActiveSpaceIntegrals
-    /// @param params the parameters <print level, e_conv, r_conv, read_wfn_guess, dump_wfn>
+    /// @param params the parameters <print level, e_conv, r_conv, dump_wfn>
     /// @return averaged energy
     double diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
                                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                   const std::tuple<int, double, double, bool, bool>& params);
+                                   const std::tuple<PrintLevel, double, double, bool>& params);
 
     /// Test if we are doing a single-reference orbital optimization
     bool is_single_reference();
@@ -171,11 +174,10 @@ class MCSCF_2STEP {
 };
 
 std::unique_ptr<MCSCF_2STEP>
-make_mcscf_two_step(const std::map<StateInfo, std::vector<double>>& state_weight_map,
+make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
+                    const std::map<StateInfo, std::vector<double>>& state_weight_map,
                     std::shared_ptr<SCFInfo> ref_wfn, std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info,
                     std::shared_ptr<ForteIntegrals> ints);
 
 } // namespace forte
-
-#endif // _mcscf_2step_h_

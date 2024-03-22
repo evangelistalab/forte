@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,20 +27,27 @@
  * @END LICENSE
  */
 
-#ifndef _dynamic_correlation_solver_h_
-#define _dynamic_correlation_solver_h_
+#pragma once
 
+#include <map>
 #include <memory>
+#include <vector>
 
-#include "base_classes/active_space_solver.h"
-#include "base_classes/forte_options.h"
-#include "base_classes/rdms.h"
-#include "integrals/integrals.h"
-#include "integrals/active_space_integrals.h"
+namespace ambit {
+class Tensor;
+}
 
 namespace forte {
 
+class ActiveSpaceIntegrals;
+class ActiveMultipoleIntegrals;
+class ActiveSpaceSolver;
+class RDMs;
 class SCFInfo;
+class StateInfo;
+class ForteIntegrals;
+class ForteOptions;
+class MOSpaceInfo;
 
 class DynamicCorrelationSolver {
   public:
@@ -55,12 +62,16 @@ class DynamicCorrelationSolver {
                              std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
-
     /// Compute energy
     virtual double compute_energy() = 0;
 
     /// Compute dressed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv() = 0;
+
+    /// Compute dressed multipole integrals
+    virtual std::shared_ptr<ActiveMultipoleIntegrals> compute_mp_eff_actv() {
+        throw std::runtime_error("Need to overload this function");
+    }
 
     /// Destructor
     virtual ~DynamicCorrelationSolver() = default;
@@ -71,15 +82,18 @@ class DynamicCorrelationSolver {
     /// Clean up amplitudes checkpoint files
     void clean_checkpoints();
 
+    /// Set CI coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
+    virtual void set_ci_vectors(const std::vector<ambit::Tensor>& ci_vectors) {
+        ci_vectors_ = ci_vectors;
+    }
     /// Set the active space solver
     void set_active_space_solver(std::shared_ptr<ActiveSpaceSolver> as_solver) {
         as_solver_ = as_solver;
     }
 
     /// Set state to weights
-    void set_state_weights_map(const std::map<StateInfo, std::vector<double>>& state_to_weights) {
-        state_to_weights_ = state_to_weights;
-    }
+    void set_state_weights_map(const std::map<StateInfo, std::vector<double>>& state_to_weights);
 
   protected:
     /// The molecular integrals
@@ -97,6 +111,9 @@ class DynamicCorrelationSolver {
     /// The ForteOptions
     std::shared_ptr<ForteOptions> foptions_;
 
+    /// The CI coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
+    std::vector<ambit::Tensor> ci_vectors_;
     /// Active space solver
     std::shared_ptr<ActiveSpaceSolver> as_solver_ = nullptr;
     /// State to weights map
@@ -161,5 +178,3 @@ make_dynamic_correlation_solver(const std::string& type, std::shared_ptr<ForteOp
                                 std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte
-
-#endif // DYNAMIC_CORRELATION_SOLVER_H

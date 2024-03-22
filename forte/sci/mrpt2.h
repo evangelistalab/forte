@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _mrpt2_h_
-#define _mrpt2_h_
+#pragma once
 
 #include "base_classes/mo_space_info.h"
 #include "sparse_ci/determinant.h"
@@ -46,7 +45,7 @@ class MRPT2 {
     // Class constructor and destructor
     MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
-          psi::SharedMatrix evecs, psi::SharedVector evals, int nroot);
+          std::shared_ptr<psi::Matrix> evecs, std::shared_ptr<psi::Vector> evals, int nroot);
 
     ~MRPT2();
 
@@ -64,9 +63,9 @@ class MRPT2 {
     // MoSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     // The sCI expansion coefficients
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
     // The sCI energies
-    psi::SharedVector evals_;
+    std::shared_ptr<psi::Vector> evals_;
     // the orbital symmetry labels
     std::vector<int> mo_symmetry_;
     // Number of reference roots
@@ -79,5 +78,3 @@ class MRPT2 {
     double energy_kernel(int bin, int nbin, int root);
 };
 } // namespace forte
-
-#endif // _mrpt2_h_

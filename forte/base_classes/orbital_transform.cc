@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,12 +26,19 @@
  * @END LICENSE
  */
 
+#include "ambit/tensor.h"
+
 #include "base_classes/orbital_transform.h"
+#include "base_classes/rdms.h"
+
+#include "integrals/integrals.h"
 
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
+#include "orbital-helpers/mrpt2_nos.h"
 #include "orbital-helpers/ci-no/ci-no.h"
 #include "orbital-helpers/ci-no/mrci-no.h"
+#include "orbital-helpers/semi_canonicalize.h"
 
 namespace forte {
 
@@ -49,19 +56,32 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
 
     if (type == "LOCAL") {
         orb_t = std::make_unique<Localize>(options, ints, mo_space_info);
-    }
-    if (type == "MP2NO") {
+    } else if (type == "MP2NO") {
         orb_t = std::make_unique<MP2_NOS>(scf_info, options, ints, mo_space_info);
-    }
-    if (type == "CINO") {
-        orb_t = std::make_unique<CINO>(scf_info, options, ints, mo_space_info);
-    }
-    if (type == "MRCINO") {
+    } else if (type == "CINO") {
+        orb_t = std::make_unique<CINO>(options, ints, mo_space_info);
+    } else if (type == "MRCINO") {
         orb_t = std::make_unique<MRCINO>(scf_info, options, ints, mo_space_info);
-    }
+    } else if (type == "MRPT2NO") {
+        // perform reference CI calculation
+        auto as_type = options->get_str("ACTIVE_SPACE_SOLVER");
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {"RESTRICTED_DOCC"});
+        auto state_weights_map = make_state_weights_map(options, mo_space_info);
+        auto state_nroots_map = to_state_nroots_map(state_weights_map);
+        auto as_solver = make_active_space_solver(as_type, state_nroots_map, scf_info,
+                                                  mo_space_info, options, as_ints);
+        auto state_energies = as_solver->compute_energy();
 
-    if (!orb_t)
+        // compute RDMs
+        auto rdm_level = (options->get_str("THREEPDC") == "ZERO" ? 2 : 3);
+        auto rdms =
+            as_solver->compute_average_rdms(state_weights_map, rdm_level, RDMsType::spin_free);
+
+        // initialize
+        orb_t = std::make_unique<MRPT2_NOS>(rdms, scf_info, options, ints, mo_space_info);
+    } else {
         throw std::runtime_error("Orbital type " + type + " is not supported!");
+    }
 
     return orb_t;
 }

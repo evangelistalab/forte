@@ -932,7 +932,7 @@ This example is modified from the df-dsrg-mrpt2-4 test case.
     }
 
     set forte {
-       active_space_solver     cas
+       active_space_solver     detci
        int_type                df
        restricted_docc         [2,0,0,0,0,2,0,0]
        active                  [1,0,1,1,0,1,1,1]
@@ -998,7 +998,7 @@ For example, a CD equivalence of the above example is ::
     }
 
     set forte {
-       active_space_solver     cas
+       active_space_solver     detci
        int_type                cholesky           # <=
        cholesky_tolerance      1.0e-5             # <=
        restricted_docc         [2,0,0,0,0,2,0,0]
@@ -1089,6 +1089,15 @@ till convergence is reached.
   This is because the ordering of states may change after dynamical correlation is included.
   When that happens, a simple fix is to include more states in the ensemble,
   which may reduce the accuracy yet usually OK if only a few low-lying states are of interest.
+
+.. tip::
+   When the ground state is averaged, the three-body density cumulants can be safely ignored
+   without affecting the vertical excitation energies.
+
+.. tip::
+   For spin-adapted implementations, it is possible to compute the oscillator strengths of
+   dipole-allowed transitions using the DSRG-transformed dipole integrals by specifying the
+   option :code:`DSRG_MAX_DIPOLE_LEVEL`, which indicates the max body of integrals kept.
 
 2. Multi-State, Extended Multi-State Formalisms
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -1226,7 +1235,7 @@ A simple example is to compute the lowest two states of :math:`\text{LiF}` molec
   }
 
   set forte{
-    active_space_solver cas
+    active_space_solver detci
     correlation_solver  dsrg-mrpt2
     frozen_docc        [2,0,0,0]
     restricted_docc    [1,0,0,0]
@@ -1595,12 +1604,15 @@ Add test cases when DWMS is back to life.
   mrdsrg-spin-adapted-3         SS, R, SQ, NIVO     :math:`\text{HF}`            long, CD, LDSRG(2)
   mrdsrg-spin-adapted-4         SS, U               :math:`\text{N}_2`           long, CD, LDSRG(2), non-semicanonical, zero ccvv
   mrdsrg-spin-adapted-5         SS, U               :math:`\text{N}_2`           long, read/dump amplitudes
+  mrdsrg-spin-adapted-6         SA                  benzene                      long
+  mrdsrg-spin-adapted-7         SA                  ethylene                     short, read/dump amplitudes, multipole integrals
   mrdsrg-spin-adapted-pt2-1     SS, U               :math:`\text{HF}`            CD
   mrdsrg-spin-adapted-pt2-2     SS, U               :math:`\text{HF}`            CD, non-semicanonical orbitals, zero ccvv source
   mrdsrg-spin-adapted-pt2-3     SS, PR              p-benzyne                    DiskDF
   mrdsrg-spin-adapted-pt2-4     SS, R               :math:`\text{O}_2`           triplet ground state, CASSCF(8e,6o)
   mrdsrg-spin-adapted-pt2-5     SA, R               :math:`\text{C}_2`           CASSCF(8e,8o), zero 3 cumulant
   mrdsrg-spin-adapted-pt2-6     SA                  benzene                      Exotic state-average weights
+  mrdsrg-spin-adapted-pt2-7     SA                  ethylene                     general orbitals, dipole level 2
   mrdsrg-spin-adapted-pt3-1     SS, PR              :math:`\text{HF}`            CD
   mrdsrg-spin-adapted-pt3-2     SA                  ethylene                     lowest three singlet states
   ============================  ==================  ===========================  =================================================
@@ -1650,6 +1662,13 @@ The theories of different DSRG correlation levels are discussed in the following
       Erratum: **148**, 079903 (2018).
       (doi: `10.1063/1.5023493 <http://dx.doi.org/10.1063/1.5023493>`_).
 
+    The spin-adapted implementation of the above MR-DSRG methods is reported in:
+
+    * "Spin-free formulation of the multireference driven similarity renormalization group:
+      A benchmark study of first-row diatomic molecules and spin-crossover energetics", C. Li
+      and F. A. Evangelista, *J. Chem. Phys.* **155**, 114111 (2021).
+      (doi: `10.1063/5.0059362 <http://dx.doi.org/10.1063/5.0059362>`_).
+
 The DSRG extensions for excited state are discussed in the following articles:
 
     SA-DSRG framework and its PT2 and PT3 applications:
@@ -1658,6 +1677,13 @@ The DSRG extensions for excited state are discussed in the following articles:
       A state-averaged perturbation theory", C. Li and F. A. Evangelista,
       *J. Chem. Phys.* **148**, 124106 (2018).
       (doi: `10.1063/1.5019793 <http://dx.doi.org/10.1063/1.5019793>`_).
+
+    SA-DSRG benchmarks
+
+    * "Assessment of State-Averaged Driven Similarity Renormalization Group on Vertical
+      Excitation Energies: Optimal Flow Parameters and Applications to Nucleobases",
+      M. Wang, W.-H. Fang, and C. Li, *J. Chem. Theory Comput.* **19**, 122-136 (2023).
+      (doi: `10.1021/acs.jctc.2c00966 <http://dx.doi.org/10.1021/acs.jctc.2c00966>`_).
 
     MS-DSRG and DWMS-DSRG:
 
@@ -1674,6 +1700,13 @@ The DSRG analytic energy gradients are described in the following series of pape
       second-order perturbation theory", S. Wang, C. Li, and F. A. Evangelista,
       *J. Chem. Phys.* **151**, 044118 (2019).
       (doi: `10.1063/1.5100175 <http://dx.doi.org/10.1063/1.5100175>`_).
+
+    Multireference DSRG-MRPT2:
+
+    * "Analytic Energy Gradients for the Driven Similarity Renormalization Group
+      Multireference Second-Order Perturbation Theory", S. Wang, C. Li, and F. A. Evangelista,
+      *J. Chem. Theory Comput.* **17**, 7666-7681 (2021).
+      (doi: `10.1021/acs.jctc.1c00980 <http://dx.doi.org/10.1021/acs.jctc.1c00980>`_).
 
 The integral-factorized implementation of DSRG is firstly achieved in:
 

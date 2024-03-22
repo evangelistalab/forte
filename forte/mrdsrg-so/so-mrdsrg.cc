@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -35,6 +35,10 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
+#include "integrals/active_space_integrals.h"
+
+#include "base_classes/state_info.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
@@ -54,7 +58,7 @@ SOMRDSRG::SOMRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info
                    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
-      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
+      tensor_type_(CoreTensor), BTF(std::make_shared<BlockedTensorFactory>()) {
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
@@ -554,16 +558,16 @@ void SOMRDSRG::startup() {
 
     //    // Print levels
     //    print_ = foptions_->get_int("PRINT");
-    //    if(print_ > 1){
+    //    if(print_ > 2){
     //        Gamma1.print(stdout);
     //        Eta1.print(stdout);
     //        F.print(stdout);
     //    }
-    //    if(print_ > 2){
+    //    if(print_ > 3){
     //        V.print(stdout);
     //        Lambda2.print(stdout);
     //    }
-    //    if(print_ > 3){
+    //    if(print_ > 4){
     //        Lambda3.print(stdout);
     //    }
 }
@@ -621,14 +625,14 @@ double SOMRDSRG::compute_energy() {
     compute_hbar();
 
     while (!converged) {
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\n  Updating the S amplitudes...");
         }
 
         update_T1();
         update_T2();
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\n  --------------------------------------------");
             outfile->Printf("\n  nExc           |S|                  |R|");
             outfile->Printf("\n  --------------------------------------------");
@@ -656,7 +660,7 @@ double SOMRDSRG::compute_energy() {
             //            }
         }
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf(" done.");
         }
         //        if(diis_manager){
@@ -697,14 +701,14 @@ double SOMRDSRG::compute_energy() {
         //                }
         //            }
         //        }
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\n  Compute recursive single commutator...");
         }
 
         // Compute the new similarity-transformed Hamiltonian
         double energy = E0_ + compute_hbar();
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf(" done.");
         }
 
@@ -788,7 +792,7 @@ void SOMRDSRG::mp2_guess() {
 }
 
 double SOMRDSRG::compute_hbar() {
-    if (print_ > 1) {
+    if (print_ > 2) {
         outfile->Printf("\n\n  Computing the similarity-transformed Hamiltonian");
         outfile->Printf("\n  "
                         "------------------------------------------------------"
@@ -808,7 +812,7 @@ double SOMRDSRG::compute_hbar() {
     O1["pq"] = F["pq"];
     O2["pqrs"] = V["pqrs"];
 
-    if (print_ > 1) {
+    if (print_ > 2) {
         outfile->Printf("\n  %2d %20.12f %20e %20e", 0, Hbar0, Hbar1.norm(), Hbar2.norm());
     }
 
@@ -837,14 +841,14 @@ double SOMRDSRG::compute_hbar() {
         double norm_C1 = C1.norm();
         double norm_C2 = C2.norm();
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\n  %2d %20.12f %20e %20e", n, C0, norm_C1, norm_C2);
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             break;
         }
     }
-    if (print_ > 1) {
+    if (print_ > 2) {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "-----------");

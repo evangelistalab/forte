@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _casscf_h_
-#define _casscf_h_
+#pragma once
 
 #include <map>
 
@@ -73,7 +72,7 @@ class CASSCF {
     /// Compute the CASSCF energy
     double compute_energy();
     /// Compute the CASSCF energy gradient
-    psi::SharedMatrix compute_gradient();
+    std::shared_ptr<psi::Matrix> compute_gradient();
 
   private:
     /// The list of states to computed. Passed to the ActiveSpaceSolver
@@ -200,9 +199,9 @@ class CASSCF {
     /// Equation 9
 
     /// The Fock matrix due to frozen core orbitals
-    psi::SharedMatrix F_frozen_core_;
+    std::shared_ptr<psi::Matrix> F_frozen_core_;
     /// The one-electron integral matrix in the AO basis (H = T + V)
-    psi::SharedMatrix Hcore_;
+    std::shared_ptr<psi::Matrix> Hcore_;
     /// The JK object.  Built in constructor
     std::shared_ptr<psi::JK> JK_;
     /// Diagonalize the Hamiltonian using the updated MO coefficients (does FCI, sCI, DMRG, etc.)
@@ -210,7 +209,8 @@ class CASSCF {
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c
-    void overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new);
+    void overlap_orbitals(const std::shared_ptr<psi::Matrix>& C_old,
+                          const std::shared_ptr<psi::Matrix>& C_new);
     void overlap_coefficients();
     //    void write_orbitals_molden();
 
@@ -232,7 +232,7 @@ class CASSCF {
     ambit::Tensor tei_gaaa_;
 
     /// The print level
-    int print_ = 0;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
@@ -254,5 +254,3 @@ make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
             std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
 
 } // namespace forte
-
-#endif // _casscf_h_

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,6 +30,7 @@
 #include "integrals/active_space_integrals.h"
 #include "sigma_vector_dynamic.h"
 #include "sigma_vector_sparse_list.h"
+#include "sigma_vector_full.h"
 
 namespace forte {
 
@@ -66,16 +67,5 @@ std::shared_ptr<SigmaVector> make_sigma_vector(const std::vector<Determinant>& s
     DeterminantHashVec dhv(space);
     return make_sigma_vector(dhv, fci_ints, max_memory, sigma_type);
 }
-
-SigmaVectorFull::SigmaVectorFull(const DeterminantHashVec& space,
-                                 std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
-    : SigmaVector(space, fci_ints, SigmaVectorType::Full, "SigmaVectorFull") {}
-
-void SigmaVectorFull::add_bad_roots(
-    std::vector<std::vector<std::pair<size_t, double>>>& /*roots*/) {}
-
-void SigmaVectorFull::get_diagonal(psi::Vector& /*diag*/) {}
-
-void SigmaVectorFull::compute_sigma(std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>) {}
 
 } // namespace forte

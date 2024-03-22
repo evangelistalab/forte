@@ -42,10 +42,10 @@ from .register_forte_options import *
 from .core import ForteManager, clean_options
 from ._forte import *
 
-__version__ = '0.2.3'
-__author__ = 'Forte Developers'
+__version__ = "0.2.4"
+__author__ = "Forte Developers"
 
-# Create a ForteOptions object (stores all options)
+# Create a global ForteOptions object (stores all options)
 forte_options = forte.ForteOptions()
 
 # Register options defined in Forte in the forte_options object
@@ -55,7 +55,7 @@ register_forte_options(forte_options)
 ForteManager()
 
 # If we are running psi4, push the options defined in forte_options to psi
-if 'psi4' in sys.modules:
+if "psi4" in sys.modules:
     psi_options = psi4.core.get_options()
-    psi_options.set_current_module('FORTE')
+    psi_options.set_current_module("FORTE")
     forte_options.push_options_to_psi4(psi_options)

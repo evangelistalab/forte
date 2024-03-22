@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -35,6 +35,7 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "helpers/printing.h"
+#include "helpers/timer.h"
 #include "sa_mrdsrg.h"
 
 using namespace psi;
@@ -88,19 +89,19 @@ void SA_MRDSRG::startup() {
     // test semi-canonical
     if (!semi_canonical_) {
         outfile->Printf("\n  Orbital invariant formalism will be employed for MR-DSRG.");
-        U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
+        U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"cc", "aa", "vv"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
 
     // determine file names
-    restart_file_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+    chk_filename_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                            std::to_string(getpid()) + "." +
                            psi::Process::environment.molecule()->name();
     t1_file_chk_.clear();
     t2_file_chk_.clear();
     if (restart_amps_ and (relax_ref_ != "NONE")) {
-        t1_file_chk_ = restart_file_prefix_ + ".mrdsrg.adapted.t1.bin";
-        t2_file_chk_ = restart_file_prefix_ + ".mrdsrg.adapted.t2.bin";
+        t1_file_chk_ = chk_filename_prefix_ + ".mrdsrg.adapted.t1.bin";
+        t2_file_chk_ = chk_filename_prefix_ + ".mrdsrg.adapted.t2.bin";
     }
 
     t1_file_cwd_ = "forte.mrdsrg.adapted.t1.bin";
@@ -109,22 +110,25 @@ void SA_MRDSRG::startup() {
 
 void SA_MRDSRG::print_options() {
     // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info_int{
-        {"Max number of iterations", maxiter_},
-        {"Max nested commutators", rsc_ncomm_},
-        {"DIIS start", diis_start_},
-        {"Min DIIS vectors", diis_min_vec_},
-        {"Max DIIS vectors", diis_max_vec_},
-        {"DIIS extrapolating freq", diis_freq_},
-        {"Number of amplitudes for printing", ntamp_}};
-
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Flow parameter", s_},
-        {"Energy convergence threshold", e_conv_},
-        {"Residual convergence threshold", r_conv_},
-        {"Recursive single commutator threshold", rsc_conv_},
-        {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"Intruder amplitudes threshold", intruder_tamp_}};
+    table_printer printer;
+    printer.add_int_data({{"Max number of iterations", maxiter_},
+                          {"Max nested commutators", rsc_ncomm_},
+                          {"DIIS start", diis_start_},
+                          {"Min DIIS vectors", diis_min_vec_},
+                          {"Max DIIS vectors", diis_max_vec_},
+                          {"DIIS extrapolating freq", diis_freq_},
+                          {"Number of amplitudes for printing", ntamp_}});
+    printer.add_double_data({{"Flow parameter", s_},
+                             {"Energy convergence threshold", e_conv_},
+                             {"Residual convergence threshold", r_conv_},
+                             {"Recursive single commutator threshold", rsc_conv_},
+                             {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+                             {"Intruder amplitudes threshold", intruder_tamp_}});
+    printer.add_bool_data({{"Restart amplitudes", restart_amps_},
+                           {"Sequential DSRG transformation", sequential_Hbar_},
+                           {"Omit blocks of >= 3 virtual indices", nivo_},
+                           {"Read amplitudes from current dir", read_amps_cwd_},
+                           {"Write amplitudes to current dir", dump_amps_cwd_}});
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Correlation level", corrlv_string_},
@@ -140,16 +144,10 @@ void SA_MRDSRG::print_options() {
         calculation_info_string.emplace_back("Internal amplitudes selection", internal_amp_select_);
     }
 
-    std::vector<std::pair<std::string, bool>> calculation_info_bool{
-        {"Restart amplitudes", restart_amps_},
-        {"Sequential DSRG transformation", sequential_Hbar_},
-        {"Omit blocks of >= 3 virtual indices", nivo_},
-        {"Read amplitudes from current dir", read_amps_cwd_},
-        {"Write amplitudes to current dir", dump_amps_cwd_}};
-
     // print information
-    print_selected_options("Computation Information", calculation_info_string,
-                           calculation_info_bool, calculation_info_double, calculation_info_int);
+    printer.add_string_data(calculation_info_string);
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 void SA_MRDSRG::check_memory() {
@@ -253,4 +251,37 @@ double SA_MRDSRG::Hbar_od_norm(const int& n, const std::vector<std::string>& blo
 
     return norm;
 }
+
+void SA_MRDSRG::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                                   const std::vector<int>& max_levels) {
+    print_h2("Transform One-Electron Operators");
+
+    if (corrlv_string_ == "LDSRG2_QC")
+        throw std::runtime_error(
+            "Not available for LDSRG2_QC: Try LDSRG2 with DSRG_RSC_NCOMM = 2.");
+
+    int n_tensors = oetens.size();
+    Mbar0_ = std::vector<double>(n_tensors, 0.0);
+    Mbar1_.resize(n_tensors);
+    Mbar2_.resize(n_tensors);
+    for (int i = 0; i < n_tensors; ++i) {
+        Mbar1_[i] = BTF_->build(tensor_type_, oetens[i].name() + "1", {"aa"});
+        if (max_levels[i] > 1)
+            Mbar2_[i] = BTF_->build(tensor_type_, oetens[i].name() + "2", {"aaaa"});
+    }
+
+    auto max_body = *std::max_element(max_levels.begin(), max_levels.end());
+    if (max_body > 1) {
+        DT2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
+    }
+
+    for (int i = 0; i < n_tensors; ++i) {
+        local_timer t_local;
+        const auto& M = oetens[i];
+        print_contents("Transforming " + M.name());
+        compute_mbar_ldsrg2(M, max_levels[i], i);
+        print_done(t_local.get());
+    }
+}
+
 } // namespace forte

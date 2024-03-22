@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -90,6 +90,81 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
     in.read(reinterpret_cast<char*>(&data[0]), data_size * sizeof(double));
 
     in.close();
+}
+
+void write_psi_matrix(const std::string& filename, const psi::Matrix& mat, bool overwrite) {
+    int nirrep = mat.nirrep();
+    int symmetry = mat.symmetry();
+    size_t n = 0;
+    for (int h = 0; h < nirrep; ++h) {
+        n += mat.rowspi(h) * mat.colspi(h ^ symmetry);
+    }
+    // copy the data from the matrix to the vector
+    std::vector<double> data(n);
+    size_t k = 0;
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0, maxi = mat.rowspi(h); i < maxi; ++i) {
+            for (int j = 0, maxj = mat.colspi(h ^ symmetry); j < maxj; ++j) {
+                data[k] = mat.get(h, i, j);
+                ++k;
+            }
+        }
+    }
+    write_disk_vector_double(filename, data, overwrite);
+}
+
+void read_psi_matrix(const std::string& filename, psi::Matrix& mat) {
+    int nirrep = mat.nirrep();
+    int symmetry = mat.symmetry();
+    size_t n = 0;
+    for (int h = 0; h < nirrep; ++h) {
+        n += mat.rowspi(h) * mat.colspi(h ^ symmetry);
+    }
+    // copy the data from the matrix to the vector
+    std::vector<double> data(n);
+    read_disk_vector_double(filename, data);
+    size_t k = 0;
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0, maxi = mat.rowspi(h); i < maxi; ++i) {
+            for (int j = 0, maxj = mat.colspi(h ^ symmetry); j < maxj; ++j) {
+                mat.set(h, i, j, data[k]);
+                ++k;
+            }
+        }
+    }
+}
+
+void dump_occupations(const std::string& filename,
+                      std::unordered_map<std::string, psi::Dimension> occ_map) {
+    int nirrep = -1;
+    std::vector<std::string> spaces;
+    for (const auto& [space_name, dim] : occ_map) {
+        if (nirrep == -1) {
+            nirrep = dim.n();
+        } else {
+            if (dim.n() != nirrep)
+                throw std::runtime_error("Inconsistent number of irreps!");
+        }
+        spaces.push_back(space_name);
+    }
+    std::ofstream wfile(filename + ".json");
+    if (wfile.is_open()) {
+        wfile << "{";
+        for (int i = 0, n = spaces.size(); i < n; ++i) {
+            wfile << "\n    \"" << spaces[i] << "\": [";
+            for (int h = 0; h < nirrep; ++h) {
+                wfile << occ_map.at(spaces[i])[h];
+                if (h < (nirrep - 1))
+                    wfile << ",";
+            }
+            wfile << "]";
+            if (i < (n - 1))
+                wfile << ",";
+        }
+        wfile << "\n}";
+    } else {
+        throw std::runtime_error("Unable to open file for dump occupation numbers!");
+    }
 }
 
 // std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,

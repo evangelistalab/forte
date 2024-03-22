@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -96,6 +96,71 @@ std::shared_ptr<RDMs> RDMs::build(size_t max_rdm_level, size_t n_orbs, RDMsType 
         }
     }
     return rdms;
+}
+
+std::shared_ptr<RDMs> RDMs::build_from_disk(size_t max_rdm_level, RDMsType type,
+                                            const std::string& filename_prefix) {
+    std::shared_ptr<RDMs> rdms;
+
+    std::string prefix = (filename_prefix.empty() ? "" : filename_prefix + ".");
+
+    if (type == RDMsType::spin_dependent) {
+        ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+        if (max_rdm_level > 0) {
+            g1a = ambit::load_tensor(prefix + "g1a.bin");
+            g1b = ambit::load_tensor(prefix + "g1b.bin");
+        }
+        if (max_rdm_level > 1) {
+            g2aa = ambit::load_tensor(prefix + "g2aa.bin");
+            g2ab = ambit::load_tensor(prefix + "g2ab.bin");
+            g2bb = ambit::load_tensor(prefix + "g2bb.bin");
+        }
+        if (max_rdm_level > 2) {
+            g3aaa = ambit::load_tensor(prefix + "g3aaa.bin");
+            g3aab = ambit::load_tensor(prefix + "g3aab.bin");
+            g3abb = ambit::load_tensor(prefix + "g3abb.bin");
+            g3bbb = ambit::load_tensor(prefix + "g3bbb.bin");
+        }
+
+        if (max_rdm_level < 1) {
+            rdms = std::make_shared<RDMsSpinDependent>();
+        } else if (max_rdm_level == 1) {
+            rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b);
+        } else if (max_rdm_level == 2) {
+            rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb);
+        } else {
+            rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
+                                                       g3abb, g3bbb);
+        }
+    } else {
+        ambit::Tensor g1, g2, g3;
+        if (max_rdm_level > 0) {
+            g1 = ambit::load_tensor(prefix + "g1.bin");
+        }
+        if (max_rdm_level > 1) {
+            g2 = ambit::load_tensor(prefix + "g2.bin");
+        }
+        if (max_rdm_level > 2) {
+            g3 = ambit::load_tensor(prefix + "g3.bin");
+        }
+
+        if (max_rdm_level < 1) {
+            rdms = std::make_shared<RDMsSpinFree>();
+        } else if (max_rdm_level == 1) {
+            rdms = std::make_shared<RDMsSpinFree>(g1);
+        } else if (max_rdm_level == 2) {
+            rdms = std::make_shared<RDMsSpinFree>(g1, g2);
+        } else {
+            rdms = std::make_shared<RDMsSpinFree>(g1, g2, g3);
+        }
+    }
+
+    return rdms;
+}
+
+void RDMs::save_SF_G1(const std::string& filename) {
+    auto d1 = SF_G1mat();
+    d1->save(filename, false, false, true);
 }
 
 std::shared_ptr<psi::Matrix> RDMs::SF_G1mat() {
@@ -297,10 +362,11 @@ void RDMs::_test_rdm_level(const size_t& level, const std::string& name) const {
     }
 }
 
-void RDMs::_test_rdm_dims(const ambit::Tensor& T, const std::string& name) const {
+void RDMs::_test_rdm_dims(const ambit::Tensor& T, const std::string& name,
+                          size_t desired_dim_size) const {
     const auto& dims = T.dims();
-    if (dims.size() < 2) {
-        throw std::runtime_error("Invalid dimension (too small) for " + name);
+    if (dims.size() != desired_dim_size) {
+        throw std::runtime_error("Invalid dimension for " + name);
     }
     if (std::find_if(dims.begin(), dims.end(), [&](size_t i) { return i != n_orbs_; }) !=
         dims.end()) {
@@ -354,8 +420,8 @@ RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b) : g1a
     max_rdm_ = 1;
     type_ = RDMsType::spin_dependent;
     n_orbs_ = g1a.dim(0);
-    _test_rdm_dims(g1a, "g1a");
-    _test_rdm_dims(g1b, "g1b");
+    _test_rdm_dims(g1a, "g1a", 2);
+    _test_rdm_dims(g1b, "g1b", 2);
 }
 
 RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa,
@@ -364,11 +430,11 @@ RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit
     max_rdm_ = 2;
     type_ = RDMsType::spin_dependent;
     n_orbs_ = g1a.dim(0);
-    _test_rdm_dims(g1a, "g1a");
-    _test_rdm_dims(g1b, "g1b");
-    _test_rdm_dims(g2aa, "g2aa");
-    _test_rdm_dims(g2ab, "g2ab");
-    _test_rdm_dims(g2bb, "g2bb");
+    _test_rdm_dims(g1a, "g1a", 2);
+    _test_rdm_dims(g1b, "g1b", 2);
+    _test_rdm_dims(g2aa, "g2aa", 4);
+    _test_rdm_dims(g2ab, "g2ab", 4);
+    _test_rdm_dims(g2bb, "g2bb", 4);
 }
 
 RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa,
@@ -379,15 +445,15 @@ RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit
     max_rdm_ = 3;
     type_ = RDMsType::spin_dependent;
     n_orbs_ = g1a.dim(0);
-    _test_rdm_dims(g1a, "g1a");
-    _test_rdm_dims(g1b, "g1b");
-    _test_rdm_dims(g2aa, "g2aa");
-    _test_rdm_dims(g2ab, "g2ab");
-    _test_rdm_dims(g2bb, "g2bb");
-    _test_rdm_dims(g3aaa, "g3aaa");
-    _test_rdm_dims(g3aab, "g3aab");
-    _test_rdm_dims(g3abb, "g3abb");
-    _test_rdm_dims(g3bbb, "g3bbb");
+    _test_rdm_dims(g1a, "g1a", 2);
+    _test_rdm_dims(g1b, "g1b", 2);
+    _test_rdm_dims(g2aa, "g2aa", 4);
+    _test_rdm_dims(g2ab, "g2ab", 4);
+    _test_rdm_dims(g2bb, "g2bb", 4);
+    _test_rdm_dims(g3aaa, "g3aaa", 6);
+    _test_rdm_dims(g3aab, "g3aab", 6);
+    _test_rdm_dims(g3abb, "g3abb", 6);
+    _test_rdm_dims(g3bbb, "g3bbb", 6);
 }
 
 ambit::Tensor RDMsSpinDependent::g1a() const {
@@ -648,6 +714,26 @@ void RDMsSpinDependent::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub)
     psi::outfile->Printf("\n    Transformed 3 RDMs.");
 }
 
+void RDMsSpinDependent::dump_to_disk(const std::string& filename_prefix) const {
+    std::string prefix = filename_prefix + (filename_prefix.empty() ? "" : ".");
+
+    if (max_rdm_ > 0) {
+        ambit::save(g1a_, prefix + "g1a.bin");
+        ambit::save(g1b_, prefix + "g1b.bin");
+    }
+    if (max_rdm_ > 1) {
+        ambit::save(g2aa_, prefix + "g2aa.bin");
+        ambit::save(g2ab_, prefix + "g2ab.bin");
+        ambit::save(g2bb_, prefix + "g2bb.bin");
+    }
+    if (max_rdm_ > 2) {
+        ambit::save(g3aaa_, prefix + "g3aaa.bin");
+        ambit::save(g3aab_, prefix + "g3aab.bin");
+        ambit::save(g3abb_, prefix + "g3abb.bin");
+        ambit::save(g3bbb_, prefix + "g3bbb.bin");
+    }
+}
+
 RDMsSpinFree::RDMsSpinFree() {
     max_rdm_ = 0;
     type_ = RDMsType::spin_free;
@@ -658,15 +744,15 @@ RDMsSpinFree::RDMsSpinFree(ambit::Tensor G1) : SF_G1_(G1) {
     max_rdm_ = 1;
     type_ = RDMsType::spin_free;
     n_orbs_ = G1.dim(0);
-    _test_rdm_dims(G1, "G1");
+    _test_rdm_dims(G1, "G1", 2);
 }
 
 RDMsSpinFree::RDMsSpinFree(ambit::Tensor G1, ambit::Tensor G2) : SF_G1_(G1), SF_G2_(G2) {
     max_rdm_ = 2;
     type_ = RDMsType::spin_free;
     n_orbs_ = G1.dim(0);
-    _test_rdm_dims(G1, "G1");
-    _test_rdm_dims(G2, "G2");
+    _test_rdm_dims(G1, "G1", 2);
+    _test_rdm_dims(G2, "G2", 4);
 }
 
 RDMsSpinFree::RDMsSpinFree(ambit::Tensor G1, ambit::Tensor G2, ambit::Tensor G3)
@@ -674,9 +760,9 @@ RDMsSpinFree::RDMsSpinFree(ambit::Tensor G1, ambit::Tensor G2, ambit::Tensor G3)
     max_rdm_ = 3;
     type_ = RDMsType::spin_free;
     n_orbs_ = G1.dim(0);
-    _test_rdm_dims(G1, "G1");
-    _test_rdm_dims(G2, "G2");
-    _test_rdm_dims(G3, "G3");
+    _test_rdm_dims(G1, "G1", 2);
+    _test_rdm_dims(G2, "G2", 4);
+    _test_rdm_dims(G3, "G3", 6);
 }
 
 ambit::Tensor RDMsSpinFree::SF_G1() const {
@@ -884,5 +970,19 @@ void RDMsSpinFree::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
         Ua("ap") * Ua("bq") * Ua("cr") * SF_G3_("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
     SF_G3_("pqrstu") = g3T("pqrstu");
     psi::outfile->Printf("\n    Transformed 3 RDMs.");
+}
+
+void RDMsSpinFree::dump_to_disk(const std::string& filename_prefix) const {
+    std::string prefix = (filename_prefix.empty() ? "" : filename_prefix + ".");
+
+    if (max_rdm_ > 0) {
+        ambit::save(SF_G1_, prefix + "g1.bin");
+    }
+    if (max_rdm_ > 1) {
+        ambit::save(SF_G2_, prefix + "g2.bin");
+    }
+    if (max_rdm_ > 2) {
+        ambit::save(SF_G3_, prefix + "g3.bin");
+    }
 }
 } // namespace forte

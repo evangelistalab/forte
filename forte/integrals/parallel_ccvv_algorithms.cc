@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -123,8 +123,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     if (debug_print)
         printf("\n P%d done with F_BCAST: %8.8f s", my_proc, F_BCAST.get());
     if (debug_print)
-        printf("\n P%d no_: %d nthree_: %d virtual_: %d core_: %d", my_proc, no_, nthree_,
-               virtual_, core_);
+        printf("\n P%d no_: %d nthree_: %d virtual_: %d core_: %d", my_proc, no_, nthree_, virtual_,
+               core_);
 
     if (memory_input > int_mem_int) {
         if (my_proc == 0) {
@@ -247,8 +247,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
                                     begin_offset[i], end_offset[i]);
                 }
 
-                //#ifdef HAVE_GA
-                //#endif
+                // #ifdef HAVE_GA
+                // #endif
             }
         }
     }
@@ -411,7 +411,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
 
         ambit::Tensor BmQe =
             ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
-        // std::shared_ptr<psi::Matrix> BmQe_mat(new psi::Matrix("BmQe_mat", m_batch.size() *
+        // auto BmQe_mat = std::make_shared<psi::Matrix>("BmQe_mat", m_batch.size( *
         // nthree_, virtual_));
         int begin_offset[2];
         int end_offset[2];
@@ -443,7 +443,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         ambit::Tensor BnQf =
             ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
         // ambit::Tensor BnQf;
-        // std::shared_ptr<psi::Matrix> BnQf_mat(new psi::Matrix("BnQf", n_batch.size() * nthree_,
+        // auto BnQf_mat = std::make_shared<psi::Matrix>("BnQf", n_batch.size( * nthree_,
         // virtual_));
         // std::vector<double> BnQf(n_batch.size() * nthree_ * virtual_, 0);
 

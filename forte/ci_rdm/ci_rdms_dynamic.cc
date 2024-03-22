@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -58,8 +58,8 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
     tprdm_abb.resize(norb5_ * norb_, 0.0);
     tprdm_bbb.resize(norb5_ * norb_, 0.0);
 
-    SortedStringList a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
-    SortedStringList b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
+    SortedStringList a_sorted_string_list_(norb_, wfn_, DetSpinType::Alpha);
+    SortedStringList b_sorted_string_list_(norb_, wfn_, DetSpinType::Beta);
     const std::vector<String>& sorted_bstr = b_sorted_string_list_.sorted_half_dets();
     size_t num_bstr = sorted_bstr.size();
     const auto& sorted_b_dets = b_sorted_string_list_.sorted_dets();

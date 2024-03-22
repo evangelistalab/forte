@@ -1,9 +1,36 @@
-#ifndef _bitwise_operations_hpp_
-#define _bitwise_operations_hpp_
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
 
-#ifdef __SSE4_2__
-#include <nmmintrin.h>
-#endif
+#pragma once
+
+#include <bit>
+#include <cstdint>
 
 #define USE_builtin_popcountll 1
 
@@ -15,106 +42,50 @@ inline void hash_combine_uint64(uint64_t& seed, size_t value) {
     seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-/**
- * @brief Count the number of bit set to 1 in a uint64_t
- * @param x the uint64_t integer to test
- * @return the number of bits that are set to 1
- *
- * If available, this function uses SSE4.2 instructions (_mm_popcnt_u64) to speed up the evaluation.
- */
-inline uint64_t ui64_bit_count(uint64_t x) {
-#ifdef __SSE4_2__
-    // this version is 2.6 times faster than the one below
-    return _mm_popcnt_u64(x);
-#else
-    x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
-    x = (0x3333333333333333UL & x) + (0x3333333333333333UL & (x >> 2));
-    x = (0x0f0f0f0f0f0f0f0fUL & x) + (0x0f0f0f0f0f0f0f0fUL & (x >> 4));
-    x = (0x00ff00ff00ff00ffUL & x) + (0x00ff00ff00ff00ffUL & (x >> 8));
-    x = (0x0000ffff0000ffffUL & x) + (0x0000ffff0000ffffUL & (x >> 16));
-    x = (0x00000000ffffffffUL & x) + (0x00000000ffffffffUL & (x >> 32));
-    return x;
-#endif
+/// @brief Count the number of bit set to 1 in a uint64_t
+/// @param x the uint64_t integer to test
+/// @return the number of bits that are set to 1
+inline uint64_t ui64_bit_count(uint64_t x) { return std::popcount(x); }
+
+/// @brief Compute the parity of a uint64_t integer (1 if odd number of bits set, -1 otherwise)
+/// @param x the uint64_t integer to test
+/// @return parity = (-1)^(number of bits set to 1)
+inline double ui64_bit_parity(uint64_t x) { return 1 - 2 * ((std::popcount(x) & 1) == 1); }
+
+/// @brief Bit-scan to find next set bit
+/// @param x the uint64_t integer to test
+/// @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
+inline uint64_t ui64_find_lowest_one_bit(uint64_t x) { return std::countr_zero(x); }
+
+/// @brief Bit-scan to find next set bit after position pos
+/// @param x the uint64_t integer to test
+/// @param pos the position where we should start scanning (must be less than 64)
+/// @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
+inline uint64_t ui64_find_lowest_one_bit_at_pos(uint64_t x, int pos) {
+    const uint64_t mask = uint64_t(~0) << pos; // set all bits to one and shift left
+    x &= mask;
+    return ui64_find_lowest_one_bit(x);
 }
 
-/**
- * @brief Count the number of bit set to 1 in a uint64_t
- * @param x the uint64_t integer to test
- * @return the number of bits that are set to 1
- *
- * If available, this function uses SSE4.2 instructions (_mm_popcnt_u64) to speed up the evaluation.
- */
-inline double ui64_bit_parity(uint64_t x) {
-#ifdef __SSE4_2__
-    // this version is 2.6 times faster than the one below
-    return 1 - 2 * ((_mm_popcnt_u64(x) & 1) == 1);
-#else
-    x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
-    x = (0x3333333333333333UL & x) + (0x3333333333333333UL & (x >> 2));
-    x = (0x0f0f0f0f0f0f0f0fUL & x) + (0x0f0f0f0f0f0f0f0fUL & (x >> 4));
-    x = (0x00ff00ff00ff00ffUL & x) + (0x00ff00ff00ff00ffUL & (x >> 8));
-    x = (0x0000ffff0000ffffUL & x) + (0x0000ffff0000ffffUL & (x >> 16));
-    x = (0x00000000ffffffffUL & x) + (0x00000000ffffffffUL & (x >> 32));
-    return 1. - 2. * ((x & 1) == 1);
-#endif
-}
-
-/**
- * @brief Bit-scan to find next set bit
- * @param x the uint64_t integer to test
- * @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
- */
-inline uint64_t ui64_find_lowest_one_bit(uint64_t x) {
-#if defined(__GNUC__) || defined(__clang__)
-    // optimized version using builtin functions
-    return __builtin_ffsll(x) - 1;
-#else
-    // version based on bitwise operations
-    if (1 >= x)
-        return x - 1; // 0 if 1, ~0 if 0
-    uint64_t r = 0;
-    x &= -x; // isolate lowest bit
-    if (x & 0xffffffff00000000UL)
-        r += 32;
-    if (x & 0xffff0000ffff0000UL)
-        r += 16;
-    if (x & 0xff00ff00ff00ff00UL)
-        r += 8;
-    if (x & 0xf0f0f0f0f0f0f0f0UL)
-        r += 4;
-    if (x & 0xccccccccccccccccUL)
-        r += 2;
-    if (x & 0xaaaaaaaaaaaaaaaaUL)
-        r += 1;
-    return r;
-#endif
-}
-
-/**
- * @brief Clear the lowest bit set in a uint64_t word
- * @param x the uint64_t word
- * @return a modified version of x with the lowest bit set to 1 turned into a 0
- */
+/// @brief Clear the lowest bit set in a uint64_t word
+/// @param x the uint64_t word
+/// @return a modified version of x with the lowest bit set to 1 turned into a 0
 inline uint64_t ui64_clear_lowest_one_bit(uint64_t x) { return x & (x - 1); }
 
-/**
- * @brief Find the index of the lowest bit set in a uint64_t word and clear it. A modified version
- *        of x with the lowest bit set to 1 turned into a 0 is stored in x
- * @param x the uint64_t integer to test
- * @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
- */
+/// @brief Find the index of the lowest bit set in a uint64_t word and clear it. A modified version
+///        of x with the lowest bit set to 1 turned into a 0 is stored in x
+/// @param x the uint64_t integer to test. This value is modified by the function
+/// @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
 inline uint64_t ui64_find_and_clear_lowest_one_bit(uint64_t& x) {
     uint64_t result = ui64_find_lowest_one_bit(x);
-    x = x & (x - 1);
+    x = ui64_clear_lowest_one_bit(x);
     return result;
 }
 
-/**
- * @brief Count the number of 1 from position 0 up to n - 1 and return the parity of this number.
- * @param x the uint64_t integer to test
- * @param n the end position (not counted)
- * @return the parity defined as parity = (-1)^(number of bits set between position 0 and n - 1)
- */
+/// @brief Count the number of 1's from position 0 up to n - 1 and return the parity of this number.
+/// @param x the uint64_t integer to test
+/// @param n the end position (not counted)
+/// @return the parity defined as parity = (-1)^(number of bits set to 1 between position 0 and n-1)
 inline double ui64_sign(uint64_t x, int n) {
     // TODO PERF: speedup by avoiding the mask altogether
     // This implementation is 20 x times faster than one based on for loops
@@ -138,14 +109,13 @@ inline double ui64_sign(uint64_t x, int n) {
     return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
 }
 
-/**
- * @brief Count the number of 1 from position m + 1 up to n - 1 and return the parity of this
- * number.
- * @param x the uint64_t integer to test
- * @param m the starting position (not counted)
- * @param n the end position (not counted)
- * @return the parity defined as parity = (-1)^(number of bits set between position m + 1 and n - 1)
- */
+/// @brief Count the number of 1's from position m + 1 up to n - 1 and return the parity of this
+/// number.
+/// @param x the uint64_t integer to test
+/// @param m the starting position (not counted)
+/// @param n the end position (not counted)
+/// @return the parity defined as parity = (-1)^(number of bits set to 1 between position m+1 and
+/// n-1)
 inline double ui64_sign(uint64_t x, int m, int n) {
     // TODO PERF: speedup by avoiding the mask altogether
     // This implementation is a bit faster than one based on for loops
@@ -169,12 +139,12 @@ inline double ui64_sign(uint64_t x, int m, int n) {
     return (mask % 2 == 0) ? 1.0 : -1.0;        // compute sign
 }
 
-/**
- * @brief Count the number of 1 from position n + 1 up to 63 and return the parity of this number.
- * @param x the uint64_t integer to test
- * @param n the start position (not counted)
- * @return the parity defined as parity = (-1)^(number of bits set between position n + 1 and 63)
- */
+/// @brief Count the number of 1's from position n + 1 up to 63 and return the parity of this
+/// number.
+/// @param x the uint64_t integer to test
+/// @param n the start position (not counted)
+/// @return the parity defined as parity = (-1)^(number of bits set to 1 between position n+1 and
+/// 63)
 inline double ui64_sign_reverse(uint64_t x, int n) {
     // TODO PERF: speedup by avoiding the mask altogether
     // This implementation is 20 x times faster than one based on for loops
@@ -195,5 +165,3 @@ inline double ui64_sign_reverse(uint64_t x, int n) {
     mask = ui64_bit_count(mask);         // count bits in between
     return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
 }
-
-#endif // _bitwise_operations_hpp_

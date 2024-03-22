@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -102,8 +102,8 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    std::shared_ptr<psi::Matrix> B1(new psi::Matrix(1, nthree_));
-    std::shared_ptr<psi::Matrix> B2(new psi::Matrix(1, nthree_));
+    auto B1 = std::make_shared<psi::Matrix>(1, nthree_);
+    auto B2 = std::make_shared<psi::Matrix>(1, nthree_);
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -141,8 +141,8 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     std::vector<size_t> s_range = {sn, sn + 1};
 
     double vpqrsalphaC = 0.0;
-    std::shared_ptr<psi::Matrix> B1(new psi::Matrix(1, nthree_));
-    std::shared_ptr<psi::Matrix> B2(new psi::Matrix(1, nthree_));
+    auto B1 = std::make_shared<psi::Matrix>(1, nthree_);
+    auto B2 = std::make_shared<psi::Matrix>(1, nthree_);
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -175,8 +175,8 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    std::shared_ptr<psi::Matrix> B1(new psi::Matrix(1, nthree_));
-    std::shared_ptr<psi::Matrix> B2(new psi::Matrix(1, nthree_));
+    auto B1 = std::make_shared<psi::Matrix>(1, nthree_);
+    auto B2 = std::make_shared<psi::Matrix>(1, nthree_);
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -290,15 +290,22 @@ double** DISKDFIntegrals::three_integral_pointer() { return (ThreeIntegral_->poi
 
 ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q_vec,
                                                     const std::vector<size_t>& p_vec,
-                                                    const std::vector<size_t>& q_vec) {
+                                                    const std::vector<size_t>& q_vec,
+                                                    ThreeIntsBlockOrder order) {
     std::string func_name = "DISKDFIntegrals::three_integral_block: ";
 
     auto Qsize = Q_vec.size();
     auto psize = p_vec.size();
     auto qsize = q_vec.size();
     auto pqsize = psize * qsize;
+    auto Qqsize = Qsize * qsize;
 
-    auto out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
+    ambit::Tensor out;
+    if (order == pqQ) {
+        out = ambit::Tensor::build(tensor_type_, "Return", {psize, qsize, Qsize});
+    } else {
+        out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
+    }
 
     // directly return if any of the dimension is zero
     if (Qsize == 0 or psize == 0 or qsize == 0) {
@@ -325,10 +332,10 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
         std::iota(cmotomo.begin(), cmotomo.end(), 0);
     }
 
-    // make sure indices are contiguous
+    // test if indices are contiguous
     for (size_t a = 1; a < Qsize; ++a) {
         if (Q_vec[a] != Q_vec[0] + a) {
-            throw std::runtime_error(func_name + "auxiliary indices not contiguous");
+            throw std::runtime_error(func_name + "auxiliary indices not contiguous!");
         }
     }
     std::vector<size_t> Q_range{Q_vec[0], Q_vec[0] + Qsize};
@@ -356,31 +363,61 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
         df_->fill_tensor("B", out_data.data(), Q_range, p_range, q_range);
+        if (order == pqQ)
+            matrix_transpose_in_place(out_data, Qsize, pqsize);
     } else if ((not p_contiguous) and q_contiguous) {
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
-        for (size_t p = 0; p < psize; ++p) {
-            auto np = cmotomo[p_vec[p]];
-            auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
-            df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
+        if (order == pqQ) {
+            for (size_t p = 0; p < psize; ++p) {
+                auto np = cmotomo[p_vec[p]];
+                auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
+                df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
 
-            for (size_t a = 0; a < Qsize; ++a) {
-                for (size_t q = 0; q < qsize; ++q) {
-                    out_data[a * pqsize + p * qsize + q] = Aq->get(a, q);
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t q = 0; q < qsize; ++q) {
+                        out_data[p * Qqsize + q * Qsize + a] = Aq->get(a, q);
+                    }
+                }
+            }
+        } else {
+            for (size_t p = 0; p < psize; ++p) {
+                auto np = cmotomo[p_vec[p]];
+                auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
+                df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
+
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t q = 0; q < qsize; ++q) {
+                        out_data[a * pqsize + p * qsize + q] = Aq->get(a, q);
+                    }
                 }
             }
         }
     } else if (p_contiguous and (not q_contiguous)) {
         std::vector<size_t> p_range{cmotomo[p_vec[0]], cmotomo[p_vec[0]] + psize};
 
-        for (size_t q = 0; q < qsize; ++q) {
-            auto nq = cmotomo[q_vec[q]];
-            auto Ap = std::make_shared<psi::Matrix>("Aq", Qsize, psize);
-            df_->fill_tensor("B", Ap, Q_range, {nq, nq + 1}, p_range);
+        if (order == pqQ) {
+            for (size_t q = 0; q < qsize; ++q) {
+                auto nq = cmotomo[q_vec[q]];
+                auto Ap = std::make_shared<psi::Matrix>("Ap", Qsize, psize);
+                df_->fill_tensor("B", Ap, Q_range, {nq, nq + 1}, p_range);
 
-            for (size_t a = 0; a < Qsize; ++a) {
-                for (size_t p = 0; p < psize; ++p) {
-                    out_data[a * pqsize + p * qsize + q] = Ap->get(a, p);
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t p = 0; p < psize; ++p) {
+                        out_data[p * Qqsize + q * Qsize + a] = Ap->get(a, p);
+                    }
+                }
+            }
+        } else {
+            for (size_t q = 0; q < qsize; ++q) {
+                auto nq = cmotomo[q_vec[q]];
+                auto Ap = std::make_shared<psi::Matrix>("Ap", Qsize, psize);
+                df_->fill_tensor("B", Ap, Q_range, {nq, nq + 1}, p_range);
+
+                for (size_t a = 0; a < Qsize; ++a) {
+                    for (size_t p = 0; p < psize; ++p) {
+                        out_data[a * pqsize + p * qsize + q] = Ap->get(a, p);
+                    }
                 }
             }
         }
@@ -394,7 +431,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
             batches.push_back(vec_small.size() % max_nslice);
 
         for (size_t n = 0, offset = 0, nbatch = batches.size(); n < nbatch; ++n) {
-            std::vector<psi::SharedMatrix> Am_vec;
+            std::vector<std::shared_ptr<psi::Matrix>> Am_vec;
 
             for (size_t i = 0; i < batches[n]; ++i) {
                 auto ni = cmotomo[vec_small[i + offset]];
@@ -404,20 +441,42 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
             }
 
             if (psize < qsize) {
-                for (size_t i = 0; i < batches[n]; ++i) {
-                    for (size_t a = 0; a < Qsize; ++a) {
-                        for (size_t q = 0; q < qsize; ++q) {
-                            auto idx = a * pqsize + (i + offset) * qsize + q;
-                            out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
+                if (order == pqQ) {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t q = 0; q < qsize; ++q) {
+                                auto idx = (i + offset) * Qqsize + q * Qsize + a;
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
+                            }
+                        }
+                    }
+                } else {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t q = 0; q < qsize; ++q) {
+                                auto idx = a * pqsize + (i + offset) * qsize + q;
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
+                            }
                         }
                     }
                 }
             } else {
-                for (size_t i = 0; i < batches[n]; ++i) {
-                    for (size_t a = 0; a < Qsize; ++a) {
-                        for (size_t p = 0; p < psize; ++p) {
-                            auto idx = a * pqsize + p * qsize + (i + offset);
-                            out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
+                if (order == pqQ) {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t p = 0; p < psize; ++p) {
+                                auto idx = p * Qqsize + (i + offset) * Qsize + a;
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
+                            }
+                        }
+                    }
+                } else {
+                    for (size_t i = 0; i < batches[n]; ++i) {
+                        for (size_t a = 0; a < Qsize; ++a) {
+                            for (size_t p = 0; p < psize; ++p) {
+                                auto idx = a * pqsize + p * qsize + (i + offset);
+                                out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
+                            }
                         }
                     }
                 }
@@ -470,27 +529,6 @@ void DISKDFIntegrals::gather_integrals() {
                     (nprim * nprim * naux * sizeof(double) / 1073741824.0));
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 
-    psi::Dimension nsopi_ = wfn_->nsopi();
-    std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
-    std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
-    std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
-
-    // Transform from the SO to the AO basis
-    for (int h = 0, index = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < nmopi_[h]; ++i) {
-            size_t nao = nso_;
-            size_t nso = nsopi_[h];
-
-            if (!nso)
-                continue;
-
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca->pointer(h)[0][i],
-                    nmopi_[h], 0.0, &Ca_ao->pointer()[0][index], nmopi_.sum());
-
-            index += 1;
-        }
-    }
-
     // B_{pq}^Q -> MO without frozen core
 
     // Constructs the DF function
@@ -520,7 +558,7 @@ void DISKDFIntegrals::gather_integrals() {
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.
-    df_->add_space("ALL", Ca_ao);
+    df_->add_space("ALL", Ca_AO());
     // Does not add the pair_space, but says which one is should use
     df_->add_transformation("B", "ALL", "ALL", "Qpq");
 
@@ -565,7 +603,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
         std::vector<size_t> qrange = {0, nmo_};
         std::vector<size_t> prange = {p_min, p_max};
 
-        std::shared_ptr<psi::Matrix> Aq(new psi::Matrix("Aq", nthree_, nmo_));
+        auto Aq = std::make_shared<psi::Matrix>("Aq", nthree_, nmo_);
         df_->fill_tensor("B", Aq, arange, prange, qrange);
 
         if (frozen_core) {

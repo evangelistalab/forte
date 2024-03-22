@@ -28,11 +28,14 @@ option_with_print(ENABLE_UNTESTED_CODE "Enable code not covered by code coverage
 include(autocmake_omp)  # no longer useful, probably need to copy psi4/external/common/lapack to cmake
 include(autocmake_mpi)  # MPI option A
 
-find_package(psi4 1.3 REQUIRED)
+find_package(psi4 1.4 REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(TargetLAPACK REQUIRED)
-find_package(ambit 0.5 REQUIRED)
+find_package(ambit 0.6 REQUIRED)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(DMRG_SOLVER "")
 if(ENABLE_CheMPS2)
@@ -68,6 +71,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings
 
 # List of CC files
 pybind11_add_module(_forte
+api/active_space_integrals_api.cc
 api/cube_file_api.cc
 api/integrals_api.cc
 api/mospaceinfo_api.cc
@@ -77,12 +81,15 @@ api/orbital_api.cc
 api/sci_api.cc
 api/state_info_api.cc
 api/forte_python_module.cc
+api/dl_solver_api.cc
+api/tensors_api.cc
 base_classes/active_space_method.cc
 base_classes/active_space_solver.cc
 base_classes/dynamic_correlation_solver.cc
 base_classes/forte_options.cc
 base_classes/mo_space_info.cc
 base_classes/orbital_transform.cc
+base_classes/orbitals.cc
 base_classes/rdms.cc
 base_classes/scf_info.cc
 base_classes/state_info.cc
@@ -97,18 +104,39 @@ ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc
 ci_rdm/ci_rdms_sf.cc
 dmrg/dmrgsolver.cc
-fci/binary_graph.cc
+external/external_active_space_method.cc
+fci/fci_string_address.cc
+fci/fci_solver_initial_guess.cc
+fci/fci_solver_rdms.cc
+fci/fci_solver_transition_rdms.cc
 fci/fci_solver.cc
-fci/fci_vector.cc
+fci/fci_string_address.cc
+fci/fci_string_hole_list.cc
+fci/fci_string_lists.cc
+fci/fci_string_oo_list.cc
+fci/fci_string_vo_list.cc
+fci/fci_string_vvoo_list.cc
 fci/fci_vector_h_diag.cc
 fci/fci_vector_hamiltonian.cc
 fci/fci_vector_rdm.cc
-fci/string_hole_list.cc
-fci/string_lists.cc
-fci/string_oo_list.cc
-fci/string_vo_list.cc
-fci/string_vvoo_list.cc
-finite_temperature/finite_temperature.cc
+fci/fci_vector_spin2.cc
+fci/fci_vector_transition_rdm.cc
+fci/fci_vector.cc
+genci/ci_occupation.cc
+genci/genci_string_address.cc
+genci/genci_solver_initial_guess.cc
+genci/genci_solver_rdms.cc
+genci/genci_solver_transition_rdms.cc
+genci/genci_solver.cc
+genci/string_lists_makers.cc
+genci/genci_string_lists.cc
+genci/genci_string_address.cc
+genci/genci_vector_h_diag.cc
+genci/genci_vector_hamiltonian.cc
+genci/genci_vector_rdm.cc
+genci/genci_vector_spin2.cc
+genci/genci_vector_transition_rdm.cc
+genci/genci_vector.cc
 forte.cc
 gradient_tpdm/backtransform_tpdm.cc
 gradient_tpdm/integraltransform_tpdm_unrestricted.cc
@@ -119,13 +147,15 @@ helpers/cube_file.cc
 helpers/disk_io.cc
 helpers/helpers.cc
 helpers/symmetry.cc
-helpers/iterative_solvers.cc
+helpers/determinant_helpers.cc
+helpers/davidson_liu_solver.cc
 helpers/lbfgs/lbfgs.cc
 helpers/lbfgs/lbfgs_param.cc
 helpers/lbfgs/rosenbrock.cc
 helpers/printing.cc
 helpers/spinorbital_helpers.cc
 helpers/string_algorithms.cc
+helpers/threading.cc
 integrals/active_space_integrals.cc
 integrals/cholesky_integrals.cc
 integrals/conventional_integrals.cc
@@ -136,6 +166,7 @@ integrals/distribute_df_integrals.cc
 integrals/integrals.cc
 integrals/integrals_psi4_interface.cc
 integrals/make_integrals.cc
+integrals/one_body_integrals.cc
 integrals/parallel_ccvv_algorithms.cc
 integrals/paralleldfmo.cc
 mrdsrg-helper/dsrg_mem.cc
@@ -159,11 +190,17 @@ mrdsrg-spin-adapted/sa_mrdsrg.cc
 mrdsrg-spin-adapted/sa_mrdsrg_amps.cc
 mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
 mrdsrg-spin-adapted/sa_mrpt2.cc
+mrdsrg-spin-adapted/sa_mrpt2_oeprop.cc
 mrdsrg-spin-adapted/sa_mrpt3.cc
 mrdsrg-spin-integrated/dsrg_mrpt2.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_gradient.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_write_rdms.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_solve_zvector.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_multipliers.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_tensors.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_setb.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 mrdsrg-spin-integrated/dsrg_mrpt3.cc
-mrdsrg-spin-integrated/dwms_mrpt2.cc
 mrdsrg-spin-integrated/master_mrdsrg.cc
 mrdsrg-spin-integrated/mcsrgpt2_mo.cc
 mrdsrg-spin-integrated/mrdsrg.cc
@@ -186,6 +223,7 @@ orbital-helpers/Laplace.cc
 orbital-helpers/LaplaceDenominator.cc
 orbital-helpers/localize.cc
 orbital-helpers/mp2_nos.cc
+orbital-helpers/mrpt2_nos.cc
 orbital-helpers/orbital_embedding.cc
 orbital-helpers/orbitaloptimizer.cc
 orbital-helpers/pao_builder.cc
@@ -199,18 +237,21 @@ sci/aci_build_F.cc
 sci/gasaci_build_F.cc
 sci/asci.cc
 sci/detci.cc
-sci/fci_mo.cc
 sci/mrpt2.cc
 sci/sci.cc
+sci/tdci.cc
 sparse_ci/ci_reference.cc
+sparse_ci/ci_spin_adaptation.cc
 sparse_ci/determinant_functions.cc
 sparse_ci/determinant_hashvector.cc
 sparse_ci/determinant_substitution_lists.cc
 sparse_ci/sigma_vector.cc
 sparse_ci/sigma_vector_dynamic.cc
+sparse_ci/sigma_vector_full.cc
 sparse_ci/sigma_vector_sparse_list.cc
 sparse_ci/sorted_string_list.cc
 sparse_ci/sparse_ci_solver.cc
+sparse_ci/sparse_initial_guess.cc
 sparse_ci/sparse_operator.cc
 sparse_ci/sparse_exp.cc
 sparse_ci/sparse_fact_exp.cc
@@ -220,16 +261,16 @@ sparse_ci/sparse_state_vector.cc
 v2rdm/v2rdm.cc
 )
 
-target_link_libraries(_forte PRIVATE psi4::core)
+target_include_directories(_forte PRIVATE .)
+
 target_link_libraries(_forte PRIVATE tgt::MathOpenMP)
-#set_target_properties(forte PROPERTIES PREFIX "")
+target_link_libraries(_forte PRIVATE psi4::core)
 target_link_libraries(_forte PRIVATE ambit::ambit)
+
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(_forte PRIVATE CheMPS2::chemps2)
     add_definitions(-DHAVE_CHEMPS2)
 endif()
-
-target_include_directories(_forte PRIVATE .)
 
 if(ENABLE_MPI)
     target_link_libraries(_forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A

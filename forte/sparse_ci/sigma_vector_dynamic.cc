@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -32,10 +32,10 @@
 #include <future>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/vector.h"
 
 #include "forte-def.h"
 #include "helpers/timer.h"
-#include "helpers/iterative_solvers.h"
 #include "sigma_vector_dynamic.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_functions.hpp"
@@ -77,8 +77,8 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
                                        std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                        size_t max_memory)
     : SigmaVector(space, fci_ints, SigmaVectorType::Dynamic, "SigmaVectorDynamic"),
-      a_sorted_string_list_(space, fci_ints, DetSpinType::Alpha),
-      b_sorted_string_list_(space, fci_ints, DetSpinType::Beta) {
+      a_sorted_string_list_(fci_ints_->nmo(), space, DetSpinType::Alpha),
+      b_sorted_string_list_(fci_ints_->nmo(), space, DetSpinType::Beta) {
 
     timer this_timer("creator");
 
@@ -121,7 +121,8 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
 
 SigmaVectorDynamic::~SigmaVectorDynamic() { print_SigmaVectorDynamic_stats(); }
 
-void SigmaVectorDynamic::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma(std::shared_ptr<psi::Vector> sigma,
+                                       std::shared_ptr<psi::Vector> b) {
     sigma->zero();
 
     compute_sigma_scalar(sigma, b);
@@ -204,7 +205,8 @@ void SigmaVectorDynamic::get_diagonal(psi::Vector& diag) {
     }
 }
 
-void SigmaVectorDynamic::compute_sigma_scalar(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma_scalar(std::shared_ptr<psi::Vector> sigma,
+                                              std::shared_ptr<psi::Vector> b) {
     timer energy_timer("scalar");
 
     double* sigma_p = sigma->pointer();
@@ -216,7 +218,8 @@ void SigmaVectorDynamic::compute_sigma_scalar(psi::SharedVector sigma, psi::Shar
     }
 }
 
-void SigmaVectorDynamic::compute_sigma_aa(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma_aa(std::shared_ptr<psi::Vector> sigma,
+                                          std::shared_ptr<psi::Vector> b) {
     timer energy_timer("sigma_aa");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {
@@ -294,7 +297,8 @@ void SigmaVectorDynamic::sigma_aa_dynamic_task(size_t task_id, size_t num_tasks)
     }
 }
 
-void SigmaVectorDynamic::compute_sigma_bb(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma_bb(std::shared_ptr<psi::Vector> sigma,
+                                          std::shared_ptr<psi::Vector> b) {
     timer energy_timer("sigma_bb");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {
@@ -371,7 +375,8 @@ void SigmaVectorDynamic::sigma_bb_dynamic_task(size_t task_id, size_t num_tasks)
     }
 }
 
-void SigmaVectorDynamic::compute_sigma_abab(psi::SharedVector sigma, psi::SharedVector b) {
+void SigmaVectorDynamic::compute_sigma_abab(std::shared_ptr<psi::Vector> sigma,
+                                            std::shared_ptr<psi::Vector> b) {
     timer energy_timer("sigma_abab");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {

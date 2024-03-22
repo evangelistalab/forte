@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,11 +34,13 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
+
 #include "base_classes/mo_space_info.h"
 #include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
-#include "boost/format.hpp"
 #include "mrdsrg.h"
 
 using namespace psi;
@@ -195,7 +197,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         T2.block(block).zero();
     }
 
@@ -253,7 +255,7 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const std::string block : {"aaaa", "aAaA", "AAAA"}) {
         T2.block(block).zero();
     }
 
@@ -335,7 +337,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const auto block : {"aa", "AA"}) {
         T1.block(block).zero();
     }
 
@@ -430,7 +432,7 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const auto block : {"aaaa", "aAaA", "AAAA"}) {
         T2.block(block).zero();
     }
 
@@ -527,7 +529,7 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const auto block : {"aaaa", "aAaA", "AAAA"}) {
         T2.block(block).zero();
     }
 
@@ -633,7 +635,7 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
     }
 
     // zero internal amplitudes
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const auto block : {"aa", "AA"}) {
         T1.block(block).zero();
     }
 
@@ -740,7 +742,7 @@ void MRDSRG::update_t2_std() {
 
     timer t8("zero internal amplitudes");
     // zero internal amplitudes
-    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+    for (const auto block : {"aaaa", "aAaA", "AAAA"}) {
         DT2_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
     }
     t8.stop();
@@ -864,7 +866,7 @@ void MRDSRG::update_t1_std() {
     DT1_["IA"] -= T1_["IA"];
 
     // zero internal amplitudes
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const auto block : {"aa", "AA"}) {
         DT1_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
     }
 
@@ -1404,40 +1406,40 @@ void MRDSRG::print_amp_summary(const std::string& name,
     };
 
     if (rank == 1) {
-        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] % ' ' %
-                          spin_case[name[0]] % ' ' % ' ');
+        spin_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", spin_case[name[0]], "",
+                                  spin_case[name[0]], "", "");
         if (spin_title.find_first_not_of(' ') != std::string::npos) {
             spin_title = "\n" + indent + extendstr(spin_title, 3);
         } else {
             spin_title = "";
         }
-        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % ' ' % 'a' % ' ' % ' ');
+        mo_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", 'i', "", 'a', "", "");
         mo_title = "\n" + indent + extendstr(mo_title, 3);
         for (size_t n = 0; n != list.size(); ++n) {
             if (n % 3 == 0)
                 output += "\n" + indent;
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
-            output += str(boost::format("[%3d %3c %3d %3c]%9.6f ") % idx[0] % ' ' % idx[1] % ' ' %
-                          datapair.second);
+            output += fmt::format("[{:>3} {:>3} {:>3} {:>3}]{:>9.6f} ", idx[0], "", idx[1], "",
+                                  datapair.second);
         }
     } else if (rank == 2) {
-        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] %
-                          spin_case[name[1]] % spin_case[name[0]] % spin_case[name[1]] % ' ');
+        spin_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", spin_case[name[0]],
+                                  spin_case[name[1]], spin_case[name[0]], spin_case[name[1]], "");
         if (spin_title.find_first_not_of(' ') != std::string::npos) {
             spin_title = "\n" + indent + extendstr(spin_title, 3);
         } else {
             spin_title = "";
         }
-        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % 'j' % 'a' % 'b' % ' ');
+        mo_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", "i", "j", "a", "b", " ");
         mo_title = "\n" + indent + extendstr(mo_title, 3);
         for (size_t n = 0; n != list.size(); ++n) {
             if (n % 3 == 0)
                 output += "\n" + indent;
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
-            output += str(boost::format("[%3d %3d %3d %3d]%9.6f ") % idx[0] % idx[1] % idx[2] %
-                          idx[3] % datapair.second);
+            output += fmt::format("[{:>3} {:>3} {:>3} {:>3}]{:>9.6f} ", idx[0], idx[1], idx[2],
+                                  idx[3], datapair.second);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -1449,7 +1451,7 @@ void MRDSRG::print_amp_summary(const std::string& name,
         line = "\n" + indent + std::string(linesize - indent.size(), '-');
         summary = "\n" + indent + "Norm of T" + std::to_string(rank) + name +
                   " vector: (nonzero elements: " + std::to_string(number_nonzero) + ")";
-        std::string strnorm = str(boost::format("%.15f.") % norm);
+        std::string strnorm = fmt::format("{:.15f}.", norm);
         std::string blank(linesize - summary.size() - strnorm.size() + 1, ' ');
         summary += blank + strnorm;
 
@@ -1469,8 +1471,7 @@ void MRDSRG::print_intruder(const std::string& name,
 
     std::string indent(4, ' ');
     std::string title = indent + "T" + std::to_string(rank) + " amplitudes larger than " +
-                        str(boost::format("%.4f") % intruder_tamp_) + " for spin case " + name +
-                        ":";
+                        fmt::format("{:.4f}", intruder_tamp_) + " for spin case " + name + ":";
     std::string col_title;
     std::string line;
     std::string output;
@@ -1491,8 +1492,9 @@ void MRDSRG::print_intruder(const std::string& name,
             double v = datapair.second;
 
             output += "\n" + indent +
-                      str(boost::format("[%3d %3c %3d %3c] %13.8f (%10.6f - %10.6f = %10.6f)") % i %
-                          ' ' % a % ' ' % v % fi % fa % down);
+                      fmt::format(
+                          "[{:>3} {:>3} {:>3} {:>3}] {:>13.8f} ({:>10.6f} - {:>10.6f} = {:>10.6f})",
+                          i, " ", a, " ", v, fi, fa, down);
         }
     } else if (rank == 2) {
         int x = 50 + 4 * 3 + 2 - 11;
@@ -1510,9 +1512,9 @@ void MRDSRG::print_intruder(const std::string& name,
             double v = datapair.second;
 
             output += "\n" + indent +
-                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                          i % j % a % b % v % fi % fj % fa % fb % down);
+                      fmt::format("[{:>3} {:>3} {:>3} {:>3}] {:>13.8f} ({:>10.6f} + {:>10.6f} - "
+                                  "{:>10.6f} - {:>10.6f} = {:>10.6f})",
+                                  i, j, a, b, v, fi, fj, fa, fb, down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -1539,7 +1541,7 @@ void MRDSRG::dump_amps_to_disk() {
     // dump amplitudes to the current directory
     if (dump_amps_cwd_) {
         outfile->Printf("\n    Dumping amplitudes to current directory ...");
-        T1_.save( t1_file_cwd_);
+        T1_.save(t1_file_cwd_);
         T2_.save(t2_file_cwd_);
         outfile->Printf(" Done.");
     }

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,13 +26,11 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_ci_h_
-#define _sparse_ci_h_
+#pragma once
 
+#include "psi4/libmints/dimension.h"
 #include "sparse_ci/determinant_hashvector.h"
-
-#define BIGNUM 1E100
-#define MAXIT 100
+#include "helpers/printing.h"
 
 namespace psi {
 class Matrix;
@@ -43,6 +41,9 @@ namespace forte {
 
 class SigmaVector;
 class ActiveSpaceIntegrals;
+class SpinAdapter;
+class DavidsonLiuSolver;
+class ForteOptions;
 
 /**
  * @brief The SparseCISolver class
@@ -87,6 +88,9 @@ class SparseCISolver {
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) { parallel_ = parallel; }
 
+    /// Set the print level
+    void set_print(PrintLevel print);
+
     /// Enable/disable printing of details
     void set_print_details(bool print_details) { print_details_ = print_details; }
 
@@ -95,6 +99,12 @@ class SparseCISolver {
 
     /// Enable/disable spin projection in full algorithm
     void set_spin_project_full(bool value);
+
+    /// Spin adapt the wave function
+    void set_spin_adapt(bool value);
+
+    /// Spin adapt the wave function using a full preconditioner?
+    void set_spin_adapt_full_preconditioner(bool value);
 
     /// Enable/disable root projection
     void set_root_project(bool value);
@@ -108,8 +118,17 @@ class SparseCISolver {
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
 
-    void set_ncollapse_per_root(int value);
-    void set_nsubspace_per_root(int value);
+    /// Set the number of guess vectors for each root
+    void set_guess_per_root(int value);
+
+    /// Set the number of collapse vectors for each root
+    void set_collapse_per_root(int value);
+
+    /// Set the maximum subspace size for each root
+    void set_subspace_per_root(int value);
+
+    /// Set the options
+    void set_options(std::shared_ptr<ForteOptions> options);
 
     /// Build the full Hamiltonian matrix
     std::shared_ptr<psi::Matrix>
@@ -122,18 +141,26 @@ class SparseCISolver {
     /// Set option to force diagonalization type
     void set_force_diag(bool value);
 
-    /// Set the size of the guess space
-    void set_guess_dimension(size_t value) { dl_guess_ = value; }
+    /// Set the number of determinants per root to use to form the initial guess
+    void set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
 
-    /// Set the initial guess
+    /// Set the initial guess for the Davidson-Liu solver in the form of a vector of vectors of
+    /// pairs of the form (determinant index, coefficient). If this vector is not empty, then we
+    /// will use the user guess instead of the standard guess.
     void set_initial_guess(const std::vector<std::vector<std::pair<size_t, double>>>& guess);
-    void manual_guess(bool value);
-    void set_num_vecs(size_t value);
+
+    /// Reset the initial guess
+    void reset_initial_guess();
 
   private:
-    std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
-    initial_guess(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
-                  int nroot, int multiplicity);
+    auto initial_guess_det(const DeterminantHashVec& space,
+                           std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
+                           int multiplicity, bool do_spin_project);
+
+    std::vector<Determinant>
+    initial_guess_generate_dets(const DeterminantHashVec& space,
+                                const std::shared_ptr<SigmaVector> sigma_vector,
+                                const size_t num_guess_states) const;
 
     bool davidson_liu_solver(const DeterminantHashVec& space,
                              std::shared_ptr<SigmaVector> sigma_vector,
@@ -141,44 +168,69 @@ class SparseCISolver {
                              std::shared_ptr<psi::Matrix> Eigenvectors, int nroot,
                              int multiplicity);
 
+    /// @brief Compute initial guess vectors in the CSF basis
+    /// @param diag The diagonal of the Hamiltonian in the CSF basis
+    /// @param n The number of guess vectors to generate
+    /// @param dls The Davidson-Liu-Solver object
+    /// @param temp A temporary vector of dimension ncfs to store the guess vectors
+    /// @param multiplicity The multiplicity
+    auto initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                           int multiplicity);
+
+    /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
+    /// @param ci_ints The integrals object
+    /// @param spin_adapter The spin adapter object
+    std::shared_ptr<psi::Vector> form_Hdiag_csf(std::shared_ptr<ActiveSpaceIntegrals> ci_ints,
+                                                std::shared_ptr<SpinAdapter> spin_adapter);
+
     /// The energy of each state
     std::vector<double> energies_;
+    /// The FCI determinant list
+    std::vector<Determinant> dets_;
+    /// The number of correlated molecular orbitals per irrep
+    psi::Dimension cmopi_;
     /// The expectation value of S^2 for each state
     std::vector<double> spin_;
+    /// A object that handles spin adaptation
+    std::shared_ptr<SpinAdapter> spin_adapter_;
+    /// The Davidson-Liu-Solver object
+    std::shared_ptr<DavidsonLiuSolver> dl_solver_;
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?
     bool print_details_ = true;
+    /// A variable to control printing information
+    PrintLevel print_ = PrintLevel::Default;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
     /// Project solutions onto given multiplicity in full algorithm?
     bool spin_project_full_ = true;
+    /// Spin adapt the wave function?
+    bool spin_adapt_ = false;
+    /// Use the full preconditioner for spin adaptation?
+    /// When set to false, it uses an approximate diagonal preconditioner
+    bool spin_adapt_full_preconditioner_ = false;
     /// Project solutions onto given root?
     bool root_project_ = false;
     /// The energy convergence threshold
     double e_convergence_ = 1.0e-12;
     /// The residual 2-norm convergence threshold
     double r_convergence_ = 1.0e-6;
+    /// The number of guess vectors for each root
+    size_t guess_per_root_ = 2;
+    /// Number of determinants used to form guess vector per root
+    size_t ndets_per_guess_ = 10;
     /// Number of collapse vectors per roots
-    int ncollapse_per_root_ = 2;
+    size_t collapse_per_root_ = 2;
     /// Number of max subspace vectors per roots
-    int nsubspace_per_root_ = 4;
+    size_t subspace_per_root_ = 4;
     /// Maximum number of iterations in the Davidson-Liu algorithm
     int maxiter_davidson_ = 100;
-    /// Number of determinants used to form guess vector per root
-    size_t dl_guess_ = 50;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-    /// Set the initial guess?
-    bool set_guess_ = false;
-    std::vector<std::vector<std::pair<size_t, double>>>
-        guess_; // nroot of guess size of (id, coefficent)
-    // Number of guess vectors
-    size_t nvec_ = 10;
+    // nroot of guess size of (id, coefficent)
+    std::vector<std::vector<std::pair<size_t, double>>> user_guess_;
 };
 } // namespace forte
-
-#endif // _sparse_ci_h_

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -33,7 +33,10 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
+#include "integrals/active_space_integrals.h"
 #include "base_classes/mo_space_info.h"
+#include "base_classes/state_info.h"
+
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "mrdsrg_so.h"
@@ -46,7 +49,7 @@ MRDSRG_SO::MRDSRG_SO(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_in
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
-      BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
+      BTF_(std::make_shared<BlockedTensorFactory>()), tensor_type_(ambit::CoreTensor) {
     print_method_banner(
         {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     startup();
@@ -145,6 +148,8 @@ void MRDSRG_SO::startup() {
     nso_ = nh_ + nv_;
     size_t nmo = nso_ / 2;
     size_t na_mo = na_ / 2;
+
+    BlockedTensor::reset_mo_spaces();
 
     BTF_->add_mo_space("c", "mn", core_sos, AlphaSpin);
     BTF_->add_mo_space("a", "uvwxyz", actv_sos, AlphaSpin);

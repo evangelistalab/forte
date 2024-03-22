@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _ci_rdms_h_
-#define _ci_rdms_h_
+#pragma once
 
 #include <functional>
 
@@ -48,12 +47,11 @@ class CI_RDMS {
     // Class constructor and destructor
     // I (York) think the following is correct, please check.
     // e.g., <root1| p^+ q^+ s r | root2> = 2rdm[p*nmo^(3) + q*nmo^(2) + r*nmo + s]
-    CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-            const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
-            int root2);
+    CI_RDMS(const std::vector<int>& mo_symmetry, const std::vector<Determinant>& det_space,
+            std::shared_ptr<psi::Matrix> evecs, int root1, int root2);
 
-    CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-            psi::SharedMatrix evecs, int root1, int root2);
+    CI_RDMS(const std::vector<int>& mo_symmetry, DeterminantHashVec& wfn,
+            std::shared_ptr<psi::Matrix> evecs, int root1, int root2);
 
     ~CI_RDMS();
 
@@ -107,9 +105,9 @@ class CI_RDMS {
     void compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2,
                                  std::vector<double>& rdm3);
 
-    double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
-                      std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
-                      std::vector<double>& tprdm_ab);
+    double get_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::vector<double>& oprdm_a,
+                      std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa,
+                      std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab);
 
     void rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                   std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
@@ -130,13 +128,13 @@ class CI_RDMS {
     // The Wavefunction
     DeterminantHashVec wfn_;
     // The FCI integrals
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
+    const std::vector<int> mo_symmetry_;
 
     // The Determinant Space
-    const std::vector<Determinant> det_space_;
+    std::vector<Determinant> det_space_;
 
     // The CI coefficients
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
 
     // Buffer to access cre_list
     std::vector<std::vector<size_t>> cre_list_buffer_;
@@ -245,5 +243,3 @@ class CI_RDMS {
                  std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb);
 };
 } // namespace forte
-
-#endif // _ci_rdms_h_

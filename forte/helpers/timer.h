@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _helpers_timer_h_
-#define _helpers_timer_h_
+#pragma once
 
 #include "psi4/libqt/qt.h"
 
@@ -122,5 +121,3 @@ class parallel_timer {
     bool running_ = true;
 };
 } // namespace forte
-
-#endif // _helpers_timer_h_

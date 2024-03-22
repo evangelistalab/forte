@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -187,7 +187,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 }
 
 void SA_MRDSRG::compute_hbar() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
@@ -219,7 +219,7 @@ void SA_MRDSRG::compute_hbar() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -257,7 +257,7 @@ void SA_MRDSRG::compute_hbar() {
         }
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -281,7 +281,7 @@ void SA_MRDSRG::compute_hbar() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
@@ -298,7 +298,7 @@ void SA_MRDSRG::compute_hbar() {
 }
 
 void SA_MRDSRG::compute_hbar_sequential() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
@@ -311,7 +311,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
 
     size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
 
-    psi::SharedMatrix A1_m(new psi::Matrix("A1 alpha", ncmo, ncmo));
+    auto A1_m = std::make_shared<psi::Matrix>("A1 alpha", ncmo, ncmo);
     A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         A1_m->set(i[0], i[1], value);
     });
@@ -413,7 +413,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -441,7 +441,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         }
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -465,7 +465,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
@@ -642,6 +642,93 @@ void SA_MRDSRG::add_hermitian_conjugate(BlockedTensor& H2) {
         // add Hermitian conjugate
         H2.block(block)("pqrs") += H2.block(block_hc)("rspq");
         H2.block(block_hc)("rspq") = H2.block(block)("pqrs");
+    }
+}
+
+void SA_MRDSRG::compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int max_level, int ind) {
+    // compute reference multipole
+    {
+        Mbar0_[ind] = M["uv"] * L1_["vu"];
+        auto& M1c = M.block("cc").data();
+        for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+            Mbar0_[ind] += 2.0 * M1c[m * ncore + m];
+        }
+        Mbar1_[ind]["uv"] = M["uv"];
+    }
+
+    O1_["pq"] = M["pq"];
+
+    bool converged = false;
+    for (int n = 1; n <= rsc_ncomm_; ++n) {
+        // prefactor before n-nested commutator
+        double factor = 1.0 / n;
+
+        // Compute the commutator C = 1/n [O, T]
+        double C0 = 0.0;
+        C1_.zero();
+        if (max_level > 1)
+            C2_.zero();
+
+        // zero-body
+        H1_T1_C0(O1_, T1_, factor, C0);
+        H1_T2_C0(O1_, T2_, factor, C0);
+        if (max_level > 1 and n != 1) {
+            H2_T1_C0(O2_, T1_, factor, C0);
+            H2_T2_C0(O2_, T2_, DT2_, factor, C0);
+        }
+
+        // one-body
+        H1_T1_C1(O1_, T1_, factor, C1_);
+        H1_T2_C1(O1_, T2_, factor, C1_);
+        if (max_level > 1 and n != 1) {
+            H2_T1_C1(O2_, T1_, factor, C1_);
+            H2_T2_C1(O2_, T2_, DT2_, factor, C1_);
+        }
+
+        // two-body
+        if (max_level > 1) {
+            H1_T2_C2(O1_, T2_, factor, C2_);
+            if (n != 1) {
+                H2_T1_C2(O2_, T1_, factor, C2_);
+                H2_T2_C2(O2_, T2_, DT2_, factor, C2_);
+            }
+        }
+
+        // [M, A] = [M, T] + [M, T]^dagger
+        C0 *= 2.0;
+        O1_["pq"] = C1_["pq"];
+        C1_["pq"] += O1_["qp"];
+        if (max_level > 1) {
+            O2_["pqrs"] = C2_["pqrs"];
+            C2_["pqrs"] += O2_["rspq"];
+        }
+
+        // Mbar += C
+        Mbar0_[ind] += C0;
+        Mbar1_[ind]["pq"] += C1_["pq"];
+        if (max_level > 1) {
+            Mbar2_[ind]["pqrs"] += C2_["pqrs"];
+        }
+
+        // copy C to O for next level commutator
+        O1_["pq"] = C1_["pq"];
+        if (max_level > 1) {
+            O2_["pqrs"] = C2_["pqrs"];
+        }
+
+        // test convergence of C
+        double norm_C1 = C1_.norm();
+        double norm_C2 = (max_level > 1) ? C2_.norm() : 0.0;
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv_) {
+            converged = true;
+            break;
+        }
+    }
+
+    if (!converged) {
+        outfile->Printf("\n    Warning! Mbar is not converged in %3d-nested commutators!",
+                        rsc_ncomm_);
+        outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
     }
 }
 

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,7 +29,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "boost/format.hpp"
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/dimension.h"
@@ -512,13 +513,13 @@ void V2RDM::write_density_to_file() {
     std::ofstream outfstr;
     outfstr.open(filenames[0]);
     D1a_.iterate([&](const std::vector<size_t>& i, double& value) {
-        outfstr << boost::format("%4d %4d  %20.15f\n") % i[0] % i[1] % value;
+        outfstr << fmt::format("{:>4} {:>4}  {:>20.15f}\n", i[0], i[1], value);
     });
     outfstr.close();
     outfstr.clear();
     outfstr.open(filenames[1]);
     D1b_.iterate([&](const std::vector<size_t>& i, double& value) {
-        outfstr << boost::format("%4d %4d  %20.15f\n") % i[0] % i[1] % value;
+        outfstr << fmt::format("{:>4} {:>4}  {:>20.15f}\n", i[0], i[1], value);
     });
     outfstr.close();
     outfstr.clear();
@@ -528,8 +529,8 @@ void V2RDM::write_density_to_file() {
 
         ambit::Tensor& D2 = D2_[m];
         D2.iterate([&](const std::vector<size_t>& i, double& value) {
-            outfstr << boost::format("%4d %4d %4d %4d  %20.15f\n") % i[0] % i[1] % i[2] % i[3] %
-                           value;
+            outfstr << fmt::format("{:>4} {:>4} {:>4} {:>4}  {:>20.15f}\n", i[0], i[1], i[2], i[3],
+                                   value);
         });
 
         outfstr.close();
@@ -542,8 +543,8 @@ void V2RDM::write_density_to_file() {
 
             ambit::Tensor& D3 = D3_[m];
             D3.iterate([&](const std::vector<size_t>& i, double& value) {
-                outfstr << boost::format("%4d %4d %4d %4d %4d %4d  %20.15f\n") % i[0] % i[1] %
-                               i[2] % i[3] % i[4] % i[5] % value;
+                outfstr << fmt::format("{:>4} {:>4} {:>4} {:>4} {:>4} {:>4}  {:>20.15f}\n", i[0],
+                                       i[1], i[2], i[3], i[4], i[5], value);
             });
 
             outfstr.close();

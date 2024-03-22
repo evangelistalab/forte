@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _helpers_h_
-#define _helpers_h_
+#pragma once
 
 #include <algorithm>
 #include <chrono>
@@ -36,6 +35,7 @@
 #include <numeric>
 #include <string>
 #include <vector>
+#include <coroutine>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -54,9 +54,9 @@ class Options;
 namespace forte {
 
 /// Spin cases for 1-, 2-, and 3-body tensors
-enum class Spin1 {a, b};
-enum class Spin2 {aa, ab, bb};
-enum class Spin3 {aaa, aab, abb, bbb};
+enum class Spin1 { a, b };
+enum class Spin2 { aa, ab, bb };
+enum class Spin3 { aaa, aab, abb, bbb };
 
 /**
  * @brief Convert an ambit tensor to a numpy ndarray.
@@ -81,7 +81,7 @@ py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector
  * @param t The input tensor
  * @return A copy of the tensor data ignoring symmetry blocks
  */
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
+std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t);
 
 /**
  * @brief tensor_to_matrix
@@ -89,7 +89,9 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
  * @param dims psi::Dimensions of the matrix extracted from the tensor
  * @return A copy of the tensor data in symmetry blocked form
  */
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
+std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
+
+std::vector<double> Vector_to_vector_double(const psi::Vector& v);
 
 // /**
 //  * @brief view_modified_orbitals Write orbitals using molden
@@ -137,8 +139,11 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
 
 template <typename T>
 std::vector<std::vector<T>> split_vector(const std::vector<T>& vec, size_t max_length) {
-    std::vector<std::vector<T>> out_vec;
     size_t vec_size = vec.size();
+    if (max_length == 0 or vec_size == 0)
+        throw std::runtime_error("Cannot split vector of size 0!");
+
+    std::vector<std::vector<T>> out_vec;
 
     size_t n_even = vec_size / max_length;
     for (size_t i = 0, begin = 0, end = max_length; i < n_even; ++i) {
@@ -182,9 +187,79 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
     }
 }
 
+/**
+ * @brief Apply in-place matrix transposition based on the algorithm of Catanzaro, Keller, Garland.
+ * @param data the matrix stored in row-major format
+ * @param m the number of rows of the matrix
+ * @param n the number of columns of the matrix
+ *
+ * See Algorithm 1 of DOI: 10.1145/2555243.2555253.
+ * Also see https://github.com/bryancatanzaro/inplace
+ */
+void matrix_transpose_in_place(std::vector<double>& data, const size_t m, const size_t n);
+
+void push_to_psi4_env_globals(double value, const std::string& label);
+
+bool is_near_integer(double value, double toll = 1.0e-12);
+
+std::vector<std::tuple<int, size_t, size_t>> find_integer_groups(const std::vector<double>& vec,
+                                                                 double toll = 1.0e-12);
+
+#include <iostream>
+#include <unordered_map>
+#include <cmath>
+#include <string>
+#include <limits>
+
+#include <iostream>
+#include <unordered_map>
+#include <cmath>
+#include <string>
+#include <limits>
+
+// Function to compare two hash maps
+template <typename T, typename S, typename Q>
+bool compare_hashes(const std::unordered_map<T, S, Q>& hash1,
+                    const std::unordered_map<T, S, Q>& hash2, S tolerance = S(1e-12)) {
+    // Go through the first hash
+    for (const auto& [key, value] : hash1) {
+        auto it = hash2.find(key);
+        if (it == hash2.end()) {
+            // If the key is not in the second hash but the value is significant
+            if (std::fabs(value) > tolerance) {
+                return false;
+            }
+        } else {
+            S diff = std::fabs(value - it->second);
+            if (diff > tolerance) {
+                return false; // Coefficients differ more than the tolerance
+            }
+        }
+    }
+
+    // Go through the second hash to catch any keys that are not in the first hash
+    for (const auto& [key, value] : hash2) {
+        if (hash1.find(key) == hash1.end()) {
+            // If the key is not in the first hash but the value is significant
+            if (std::fabs(value) > tolerance) {
+                return false;
+            }
+        }
+        // No need to compare the values again if the key was found in the first hash,
+        // that was already done in the first loop.
+    }
+
+    return true;
+}
+
 namespace math {
 /// Return the number of combinations of n identical objects
 size_t combinations(size_t n, size_t k);
+
+template <typename Container> auto sum(const Container& c) -> typename Container::value_type {
+    using T = typename Container::value_type;
+    return std::accumulate(std::begin(c), std::end(c), T(0));
+}
 
 /// Return the Cartesian product of the input vector<vector<T>>
 /// https://stackoverflow.com/a/17050528/4101036
@@ -208,5 +283,3 @@ std::vector<std::vector<T>> cartesian_product(const std::vector<std::vector<T>>&
 } // namespace math
 
 } // namespace forte
-
-#endif // _helpers_h_

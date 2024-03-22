@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _three_dsrg_mrpt2_h_
-#define _three_dsrg_mrpt2_h_
+#pragma once
 
 #include "master_mrdsrg.h"
 
@@ -82,10 +81,10 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
-    void rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose = false,
-                    const bool& t1eff = false);
+    void rotate_amp(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                    const bool& transpose = false, const bool& t1eff = false);
 
-    void set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub);
+    void set_Ufull(std::shared_ptr<psi::Matrix>& Ua, std::shared_ptr<psi::Matrix>& Ub);
 
   protected:
     // => Class data <= //
@@ -125,8 +124,8 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<double> Fb_;
 
     /// Semicanonical Transformation matrices
-    psi::SharedMatrix Ua_full_;
-    psi::SharedMatrix Ub_full_;
+    std::shared_ptr<psi::Matrix> Ua_full_;
+    std::shared_ptr<psi::Matrix> Ub_full_;
 
     // => Tensors <= //
     ambit::BlockedTensor H_;
@@ -274,5 +273,3 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     static bool have_mpi_;
 };
 } // namespace forte
-
-#endif // _three_dsrg_mrpt2_h_

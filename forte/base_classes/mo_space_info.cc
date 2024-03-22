@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -29,6 +29,9 @@
 
 #include <algorithm>
 #include <numeric>
+
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -97,9 +100,7 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) const {
     psi::Dimension dims = dimension(space);
     std::vector<int> result;
     for (int h = 0; h < dims.n(); ++h) {
-        for (int i = 0; i < dims[h]; ++i) {
-            result.push_back(h);
-        }
+        fill_n(back_inserter(result), dims[h], h); // insert h for dims[h] times
     }
     return result;
 }
@@ -334,11 +335,16 @@ void MOSpaceInfo::compute_space_info() {
 
     for (size_t h = 0; h < nirrep_; ++h) {
         if (unassigned[h] < 0) {
-            outfile->Printf("\n  There is an error in the definition of the "
-                            "orbital spaces.  Total unassigned MOs for irrep "
-                            "%d is %d.",
-                            h, unassigned[h]);
-            exit(1);
+            // Throw and exception if there are more orbitals assigned to an irrep than there are
+            // available
+            auto msg = fmt::format(
+                "There is an error in the definition of the orbital spaces.  Total assigned MOs "
+                "for irrep {} is {} leaving {} orbitals unassigned.",
+                h, nmopi_[h], unassigned[h]);
+            outfile->Printf("\n%s", msg.c_str());
+
+            // generate a runtime error and use the fmt library to print the error message
+            throw std::runtime_error(msg);
         }
     }
 

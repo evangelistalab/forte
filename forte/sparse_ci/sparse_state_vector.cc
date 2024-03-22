@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,6 +30,7 @@
 #include <cmath>
 #include <numeric>
 
+#include "helpers/helpers.h"
 #include "helpers/timer.h"
 #include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
@@ -41,19 +42,19 @@ namespace forte {
 StateVector::StateVector(const det_hash<double>& state_vec) : state_vec_(state_vec) {}
 
 bool StateVector::operator==(const StateVector& lhs) const {
-    double zero = 1.0e-14;
-    const auto& small_state = size() < lhs.size() ? *this : lhs;
-    const auto& large_state = size() < lhs.size() ? lhs : *this;
-    for (const auto& det_c_r : small_state) {
-        auto it = large_state.find(det_c_r.first);
-        if (it != large_state.end()) {
-            if (std::fabs(it->second - det_c_r.second) > zero)
-                return false;
-        } else {
-            return false;
-        }
-    }
-    return true;
+    // double zero = 1.0e-14;
+    // const auto& small_state = size() < lhs.size() ? *this : lhs;
+    // const auto& large_state = size() < lhs.size() ? lhs : *this;
+    // for (const auto& det_c_r : small_state) {
+    //     auto it = large_state.find(det_c_r.first);
+    //     if (it != large_state.end()) {
+    //         if (std::fabs(it->second - det_c_r.second) > zero)
+    //             return false;
+    //     } else {
+    //         return false;
+    //     }
+    // }
+    return compare_hashes(map(), lhs.map());
 }
 
 std::string StateVector::str(int n) const {

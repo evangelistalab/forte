@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -49,8 +49,8 @@ void SA_DSRGPT::read_options() { form_Hbar_ = (relax_ref_ != "NONE" || multi_sta
 
 void SA_DSRGPT::print_options() {
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info_int{
-        {"Number of amplitudes for printing", ntamp_}};
+    table_printer printer;
+    printer.add_int_data({{"Number of amplitudes for printing", ntamp_}});
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Flow parameter", s_},
@@ -61,6 +61,7 @@ void SA_DSRGPT::print_options() {
         auto cholesky_threshold = foptions_->get_double("CHOLESKY_TOLERANCE");
         calculation_info_double.push_back({"Cholesky tolerance", cholesky_threshold});
     }
+    printer.add_double_data(calculation_info_double);
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Integral type", ints_type_},
@@ -82,9 +83,9 @@ void SA_DSRGPT::print_options() {
         calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
     }
 
-    // Print some information
-    print_selected_options("Computation Information", calculation_info_string, {},
-                           calculation_info_double, calculation_info_int);
+    printer.add_string_data(calculation_info_string);
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 void SA_DSRGPT::init_fock() {

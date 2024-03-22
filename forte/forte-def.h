@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _forte_def_h_
-#define _forte_def_h_
+#pragma once
 
 // Define OPENMP functions in case they are not available
 #ifdef _OPENMP
@@ -37,5 +36,3 @@
 #define omp_get_thread_num() 0
 #define omp_get_num_threads() 1
 #endif
-
-#endif // _forte_def_h_

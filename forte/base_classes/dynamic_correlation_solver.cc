@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -29,8 +29,11 @@
 
 #include "psi4/libmints/matrix.h"
 
+#include "integrals/integrals.h"
 #include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/mo_space_info.h"
+#include "base_classes/rdms.h"
+#include "base_classes/state_info.h"
 
 namespace forte {
 DynamicCorrelationSolver::DynamicCorrelationSolver(std::shared_ptr<RDMs> rdms,
@@ -70,12 +73,17 @@ void DynamicCorrelationSolver::startup() {
     }
 }
 
+void DynamicCorrelationSolver::set_state_weights_map(
+    const std::map<StateInfo, std::vector<double>>& state_to_weights) {
+    state_to_weights_ = state_to_weights;
+}
+
 double DynamicCorrelationSolver::compute_reference_energy() {
     // Identical to the one in CASSCF_ORB_GRAD class.
     // Eref = Enuc + Eclosed + Fclosed["uv"] * D1["uv"] + 0.5 * (uv|xy) * D2["uxvy"]
     double Eref = Enuc_;
 
-    psi::SharedMatrix Fclosed;
+    std::shared_ptr<psi::Matrix> Fclosed;
     double Eclosed;
     auto dim_start = psi::Dimension(mo_space_info_->nirrep());
     auto dim_end = mo_space_info_->dimension("INACTIVE_DOCC");
@@ -85,7 +93,7 @@ double DynamicCorrelationSolver::compute_reference_energy() {
     auto nactv = mo_space_info_->size("ACTIVE");
     auto Fc = ambit::Tensor::build(ambit::CoreTensor, "F closed", {nactv, nactv});
     auto actv_relative_mos = mo_space_info_->relative_mo("ACTIVE");
-    Fc.iterate([&](const std::vector<size_t>& i, double& value){
+    Fc.iterate([&](const std::vector<size_t>& i, double& value) {
         size_t h1, h2, p, q;
         std::tie(h1, p) = actv_relative_mos[i[0]];
         std::tie(h2, q) = actv_relative_mos[i[1]];

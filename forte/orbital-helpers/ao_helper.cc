@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -28,8 +28,8 @@
  */
 
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/sieve.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libmints/integral.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 
@@ -43,19 +43,7 @@
 using namespace psi;
 
 namespace forte {
-
-// AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
-//                                          psi::SharedVector eps_vir, double laplace_tolerance)
-//     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
-//     LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_, 0);
-//     Occupied_Laplace_ = laplace.denominator_occ();
-//     Virtual_Laplace_ = laplace.denominator_vir();
-//     weights_ = Occupied_Laplace_->rowspi()[0];
-//     nrdocc_ = eps_rdocc_->dim();
-//     nvir_ = eps_virtual_->dim();
-//     nbf_ = CMO_->rowspi()[0];
-//     shift_ = 0;
-// }
+  
 AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
                                          psi::SharedVector eps_vir, double laplace_tolerance,
                                          int shift, int nfrozen, double vir_tol)

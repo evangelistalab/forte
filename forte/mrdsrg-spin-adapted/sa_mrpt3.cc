@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -53,7 +53,7 @@ void SA_MRPT3::startup() {
     // test semi-canonical
     if (!semi_canonical_) {
         outfile->Printf("\n  Orbital invariant formalism will be employed for DSRG-MRPT3.");
-        U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
+        U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"cc", "aa", "vv"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
 
@@ -417,5 +417,118 @@ double SA_MRPT3::compute_energy_pt3_3() {
     }
 
     return Ereturn;
+}
+
+void SA_MRPT3::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens,
+                                  const std::vector<int>& max_levels) {
+    /**
+     * Transform one-body integrals based on DSRG-PT3.
+     * The diagonal blocks of the one-body integrals are considered 0th order.
+     *
+     * @param oetens: a vector of bare multipole integrals
+     * @param max_body: the max body kept in recursive linear commutator approximation
+     *
+     * This function should be called after compute_energy(),
+     * as 1st- and 2nd-order amps. are stored in O1_/O2_ and T1_/T2_, respectively.
+     */
+    print_h2("Transform One-Electron Operators");
+
+    auto max_body = *std::max_element(max_levels.begin(), max_levels.end());
+    if (max_body > 1)
+        throw std::runtime_error("Multipole level > 1 currently not available for MRPT3!");
+
+    int n_tensors = oetens.size();
+    Mbar0_ = std::vector<double>(n_tensors, 0.0);
+
+    // compute Mref and add to Mbar0_
+    for (int i = 0; i < n_tensors; ++i) {
+        auto& M1c = oetens[i].block("cc").data();
+        for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+            Mbar0_[i] += 2.0 * M1c[m * ncore + m];
+        }
+        Mbar0_[i] += oetens[i]["uv"] * L1_["vu"];
+    }
+
+    Mbar1_.resize(n_tensors);
+    Mbar2_.resize(n_tensors);
+    for (int i = 0; i < n_tensors; ++i) {
+        Mbar1_[i] = BTF_->build(tensor_type_, oetens[i].name() + "1", {"aa"});
+        Mbar1_[i]["uv"] += oetens[i]["uv"]; // add bare one-electron integrals
+        if (max_levels[i] > 1)
+            Mbar2_[i] = BTF_->build(tensor_type_, oetens[i].name() + "2", {"aaaa"});
+    }
+
+    auto Md = BTF_->build(tensor_type_, "M_D", {"cc", "aa", "vv"});
+    auto Mod = BTF_->build(tensor_type_, "M_OD", od_one_labels());
+
+    auto O1 = BTF_->build(tensor_type_, "O1", od_one_labels_ph());
+    auto temp1 = BTF_->build(tensor_type_, "temp1M", {"aa"});
+    auto C1 = BTF_->build(tensor_type_, "C1", {"gg"});
+    auto H1 = BTF_->build(tensor_type_, "H1", {"gg"});
+
+    // transform each tensor
+    for (int i = 0; i < n_tensors; ++i) {
+        local_timer t_local;
+        auto M = oetens[i];
+        print_contents("Transforming " + M.name());
+
+        // separate M to diagonal and off-diagonal components
+        Md["pq"] = M["pq"];
+        Mod["pq"] = M["pq"];
+
+        // initialize Mbar
+        auto& Mbar0 = Mbar0_[i];
+        auto& Mbar1 = Mbar1_[i];
+        temp1.zero();
+
+        // [M, A2nd] + 0.5 * [[M^{d}, A1st], A2nd]
+        // - prepare O1 = M^{od} + 0.5 * [M^{d}, A1st]^{od}
+        O1["pq"] = Mod["pq"];
+        S2_["ijab"] = 2.0 * O2_["ijab"] - O2_["jiab"];
+        H1d_A1_C1ph(Md, O1_, 0.5, O1);
+        H1d_A2_C1ph(Md, S2_, 0.5, O1);
+
+        // - compute Mbar_{0,1}
+        S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["jiab"];
+        H1_T1_C0(O1, T1_, 2.0, Mbar0);
+        H1_T2_C0(O1, T2_, 2.0, Mbar0);
+        H1_T_C1a_smallS(O1, T1_, S2_, temp1);
+
+        // [M, A1st] + 0.5 * [[M^{d}, A2nd], A1st] + 0.5 * [[M, A1st], A1st]
+        // + 1/6 * [[[M^{d}, A1st], A1st], A1st]
+
+        // - O1 <- M^{od}
+        O1["pq"] = Mod["pq"];
+
+        // - O1 <- 0.5 * [M^{d}, A2nd]^{od}
+        H1d_A1_C1ph(Md, T1_, 0.5, O1);
+        H1d_A2_C1ph(Md, S2_, 0.5, O1);
+
+        // - O1 <- 0.5 * [M, A1st]^{od}
+        S2_["ijab"] = 2.0 * O2_["ijab"] - O2_["jiab"];
+        H1_A1_C1ph(M, O1_, 0.5, O1);
+        H1_A2_C1ph(M, S2_, 0.5, O1);
+
+        // - O1 <- 1/6 * [[M^{d}, A1st], A1st]^{od}
+        C1.zero();
+        H1_T1_C1(Md, O1_, 1.0, C1);
+        H1_T2_C1(Md, O2_, 1.0, C1);
+        H1["pq"] = C1["pq"];
+        H1["pq"] += C1["qp"];
+
+        H1_A1_C1ph(H1, O1_, 1.0 / 6.0, O1);
+        H1_A2_C1ph(H1, S2_, 1.0 / 6.0, O1);
+
+        // - compute Mbar_{0,1}
+        H1_T1_C0(O1, O1_, 2.0, Mbar0);
+        H1_T2_C0(O1, O2_, 2.0, Mbar0);
+        H1_T_C1a_smallS(O1, O1_, S2_, temp1);
+
+        // add 1-body results
+        Mbar1["uv"] += temp1["uv"];
+        Mbar1["vu"] += temp1["uv"];
+
+        print_done(t_local.get());
+    }
 }
 } // namespace forte
