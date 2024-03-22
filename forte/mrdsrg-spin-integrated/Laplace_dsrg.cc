@@ -25,7 +25,6 @@
 #include "helpers/timer.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
-#include "sci/fci_mo.h"
 #include "sci/aci.h"
 
 #include "orbital-helpers/Laplace.h"

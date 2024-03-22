@@ -62,6 +62,7 @@
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
+#include "helpers/helpers.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
 #include "sci/aci.h"
@@ -3410,7 +3411,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
                 T_ev[thread].zero();
             }
         }
-
 
         ambit::Tensor tempTAA_all =
             ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
