@@ -33,107 +33,151 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 
-#include "psi4/lib3index/denominator.h"
+#include "LaplaceDenominator.h"
 #include "psi4/libfock/jk.h"
+#include "Laplace.h"
 #include "ao_helper.h"
+
+#include <numeric> 
 
 using namespace psi;
 
 namespace forte {
-
-AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
-                                         std::shared_ptr<psi::Vector> eps_occ,
-                                         std::shared_ptr<psi::Vector> eps_vir,
-                                         double laplace_tolerance)
-    : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
-    psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
-    Occupied_Laplace_ = laplace.denominator_occ();
-    Virtual_Laplace_ = laplace.denominator_vir();
-    weights_ = Occupied_Laplace_->rowspi()[0];
-    nrdocc_ = eps_rdocc_->dim();
-    nvir_ = eps_virtual_->dim();
-    nbf_ = CMO_->rowspi()[0];
-    shift_ = 0;
-}
-AtomicOrbitalHelper::AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO,
-                                         std::shared_ptr<psi::Vector> eps_occ,
-                                         std::shared_ptr<psi::Vector> eps_vir,
-                                         double laplace_tolerance, int shift)
+  
+AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
+                                         psi::SharedVector eps_vir, double laplace_tolerance,
+                                         int shift, int nfrozen, double vir_tol)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
-      shift_(shift) {
-    psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
+      shift_(shift), nfrozen_(nfrozen) {
+    LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_, vir_tol);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
     weights_ = Occupied_Laplace_->rowspi()[0];
     nrdocc_ = eps_rdocc_->dim();
-    nvir_ = eps_virtual_->dim();
+    nvir_ = Virtual_Laplace_->colspi()[0];
+    nbf_ = CMO_->rowspi()[0];
+    vir_start_ = laplace.vir_start();
+    shift_ += vir_start_;
+}
+
+AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_act,
+                                         psi::SharedVector eps_vir, double laplace_tolerance,
+                                         int shift, int nfrozen, bool cavv, double vir_tol)
+    : CMO_(CMO), eps_rdocc_(eps_occ), eps_active_(eps_act), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
+      shift_(shift), nfrozen_(nfrozen) {
+    LaplaceDenominator laplace(eps_rdocc_, eps_active_, eps_virtual_, laplace_tolerance_, cavv, vir_tol);
+    Occupied_Laplace_ = laplace.denominator_occ();
+    Virtual_Laplace_ = laplace.denominator_vir();
+    Active_Laplace_ = laplace.denominator_act();
+    weights_ = Occupied_Laplace_->rowspi()[0];
+    nrdocc_ = eps_rdocc_->dim();
+    nact_ = eps_active_->dim();
+    nvir_ = Virtual_Laplace_->colspi()[0];
+    vir_start_ = laplace.vir_start();
+    shift_ += vir_start_;
     nbf_ = CMO_->rowspi()[0];
 }
-AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n Done with AO helper class"); }
-void AtomicOrbitalHelper::Compute_Psuedo_Density() {
-    int nmo_ = nbf_;
-    auto Xocc = std::make_shared<psi::Matrix>("DensityOccupied", weights_, nbf_ * nbf_);
-    auto Yvir = std::make_shared<psi::Matrix>("DensityVirtual", weights_, nmo_ * nmo_);
 
+AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n    Done with AO helper class"); }
+
+void AtomicOrbitalHelper::Compute_Cholesky_Pseudo_Density() {
+    psi::SharedMatrix POcc_single(new psi::Matrix("Single_POcc", nbf_, nbf_));
+    psi::SharedMatrix PVir_single(new psi::Matrix("Single_PVir", nbf_, nbf_)); 
+
+    double value_occ, value_vir = 0.0;
     for (int w = 0; w < weights_; w++) {
         for (int mu = 0; mu < nbf_; mu++) {
             for (int nu = 0; nu < nbf_; nu++) {
-                double value_occ = 0.0;
                 for (int i = 0; i < nrdocc_; i++) {
-                    value_occ += CMO_->get(mu, i) * CMO_->get(nu, i) * Occupied_Laplace_->get(w, i);
+                    value_occ += CMO_->get(mu, i + nfrozen_) * CMO_->get(nu, i + nfrozen_) * Occupied_Laplace_->get(w, i);
                 }
-                Xocc->set(w, mu * nmo_ + nu, value_occ);
-                double value_vir = 0.0;
+                POcc_single->set(mu, nu, value_occ);
                 for (int a = 0; a < nvir_; a++) {
-                    value_vir += CMO_->get(mu, nrdocc_ + shift_ + a) *
-                                 CMO_->get(nu, nrdocc_ + shift_ + a) * Virtual_Laplace_->get(w, a);
+                    value_vir += CMO_->get(mu, nfrozen_ + nrdocc_ + shift_ + a) *
+                                 CMO_->get(nu, nfrozen_ + nrdocc_ + shift_ + a) * Virtual_Laplace_->get(w, a);
                 }
-                Yvir->set(w, mu * nmo_ + nu, value_vir);
+                PVir_single->set(mu, nu, value_vir);
+                value_occ = 0.0;
+                value_vir = 0.0;
             }
         }
+        psi::SharedMatrix LOcc = POcc_single->partial_cholesky_factorize(1e-10);
+        psi::SharedMatrix LVir = PVir_single->partial_cholesky_factorize(1e-10);
+        LOcc_list_.push_back(LOcc);
+        LVir_list_.push_back(LVir);
+        //POcc_list_.push_back(POcc_single);
+        //PVir_list_.push_back(PVir_single);
+        //n_pseudo_occ_list_.push_back(LOcc->coldim());
+        //n_pseudo_vir_list_.push_back(LVir->coldim());
     }
-    POcc_ = Xocc->clone();
-    PVir_ = Yvir->clone();
 }
-void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary) {
-    auto integral = std::make_shared<IntegralFactory>(primary, primary, primary, primary);
-    auto twobodyaoints = std::shared_ptr<TwoBodyAOInt>(integral->eri());
-    // ERISieve sieve(primary, 1e-10);
-    // auto my_function_pair_values = twobodyaoints->function_pair_values();
-    auto AO_Screen = std::make_shared<psi::Matrix>("Z", nbf_, nbf_);
-    for (int mu = 0; mu < nbf_; mu++)
-        for (int nu = 0; nu < nbf_; nu++) {
-            // AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
-            double value = std::sqrt(twobodyaoints->function_ceiling2(mu, nu, mu, nu));
-            AO_Screen->set(mu, nu, value);
-        }
 
-    AO_Screen_ = AO_Screen;
-    AO_Screen_->set_name("ScwartzAOInts");
-}
-void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
-                                                  std::shared_ptr<psi::BasisSet>& auxiliary) {
-    Compute_Psuedo_Density();
-    MemDFJK jk(primary, auxiliary, psi::Process::environment.options);
-    jk.initialize();
-    jk.compute();
-    auto AO_Trans_Screen = std::make_shared<psi::Matrix>("AOTrans", weights_, nbf_ * nbf_);
+void AtomicOrbitalHelper::Compute_Cholesky_Active_Density(psi::SharedMatrix RDM) {
+    psi::SharedMatrix PAct_single(new psi::Matrix("Single_PAct", nbf_, nbf_));
+    std::vector<int> Act_idx(nact_);
+    std::iota(Act_idx.begin(), Act_idx.end(), nfrozen_+nrdocc_);
+    psi::SharedMatrix C_Act = submatrix_cols(*CMO_, Act_idx);
+    psi::SharedMatrix D_Act = psi::linalg::doublet(C_Act, RDM, false, false);
 
+    double value_act = 0.0;
     for (int w = 0; w < weights_; w++) {
-        auto COcc = std::make_shared<psi::Matrix>("COcc", nbf_, nbf_);
-        auto CVir = std::make_shared<psi::Matrix>("COcc", nbf_, nbf_);
-        for (int mu = 0; mu < nbf_; mu++)
+        for (int mu = 0; mu < nbf_; mu++) {
             for (int nu = 0; nu < nbf_; nu++) {
-                COcc->set(mu, nu, POcc_->get(w, mu * nbf_ + nu));
-                CVir->set(mu, nu, PVir_->get(w, mu * nbf_ + nu));
+                for (int u = 0; u < nact_; u++) {
+                    value_act += D_Act->get(mu, u) * C_Act->get(nu, u) * Active_Laplace_->get(w, u);
+                }
+                PAct_single->set(mu, nu, value_act);
+                value_act = 0.0;
             }
-
-        auto iaia_w = jk.iaia(COcc, CVir);
-        for (int mu = 0; mu < nbf_; mu++)
-            for (int nu = 0; nu < nbf_; nu++)
-                AO_Trans_Screen->set(w, mu * nbf_ + nu, iaia_w->get(mu * nbf_ + nu));
+        }
+        psi::SharedMatrix LAct = PAct_single->partial_cholesky_factorize(1e-10);
+        LAct_list_.push_back(LAct);
+        //n_pseudo_vir_list_.push_back(LAct->coldim());
     }
-    TransAO_Screen_ = AO_Trans_Screen;
-    TransAO_Screen_->set_name("(u_b {b}^v | u_b {b}^v)");
 }
+
+void AtomicOrbitalHelper::Compute_Cholesky_Density() {
+    std::vector<int> Occ_idx(nrdocc_);
+    std::iota(Occ_idx.begin(), Occ_idx.end(), nfrozen_);
+    psi::SharedMatrix C_Occ = submatrix_cols(*CMO_, Occ_idx);
+    POcc_real_ = psi::linalg::doublet(C_Occ, C_Occ, false, true);
+    L_Occ_real_ = POcc_real_->partial_cholesky_factorize(1e-10);
+}
+/*
+void AtomicOrbitalHelper::Householder_QR() {
+    std::vector<int> Occ_idx(nrdocc_);
+    std::iota(Occ_idx.begin(), Occ_idx.end(), 0);
+    psi::SharedMatrix C_Occ = submatrix_cols(*CMO_, Occ_idx);
+    psi::SharedMatrix C_Occ_transpose = C_Occ->transpose();
+    /// Copy C_Occ matrix to R
+    double** C_T = C_Occ_transpose->pointer();
+    auto R = std::make_shared<psi::Matrix>("R", nrdocc_, C_Occ_transpose->coldim());
+    double** Rp = R->pointer();
+    C_DCOPY(nrdocc_ * C_Occ_transpose->coldim(), C_T[0], 1, Rp[0], 1);
+
+    /// QR decomposition
+    std::vector<double> tau(nrdocc_);
+    //std::vector<int> jpvt(C_Occ_transpose->coldim());
+
+    // First, find out how much workspace to provide
+    // Optimal size of work vector is written to work_size
+    double work_size;
+    //C_DGEQP3(nrdocc_, C_Occ_transpose->coldim(), Rp[0], nrdocc_, jpvt.data(), tau.data(), &work_size, -1);
+    C_DGEQRF(nrdocc_, C_Occ_transpose->coldim(), Rp[0], nrdocc_, tau.data(), &work_size, -1);
+    // Now, do the QR decomposition
+    int lwork = (int)work_size;
+    std::vector<double> work(lwork);
+    //C_DGEQP3(nrdocc_, C_Occ_transpose->coldim(), Rp[0], nrdocc_, jpvt.data(), tau.data(), work.data(), lwork);
+    C_DGEQRF(nrdocc_, C_Occ_transpose->coldim(), Rp[0], nrdocc_, tau.data(), work.data(), lwork);
+
+    // Put R in the upper triangle where it belongs
+    for (int i = 1; i < nrdocc_; i++) {
+        for (int j = 0; j < i; j++) {
+            Rp[j][i] = 0.0;
+        }
+    }
+
+    R->transpose()->print();
+}
+*/
 } // namespace forte
