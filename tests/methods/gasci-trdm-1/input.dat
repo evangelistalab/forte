@@ -1,0 +1,123 @@
+import forte
+memory 2gb
+
+molecule h2{
+H
+H 1 0.75
+}
+
+set {
+  basis sto-6g
+  e_convergence 12
+}
+
+set scf {
+  scf_type pk
+  reference rhf
+}
+
+set forte {
+  active_space_solver genci
+  active_ref_type gas
+  gas1            [1,0,0,0,0,0,0,0]
+  gas2            [0,0,0,0,0,1,0,0]
+  avg_state       [[0,1,2],[5,1,1],[5,3,1]]
+  fci_test_rdms   true
+  transition_dipoles    true
+}
+
+energy('forte')
+
+refvals = [
+    ("AA 1-RDM ERROR"                  ,       0.000000000000),
+    ("AAAA 2-RDM ERROR"                ,       0.000000000000),
+    ("AAAAAA 3-RDM ERROR"              ,       0.000000000000),
+    ("AABAAB 3-RDM ERROR"              ,       0.000000000000),
+    ("ABAB 2-RDM ERROR"                ,       0.000000000000),
+    ("ABBABB 3-RDM ERROR"              ,       0.000000000000),
+    ("BB 1-RDM ERROR"                  ,       0.000000000000),
+    ("BBBB 2-RDM ERROR"                ,       0.000000000000),
+    ("BBBBBB 3-RDM ERROR"              ,       0.000000000000),
+    ("CURRENT ENERGY"                  ,      -0.357670407965),
+    ("CURRENT REFERENCE ENERGY"        ,      -1.124730745504),
+    ("DD SOLVATION ENERGY"             ,       0.000000000000),
+    ("ENERGY ROOT 0 1AG"               ,      -1.145741671060),
+    ("ENERGY ROOT 0 1B1U"              ,      -0.186822898629),
+    ("ENERGY ROOT 0 3B1U"              ,      -0.550943397253),
+    ("ENERGY ROOT 1 1AG"               ,       0.452826335081),
+    ("CI ENERGY"                       ,      -0.550943397253),
+    ("HF KINETIC ENERGY"               ,       1.206897379616),
+    ("HF POTENTIAL ENERGY"             ,      -2.331628125120),
+    ("HF TOTAL ENERGY"                 ,      -1.124730745504),
+    ("HF VIRIAL RATIO"                 ,       1.931919121294),
+    ("NUCLEAR REPULSION ENERGY"        ,       0.705569614227),
+    ("ONE-ELECTRON ENERGY"             ,      -2.503086824115),
+    ("OSC. SINGLET 0AG -> 0B1U"        ,       0.864798377887),
+    ("OSC. SINGLET 0AG -> 1AG"         ,       0.000000000000),
+    ("OSC. SINGLET 1AG -> 0B1U"        ,       0.917178110540),
+    ("PCM POLARIZATION ENERGY"         ,       0.000000000000),
+    ("PE ENERGY"                       ,       0.000000000000),
+    ("SCF ITERATION ENERGY"            ,      -1.124730745504),
+    ("SCF ITERATIONS"                  ,       2.000000000000),
+    ("SCF TOTAL ENERGY"                ,      -1.124730745504),
+    ("SF 1-RDM ERROR"                  ,       0.000000000000),
+    ("SINGLET <0AG|DM_X|0AG>"          ,       0.000000000000),
+    ("SINGLET <0AG|DM_Y|0AG>"          ,       0.000000000000),
+    ("SINGLET <0AG|DM_Z|0AG>"          ,      -0.000000000000),
+    ("SINGLET <0AG|QM_XX|0AG>"         ,      -1.371925184407),
+    ("SINGLET <0AG|QM_XY|0AG>"         ,       0.000000000000),
+    ("SINGLET <0AG|QM_XZ|0AG>"         ,       0.000000000000),
+    ("SINGLET <0AG|QM_YY|0AG>"         ,      -1.371925184407),
+    ("SINGLET <0AG|QM_YZ|0AG>"         ,       0.000000000000),
+    ("SINGLET <0AG|QM_ZZ|0AG>"         ,      -1.078513487071),
+    ("SINGLET <0B1U|DM_X|0B1U>"        ,       0.000000000000),
+    ("SINGLET <0B1U|DM_Y|0B1U>"        ,       0.000000000000),
+    ("SINGLET <0B1U|DM_Z|0B1U>"        ,       0.000000000000),
+    ("SINGLET <0B1U|QM_XX|0B1U>"       ,      -1.155602329158),
+    ("SINGLET <0B1U|QM_XY|0B1U>"       ,       0.000000000000),
+    ("SINGLET <0B1U|QM_XZ|0B1U>"       ,       0.000000000000),
+    ("SINGLET <0B1U|QM_YY|0B1U>"       ,      -1.155602329158),
+    ("SINGLET <0B1U|QM_YZ|0B1U>"       ,       0.000000000000),
+    ("SINGLET <0B1U|QM_ZZ|0B1U>"       ,      -1.753562290402),
+    ("SINGLET <1AG|DM_X|1AG>"          ,       0.000000000000),
+    ("SINGLET <1AG|DM_Y|1AG>"          ,       0.000000000000),
+    ("SINGLET <1AG|DM_Z|1AG>"          ,       0.000000000000),
+    ("SINGLET <1AG|QM_XX|1AG>"         ,      -0.939279473910),
+    ("SINGLET <1AG|QM_XY|1AG>"         ,       0.000000000000),
+    ("SINGLET <1AG|QM_XZ|1AG>"         ,       0.000000000000),
+    ("SINGLET <1AG|QM_YY|1AG>"         ,      -0.939279473910),
+    ("SINGLET <1AG|QM_YZ|1AG>"         ,       0.000000000000),
+    ("SINGLET <1AG|QM_ZZ|1AG>"         ,      -2.428611093732),
+    ("SINGLET |<0AG|DM|0AG>|"          ,       0.000000000000),
+    ("SINGLET |<0B1U|DM|0B1U>|"        ,       0.000000000000),
+    ("SINGLET |<1AG|DM|1AG>|"          ,       0.000000000000),
+    ("TRANS SINGLET <0AG|DM_X|0B1U>"   ,       0.000000000000),
+    ("TRANS SINGLET <0AG|DM_X|1AG>"    ,       0.000000000000),
+    ("TRANS SINGLET <0AG|DM_Y|0B1U>"   ,       0.000000000000),
+    ("TRANS SINGLET <0AG|DM_Y|1AG>"    ,       0.000000000000),
+    ("TRANS SINGLET <0AG|DM_Z|0B1U>"   ,       1.163086868083),
+    ("TRANS SINGLET <0AG|DM_Z|1AG>"    ,      -0.000000000000),
+    ("TRANS SINGLET <1AG|DM_X|0B1U>"   ,       0.000000000000),
+    ("TRANS SINGLET <1AG|DM_Y|0B1U>"   ,       0.000000000000),
+    ("TRANS SINGLET <1AG|DM_Z|0B1U>"   ,       1.466565715801),
+    ("TRANS SINGLET S_MAX 0AG -> 0B1U" ,       1.404888898144),
+    ("TRANS SINGLET S_MAX 0AG -> 1AG"  ,       0.227779173126),
+    ("TRANS SINGLET S_MAX 1AG -> 0B1U" ,       1.404888898144),
+    ("TRANS SINGLET |<0AG|DM|0B1U>|"   ,       1.163086868083),
+    ("TRANS SINGLET |<0AG|DM|1AG>|"    ,       0.000000000000),
+    ("TRANS SINGLET |<1AG|DM|0B1U>|"   ,       1.466565715801),
+    ("TRIPLET <0B1U|DM_X|0B1U>"        ,       0.000000000000),
+    ("TRIPLET <0B1U|DM_Y|0B1U>"        ,       0.000000000000),
+    ("TRIPLET <0B1U|DM_Z|0B1U>"        ,       0.000000000000),
+    ("TRIPLET <0B1U|QM_XX|0B1U>"       ,      -1.155602329158),
+    ("TRIPLET <0B1U|QM_XY|0B1U>"       ,       0.000000000000),
+    ("TRIPLET <0B1U|QM_XZ|0B1U>"       ,       0.000000000000),
+    ("TRIPLET <0B1U|QM_YY|0B1U>"       ,      -1.155602329158),
+    ("TRIPLET <0B1U|QM_YZ|0B1U>"       ,       0.000000000000),
+    ("TRIPLET <0B1U|QM_ZZ|0B1U>"       ,      -1.753562290402),
+    ("TRIPLET |<0B1U|DM|0B1U>|"        ,       0.000000000000),
+    ("TWO-ELECTRON ENERGY"             ,       0.672786464384),
+]
+
+for label, val in refvals:
+    compare_values(val, variable(label),10,label)
