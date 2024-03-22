@@ -1,0 +1,49 @@
+# DSRG-MRPT2 gradient on 4 H atoms with c1 symmetry
+import forte
+
+ref_grad = psi4.Matrix.from_list([
+      [-0.521586919763,    -1.188829187079,    -0.914234910278],
+      [-0.877544461704,    -1.015038289914,     0.232457682530],
+      [ 1.052395793208,     2.131164236150,     0.332015275804],
+      [ 0.346735588259,     0.072703240844,     0.349761951944]
+      ])
+
+molecule {
+0 1
+H  1.0     0.8      0.6
+H  0.9     0.5      0.4
+H  0.76    0.23     0.35
+H  0.34    0.45     -0.11
+}
+
+set {
+  basis cc-pvdz
+  reference rhf
+  scf_type pk
+  e_convergence 10
+  d_convergence 8
+  active          [4]
+   mcscf_type           conv
+   mcscf_maxiter        200
+   mcscf_diis_start     20
+   MCSCF_E_CONVERGENCE  10
+   MCSCF_R_CONVERGENCE  8
+   g_convergence     gau_verytight
+}
+
+set forte {
+  REF_TYPE  CASSCF
+  CASSCF_G_CONVERGENCE   1e-10
+  CASSCF_E_CONVERGENCE   1e-10
+  active          [4]
+  active_space_solver  detci
+  correlation_solver   dsrg-mrpt2
+  dsrg_s               1.0
+  dsrgpt               true
+  print_denom2         true
+  multiplicity         1 
+  force_diag_method    true
+}
+
+grad = gradient('forte')
+compare_matrices(ref_grad, grad, 6, "DSRG-MRPT2 gradient on 4 H atoms with c1 symmetry")

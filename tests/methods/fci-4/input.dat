@@ -1,9 +1,9 @@
-#! Generated using commit GITCOMMIT
+# LiH triplet B1 state (M_S = 0), minimal basis set RHF/CASCI
 
 import forte
 
 refscf = -7.862246310410
-reffci = -7.716243788616362
+reffci = -7.716243788616
 
 molecule {
 0 1
@@ -22,18 +22,16 @@ set {
 }
 
 set forte {
-  active_space_solver fci
-  print 1
-  active [4,0,1,1]
-  restricted_docc [0,0,0,0]
-  root_sym 2
-  multiplicity 3
-  ms 0.0
+  active_space_solver genci
+  active              [4,0,1,1]
+  restricted_docc     [0,0,0,0]
+  root_sym            2
+  multiplicity        3
+  ms                  0.0
 }
 
-
 energy('scf')
-compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy")
 
 energy('forte')
-compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy")

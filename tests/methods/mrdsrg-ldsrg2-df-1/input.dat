@@ -61,7 +61,7 @@ set {
 
 set forte {
 
-  active_space_solver    cas
+  active_space_solver    detci
   correlation_solver     mrdsrg
  # job_type               mrdsrg
   int_type               cholesky

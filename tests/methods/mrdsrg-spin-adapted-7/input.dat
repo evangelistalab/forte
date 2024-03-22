@@ -1,0 +1,121 @@
+# Valence-Rydberg mixing of ethene in the MS-CASPT2 paper
+
+names = {"cas": "CASSCF",
+         "pt2": "SA-DSRG-PT2", "pt2_casci": "SA-DSRG-PT2/BARE MULTIPOLE",
+         "pt3": "SA-DSRG-PT3", "pt3_casci": "SA-DSRG-PT3/BARE MULTIPOLE",
+         "ldsrg2": "SA-LDSRG(2)", "ldsrg2_casci": "SA-LDSRG(2)/BARE MULTIPOLE"}
+
+ref_energies = {"cas": {"0 1AG": -78.050972650022, "0 1B1U": -77.754262809385, "1 1B1U": -77.640640110185},
+                "pt2": {"0 1AG": -78.322910420240, "0 1B1U": -78.024073016710, "1 1B1U": -77.912657326092},
+                "pt3": {"0 1AG": -78.355123774026, "0 1B1U": -78.063699729828, "1 1B1U": -77.949828270258},
+                "ldsrg2": {"0 1AG": -78.365075557749, "0 1B1U": -78.072476883119, "1 1B1U": -77.959441183617}}
+
+ref_osc = {"cas": {"0B1U": 0.310706108193, "1B1U": 0.233911712991},
+           "pt2_casci": {"0B1U": 0.467715263324, "1B1U": 0.087820418627},
+           "pt2": {"0B1U": 0.416479551582, "1B1U": 0.071542891028},
+           "pt3_casci": {"0B1U": 0.453605882499, "1B1U": 0.074334293374},
+           "pt3": {"0B1U": 0.356740458265, "1B1U": 0.044040508954},
+           "ldsrg2_casci": {"0B1U": 0.457225619071, "1B1U": 0.076489401311},
+           "ldsrg2": {"0B1U": 0.365252652237, "1B1U": 0.047988146282}}
+
+ref_qp_xx = {"cas": {"0AG": -11.684553148724, "0B1U": -21.882900761865, "1B1U": -21.603817284171},
+             "pt2_casci": {"0AG": -11.675317636441, "0B1U": -16.519578192300, "1B1U": -26.967139853736},
+             "pt2": {"0AG": -11.781130095753, "0B1U": -16.494465668042, "1B1U": -26.883130105872},
+             "pt3_casci": {"0AG": -11.678209637748, "0B1U": -16.194792526608, "1B1U": -27.291925519428},
+             "pt3": {"0AG": -11.757696414354, "0B1U": -16.192862906223, "1B1U": -26.873505484459},
+             "ldsrg2_casci": {"0AG": -11.677415216577, "0B1U": -16.238986555644, "1B1U": -27.247731490391},
+             "ldsrg2": {"0AG": -11.769187258636, "0B1U": -16.205863445921, "1B1U": -26.915345760351}}
+
+
+def compare_results(level):
+    name = names[level]
+
+    # compare energies
+    entry = 0 if level == "cas" else 1
+    if "_casci" not in level:
+        for state, eref in ref_energies[level].items():
+            ecompt = variable(f"ENERGY ROOT {state} ENTRY {entry}")
+            compare_values(eref, ecompt, 8, f"{name} ENERGY")
+
+    # compare quadrupole moments
+    if level != "cas":
+        entry = 1 if "_casci" in level else 2
+    for state, qref in ref_qp_xx[level].items():
+         qcompt = variable(f"SINGLET <{state}|QM_XX|{state}> ENTRY {entry}")
+         compare_values(qref, qcompt, 6, f"{name} QM_XX OF {state}")
+
+    # compare oscillator strengths
+    for state, oref in ref_osc[level].items():
+         ocompt = variable(f"OSC. SINGLET 0AG -> {state} ENTRY {entry}")
+         compare_values(oref, ocompt, 6, f"{name} OSCILLATOR STRENGTH OF {state}")
+
+memory 8 gb
+import forte
+
+molecule C2H4{
+0 1
+C      0.000000000000000     0.000000000000000     0.000000000000000
+H      0.000000000000000     0.928925586534310     0.562577332179220
+H      0.000000000000000    -0.928925586534310     0.562577332179220
+C      0.000000000000000     0.000000000000000    -1.339000000000000
+H      0.000000000000000     0.928925586534310    -1.901577332179220
+H      0.000000000000000    -0.928925586534310    -1.901577332179220
+}
+
+set {
+  reference           rhf
+  basis               aug-cc-pvdz
+  scf_type            df
+  df_basis_scf        aug-cc-pvdz-jkfit
+  df_basis_mp2        aug-cc-pvdz-jkfit
+  maxiter             300
+}
+Escf, wfn = energy('scf', return_wfn=True)
+
+set forte {
+  read_orbitals             true
+  job_type                  newdriver
+  int_type                  df
+  frozen_docc               [1,0,0,0,0,1,0,0]
+  restricted_docc           [2,0,0,1,0,1,1,0]
+  active                    [0,0,2,0,0,0,0,1]
+  avg_state                 [[0,1,1],[5,1,2]]
+  active_space_solver       detci
+  correlation_solver        sa-mrdsrg
+  corr_level                pt2
+  dsrg_s                    0.35
+  calc_type                 sa
+  transition_dipoles        true
+  dsrg_max_dipole_level     1
+  dsrg_max_quadrupole_level 1
+}
+Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+
+# compare SA-CASSCF results
+compare_results("cas")
+
+# compare SA-DSRG-PT2 results
+compare_results("pt2")
+compare_results("pt2_casci")
+
+set forte {
+  corr_level  pt3
+  dsrg_s      2.0
+}
+Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+
+# compare SA-DSRG-PT3 results
+compare_results("pt3")
+compare_results("pt3_casci")
+
+set forte {
+  corr_level     ldsrg2
+  dsrg_s         1.5
+  dsrg_nivo      true
+  dsrg_read_amps true
+}
+Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+
+# compare SA-LDSRG(2) results
+compare_results("ldsrg2")
+compare_results("ldsrg2_casci")

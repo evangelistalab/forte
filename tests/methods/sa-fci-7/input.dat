@@ -1,0 +1,99 @@
+# Test FCI on differnt spin Ms values for doublet CH and triplet CH+
+
+import forte
+
+refscf = -37.43945401822133
+reffci = -37.49081328115731
+
+molecule {
+0 2
+C
+H 1 1.0
+units bohr
+}
+
+set {
+  basis 6-31G
+  scf_type pk
+  reference rohf
+  e_convergence 12
+  docc [3,0,0,0]
+  socc [0,0,1,0]
+}
+
+Escf_doublet, wfn0 = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy on doublet Pi of CH")
+
+set forte {
+  active_space_solver fci
+  root_sym 2
+  ms 0.5
+  ci_spin_adapt true
+}
+
+energy('forte', ref_wfn=wfn0)
+compare_values(reffci, variable("CURRENT ENERGY"), 11, "FCI energy (M_S =  1/2)")
+
+set forte {
+  active_space_solver fci
+  root_sym 2
+  ms -0.5
+  ci_spin_adapt true
+}
+
+energy('forte', ref_wfn=wfn0)
+compare_values(reffci, variable("CURRENT ENERGY"), 11, "FCI energy (M_S = -1/2)")
+
+clean()
+
+# Test triplet manifold of CH+
+
+refscf_triplet = -37.066693498042760
+reffci_triplet = -37.088876452204509
+
+molecule {
+1 3
+C
+H 1 1.0
+units bohr
+}
+
+set {
+  basis 6-31G
+  scf_type pk
+  reference rohf
+  e_convergence 12
+  docc [2,0,0,0]
+  socc [1,0,1,0]
+}
+
+scf_triplet = energy('scf')
+compare_values(refscf_triplet, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+set forte {
+  active_space_solver fci
+  root_sym 3
+  ms 1.0
+  ci_spin_adapt true
+}
+
+Escf_triplet, wfn1 = energy('scf', return_wfn=True)
+compare_values(refscf_triplet, variable("CURRENT ENERGY"), 11, "SCF energy on triplet Pi of CH+")
+
+set forte {
+  active_space_solver fci
+  root_sym 3
+  ms 1.0
+  ci_spin_adapt true
+}
+
+energy('forte', ref_wfn=wfn1)
+compare_values(reffci_triplet, variable("CURRENT ENERGY"), 11, "FCI energy (M_S =  1)")
+
+set forte ms 0.0
+energy('forte', ref_wfn=wfn1)
+compare_values(reffci_triplet, variable("CURRENT ENERGY"), 11, "FCI energy (M_S =  0)")
+
+set forte ms -1.0
+energy('forte', ref_wfn=wfn1)
+compare_values(reffci_triplet, variable("CURRENT ENERGY"), 11, "FCI energy (M_S = -1)")

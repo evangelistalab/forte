@@ -1,0 +1,36 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+molecule {
+-1 2
+Li
+H 1 R
+
+R = 3.0
+units bohr 
+}
+
+set {
+  basis sto-3g
+  reference rohf
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  active_space_solver fci
+  ci_spin_adapt      true
+  fci_test_rdms true
+}
+
+energy('scf')
+energy('forte')
+
+compare_values(0.0, variable("AAAA 2-RDM ERROR"),12, "AAAA 2-RDM") #TEST
+compare_values(0.0, variable("BBBB 2-RDM ERROR"),12, "BBBB 2-RDM") #TEST
+compare_values(0.0, variable("ABAB 2-RDM ERROR"),12, "ABAB 2-RDM") #TEST
+compare_values(0.0, variable("AABAAB 3-RDM ERROR"),12, "AABAAB 3-RDM") #TEST
+compare_values(0.0, variable("ABBABB 3-RDM ERROR"),12, "ABBABB 3-RDM") #TEST
+compare_values(0.0, variable("AAAAAA 3-RDM ERROR"),12, "AAAAAA 3-RDM") #TEST
+compare_values(0.0, variable("BBBBBB 3-RDM ERROR"),12, "BBBBBB 3-RDM") #TEST

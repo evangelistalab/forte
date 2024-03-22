@@ -71,7 +71,7 @@ set globals{
 }
 
 set forte{
-  active_space_solver  cas
+  active_space_solver  detci
   correlation_solver   dsrg-mrpt2
   frozen_docc          [3,0,0,0]
   restricted_docc      [0,0,1,1]

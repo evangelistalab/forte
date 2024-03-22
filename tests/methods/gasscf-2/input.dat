@@ -1,13 +1,11 @@
-#! Generated using commit GITCOMMIT 
-# GASSCF for core-excited state with core orbital frozen
+# H2O singlet, 6-31G**/GASSCF calculation for core-excited state with core orbital frozen
 # Without CASSCF_FROZEN_ORBITAL this will collapse to ground state and not converge
 
 import forte
 
-refscf = -76.0172965561
-refgasscf = -56.29198840256376712
+refscf    = -76.0172965561
+refgasscf = -56.2919884026
 
-memory 1000mb
 molecule h2o{
    O
    H  1 1.00
@@ -16,34 +14,26 @@ molecule h2o{
 
 set global {
   basis 6-31g**
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
-  guess gwh
-  scf_type pk
+  e_convergence 12
+  d_convergence 8
+  scf_type direct
   reference rhf
 }
 
-set scf_type direct
 set forte {
-  active_space_solver aci
-  ms 0.0
-  multiplicity 1
-  sigma 0.00
-  root_sym 0
-  charge 0
-  sci_enforce_spin_complete true
-  e_convergence 10
-  charge 0
-  active_ref_type gas
-  one_cycle True
-  GAS1 [1,0,0,0]
-  GAS2 [3,0,1,2]
-  GAS1MAX [1]
-  GAS1MIN [0]
-  job_type casscf
-  casscf_ci_solver aci
-  casscf_maxiter 100
+  active_space_solver genci
+  ms                  0.0
+  multiplicity        1
+  root_sym            0
+  charge              0
+  e_convergence       12
+  r_convergence       8
+  gas1                [1,0,0,0]
+  gas2                [3,0,1,2]
+  gas1min             [0]
+  gas1max             [1]
+  job_type            mcscf_two_step
+  casscf_maxiter     100
   casscf_e_convergence 1e-10
   casscf_active_frozen_orbital [0]
   casscf_diis_start 15

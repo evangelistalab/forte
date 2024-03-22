@@ -1,6 +1,0 @@
-2022-12-19:13:20:44,489 INFO     [psi4.driver.task_planner:283] PLANNING Atomic:  keywords={'E_CONVERGENCE': 1e-12, 'SCF_TYPE': 'PK', 'forte__scf_type': 'PK', 'forte__e_convergence': 1e-12, 'forte__active_space_solver': 'FCI', 'forte__basis': 'STO-3G', 'function_kwargs': {}}
-2022-12-19:13:20:44,490 INFO     [psi4.driver.driver:524] Compute energy(): method=scf, basis=sto-3g, molecule=default, nre=3.0
-2022-12-19:13:20:44,645 INFO     [psi4.driver.driver:527] Return energy(): -14.548739101083534
-2022-12-19:13:20:44,659 INFO     [psi4.driver.task_planner:283] PLANNING Atomic:  keywords={'E_CONVERGENCE': 1e-12, 'SCF__INTS_TOLERANCE': 1e-12, 'SCF_TYPE': 'PK', 'forte__scf_type': 'PK', 'forte__e_convergence': 1e-12, 'forte__active_space_solver': 'FCI', 'forte__basis': 'STO-3G', 'function_kwargs': {}}
-2022-12-19:13:20:44,661 INFO     [psi4.driver.driver:524] Compute energy(): method=forte, basis=sto-3g, molecule=default, nre=3.0
-2022-12-19:13:20:44,777 INFO     [psi4.driver.driver:527] Return energy(): -14.595808852754011
