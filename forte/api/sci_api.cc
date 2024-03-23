@@ -277,13 +277,13 @@ void export_Determinant(py::module& m) {
         .def(
             "__matmul__",
             [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs * rhs; },
-            "Multiply two SparseOperator")
+            "Multiply two SparseOperator objects")
         .def(
             "commutator",
             [](const SparseOperator& lhs, const SparseOperator& rhs) {
                 return commutator(lhs, rhs);
             },
-            "Compute the commutator of two SparseOperators")
+            "Compute the commutator of two SparseOperator objects")
         .def("is_antihermitian", &SparseOperator::is_antihermitian,
              "Is this operator antihermitian?")
         .def("__iadd__", &SparseOperator::operator+=, "Add a SparseOperator to this SparseOperator")
@@ -300,6 +300,10 @@ void export_Determinant(py::module& m) {
                  // This enables the reversed operation: scalar * SparseOperator
                  return self * scalar; // Reuse the __mul__ logic
              })
+        .def("__rdiv__",
+             [](const SparseOperator& self, double scalar) {
+                 return self * (1.0 / scalar); // This uses the operator* we defined
+             })
         .def(
             "__add__",
             [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs + rhs; },
@@ -310,7 +314,9 @@ void export_Determinant(py::module& m) {
             "Subtract two SparseOperators")
         .def("pop_term", &SparseOperator::pop_term)
         .def("term", &SparseOperator::term)
+        .def("copy", &SparseOperator::copy)
         .def("size", &SparseOperator::size)
+        .def("__len__", &SparseOperator::size)
         .def("norm", [](const SparseOperator& op) { return norm(op); })
         .def("coefficients", &SparseOperator::coefficients)
         .def("set_coefficients", &SparseOperator::set_coefficients)
@@ -323,35 +329,13 @@ void export_Determinant(py::module& m) {
         .def("__repr__", [](const SparseOperator& op) { return join(op.str(), " "); })
         .def("__str__", [](const SparseOperator& op) { return join(op.str(), " "); });
 
-    // py::class_<SQOperator>(m, "SQOperator",
-    //                        "A class to represent a string of creation/annihilation
-    //                        operators")
-    //     .def(py::init<double, const SQOperatorString&>())
-    //     .def("coefficient", &SQOperator::coefficient)
-    //     .def("cre", [](const SQOperator& sqop) { return sqop.sqop_str().cre(); })
-    //     .def("ann", [](const SQOperator& sqop) { return sqop.sqop_str().ann(); })
-    //     .def("str", &SQOperator::str)
-    //     .def("latex", &SQOperator::latex)
-    //     .def("adjoint", &SQOperator::adjoint)
-    //     .def("commutator",
-    //          [](const SQOperator& lhs, const SQOperator& rhs) { return commutator(lhs, rhs);
-    //          })
-    //     .def("__eq__", &SQOperator::operator==)
-    //     .def("__lt__", &SQOperator::operator<)
-    //     .def(
-    //         "__matmul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs *
-    //         rhs; }, "Multiply two SQOperators")
-    //     .def(
-    //         "__mul__", [](const SQOperator& sqop, const double factor) { return factor *
-    //         sqop; }, "Multiply a scalar and a SQOperator")
-    //     .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
-    //     .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
-
     py::class_<SQOperatorString>(m, "SQOperatorString",
                                  "A class to represent a string of creation/annihilation operators")
         .def(py::init<const Determinant&, const Determinant&>())
         .def("cre", &SQOperatorString::cre)
         .def("ann", &SQOperatorString::ann)
+        .def("str", &SQOperatorString::str)
+        .def("count", &SQOperatorString::count)
         .def("__eq__", &SQOperatorString::operator==)
         .def("__lt__", &SQOperatorString::operator<);
 
@@ -378,15 +362,15 @@ void export_Determinant(py::module& m) {
 
     m.def(
         "similarity_transform",
-        [](SparseOperator& op, const SparseOperator& A) {
+        [](SparseOperator& op, const SparseOperator& A, bool reverse, double screen_thresh) {
             // time this call and print to std::cout
             auto start = std::chrono::high_resolution_clock::now();
-            similarity_transform(op, A);
+            similarity_transform(op, A, reverse);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end - start;
             std::cout << "similarity_transform took " << elapsed_seconds.count() << "s\n";
         },
-        "op"_a, "A"_a);
+        "op"_a, "A"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
     py::class_<StateVector, std::shared_ptr<StateVector>>(
         m, "StateVector", "A class to represent a vector of determinants")
@@ -396,10 +380,12 @@ void export_Determinant(py::module& m) {
             "items", [](const StateVector& v) { return py::make_iterator(v.begin(), v.end()); },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def("str", &StateVector::str)
+        .def("size", &StateVector::size)
         .def("__len__", &StateVector::size)
         .def("__eq__", &StateVector::operator==)
         .def("__repr__", [](const StateVector& v) { return v.str(); })
         .def("__str__", [](const StateVector& v) { return v.str(); })
+        .def("map", [](const StateVector& v) { return v.map(); })
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
         .def("__setitem__",
              [](StateVector& v, const Determinant& d, const double val) { v[d] = val; })
@@ -512,3 +498,27 @@ void export_GAS(py::module& m) {
         .def("set_to", &GenCIVector::set_to, "Set the GAS vector to a given value");
 }
 } // namespace forte
+
+// py::class_<SQOperator>(m, "SQOperator",
+//                        "A class to represent a string of creation/annihilation
+//                        operators")
+//     .def(py::init<double, const SQOperatorString&>())
+//     .def("coefficient", &SQOperator::coefficient)
+//     .def("cre", [](const SQOperator& sqop) { return sqop.sqop_str().cre(); })
+//     .def("ann", [](const SQOperator& sqop) { return sqop.sqop_str().ann(); })
+//     .def("str", &SQOperator::str)
+//     .def("latex", &SQOperator::latex)
+//     .def("adjoint", &SQOperator::adjoint)
+//     .def("commutator",
+//          [](const SQOperator& lhs, const SQOperator& rhs) { return commutator(lhs, rhs);
+//          })
+//     .def("__eq__", &SQOperator::operator==)
+//     .def("__lt__", &SQOperator::operator<)
+//     .def(
+//         "__matmul__", [](const SQOperator& lhs, const SQOperator& rhs) { return lhs *
+//         rhs; }, "Multiply two SQOperators")
+//     .def(
+//         "__mul__", [](const SQOperator& sqop, const double factor) { return factor *
+//         sqop; }, "Multiply a scalar and a SQOperator")
+//     .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
+//     .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });

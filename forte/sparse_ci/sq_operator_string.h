@@ -88,6 +88,8 @@ class SQOperatorString {
     /// @return true if this operator is a number operator (i.e. it contains no creation or
     /// annihilation  operators)
     bool is_number() const;
+    /// @return true if this operator is such that op - op^dagger != 0
+    bool is_antihermitian_compatible() const;
     /// @return the number of creation + annihilation operators in this operator
     int count() const;
     /// @return compare this operator with another operator
@@ -115,6 +117,9 @@ class SQOperatorString {
     /// a Determinant that represents the annihilation operators
     Determinant ann_;
 };
+
+// implement the << operator for SQOperatorString
+std::ostream& operator<<(std::ostream& os, const SQOperatorString& sqop);
 
 std::vector<std::pair<SQOperatorString, double>> operator*(const SQOperatorString& lhs,
                                                            const SQOperatorString& rhs);

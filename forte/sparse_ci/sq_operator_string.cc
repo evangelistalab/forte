@@ -66,7 +66,12 @@ const Determinant& SQOperatorString::ann() const { return ann_; }
 
 bool SQOperatorString::is_number() const { return (cre().count() == 0) and (ann().count() == 0); }
 
-int SQOperatorString::count() const { return cre().count() + ann().count(); }
+bool SQOperatorString::is_antihermitian_compatible() const {
+    // here we test that op != op^dagger, otherwise op - op^dagger = 0
+    return (cre() != ann());
+}
+
+int SQOperatorString::count() const { return cre().count_all() + ann().count_all(); }
 
 bool SQOperatorString::operator==(const SQOperatorString& other) const {
     return (cre() == other.cre()) and (ann() == other.ann());
@@ -104,6 +109,12 @@ std::string SQOperatorString::str() const {
     s += "]";
 
     return s;
+}
+
+// implement the << operator for SQOperatorString
+std::ostream& operator<<(std::ostream& os, const SQOperatorString& sqop) {
+    os << sqop.str();
+    return os;
 }
 
 std::string SQOperatorString::latex() const {
@@ -324,9 +335,11 @@ std::vector<std::pair<SQOperatorString, double>> operator*(const SQOperatorStrin
 
 bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs) {
     const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
+    const auto common_l_cre_r_ann = lhs.cre().fast_a_and_b_count(rhs.ann());
     const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
     const auto common_l_ann_r_cre = lhs.ann().fast_a_and_b_count(rhs.cre());
-    if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0) {
+    if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0 and
+        common_l_cre_r_ann == 0) {
         // if the number of operators is even, the commutator is zero
         const auto nl = lhs.count();
         const auto nr = rhs.count();
@@ -365,22 +378,35 @@ std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperato
 
 std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorString& lhs,
                                                             const SQOperatorString& rhs) {
+
     const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
+    const auto common_l_cre_r_ann = lhs.cre().fast_a_and_b_count(rhs.ann());
     const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
     const auto common_l_ann_r_cre = lhs.ann().fast_a_and_b_count(rhs.cre());
     const auto nl = lhs.count();
     const auto nr = rhs.count();
+
     // if the operators do not have any common creation or annihilation operators
-    if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0) {
-        // if the number of operators is even, the commutator is zero
-        if ((nl * nr) % 2 == 0) {
-            return {};
-        }
-        // if the number of operators is odd, the commutator is the product of the operators
-        // and we get a factor of two because both terms in the commutator are the same
-        const auto prod = lhs * rhs;
-        return {{prod[0].first, 2.0 * prod[0].second}};
-    }
+    // if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0 and
+    // common_l_cre_r_ann == 0) {
+    // if (common_l_ann_r_cre == 0 and common_l_cre_r_ann == 0) {
+    //     // std::cout << "\nno common operators" << std::endl;
+
+    //     // std::cout << "rhs: " << rhs.str() << std::endl;
+    //     // std::cout << "lhs: " << lhs.str() << std::endl;
+    //     // std::cout << "common_l_cre_r_cre: " << common_l_cre_r_cre << std::endl;
+    //     // std::cout << "common_l_ann_r_ann: " << common_l_ann_r_ann << std::endl;
+    //     // std::cout << "common_l_ann_r_cre: " << common_l_ann_r_cre << std::endl;
+
+    //     // if the number of operators is even, the commutator is zero
+    //     if ((nl * nr) % 2 == 0) {
+    //         return {};
+    //     }
+    //     // if the number of operators is odd, the commutator is the product of the operators
+    //     // and we get a factor of two because both terms in the commutator are the same
+    //     const auto prod = lhs * rhs;
+    //     return {{prod[0].first, 2.0 * prod[0].second}};
+    // }
 
     const auto lr_prod = lhs * rhs;
     const auto rl_prod = rhs * lhs;
@@ -401,6 +427,20 @@ std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorStri
             result.emplace_back(sqop_str, c);
         }
     }
+    // if (is_zero) {
+    //     std::cout << "\nrhs: " << rhs.str() << std::endl;
+    //     std::cout << "lhs: " << lhs.str() << std::endl;
+    //     std::cout << "common_l_cre_r_cre: " << common_l_cre_r_cre << std::endl;
+    //     std::cout << "common_l_cre_r_ann: " << common_l_cre_r_ann << std::endl;
+    //     std::cout << "common_l_ann_r_ann: " << common_l_ann_r_ann << std::endl;
+    //     std::cout << "common_l_ann_r_cre: " << common_l_ann_r_cre << std::endl;
+    //     std::cout << "nl: " << nl << std::endl;
+    //     std::cout << "nr: " << nr << std::endl;
+    //     std::cout << "common_l_cre_r_cre + common_l_ann_r_ann - nl: "
+    //               << common_l_cre_r_cre + common_l_ann_r_ann - nl << ", nl - nr: " << nl - nr
+    //               << std::endl;
+    // }
+
     return result;
 }
 

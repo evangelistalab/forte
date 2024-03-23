@@ -24,7 +24,7 @@ def test_sparse_operator():
     sop = forte.SparseOperator(antihermitian=True)
     sop.add_term_from_str("[1a+ 1b+ 0b- 0a-]", 1.0)
     to_str = sop.str()
-    assert to_str == ["1.000000000000 * [ 1a+ 1b+ 0b- 0a- ]", "-1.000000000000 * [ 0a+ 0b+ 1b- 1a- ]"]
+    assert to_str == ["+ [ 1a+ 1b+ 0b- 0a- ]", "- [ 0a+ 0b+ 1b- 1a- ]"]
     to_latex = sop.latex()
     assert (
         to_latex
@@ -101,10 +101,9 @@ def test_sparse_operator():
     with pytest.raises(RuntimeError):
         sop.add_term_from_str("[0a+ 0b+ 0a- 0b-]", 1.0)
 
-    # test ordering exception
     sop = forte.SparseOperator(antihermitian=True)
-    with pytest.raises(RuntimeError):
-        sop.add_term_from_str("[]", 1.0)
+    sop.add_term_from_str("[]", 1.0)
+    assert sop.size() == 0
 
     # test ordering: 0a+ 0b+ 0b- 0a- |2> = +|2>
     sop = forte.SparseOperator()

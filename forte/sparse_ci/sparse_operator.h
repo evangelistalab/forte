@@ -108,6 +108,8 @@ class SparseOperator {
     std::pair<SQOperatorString, double> term(size_t n) const;
     /// @return the operator component of a term
     const SQOperatorString& term_operator(size_t n) const;
+    /// @brief copy another operator into this operator
+    void copy(const SparseOperator& other);
 
     /// @return the number of terms
     size_t size() const;
@@ -133,6 +135,8 @@ class SparseOperator {
     SparseOperator adjoint() const;
     /// @return the a scaled version of this operator
     SparseOperator operator*(double scalar) const;
+    /// @return the a scaled version of this operator
+    SparseOperator operator/(double scalar) const;
     /// @brief Add another operator to this operator
     SparseOperator& operator+=(const SparseOperator& other);
     /// @brief Add another operator to this operator
@@ -166,17 +170,21 @@ SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs);
 /// @return The product of a second quantized operator and a numerical factor
 SparseOperator operator*(double scalar, const SparseOperator& op);
 
+/// @return A second quantized operator divided by a numerical factor
+SparseOperator operator/(double scalar, const SparseOperator& op);
+
 /// @return The commutator of two second quantized operators
 SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs);
 
-void similarity_transform(SparseOperator& op, const SQOperatorString& A, double theta);
+void similarity_transform_test(SparseOperator& op, const SQOperatorString& A, double theta);
 
-void similarity_transform(SparseOperator& op, const SparseOperator& T, bool reverse = false);
+void similarity_transform(SparseOperator& op, const SparseOperator& T, bool reverse = false,
+                          double screen_threshold = 1e-12);
 
 void similarity_transform_antihermitian(SparseOperator& O, const SQOperatorString& T_sqop,
-                                        double theta);
+                                        double theta, double screen_threshold);
 
-void similarity_transform_nilpotent(SparseOperator& O, const SQOperatorString& T_sqop,
-                                    double theta);
+void similarity_transform_nilpotent(SparseOperator& O, const SQOperatorString& T_sqop, double theta,
+                                    double screen_threshold);
 
 } // namespace forte
