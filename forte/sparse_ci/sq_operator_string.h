@@ -133,7 +133,8 @@ class SQOperatorProductComputer {
     Determinant con_rhs_cre_;
     Determinant ucon_rhs_ann_;
     double phase_;
-    std::vector<int> set_bits_ = std::vector<int>(1024, 0); // can contract up to 10 operators
+    std::vector<int> set_bits_ = std::vector<int>(64, 0);
+    std::bitset<64> sign_;
 };
 
 // implement the << operator for SQOperatorString

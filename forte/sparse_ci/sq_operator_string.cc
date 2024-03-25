@@ -459,118 +459,91 @@ void SQOperatorProductComputer::product(
     std::function<void(const SQOperatorString&, const double)> func) {
     // determine the right creation operators that can be moved to the left without contraction
     ucon_rhs_cre_ = rhs.cre() - lhs.ann();
-    debug_print(ucon_rhs_cre_);
     // if there are common lhs creation ops and uncontracted rhs creation ops then we get zero
     if (not lhs.cre().fast_a_and_b_eq_zero(ucon_rhs_cre_)) {
         return;
     }
     // find the right creation ops that will need to be contracted with the left annihilation ops
     con_rhs_cre_ = rhs.cre() - ucon_rhs_cre_;
-    debug_print(con_rhs_cre_);
     // determine the right annihilation ops that can be moved to the left without contracting them
     // with the rhs creation ops
     ucon_rhs_ann_ = rhs.ann() - con_rhs_cre_;
-    debug_print(ucon_rhs_ann_);
     // if there are common lhs annihilation ops and uncontracted rhs annihilation ops then we get
     // zero, so we return
     if (not lhs.ann().fast_a_and_b_eq_zero(ucon_rhs_ann_)) {
         return;
     }
+
+    // initialize the phase and the bitarray operators
     phase_ = 1.0;
     rhs_cre_ = rhs.cre();
     rhs_ann_ = rhs.ann();
     lhs_cre_ = lhs.cre();
     lhs_ann_ = lhs.ann();
+
     // Step 1. Move the uncontracted rhs creation operators to the left
     // 1.a phase adjustment due to permutation of the operator with left annihilation ops
-    phase_ *= ((lhs_ann_.count_all() * ucon_rhs_cre_.count_all()) % 2) == 0 ? 1.0 : -1.0;
-    // 1.b move the uncontracted rhs creation operators to the left creation ops
-    // double cre_perm_phase = (lhs_cre_.count_all() % 2) == 0 ? 1.0 : -1.0;
-    for (size_t i = ucon_rhs_cre_.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = ucon_rhs_cre_.fast_find_and_clear_first_one(i)) {
-        // remove op i and find the sign for permuting it to the left of the right creation ops
-        rhs_cre_.set_bit(i, false);
-        phase_ *= rhs_cre_.slater_sign(i);
-        // add the op to the left and find the computing the phase
-        lhs_cre_.set_bit(i, true);
-        phase_ *= lhs_cre_.slater_sign_reverse(i); // * cre_perm_phase;
-        // creation ops phase adjustment because we added a creation operator
-        // cre_perm_phase *= -1.0;
+    if (const auto ucon_rhs_cre_count = ucon_rhs_cre_.count_all(); ucon_rhs_cre_count > 0) {
+        phase_ *= ((lhs_ann_.count_all() * ucon_rhs_cre_.count_all()) % 2) == 0 ? 1.0 : -1.0;
+        // 1.b move the uncontracted rhs creation operators to the left creation ops
+        // double cre_perm_phase = (lhs_cre_.count_all() % 2) == 0 ? 1.0 : -1.0;
+        for (size_t i = ucon_rhs_cre_.fast_find_and_clear_first_one(0); i != ~0ULL;
+             i = ucon_rhs_cre_.fast_find_and_clear_first_one(i)) {
+            // remove op i and find the sign for permuting it to the left of the right creation ops
+            rhs_cre_.set_bit(i, false);
+            phase_ *= rhs_cre_.slater_sign(i);
+            // add the op to the left and find the computing the phase
+            lhs_cre_.set_bit(i, true);
+            phase_ *= lhs_cre_.slater_sign_reverse(i); // * cre_perm_phase;
+        }
     }
-    // std::cout << "After step 1" << std::endl;
-    // debug_print(lhs_cre_);
-    // debug_print(lhs_ann_);
-    // debug_print(rhs_cre_);
-    // debug_print(rhs_ann_);
-    // std::cout << "phase_: " << phase_ << std::endl;
 
     // Step 2. Move the uncontracted rhs annihilation operators to the left
     // 2.a phase adjustment due to permutation of the operator with right creation ops
-    phase_ *= ((rhs_cre_.count_all() * ucon_rhs_ann_.count_all()) % 2) == 0 ? 1.0 : -1.0;
-    // double ann_perm_phase = (rhs_ann_.count_all() % 2) == 0 ? -1.0 : 1.0;
-    for (size_t i = ucon_rhs_ann_.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = ucon_rhs_ann_.fast_find_and_clear_first_one(i)) {
-        // remove op i and find the sign for permuting it with the right creation ops
-        rhs_ann_.set_bit(i, false);
-        phase_ *= rhs_ann_.slater_sign_reverse(i);
-        // phase adjustment due to permutation of the operator with right annihilation ops
-        // phase_ *= ann_perm_phase;
-        // annihilation ops phase adjustment because we removed one op from the right
-        // ann_perm_phase *= -1.0;
-        // add the op to the left computing the phase
-        lhs_ann_.set_bit(i, true);
-        phase_ *= lhs_ann_.slater_sign(i);
+    if (const auto ucon_rhs_ann_count = ucon_rhs_ann_.count_all(); ucon_rhs_ann_count > 0) {
+        phase_ *= ((rhs_cre_.count_all() * ucon_rhs_ann_count) % 2) == 0 ? 1.0 : -1.0;
+        for (size_t i = ucon_rhs_ann_.fast_find_and_clear_first_one(0); i != ~0ULL;
+             i = ucon_rhs_ann_.fast_find_and_clear_first_one(i)) {
+            // remove op i and find the sign for permuting it with the right creation ops
+            rhs_ann_.set_bit(i, false);
+            phase_ *= rhs_ann_.slater_sign_reverse(i);
+            // add the op to the left computing the phase
+            lhs_ann_.set_bit(i, true);
+            phase_ *= lhs_ann_.slater_sign(i);
+        }
     }
-
-    // std::cout << "After step 2" << std::endl;
-    // debug_print(lhs_cre_);
-    // debug_print(lhs_ann_);
-    // debug_print(rhs_cre_);
-    // debug_print(rhs_ann_);
-    // std::cout << "phase_: " << phase_ << std::endl;
 
     // Step 3. Find the number component operators on the right that can be treated trivially
     // E.g.   ([1-]) ([1+ 1-]) = ([1-]) (1 - [1-1+]) = [1-] - [1-1-1+] = [1-]
     // find the operators in common that can be trivially contracted
     auto rhs_comm_trivial_ = rhs_cre_ & rhs_ann_ & lhs_ann_;
-    rhs_cre_ -= rhs_comm_trivial_; // remove the trivially contracted operators from the right
-                                   // creation ops adjust the phase due to the trivial contractions
-    rhs_ann_ -= rhs_comm_trivial_; // remove the trivially contracted operators from the right
-    ucon_rhs_cre_ = rhs_cre_;      // now this holds the operators that need to be contracted
-    // NOTE: this was not checked yet
-    for (size_t i = rhs_comm_trivial_.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = rhs_comm_trivial_.fast_find_and_clear_first_one(i)) {
-        phase_ *= rhs_cre_.slater_sign_reverse(i) * rhs_ann_.slater_sign_reverse(i);
+    if (rhs_comm_trivial_.count_all() != 0) {
+        // remove the trivially contracted operators from the right creation ops
+        rhs_cre_ -= rhs_comm_trivial_;
+        rhs_ann_ -= rhs_comm_trivial_; // remove the trivially contracted operators from the right
+        ucon_rhs_cre_ = rhs_cre_;      // now this holds the operators that need to be contracted
+        // adjust the phase due to the trivial contractions
+        for (size_t i = rhs_comm_trivial_.fast_find_and_clear_first_one(0); i != ~0ULL;
+             i = rhs_comm_trivial_.fast_find_and_clear_first_one(i)) {
+            phase_ *= rhs_cre_.slater_sign_reverse(i) * rhs_ann_.slater_sign_reverse(i);
+        }
     }
-
-    // std::cout << "After step 3" << std::endl;
-    // debug_print(lhs_cre_);
-    // debug_print(lhs_ann_);
-    // debug_print(rhs_cre_);
-    // debug_print(rhs_ann_);
-    // std::cout << "phase_: " << phase_ << std::endl;
 
     // Step 4. Find the anti-number component operators on the right that can be treated trivially
     // E.g.   ([1+ 1-]) ([1+]) = (1 - [1- 1+]) [1+] = [1+] - [1- 1+ 1+] = [1+]
     // find the operators in common that can be trivially contracted
     auto lhs_comm_trivial_ = lhs_cre_ & lhs_ann_ & rhs_cre_;
-    rhs_cre_ -=
-        lhs_comm_trivial_; // remove the trivially contracted operators from the right creation
-    lhs_ann_ -= lhs_comm_trivial_; // remove the trivially contracted operators from the left
-    // ops adjust the phase due to the trivial contractions
-    ucon_rhs_cre_ = rhs_cre_; // now this holds the operators that need to be contracted
-    // NOTE: this was not checked yet
-    for (size_t i = lhs_comm_trivial_.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = lhs_comm_trivial_.fast_find_and_clear_first_one(i)) {
-        phase_ *= lhs_ann_.slater_sign(i) * rhs_cre_.slater_sign(i);
+    if (lhs_comm_trivial_.count_all() != 0) {
+        // remove the trivially contracted operators from the right creation
+        rhs_cre_ -= lhs_comm_trivial_;
+        lhs_ann_ -= lhs_comm_trivial_; // remove the trivially contracted operators from the left
+        ucon_rhs_cre_ = rhs_cre_;      // now this holds the operators that need to be contracted
+        // ops adjust the phase due to the trivial contractions
+        for (size_t i = lhs_comm_trivial_.fast_find_and_clear_first_one(0); i != ~0ULL;
+             i = lhs_comm_trivial_.fast_find_and_clear_first_one(i)) {
+            phase_ *= lhs_ann_.slater_sign(i) * rhs_cre_.slater_sign(i);
+        }
     }
-
-    // std::cout << "After step 4" << std::endl;
-    // debug_print(lhs_cre_);
-    // debug_print(lhs_ann_);
-    // debug_print(rhs_cre_);
-    // debug_print(rhs_ann_);
-    // std::cout << "phase_: " << phase_ << std::endl;
 
     // ok, at this point we have moved all the uncontracted rhs creation and annihilation operators
     // to the left and we can now compute the product of the operators that don't commute.
@@ -591,43 +564,33 @@ void SQOperatorProductComputer::product(
          i = ucon_rhs_cre_.fast_find_and_clear_first_one(i)) {
         phase_ *= lhs_ann_.slater_sign(i) * rhs_cre_.slater_sign(i);
     }
-
-    // std::cout << "ucon_rhs_cre_: " << str(ucon_rhs_cre_) << std::endl;
-    // std::cout << "rhs_cre_: " << str(rhs_cre_) << std::endl;
-    // std::cout << "phase_: " << phase_ << std::endl;
-
     // find the set bits of the operators that can be contracted and store it in set_bits_
     rhs_cre_.find_set_bits(set_bits_, ncontr);
-    rhs_cre_ = lhs_ann_ -
-               rhs_cre_; // now this holds the left annihilation ops not paired with creation ops
-    // std::cout << "rhs_cre_: " << str(rhs_cre_) << std::endl;
-    // std::cout << "lhs_ann_: " << str(lhs_ann_) << std::endl;
-    // std::cout << "ncontr: " << ncontr << std::endl;
-
+    // now this holds the left annihilation ops not paired with creation ops
+    rhs_cre_ = lhs_ann_ - rhs_cre_;
+    // precompute signs (store the sign as a 0 or 1 in a temporary array)
+    for (size_t i = 0; i < ncontr; i++) {
+        sign_[i] = (rhs_cre_.slater_sign_reverse(set_bits_[i]) *
+                        lhs_cre_.slater_sign_reverse(set_bits_[i]) >
+                    0.0)
+                       ? 0
+                       : 1;
+    }
     for (size_t i = 0; i < (1ULL << ncontr); i++) {
         double contraction_phase = 1.0;
-        // std::cout << "\nContraction" << std::endl;
-        // compute the contraction
         auto new_lhs_cre = lhs_cre_;
         auto new_lhs_ann = lhs_ann_;
         for (size_t j = 0; j < ncontr; j++) {
-            if ((i >> j) & 1) {
-                // contraction
-                // std::cout << "operator component from term: " << j << std::endl;
-                // std::cout << "lhs_cre_: " << str(lhs_cre_) << std::endl;
-                // std::cout << "lhs_ann_: " << str(lhs_ann_) << std::endl;
-                // std::cout << "rhs_cre_: " << str(rhs_cre_) << std::endl;
-                // std::cout << "set_bits_[j]: " << set_bits_[j] << std::endl;
-                // std::cout << "rhs_cre_.slater_sign_reverse(set_bits_[j]): "
-                //           << rhs_cre_.slater_sign_reverse(set_bits_[j]) << std::endl;
-                // std::cout << "lhs_cre_.slater_sign_reverse(set_bits_[j]): "
-                //           << lhs_cre_.slater_sign_reverse(set_bits_[j]) << std::endl;
-                contraction_phase *= rhs_cre_.slater_sign_reverse(set_bits_[j]);
-                contraction_phase *= lhs_cre_.slater_sign_reverse(set_bits_[j]);
+            if ((i >> j) & 1) { // if bit j of i is set
+                // this is the swapped operator term
+                if (sign_[j]) {
+                    contraction_phase *= -1.0;
+                }
                 new_lhs_cre.set_bit(set_bits_[j], true);
                 new_lhs_ann.set_bit(set_bits_[j], true);
                 contraction_phase *= -1.0;
             } else {
+                // this is the identity term
                 new_lhs_ann.set_bit(set_bits_[j], false);
             }
         }

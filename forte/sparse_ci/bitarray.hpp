@@ -375,6 +375,22 @@ template <size_t N> class BitArray {
         return c;
     }
 
+    int count_all() const {
+        // with constexpr we compile only one of these cases
+        if constexpr (N == 128) {
+            return ui64_bit_count(words_[0]) + ui64_bit_count(words_[1]);
+        } else if (N == 256) {
+            return ui64_bit_count(words_[0]) + ui64_bit_count(words_[1]) +
+                   ui64_bit_count(words_[2]) + ui64_bit_count(words_[3]);
+        } else {
+            int c{0};
+            for (const auto& w : words_) {
+                c += ui64_bit_count(w);
+            }
+            return c;
+        }
+    }
+
     /// Find the first bit set to one (starting from the lowest index)
     /// @return the index of the the first bit, or if all bits are zero, returns ~0
     uint64_t find_first_one(size_t begin = 0, size_t end = nwords_) const {

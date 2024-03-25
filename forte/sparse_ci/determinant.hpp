@@ -381,18 +381,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
     }
 
-    int count_all() const {
-        // with constexpr we compile only one of these cases
-        if constexpr (N == 128) {
-            return ui64_bit_count(words_[0]) + ui64_bit_count(words_[1]);
-        } else if (N == 256) {
-            return ui64_bit_count(words_[0]) + ui64_bit_count(words_[1]) +
-                   ui64_bit_count(words_[2]) + ui64_bit_count(words_[3]);
-        } else {
-            return count(0, nwords_);
-        }
-    }
-
     /// Count the number of beta bits set to 1
     int count_alfa() const {
         // with constexpr we compile only one of these cases
