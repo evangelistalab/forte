@@ -48,8 +48,7 @@ namespace forte {
 class SparseFactExp {
   public:
     /// Constructor
-    /// @param phaseless if true, ignore the fermionic sign factor when applying the operator
-    SparseFactExp(bool phaseless = false);
+    SparseFactExp();
 
     /// @brief Compute the factorized exponential applied to a state using an exact algorithm
     ///
@@ -63,15 +62,43 @@ class SparseFactExp {
     ///
     /// @param sop the operator. Each term in this operator is applied in the order provided
     /// @param state the state to which the factorized exponential will be applied
+    /// @param algorithm the algorithm used to compute the exponential. The only valid choice is
+    /// algorithm = 'onthefly'. This function will compute the factorized exponential using an
+    /// on-the-fly implementation (slow).
+    /// @param inverse If true, compute the inverse of the factorized exponential:
+    ///
+    ///             exp(-op1) exp(-op2) ... |state>
+    ///
+    /// @param screen_thresh a threshold to select which elements of the operator applied to the
+    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
+    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
+    StateVector apply_op(const SparseOperator& sop, const StateVector& state,
+                         const std::string& algorithm, bool inverse, double screen_thresh);
+
+    /// @brief Compute the factorized exponential applied to a state using an exact algorithm
+    ///
+    ///             ... exp(op2 - op2^dagger) exp(op1 - op1^dagger) |state>
+    ///
+    /// This algorithm is useful when applying the factorized exponential repeatedly
+    /// to the same state or in an iterative procedure
+    /// This function applies only those elements of the operator that satisfy the condition:
+    ///     |t * C_I| > screen_threshold
+    /// where C_I is the coefficient of a determinant
+    ///
+    /// @param sop the operator. Each term in this operator is applied in the order provided
+    /// @param state the state to which the factorized exponential will be applied
     /// @param algorithm the algorithm used to compute the exponential. If algorithm = 'onthefly'
     /// this function will compute the factorized exponential using an on-the-fly implementation
     /// (slow). Otherwise, a caching algorithm is used.
     /// @param inverse If true, compute the inverse of the factorized exponential
+    ///
+    ///             exp(-op1 + op1^dagger) exp(-op2 + op2^dagger) ... |state>
+    ///
     /// @param screen_thresh a threshold to select which elements of the operator applied to the
     /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
     /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
-    StateVector compute(const SparseOperator& sop, const StateVector& state,
-                        const std::string& algorithm, bool inverse, double screen_thresh);
+    StateVector apply_antiherm(const SparseOperator& sop, const StateVector& state,
+                               const std::string& algorithm, bool inverse, double screen_thresh);
     /// @return timings for this class
     std::map<std::string, double> timings() const;
 
@@ -89,8 +116,6 @@ class SparseFactExp {
     StateVector compute_on_the_fly_excitation(const SparseOperator& sop, const StateVector& state0,
                                               bool inverse, double screen_thresh);
 
-    /// Ignore the fermionic phase?
-    bool phaseless_ = false;
     /// Are the coupling initialized?
     bool initialized_ = false;
     /// Are the inverse couplings initialized?

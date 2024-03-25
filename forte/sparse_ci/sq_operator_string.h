@@ -118,6 +118,24 @@ class SQOperatorString {
     Determinant ann_;
 };
 
+class SQOperatorProductComputer {
+  public:
+    SQOperatorProductComputer() = default;
+    void product(const SQOperatorString& lhs, const SQOperatorString& rhs,
+                 std::function<void(const SQOperatorString&, const double)> func);
+
+  private:
+    Determinant lhs_cre_;
+    Determinant lhs_ann_;
+    Determinant rhs_cre_;
+    Determinant rhs_ann_;
+    Determinant ucon_rhs_cre_;
+    Determinant con_rhs_cre_;
+    Determinant ucon_rhs_ann_;
+    double phase_;
+    std::vector<int> set_bits_ = std::vector<int>(1024, 0); // can contract up to 10 operators
+};
+
 // implement the << operator for SQOperatorString
 std::ostream& operator<<(std::ostream& os, const SQOperatorString& sqop);
 
@@ -136,17 +154,22 @@ std::pair<SQOperatorString, double> make_sq_operator_string_from_list(const op_t
 
                                                                       bool allow_reordering);
 
-template <size_t N> double apply_op(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
-    return apply_op(d, sqop.cre(), sqop.ann());
+template <size_t N>
+double apply_operator_to_det(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
+    return apply_operator_to_det(d, sqop.cre(), sqop.ann());
 }
 
-template <size_t N> double apply_op_safe(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
-    return apply_op_safe(d, sqop.cre(), sqop.ann());
+template <size_t N>
+double apply_operator_to_det_fast(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
+    return apply_operator_to_det_fast(d, sqop.cre(), sqop.ann());
 }
 
 bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs);
 
 std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperatorString& lhs,
                                                                  const SQOperatorString& rhs);
+
+std::vector<std::pair<SQOperatorString, double>> new_product(const SQOperatorString& lhs,
+                                                             const SQOperatorString& rhs);
 
 } // namespace forte

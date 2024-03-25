@@ -39,21 +39,12 @@
 
 namespace forte {
 
+StateVector apply_operator_impl(bool is_antihermitian, const SparseOperator& sop,
+                                const StateVector& state, double screen_thresh);
+
 StateVector::StateVector(const det_hash<double>& state_vec) : state_vec_(state_vec) {}
 
 bool StateVector::operator==(const StateVector& lhs) const {
-    // double zero = 1.0e-14;
-    // const auto& small_state = size() < lhs.size() ? *this : lhs;
-    // const auto& large_state = size() < lhs.size() ? lhs : *this;
-    // for (const auto& det_c_r : small_state) {
-    //     auto it = large_state.find(det_c_r.first);
-    //     if (it != large_state.end()) {
-    //         if (std::fabs(it->second - det_c_r.second) > zero)
-    //             return false;
-    //     } else {
-    //         return false;
-    //     }
-    // }
     return compare_hashes(map(), lhs.map());
 }
 
@@ -62,38 +53,32 @@ std::string StateVector::str(int n) const {
         n = Determinant::norb();
     }
     std::string s;
-    for (const auto& c_d : state_vec_) {
-        if (std::fabs(c_d.second) > 1.0e-12) {
-            s += forte::str(c_d.first, n) + " * " + std::to_string(c_d.second) + "\n";
+    for (const auto& [det, c] : state_vec_) {
+        if (std::fabs(c) > 1.0e-12) {
+            s += forte::str(det, n) + " * " + std::to_string(c) + "\n";
         }
     }
     return s;
 }
 
-StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state) {
-    StateVector new_state;
-    Determinant d;
-    for (const auto& det_c : state) {
-        const double c = det_c.second;
-        for (size_t n = 0, maxn = sop.size(); n < maxn; n++) {
-            const auto [sqop, coefficient] = sop.term(n);
-            d = det_c.first;
-            double sign = apply_op(d, sqop.cre(), sqop.ann());
-            if (sign != 0.0) {
-                new_state[d] += coefficient * sign * c;
-            }
-        }
-    }
-    return new_state;
+StateVector apply_operator_lin(const SparseOperator& sop, const StateVector& state,
+                               double screen_thresh) {
+    return apply_operator_impl(false, sop, state, screen_thresh);
 }
 
-StateVector apply_operator(SparseOperator& sop, const StateVector& state, double screen_thresh) {
+StateVector apply_operator_antiherm(const SparseOperator& sop, const StateVector& state,
+                                    double screen_thresh) {
+    return apply_operator_impl(true, sop, state, screen_thresh);
+}
+
+StateVector apply_operator_impl(bool is_antihermitian, const SparseOperator& sop,
+                                const StateVector& state, double screen_thresh) {
+    if (screen_thresh < 0) {
+        throw std::invalid_argument("apply_operator_impl:screen_thresh must be non-negative");
+    }
     // make a copy of the state
     std::vector<std::tuple<double, double, Determinant>> state_sorted(state.size());
-    size_t k = 0;
-    for (const auto& det_c : state) {
-        const Determinant& d = det_c.first;
-        const double c = det_c.second;
+    for (size_t k = 0; const auto& [d, c] : state) {
         state_sorted[k] = std::make_tuple(std::fabs(c), c, d);
         ++k;
     }
@@ -112,12 +97,14 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
         const Determinant ucre = sqop.cre() - sqop.ann();
         // loop over all determinants
         for (const auto& [absc, c, det] : state_sorted) {
-            // screen according to the product tau * c
+            // screen according to the product tau * c. Since the list is sorted, if the
+            // coefficient is below the threshold, we can break the loop
             if (std::fabs(coefficient * c) > screen_thresh) {
                 // check if this operator can be applied
                 if (det.fast_a_and_b_equal_b(sqop.ann()) and det.fast_a_and_b_eq_zero(ucre)) {
                     d = det;
-                    double value = apply_op_safe(d, sqop.cre(), sqop.ann()) * coefficient * c;
+                    double value =
+                        apply_operator_to_det_fast(d, sqop.cre(), sqop.ann()) * coefficient * c;
                     new_terms[d] += value;
                 }
             } else {
@@ -126,7 +113,7 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
         }
     }
 
-    if (sop.is_antihermitian()) {
+    if (is_antihermitian) {
         // loop over all the operators
         for (const auto& [sqop, coefficient] : sop.op_map()) {
             if (coefficient == 0.0)
@@ -137,12 +124,14 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
             const Determinant ucre = sqop.ann() - sqop.cre();
             // loop over all determinants
             for (const auto& [absc, c, det] : state_sorted) {
-                // screen according to the product tau * c
+                // screen according to the product tau * c. Since the list is sorted, if the
+                // coefficient is below the threshold, we can break the loop
                 if (std::fabs(coefficient * c) > screen_thresh) {
                     // check if this operator can be applied
                     if (det.fast_a_and_b_equal_b(sqop.cre()) and det.fast_a_and_b_eq_zero(ucre)) {
                         d = det;
-                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * coefficient * c;
+                        double value =
+                            apply_operator_to_det_fast(d, sqop.ann(), sqop.cre()) * coefficient * c;
                         new_terms[d] -= value;
                     }
                 } else {
@@ -154,7 +143,7 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
     return new_terms;
 }
 
-std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
+std::vector<double> get_projection(const SparseOperator& sop, const StateVector& ref,
                                    const StateVector& state) {
     local_timer t;
     std::vector<double> proj(sop.size(), 0.0);
@@ -169,7 +158,7 @@ std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
         // apply the operator op_n
         for (const auto& [det, c] : ref) {
             d = det;
-            const double sign = apply_op(d, sqop);
+            const double sign = apply_operator_to_det(d, sqop);
             if (sign != 0.0) {
                 auto search = state.find(d);
                 if (search != state.end()) {
@@ -183,25 +172,24 @@ std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
     return proj;
 }
 
-StateVector apply_number_projector(int na, int nb, StateVector& state) {
+StateVector apply_number_projector(int na, int nb, const StateVector& state) {
     StateVector new_state;
-    for (const auto& det_c : state) {
-        if ((det_c.first.count_alfa() == na) and (det_c.first.count_beta() == nb) and
-            (std::fabs(det_c.second) > 1.0e-12)) {
-            new_state[det_c.first] = det_c.second;
+    for (const auto& [det, c] : state) {
+        if ((det.count_alfa() == na) and (det.count_beta() == nb) and (std::fabs(c) > 1.0e-12)) {
+            new_state[det] = c;
         }
     }
     return new_state;
 }
 
-double overlap(StateVector& left_state, StateVector& right_state) {
+double overlap(const StateVector& left_state, const StateVector& right_state) {
     double overlap = 0.0;
     const auto& small_state = left_state.size() < right_state.size() ? left_state : right_state;
     const auto& large_state = left_state.size() < right_state.size() ? right_state : left_state;
-    for (const auto& det_c_r : small_state) {
-        auto it = large_state.find(det_c_r.first);
+    for (const auto& [det, c] : small_state) {
+        auto it = large_state.find(det);
         if (it != large_state.end()) {
-            overlap += it->second * det_c_r.second;
+            overlap += it->second * c;
         }
     }
     return overlap;

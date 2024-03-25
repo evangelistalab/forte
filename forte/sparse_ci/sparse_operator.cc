@@ -39,11 +39,16 @@
 
 namespace forte {
 
+void sim_trans_exc_impl(SparseOperator& O, const SQOperatorString& T_op, double theta,
+                        double screen_threshold);
+
+void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, double theta,
+                             double screen_threshold);
+
 SparseOperator::SparseOperator(
-    bool antihermitian,
     const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map)
-    : antihermitian_(antihermitian), op_map_(op_map) {
-    // populate the insertion list in the order of the map
+    : op_map_(op_map) {
+    // populate the insertion list in the order of the map since we don't have a specific order
     for (const auto& [sqop, _] : op_map_) {
         op_insertion_list_.push_back(sqop);
     }
@@ -58,15 +63,13 @@ void SparseOperator::add_term(const std::vector<std::tuple<bool, bool, int>>& op
 }
 
 void SparseOperator::add_term(const SQOperatorString& sqop, double c) {
-    if (not is_antihermitian() or sqop.is_antihermitian_compatible()) {
-        auto result = op_map_.insert({sqop, c});
-        if (!result.second) {
-            // the element already exists, so add c to the existing value
-            result.first->second += c;
-        } else {
-            // this is a new element, so add sqop to the insertion order tracking list
-            op_insertion_list_.push_back(sqop);
-        }
+    auto result = op_map_.insert({sqop, c});
+    if (!result.second) {
+        // the element already exists, so add c to the existing value
+        result.first->second += c;
+    } else {
+        // this is a new element, so add sqop to the insertion order tracking list
+        op_insertion_list_.push_back(sqop);
     }
 }
 
@@ -173,12 +176,7 @@ std::vector<std::string> SparseOperator::str() const {
         double coefficient = op_map_.at(sqop);
         if (std::fabs(coefficient) < 1.0e-12)
             continue;
-
         v.push_back(format_term_in_sum(coefficient, sqop.str()));
-
-        if (is_antihermitian()) {
-            v.push_back(format_term_in_sum(-coefficient, sqop.adjoint().str()));
-        }
     }
     return v;
 }
@@ -189,17 +187,12 @@ std::string SparseOperator::latex() const {
         double coefficient = op_map_.at(sqop);
         const std::string s = double_to_string_latex(coefficient) + "\\;" + sqop.latex();
         v.push_back(s);
-        if (is_antihermitian()) {
-            const std::string s =
-                double_to_string_latex(-coefficient) + "\\;" + sqop.adjoint().latex();
-            v.push_back(s);
-        }
     }
     return join(v, " ");
 }
 
 SparseOperator SparseOperator::adjoint() const {
-    SparseOperator adjoint_operator(antihermitian_);
+    SparseOperator adjoint_operator;
     for (const auto& sqop : op_insertion_list_) {
         // Retrieve the original coefficient
         auto coefficient = op_map_.at(sqop);
@@ -246,85 +239,17 @@ SparseOperator& SparseOperator::operator/=(double factor) {
 }
 
 bool SparseOperator::operator==(const SparseOperator& other) const {
-    std::cout << "antihermitian_: " << antihermitian_ << std::endl;
-    std::cout << "other.antihermitian_: " << other.antihermitian_ << std::endl;
-
-    // the operators are of the same type, compare size and content
-    if (not antihermitian_ and not other.antihermitian_) {
-        if (op_insertion_list_.size() != other.op_insertion_list_.size()) {
-            return false;
-        }
-        for (const auto& sqop : op_insertion_list_) {
-            if (other.op_map_.find(sqop) == other.op_map_.end()) {
-                return false;
-            }
-            if (std::fabs(op_map_.at(sqop) - other.op_map_.at(sqop)) > 1.0e-14) {
-                return false;
-            }
-        }
-    } else if (antihermitian_ and other.antihermitian_) {
-        std::cout << "op_insertion_list_: " << op_insertion_list_.size() << std::endl;
-        std::cout << "other.op_insertion_list_: " << other.op_insertion_list_.size() << std::endl;
-        if (op_insertion_list_.size() != other.op_insertion_list_.size()) {
-            return false;
-        }
-        for (const auto& sqop : op_insertion_list_) {
-            // return false if the operator or its adjoint is not found in the other operator
-
-            if (other.op_map_.find(sqop) != other.op_map_.end()) {
-                if (std::fabs(op_map_.at(sqop) - other.op_map_.at(sqop)) > 1.0e-14) {
-                    return false;
-                }
-            } else if (auto sqop_adjoint = sqop.adjoint();
-                       other.op_map_.find(sqop.adjoint()) != other.op_map_.end()) {
-                if (std::fabs(op_map_.at(sqop) + other.op_map_.at(sqop_adjoint)) > 1.0e-14) {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
+    // Check if the two operators have the number of terms
+    if (op_insertion_list_.size() != other.op_insertion_list_.size()) {
+        return false;
     }
-    // the left operator is antihermitian while the right one is not antihermitian
-    else if (antihermitian_ and not other.antihermitian_) {
-        if (2 * op_insertion_list_.size() != other.op_insertion_list_.size()) {
+    // Check if the two operators have the same terms
+    for (const auto& sqop : op_insertion_list_) {
+        if (other.op_map_.find(sqop) == other.op_map_.end()) {
             return false;
         }
-        for (const auto& sqop : op_insertion_list_) {
-            if (other.op_map_.find(sqop) == other.op_map_.end()) {
-                return false;
-            }
-            if (std::fabs(op_map_.at(sqop) - other.op_map_.at(sqop)) > 1.0e-14) {
-                return false;
-            }
-            const auto sqop_adjoint = sqop.adjoint();
-            if (other.op_map_.find(sqop_adjoint) == other.op_map_.end()) {
-                return false;
-            }
-            if (std::fabs(op_map_.at(sqop) + other.op_map_.at(sqop_adjoint)) > 1.0e-14) {
-                return false;
-            }
-        }
-    }
-    // the right operator is antihermitian while the left one is not antihermitian
-    else if (not antihermitian_ and other.antihermitian_) {
-        if (op_insertion_list_.size() != 2 * other.op_insertion_list_.size()) {
+        if (std::fabs(op_map_.at(sqop) - other.op_map_.at(sqop)) > 1.0e-14) {
             return false;
-        }
-        for (const auto& sqop : other.op_insertion_list_) {
-            if (op_map_.find(sqop) == op_map_.end()) {
-                return false;
-            }
-            if (std::fabs(op_map_.at(sqop) - other.op_map_.at(sqop)) > 1.0e-14) {
-                return false;
-            }
-            const auto sqop_adjoint = sqop.adjoint();
-            if (op_map_.find(sqop_adjoint) == op_map_.end()) {
-                return false;
-            }
-            if (std::fabs(op_map_.at(sqop_adjoint) + other.op_map_.at(sqop)) > 1.0e-14) {
-                return false;
-            }
         }
     }
     return true;
@@ -357,15 +282,6 @@ double norm(const SparseOperator& op) {
 }
 
 SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs) {
-    // when taking the product of two operators we need to consider the following cases:
-    // 1. both operators are antihermitian
-    // 2. one of the operators is antihermitian
-    // 3. none of the operators is antihermitian
-
-    // case 2 and 3 do not lead generally to antihermitian operators, so we can just add the
-    // terms and return the result case 1 is more complex, and one in principle can say more
-    // depending on whether the operators anticommute or not. For now we just return the sum of
-    // the terms assuming that the product is not antihermitian but generating all the terms.
     std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
     for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
         for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
@@ -377,71 +293,11 @@ SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs) {
             }
         }
     }
-    if (lhs.is_antihermitian()) {
-        for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
-            for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
-                const auto prod = sqop_lhs.adjoint() * sqop_rhs;
-                for (const auto& [sqop, c] : prod) {
-                    if (c * c_lhs * c_rhs != 0.0) {
-                        result_map[sqop] -= c * c_lhs * c_rhs;
-                    }
-                }
-            }
-        }
-    }
-    if (rhs.is_antihermitian()) {
-        for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
-            for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
-                const auto prod = sqop_lhs * sqop_rhs.adjoint();
-                for (const auto& [sqop, c] : prod) {
-                    if (c * c_lhs * c_rhs != 0.0) {
-                        result_map[sqop] -= c * c_lhs * c_rhs;
-                    }
-                }
-            }
-        }
-    }
-    if (lhs.is_antihermitian() and rhs.is_antihermitian()) {
-        for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
-            for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
-                const auto prod = sqop_lhs.adjoint() * sqop_rhs.adjoint();
-                for (const auto& [sqop, c] : prod) {
-                    if (c * c_lhs * c_rhs != 0.0) {
-                        result_map[sqop] += c * c_lhs * c_rhs;
-                    }
-                }
-            }
-        }
-    }
-    return SparseOperator(false, result_map);
+    return SparseOperator(result_map);
 }
 
 SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) {
     std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
-    // if both operators are antihermitian, we can write this in terms of only two commutators
-    if (lhs.is_antihermitian() and rhs.is_antihermitian()) {
-        for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
-            for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
-                {
-                    const auto prod = commutator(sqop_lhs, sqop_rhs);
-                    for (const auto& [sqop, c] : prod) {
-                        if (c * c_lhs * c_rhs != 0.0) {
-                            result_map[sqop] += c * c_lhs * c_rhs;
-                        }
-                    }
-                }
-                {
-                    const auto prod = commutator(sqop_lhs, sqop_rhs.adjoint());
-                    for (const auto& [sqop, c] : prod) {
-                        if (c * c_lhs * c_rhs != 0.0) {
-                            result_map[sqop] -= c * c_lhs * c_rhs;
-                        }
-                    }
-                }
-            }
-        }
-        return SparseOperator(true, result_map);
-    }
     // this works when one or none of the operators is antihermitian
     for (const auto& [sqop_lhs, c_lhs] : lhs.op_map()) {
         for (const auto& [sqop_rhs, c_rhs] : rhs.op_map()) {
@@ -451,25 +307,9 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) 
                     result_map[sqop] += c * c_lhs * c_rhs;
                 }
             }
-            if (lhs.is_antihermitian()) {
-                const auto prod = commutator(sqop_lhs.adjoint(), sqop_rhs);
-                for (const auto& [sqop, c] : prod) {
-                    if (c * c_lhs * c_rhs != 0.0) {
-                        result_map[sqop] -= c * c_lhs * c_rhs;
-                    }
-                }
-            }
-            if (rhs.is_antihermitian()) {
-                const auto prod = commutator(sqop_lhs, sqop_rhs.adjoint());
-                for (const auto& [sqop, c] : prod) {
-                    if (c * c_lhs * c_rhs != 0.0) {
-                        result_map[sqop] -= c * c_lhs * c_rhs;
-                    }
-                }
-            }
         }
     }
-    return SparseOperator(false, result_map);
+    return SparseOperator(result_map);
 }
 
 void similarity_transform_test(SparseOperator& op, const SQOperatorString& sqop, double theta) {
@@ -515,25 +355,61 @@ void similarity_transform_test(SparseOperator& op, const SQOperatorString& sqop,
     op += +std::sin(theta) * (std::cos(theta) - 1) * T_cOTd_Td;
 }
 
-void similarity_transform(SparseOperator& O, const SparseOperator& T, bool reverse,
-                          double screen_threshold) {
-    if (T.is_antihermitian()) {
-        for (size_t m = 0, mmax = T.size(); m < mmax; ++m) {
-            auto n = reverse ? mmax - m - 1 : m;
-            similarity_transform_antihermitian(O, T.term_operator(n), T.coefficient(n),
-                                               screen_threshold);
-        }
-    } else {
-        for (size_t m = 0, mmax = T.size(); m < mmax; ++m) {
-            auto n = reverse ? mmax - m - 1 : m;
-            similarity_transform_nilpotent(O, T.term_operator(n), T.coefficient(n),
-                                           screen_threshold);
-        }
+void sim_trans_exc(SparseOperator& O, const SparseOperator& T, bool reverse,
+                   double screen_threshold) {
+    for (size_t m = 0, mmax = T.size(); m < mmax; ++m) {
+        auto n = reverse ? mmax - m - 1 : m;
+        sim_trans_exc_impl(O, T.term_operator(n), T.coefficient(n), screen_threshold);
     }
 }
 
-void similarity_transform_antihermitian(SparseOperator& O, const SQOperatorString& T_op,
-                                        double theta, double screen_threshold) {
+void sim_trans_exc_impl(SparseOperator& O, const SQOperatorString& T_op, double theta,
+                        double screen_threshold) {
+    // sanity check to make sure all indices are distinct
+    if (not T_op.cre().fast_a_and_b_eq_zero(T_op.ann())) {
+        throw std::runtime_error("similarity_transform_fast: the operator " + T_op.str() +
+                                 " contains repeated indices.\nThis is not allowed for the "
+                                 "similarity transformation.");
+    }
+    // (1 - T) O(1 + T) = O + [ O, T ] - T O T
+    SparseOperator T;
+    for (const auto& [O_op, O_c] : O.op_map()) {
+        if (std::fabs(O_c * theta) < screen_threshold) {
+            continue;
+        }
+        const bool do_O_T_commute = do_ops_commute(O_op, T_op);
+        // if the commutator is zero, then we can skip this term
+        if (do_O_T_commute) {
+            continue;
+        }
+        auto cOT = commutator_fast(O_op, T_op);
+        for (const auto& [cOT_op, cOT_c] : cOT) {
+            // + [O, T]
+            if (std::fabs(theta * cOT_c * O_c) > screen_threshold) {
+                T.add_term(cOT_op, theta * cOT_c * O_c);
+            }
+            // - T [O,T]
+            auto T_cOT = T_op * cOT_op;
+            for (const auto& [T_cOT_op, T_cOT_c] : T_cOT) {
+                if (std::fabs(theta * theta * T_cOT_c * cOT_c * O_c) > screen_threshold) {
+                    T.add_term(T_cOT_op, -theta * theta * T_cOT_c * cOT_c * O_c);
+                }
+            }
+        }
+    }
+    O += T;
+}
+
+void sim_trans_antiherm(SparseOperator& O, const SparseOperator& T, bool reverse,
+                        double screen_threshold) {
+    for (size_t m = 0, mmax = T.size(); m < mmax; ++m) {
+        auto n = reverse ? mmax - m - 1 : m;
+        sim_trans_antiherm_impl(O, T.term_operator(n), T.coefficient(n), screen_threshold);
+    }
+}
+
+void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, double theta,
+                             double screen_threshold) {
     // sanity check to make sure all indices are distinct
     if (not T_op.cre().fast_a_and_b_eq_zero(T_op.ann())) {
         throw std::runtime_error("similarity_transform_fast: the operator " + T_op.str() +
@@ -701,43 +577,6 @@ void similarity_transform_antihermitian(SparseOperator& O, const SQOperatorStrin
             auto OTTd = O_op * TTd_op;
             for (const auto& [OTTd_op, OTTd_c] : OTTd) {
                 T.add_term(OTTd_op, -2.0 * sin_theta_half_4 * OTTd_c * TTd_c * O_c);
-            }
-        }
-    }
-    O += T;
-}
-
-void similarity_transform_nilpotent(SparseOperator& O, const SQOperatorString& T_op, double theta,
-                                    double screen_threshold) {
-    // sanity check to make sure all indices are distinct
-    if (not T_op.cre().fast_a_and_b_eq_zero(T_op.ann())) {
-        throw std::runtime_error("similarity_transform_fast: the operator " + T_op.str() +
-                                 " contains repeated indices.\nThis is not allowed for the "
-                                 "similarity transformation.");
-    }
-    // (1 - T) O(1 + T) = O + [ O, T ] - T O T
-    SparseOperator T;
-    for (const auto& [O_op, O_c] : O.op_map()) {
-        if (std::fabs(O_c * theta) < screen_threshold) {
-            continue;
-        }
-        const bool do_O_T_commute = do_ops_commute(O_op, T_op);
-        // if the commutator is zero, then we can skip this term
-        if (do_O_T_commute) {
-            continue;
-        }
-        auto cOT = commutator_fast(O_op, T_op);
-        for (const auto& [cOT_op, cOT_c] : cOT) {
-            // + [O, T]
-            if (std::fabs(theta * cOT_c * O_c) > screen_threshold) {
-                T.add_term(cOT_op, theta * cOT_c * O_c);
-            }
-            // - T [O,T]
-            auto T_cOT = T_op * cOT_op;
-            for (const auto& [T_cOT_op, T_cOT_c] : T_cOT) {
-                if (std::fabs(theta * theta * T_cOT_c * cOT_c * O_c) > screen_threshold) {
-                    T.add_term(T_cOT_op, -theta * theta * T_cOT_c * cOT_c * O_c);
-                }
             }
         }
     }

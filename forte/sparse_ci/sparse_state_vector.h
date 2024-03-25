@@ -44,14 +44,12 @@ class StateVector {
     StateVector() = default;
     /// Constructor from a map/dictionary (python friendly)
     StateVector(const det_hash<double>& state_vec);
-
     /// @return the map that holds the determinants
     det_hash<double>& map() { return state_vec_; }
     /// @return the map that holds the determinants
     const det_hash<double>& map() const { return state_vec_; }
     /// @return true if the two states are identical
     bool operator==(const StateVector& lhs) const;
-
     /// @return a string representation of the object
     std::string str(int n = 0) const;
     /// @return the number of elements (determinants)
@@ -62,6 +60,7 @@ class StateVector {
     /// @param d the determinant to search for
     /// @return the element found
     auto find(const Determinant& d) const { return state_vec_.find(d); }
+    /// @return count the number of elements corresponding to a determinant
     auto count(const Determinant& d) const { return state_vec_.count(d); }
 
     /// @return the beginning of the map
@@ -84,19 +83,19 @@ class StateVector {
 // Functions to apply operators, gop |state>
 
 /// apply the number projection operator P^alpha_na P^beta_nb |state>
-StateVector apply_number_projector(int na, int nb, StateVector& state);
+StateVector apply_number_projector(int na, int nb, const StateVector& state);
 
 /// compute the projection  <state0 | op | ref>, for each operator op in gop
-std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
+std::vector<double> get_projection(const SparseOperator& sop, const StateVector& ref,
                                    const StateVector& state0);
 
 /// compute the overlap value <left_state|right_state>
-double overlap(StateVector& left_state, StateVector& right_state);
+double overlap(const StateVector& left_state, const StateVector& right_state);
 
-/// safe implementation of apply operator
-StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state);
 /// fast implementation of apply operator based on sorting
-StateVector apply_operator(SparseOperator& sop, const StateVector& state0,
-                           double screen_thresh = 1.0e-12);
+StateVector apply_operator_lin(const SparseOperator& sop, const StateVector& state0,
+                               double screen_thresh = 1.0e-12);
+StateVector apply_operator_antiherm(const SparseOperator& sop, const StateVector& state0,
+                                    double screen_thresh = 1.0e-12);
 
 } // namespace forte

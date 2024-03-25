@@ -86,6 +86,13 @@ void export_Determinant(py::module& m) {
              "Set the value of an alpha bit")
         .def("set_beta_bit", &Determinant::set_beta_bit, "n"_a, "value"_a,
              "Set the value of an beta bit")
+        .def(
+            "slater_sign", [](const Determinant& d, size_t n) { return d.slater_sign(n); },
+            "Get the sign of the Slater determinant")
+        .def(
+            "slater_sign_reverse",
+            [](const Determinant& d, size_t n) { return d.slater_sign_reverse(n); },
+            "Get the sign of the Slater determinant")
         .def("create_alfa_bit", &Determinant::create_alfa_bit, "n"_a, "Create an alpha bit")
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
@@ -265,7 +272,7 @@ void export_Determinant(py::module& m) {
         .def("strpcls", &FCIStringAddress::strpcls, "Return the number of strings per class");
 
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
-        .def(py::init<bool>(), "antihermitian"_a = false)
+        .def(py::init<>())
         .def("add_term",
              py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
                  &SparseOperator::add_term),
@@ -284,8 +291,6 @@ void export_Determinant(py::module& m) {
                 return commutator(lhs, rhs);
             },
             "Compute the commutator of two SparseOperator objects")
-        .def("is_antihermitian", &SparseOperator::is_antihermitian,
-             "Is this operator antihermitian?")
         .def("__iadd__", &SparseOperator::operator+=, "Add a SparseOperator to this SparseOperator")
         .def("__isub__", &SparseOperator::operator-=,
              "Subtract a SparseOperator from this SparseOperator")
@@ -339,36 +344,62 @@ void export_Determinant(py::module& m) {
         .def("__eq__", &SQOperatorString::operator==)
         .def("__lt__", &SQOperatorString::operator<);
 
-    m.def(
-        "make_sparse_operator",
-        [](const std::string& s, double coefficient, bool allow_reordering, bool antihermitian) {
-            SparseOperator sop(antihermitian);
-            sop.add_term_from_str(s, coefficient, allow_reordering);
-            return sop;
-        },
-        "s"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false, "antihermitian"_a = false);
+    m.def("new_product", [](const SparseOperator A, const SparseOperator B) {
+        SparseOperator C;
+        for (const auto& [op, coeff] : A.op_map()) {
+            for (const auto& [op2, coeff2] : B.op_map()) {
+                auto prod = new_product(op, op2);
+                for (const auto& [op3, coeff3] : prod) {
+                    C.add_term(op3, coeff * coeff2 * coeff3);
+                }
+            }
+        }
+        return C;
+    });
 
     m.def(
         "make_sparse_operator",
-        [](const std::vector<std::pair<std::string, double>>& list, bool allow_reordering,
-           bool antihermitian) {
-            SparseOperator sop(antihermitian);
+        [](const std::string& s, double coefficient, bool allow_reordering) {
+            SparseOperator sop;
+            sop.add_term_from_str(s, coefficient, allow_reordering);
+            return sop;
+        },
+        "s"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false);
+
+    m.def(
+        "make_sparse_operator",
+        [](const std::vector<std::pair<std::string, double>>& list, bool allow_reordering) {
+            SparseOperator sop;
             for (const auto& [s, coefficient] : list) {
                 sop.add_term_from_str(s, coefficient, allow_reordering);
             }
             return sop;
         },
-        "list"_a, "allow_reordering"_a = false, "antihermitian"_a = false);
+        "list"_a, "allow_reordering"_a = false);
 
     m.def(
-        "similarity_transform",
+        "sim_trans_exc",
         [](SparseOperator& op, const SparseOperator& A, bool reverse, double screen_thresh) {
             // time this call and print to std::cout
             auto start = std::chrono::high_resolution_clock::now();
-            similarity_transform(op, A, reverse);
+            sim_trans_exc(op, A, reverse, screen_thresh);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end - start;
-            std::cout << "similarity_transform took " << elapsed_seconds.count() << "s\n";
+            std::cout << "similarity_transform (excitation) took " << elapsed_seconds.count()
+                      << "s\n";
+        },
+        "op"_a, "A"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
+
+    m.def(
+        "sim_trans_antiherm",
+        [](SparseOperator& op, const SparseOperator& A, bool reverse, double screen_thresh) {
+            // time this call and print to std::cout
+            auto start = std::chrono::high_resolution_clock::now();
+            sim_trans_antiherm(op, A, reverse, screen_thresh);
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end - start;
+            std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
+                      << "s\n";
         },
         "op"_a, "A"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
@@ -400,25 +431,27 @@ void export_Determinant(py::module& m) {
 
     py::class_<SparseExp>(m, "SparseExp", "A class to compute the exponential of a sparse operator")
         .def(py::init<>())
-        .def("compute", &SparseExp::compute, "sop"_a, "state"_a, "algorithm"_a = "cached",
+        .def("apply_op", &SparseExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
              "scaling_factor"_a = 1.0, "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
+        .def("apply_antiherm", &SparseExp::apply_antiherm, "sop"_a, "state"_a,
+             "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
+             "screen_thresh"_a = 1.0e-12)
         .def("timings", &SparseExp::timings);
 
     py::class_<SparseFactExp>(
         m, "SparseFactExp",
         "A class to compute the product exponential of a sparse operator using factorization")
-        .def(py::init<bool>(), "phaseless"_a = false)
-        .def("compute", &SparseFactExp::compute, "sop"_a, "state"_a, "algorithm"_a = "cached",
+        .def(py::init<>())
+        .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
              "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
+        .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
+             "algorithm"_a = "cached", "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
         .def("timings", &SparseFactExp::timings);
 
-    m.def("apply_operator",
-          py::overload_cast<SparseOperator&, const StateVector&, double>(&apply_operator), "sop"_a,
-          "state0"_a, "screen_thresh"_a = 1.0e-12);
+    m.def("apply_op", &apply_operator_lin, "sop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
 
-    m.def("apply_operator_safe",
-          py::overload_cast<SparseOperator&, const StateVector&>(&apply_operator_safe), "sop"_a,
-          "state0"_a);
+    m.def("apply_antiherm", &apply_operator_antiherm, "sop"_a, "state0"_a,
+          "screen_thresh"_a = 1.0e-12);
 
     m.def("apply_number_projector", &apply_number_projector);
     m.def("get_projection", &get_projection);

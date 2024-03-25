@@ -36,9 +36,23 @@ namespace forte {
 size_t num_attempts_ = 0;
 size_t num_success_ = 0;
 
-StateVector SparseExp::compute(const SparseOperator& sop, const StateVector& state0,
-                               const std::string& algorithm, double scaling_factor, int maxk,
-                               double screen_thresh) {
+StateVector SparseExp::apply_op(const SparseOperator& sop, const StateVector& state0,
+                                const std::string& algorithm, double scaling_factor, int maxk,
+                                double screen_thresh) {
+    return compute(OperatorType::Excitation, sop, state0, algorithm, scaling_factor, maxk,
+                   screen_thresh);
+}
+
+StateVector SparseExp::apply_antiherm(const SparseOperator& sop, const StateVector& state0,
+                                      const std::string& algorithm, double scaling_factor, int maxk,
+                                      double screen_thresh) {
+    return compute(OperatorType::Antihermitian, sop, state0, algorithm, scaling_factor, maxk,
+                   screen_thresh);
+}
+
+StateVector SparseExp::compute(OperatorType op_type, const SparseOperator& sop,
+                               const StateVector& state0, const std::string& algorithm,
+                               double scaling_factor, int maxk, double screen_thresh) {
     local_timer t;
     Algorithm alg = Algorithm::Cached;
     if (algorithm == "onthefly") {
@@ -47,15 +61,15 @@ StateVector SparseExp::compute(const SparseOperator& sop, const StateVector& sta
         alg = Algorithm::OnTheFlyStd;
     }
 
-    auto state = apply_exp_operator(sop, state0, scaling_factor, maxk, screen_thresh, alg);
+    auto state = apply_exp_operator(op_type, sop, state0, scaling_factor, maxk, screen_thresh, alg);
 
     timings_["total"] = t.get();
     return state;
 }
 
-StateVector SparseExp::apply_exp_operator(const SparseOperator& sop, const StateVector& state0,
-                                          double scaling_factor, int maxk, double screen_thresh,
-                                          Algorithm alg) {
+StateVector SparseExp::apply_exp_operator(OperatorType op_type, const SparseOperator& sop,
+                                          const StateVector& state0, double scaling_factor,
+                                          int maxk, double screen_thresh, Algorithm alg) {
     double convergence_threshold_ = screen_thresh;
 
     StateVector exp_state(state0);
@@ -66,11 +80,11 @@ StateVector SparseExp::apply_exp_operator(const SparseOperator& sop, const State
     for (int k = 1; k <= maxk; k++) {
         factor *= scaling_factor / static_cast<double>(k);
         if (alg == Algorithm::Cached) {
-            new_terms = apply_operator_cached(sop, state, screen_thresh);
+            new_terms = apply_operator_cached(op_type, sop, state, screen_thresh);
         } else if (alg == Algorithm::OnTheFlyStd) {
-            new_terms = apply_operator_std(sop, state, screen_thresh);
+            new_terms = apply_operator_std(op_type, sop, state, screen_thresh);
         } else if (alg == Algorithm::OnTheFlySorted) {
-            new_terms = apply_operator_sorted(sop, state, screen_thresh);
+            new_terms = apply_operator_sorted(op_type, sop, state, screen_thresh);
         }
         double norm = 0.0;
         double inf_norm = 0.0;
@@ -89,8 +103,8 @@ StateVector SparseExp::apply_exp_operator(const SparseOperator& sop, const State
     return exp_state;
 }
 
-StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const StateVector& state0,
-                                             double screen_thresh) {
+StateVector SparseExp::apply_operator_cached(OperatorType op_type, const SparseOperator& sop,
+                                             const StateVector& state0, double screen_thresh) {
     // make a copy of the state
     std::vector<std::tuple<double, double, Determinant>> state_sorted(state0.size());
     size_t k = 0;
@@ -128,7 +142,7 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
                     // check if this operator can be applied
                     if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
                         d_new = d;
-                        double value = apply_op_safe(d_new, sqop.cre(), sqop.ann());
+                        double value = apply_operator_to_det_fast(d_new, sqop.cre(), sqop.ann());
                         d_couplings.push_back(std::make_tuple(n, d_new, value));
                     }
                 }
@@ -149,7 +163,7 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
         }
     }
 
-    if (sop.is_antihermitian()) {
+    if (op_type == OperatorType::Antihermitian) {
         for (const auto& absc_c_det : state_sorted) {
             const double absc = std::get<0>(absc_c_det);
             if (absc > screen_thresh) {
@@ -172,7 +186,8 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
                         // check if this operator can be applied
                         if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
                             d_new = d;
-                            double value = apply_op_safe(d_new, sqop.ann(), sqop.cre());
+                            double value =
+                                apply_operator_to_det_fast(d_new, sqop.ann(), sqop.cre());
                             d_couplings.push_back(std::make_tuple(n, d_new, value));
                         }
                     }
@@ -196,8 +211,8 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
     return new_terms;
 }
 
-StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const StateVector& state0,
-                                             double screen_thresh) {
+StateVector SparseExp::apply_operator_sorted(OperatorType op_type, const SparseOperator& sop,
+                                             const StateVector& state0, double screen_thresh) {
     // make a copy of the state
     std::vector<std::tuple<double, double, Determinant>> state_sorted(state0.size());
     size_t k = 0;
@@ -229,7 +244,8 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
                 // check if this operator can be applied
                 if (det.fast_a_and_b_equal_b(sqop.ann()) and det.fast_a_and_b_eq_zero(ucre)) {
                     d = det;
-                    const double value = apply_op_safe(d, sqop.cre(), sqop.ann()) * coefficient * c;
+                    const double value =
+                        apply_operator_to_det_fast(d, sqop.cre(), sqop.ann()) * coefficient * c;
                     new_terms[d] += value;
                     num_success_++;
                 }
@@ -239,7 +255,7 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
         }
     }
 
-    if (sop.is_antihermitian()) {
+    if (op_type == OperatorType::Antihermitian) {
         // loop over all the operators
         for (size_t n = 0, maxn = sop.size(); n < maxn; n++) {
             const auto [sqop, coefficient] = sop.term(n);
@@ -258,7 +274,8 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
                     // check if this operator can be applied
                     if (det.fast_a_and_b_equal_b(sqop.cre()) and det.fast_a_and_b_eq_zero(ucre)) {
                         d = det;
-                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * coefficient * c;
+                        double value =
+                            apply_operator_to_det_fast(d, sqop.ann(), sqop.cre()) * coefficient * c;
                         new_terms[d] -= value;
                         num_success_++;
                     }
@@ -271,8 +288,8 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
     return new_terms;
 }
 
-StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const StateVector& state0,
-                                          double screen_thresh) {
+StateVector SparseExp::apply_operator_std(OperatorType op_type, const SparseOperator& sop,
+                                          const StateVector& state0, double screen_thresh) {
     local_timer t;
 
     StateVector new_terms;
@@ -295,14 +312,15 @@ StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const State
                 // check if this operator can be applied
                 if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
                     new_d = d;
-                    double value = apply_op_safe(new_d, sqop.cre(), sqop.ann()) * coefficient * c;
+                    double value =
+                        apply_operator_to_det_fast(new_d, sqop.cre(), sqop.ann()) * coefficient * c;
                     new_terms[new_d] += value;
                 }
             }
         }
     }
 
-    if (sop.is_antihermitian()) {
+    if (op_type == OperatorType::Antihermitian) {
         // loop over all the operators
         for (size_t n = 0, maxn = sop.size(); n < maxn; n++) {
             const auto [sqop, coefficient] = sop.term(n);
@@ -320,8 +338,8 @@ StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const State
                     // check if this operator can be applied
                     if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
                         new_d = d;
-                        double value =
-                            apply_op_safe(new_d, sqop.ann(), sqop.cre()) * coefficient * c;
+                        double value = apply_operator_to_det_fast(new_d, sqop.ann(), sqop.cre()) *
+                                       coefficient * c;
                         new_terms[new_d] -= value;
                     }
                 }

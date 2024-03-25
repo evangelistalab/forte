@@ -323,6 +323,15 @@ template <size_t N> class BitArray {
         return *this;
     }
 
+    /// Bitwise plus without carrying operator (+)
+    BitArray<N> operator+(const BitArray<N>& lhs) const {
+        BitArray<N> result;
+        for (size_t n = 0; n < nwords_; n++) {
+            result.words_[n] = words_[n] ^ lhs.words_[n];
+        }
+        return result;
+    }
+
     /// Bitwise AND operator (&)
     BitArray<N> operator&(const BitArray<N>& lhs) const {
         BitArray<N> result;
@@ -350,7 +359,7 @@ template <size_t N> class BitArray {
     }
 
     /// Bitwise difference operator (-=)
-    BitArray<N> operator-=(const BitArray<N>& lhs) const {
+    BitArray<N> operator-=(const BitArray<N>& lhs) {
         for (size_t n = 0; n < nwords_; n++) {
             words_[n] &= ~lhs.words_[n];
         }
@@ -541,6 +550,26 @@ template <size_t N> class BitArray {
             }
             return (count % 2 == 0) ? ui64_sign(getword(n), whichbit(n))
                                     : -ui64_sign(getword(n), whichbit(n));
+        }
+    }
+
+    /// Return the sign of a_n applied to this determinant in reverse order
+    /// This function ignores if bit n is set or not
+    double slater_sign_reverse(int n) const {
+        if constexpr (N == 64) {
+            return ui64_sign_reverse(words_[0], n);
+        } else {
+            size_t count = 0;
+            // count all the following bits only if we are not looking at the last word
+            size_t start_word =
+                whichword(n) + 1; // Start from the word following the one containing bit n
+            if (start_word < nwords_) {
+                for (size_t k = start_word; k < nwords_; ++k) {
+                    count += ui64_bit_count(words_[k]);
+                }
+            }
+            return (count % 2 == 0) ? ui64_sign_reverse(getword(n), whichbit(n))
+                                    : -ui64_sign_reverse(getword(n), whichbit(n));
         }
     }
 

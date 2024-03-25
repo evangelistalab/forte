@@ -87,8 +87,8 @@ def run_cc(
     antihermitian = (cc_type != "cc") and (cc_type != "dcc")
 
     # create the operator pool
-    op, denominators = make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, scf_info)
-    selected_op = forte.SparseOperator(antihermitian)
+    op, denominators = make_cluster_operator(max_exc, naelpi, mo_space_info, scf_info)
+    selected_op = forte.SparseOperator()
 
     # the list of operators selected from the full list
     if select_type is None:
@@ -202,7 +202,7 @@ def make_hfref(naelpi, nbelpi, nmopi):
     return hfref
 
 
-def make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, psi4_wfn):
+def make_cluster_operator(max_exc, naelpi, mo_space_info, psi4_wfn):
     """Make the full cluster operator truncated to a given maximum excitation level (closed-shell case)
 
     Parameters
@@ -242,7 +242,7 @@ def make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, psi4_wf
     # get the symmetry of each active orbital
     symmetry = mo_space_info.symmetry("CORRELATED")
 
-    sop = forte.SparseOperator(antihermitian=antihermitian)
+    sop = forte.SparseOperator()
 
     active_to_all = mo_space_info.absolute_mo("CORRELATED")
 
@@ -412,30 +412,29 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on
     sop.set_coefficients(t)
 
     c0 = 0.0
-    if on_the_fly:
-        if cc_type == "cc" or cc_type == "ucc":
-            wfn = exp.compute(sop, ref, algorithm="onthefly", screen_thresh=compute_threshold, maxk=maxk)
-            Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-            R = exp.compute(
-                sop, Hwfn, scaling_factor=-1.0, algorithm="onthefly", screen_thresh=compute_threshold, maxk=maxk
-            )
-        elif cc_type == "dcc" or cc_type == "ducc":
-            wfn = exp.compute(sop, ref, algorithm="onthefly", screen_thresh=compute_threshold)
-            Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, inverse=True, algorithm="onthefly", screen_thresh=compute_threshold)
-        else:
-            raise ValueError("Incorrect value for cc_type")
+    algorithm = "onthefly" if on_the_fly else "default"
+    if cc_type == "cc":
+        wfn = exp.apply_op(sop, ref, algorithm=algorithm, screen_thresh=compute_threshold, maxk=maxk)
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        R = exp.apply_op(
+            sop, Hwfn, scaling_factor=-1.0, algorithm=algorithm, screen_thresh=compute_threshold, maxk=maxk
+        )
+    elif cc_type == "ucc":
+        wfn = exp.apply_antiherm(sop, ref, algorithm=algorithm, screen_thresh=compute_threshold, maxk=maxk)
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        R = exp.apply_antiherm(
+            sop, Hwfn, scaling_factor=-1.0, algorithm=algorithm, screen_thresh=compute_threshold, maxk=maxk
+        )
+    elif cc_type == "dcc":
+        wfn = exp.apply_op(sop, ref, algorithm=algorithm, screen_thresh=compute_threshold)
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        R = exp.apply_op(sop, Hwfn, inverse=True, algorithm=algorithm, screen_thresh=compute_threshold)
+    elif cc_type == "ducc":
+        wfn = exp.apply_antiherm(sop, ref, algorithm=algorithm, screen_thresh=compute_threshold)
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        R = exp.apply_antiherm(sop, Hwfn, inverse=True, algorithm=algorithm, screen_thresh=compute_threshold)
     else:
-        if cc_type == "cc" or cc_type == "ucc":
-            wfn = exp.compute(sop, ref, screen_thresh=compute_threshold, maxk=maxk)
-            Hwfn = ham.compute(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, scaling_factor=-1.0, screen_thresh=compute_threshold, maxk=maxk)
-        elif cc_type == "dcc" or cc_type == "ducc":
-            wfn = exp.compute(sop, ref, screen_thresh=compute_threshold)
-            Hwfn = ham.compute(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, inverse=True, screen_thresh=compute_threshold)
-        else:
-            raise ValueError("Incorrect value for cc_type")
+        raise ValueError("Incorrect value for cc_type")
 
     # compute <ref|Psi>
     for d, c in ref.items():

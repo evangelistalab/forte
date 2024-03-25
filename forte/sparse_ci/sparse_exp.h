@@ -47,6 +47,7 @@ namespace forte {
  */
 class SparseExp {
     enum class Algorithm { Cached, OnTheFlySorted, OnTheFlyStd };
+    enum class OperatorType { Excitation, Antihermitian };
 
   public:
     /// @brief Compute the exponential applied to a state via a Taylor expansion
@@ -70,22 +71,52 @@ class SparseExp {
     /// @param screen_thresh a threshold to select which elements of the operator applied to the
     /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
     /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
-    StateVector compute(const SparseOperator& sop, const StateVector& state,
-                        const std::string& algorithm = "cached", double scaling_factor = 1.0,
-                        int maxk = 19, double screen_thresh = 1.0e-12);
+    StateVector apply_op(const SparseOperator& sop, const StateVector& state,
+                         const std::string& algorithm = "cached", double scaling_factor = 1.0,
+                         int maxk = 19, double screen_thresh = 1.0e-12);
+
+    /// @brief Compute the exponential of the antihermitian of an operator applied to a state via a
+    /// Taylor expansion
+    ///
+    ///             exp(op - op^dagger) |state>
+    ///
+    /// This algorithms is useful when applying the exponential repeatedly
+    /// to the same state or in an iterative procedure
+    /// This function applies only those elements of the operator that satisfy the condition:
+    ///     |t * C_I| > screen_threshold
+    /// where C_I is the coefficient of a determinant
+    ///
+    /// @param sop the operator. Each term in this operator is applied in the order provided
+    /// @param state the state to which the factorized exponential will be applied
+    /// @param algorithm the algorithm used to compute the exponential. If algorithm = "onthefly"
+    /// this function will compute the factorized exponential using an on-the-fly implementation
+    /// (slow). If algorithm = "cached", a cached approach is used.
+    /// @param scaling_factor A scalar factor that multiplies the operator exponentiated. If set to
+    /// -1.0 it allows to compute the inverse of the exponential exp(-op)
+    /// @param maxk the maximum power of op used in the Taylor expansion of exp(op)
+    /// @param screen_thresh a threshold to select which elements of the operator applied to the
+    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
+    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
+    StateVector apply_antiherm(const SparseOperator& sop, const StateVector& state,
+                               const std::string& algorithm = "cached", double scaling_factor = 1.0,
+                               int maxk = 19, double screen_thresh = 1.0e-12);
     /// @return timings for this class
     std::map<std::string, double> timings() const;
 
   private:
-    StateVector apply_exp_operator(const SparseOperator& sop, const StateVector& state0,
-                                   double scaling_factor, int maxk, double screen_thresh,
-                                   Algorithm alg);
-    StateVector apply_operator_cached(const SparseOperator& sop, const StateVector& state0,
-                                      double screen_thresh);
-    StateVector apply_operator_sorted(const SparseOperator& sop, const StateVector& state0,
-                                      double screen_thresh);
-    StateVector apply_operator_std(const SparseOperator& sop, const StateVector& state0,
-                                   double screen_thresh);
+    StateVector compute(OperatorType op_type, const SparseOperator& sop, const StateVector& state,
+                        const std::string& algorithm, double scaling_factor, int maxk,
+                        double screen_thresh);
+
+    StateVector apply_exp_operator(OperatorType op_type, const SparseOperator& sop,
+                                   const StateVector& state0, double scaling_factor, int maxk,
+                                   double screen_thresh, Algorithm alg);
+    StateVector apply_operator_cached(OperatorType op_type, const SparseOperator& sop,
+                                      const StateVector& state0, double screen_thresh);
+    StateVector apply_operator_sorted(OperatorType op_type, const SparseOperator& sop,
+                                      const StateVector& state0, double screen_thresh);
+    StateVector apply_operator_std(OperatorType op_type, const SparseOperator& sop,
+                                   const StateVector& state0, double screen_thresh);
 
     std::map<std::string, double> timings_;
     DeterminantHashVec exp_hash_;

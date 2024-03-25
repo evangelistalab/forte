@@ -58,9 +58,11 @@ class ActiveSpaceIntegrals;
  */
 class SparseOperator {
   public:
+    SparseOperator() = default;
+
+    /// @brief Construct a SparseOperator from a string
     SparseOperator(
-        bool antihermitian = false,
-        const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map = {});
+        const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map);
 
     /// add a term to this operator (python-friendly version) of the form
     ///
@@ -121,8 +123,6 @@ class SparseOperator {
     void set_coefficients(const std::vector<double>& values);
     /// set the value of one coefficient
     void set_coefficient(size_t n, double value);
-    /// is this operator antihermitian?
-    bool is_antihermitian() const { return antihermitian_; }
     /// @return the list of operators
     const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map() const {
         return op_map_;
@@ -149,10 +149,9 @@ class SparseOperator {
     bool operator==(const SparseOperator& other) const;
 
   private:
-    /// is this an antihermitian operator?
-    bool antihermitian_ = false;
-    /// a vector of SQOperator objects
+    /// a vector of SQOperator objects to keep track of the order of the operators
     std::vector<SQOperatorString> op_insertion_list_;
+    /// a map of SQOperator objects to keep track of the operators and their coefficients
     std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> op_map_;
 };
 
@@ -178,13 +177,10 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs);
 
 void similarity_transform_test(SparseOperator& op, const SQOperatorString& A, double theta);
 
-void similarity_transform(SparseOperator& op, const SparseOperator& T, bool reverse = false,
-                          double screen_threshold = 1e-12);
+void sim_trans_exc(SparseOperator& op, const SparseOperator& T, bool reverse = false,
+                   double screen_threshold = 1e-12);
 
-void similarity_transform_antihermitian(SparseOperator& O, const SQOperatorString& T_sqop,
-                                        double theta, double screen_threshold);
-
-void similarity_transform_nilpotent(SparseOperator& O, const SQOperatorString& T_sqop, double theta,
-                                    double screen_threshold);
+void sim_trans_antiherm(SparseOperator& op, const SparseOperator& T, bool reverse = false,
+                        double screen_threshold = 1e-12);
 
 } // namespace forte

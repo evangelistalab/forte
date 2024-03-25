@@ -73,22 +73,23 @@ def compute_st_nilpotent(O, unormA, theta):
     return stO
 
 
-def run_test_sparse_operator_transform(O, A, theta):
+def run_test_sparse_operator_transform(type, O, A, theta):
     print(O)
     print(A)
 
     sqop, a = A.term(0)
     A2 = forte.SparseOperator()
     A2.add_term(sqop, a)
-    if A.is_antihermitian():
+    if type == "antiherm":
         A2 = A2 - A2.adjoint()
 
     C_taylor = compute_st_taylor(O, A2)
-    if A.is_antihermitian():
+    if type == "antiherm":
         C_python = compute_st_antihermitian(O, A2, theta)
+        forte.sim_trans_antiherm(O, A)
     else:
         C_python = compute_st_nilpotent(O, A, theta)
-    forte.similarity_transform(O, A)
+        forte.sim_trans_exc(O, A)
 
     print(C_taylor)
     print(C_python)
@@ -105,64 +106,64 @@ def run_test_sparse_operator_transform(O, A, theta):
 def test_sparse_operator_transform_1():
     O = forte.make_sparse_operator("[2a+ 0a-]", 1.0)
     theta = 0.3  # math.pi / 2
-    A = forte.make_sparse_operator("[2a+ 0a-]", theta, antihermitian=True)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[2a+ 0a-]", theta)
+    run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_2():
     O = forte.make_sparse_operator("[0a+ 2a+ 1a- 0a-]", 1.0)
     theta = 0.23  # math.pi / 2
-    A = forte.make_sparse_operator("[2a+ 0a-]", theta, antihermitian=True)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[2a+ 0a-]", theta)
+    run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_3():
     O = forte.make_sparse_operator("[0a+ 3a+ 2a- 0a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[2a+ 0a-]", theta, antihermitian=True)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[2a+ 0a-]", theta)
+    run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_4():
     O = forte.make_sparse_operator("[0a+ 3b+ 2b- 0a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[2a+ 0a-]", theta, antihermitian=True)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[2a+ 0a-]", theta)
+    run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_5():
     O = forte.make_sparse_operator("[0b+ 0b-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[2b+ 0b-]", theta, antihermitian=True)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[2b+ 0b-]", theta)
+    run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_6():
     O = forte.make_sparse_operator("[0a+ 1a+ 7a- 3a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[1a+ 7a+ 3a- 2a-]", theta, antihermitian=True)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[1a+ 7a+ 3a- 2a-]", theta)
+    run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_7():
     O = forte.make_sparse_operator("[1a+ 4a+ 7a- 3a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[0a+ 7a+ 2a- 1a-]", theta, antihermitian=True)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[0a+ 7a+ 2a- 1a-]", theta)
+    run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_8():
     O = forte.make_sparse_operator("[0a+ 0a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[2a- 0a-]", theta, antihermitian=False)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[2a- 0a-]", theta)
+    run_test_sparse_operator_transform("exc", O, A, theta)
 
 
 def test_sparse_operator_transform_9():
     O = forte.make_sparse_operator([("[0a+ 0a-]", 1.0), ("[1a+ 1a-]", 1.0), ("[1a+ 4a+ 7a- 3a-]", 1.0)])
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[0a+ 7a+ 2a- 1a-]", theta, antihermitian=True)
-    run_test_sparse_operator_transform(O, A, theta)
+    A = forte.make_sparse_operator("[0a+ 7a+ 2a- 1a-]", theta)
+    run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 if __name__ == "__main__":

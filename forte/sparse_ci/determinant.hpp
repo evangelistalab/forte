@@ -568,6 +568,11 @@ std::string str(const DeterminantImpl<N>& d, int n = DeterminantImpl<N>::nbits_h
     return s;
 }
 
+template <size_t N> std::ostream& operator<<(std::ostream& os, const DeterminantImpl<N>& d) {
+    os << str(d);
+    return os;
+}
+
 template <size_t N> void set_str(DeterminantImpl<N>& d, const std::string& str) {
     // zero all the bits and set the bits passed as a string
     d.zero();
@@ -721,8 +726,8 @@ double can_apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& ann,
 }
 
 template <size_t N>
-double apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
-                const DeterminantImpl<N>& ann) {
+double apply_operator_to_det(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
+                             const DeterminantImpl<N>& ann) {
     // loop over the annihilation operators (in ascending order)
     DeterminantImpl<N> temp(ann); // temp is for bookkeeping
     size_t n = temp.count();
@@ -767,31 +772,29 @@ double apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
 /// this function assumes we can apply this operator to the determinant.
 /// So there are no checks in place
 template <size_t N>
-double apply_op_safe(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
-                     const DeterminantImpl<N>& ann) {
+double apply_operator_to_det_fast(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
+                                  const DeterminantImpl<N>& ann) {
     // loop over the annihilation operators (in ascending order)
     DeterminantImpl<N> temp(ann); // temp is for bookkeeping
     size_t n = temp.count();
     double sign = 1.0;
+    uint64_t orb = 0;
     for (size_t i = 0; i < n; ++i) {
         // find the next annihilation operator
-        const uint64_t orb = temp.find_and_clear_first_one();
-        // we assume this bit is set
-        // compute the sign
+        orb = temp.fast_find_and_clear_first_one(orb);
+        // compute the sign and set the bit to zero (we assume this bit is set)
         sign *= d.slater_sign(orb);
-        // set the bit to zero
         d.set_bit(orb, false);
     }
     // loop over the creation operators (in ascending order)
     temp = cre;
     n = temp.count();
+    orb = 0;
     for (size_t i = 0; i < n; ++i) {
         // find the next creation operator
-        const uint64_t orb = temp.find_and_clear_first_one();
-        // we assume this bit is unset
-        // compute the sign
+        orb = temp.fast_find_and_clear_first_one(orb);
+        // compute the sign and set the bit to one (we assume this bit is unset)
         sign *= d.slater_sign(orb);
-        // set the bit to zero
         d.set_bit(orb, true);
     }
     // the creation operators are applied in the opposite order of the way
