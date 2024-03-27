@@ -161,6 +161,7 @@ def energy_forte(name, pyscf_obj, **kwargs):
         data = ObjectsFromFCIDUMP(options=kwargs).run(data)
     elif data.options.get_str("INT_TYPE") == "PYSCF":
         data = ObjectsFromPySCF(pyscf_obj, options=kwargs).run(data)
+        #data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
     else:
         data = ObjectsFromPsi4(**kwargs).run(data)
 

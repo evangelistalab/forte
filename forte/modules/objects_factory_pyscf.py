@@ -11,12 +11,11 @@ from forte.register_forte_options import register_forte_options
 
 import pyscf
 
-def _make_ints_from_pyscf(pyscf_obj, data: ForteData):
+def _make_ints_from_pyscf(pyscf_obj, data: ForteData, mo_coeff):
     """
     Make custom integrals from the PySCF wavefunction object
     """
     int_ao = pyscf_obj.mol.intor("int2e", aosym="s1")
-    mo_coeff = pyscf_obj.mo_coeff
     eri = pyscf.ao2mo.incore.full(int_ao, mo_coeff)
     nmo = pyscf_obj.mol.nao_nr()
     
@@ -32,7 +31,7 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData):
     eri_bb += np.einsum("ikjl->ijkl", eri)
     eri_bb -= np.einsum("iljk->ijkl", eri)
     
-    enuc = pyscf_obj.mol.energy_nuc()
+    enuc = pyscf_obj.mol.energy_nuc() # Should we also add the frozen-core energy?
     hcore_ao = pyscf_obj.get_hcore()
     
     hcore = np.einsum("uv,up,vq->pq", hcore_ao, mo_coeff.conj(), mo_coeff, optimize="optimal")
@@ -48,6 +47,9 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData):
         eri_bb.flatten(),
     )
     data.ints = ints
+    
+    data.as_ints = forte.make_active_space_ints(data.mo_space_info, data.ints, 'ACTIVE', ['RESTRICTED_DOCC'])
+    
     return data
 
 def _make_state_info_from_pyscf(pyscf_obj, options):
@@ -92,8 +94,7 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
         nirrep = irrep_size[pyscf_obj.mol.groupname.lower()]
         nmopi_list = np.zeros(nirrep, dtype = int)
         for i in orbsym:
-            symm = orbsym[i]
-            nmopi_list[symm] += 1
+            nmopi_list[i] += 1
         
     # nmopi_offset = [sum(nmopi_list[0:h]) for h in range(nirrep)]
 
@@ -120,8 +121,7 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
             raise Exception(f"Forte: the object ({pyscf_obj}) is not supported. Use CASCI or SCF.")
         doccpi = np.zeros(nirrep, dtype = int)
         soccpi = np.zeros(nirrep, dtype = int)
-        for i in mo_occ:
-            i = int(i)
+        for i in range(len(mo_occ)):
             symm = orbsym[i]
             if mo_occ[i] == 2:
                 doccpi[symm] += 1
@@ -131,8 +131,30 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
         doccpi = psi4.core.Dimension(list(doccpi))
         soccpi = psi4.core.Dimension(list(soccpi))  
     
-    epsilon_a = psi4.core.Vector.from_array(pyscf_obj.mo_energy)
-    epsilon_b = psi4.core.Vector.from_array(pyscf_obj.mo_energy)
+    if isinstance(pyscf_obj, pyscf.mcscf.casci.CASCI):
+        mo_energy_pyscf = pyscf_obj._scf.mo_energy
+    elif isinstance(pyscf_obj, pyscf.scf.hf.SCF):
+        mo_energy_pyscf = pyscf_obj.mo_energy
+        
+    mo_coeff_pyscf = pyscf_obj.mo_coeff
+        
+    if nirrep == 1:
+        mo_energy = mo_energy_pyscf
+        mo_coeff = mo_coeff_pyscf
+    else:
+        mo_energy = []
+        mo_coeff = np.zeros((nmo, nmo))
+        n_orb = 0
+        for i in range(nirrep):
+            for i_orb in range(nmo):
+                if orbsym[i_orb] == int(i):
+                    mo_energy.append(mo_energy_pyscf[i_orb])
+                    mo_coeff[:,n_orb] = mo_coeff_pyscf[:,i_orb] 
+                    n_orb += 1
+        mo_energy = np.array(mo_energy)
+    
+    epsilon_a = psi4.core.Vector.from_array(mo_energy)
+    epsilon_b = psi4.core.Vector.from_array(mo_energy)
     
     data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
     
@@ -140,7 +162,7 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
     data.state_weights_map = {state_info: [1.0]}
     data.psi_wfn = None
     
-    return data, pyscf_obj
+    return data, pyscf_obj, mo_coeff
 
 class ObjectsFromPySCF(Module):
     """
@@ -164,8 +186,8 @@ class ObjectsFromPySCF(Module):
 
         psi4.core.print_out("\n  Preparing forte objects from PySCF\n")
 
-        data, self.pyscf_obj = _prepare_forte_objects_from_pyscf(data, self.pyscf_obj)
+        data, self.pyscf_obj, mo_coeff = _prepare_forte_objects_from_pyscf(data, self.pyscf_obj)
 
         # Make an integral object from the psi4 wavefunction object
-        data = _make_ints_from_pyscf(self.pyscf_obj, data)
+        data = _make_ints_from_pyscf(self.pyscf_obj, data, mo_coeff)
         return data
