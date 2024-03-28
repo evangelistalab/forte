@@ -1,0 +1,2179 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.8a1.dev68 
+
+                         Git: Rev {HEAD} 78ba1c2 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Friday, 30 June 2023 06:18AM
+
+    Process ID: 1630
+    Host:       DESKTOP-SQPD2D3
+    PSIDATADIR: /home/mhuang/psi4_install/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+# GAS ACI calculation for core excited state of COO
+
+import forte
+
+aci = -93.05161111331 #TEST
+acipt2 = -93.15154033833 #TEST
+
+molecule CO{
+0 1
+C
+O 1 1.123708
+}
+
+set {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 8
+  r_convergence 10
+  scf_type pk
+}
+
+set forte {
+  active_space_solver aci
+  ms 0.0
+  multiplicity 1
+  sigma 0.1
+  nroot 1
+  root_sym 0
+  charge 0
+  sci_enforce_spin_complete true
+  active_ref_type gas
+  charge 0
+  gas_ref_count 2 #using GAS1 and GAS2 for initial guess
+  GAS1 [1,0,0,0]
+  GAS2 [5,0,2,2]
+  GAS3 [6,0,4,4]
+  GAS1MAX [1]
+  GAS1MIN [0]
+  root_sym 2
+}
+
+escf ,wfn = energy('scf',return_wfn = True)
+
+energy('forte',ref_wfn = wfn)
+compare_values(aci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(acipt2, variable("ACI+PT2 ENERGY"),9, "ACI+PT2 energy") #TEST
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+*** tstart() called on DESKTOP-SQPD2D3
+*** at Fri Jun 30 06:18:10 2023
+
+   => Loading Basis Set <=
+
+    Name: 6-31G**
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry C          line   115 file /home/mhuang/psi4_install/share/psi4/basis/6-31gss.gbs 
+    atoms 2 entry O          line   149 file /home/mhuang/psi4_install/share/psi4/basis/6-31gss.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000     0.000000000000    -0.642031374683    12.000000000000
+         O            0.000000000000     0.000000000000     0.481676625317    15.994914619570
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      1.94718  C =      1.94718 [cm^-1]
+  Rotational constants: A = ************  B =  58374.91066  C =  58374.91066 [MHz]
+  Nuclear repulsion =   22.604187308589065
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: 6-31G**
+    Blend: 6-31G**
+    Number of shells: 12
+    Number of basis functions: 30
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: false
+    Max angular momentum: 2
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             30
+      Number of atomic orbitals:        30
+      Number of basis functions:        30
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 216690 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 7.6561678406E-03.
+  Reciprocal condition number of the overlap matrix is 1.4485031790E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        16      16 
+     A2         2       2 
+     B1         6       6 
+     B2         6       6 
+   -------------------------
+    Total      30      30
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -111.90075982217580   -1.11901e+02   0.00000e+00 
+   @RHF iter   1:  -112.71364970656947   -8.12890e-01   1.40187e-02 ADIIS/DIIS
+   @RHF iter   2:  -112.72332142983851   -9.67172e-03   1.10627e-02 ADIIS/DIIS
+   @RHF iter   3:  -112.73746488071333   -1.41435e-02   9.93523e-04 ADIIS/DIIS
+   @RHF iter   4:  -112.73760756118126   -1.42680e-04   1.29004e-04 ADIIS/DIIS
+   @RHF iter   5:  -112.73761088236380   -3.32118e-06   2.46908e-05 DIIS
+   @RHF iter   6:  -112.73761100766296   -1.25299e-07   3.29006e-06 DIIS
+   @RHF iter   7:  -112.73761101088454   -3.22157e-09   7.25125e-07 DIIS
+   @RHF iter   8:  -112.73761101102899   -1.44453e-10   2.04523e-07 DIIS
+   @RHF iter   9:  -112.73761101103844   -9.45022e-12   1.50212e-08 DIIS
+   @RHF iter  10:  -112.73761101103857   -1.27898e-13   1.10144e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -20.675093     2A1   -11.359272     3A1    -1.522248  
+       4A1    -0.796931     1B1    -0.634858     1B2    -0.634858  
+       5A1    -0.547137  
+
+    Virtual:                                                              
+
+       2B1     0.163685     2B2     0.163685     6A1     0.409061  
+       3B1     0.733489     3B2     0.733489     7A1     0.758352  
+       8A1     0.995752     9A1     1.103683     4B1     1.207063  
+       4B2     1.207063    10A1     1.611233    11A1     1.747874  
+       1A2     1.747874     5B1     1.848075     5B2     1.848075  
+      12A1     2.264383     2A2     2.264383    13A1     2.782669  
+       6B1     2.957883     6B2     2.957883    14A1     3.360305  
+      15A1     4.103048    16A1     4.302533  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     5,    0,    1,    1 ]
+    NA   [     5,    0,    1,    1 ]
+    NB   [     5,    0,    1,    1 ]
+
+  @RHF Final Energy:  -112.73761101103857
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             22.6041873085890650
+    One-Electron Energy =                -198.3428006675270865
+    Two-Electron Energy =                  63.0010023478994512
+    Total Energy =                       -112.7376110110385525
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.1246232            0.0023145           -0.1223087
+ Magnitude           :                                                    0.1223087
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on DESKTOP-SQPD2D3 at Fri Jun 30 06:18:11 2023
+Module time:
+	user time   =       0.79 seconds =       0.01 minutes
+	system time =       0.69 seconds =       0.01 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.79 seconds =       0.01 minutes
+	system time =       0.69 seconds =       0.01 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: adding_gas_option - git commit: 30ed0db0
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space GAS1
+  Read options for space GAS2
+  Read options for space GAS3
+  Read options for space GAS1
+  Read options for space GAS2
+  Read options for space GAS3
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0
+    GAS1                1     0     0     0     1
+    GAS2                5     0     2     2     9
+    GAS3                6     0     4     4    14
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     4     2     0     0     6
+    FROZEN_UOCC         0     0     0     0     0
+    Total              16     2     6     6    30
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: 6-31G**
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry C          line   115 file /home/mhuang/psi4_install/share/psi4/basis/6-31gss.gbs 
+    atoms 2 entry O          line   149 file /home/mhuang/psi4_install/share/psi4/basis/6-31gss.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry C          line    61 file /home/mhuang/psi4_install/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry O          line    81 file /home/mhuang/psi4_install/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: 6-31G**
+    Blend: 6-31G**
+    Number of shells: 12
+    Number of basis functions: 30
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: false
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             30
+      Number of atomic orbitals:        30
+      Number of basis functions:        30
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 216690 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         30
+  Number of correlated molecular orbitals:              30
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.09960040 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.018105 GB
+  Timing for conventional integral transformation:            0.159 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.159 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       B1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+--------------------------------------------------------------------------------
+               Selected Configuration Interaction Excited States
+  written by Jeffrey B. Schriber, Tianyuan Zhang, and Francesco A. Evangelista
+--------------------------------------------------------------------------------
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 2    
+    Number of roots                          1    
+    Ms                                       0
+    Excited Algorithm                        NONE
+  -----------------------------------------------------------------
+  Using 1 thread(s)
+  Computing wavefunction for root 0
+
+        ---------------------------------------------------------------
+                      Adaptive Configuration Interaction
+          written by Jeffrey B. Schriber and Francesco A. Evangelista
+        ---------------------------------------------------------------
+
+  ==> Reference Information <==
+
+  There are 0 frozen orbitals.
+  There are 24 active orbitals.
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 2    
+    Number of roots                          1    
+    Root used for properties                 0    
+    Roots used for averaging                 1    
+    Root averaging offset                    0    
+    Sigma (Eh)                               1.00e-01
+    Gamma (Eh^(-1))                          1.00e+00
+    Convergence threshold                    1.00e-09
+    Ms                                       0
+    Diagonalization algorithm                SPARSE
+    Excited Algorithm                        NONE
+    Project out spin contaminants            True
+    Enforce spin completeness of basis       True
+    Enforce complete aimed selection         True
+    Multiroot averaging                      Average
+  -----------------------------------------------------------------
+  Number of active orbitals: 24
+  Number of active alpha electrons: 7
+  Number of active beta electrons: 7
+
+  ==> GAS Orbital Energies from SCF <==
+
+    GAS        Energy  Index
+    ------------------------
+     1   -20.67509326      0
+     2   -11.35927182      1
+     2    -1.52224836      2
+     2    -0.79693086      3
+     2    -0.54713745      4
+     2     0.40906066      5
+     2    -0.63485812     12
+     2     0.16368498     13
+     2    -0.63485812     18
+     2     0.16368498     19
+     3     0.75835233      6
+     3     0.99575177      7
+     3     1.10368254      8
+     3     1.61123305      9
+     3     1.74787430     10
+     3     2.26438313     11
+     3     0.73348872     14
+     3     1.20706281     15
+     3     1.84807476     16
+     3     2.95788335     17
+     3     0.73348872     20
+     3     1.20706281     21
+     3     1.84807476     22
+     3     2.95788335     23
+    ------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   14    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B
+    ---------------------------
+         1     1    0    6    7
+         2     0    1    7    6
+         3     0    0    7    7
+    ---------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+  ==> Building GAS Determinants <==
+
+    Config.  #Determinants     Time/s
+    ---------------------------------
+         1             752  5.044e-04
+         2             752  3.745e-04
+         3             320  2.131e-04
+    ---------------------------------
+    Total:            1824  1.240e-03
+    ---------------------------------
+
+  ==> Number of Electrons in GAS <==
+
+    GAS  MAX  MIN
+    -------------
+      1    1    0
+      2   14    0
+      3   14    0
+    -------------
+
+  ==> Possible Electron Occupations in GAS <==
+
+    Config.  1_A  1_B  2_A  2_B  3_A  3_B
+    -------------------------------------
+         1     1    0    6    7    0    0
+         2     0    1    7    6    0    0
+         3     0    0    7    7    0    0
+         4     1    0    6    6    0    1
+         5     0    1    7    5    0    1
+         6     0    0    7    6    0    1
+         7     1    0    6    5    0    2
+         8     0    1    7    4    0    2
+         9     0    0    7    5    0    2
+        10     1    0    6    4    0    3
+        11     0    1    7    3    0    3
+        12     0    0    7    4    0    3
+        13     1    0    6    3    0    4
+        14     0    1    7    2    0    4
+        15     0    0    7    3    0    4
+        16     1    0    6    2    0    5
+        17     0    1    7    1    0    5
+        18     0    0    7    2    0    5
+        19     1    0    6    1    0    6
+        20     0    1    7    0    0    6
+        21     0    0    7    1    0    6
+        22     1    0    6    0    0    7
+        23     0    0    7    0    0    7
+        24     1    0    5    7    1    0
+        25     0    1    6    6    1    0
+        26     0    0    6    7    1    0
+        27     1    0    5    6    1    1
+        28     0    1    6    5    1    1
+        29     0    0    6    6    1    1
+        30     1    0    5    5    1    2
+        31     0    1    6    4    1    2
+        32     0    0    6    5    1    2
+        33     1    0    5    4    1    3
+        34     0    1    6    3    1    3
+        35     0    0    6    4    1    3
+        36     1    0    5    3    1    4
+        37     0    1    6    2    1    4
+        38     0    0    6    3    1    4
+        39     1    0    5    2    1    5
+        40     0    1    6    1    1    5
+        41     0    0    6    2    1    5
+        42     1    0    5    1    1    6
+        43     0    1    6    0    1    6
+        44     0    0    6    1    1    6
+        45     1    0    5    0    1    7
+        46     0    0    6    0    1    7
+        47     1    0    4    7    2    0
+        48     0    1    5    6    2    0
+        49     0    0    5    7    2    0
+        50     1    0    4    6    2    1
+        51     0    1    5    5    2    1
+        52     0    0    5    6    2    1
+        53     1    0    4    5    2    2
+        54     0    1    5    4    2    2
+        55     0    0    5    5    2    2
+        56     1    0    4    4    2    3
+        57     0    1    5    3    2    3
+        58     0    0    5    4    2    3
+        59     1    0    4    3    2    4
+        60     0    1    5    2    2    4
+        61     0    0    5    3    2    4
+        62     1    0    4    2    2    5
+        63     0    1    5    1    2    5
+        64     0    0    5    2    2    5
+        65     1    0    4    1    2    6
+        66     0    1    5    0    2    6
+        67     0    0    5    1    2    6
+        68     1    0    4    0    2    7
+        69     0    0    5    0    2    7
+        70     1    0    3    7    3    0
+        71     0    1    4    6    3    0
+        72     0    0    4    7    3    0
+        73     1    0    3    6    3    1
+        74     0    1    4    5    3    1
+        75     0    0    4    6    3    1
+        76     1    0    3    5    3    2
+        77     0    1    4    4    3    2
+        78     0    0    4    5    3    2
+        79     1    0    3    4    3    3
+        80     0    1    4    3    3    3
+        81     0    0    4    4    3    3
+        82     1    0    3    3    3    4
+        83     0    1    4    2    3    4
+        84     0    0    4    3    3    4
+        85     1    0    3    2    3    5
+        86     0    1    4    1    3    5
+        87     0    0    4    2    3    5
+        88     1    0    3    1    3    6
+        89     0    1    4    0    3    6
+        90     0    0    4    1    3    6
+        91     1    0    3    0    3    7
+        92     0    0    4    0    3    7
+        93     1    0    2    7    4    0
+        94     0    1    3    6    4    0
+        95     0    0    3    7    4    0
+        96     1    0    2    6    4    1
+        97     0    1    3    5    4    1
+        98     0    0    3    6    4    1
+        99     1    0    2    5    4    2
+       100     0    1    3    4    4    2
+       101     0    0    3    5    4    2
+       102     1    0    2    4    4    3
+       103     0    1    3    3    4    3
+       104     0    0    3    4    4    3
+       105     1    0    2    3    4    4
+       106     0    1    3    2    4    4
+       107     0    0    3    3    4    4
+       108     1    0    2    2    4    5
+       109     0    1    3    1    4    5
+       110     0    0    3    2    4    5
+       111     1    0    2    1    4    6
+       112     0    1    3    0    4    6
+       113     0    0    3    1    4    6
+       114     1    0    2    0    4    7
+       115     0    0    3    0    4    7
+       116     1    0    1    7    5    0
+       117     0    1    2    6    5    0
+       118     0    0    2    7    5    0
+       119     1    0    1    6    5    1
+       120     0    1    2    5    5    1
+       121     0    0    2    6    5    1
+       122     1    0    1    5    5    2
+       123     0    1    2    4    5    2
+       124     0    0    2    5    5    2
+       125     1    0    1    4    5    3
+       126     0    1    2    3    5    3
+       127     0    0    2    4    5    3
+       128     1    0    1    3    5    4
+       129     0    1    2    2    5    4
+       130     0    0    2    3    5    4
+       131     1    0    1    2    5    5
+       132     0    1    2    1    5    5
+       133     0    0    2    2    5    5
+       134     1    0    1    1    5    6
+       135     0    1    2    0    5    6
+       136     0    0    2    1    5    6
+       137     1    0    1    0    5    7
+       138     0    0    2    0    5    7
+       139     1    0    0    7    6    0
+       140     0    1    1    6    6    0
+       141     0    0    1    7    6    0
+       142     1    0    0    6    6    1
+       143     0    1    1    5    6    1
+       144     0    0    1    6    6    1
+       145     1    0    0    5    6    2
+       146     0    1    1    4    6    2
+       147     0    0    1    5    6    2
+       148     1    0    0    4    6    3
+       149     0    1    1    3    6    3
+       150     0    0    1    4    6    3
+       151     1    0    0    3    6    4
+       152     0    1    1    2    6    4
+       153     0    0    1    3    6    4
+       154     1    0    0    2    6    5
+       155     0    1    1    1    6    5
+       156     0    0    1    2    6    5
+       157     1    0    0    1    6    6
+       158     0    1    1    0    6    6
+       159     0    0    1    1    6    6
+       160     1    0    0    0    6    7
+       161     0    0    1    0    6    7
+       162     0    1    0    6    7    0
+       163     0    0    0    7    7    0
+       164     0    1    0    5    7    1
+       165     0    0    0    6    7    1
+       166     0    1    0    4    7    2
+       167     0    0    0    5    7    2
+       168     0    1    0    3    7    3
+       169     0    0    0    4    7    3
+       170     0    1    0    2    7    4
+       171     0    0    0    3    7    4
+       172     0    1    0    1    7    5
+       173     0    0    0    2    7    5
+       174     0    1    0    0    7    6
+       175     0    0    0    1    7    6
+       176     0    0    0    0    7    7
+    -------------------------------------
+    n_A/B: # of alpha/beta electrons in GASn
+
+
+  ---------------------------------- Cycle 0 -----------------------------------
+
+  ==> Diagonalizing the Hamiltonian in the P space <==
+
+  Initial P space dimension: 1824
+  Spin-complete dimension of the P space: 1824 determinants
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1       4620
+         2       2484
+         3        860
+         4        150
+        α          5.100e-03 seconds
+        β          5.041e-03 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+         1       3400
+         2       4618
+         3       3760
+         4       2082
+         6        910
+        10         60
+        αα         1.129e-02 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         1       3680
+         2       3124
+         3       6008
+         4       3914
+         5       3720
+         6       2368
+         7        280
+         8        375
+         9        400
+        11        400
+        αβ         2.733e-02 seconds
+        ββ         6.805e-03 seconds
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Initial guess determinants:         50
+
+  Spin-adaptation of the initial guess based on minimum spin-complete subset
+  Initial guess determinants do not form a spin-complete set. 10 determinant(s) missing
+
+  Guess determinants after screening: 34
+
+  Initial guess solutions
+  ========================
+  Number   2S+1   Selected
+  ------------------------
+    13       1       *
+    17       3        
+     4       5        
+  ========================
+
+  Setting initial guess and roots to project
+  Adding guess 0        2S+1 = 1    E = -115.249021
+  Adding guess 1        2S+1 = 1    E = -114.612295
+  Projecting out guess  2S+1 = 3    E = -115.256072
+  Projecting out guess  2S+1 = 3    E = -114.618771
+
+  Projecting out 2 solutions
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-10
+  Residual convergence: 1.00e-10
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -115.249020679424  -1.152e+02  +3.398e-01
+      2     -115.284028744649  -3.501e-02  +1.269e-01
+      3     -115.289675624812  -5.647e-03  +7.444e-02
+      4     -115.291257331820  -1.582e-03  +3.034e-02
+      5     -115.291437256142  -1.799e-04  +1.192e-02
+      6     -115.291479478946  -4.222e-05  +5.308e-03
+      7     -115.291486987258  -7.508e-06  +2.475e-03
+      8     -115.291488127791  -1.141e-06  +9.071e-04
+      9     -115.291488389850  -2.621e-07  +4.180e-04
+     10     -115.291488431112  -4.126e-08  +2.126e-04
+     11     -115.291488439555  -8.442e-09  +8.432e-05
+     12     -115.291488441860  -2.305e-09  +3.877e-05
+     13     -115.291488442217  -3.577e-10  +2.072e-05
+     14     -115.291488442289  -7.161e-11  +7.854e-06
+     15     -115.291488442306  -1.694e-11  +3.195e-06
+     16     -115.291488442308  -2.629e-12  +1.845e-06
+     17     -115.291488442309  -5.826e-13  +7.175e-07
+     18     -115.291488442309  -1.563e-13  +3.405e-07
+     19     -115.291488442309  +2.842e-14  +1.865e-07
+     20     -115.291488442309  -1.421e-14  +7.217e-08
+     21     -115.291488442309  +1.421e-14  +2.774e-08
+     22     -115.291488442309  +0.000e+00  +1.706e-08
+     23     -115.291488442309  +0.000e+00  +6.544e-09
+     24     -115.291488442309  +0.000e+00  +3.182e-09
+     25     -115.291488442309  +1.421e-14  +1.785e-09
+     26     -115.291488442309  -1.421e-14  +7.026e-10
+     27     -115.291488442309  +0.000e+00  +2.615e-10
+     28     -115.291488442309  +0.000e+00  +1.678e-10
+     29     -115.291488442309  +0.000e+00  +6.347e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 30 iterations.
+  Davidson-Liu procedure took  0.455970 s
+  Time spent diagonalizing H:   0.513955 s
+
+    P-space  CI Energy Root   0        = -92.687301133720 Eh =   0.0000 eV, S^2 = -0.000000
+
+
+  ==> Finding the Q space <==
+
+  Using SR screening algorithm
+  Time spent forming F space:             2.410253
+  Time spent merging thread F spaces:             0.984594
+  Size of F space: 1944304
+  Time spent building sorting list: 0.355725
+  Dimension of the PQ space:                  2142
+  Dimension of the PQ space (spin-complete) : 2478
+  Time spent building the model space: 4.535368
+
+  ==> Diagonalizing the Hamiltonian in the P + Q space <==
+
+  Number of reference roots: 1
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1       8232
+         2       2742
+         3        972
+         4        162
+         5          8
+         6          2
+         7          2
+        α          4.190e-03 seconds
+        β          4.075e-03 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+         1      12205
+         2       5572
+         3       4050
+         4       2255
+         5        108
+         6        963
+         7         18
+         8          8
+         9          6
+        10         68
+        11          8
+        12          5
+        13          2
+        14          4
+        15          1
+        16          2
+        αα         1.019e-02 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         1      22050
+         2       5517
+         3       6700
+         4       4207
+         5       3898
+         6       2587
+         7        424
+         8        469
+         9        412
+        10          8
+        11        404
+        12          6
+        13         16
+        14         17
+        15          6
+        16          4
+        17         14
+        18         16
+        19          8
+        20          2
+        28          2
+        αβ         2.404e-02 seconds
+        ββ         9.569e-03 seconds
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Initial guess determinants:         50
+
+  Spin-adaptation of the initial guess based on minimum spin-complete subset
+  Guess determinants after screening: 50
+
+  Initial guess solutions
+  ========================
+  Number   2S+1   Selected
+  ------------------------
+    19       1       *
+    25       3        
+     6       5        
+  ========================
+
+  Setting initial guess and roots to project
+  Adding guess 0        2S+1 = 1    E = -115.329674
+  Adding guess 1        2S+1 = 1    E = -114.640230
+  Projecting out guess  2S+1 = 3    E = -115.356385
+  Projecting out guess  2S+1 = 3    E = -114.648443
+
+  Projecting out 2 solutions
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-10
+  Residual convergence: 1.00e-10
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -115.329673712654  -1.153e+02  +1.015e+00
+      2     -115.627020959980  -2.973e-01  +3.483e-01
+      3     -115.663175703367  -3.615e-02  +1.341e-01
+      4     -115.668577636189  -5.402e-03  +6.594e-02
+      5     -115.669636084312  -1.058e-03  +2.916e-02
+      6     -115.670032456994  -3.964e-04  +1.832e-02
+      7     -115.670154141453  -1.217e-04  +8.452e-03
+      8     -115.670173464290  -1.932e-05  +3.571e-03
+      9     -115.670178943026  -5.479e-06  +1.966e-03
+     10     -115.670180186548  -1.244e-06  +1.002e-03
+     11     -115.670180433077  -2.465e-07  +4.230e-04
+     12     -115.670180502354  -6.928e-08  +2.314e-04
+     13     -115.670180523251  -2.090e-08  +1.284e-04
+     14     -115.670180527175  -3.924e-09  +4.867e-05
+     15     -115.670180528175  -9.997e-10  +3.154e-05
+     16     -115.670180528500  -3.249e-10  +1.868e-05
+     17     -115.670180528582  -8.208e-11  +8.411e-06
+     18     -115.670180528605  -2.301e-11  +4.471e-06
+     19     -115.670180528613  -7.958e-12  +2.959e-06
+     20     -115.670180528615  -2.018e-12  +1.159e-06
+     21     -115.670180528615  -5.400e-13  +7.451e-07
+     22     -115.670180528615  -1.563e-13  +4.756e-07
+     23     -115.670180528616  -4.263e-14  +2.175e-07
+     24     -115.670180528616  -4.263e-14  +1.195e-07
+     25     -115.670180528616  -1.421e-13  +8.388e-08
+     26     -115.670180528616  -1.421e-14  +3.386e-08
+     27     -115.670180528616  +2.842e-14  +2.201e-08
+     28     -115.670180528616  +1.563e-13  +1.566e-08
+     29     -115.670180528616  +0.000e+00  +6.918e-09
+     30     -115.670180528616  -2.842e-14  +3.925e-09
+     31     -115.670180528616  -4.263e-14  +2.891e-09
+     32     -115.670180528616  +0.000e+00  +1.196e-09
+     33     -115.670180528616  +0.000e+00  +7.464e-10
+     34     -115.670180528616  +7.105e-14  +5.499e-10
+     35     -115.670180528616  +1.421e-14  +2.417e-10
+     36     -115.670180528616  -1.421e-14  +1.353e-10
+     37     -115.670180528616  +0.000e+00  +9.860e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 38 iterations.
+  Davidson-Liu procedure took  0.905709 s
+  Total time spent diagonalizing H:   0.960184 s
+
+    PQ-space CI Energy Root   0        = -93.065993220026 Eh =   0.0000 eV, S^2 = 0.000000
+    PQ-space CI Energy + EPT2 Root   0 = -93.165881019809 Eh =   0.0000 eV
+
+
+  ==> GAS Contribution Analysis <==
+
+  Root 0:
+    Config.  1_A  1_B  2_A  2_B  3_A  3_B  Contribution
+    ---------------------------------------------------
+         1     1    0    6    7    0    0  42.66520323%
+         2     0    1    7    6    0    0  42.66520323%
+         3     0    0    7    7    0    0   0.00221382%
+         4     1    0    6    6    0    1   3.45916201%
+         5     0    1    7    5    0    1   3.61477697%
+         6     0    0    7    6    0    1   0.00165545%
+         7     1    0    6    5    0    2   0.03895852%
+         8     0    1    7    4    0    2   0.02544716%
+         9     0    0    7    5    0    2   0.00000000%
+        10     1    0    6    4    0    3   0.00000000%
+        11     0    1    7    3    0    3   0.00000000%
+        12     0    0    7    4    0    3   0.00000000%
+        13     1    0    6    3    0    4   0.00000000%
+        14     0    1    7    2    0    4   0.00000000%
+        15     0    0    7    3    0    4   0.00000000%
+        16     1    0    6    2    0    5   0.00000000%
+        17     0    1    7    1    0    5   0.00000000%
+        18     0    0    7    2    0    5   0.00000000%
+        19     1    0    6    1    0    6   0.00000000%
+        20     0    1    7    0    0    6   0.00000000%
+        21     0    0    7    1    0    6   0.00000000%
+        22     1    0    6    0    0    7   0.00000000%
+        23     0    0    7    0    0    7   0.00000000%
+        24     1    0    5    7    1    0   3.61477697%
+        25     0    1    6    6    1    0   3.45916201%
+        26     0    0    6    7    1    0   0.00165545%
+        27     1    0    5    6    1    1   0.19368976%
+        28     0    1    6    5    1    1   0.19368976%
+        29     0    0    6    6    1    1   0.00000000%
+        30     1    0    5    5    1    2   0.00000000%
+        31     0    1    6    4    1    2   0.00000000%
+        32     0    0    6    5    1    2   0.00000000%
+        33     1    0    5    4    1    3   0.00000000%
+        34     0    1    6    3    1    3   0.00000000%
+        35     0    0    6    4    1    3   0.00000000%
+        36     1    0    5    3    1    4   0.00000000%
+        37     0    1    6    2    1    4   0.00000000%
+        38     0    0    6    3    1    4   0.00000000%
+        39     1    0    5    2    1    5   0.00000000%
+        40     0    1    6    1    1    5   0.00000000%
+        41     0    0    6    2    1    5   0.00000000%
+        42     1    0    5    1    1    6   0.00000000%
+        43     0    1    6    0    1    6   0.00000000%
+        44     0    0    6    1    1    6   0.00000000%
+        45     1    0    5    0    1    7   0.00000000%
+        46     0    0    6    0    1    7   0.00000000%
+        47     1    0    4    7    2    0   0.02544716%
+        48     0    1    5    6    2    0   0.03895852%
+        49     0    0    5    7    2    0   0.00000000%
+        50     1    0    4    6    2    1   0.00000000%
+        51     0    1    5    5    2    1   0.00000000%
+        52     0    0    5    6    2    1   0.00000000%
+        53     1    0    4    5    2    2   0.00000000%
+        54     0    1    5    4    2    2   0.00000000%
+        55     0    0    5    5    2    2   0.00000000%
+        56     1    0    4    4    2    3   0.00000000%
+        57     0    1    5    3    2    3   0.00000000%
+        58     0    0    5    4    2    3   0.00000000%
+        59     1    0    4    3    2    4   0.00000000%
+        60     0    1    5    2    2    4   0.00000000%
+        61     0    0    5    3    2    4   0.00000000%
+        62     1    0    4    2    2    5   0.00000000%
+        63     0    1    5    1    2    5   0.00000000%
+        64     0    0    5    2    2    5   0.00000000%
+        65     1    0    4    1    2    6   0.00000000%
+        66     0    1    5    0    2    6   0.00000000%
+        67     0    0    5    1    2    6   0.00000000%
+        68     1    0    4    0    2    7   0.00000000%
+        69     0    0    5    0    2    7   0.00000000%
+        70     1    0    3    7    3    0   0.00000000%
+        71     0    1    4    6    3    0   0.00000000%
+        72     0    0    4    7    3    0   0.00000000%
+        73     1    0    3    6    3    1   0.00000000%
+        74     0    1    4    5    3    1   0.00000000%
+        75     0    0    4    6    3    1   0.00000000%
+        76     1    0    3    5    3    2   0.00000000%
+        77     0    1    4    4    3    2   0.00000000%
+        78     0    0    4    5    3    2   0.00000000%
+        79     1    0    3    4    3    3   0.00000000%
+        80     0    1    4    3    3    3   0.00000000%
+        81     0    0    4    4    3    3   0.00000000%
+        82     1    0    3    3    3    4   0.00000000%
+        83     0    1    4    2    3    4   0.00000000%
+        84     0    0    4    3    3    4   0.00000000%
+        85     1    0    3    2    3    5   0.00000000%
+        86     0    1    4    1    3    5   0.00000000%
+        87     0    0    4    2    3    5   0.00000000%
+        88     1    0    3    1    3    6   0.00000000%
+        89     0    1    4    0    3    6   0.00000000%
+        90     0    0    4    1    3    6   0.00000000%
+        91     1    0    3    0    3    7   0.00000000%
+        92     0    0    4    0    3    7   0.00000000%
+        93     1    0    2    7    4    0   0.00000000%
+        94     0    1    3    6    4    0   0.00000000%
+        95     0    0    3    7    4    0   0.00000000%
+        96     1    0    2    6    4    1   0.00000000%
+        97     0    1    3    5    4    1   0.00000000%
+        98     0    0    3    6    4    1   0.00000000%
+        99     1    0    2    5    4    2   0.00000000%
+       100     0    1    3    4    4    2   0.00000000%
+       101     0    0    3    5    4    2   0.00000000%
+       102     1    0    2    4    4    3   0.00000000%
+       103     0    1    3    3    4    3   0.00000000%
+       104     0    0    3    4    4    3   0.00000000%
+       105     1    0    2    3    4    4   0.00000000%
+       106     0    1    3    2    4    4   0.00000000%
+       107     0    0    3    3    4    4   0.00000000%
+       108     1    0    2    2    4    5   0.00000000%
+       109     0    1    3    1    4    5   0.00000000%
+       110     0    0    3    2    4    5   0.00000000%
+       111     1    0    2    1    4    6   0.00000000%
+       112     0    1    3    0    4    6   0.00000000%
+       113     0    0    3    1    4    6   0.00000000%
+       114     1    0    2    0    4    7   0.00000000%
+       115     0    0    3    0    4    7   0.00000000%
+       116     1    0    1    7    5    0   0.00000000%
+       117     0    1    2    6    5    0   0.00000000%
+       118     0    0    2    7    5    0   0.00000000%
+       119     1    0    1    6    5    1   0.00000000%
+       120     0    1    2    5    5    1   0.00000000%
+       121     0    0    2    6    5    1   0.00000000%
+       122     1    0    1    5    5    2   0.00000000%
+       123     0    1    2    4    5    2   0.00000000%
+       124     0    0    2    5    5    2   0.00000000%
+       125     1    0    1    4    5    3   0.00000000%
+       126     0    1    2    3    5    3   0.00000000%
+       127     0    0    2    4    5    3   0.00000000%
+       128     1    0    1    3    5    4   0.00000000%
+       129     0    1    2    2    5    4   0.00000000%
+       130     0    0    2    3    5    4   0.00000000%
+       131     1    0    1    2    5    5   0.00000000%
+       132     0    1    2    1    5    5   0.00000000%
+       133     0    0    2    2    5    5   0.00000000%
+       134     1    0    1    1    5    6   0.00000000%
+       135     0    1    2    0    5    6   0.00000000%
+       136     0    0    2    1    5    6   0.00000000%
+       137     1    0    1    0    5    7   0.00000000%
+       138     0    0    2    0    5    7   0.00000000%
+       139     1    0    0    7    6    0   0.00000000%
+       140     0    1    1    6    6    0   0.00000000%
+       141     0    0    1    7    6    0   0.00000000%
+       142     1    0    0    6    6    1   0.00000000%
+       143     0    1    1    5    6    1   0.00000000%
+       144     0    0    1    6    6    1   0.00000000%
+       145     1    0    0    5    6    2   0.00000000%
+       146     0    1    1    4    6    2   0.00000000%
+       147     0    0    1    5    6    2   0.00000000%
+       148     1    0    0    4    6    3   0.00000000%
+       149     0    1    1    3    6    3   0.00000000%
+       150     0    0    1    4    6    3   0.00000000%
+       151     1    0    0    3    6    4   0.00000000%
+       152     0    1    1    2    6    4   0.00000000%
+       153     0    0    1    3    6    4   0.00000000%
+       154     1    0    0    2    6    5   0.00000000%
+       155     0    1    1    1    6    5   0.00000000%
+       156     0    0    1    2    6    5   0.00000000%
+       157     1    0    0    1    6    6   0.00000000%
+       158     0    1    1    0    6    6   0.00000000%
+       159     0    0    1    1    6    6   0.00000000%
+       160     1    0    0    0    6    7   0.00000000%
+       161     0    0    1    0    6    7   0.00000000%
+       162     0    1    0    6    7    0   0.00000000%
+       163     0    0    0    7    7    0   0.00000000%
+       164     0    1    0    5    7    1   0.00000000%
+       165     0    0    0    6    7    1   0.00000000%
+       166     0    1    0    4    7    2   0.00000000%
+       167     0    0    0    5    7    2   0.00000000%
+       168     0    1    0    3    7    3   0.00000000%
+       169     0    0    0    4    7    3   0.00000000%
+       170     0    1    0    2    7    4   0.00000000%
+       171     0    0    0    3    7    4   0.00000000%
+       172     0    1    0    1    7    5   0.00000000%
+       173     0    0    0    2    7    5   0.00000000%
+       174     0    1    0    0    7    6   0.00000000%
+       175     0    0    0    1    7    6   0.00000000%
+       176     0    0    0    0    7    7   0.00000000%
+    ---------------------------------------------------
+               GAS1      GAS2      GAS3    Contribution
+    ---------------------------------------------------
+                  0         0        14     0.00000000%
+                  0         1        13     0.00000000%
+                  0         2        12     0.00000000%
+                  0         3        11     0.00000000%
+                  0         4        10     0.00000000%
+                  0         5         9     0.00000000%
+                  0         6         8     0.00000000%
+                  0         7         7     0.00000000%
+                  0         8         6     0.00000000%
+                  0         9         5     0.00000000%
+                  0        10         4     0.00000000%
+                  0        11         3     0.00000000%
+                  0        12         2     0.00000000%
+                  0        13         1     0.00331090%
+                  0        14         0     0.00221382%
+                  1         0        13     0.00000000%
+                  1         1        12     0.00000000%
+                  1         2        11     0.00000000%
+                  1         3        10     0.00000000%
+                  1         4         9     0.00000000%
+                  1         5         8     0.00000000%
+                  1         6         7     0.00000000%
+                  1         7         6     0.00000000%
+                  1         8         5     0.00000000%
+                  1         9         4     0.00000000%
+                  1        10         3     0.00000000%
+                  1        11         2     0.51619089%
+                  1        12         1    14.14787794%
+                  1        13         0    85.33040645%
+    ---------------------------------------------------
+
+  ==> Pruning the Q space <==
+
+  Added 1 missing determinants in aimed selection (prune_q_space).
+  Cycle 0 took: 6.032591 s
+
+
+  ---------------------------------- Cycle 1 -----------------------------------
+
+  ==> Diagonalizing the Hamiltonian in the P space <==
+
+  Initial P space dimension: 16
+  Spin-complete dimension of the P space: 22 determinants
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1        139
+         2          3
+         3          3
+        α          8.030e-05 seconds
+        β          4.040e-05 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+         1        374
+         2         17
+         3         15
+         4          1
+         5          1
+        αα         1.696e-04 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         1        838
+         2         44
+         3         24
+         4         10
+         5          8
+        αβ         2.654e-04 seconds
+        ββ         1.000e-04 seconds
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 8 roots with 2S+1 = 1 *
+  Found 11 roots with 2S+1 = 3
+  Found 3 roots with 2S+1 = 5
+  Time spent diagonalizing H:   0.001274 s
+
+    P-space  CI Energy Root   0        = -92.875970464074 Eh =   0.0000 eV, S^2 = 0.000000
+
+
+  ==> Finding the Q space <==
+
+  Using SR screening algorithm
+  Time spent forming F space:             0.023274
+  Time spent merging thread F spaces:             0.015955
+  Size of F space: 80098
+  Time spent building sorting list: 0.014051
+  Added 1 missing determinants in aimed selection (find_q_space).
+  Dimension of the PQ space:                  244
+  Dimension of the PQ space (spin-complete) : 452
+  Time spent building the model space: 0.073122
+
+  ==> Diagonalizing the Hamiltonian in the P + Q space <==
+
+  Number of reference roots: 1
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1       2492
+         2        236
+         3         39
+         4          7
+         5          7
+         6          1
+         7          2
+        α          1.641e-03 seconds
+        β          1.402e-03 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+         1       5928
+         2        946
+         3        325
+         4         44
+         5         15
+         6         14
+         7          4
+         8          7
+         9         11
+        10          2
+        11         11
+        12          2
+        14          1
+        αα         4.020e-03 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         1      12542
+         2       2108
+         3        844
+         4        199
+         5         98
+         6         24
+         7         14
+         8         12
+         9         20
+        10         12
+        11         22
+        12         18
+        13         12
+        14          5
+        16          8
+        17          2
+        20          2
+        24          2
+        αβ         4.858e-03 seconds
+        ββ         1.941e-03 seconds
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Initial guess determinants:         50
+
+  Spin-adaptation of the initial guess based on minimum spin-complete subset
+  Initial guess determinants do not form a spin-complete set. 8 determinant(s) missing
+
+  Guess determinants after screening: 40
+
+  Initial guess solutions
+  ========================
+  Number   2S+1   Selected
+  ------------------------
+    15       1       *
+    20       3        
+     5       5        
+  ========================
+
+  Setting initial guess and roots to project
+  Adding guess 0        2S+1 = 1    E = -115.328176
+  Adding guess 1        2S+1 = 1    E = -114.565989
+  Projecting out guess  2S+1 = 3    E = -115.355092
+  Projecting out guess  2S+1 = 3    E = -114.584592
+  Projecting out guess  2S+1 = 5    E = -114.577377
+
+  Projecting out 3 solutions
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-10
+  Residual convergence: 1.00e-10
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -115.328176257910  -1.153e+02  +9.504e-01
+      2     -115.624146029351  -2.960e-01  +2.825e-01
+      3     -115.651903970415  -2.776e-02  +9.825e-02
+      4     -115.655028362404  -3.124e-03  +4.288e-02
+      5     -115.655575702121  -5.473e-04  +1.913e-02
+      6     -115.655744851492  -1.691e-04  +1.163e-02
+      7     -115.655789567828  -4.472e-05  +4.695e-03
+      8     -115.655796464665  -6.897e-06  +2.111e-03
+      9     -115.655798077052  -1.612e-06  +9.434e-04
+     10     -115.655798367065  -2.900e-07  +3.682e-04
+     11     -115.655798407160  -4.009e-08  +1.541e-04
+     12     -115.655798416981  -9.821e-09  +9.690e-05
+     13     -115.655798420865  -3.885e-09  +5.095e-05
+     14     -115.655798421626  -7.609e-10  +2.127e-05
+     15     -115.655798421814  -1.877e-10  +1.191e-05
+     16     -115.655798421877  -6.270e-11  +6.836e-06
+     17     -115.655798421892  -1.519e-11  +3.139e-06
+     18     -115.655798421896  -4.079e-12  +1.893e-06
+     19     -115.655798421897  -1.450e-12  +1.076e-06
+     20     -115.655798421898  -3.553e-13  +4.599e-07
+     21     -115.655798421898  -9.948e-14  +2.422e-07
+     22     -115.655798421898  +0.000e+00  +1.405e-07
+     23     -115.655798421898  +0.000e+00  +7.185e-08
+     24     -115.655798421898  -1.421e-14  +4.349e-08
+     25     -115.655798421898  -8.527e-14  +2.332e-08
+     26     -115.655798421898  +0.000e+00  +9.910e-09
+     27     -115.655798421898  +0.000e+00  +4.877e-09
+     28     -115.655798421898  +8.527e-14  +2.618e-09
+     29     -115.655798421898  -1.421e-14  +1.429e-09
+     30     -115.655798421898  +1.421e-14  +8.082e-10
+     31     -115.655798421898  -1.137e-13  +4.036e-10
+     32     -115.655798421898  +0.000e+00  +1.659e-10
+     33     -115.655798421898  +0.000e+00  +7.906e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 34 iterations.
+  Davidson-Liu procedure took  0.214791 s
+  Total time spent diagonalizing H:   0.230038 s
+
+    PQ-space CI Energy Root   0        = -93.051611113309 Eh =   0.0000 eV, S^2 = -0.000000
+    PQ-space CI Energy + EPT2 Root   0 = -93.151540338330 Eh =   0.0000 eV
+
+
+  ==> GAS Contribution Analysis <==
+
+  Root 0:
+    Config.  1_A  1_B  2_A  2_B  3_A  3_B  Contribution
+    ---------------------------------------------------
+         1     1    0    6    7    0    0  43.01311647%
+         2     0    1    7    6    0    0  43.01311647%
+         3     0    0    7    7    0    0   0.00194157%
+         4     1    0    6    6    0    1   3.23724638%
+         5     0    1    7    5    0    1   3.51912760%
+         6     0    0    7    6    0    1   0.00174091%
+         7     1    0    6    5    0    2   0.03120144%
+         8     0    1    7    4    0    2   0.01557031%
+         9     0    0    7    5    0    2   0.00000000%
+        10     1    0    6    4    0    3   0.00000000%
+        11     0    1    7    3    0    3   0.00000000%
+        12     0    0    7    4    0    3   0.00000000%
+        13     1    0    6    3    0    4   0.00000000%
+        14     0    1    7    2    0    4   0.00000000%
+        15     0    0    7    3    0    4   0.00000000%
+        16     1    0    6    2    0    5   0.00000000%
+        17     0    1    7    1    0    5   0.00000000%
+        18     0    0    7    2    0    5   0.00000000%
+        19     1    0    6    1    0    6   0.00000000%
+        20     0    1    7    0    0    6   0.00000000%
+        21     0    0    7    1    0    6   0.00000000%
+        22     1    0    6    0    0    7   0.00000000%
+        23     0    0    7    0    0    7   0.00000000%
+        24     1    0    5    7    1    0   3.51912760%
+        25     0    1    6    6    1    0   3.23724638%
+        26     0    0    6    7    1    0   0.00174091%
+        27     1    0    5    6    1    1   0.16852611%
+        28     0    1    6    5    1    1   0.16852611%
+        29     0    0    6    6    1    1   0.00000000%
+        30     1    0    5    5    1    2   0.00543271%
+        31     0    1    6    4    1    2   0.00706728%
+        32     0    0    6    5    1    2   0.00000000%
+        33     1    0    5    4    1    3   0.00000000%
+        34     0    1    6    3    1    3   0.00000000%
+        35     0    0    6    4    1    3   0.00000000%
+        36     1    0    5    3    1    4   0.00000000%
+        37     0    1    6    2    1    4   0.00000000%
+        38     0    0    6    3    1    4   0.00000000%
+        39     1    0    5    2    1    5   0.00000000%
+        40     0    1    6    1    1    5   0.00000000%
+        41     0    0    6    2    1    5   0.00000000%
+        42     1    0    5    1    1    6   0.00000000%
+        43     0    1    6    0    1    6   0.00000000%
+        44     0    0    6    1    1    6   0.00000000%
+        45     1    0    5    0    1    7   0.00000000%
+        46     0    0    6    0    1    7   0.00000000%
+        47     1    0    4    7    2    0   0.01557031%
+        48     0    1    5    6    2    0   0.03120144%
+        49     0    0    5    7    2    0   0.00000000%
+        50     1    0    4    6    2    1   0.00706728%
+        51     0    1    5    5    2    1   0.00543271%
+        52     0    0    5    6    2    1   0.00000000%
+        53     1    0    4    5    2    2   0.00000000%
+        54     0    1    5    4    2    2   0.00000000%
+        55     0    0    5    5    2    2   0.00000000%
+        56     1    0    4    4    2    3   0.00000000%
+        57     0    1    5    3    2    3   0.00000000%
+        58     0    0    5    4    2    3   0.00000000%
+        59     1    0    4    3    2    4   0.00000000%
+        60     0    1    5    2    2    4   0.00000000%
+        61     0    0    5    3    2    4   0.00000000%
+        62     1    0    4    2    2    5   0.00000000%
+        63     0    1    5    1    2    5   0.00000000%
+        64     0    0    5    2    2    5   0.00000000%
+        65     1    0    4    1    2    6   0.00000000%
+        66     0    1    5    0    2    6   0.00000000%
+        67     0    0    5    1    2    6   0.00000000%
+        68     1    0    4    0    2    7   0.00000000%
+        69     0    0    5    0    2    7   0.00000000%
+        70     1    0    3    7    3    0   0.00000000%
+        71     0    1    4    6    3    0   0.00000000%
+        72     0    0    4    7    3    0   0.00000000%
+        73     1    0    3    6    3    1   0.00000000%
+        74     0    1    4    5    3    1   0.00000000%
+        75     0    0    4    6    3    1   0.00000000%
+        76     1    0    3    5    3    2   0.00000000%
+        77     0    1    4    4    3    2   0.00000000%
+        78     0    0    4    5    3    2   0.00000000%
+        79     1    0    3    4    3    3   0.00000000%
+        80     0    1    4    3    3    3   0.00000000%
+        81     0    0    4    4    3    3   0.00000000%
+        82     1    0    3    3    3    4   0.00000000%
+        83     0    1    4    2    3    4   0.00000000%
+        84     0    0    4    3    3    4   0.00000000%
+        85     1    0    3    2    3    5   0.00000000%
+        86     0    1    4    1    3    5   0.00000000%
+        87     0    0    4    2    3    5   0.00000000%
+        88     1    0    3    1    3    6   0.00000000%
+        89     0    1    4    0    3    6   0.00000000%
+        90     0    0    4    1    3    6   0.00000000%
+        91     1    0    3    0    3    7   0.00000000%
+        92     0    0    4    0    3    7   0.00000000%
+        93     1    0    2    7    4    0   0.00000000%
+        94     0    1    3    6    4    0   0.00000000%
+        95     0    0    3    7    4    0   0.00000000%
+        96     1    0    2    6    4    1   0.00000000%
+        97     0    1    3    5    4    1   0.00000000%
+        98     0    0    3    6    4    1   0.00000000%
+        99     1    0    2    5    4    2   0.00000000%
+       100     0    1    3    4    4    2   0.00000000%
+       101     0    0    3    5    4    2   0.00000000%
+       102     1    0    2    4    4    3   0.00000000%
+       103     0    1    3    3    4    3   0.00000000%
+       104     0    0    3    4    4    3   0.00000000%
+       105     1    0    2    3    4    4   0.00000000%
+       106     0    1    3    2    4    4   0.00000000%
+       107     0    0    3    3    4    4   0.00000000%
+       108     1    0    2    2    4    5   0.00000000%
+       109     0    1    3    1    4    5   0.00000000%
+       110     0    0    3    2    4    5   0.00000000%
+       111     1    0    2    1    4    6   0.00000000%
+       112     0    1    3    0    4    6   0.00000000%
+       113     0    0    3    1    4    6   0.00000000%
+       114     1    0    2    0    4    7   0.00000000%
+       115     0    0    3    0    4    7   0.00000000%
+       116     1    0    1    7    5    0   0.00000000%
+       117     0    1    2    6    5    0   0.00000000%
+       118     0    0    2    7    5    0   0.00000000%
+       119     1    0    1    6    5    1   0.00000000%
+       120     0    1    2    5    5    1   0.00000000%
+       121     0    0    2    6    5    1   0.00000000%
+       122     1    0    1    5    5    2   0.00000000%
+       123     0    1    2    4    5    2   0.00000000%
+       124     0    0    2    5    5    2   0.00000000%
+       125     1    0    1    4    5    3   0.00000000%
+       126     0    1    2    3    5    3   0.00000000%
+       127     0    0    2    4    5    3   0.00000000%
+       128     1    0    1    3    5    4   0.00000000%
+       129     0    1    2    2    5    4   0.00000000%
+       130     0    0    2    3    5    4   0.00000000%
+       131     1    0    1    2    5    5   0.00000000%
+       132     0    1    2    1    5    5   0.00000000%
+       133     0    0    2    2    5    5   0.00000000%
+       134     1    0    1    1    5    6   0.00000000%
+       135     0    1    2    0    5    6   0.00000000%
+       136     0    0    2    1    5    6   0.00000000%
+       137     1    0    1    0    5    7   0.00000000%
+       138     0    0    2    0    5    7   0.00000000%
+       139     1    0    0    7    6    0   0.00000000%
+       140     0    1    1    6    6    0   0.00000000%
+       141     0    0    1    7    6    0   0.00000000%
+       142     1    0    0    6    6    1   0.00000000%
+       143     0    1    1    5    6    1   0.00000000%
+       144     0    0    1    6    6    1   0.00000000%
+       145     1    0    0    5    6    2   0.00000000%
+       146     0    1    1    4    6    2   0.00000000%
+       147     0    0    1    5    6    2   0.00000000%
+       148     1    0    0    4    6    3   0.00000000%
+       149     0    1    1    3    6    3   0.00000000%
+       150     0    0    1    4    6    3   0.00000000%
+       151     1    0    0    3    6    4   0.00000000%
+       152     0    1    1    2    6    4   0.00000000%
+       153     0    0    1    3    6    4   0.00000000%
+       154     1    0    0    2    6    5   0.00000000%
+       155     0    1    1    1    6    5   0.00000000%
+       156     0    0    1    2    6    5   0.00000000%
+       157     1    0    0    1    6    6   0.00000000%
+       158     0    1    1    0    6    6   0.00000000%
+       159     0    0    1    1    6    6   0.00000000%
+       160     1    0    0    0    6    7   0.00000000%
+       161     0    0    1    0    6    7   0.00000000%
+       162     0    1    0    6    7    0   0.00000000%
+       163     0    0    0    7    7    0   0.00000000%
+       164     0    1    0    5    7    1   0.00000000%
+       165     0    0    0    6    7    1   0.00000000%
+       166     0    1    0    4    7    2   0.00000000%
+       167     0    0    0    5    7    2   0.00000000%
+       168     0    1    0    3    7    3   0.00000000%
+       169     0    0    0    4    7    3   0.00000000%
+       170     0    1    0    2    7    4   0.00000000%
+       171     0    0    0    3    7    4   0.00000000%
+       172     0    1    0    1    7    5   0.00000000%
+       173     0    0    0    2    7    5   0.00000000%
+       174     0    1    0    0    7    6   0.00000000%
+       175     0    0    0    1    7    6   0.00000000%
+       176     0    0    0    0    7    7   0.00000000%
+    ---------------------------------------------------
+               GAS1      GAS2      GAS3    Contribution
+    ---------------------------------------------------
+                  0         0        14     0.00000000%
+                  0         1        13     0.00000000%
+                  0         2        12     0.00000000%
+                  0         3        11     0.00000000%
+                  0         4        10     0.00000000%
+                  0         5         9     0.00000000%
+                  0         6         8     0.00000000%
+                  0         7         7     0.00000000%
+                  0         8         6     0.00000000%
+                  0         9         5     0.00000000%
+                  0        10         4     0.00000000%
+                  0        11         3     0.00000000%
+                  0        12         2     0.00000000%
+                  0        13         1     0.00348182%
+                  0        14         0     0.00194157%
+                  1         0        13     0.00000000%
+                  1         1        12     0.00000000%
+                  1         2        11     0.00000000%
+                  1         3        10     0.00000000%
+                  1         4         9     0.00000000%
+                  1         5         8     0.00000000%
+                  1         6         7     0.00000000%
+                  1         7         6     0.00000000%
+                  1         8         5     0.00000000%
+                  1         9         4     0.00000000%
+                  1        10         3     0.02499998%
+                  1        11         2     0.43059571%
+                  1        12         1    13.51274797%
+                  1        13         0    86.02623295%
+    ---------------------------------------------------
+
+  ==> Pruning the Q space <==
+
+  Added 1 missing determinants in aimed selection (prune_q_space).
+  Cycle 1 took: 0.318192 s
+
+
+  ---------------------------------- Cycle 2 -----------------------------------
+
+  ==> Diagonalizing the Hamiltonian in the P space <==
+
+  Initial P space dimension: 14
+  Spin-complete dimension of the P space: 22 determinants
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1        139
+         2          3
+         3          3
+        α          9.500e-05 seconds
+        β          4.810e-05 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+         1        374
+         2         17
+         3         15
+         4          1
+         5          1
+        αα         1.833e-04 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         1        838
+         2         44
+         3         24
+         4         10
+         5          8
+        αβ         3.085e-04 seconds
+        ββ         1.172e-04 seconds
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing full diagonalization of the H matrix
+  Found 8 roots with 2S+1 = 1 *
+  Found 11 roots with 2S+1 = 3
+  Found 3 roots with 2S+1 = 5
+  Time spent diagonalizing H:   0.001424 s
+
+    P-space  CI Energy Root   0        = -92.875970464074 Eh =   0.0000 eV, S^2 = 0.000000
+
+
+  ==> Finding the Q space <==
+
+  Using SR screening algorithm
+  Time spent forming F space:             0.014201
+  Time spent merging thread F spaces:             0.012942
+  Size of F space: 80098
+  Time spent building sorting list: 0.031523
+  Added 1 missing determinants in aimed selection (find_q_space).
+  Dimension of the PQ space:                  244
+  Dimension of the PQ space (spin-complete) : 452
+  Time spent building the model space: 0.079695
+
+  ==> Diagonalizing the Hamiltonian in the P + Q space <==
+
+  Number of reference roots: 1
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1       2492
+         2        236
+         3         39
+         4          7
+         5          7
+         6          1
+         7          2
+        α          8.055e-04 seconds
+        β          6.930e-04 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+         1       5928
+         2        946
+         3        325
+         4         44
+         5         15
+         6         14
+         7          4
+         8          7
+         9         11
+        10          2
+        11         11
+        12          2
+        14          1
+        αα         4.003e-03 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         1      12542
+         2       2108
+         3        844
+         4        199
+         5         98
+         6         24
+         7         14
+         8         12
+         9         20
+        10         12
+        11         22
+        12         18
+        13         12
+        14          5
+        16          8
+        17          2
+        20          2
+        24          2
+        αβ         1.014e-02 seconds
+        ββ         4.038e-03 seconds
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Initial guess determinants:         50
+
+  Spin-adaptation of the initial guess based on minimum spin-complete subset
+  Initial guess determinants do not form a spin-complete set. 8 determinant(s) missing
+
+  Guess determinants after screening: 40
+
+  Initial guess solutions
+  ========================
+  Number   2S+1   Selected
+  ------------------------
+    15       1       *
+    20       3        
+     5       5        
+  ========================
+
+  Setting initial guess and roots to project
+  Adding guess 0        2S+1 = 1    E = -115.328176
+  Adding guess 1        2S+1 = 1    E = -114.565989
+  Projecting out guess  2S+1 = 3    E = -115.355092
+  Projecting out guess  2S+1 = 3    E = -114.584592
+  Projecting out guess  2S+1 = 5    E = -114.577377
+
+  Projecting out 3 solutions
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-10
+  Residual convergence: 1.00e-10
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -115.328176257910  -1.153e+02  +9.504e-01
+      2     -115.624146029351  -2.960e-01  +2.825e-01
+      3     -115.651903970415  -2.776e-02  +9.825e-02
+      4     -115.655028362404  -3.124e-03  +4.288e-02
+      5     -115.655575702120  -5.473e-04  +1.913e-02
+      6     -115.655744851492  -1.691e-04  +1.163e-02
+      7     -115.655789567829  -4.472e-05  +4.695e-03
+      8     -115.655796464665  -6.897e-06  +2.111e-03
+      9     -115.655798077052  -1.612e-06  +9.434e-04
+     10     -115.655798367065  -2.900e-07  +3.682e-04
+     11     -115.655798407160  -4.009e-08  +1.541e-04
+     12     -115.655798416981  -9.821e-09  +9.690e-05
+     13     -115.655798420865  -3.885e-09  +5.095e-05
+     14     -115.655798421626  -7.609e-10  +2.127e-05
+     15     -115.655798421814  -1.877e-10  +1.191e-05
+     16     -115.655798421877  -6.263e-11  +6.836e-06
+     17     -115.655798421892  -1.519e-11  +3.139e-06
+     18     -115.655798421896  -4.079e-12  +1.893e-06
+     19     -115.655798421898  -1.577e-12  +1.076e-06
+     20     -115.655798421898  -3.553e-13  +4.599e-07
+     21     -115.655798421898  -9.948e-14  +2.422e-07
+     22     -115.655798421898  +1.705e-13  +1.405e-07
+     23     -115.655798421898  +0.000e+00  +7.185e-08
+     24     -115.655798421898  +0.000e+00  +4.349e-08
+     25     -115.655798421898  -1.137e-13  +2.332e-08
+     26     -115.655798421898  +0.000e+00  +9.910e-09
+     27     -115.655798421898  +0.000e+00  +4.877e-09
+     28     -115.655798421898  +1.137e-13  +2.618e-09
+     29     -115.655798421898  -1.421e-14  +1.430e-09
+     30     -115.655798421898  +1.421e-14  +8.082e-10
+     31     -115.655798421898  -1.137e-13  +4.036e-10
+     32     -115.655798421898  +0.000e+00  +1.658e-10
+     33     -115.655798421898  +0.000e+00  +7.906e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 34 iterations.
+  Davidson-Liu procedure took  0.215796 s
+  Total time spent diagonalizing H:   0.236550 s
+
+    PQ-space CI Energy Root   0        = -93.051611113309 Eh =   0.0000 eV, S^2 = -0.000000
+    PQ-space CI Energy + EPT2 Root   0 = -93.151540338330 Eh =   0.0000 eV
+
+
+  ==> GAS Contribution Analysis <==
+
+  Root 0:
+    Config.  1_A  1_B  2_A  2_B  3_A  3_B  Contribution
+    ---------------------------------------------------
+         1     1    0    6    7    0    0  43.01311647%
+         2     0    1    7    6    0    0  43.01311647%
+         3     0    0    7    7    0    0   0.00194157%
+         4     1    0    6    6    0    1   3.23724638%
+         5     0    1    7    5    0    1   3.51912760%
+         6     0    0    7    6    0    1   0.00174091%
+         7     1    0    6    5    0    2   0.03120144%
+         8     0    1    7    4    0    2   0.01557031%
+         9     0    0    7    5    0    2   0.00000000%
+        10     1    0    6    4    0    3   0.00000000%
+        11     0    1    7    3    0    3   0.00000000%
+        12     0    0    7    4    0    3   0.00000000%
+        13     1    0    6    3    0    4   0.00000000%
+        14     0    1    7    2    0    4   0.00000000%
+        15     0    0    7    3    0    4   0.00000000%
+        16     1    0    6    2    0    5   0.00000000%
+        17     0    1    7    1    0    5   0.00000000%
+        18     0    0    7    2    0    5   0.00000000%
+        19     1    0    6    1    0    6   0.00000000%
+        20     0    1    7    0    0    6   0.00000000%
+        21     0    0    7    1    0    6   0.00000000%
+        22     1    0    6    0    0    7   0.00000000%
+        23     0    0    7    0    0    7   0.00000000%
+        24     1    0    5    7    1    0   3.51912760%
+        25     0    1    6    6    1    0   3.23724638%
+        26     0    0    6    7    1    0   0.00174091%
+        27     1    0    5    6    1    1   0.16852611%
+        28     0    1    6    5    1    1   0.16852611%
+        29     0    0    6    6    1    1   0.00000000%
+        30     1    0    5    5    1    2   0.00543271%
+        31     0    1    6    4    1    2   0.00706728%
+        32     0    0    6    5    1    2   0.00000000%
+        33     1    0    5    4    1    3   0.00000000%
+        34     0    1    6    3    1    3   0.00000000%
+        35     0    0    6    4    1    3   0.00000000%
+        36     1    0    5    3    1    4   0.00000000%
+        37     0    1    6    2    1    4   0.00000000%
+        38     0    0    6    3    1    4   0.00000000%
+        39     1    0    5    2    1    5   0.00000000%
+        40     0    1    6    1    1    5   0.00000000%
+        41     0    0    6    2    1    5   0.00000000%
+        42     1    0    5    1    1    6   0.00000000%
+        43     0    1    6    0    1    6   0.00000000%
+        44     0    0    6    1    1    6   0.00000000%
+        45     1    0    5    0    1    7   0.00000000%
+        46     0    0    6    0    1    7   0.00000000%
+        47     1    0    4    7    2    0   0.01557031%
+        48     0    1    5    6    2    0   0.03120144%
+        49     0    0    5    7    2    0   0.00000000%
+        50     1    0    4    6    2    1   0.00706728%
+        51     0    1    5    5    2    1   0.00543271%
+        52     0    0    5    6    2    1   0.00000000%
+        53     1    0    4    5    2    2   0.00000000%
+        54     0    1    5    4    2    2   0.00000000%
+        55     0    0    5    5    2    2   0.00000000%
+        56     1    0    4    4    2    3   0.00000000%
+        57     0    1    5    3    2    3   0.00000000%
+        58     0    0    5    4    2    3   0.00000000%
+        59     1    0    4    3    2    4   0.00000000%
+        60     0    1    5    2    2    4   0.00000000%
+        61     0    0    5    3    2    4   0.00000000%
+        62     1    0    4    2    2    5   0.00000000%
+        63     0    1    5    1    2    5   0.00000000%
+        64     0    0    5    2    2    5   0.00000000%
+        65     1    0    4    1    2    6   0.00000000%
+        66     0    1    5    0    2    6   0.00000000%
+        67     0    0    5    1    2    6   0.00000000%
+        68     1    0    4    0    2    7   0.00000000%
+        69     0    0    5    0    2    7   0.00000000%
+        70     1    0    3    7    3    0   0.00000000%
+        71     0    1    4    6    3    0   0.00000000%
+        72     0    0    4    7    3    0   0.00000000%
+        73     1    0    3    6    3    1   0.00000000%
+        74     0    1    4    5    3    1   0.00000000%
+        75     0    0    4    6    3    1   0.00000000%
+        76     1    0    3    5    3    2   0.00000000%
+        77     0    1    4    4    3    2   0.00000000%
+        78     0    0    4    5    3    2   0.00000000%
+        79     1    0    3    4    3    3   0.00000000%
+        80     0    1    4    3    3    3   0.00000000%
+        81     0    0    4    4    3    3   0.00000000%
+        82     1    0    3    3    3    4   0.00000000%
+        83     0    1    4    2    3    4   0.00000000%
+        84     0    0    4    3    3    4   0.00000000%
+        85     1    0    3    2    3    5   0.00000000%
+        86     0    1    4    1    3    5   0.00000000%
+        87     0    0    4    2    3    5   0.00000000%
+        88     1    0    3    1    3    6   0.00000000%
+        89     0    1    4    0    3    6   0.00000000%
+        90     0    0    4    1    3    6   0.00000000%
+        91     1    0    3    0    3    7   0.00000000%
+        92     0    0    4    0    3    7   0.00000000%
+        93     1    0    2    7    4    0   0.00000000%
+        94     0    1    3    6    4    0   0.00000000%
+        95     0    0    3    7    4    0   0.00000000%
+        96     1    0    2    6    4    1   0.00000000%
+        97     0    1    3    5    4    1   0.00000000%
+        98     0    0    3    6    4    1   0.00000000%
+        99     1    0    2    5    4    2   0.00000000%
+       100     0    1    3    4    4    2   0.00000000%
+       101     0    0    3    5    4    2   0.00000000%
+       102     1    0    2    4    4    3   0.00000000%
+       103     0    1    3    3    4    3   0.00000000%
+       104     0    0    3    4    4    3   0.00000000%
+       105     1    0    2    3    4    4   0.00000000%
+       106     0    1    3    2    4    4   0.00000000%
+       107     0    0    3    3    4    4   0.00000000%
+       108     1    0    2    2    4    5   0.00000000%
+       109     0    1    3    1    4    5   0.00000000%
+       110     0    0    3    2    4    5   0.00000000%
+       111     1    0    2    1    4    6   0.00000000%
+       112     0    1    3    0    4    6   0.00000000%
+       113     0    0    3    1    4    6   0.00000000%
+       114     1    0    2    0    4    7   0.00000000%
+       115     0    0    3    0    4    7   0.00000000%
+       116     1    0    1    7    5    0   0.00000000%
+       117     0    1    2    6    5    0   0.00000000%
+       118     0    0    2    7    5    0   0.00000000%
+       119     1    0    1    6    5    1   0.00000000%
+       120     0    1    2    5    5    1   0.00000000%
+       121     0    0    2    6    5    1   0.00000000%
+       122     1    0    1    5    5    2   0.00000000%
+       123     0    1    2    4    5    2   0.00000000%
+       124     0    0    2    5    5    2   0.00000000%
+       125     1    0    1    4    5    3   0.00000000%
+       126     0    1    2    3    5    3   0.00000000%
+       127     0    0    2    4    5    3   0.00000000%
+       128     1    0    1    3    5    4   0.00000000%
+       129     0    1    2    2    5    4   0.00000000%
+       130     0    0    2    3    5    4   0.00000000%
+       131     1    0    1    2    5    5   0.00000000%
+       132     0    1    2    1    5    5   0.00000000%
+       133     0    0    2    2    5    5   0.00000000%
+       134     1    0    1    1    5    6   0.00000000%
+       135     0    1    2    0    5    6   0.00000000%
+       136     0    0    2    1    5    6   0.00000000%
+       137     1    0    1    0    5    7   0.00000000%
+       138     0    0    2    0    5    7   0.00000000%
+       139     1    0    0    7    6    0   0.00000000%
+       140     0    1    1    6    6    0   0.00000000%
+       141     0    0    1    7    6    0   0.00000000%
+       142     1    0    0    6    6    1   0.00000000%
+       143     0    1    1    5    6    1   0.00000000%
+       144     0    0    1    6    6    1   0.00000000%
+       145     1    0    0    5    6    2   0.00000000%
+       146     0    1    1    4    6    2   0.00000000%
+       147     0    0    1    5    6    2   0.00000000%
+       148     1    0    0    4    6    3   0.00000000%
+       149     0    1    1    3    6    3   0.00000000%
+       150     0    0    1    4    6    3   0.00000000%
+       151     1    0    0    3    6    4   0.00000000%
+       152     0    1    1    2    6    4   0.00000000%
+       153     0    0    1    3    6    4   0.00000000%
+       154     1    0    0    2    6    5   0.00000000%
+       155     0    1    1    1    6    5   0.00000000%
+       156     0    0    1    2    6    5   0.00000000%
+       157     1    0    0    1    6    6   0.00000000%
+       158     0    1    1    0    6    6   0.00000000%
+       159     0    0    1    1    6    6   0.00000000%
+       160     1    0    0    0    6    7   0.00000000%
+       161     0    0    1    0    6    7   0.00000000%
+       162     0    1    0    6    7    0   0.00000000%
+       163     0    0    0    7    7    0   0.00000000%
+       164     0    1    0    5    7    1   0.00000000%
+       165     0    0    0    6    7    1   0.00000000%
+       166     0    1    0    4    7    2   0.00000000%
+       167     0    0    0    5    7    2   0.00000000%
+       168     0    1    0    3    7    3   0.00000000%
+       169     0    0    0    4    7    3   0.00000000%
+       170     0    1    0    2    7    4   0.00000000%
+       171     0    0    0    3    7    4   0.00000000%
+       172     0    1    0    1    7    5   0.00000000%
+       173     0    0    0    2    7    5   0.00000000%
+       174     0    1    0    0    7    6   0.00000000%
+       175     0    0    0    1    7    6   0.00000000%
+       176     0    0    0    0    7    7   0.00000000%
+    ---------------------------------------------------
+               GAS1      GAS2      GAS3    Contribution
+    ---------------------------------------------------
+                  0         0        14     0.00000000%
+                  0         1        13     0.00000000%
+                  0         2        12     0.00000000%
+                  0         3        11     0.00000000%
+                  0         4        10     0.00000000%
+                  0         5         9     0.00000000%
+                  0         6         8     0.00000000%
+                  0         7         7     0.00000000%
+                  0         8         6     0.00000000%
+                  0         9         5     0.00000000%
+                  0        10         4     0.00000000%
+                  0        11         3     0.00000000%
+                  0        12         2     0.00000000%
+                  0        13         1     0.00348182%
+                  0        14         0     0.00194157%
+                  1         0        13     0.00000000%
+                  1         1        12     0.00000000%
+                  1         2        11     0.00000000%
+                  1         3        10     0.00000000%
+                  1         4         9     0.00000000%
+                  1         5         8     0.00000000%
+                  1         6         7     0.00000000%
+                  1         7         6     0.00000000%
+                  1         8         5     0.00000000%
+                  1         9         4     0.00000000%
+                  1        10         3     0.02499998%
+                  1        11         2     0.43059571%
+                  1        12         1    13.51274797%
+                  1        13         0    86.02623295%
+    ---------------------------------------------------
+  ***** Calculation Converged *****
+
+  ==> ACI Natural Orbitals <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1       2492
+         2        236
+         3         39
+         4          7
+         5          7
+         6          1
+         7          2
+        1A1     2.000000      2A1     1.997624      3A1     1.993924  
+        1B1     1.988932      1B2     1.984368      4A1     1.983393  
+        2B1     1.000833      5A1     0.999986      2B2     0.019602  
+        6A1     0.007919      3B1     0.007610      3B2     0.004543  
+        7A1     0.003252      8A1     0.002514      4B1     0.002021  
+        5B1     0.001151      4B2     0.000718      9A1     0.000710  
+       10A1     0.000602     11A1     0.000197     12A1     0.000059  
+        6B1     0.000033      5B2     0.000008      6B2     0.000000  
+
+  ==> Excited state solver summary <==
+
+  Iterations required:                         2
+  Dimension of optimized determinant space:    452
+
+  * Selected-CI Energy Root   0        = -93.051611113309 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0 + EPT2 = -93.151540338330 Eh =   0.0000 eV
+
+  ==> Wavefunction Information <==
+
+  Most important contributions to root   0:
+    0   0.608217 0.369927623          12 |+222200000002-0000200000>
+    1   0.608217 0.369927623          11 |-222200000002+0000200000>
+    2  -0.152453 0.023241888          10 |-22220000000+20000200000>
+    3  -0.152453 0.023241888           9 |+22220000000-20000200000>
+    4  -0.131726 0.017351704           8 |-222200000002+0000+-0000>
+    5  -0.131726 0.017351704           7 |+222200000002-0000-+0000>
+    6  -0.113338 0.012845576           5 |+222200000002-0000+-0000>
+    7  -0.113338 0.012845576           6 |-222200000002+0000-+0000>
+    8  -0.113036 0.012777241           4 |+22220000000--0+00200000>
+    9  -0.113036 0.012777241           3 |-22220000000++0-00200000>
+
+  Saving information for root: 0
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    B1     0      -93.051611113309  -0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+        α          1.930e-05 seconds
+        β          4.900e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         1.900e-05 seconds
+  (N-2) ab lists size counts
+      Size      Count
+        αβ         1.890e-05 seconds
+        ββ         5.000e-06 seconds
+  (N-1) a lists size counts
+      Size      Count
+         1       2492
+         2        236
+         3         39
+         4          7
+         5          7
+         6          1
+         7          2
+  1-RDM  took 0.004819 s (determinant)
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0B1     0.00000000     0.00000000     0.67016677     0.67016677
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00231445     0.00231445
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1 <==
+
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+        α          3.420e-05 seconds
+        β          8.100e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         3.410e-05 seconds
+  (N-2) ab lists size counts
+      Size      Count
+        αβ         3.460e-05 seconds
+        ββ         8.100e-06 seconds
+  (N-1) a lists size counts
+      Size      Count
+         1       2492
+         2        236
+         3         39
+         4          7
+         5          7
+         6          1
+         7          2
+  1-RDM  took 0.004725 s (determinant)
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0B1    -8.56712258     0.00000000     0.00000000    -7.01347920     0.00000000    -9.74183768
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.46029913
+    --------------------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        0.218 seconds
+  Time to run job          :        6.791 seconds
+  Total                    :        7.009 seconds
+    ACI energy............................................................................PASSED
+    ACI+PT2 energy........................................................................PASSED
+
+    Psi4 stopped on: Friday, 30 June 2023 06:18AM
+    Psi4 wall time for execution: 0:00:07.67
+
+*** Psi4 exiting successfully. Buy a developer a beer!

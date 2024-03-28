@@ -78,7 +78,10 @@ void AdaptiveCI::startup() {
 
     gas_iteration_ = false;
     if (options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE" or
-        options_->get_str("ACTIVE_REF_TYPE") == "GAS") {
+        options_->get_str("ACTIVE_REF_TYPE") == "GAS" or
+        options_->get_str("ACTIVE_REF_TYPE") == "GAS_CIS" or
+        options_->get_str("ACTIVE_REF_TYPE") == "GAS_CISD" or
+        options_->get_str("ACTIVE_REF_TYPE") == "GAS_CID") {
         gas_iteration_ = true;
     }
 
@@ -573,19 +576,15 @@ void AdaptiveCI::pre_iter_preparation() {
         gas_single_criterion_ = ref.gas_single_criterion();
         gas_double_criterion_ = ref.gas_double_criterion();
         gas_electrons_ = ref.gas_electrons();
+        rel_gas_mos.clear();
         for (size_t gas_count = 0; gas_count < 6; gas_count++) {
             std::string space = "GAS" + std::to_string(gas_count + 1);
-            std::vector<size_t> relative_mo;
-            auto gas_mo = mo_space_info_->absolute_mo(space);
-            for (size_t i = 0, imax = gas_mo.size(); i < imax; ++i) {
-                relative_mo.push_back(re_ab_mo[gas_mo[i]]);
-            }
-            if (!relative_mo.empty()) {
-                gas_num_ = gas_num_ + 1;
-            }
-
-            relative_gas_mo_.push_back(relative_mo);
+            auto abs_mos = mo_space_info_->absolute_mo(space);
+            if (abs_mos.size() == 0)
+                continue;
+            rel_gas_mos.push_back(mo_space_info_->pos_in_space(space, "ACTIVE"));
         }
+        gas_num_ = rel_gas_mos.size();
     }
     if ((options_->get_bool("SCI_CORE_EX")) and (root_ > 0)) {
 
@@ -954,7 +953,7 @@ void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, std::shared_ptr<psi::M
                 std::vector<int> occ_b;
                 std::vector<int> vir_a;
                 std::vector<int> vir_b;
-                for (const auto& p : relative_gas_mo_[gas_count]) {
+                for (const auto& p : rel_gas_mos[gas_count]) {
                     if (det.get_alfa_bit(p)) {
                         occ_a.push_back(p);
                     } else {

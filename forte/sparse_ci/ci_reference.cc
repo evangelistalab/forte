@@ -83,6 +83,9 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     // Size of subspace
     subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");
 
+    // The number of GAS to build the reference
+    gas_ref_num_ = options->get_int("GAS_REF_COUNT");
+
     // Reference type
     ref_type_ = options->get_str("ACTIVE_REF_TYPE");
 
@@ -106,6 +109,9 @@ void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
     } else if (ref_type_ == "GAS_SINGLE") {
         // Low(est) energy one in GAS
         build_gas_single(ref_space);
+    } else if (ref_type_ == "GAS_CIS" or ref_type_ == "GAS_CISD" or ref_type_ == "GAS_CID") {
+        build_gas_single(ref_space);
+        build_gas_ci_reference(ref_space);
     } else {
         build_ci_reference(ref_space);
     }
@@ -649,7 +655,7 @@ CI_Reference::build_gas_occ_string(const std::vector<std::vector<std::vector<boo
 void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     // build the determinant from aufbau principle
     print_gas_scf_epsilon();
-    get_gas_occupation();
+    get_gas_occupation(6);
     ref_space.clear();
 
     std::vector<std::vector<size_t>> rel_gas_mos;     // relative indices within active
@@ -856,7 +862,6 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                 double e = std::get<0>(a) + std::get<0>(b);
                 double e_check = std::get<0>(a) * std::get<0>(b);
                 Determinant det(std::get<1>(a), std::get<1>(b));
-
                 if (e < e_min and (nalpha_ + nbeta_ - 2 * det.npair() + 1) >= multiplicity_ and
                     e_check != 0) {
                     det_min = det;
@@ -865,7 +870,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
             }
             if (e_min != 0.0) {
                 ref_space.push_back(det_min);
-                outfile->Printf("\n    Reference determinant: %s", str(det_min, nact_).c_str());
+                outfile->Printf("\n    Aufbau determinant: %s", str(det_min, nact_).c_str());
                 break;
             }
             sub_orb++;
@@ -875,14 +880,18 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 
 void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     print_gas_scf_epsilon();
-    get_gas_occupation();
-
+    // build gas determinants using only first gas_ref_num_ number of GAS
+    if (gas_ref_num_ != 6) {
+        outfile->Printf("\n ");
+        outfile->Printf("\n  Using only GAS1-GAS%d for reference space!", gas_ref_num_);
+    }
+    get_gas_occupation(gas_ref_num_);
     ref_space.clear();
 
     // relative indices within the active orbitals
     std::vector<std::vector<size_t>> rel_gas_mos;
 
-    for (int gas = 0; gas < 6; ++gas) {
+    for (int gas = 0; gas < gas_ref_num_; ++gas) {
         std::string space_name = "GAS" + std::to_string(gas + 1);
         auto abs_mos = mo_space_info_->absolute_mo(space_name);
         if (abs_mos.size() == 0)
@@ -991,14 +1000,250 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     //    for (const auto& det : ref_space) {
     //        outfile->Printf("\n    %s", str(det, nact_).c_str());
     //    }
+
+    // Use all of GAS for further ACI calculation if the initial guess of ACI uses a small GAS
+    if (gas_ref_num_ != 6) {
+        outfile->Printf("\n  ");
+        outfile->Printf("\n  Reference space build up complete!");
+        get_gas_occupation(6);
+    }
 }
 
+void CI_Reference::build_gas_ci_reference(std::vector<Determinant>& ref_space) {
+
+    if (ref_space.size() != 1) {
+        throw psi::PSIEXCEPTION(
+            "The generation of the aufbau determinant under GAS is problematic!");
+    }
+
+    const Determinant det(ref_space[0]);
+
+    // relative indices within active
+    std::vector<std::vector<size_t>> rel_gas_mos;
+    for (int gas = 0; gas < 6; ++gas) {
+        std::string space_name = "GAS" + std::to_string(gas + 1);
+        auto abs_mos = mo_space_info_->absolute_mo(space_name);
+        if (abs_mos.size() == 0)
+            continue;
+        rel_gas_mos.push_back(mo_space_info_->pos_in_space(space_name, "ACTIVE"));
+    }
+
+    // Generate the occupied/virtual alpha/beta orbitals for aufbau determinant
+    std::vector<std::vector<int>> gas_occ_a;
+    std::vector<std::vector<int>> gas_vir_a;
+    std::vector<std::vector<int>> gas_occ_b;
+    std::vector<std::vector<int>> gas_vir_b;
+    for (size_t gas_count = 0; gas_count < gas_num_; gas_count++) {
+        std::vector<int> occ_a;
+        std::vector<int> occ_b;
+        std::vector<int> vir_a;
+        std::vector<int> vir_b;
+        for (const auto& p : rel_gas_mos[gas_count]) {
+            if (det.get_alfa_bit(p)) {
+                occ_a.push_back(p);
+            } else {
+                vir_a.push_back(p);
+            }
+            if (det.get_beta_bit(p)) {
+                occ_b.push_back(p);
+            } else {
+                vir_b.push_back(p);
+            }
+        }
+        gas_occ_a.push_back(occ_a);
+        gas_vir_a.push_back(vir_a);
+        gas_occ_b.push_back(occ_b);
+        gas_vir_b.push_back(vir_b);
+    }
+
+    // Generate the number of electrons in each GAS
+    std::vector<int> gas_configuration;
+    for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+        if (gas_count < gas_num_) {
+            gas_configuration.push_back(gas_occ_a[gas_count].size());
+            gas_configuration.push_back(gas_occ_b[gas_count].size());
+        } else {
+            gas_configuration.push_back(0);
+            gas_configuration.push_back(0);
+        }
+    }
+
+    if ((ref_type_ == "GAS_CIS") or (ref_type_ == "GAS_CISD")) {
+        auto gas_single_criterion_ = gas_single_criterion();
+
+        // Generate a excitations
+        for (auto& [gas_count_i, gas_count_a] : gas_single_criterion_.first[gas_configuration]) {
+
+            // gas_single_criterion_.first stores all allowed i,a for alpha electron transition
+            // from GAS_count_i to GAS_count_a
+
+            auto& occ = gas_occ_a[gas_count_i];
+            auto& vir = gas_vir_a[gas_count_a];
+
+            for (size_t ii : occ) {
+                for (size_t aa : vir) {
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                        Determinant new_det(det);
+                        new_det.set_alfa_bit(ii, false);
+                        new_det.set_alfa_bit(aa, true);
+                        ref_space.push_back(new_det);
+                    }
+                }
+            }
+        }
+
+        // Generate b excitations
+        for (auto& [gas_count_i, gas_count_a] : gas_single_criterion_.second[gas_configuration]) {
+
+            // gas_single_criterion_.second stores all allowed i,a for beta electron transition
+            // from GAS_count_i to GAS_count_a
+
+            auto& occ = gas_occ_b[gas_count_i];
+            auto& vir = gas_vir_b[gas_count_a];
+
+            for (size_t ii : occ) {
+                for (size_t aa : vir) {
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                        Determinant new_det(det);
+                        new_det.set_beta_bit(ii, false);
+                        new_det.set_beta_bit(aa, true);
+                        ref_space.push_back(new_det);
+                    }
+                }
+            }
+        }
+    }
+
+    if ((ref_type_ == "GAS_CID") or (ref_type_ == "GAS_CISD")) {
+        auto gas_double_criterion_ = gas_double_criterion();
+        // Generate aa excitations
+        for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+             std::get<0>(gas_double_criterion_)[gas_configuration]) {
+
+            // The first element of gas_double_criterion_ stores all allowed choice of i,j,a,b
+            // for two alpha electron transitions from GAS_count_i to GAS_count_a and
+            // GAS_count_j to GAS_count_b
+
+            auto& occ1 = gas_occ_a[gas_count_i];
+            auto& occ2 = gas_occ_a[gas_count_j];
+            auto& vir1 = gas_vir_a[gas_count_a];
+            auto& vir2 = gas_vir_a[gas_count_b];
+
+            for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
+                size_t ii = occ1[i];
+                size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
+
+                for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
+                    size_t jj = occ2[j];
+
+                    for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
+                        size_t aa = vir1[a];
+                        size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
+
+                        for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
+                            size_t bb = vir2[b];
+
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                                 mo_symmetry_[bb]) == 0) {
+                                Determinant new_det(det);
+                                new_det.set_alfa_bit(ii, false);
+                                new_det.set_alfa_bit(jj, false);
+                                new_det.set_alfa_bit(aa, true);
+                                new_det.set_alfa_bit(bb, true);
+                                ref_space.push_back(new_det);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate ab excitations
+        for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+             std::get<2>(gas_double_criterion_)[gas_configuration]) {
+
+            // The third element of gas_double_criterion_ stores all allowed choice of
+            // i,j,a,b for alpha-beta electron transitions from GAS_count_i to GAS_count_a and
+            // GAS_count_j to GAS_count_b
+
+            auto& occ1 = gas_occ_a[gas_count_i];
+            auto& occ2 = gas_occ_b[gas_count_j];
+            auto& vir1 = gas_vir_a[gas_count_a];
+            auto& vir2 = gas_vir_b[gas_count_b];
+
+            for (size_t ii : occ1) {
+                for (size_t jj : occ2) {
+                    for (size_t aa : vir1) {
+                        for (size_t bb : vir2) {
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                                 mo_symmetry_[bb]) == 0) {
+                                Determinant new_det(det);
+                                new_det.set_alfa_bit(ii, false);
+                                new_det.set_beta_bit(jj, false);
+                                new_det.set_alfa_bit(aa, true);
+                                new_det.set_beta_bit(bb, true);
+                                ref_space.push_back(new_det);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate bb excitations
+        for (auto& [gas_count_i, gas_count_j, gas_count_a, gas_count_b] :
+             std::get<1>(gas_double_criterion_)[gas_configuration]) {
+
+            // The second element of gas_double_criterion_ stores all allowed choice of
+            // i,j,a,b  two beta electron transitions from GAS_count_i to GAS_count_a and
+            // GAS_count_j to GAS_count_b
+
+            auto& occ1 = gas_occ_b[gas_count_i];
+            auto& occ2 = gas_occ_b[gas_count_j];
+            auto& vir1 = gas_vir_b[gas_count_a];
+            auto& vir2 = gas_vir_b[gas_count_b];
+
+            for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
+                size_t ii = occ1[i];
+                size_t jstart = (gas_count_i == gas_count_j ? i + 1 : 0);
+
+                for (size_t j = jstart, maxj = occ2.size(); j < maxj; ++j) {
+                    size_t jj = occ2[j];
+
+                    for (size_t a = 0, maxa = vir1.size(); a < maxa; ++a) {
+                        size_t aa = vir1[a];
+                        size_t bstart = (gas_count_a == gas_count_b ? a + 1 : 0);
+
+                        for (size_t b = bstart, maxb = vir2.size(); b < maxb; ++b) {
+                            size_t bb = vir2[b];
+
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                                 mo_symmetry_[bb]) == 0) {
+                                Determinant new_det(det);
+                                new_det.set_beta_bit(ii, false);
+                                new_det.set_beta_bit(jj, false);
+                                new_det.set_beta_bit(aa, true);
+                                new_det.set_beta_bit(bb, true);
+                                ref_space.push_back(new_det);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // print_h2("GAS Determinants");
+        // for (const auto& det : ref_space) {
+        //     outfile->Printf("\n    %s", str(det, nact_).c_str());
+        // }
+    }
+}
 std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std::string type) {
     size_t nact = mo_space_info_->size("ACTIVE");
 
     std::vector<std::tuple<double, int, int>> labeled_orb;
 
-    auto epsilon_a = scf_info_->epsilon_a();
+    std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
 
     if (type == "RHF" or type == "ROHF" or type == "ALFA") {
 
@@ -1022,7 +1267,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
     }
     if (type == "BETA") {
         // Create a vector of orbital energies and index pairs
-        auto epsilon_b = scf_info_->epsilon_b();
+        std::shared_ptr<Vector> epsilon_b = scf_info_->epsilon_b();
         std::vector<std::pair<double, int>> orb_e;
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
@@ -1042,7 +1287,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
     return labeled_orb;
 }
 
-void CI_Reference::get_gas_occupation() {
+void CI_Reference::get_gas_occupation(int gas_ref_num) {
     gas_electrons_.clear();
 
     print_h2("Number of Electrons in GAS");
@@ -1059,7 +1304,7 @@ void CI_Reference::get_gas_occupation() {
         std::string space = "GAS" + std::to_string(gas_count + 1);
         int orbital_maximum = mo_space_info_->size(space);
         gas_orbital.push_back(orbital_maximum);
-        if (orbital_maximum) {
+        if (orbital_maximum && gas_count < gas_ref_num) {
             outfile->Printf("\n    %3d", gas_count + 1);
 
             // define max_e_number to be the largest possible

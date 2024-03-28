@@ -37,7 +37,7 @@ set forte {
   nroot 3
   root 1 
   charge 0
-  active_ref_type hf
+  active_ref_type gas_cisd
   sci_enforce_spin_complete True
   GAS1 [6,0,2,2,0,6,0,0]
   GAS2 [0,0,0,0,0,0,2,2]

@@ -359,7 +359,7 @@ class AdaptiveCI : public SelectedCIMethod {
     std::vector<std::vector<int>> gas_electrons_;
 
     /// Relative mo in the entire active space for each GAS;
-    std::vector<std::vector<size_t>> relative_gas_mo_;
+    std::vector<std::vector<size_t>> rel_gas_mos;
 };
 
 } // namespace forte

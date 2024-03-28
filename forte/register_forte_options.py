@@ -88,11 +88,12 @@ def register_driver_options(options):
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
     options.add_str(
-        "ACTIVE_REF_TYPE",
-        "CAS",
-        ["HF", "CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD", "DOCI"],
-        "Initial guess for active space wave functions",
+        "ACTIVE_REF_TYPE", "CAS",
+        ["HF", "CAS", "GAS", "GAS_SINGLE", "CIS", "CID", "CISD", "DOCI","GAS_CIS", "GAS_CISD", "GAS_CID"],
+        "Initial guess for active space wave functions"
     )
+     
+    options.add_int("GAS_REF_COUNT", 6, "The number of GAS used to build the active space reference (can be used for initial guess for ACI)")
 
     options.add_bool("WRITE_RDM", False, "Save RDMs to ref_rdms.json for external computations")
 

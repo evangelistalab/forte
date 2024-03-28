@@ -1,0 +1,46 @@
+# GAS ACI calculation for core excited state of COO
+
+import forte
+
+aci = -93.05161111331 #TEST
+acipt2 = -93.15154033833 #TEST
+
+molecule CO{
+0 1
+C
+O 1 1.123708
+}
+
+set {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 8
+  r_convergence 10
+  scf_type pk
+}
+
+set forte {
+  active_space_solver aci
+  ms 0.0
+  multiplicity 1
+  sigma 0.1
+  nroot 1
+  root_sym 0
+  charge 0
+  sci_enforce_spin_complete true
+  active_ref_type gas
+  charge 0
+  gas_ref_count 2 #using GAS1 and GAS2 for initial guess
+  GAS1 [1,0,0,0]
+  GAS2 [5,0,2,2]
+  GAS3 [6,0,4,4]
+  GAS1MAX [1]
+  GAS1MIN [0]
+  root_sym 2
+}
+
+escf ,wfn = energy('scf',return_wfn = True)
+
+energy('forte',ref_wfn = wfn)
+compare_values(aci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(acipt2, variable("ACI+PT2 ENERGY"),9, "ACI+PT2 energy") #TEST

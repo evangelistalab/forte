@@ -278,6 +278,7 @@ gasci:
 gasaci:
    short:
       - gasaci-1
+      - gasaci-2
       - gasaci-4
    medium:
       - gasaci-3
@@ -285,6 +286,8 @@ gasaci:
       - sa-gasaciscf-1
    long:
       - gasaci-5
+      - gasaci-6
+      - gasaci-7
 
 gasscf:
    short:
