@@ -78,7 +78,7 @@ void CustomIntegrals::initialize() {
     local_timer int_timer;
     gather_integrals();
     freeze_core_orbitals();
-    print_timing("preparing custom (FCIDUMP) integrals", int_timer.get());
+    print_timing("preparing custom integrals", int_timer.get());
 }
 
 std::shared_ptr<psi::Matrix> CustomIntegrals::Ca_AO() const {

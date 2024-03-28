@@ -680,7 +680,7 @@ def register_integral_options(options):
     options.add_str(
         "INT_TYPE",
         "CONVENTIONAL",
-        ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF", "FCIDUMP"],
+        ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF", "FCIDUMP", "PYSCF"],
         "The type of molecular integrals used in a computation"
         "- CONVENTIONAL Conventional four-index two-electron integrals"
         "- DF Density fitted two-electron integrals"

@@ -39,6 +39,7 @@ from forte.modules import (
     OptionsFactory,
     ObjectsFromFCIDUMP,
     ObjectsFromPsi4,
+    ObjectsFromPySCF,
     ActiveSpaceInts,
     ActiveSpaceSolver,
     ActiveSpaceRDMs,
@@ -158,6 +159,9 @@ def energy_forte(name, **kwargs):
     # Prepare Forte objects
     if "FCIDUMP" in data.options.get_str("INT_TYPE"):
         data = ObjectsFromFCIDUMP(options=kwargs).run(data)
+    elif data.options.get_str("INT_TYPE") == "PYSCF":
+        data = ObjectsFromPySCF(kwargs.get("pyscf_obj"), options=kwargs).run(data)
+        #data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
     else:
         data = ObjectsFromPsi4(**kwargs).run(data)
 

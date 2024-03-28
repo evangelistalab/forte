@@ -1,0 +1,35 @@
+import forte
+from pyscf import gto, scf, mcscf
+
+refdsrgpt2 = -15.595924356891569
+
+mol = gto.M(
+atom = '''
+    Be 0.0   0.0    0.0
+    H  0.0   2.0    2.0
+    H  0.0   2.0   -2.0
+    ''',
+basis = 'ccpvdz',
+symmetry = 'c2v',
+verbose = 0,
+)
+myhf = scf.RHF(mol)
+myhf.kernel()
+mc = mcscf.CASSCF(myhf, ncas = 4, nelecas=(2,2))
+cas_space_symmetry = {'A1':2, 'B1':1, 'B2':1}
+mc.fcisolver.wfnsym = 0
+mc.fix_spin_(ss=0.0)
+mc.mc2step()
+
+set forte{
+   correlation_solver   dsrg-mrpt2
+   int_type             PYSCF
+   job_type             newdriver
+   active_space_solver  fci
+   restricted_docc      [1,0,0,0]
+   active               [2,0,1,1]
+   root_sym             0
+}
+
+energy('forte', pyscf_obj = mc)
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")
