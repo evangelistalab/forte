@@ -88,7 +88,7 @@ StateVector apply_operator_impl(bool is_antihermitian, const SparseOperator& sop
 
     Determinant d;
     // loop over all the operators (order does not matter)
-    for (const auto& [sqop, coefficient] : sop.op_map()) {
+    for (const auto& [sqop, coefficient] : sop.elements()) {
         if (coefficient == 0.0)
             continue;
         // create a mask for screening determinants according to the creation operators
@@ -115,7 +115,7 @@ StateVector apply_operator_impl(bool is_antihermitian, const SparseOperator& sop
 
     if (is_antihermitian) {
         // loop over all the operators
-        for (const auto& [sqop, coefficient] : sop.op_map()) {
+        for (const auto& [sqop, coefficient] : sop.elements()) {
             if (coefficient == 0.0)
                 continue;
             // create a mask for screening determinants according to the creation operators
@@ -151,10 +151,8 @@ std::vector<double> get_projection(const SparseOperator& sop, const StateVector&
     Determinant d;
 
     // loop over all the operators
-    for (size_t n = 0, nterms = sop.size(); n < nterms; n++) {
+    for (size_t n = 0; const auto& [sqop, coefficient] : sop.elements()) {
         double value = 0.0;
-        const SQOperatorString& sqop = sop.term_operator(n);
-
         // apply the operator op_n
         for (const auto& [det, c] : ref) {
             d = det;
@@ -166,8 +164,8 @@ std::vector<double> get_projection(const SparseOperator& sop, const StateVector&
                 }
             }
         }
-
         proj[n] = value;
+        n++;
     }
     return proj;
 }

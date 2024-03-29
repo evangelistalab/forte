@@ -30,6 +30,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <helpers/math_structures.h>
 
 #include "sparse_ci/sq_operator_string.h"
 
@@ -56,34 +57,16 @@ class ActiveSpaceIntegrals;
  *
  *            (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
  */
-class SparseOperator {
+class SparseOperator
+    : public VectorSpace<SparseOperator, SQOperatorString, double, SQOperatorString::Hash> {
   public:
     SparseOperator() = default;
 
-    /// @brief Construct a SparseOperator from a string
-    SparseOperator(
-        const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map);
-
-    /// add a term to this operator (python-friendly version) of the form
-    ///
-    ///     coefficient * [... q_2 q_1 q_0]
-    ///
-    /// where q_0, q_1, ... are second quantized operators. These operators are
-    /// passed as a list of tuples of the form
-    ///
-    ///     [(creation_0, alpha_0, orb_0), (creation_1, alpha_1, orb_1), ...]
-    ///
-    /// where the indices are defined as
-    ///
-    ///     creation_i  : bool (true = creation, false = annihilation)
-    ///     alpha_i     : bool (true = alpha, false = beta)
-    ///     orb_i       : int  (the index of the mo)
-    ///
-    void add_term(const std::vector<std::tuple<bool, bool, int>>& op_list, double coefficient = 0.0,
-                  bool allow_reordering = false);
-    /// add a term to this operator
-    void add_term(const SQOperatorString& sqop, double c);
-    /// add a term to this operator of the form
+    /// @brief add a term to this operator
+    /// @param str a string that defines the product of operators in the format [... q_2 q_1 q_0]
+    /// @param coefficient a coefficient that multiplies the product of second quantized operators
+    /// @param allow_reordering if true, the operator will be reordered to canonical form
+    /// @details The operator is stored in canonical form
     ///
     ///     coefficient * [... q_2 q_1 q_0]
     ///
@@ -100,87 +83,63 @@ class SparseOperator {
     ///
     /// For example, '[0a+ 1b+ 12b- 0a-]'
     ///
-    /// @param str a string that defines the product of operators in the format [... q_2 q_1 q_0]
-    /// @param coefficient a coefficient that multiplies the product of second quantized operators
     void add_term_from_str(std::string str, double coefficient, bool allow_reordering = false);
-    /// remove the last term from this operator
-    void pop_term();
-    /// @return a term
-    // const std::pair<SQOperatorString, double>& term(size_t n) const;
-    std::pair<SQOperatorString, double> term(size_t n) const;
-    /// @return the operator component of a term
-    const SQOperatorString& term_operator(size_t n) const;
-    /// @brief copy another operator into this operator
-    void copy(const SparseOperator& other);
 
-    /// @return the number of terms
-    size_t size() const;
-    /// set the value of the coefficients
-    std::vector<double> coefficients() const;
-    /// @return the value of the coefficient
-    double coefficient(size_t n) const;
-    /// set the value of the coefficients
-    void set_coefficients(const std::vector<double>& values);
-    /// set the value of one coefficient
-    void set_coefficient(size_t n, double value);
-    /// @return the list of operators
-    const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map() const {
-        return op_map_;
-    }
     /// @return a string representation of this operator
     std::vector<std::string> str() const;
+
     /// @return a latex representation of this operator
     std::string latex() const;
-    /// @return the sparse operator that is the adjoint of this operator
-    SparseOperator adjoint() const;
-    /// @return the a scaled version of this operator
-    SparseOperator operator*(double scalar) const;
-    /// @return the a scaled version of this operator
-    SparseOperator operator/(double scalar) const;
-    /// @brief Add another operator to this operator
-    SparseOperator& operator+=(const SparseOperator& other);
-    /// @brief Add another operator to this operator
-    SparseOperator& operator-=(const SparseOperator& other);
-    /// @brief Add another operator to this operator
-    SparseOperator& operator*=(double factor);
-    /// @brief Add another operator to this operator
-    SparseOperator& operator/=(double factor);
-    /// @brief Compare this operator with another operator
-    bool operator==(const SparseOperator& other) const;
-
-  private:
-    /// a vector of SQOperator objects to keep track of the order of the operators
-    std::vector<SQOperatorString> op_insertion_list_;
-    /// a map of SQOperator objects to keep track of the operators and their coefficients
-    std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> op_map_;
 };
 
-double norm(const SparseOperator& op);
+class SparseOperatorList : public VectorSpaceList<SQOperatorString, double> {
+  public:
+    SparseOperatorList() = default;
 
-/// @return The product of two second quantized operators
-SparseOperator operator+(SparseOperator lhs, const SparseOperator& rhs);
+    void add(const SQOperatorString& op, double coefficient);
 
-/// @return The product of two second quantized operators
-SparseOperator operator-(SparseOperator lhs, const SparseOperator& rhs);
+    double operator[](size_t i) const { return elements_[i].second; }
+    double& operator[](size_t i) { return elements_[i].second; }
+
+  private:
+    std::vector<std::pair<SQOperatorString, double>> elements_;
+};
+
+// double norm(const SparseOperator& op);
+
+// /// @return The product of two second quantized operators
+// SparseOperator operator+(SparseOperator lhs, const SparseOperator& rhs);
+
+// /// @return The product of two second quantized operators
+// SparseOperator operator-(SparseOperator lhs, const SparseOperator& rhs);
 
 /// @return The product of two second quantized operators
 SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs);
 
-/// @return The product of a second quantized operator and a numerical factor
-SparseOperator operator*(double scalar, const SparseOperator& op);
+// /// @return The product of a second quantized operator and a numerical factor
+// SparseOperator operator*(double scalar, const SparseOperator& op);
 
-/// @return A second quantized operator divided by a numerical factor
-SparseOperator operator/(double scalar, const SparseOperator& op);
+// /// @return A second quantized operator divided by a numerical factor
+// SparseOperator operator/(double scalar, const SparseOperator& op);
 
 /// @return The commutator of two second quantized operators
 SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs);
 
-void similarity_transform_test(SparseOperator& op, const SQOperatorString& A, double theta);
+// void similarity_transform_test(SparseOperator& op, const SQOperatorString& A, double theta);
 
-void sim_trans_exc(SparseOperator& op, const SparseOperator& T, bool reverse = false,
-                   double screen_threshold = 1e-12);
+void sim_trans_fact_op(SparseOperator& O, const SparseOperatorList& T, bool reverse = false,
+                       double screen_threshold = 1e-12);
 
-void sim_trans_antiherm(SparseOperator& op, const SparseOperator& T, bool reverse = false,
-                        double screen_threshold = 1e-12);
+void sim_trans_fact_antiherm(SparseOperator& O, const SparseOperatorList& T, bool reverse = false,
+                             double screen_threshold = 1e-12);
+
+// class NormalOrderedOperator {
+//   public:
+//     NormalOrderedOperator() = default;
+//     NormalOrderedOperator(const SparseOperator& op, const MOSpaceInfo& mo_space_info,
+//                           const RDMs& rdm);
+
+//   private:
+// };
 
 } // namespace forte

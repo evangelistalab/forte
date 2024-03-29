@@ -29,23 +29,30 @@ def test_sparse_operator():
     assert to_latex == r"+\;\hat{a}_{1 \alpha}^\dagger\hat{a}_{1 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
 
     sop = forte.SparseOperator()
-    sop.add_term_from_str("[]")
-    sop.add_term_from_str("[0a+ 0b+ 0b- 0a-]")
+    sop.add_term_from_str("[]", 1.0)
+    sop.add_term_from_str("[0a+ 0b+ 0b- 0a-]", 1.0)
 
-    coeff = sop.coefficients()
-    assert coeff == pytest.approx([0.0, 0.0], abs=1e-9)
-    sop.set_coefficient(0, 0.5)
-    sop.set_coefficient(1, 0.3)
-    coeff = sop.coefficients()
-    assert coeff == pytest.approx([0.5, 0.3], abs=1e-9)
+    assert sop["[]"] == 1.0
+    assert sop["[0a+ 0b+ 0b- 0a-]"] == 1.0
+    sop["[]"] = 0.5
+    sop["[0a+ 0b+ 0b- 0a-]"] = 0.3
+    assert sop["[]"] == 0.5
+    assert sop["[0a+ 0b+ 0b- 0a-]"] == 0.3
     # remove one term from sop
-    sop.pop_term()
+    sop.remove("[0a+ 0b+ 0b- 0a-]")
     # check the size
     assert sop.size() == 1
+    # check the element
+    assert sop["[]"] == 0.5
+    assert sop["[0a+ 0b+ 0b- 0a-]"] == 0.0
+    assert sop.size() == 1
+    sop.remove("[]")
+    assert sop.size() == 0
+
     # copy a term into a new operator
-    sop2 = forte.SparseOperator()
-    term = sop.term(0)
-    sop2.add_term(*term)
+    sop = forte.SparseOperator()
+    sop.add_term_from_str("[]", 1.0)
+    sop.add_term_from_str("[0a+ 0b+ 0b- 0a-]", 1.0)
 
     # test apply operator against safe implementation
     sop = forte.SparseOperator()

@@ -460,7 +460,7 @@ template <size_t N> class BitArray {
     /// @param n the number of bits set to one
     /// @param begin the index of the first word to test
     /// @param end the index of the last word to test (not included)
-    void find_set_bits(std::vector<int>& occ, int& n, size_t begin = 0,
+    void find_set_bits(std::vector<short>& occ, int& n, size_t begin = 0,
                        size_t end = nwords_) const {
         n = 0;
         uint64_t x;

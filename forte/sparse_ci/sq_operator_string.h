@@ -85,6 +85,10 @@ class SQOperatorString {
     const Determinant& cre() const;
     /// @return a Determinant object that represents the annihilation operators
     const Determinant& ann() const;
+    /// @return a Determinant object that represents the creation operators
+    Determinant& cre_mod();
+    /// @return a Determinant object that represents the annihilation operators
+    Determinant& ann_mod();
     /// @return true if this operator is a number operator (i.e. it contains no creation or
     /// annihilation  operators)
     bool is_number() const;
@@ -121,10 +125,13 @@ class SQOperatorString {
 class SQOperatorProductComputer {
   public:
     SQOperatorProductComputer() = default;
-    void product(const SQOperatorString& lhs, const SQOperatorString& rhs,
+    void product(const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
                  std::function<void(const SQOperatorString&, const double)> func);
+    void commutator(const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
+                    std::function<void(const SQOperatorString&, const double)> func);
 
   private:
+    constexpr static size_t max_contracted_ops_ = 32;
     Determinant lhs_cre_;
     Determinant lhs_ann_;
     Determinant rhs_cre_;
@@ -133,8 +140,8 @@ class SQOperatorProductComputer {
     Determinant con_rhs_cre_;
     Determinant ucon_rhs_ann_;
     double phase_;
-    std::vector<int> set_bits_ = std::vector<int>(64, 0);
-    std::bitset<64> sign_;
+    std::vector<short> set_bits_ = std::vector<short>(max_contracted_ops_, 0);
+    std::bitset<max_contracted_ops_> sign_;
 };
 
 // implement the << operator for SQOperatorString
@@ -169,8 +176,5 @@ bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs);
 
 std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperatorString& lhs,
                                                                  const SQOperatorString& rhs);
-
-std::vector<std::pair<SQOperatorString, double>> new_product(const SQOperatorString& lhs,
-                                                             const SQOperatorString& rhs);
 
 } // namespace forte

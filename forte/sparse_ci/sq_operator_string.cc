@@ -64,6 +64,10 @@ const Determinant& SQOperatorString::cre() const { return cre_; }
 
 const Determinant& SQOperatorString::ann() const { return ann_; }
 
+Determinant& SQOperatorString::cre_mod() { return cre_; }
+
+Determinant& SQOperatorString::ann_mod() { return ann_; }
+
 bool SQOperatorString::is_number() const { return (cre().count() == 0) and (ann().count() == 0); }
 
 bool SQOperatorString::is_antihermitian_compatible() const {
@@ -455,8 +459,11 @@ std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorStri
 #define debug_print(x) ; // std::cout << #x << ": " << x << std::endl;
 
 void SQOperatorProductComputer::product(
-    const SQOperatorString& lhs, const SQOperatorString& rhs,
+    const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
     std::function<void(const SQOperatorString&, const double)> func) {
+
+    // apologies to those who read this code, it's meant to be fast, not readable.
+
     // determine the right creation operators that can be moved to the left without contraction
     ucon_rhs_cre_ = rhs.cre() - lhs.ann();
     // if there are common lhs creation ops and uncontracted rhs creation ops then we get zero
@@ -475,7 +482,7 @@ void SQOperatorProductComputer::product(
     }
 
     // initialize the phase and the bitarray operators
-    phase_ = 1.0;
+    phase_ = factor;
     rhs_cre_ = rhs.cre();
     rhs_ann_ = rhs.ann();
     lhs_cre_ = lhs.cre();
@@ -534,10 +541,9 @@ void SQOperatorProductComputer::product(
     // find the operators in common that can be trivially contracted
     auto lhs_comm_trivial_ = lhs_cre_ & lhs_ann_ & rhs_cre_;
     if (lhs_comm_trivial_.count_all() != 0) {
-        // remove the trivially contracted operators from the right creation
+        // remove the trivially contracted operators from the right creation/left annihilation ops
         rhs_cre_ -= lhs_comm_trivial_;
-        lhs_ann_ -= lhs_comm_trivial_; // remove the trivially contracted operators from the left
-        ucon_rhs_cre_ = rhs_cre_;      // now this holds the operators that need to be contracted
+        lhs_ann_ -= lhs_comm_trivial_;
         // ops adjust the phase due to the trivial contractions
         for (size_t i = lhs_comm_trivial_.fast_find_and_clear_first_one(0); i != ~0ULL;
              i = lhs_comm_trivial_.fast_find_and_clear_first_one(i)) {
@@ -545,7 +551,7 @@ void SQOperatorProductComputer::product(
         }
     }
 
-    // ok, at this point we have moved all the uncontracted rhs creation and annihilation operators
+    // At this point we have moved all the uncontracted rhs creation and annihilation operators
     // to the left and we can now compute the product of the operators that don't commute.
     // These are the left annihilations-right creations
     // One thing we know is that each of these will give us 2^n terms where n is the number of
@@ -598,13 +604,11 @@ void SQOperatorProductComputer::product(
     }
 }
 
-std::vector<std::pair<SQOperatorString, double>> new_product(const SQOperatorString& lhs,
-                                                             const SQOperatorString& rhs) {
-    SQOperatorProductComputer computer;
-    std::vector<std::pair<SQOperatorString, double>> result;
-    computer.product(lhs, rhs, [&result](const SQOperatorString& sqop, const double c) {
-        result.push_back({sqop, c});
-    });
-    return result;
+void SQOperatorProductComputer::commutator(
+    const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
+    std::function<void(const SQOperatorString&, const double)> func) {
+    product(lhs, rhs, factor, func);
+    product(rhs, lhs, -factor, func);
 }
+
 } // namespace forte

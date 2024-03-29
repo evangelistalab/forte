@@ -53,6 +53,7 @@
 #include "sparse_ci/sparse_fact_exp.h"
 #include "sparse_ci/sparse_exp.h"
 #include "sparse_ci/sparse_hamiltonian.h"
+#include "sparse_ci/sq_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -273,14 +274,34 @@ void export_Determinant(py::module& m) {
 
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
         .def(py::init<>())
-        .def("add_term",
-             py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
-                 &SparseOperator::add_term),
-             "op_list"_a, "value"_a = 0.0, "allow_reordering"_a = false)
-        .def("add_term",
-             py::overload_cast<const SQOperatorString&, double>(&SparseOperator::add_term))
+        // .def("add_term",
+        //      py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
+        //          &SparseOperator::add),
+        //      "op_list"_a, "value"_a = 0.0, "allow_reordering"_a = false)
+        .def("add", py::overload_cast<const SQOperatorString&, double>(&SparseOperator::add))
         .def("add_term_from_str", &SparseOperator::add_term_from_str, "str"_a,
              "coefficient"_a = 0.0, "allow_reordering"_a = false)
+        .def(
+            "__getitem__",
+            [](const SparseOperator& op, const std::string& s) {
+                const auto [sqop, factor] = make_sq_operator_string(s, false);
+                return factor * op[sqop];
+            },
+            "Get the coefficient of a term")
+        .def(
+            "__setitem__",
+            [](SparseOperator& op, const std::string& s, double value) {
+                const auto [sqop, factor] = make_sq_operator_string(s, false);
+                op[sqop] = factor * value;
+            },
+            "Get the coefficient of a term")
+        .def(
+            "remove",
+            [](SparseOperator& op, const std::string& s) {
+                const auto [sqop, _] = make_sq_operator_string(s, false);
+                op.remove(sqop);
+            },
+            "Remove a term")
         .def(
             "__matmul__",
             [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs * rhs; },
@@ -309,27 +330,16 @@ void export_Determinant(py::module& m) {
              [](const SparseOperator& self, double scalar) {
                  return self * (1.0 / scalar); // This uses the operator* we defined
              })
-        .def(
-            "__add__",
-            [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs + rhs; },
-            "Add two SparseOperators")
-        .def(
-            "__sub__",
-            [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs - rhs; },
-            "Subtract two SparseOperators")
-        .def("pop_term", &SparseOperator::pop_term)
-        .def("term", &SparseOperator::term)
+        .def("__add__", &SparseOperator::operator+, "Add two SparseOperators")
+        .def("__sub__", &SparseOperator::operator-, "Subtract two SparseOperators")
         .def("copy", &SparseOperator::copy)
         .def("size", &SparseOperator::size)
         .def("__len__", &SparseOperator::size)
-        .def("norm", [](const SparseOperator& op) { return norm(op); })
-        .def("coefficients", &SparseOperator::coefficients)
-        .def("set_coefficients", &SparseOperator::set_coefficients)
-        .def("set_coefficient", &SparseOperator::set_coefficient)
+        .def("norm", [](const SparseOperator& op) { return op.norm(); })
         // .def("op_list", &SparseOperator::op_list)
         .def("str", &SparseOperator::str)
         .def("latex", &SparseOperator::latex)
-        .def("adjoint", &SparseOperator::adjoint)
+        .def("adjoint", [](const SparseOperator& op) { return op.adjoint(); })
         .def("__eq__", &SparseOperator::operator==)
         .def("__repr__", [](const SparseOperator& op) { return join(op.str(), " "); })
         .def("__str__", [](const SparseOperator& op) { return join(op.str(), " "); });
@@ -346,12 +356,22 @@ void export_Determinant(py::module& m) {
 
     m.def("new_product", [](const SparseOperator A, const SparseOperator B) {
         SparseOperator C;
-        for (const auto& [op, coeff] : A.op_map()) {
-            for (const auto& [op2, coeff2] : B.op_map()) {
-                auto prod = new_product(op, op2);
-                for (const auto& [op3, coeff3] : prod) {
-                    C.add_term(op3, coeff * coeff2 * coeff3);
-                }
+        SQOperatorProductComputer computer;
+        for (const auto& [op, coeff] : A.elements()) {
+            for (const auto& [op2, coeff2] : B.elements()) {
+                computer.product(
+                    op, op2, coeff * coeff2,
+                    [&C](const SQOperatorString& sqop, const double c) { C.add(sqop, c); });
+            }
+        }
+        return C;
+    });
+
+    m.def("new_product2", [](const SparseOperator A, const SparseOperator B) {
+        SparseOperator C;
+        for (const auto& [op, coeff] : A.elements()) {
+            for (const auto& [op2, coeff2] : B.elements()) {
+                new_product2(C, op, op2, coeff * coeff2);
             }
         }
         return C;
@@ -378,11 +398,11 @@ void export_Determinant(py::module& m) {
         "list"_a, "allow_reordering"_a = false);
 
     m.def(
-        "sim_trans_exc",
-        [](SparseOperator& op, const SparseOperator& A, bool reverse, double screen_thresh) {
+        "sim_trans_fact_exc",
+        [](SparseOperator& op, const SparseOperatorList& A, bool reverse, double screen_thresh) {
             // time this call and print to std::cout
             auto start = std::chrono::high_resolution_clock::now();
-            sim_trans_exc(op, A, reverse, screen_thresh);
+            sim_trans_fact_op(op, A, reverse, screen_thresh);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end - start;
             std::cout << "similarity_transform (excitation) took " << elapsed_seconds.count()
@@ -391,11 +411,11 @@ void export_Determinant(py::module& m) {
         "op"_a, "A"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
     m.def(
-        "sim_trans_antiherm",
-        [](SparseOperator& op, const SparseOperator& A, bool reverse, double screen_thresh) {
+        "sim_trans_fact_antiherm",
+        [](SparseOperator& op, const SparseOperatorList& A, bool reverse, double screen_thresh) {
             // time this call and print to std::cout
             auto start = std::chrono::high_resolution_clock::now();
-            sim_trans_antiherm(op, A, reverse, screen_thresh);
+            sim_trans_fact_antiherm(op, A, reverse, screen_thresh);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end - start;
             std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
@@ -442,10 +462,10 @@ void export_Determinant(py::module& m) {
         m, "SparseFactExp",
         "A class to compute the product exponential of a sparse operator using factorization")
         .def(py::init<>())
-        .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
-             "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
-        .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
-             "algorithm"_a = "cached", "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
+        // .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
+        //      "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
+        // .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
+        //      "algorithm"_a = "cached", "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
         .def("timings", &SparseFactExp::timings);
 
     m.def("apply_op", &apply_operator_lin, "sop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
