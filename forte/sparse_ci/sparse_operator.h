@@ -92,17 +92,14 @@ class SparseOperator
     std::string latex() const;
 };
 
-class SparseOperatorList : public VectorSpaceList<SQOperatorString, double> {
+class SparseOperatorList : public VectorSpaceList<SparseOperatorList, SQOperatorString, double> {
   public:
     SparseOperatorList() = default;
 
-    void add(const SQOperatorString& op, double coefficient);
+    void add_term_from_str(std::string str, double coefficient, bool allow_reordering = false);
 
-    double operator[](size_t i) const { return elements_[i].second; }
-    double& operator[](size_t i) { return elements_[i].second; }
-
-  private:
-    std::vector<std::pair<SQOperatorString, double>> elements_;
+    /// @return a string representation of this operator
+    std::vector<std::string> str() const;
 };
 
 // double norm(const SparseOperator& op);

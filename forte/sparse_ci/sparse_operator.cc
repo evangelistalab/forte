@@ -577,8 +577,47 @@ void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, do
     O += T;
 }
 
-void SparseOperatorList::add(const SQOperatorString& op, double coefficient) {
-    elements_.push_back({op, coefficient});
+void SparseOperatorList::add_term_from_str(std::string str, double coefficient,
+                                           bool allow_reordering) {
+    // the regex to parse the entries
+    std::regex re("\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
+    // the match object
+    std::smatch m;
+
+    // here we match terms of the form [<orb><a/b><+/-> ...], then parse the operator part
+    // and translate it into a term that is added to the operator.
+    //
+    if (std::regex_match(str, m, re)) {
+        if (m.ready()) {
+            auto [sqop, phase] = make_sq_operator_string(m[1], allow_reordering);
+            add(sqop, phase * coefficient);
+        } else {
+            std::string msg =
+                "add_term_from_str(std::string str, double value) could not parse the string " +
+                str;
+            throw std::runtime_error(msg);
+        }
+    } else {
+        std::string msg =
+            "add_term_from_str(std::string str, double value) could not parse the string " + str;
+        throw std::runtime_error(msg);
+    }
+}
+
+// void SparseOperatorList::add(const SQOperatorString& op, double coefficient) {
+//     elements_.push_back({op, coefficient});
+// }
+
+std::vector<std::string> SparseOperatorList::str() const {
+    std::vector<std::string> v;
+    for (const auto& [sqop, c] : this->elements()) {
+        if (std::fabs(c) < 1.0e-12)
+            continue;
+        v.push_back(format_term_in_sum(c, sqop.str()));
+    }
+    // sort v to guarantee a consistent order
+    std::sort(v.begin(), v.end());
+    return v;
 }
 
 } // namespace forte

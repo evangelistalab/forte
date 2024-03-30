@@ -54,12 +54,12 @@ StateVector SparseExp::compute(OperatorType op_type, const SparseOperator& sop,
                                const StateVector& state0, const std::string& algorithm,
                                double scaling_factor, int maxk, double screen_thresh) {
     local_timer t;
-    Algorithm alg = Algorithm::Cached;
-    if (algorithm == "onthefly") {
-        alg = Algorithm::OnTheFlySorted;
-    } else if (algorithm == "ontheflystd") {
-        alg = Algorithm::OnTheFlyStd;
-    }
+    Algorithm alg = Algorithm::OnTheFlyStd;
+    // if (algorithm == "onthefly") {
+    //     alg = Algorithm::OnTheFlySorted;
+    // } else if (algorithm == "ontheflystd") {
+    //     alg = Algorithm::OnTheFlyStd;
+    // }
 
     auto state = apply_exp_operator(op_type, sop, state0, scaling_factor, maxk, screen_thresh, alg);
 
@@ -105,9 +105,19 @@ StateVector SparseExp::apply_exp_operator(OperatorType op_type, const SparseOper
 
 StateVector SparseExp::apply_operator_cached(OperatorType op_type, const SparseOperator& sop,
                                              const StateVector& state0, double screen_thresh) {
-    throw std::runtime_error("apply_operator_cached Not implemented");
-    // // make a copy of the state
-    // std::vector<std::tuple<double, double, Determinant>> state_sorted(state0.size());
+    // make a copy of the state
+    // std::vector<std::tuple<double, Determinant>> state_sorted;
+    // state_sorted.reserve(state0.size());
+    // for (const auto& [det, c] : state0) {
+    //     state_sorted.emplace_back(c, det);
+    // }
+    // std::sort(state_sorted.rbegin(), state_sorted.rend(), [](const auto& lhs, const auto& rhs) {
+    //     return std::abs(lhs.first) > std::abs(rhs.first);
+    // });
+
+    StateVector new_terms;
+    // std::vector<std::tuple<double, double, Determinant>> state_sorted;
+
     // size_t k = 0;
     // for (const auto& det_c : state0) {
     //     const Determinant& d = det_c.first;
@@ -117,7 +127,6 @@ StateVector SparseExp::apply_operator_cached(OperatorType op_type, const SparseO
     // }
     // std::sort(state_sorted.rbegin(), state_sorted.rend());
 
-    StateVector new_terms;
     // Determinant d_new;
 
     // // loop over all determinants

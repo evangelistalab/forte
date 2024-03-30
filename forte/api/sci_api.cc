@@ -54,6 +54,7 @@
 #include "sparse_ci/sparse_exp.h"
 #include "sparse_ci/sparse_hamiltonian.h"
 #include "sparse_ci/sq_operator.h"
+#include "sparse_ci/sq_operator_string.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -272,6 +273,23 @@ void export_Determinant(py::module& m) {
         .def("sym", &FCIStringAddress::sym, "Return the symmetry of a string")
         .def("strpcls", &FCIStringAddress::strpcls, "Return the number of strings per class");
 
+    py::class_<SQOperatorString>(m, "SQOperatorString",
+                                 "A class to represent a string of creation/annihilation operators")
+        .def(py::init<const Determinant&, const Determinant&>())
+        .def("cre", &SQOperatorString::cre)
+        .def("ann", &SQOperatorString::ann)
+        .def("str", &SQOperatorString::str)
+        .def("count", &SQOperatorString::count)
+        .def("__eq__", &SQOperatorString::operator==)
+        .def("__lt__", &SQOperatorString::operator<);
+
+    m.def(
+        "sqop",
+        [](const std::string& s, bool allow_reordering) {
+            return make_sq_operator_string(s, allow_reordering);
+        },
+        "s"_a, "allow_reordering"_a = false);
+
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
         .def(py::init<>())
         // .def("add_term",
@@ -280,7 +298,7 @@ void export_Determinant(py::module& m) {
         //      "op_list"_a, "value"_a = 0.0, "allow_reordering"_a = false)
         .def("add", py::overload_cast<const SQOperatorString&, double>(&SparseOperator::add))
         .def("add_term_from_str", &SparseOperator::add_term_from_str, "str"_a,
-             "coefficient"_a = 0.0, "allow_reordering"_a = false)
+             "coefficient"_a = 1.0, "allow_reordering"_a = false)
         .def(
             "__getitem__",
             [](const SparseOperator& op, const std::string& s) {
@@ -344,15 +362,21 @@ void export_Determinant(py::module& m) {
         .def("__repr__", [](const SparseOperator& op) { return join(op.str(), " "); })
         .def("__str__", [](const SparseOperator& op) { return join(op.str(), " "); });
 
-    py::class_<SQOperatorString>(m, "SQOperatorString",
-                                 "A class to represent a string of creation/annihilation operators")
-        .def(py::init<const Determinant&, const Determinant&>())
-        .def("cre", &SQOperatorString::cre)
-        .def("ann", &SQOperatorString::ann)
-        .def("str", &SQOperatorString::str)
-        .def("count", &SQOperatorString::count)
-        .def("__eq__", &SQOperatorString::operator==)
-        .def("__lt__", &SQOperatorString::operator<);
+    py::class_<SparseOperatorList>(m, "SparseOperatorList",
+                                   "A class to represent a list of sparse operators")
+        .def(py::init<>())
+        .def("add", &SparseOperatorList::add)
+        .def("add_term_from_str", &SparseOperatorList::add_term_from_str, "str"_a,
+             "coefficient"_a = 1.0, "allow_reordering"_a = false)
+        .def("__len__", &SparseOperatorList::size)
+        .def("__str__", [](const SparseOperatorList& op) { return join(op.str(), " "); })
+        .def(
+            "__getitem__", [](const SparseOperatorList& op, const size_t n) { return op[n]; },
+            "Get the coefficient of a term")
+        .def(
+            "__setitem__",
+            [](SparseOperatorList& op, const size_t n, double value) { op[n] = value; },
+            "Set the coefficient of a term");
 
     m.def("new_product", [](const SparseOperator A, const SparseOperator B) {
         SparseOperator C;
@@ -462,10 +486,10 @@ void export_Determinant(py::module& m) {
         m, "SparseFactExp",
         "A class to compute the product exponential of a sparse operator using factorization")
         .def(py::init<>())
-        // .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
-        //      "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
-        // .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
-        //      "algorithm"_a = "cached", "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
+        .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
+             "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
+        .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
+             "algorithm"_a = "cached", "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
         .def("timings", &SparseFactExp::timings);
 
     m.def("apply_op", &apply_operator_lin, "sop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);

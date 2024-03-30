@@ -72,9 +72,8 @@ class SparseFactExp {
     /// @param screen_thresh a threshold to select which elements of the operator applied to the
     /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
     /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
-    StateVector apply_op(const SparseOperator& sop, const std::vector<SQOperatorString>& op_order,
-                         const StateVector& state, const std::string& algorithm, bool inverse,
-                         double screen_thresh);
+    StateVector apply_op(const SparseOperatorList& sop, const StateVector& state,
+                         const std::string& algorithm, bool inverse, double screen_thresh);
 
     /// @brief Compute the factorized exponential applied to a state using an exact algorithm
     ///
@@ -98,30 +97,23 @@ class SparseFactExp {
     /// @param screen_thresh a threshold to select which elements of the operator applied to the
     /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
     /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
-    StateVector apply_antiherm(const SparseOperator& sop,
-                               const std::vector<SQOperatorString>& op_order,
-                               const StateVector& state, const std::string& algorithm, bool inverse,
-                               double screen_thresh);
+    StateVector apply_antiherm(const SparseOperatorList& sop, const StateVector& state,
+                               const std::string& algorithm, bool inverse, double screen_thresh);
     /// @return timings for this class
     std::map<std::string, double> timings() const;
 
   private:
     void apply_exp_op_fast(const Determinant& d, Determinant& new_d, const Determinant& cre,
                            const Determinant& ann, double amp, double c, StateVector& new_terms);
-    void compute_couplings(const SparseOperator& sop, const std::vector<SQOperatorString>& op_order,
-                           const StateVector& state0, bool inverse);
-    StateVector compute_exp(const SparseOperator& sop,
-                            const std::vector<SQOperatorString>& op_order,
-                            const StateVector& state0, bool inverse, double screen_thresh);
-    StateVector compute_cached(const SparseOperator& sop,
-                               const std::vector<SQOperatorString>& op_order,
-                               const StateVector& state, bool inverse, double screen_thresh);
-    StateVector compute_on_the_fly_antihermitian(const SparseOperator& sop,
-                                                 const std::vector<SQOperatorString>& op_order,
+    void compute_couplings(const SparseOperatorList& sop, const StateVector& state0, bool inverse);
+    StateVector compute_exp(const SparseOperatorList& sop, const StateVector& state0, bool inverse,
+                            double screen_thresh);
+    StateVector compute_cached(const SparseOperatorList& sop, const StateVector& state,
+                               bool inverse, double screen_thresh);
+    StateVector compute_on_the_fly_antihermitian(const SparseOperatorList& sop,
                                                  const StateVector& state0, bool inverse,
                                                  double screen_thresh);
-    StateVector compute_on_the_fly_excitation(const SparseOperator& sop,
-                                              const std::vector<SQOperatorString>& op_order,
+    StateVector compute_on_the_fly_excitation(const SparseOperatorList& sop,
                                               const StateVector& state0, bool inverse,
                                               double screen_thresh);
 

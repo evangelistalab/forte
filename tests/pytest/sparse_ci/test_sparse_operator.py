@@ -11,14 +11,14 @@ def test_sparse_operator():
 
     # test get/set
     sop = forte.SparseOperator()
-    sop.add_term_from_str("[]")
+    sop.add_term_from_str("[]", 2.3)
     sop.add_term_from_str("[0a+ 0b+ 0b- 0a-]")
     to_str = sop.str()
-    assert to_str == []
+    assert to_str == ["+ 2.3", "+ [ 0a+ 0b+ 0b- 0a- ]"]
     to_latex = sop.latex()
     assert (
         to_latex
-        == r"0.000000\; 0.000000\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
+        == r"+2.300000\; +\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
     )
 
     sop = forte.SparseOperator()

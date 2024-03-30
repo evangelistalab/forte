@@ -115,7 +115,7 @@ def test_sparse_ci4():
     assert wfn2[det("-2+0")] == pytest.approx(0.0, abs=1e-9)
 
     ### Test the factorized exponential operator with an antihermitian operator ###
-    op = forte.SparseOperator()
+    op = forte.SparseOperatorList()
     op.add_term_from_str("[2a+ 0a-]", 0.1)
     op.add_term_from_str("[2b+ 0b-]", 0.2)
     op.add_term_from_str("[2a+ 2b+ 0b- 0a-]", 0.15)
@@ -145,7 +145,7 @@ def test_sparse_ci4():
 
     assert wfn2[det("2200")] == pytest.approx(1.0, abs=1e-9)
 
-    op = forte.SparseOperator()
+    op = forte.SparseOperatorList()
     op.add_term_from_str("[1a+ 0a-]", 0.1)
     op.add_term_from_str("[1a+ 1b+ 0b- 0a-]", -0.3)
     op.add_term_from_str("[1b+ 0b-]", 0.05)
