@@ -75,6 +75,10 @@ class SparseExp {
                          const std::string& algorithm = "cached", double scaling_factor = 1.0,
                          int maxk = 19, double screen_thresh = 1.0e-12);
 
+    StateVector apply_op(const SparseOperatorList& sop, const StateVector& state,
+                         const std::string& algorithm = "cached", double scaling_factor = 1.0,
+                         int maxk = 19, double screen_thresh = 1.0e-12);
+
     /// @brief Compute the exponential of the antihermitian of an operator applied to a state via a
     /// Taylor expansion
     ///
@@ -98,6 +102,10 @@ class SparseExp {
     /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
     /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
     StateVector apply_antiherm(const SparseOperator& sop, const StateVector& state,
+                               const std::string& algorithm = "cached", double scaling_factor = 1.0,
+                               int maxk = 19, double screen_thresh = 1.0e-12);
+
+    StateVector apply_antiherm(const SparseOperatorList& sop, const StateVector& state,
                                const std::string& algorithm = "cached", double scaling_factor = 1.0,
                                int maxk = 19, double screen_thresh = 1.0e-12);
     /// @return timings for this class

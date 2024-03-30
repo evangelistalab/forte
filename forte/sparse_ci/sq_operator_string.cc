@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <regex>
 
 #include "helpers/combinatorial.h"
 #include "helpers/string_algorithms.h"
@@ -147,20 +148,26 @@ std::string SQOperatorString::latex() const {
 }
 
 std::vector<std::tuple<bool, bool, int>> parse_sq_operator(const std::string& s) {
-    // reverse the operator order
-    auto clean_s = s.substr(1, s.size() - 2);
+    // the regex to verify the validity of the string
+    std::regex validity(R"(\[?(\d+[ab][\+\-]\s*)*\]?)");
+    std::smatch m;
+    if (not std::regex_match(s, m, validity)) {
+        std::string msg = "parse_sq_operator could not parse the string " + s;
+        throw std::runtime_error(msg);
+    }
 
-    auto ops_str = split_string(clean_s, " ");
-    std::reverse(ops_str.begin(), ops_str.end());
-
+    std::regex pattern(R"(\b(\d+)([ab])([\+\-]))");
+    auto begin = std::sregex_iterator(s.begin(), s.end(), pattern);
+    auto end = std::sregex_iterator();
     std::vector<std::tuple<bool, bool, int>> ops_vec_tuple;
-    for (auto op_str : ops_str) {
-        size_t len = op_str.size();
-        bool creation = op_str[len - 1] == '+' ? true : false;
-        bool alpha = op_str[len - 2] == 'a' ? true : false;
-        int orb = stoi(op_str.substr(0, len - 2));
+    for (std::sregex_iterator i = begin; i != end; ++i) {
+        std::smatch match = *i;
+        int orb = std::stoi(match[1].str());               // Convert captured integer part to int
+        bool alpha = match[2].str() == "a" ? true : false; // Capture 'a' or 'b'
+        char creation = match[3].str() == "+" ? true : false; // Capture '+' or '-'
         ops_vec_tuple.push_back(std::make_tuple(creation, alpha, orb));
     }
+    std::reverse(ops_vec_tuple.begin(), ops_vec_tuple.end());
     return ops_vec_tuple;
 }
 

@@ -9,6 +9,15 @@ def test_sq_operator():
     op1 = forte.make_sparse_operator([("[0a+ 0a-]", 1.0), ("[1a+ 0a-]", -1.0)])
     op1 *= -2.0
     assert op1 == forte.make_sparse_operator([("[0a+ 0a-]", -2.0), ("[1a+ 0a-]", 2.0)])
+    with pytest.raises(Exception):
+        op1 = forte.make_sparse_operator("[0a+ 0a]")
+    with pytest.raises(Exception):
+        op1 = forte.make_sparse_operator("[0a+ 0]")
+    op1 = forte.make_sparse_operator("[0a+")
+    assert op1 == forte.make_sparse_operator("[0a+]")
+
+    op1 = forte.make_sparse_operator([("0a+ 0a-", 1.0), ("1a+ 0a-", -1.0)])
+    assert op1 == forte.make_sparse_operator([("[0a+ 0a-]", 1.0), ("[1a+ 0a-]", -1.0)])
 
 
 def test_sq_operator_product():
@@ -135,7 +144,8 @@ def test_sq_operator_commutator():
     op1 = forte.make_sparse_operator("[1a+ 0a-]")
     op2 = forte.make_sparse_operator("[2a+ 3a-]")
     op3 = op1.commutator(op2)
-    assert op3.size() == 0
+    nullop = forte.SparseOperator()
+    assert op3 == nullop
 
     print("[[1a+ 0b-],[0b+ 3a-]]")
     op1 = forte.make_sparse_operator("[1a+ 0b-]")

@@ -29,7 +29,6 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <regex>
 
 #include "helpers/combinatorial.h"
 #include "helpers/timer.h"
@@ -93,25 +92,28 @@ void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, do
 
 // void SparseOperator::copy(const SparseOperator& other) { *this = other; }
 
-void SparseOperator::add_term_from_str(std::string str, double coefficient, bool allow_reordering) {
-    // the regex to parse the entries
-    std::regex re("\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
-    // the match object
-    std::smatch m;
+void SparseOperator::add_term_from_str(std::string s, double coefficient, bool allow_reordering) {
+    auto [sqop, phase] = make_sq_operator_string(s, allow_reordering);
+    add(sqop, phase * coefficient);
 
-    // here we match terms of the form [<orb><a/b><+/-> ...], then parse the operator part
-    // and translate it into a term that is added to the operator.
-    //
-    if (std::regex_match(str, m, re)) {
-        if (m.ready()) {
-            auto [sqop, phase] = make_sq_operator_string(m[1], allow_reordering);
-            add(sqop, phase * coefficient);
-        }
-    } else {
-        std::string msg =
-            "add_term_from_str(std::string str, double value) could not parse the string " + str;
-        throw std::runtime_error(msg);
-    }
+    // // the regex to parse the entries
+    // std::regex re("\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
+    // // the match object
+    // std::smatch m;
+
+    // // here we match terms of the form [<orb><a/b><+/-> ...], then parse the operator part
+    // // and translate it into a term that is added to the operator.
+    // //
+    // if (std::regex_match(str, m, re)) {
+    //     if (m.ready()) {
+    //         auto [sqop, phase] = make_sq_operator_string(m[1], allow_reordering);
+    //         add(sqop, phase * coefficient);
+    //     }
+    // } else {
+    //     std::string msg =
+    //         "add_term_from_str(std::string str, double value) could not parse the string " + str;
+    //     throw std::runtime_error(msg);
+    // }
 }
 
 // std::vector<double> SparseOperator::coefficients() const {
@@ -146,6 +148,14 @@ void SparseOperator::add_term_from_str(std::string str, double coefficient, bool
 //     }
 // }
 
+SparseOperator SparseOperatorList::to_operator() const {
+    SparseOperator op;
+    for (const auto& [sqop, c] : elements()) {
+        op.add(sqop, c);
+    }
+    return op;
+}
+
 std::string format_term_in_sum(double coefficient, const std::string& term) {
     if (term == "[ ]") {
         if (coefficient == 0.0) {
@@ -173,7 +183,7 @@ std::string format_term_in_sum(double coefficient, const std::string& term) {
 std::vector<std::string> SparseOperator::str() const {
     std::vector<std::string> v;
     for (const auto& [sqop, c] : this->elements()) {
-        if (std::fabs(c) < 1.0e-12)
+        if (std::abs(c) < 1.0e-12)
             continue;
         v.push_back(format_term_in_sum(c, sqop.str()));
     }
@@ -321,8 +331,8 @@ void sim_trans_fact_op(SparseOperator& O, const SparseOperatorList& T, bool reve
 void sim_trans_op_impl(SparseOperator& O, const SQOperatorString& T_op, double theta,
                        double screen_threshold) {
     // sanity check to make sure all indices are distinct
-    if (not T_op.cre().fast_a_and_b_eq_zero(T_op.ann())) {
-        throw std::runtime_error("similarity_transform_fast: the operator " + T_op.str() +
+    if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
+        throw std::runtime_error("sim_trans_op_impl: the operator " + T_op.str() +
                                  " contains repeated indices.\nThis is not allowed for the "
                                  "similarity transformation.");
     }
@@ -376,8 +386,8 @@ void sim_trans_fact_antiherm(SparseOperator& O, const SparseOperatorList& T, boo
 void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, double theta,
                              double screen_threshold) {
     // sanity check to make sure all indices are distinct
-    if (not T_op.cre().fast_a_and_b_eq_zero(T_op.ann())) {
-        throw std::runtime_error("similarity_transform_fast: the operator " + T_op.str() +
+    if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
+        throw std::runtime_error("sim_trans_antiherm_impl: the operator " + T_op.str() +
                                  " contains repeated indices.\nThis is not allowed for the "
                                  "similarity transformation.");
     }
@@ -579,39 +589,14 @@ void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, do
 
 void SparseOperatorList::add_term_from_str(std::string str, double coefficient,
                                            bool allow_reordering) {
-    // the regex to parse the entries
-    std::regex re("\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
-    // the match object
-    std::smatch m;
-
-    // here we match terms of the form [<orb><a/b><+/-> ...], then parse the operator part
-    // and translate it into a term that is added to the operator.
-    //
-    if (std::regex_match(str, m, re)) {
-        if (m.ready()) {
-            auto [sqop, phase] = make_sq_operator_string(m[1], allow_reordering);
-            add(sqop, phase * coefficient);
-        } else {
-            std::string msg =
-                "add_term_from_str(std::string str, double value) could not parse the string " +
-                str;
-            throw std::runtime_error(msg);
-        }
-    } else {
-        std::string msg =
-            "add_term_from_str(std::string str, double value) could not parse the string " + str;
-        throw std::runtime_error(msg);
-    }
+    auto [sqop, phase] = make_sq_operator_string(str, allow_reordering);
+    add(sqop, phase * coefficient);
 }
-
-// void SparseOperatorList::add(const SQOperatorString& op, double coefficient) {
-//     elements_.push_back({op, coefficient});
-// }
 
 std::vector<std::string> SparseOperatorList::str() const {
     std::vector<std::string> v;
     for (const auto& [sqop, c] : this->elements()) {
-        if (std::fabs(c) < 1.0e-12)
+        if (std::abs(c) < 1.0e-12)
             continue;
         v.push_back(format_term_in_sum(c, sqop.str()));
     }

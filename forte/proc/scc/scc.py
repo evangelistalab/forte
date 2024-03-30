@@ -242,7 +242,7 @@ def make_cluster_operator(max_exc, naelpi, mo_space_info, psi4_wfn):
     # get the symmetry of each active orbital
     symmetry = mo_space_info.symmetry("CORRELATED")
 
-    sop = forte.SparseOperator()
+    sop = forte.SparseOperatorList()
 
     active_to_all = mo_space_info.absolute_mo("CORRELATED")
 
@@ -264,21 +264,17 @@ def make_cluster_operator(max_exc, naelpi, mo_space_info, psi4_wfn):
                             bvir_sym = functools.reduce(lambda x, y: x ^ symmetry[y], bv, 0)
                             # make sure the operators are total symmetric
                             if (aocc_sym ^ avir_sym) ^ (bocc_sym ^ bvir_sym) == 0:
-                                # Create a list of tuples (creation, alpha, orb) where
-                                #   creation : bool (true = creation, false = annihilation)
-                                #   alpha    : bool (true = alpha, false = beta)
-                                #   orb      : int  (the index of the mo)
                                 op = []
-                                for i in ao:
-                                    op.append((False, True, i))
-                                for i in bo:
-                                    op.append((False, False, i))
-                                for a in reversed(bv):
-                                    op.append((True, False, a))
-                                for a in reversed(av):
-                                    op.append((True, True, a))
+                                for a in av:
+                                    op.append(f"{a}a+")
+                                for a in bv:
+                                    op.append(f"{a}b+")
+                                for i in reversed(bo):
+                                    op.append(f"{i}b-")
+                                for i in reversed(ao):
+                                    op.append(f"{i}a-")
 
-                                sop.add_term(op, 0.0)
+                                sop.add_term_from_str(f"[{' '.join(op)}]", 0.0)
 
                                 e_aocc = functools.reduce(lambda x, y: x + ea[y], ao, 0.0)
                                 e_avir = functools.reduce(lambda x, y: x + ea[y], av, 0.0)

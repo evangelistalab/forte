@@ -280,6 +280,7 @@ void export_Determinant(py::module& m) {
         .def("ann", &SQOperatorString::ann)
         .def("str", &SQOperatorString::str)
         .def("count", &SQOperatorString::count)
+        .def("__str__", &SQOperatorString::str)
         .def("__eq__", &SQOperatorString::operator==)
         .def("__lt__", &SQOperatorString::operator<);
 
@@ -300,14 +301,20 @@ void export_Determinant(py::module& m) {
         .def("add_term_from_str", &SparseOperator::add_term_from_str, "str"_a,
              "coefficient"_a = 1.0, "allow_reordering"_a = false)
         .def(
-            "__getitem__",
+            "__iter__",
+            [](const SparseOperator& v) {
+                return py::make_iterator(v.elements().begin(), v.elements().end());
+            },
+            py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
+        .def(
+            "coefficient",
             [](const SparseOperator& op, const std::string& s) {
                 const auto [sqop, factor] = make_sq_operator_string(s, false);
                 return factor * op[sqop];
             },
             "Get the coefficient of a term")
         .def(
-            "__setitem__",
+            "set_coefficient",
             [](SparseOperator& op, const std::string& s, double value) {
                 const auto [sqop, factor] = make_sq_operator_string(s, false);
                 op[sqop] = factor * value;
@@ -368,7 +375,15 @@ void export_Determinant(py::module& m) {
         .def("add", &SparseOperatorList::add)
         .def("add_term_from_str", &SparseOperatorList::add_term_from_str, "str"_a,
              "coefficient"_a = 1.0, "allow_reordering"_a = false)
+        .def("to_operator", &SparseOperatorList::to_operator)
         .def("__len__", &SparseOperatorList::size)
+        .def(
+            "__iter__",
+            [](const SparseOperatorList& v) {
+                return py::make_iterator(v.elements().begin(), v.elements().end());
+            },
+            py::keep_alive<0, 1>())
+        .def("size", &SparseOperatorList::size)
         .def("__str__", [](const SparseOperatorList& op) { return join(op.str(), " "); })
         .def(
             "__getitem__", [](const SparseOperatorList& op, const size_t n) { return op[n]; },
@@ -376,7 +391,35 @@ void export_Determinant(py::module& m) {
         .def(
             "__setitem__",
             [](SparseOperatorList& op, const size_t n, double value) { op[n] = value; },
-            "Set the coefficient of a term");
+            "Set the coefficient of a term")
+        .def("coefficients",
+             [](SparseOperatorList& op) {
+                 std::vector<double> values(op.size());
+                 for (size_t i = 0, max = op.size(); i < max; ++i) {
+                     values[i] = op[i];
+                 }
+                 return values;
+             })
+        .def("set_coefficients",
+             [](SparseOperatorList& op, const std::vector<double>& values) {
+                 if (op.size() != values.size()) {
+                     throw std::invalid_argument(
+                         "The size of the list of coefficients must match the "
+                         "size of the operator list");
+                 }
+                 for (size_t i = 0; i < op.size(); ++i) {
+                     op[i] = values[i];
+                 }
+             })
+        .def(
+            "__call__",
+            [](const SparseOperatorList& op, const size_t n) {
+                if (n >= op.size()) {
+                    throw std::out_of_range("Index out of range");
+                }
+                return op(n);
+            },
+            "Get the nth element");
 
     m.def("new_product", [](const SparseOperator A, const SparseOperator B) {
         SparseOperator C;
@@ -420,6 +463,15 @@ void export_Determinant(py::module& m) {
             return sop;
         },
         "list"_a, "allow_reordering"_a = false);
+
+    m.def(
+        "operator_list",
+        [](const std::string& s, double coefficient, bool allow_reordering) {
+            SparseOperatorList sop;
+            sop.add_term_from_str(s, coefficient, allow_reordering);
+            return sop;
+        },
+        "s"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false);
 
     m.def(
         "sim_trans_fact_exc",
@@ -470,15 +522,31 @@ void export_Determinant(py::module& m) {
                                   "A class to represent a sparse Hamiltonian")
         .def(py::init<std::shared_ptr<ActiveSpaceIntegrals>>())
         .def("compute", &SparseHamiltonian::compute)
+        .def("apply", &SparseHamiltonian::compute)
         .def("compute_on_the_fly", &SparseHamiltonian::compute_on_the_fly)
         .def("timings", &SparseHamiltonian::timings);
 
     py::class_<SparseExp>(m, "SparseExp", "A class to compute the exponential of a sparse operator")
         .def(py::init<>())
-        .def("apply_op", &SparseExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
-             "scaling_factor"_a = 1.0, "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
-        .def("apply_antiherm", &SparseExp::apply_antiherm, "sop"_a, "state"_a,
-             "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
+        .def("apply_op",
+             py::overload_cast<const SparseOperator&, const StateVector&, const std::string&,
+                               double, int, double>(&SparseExp::apply_op),
+             "sop"_a, "state"_a, "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
+             "screen_thresh"_a = 1.0e-12)
+        .def("apply_op",
+             py::overload_cast<const SparseOperatorList&, const StateVector&, const std::string&,
+                               double, int, double>(&SparseExp::apply_op),
+             "sop"_a, "state"_a, "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
+             "screen_thresh"_a = 1.0e-12)
+        .def("apply_antiherm",
+             py::overload_cast<const SparseOperator&, const StateVector&, const std::string&,
+                               double, int, double>(&SparseExp::apply_antiherm),
+             "sop"_a, "state"_a, "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
+             "screen_thresh"_a = 1.0e-12)
+        .def("apply_antiherm",
+             py::overload_cast<const SparseOperatorList&, const StateVector&, const std::string&,
+                               double, int, double>(&SparseExp::apply_antiherm),
+             "sop"_a, "state"_a, "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
              "screen_thresh"_a = 1.0e-12)
         .def("timings", &SparseExp::timings);
 

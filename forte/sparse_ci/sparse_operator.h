@@ -112,6 +112,8 @@ class SparseOperatorList : public VectorSpaceList<SparseOperatorList, SQOperator
 
     /// @return a string representation of this operator
     std::vector<std::string> str() const;
+
+    SparseOperator to_operator() const;
 };
 
 // double norm(const SparseOperator& op);

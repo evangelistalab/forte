@@ -32,19 +32,19 @@ def test_sparse_operator():
     sop.add_term_from_str("[]", 1.0)
     sop.add_term_from_str("[0a+ 0b+ 0b- 0a-]", 1.0)
 
-    assert sop["[]"] == 1.0
-    assert sop["[0a+ 0b+ 0b- 0a-]"] == 1.0
-    sop["[]"] = 0.5
-    sop["[0a+ 0b+ 0b- 0a-]"] = 0.3
-    assert sop["[]"] == 0.5
-    assert sop["[0a+ 0b+ 0b- 0a-]"] == 0.3
+    assert sop.coefficient("[]") == 1.0
+    assert sop.coefficient("[0a+ 0b+ 0b- 0a-]") == 1.0
+    sop.set_coefficient("[]", 0.5)
+    sop.set_coefficient("[0a+ 0b+ 0b- 0a-]", 0.3)
+    assert sop.coefficient("[]") == 0.5
+    assert sop.coefficient("[0a+ 0b+ 0b- 0a-]") == 0.3
     # remove one term from sop
     sop.remove("[0a+ 0b+ 0b- 0a-]")
     # check the size
     assert sop.size() == 1
     # check the element
-    assert sop["[]"] == 0.5
-    assert sop["[0a+ 0b+ 0b- 0a-]"] == 0.0
+    assert sop.coefficient("[]") == 0.5
+    assert sop.coefficient("[0a+ 0b+ 0b- 0a-]") == 0.0
     assert sop.size() == 1
     sop.remove("[]")
     assert sop.size() == 0

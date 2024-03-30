@@ -43,11 +43,25 @@ StateVector SparseExp::apply_op(const SparseOperator& sop, const StateVector& st
                    screen_thresh);
 }
 
+StateVector SparseExp::apply_op(const SparseOperatorList& sop_list, const StateVector& state0,
+                                const std::string& algorithm, double scaling_factor, int maxk,
+                                double screen_thresh) {
+    SparseOperator sop = sop_list.to_operator();
+    return apply_op(sop, state0, algorithm, scaling_factor, maxk, screen_thresh);
+}
+
 StateVector SparseExp::apply_antiherm(const SparseOperator& sop, const StateVector& state0,
                                       const std::string& algorithm, double scaling_factor, int maxk,
                                       double screen_thresh) {
     return compute(OperatorType::Antihermitian, sop, state0, algorithm, scaling_factor, maxk,
                    screen_thresh);
+}
+
+StateVector SparseExp::apply_antiherm(const SparseOperatorList& sop_list, const StateVector& state0,
+                                      const std::string& algorithm, double scaling_factor, int maxk,
+                                      double screen_thresh) {
+    SparseOperator sop = sop_list.to_operator();
+    return apply_antiherm(sop, state0, algorithm, scaling_factor, maxk, screen_thresh);
 }
 
 StateVector SparseExp::compute(OperatorType op_type, const SparseOperator& sop,

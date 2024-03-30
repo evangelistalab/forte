@@ -143,7 +143,7 @@ StateVector apply_operator_impl(bool is_antihermitian, const SparseOperator& sop
     return new_terms;
 }
 
-std::vector<double> get_projection(const SparseOperator& sop, const StateVector& ref,
+std::vector<double> get_projection(const SparseOperatorList& sop, const StateVector& ref,
                                    const StateVector& state) {
     local_timer t;
     std::vector<double> proj(sop.size(), 0.0);

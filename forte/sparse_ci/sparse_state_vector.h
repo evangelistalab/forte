@@ -86,7 +86,7 @@ class StateVector {
 StateVector apply_number_projector(int na, int nb, const StateVector& state);
 
 /// compute the projection  <state0 | op | ref>, for each operator op in gop
-std::vector<double> get_projection(const SparseOperator& sop, const StateVector& ref,
+std::vector<double> get_projection(const SparseOperatorList& sop, const StateVector& ref,
                                    const StateVector& state0);
 
 /// compute the overlap value <left_state|right_state>
