@@ -92,6 +92,18 @@ class SparseOperator
     std::string latex() const;
 };
 
+class NormalOrderedSparseOperator
+    : public VectorSpace<NormalOrderedSparseOperator, SQOperatorString, double,
+                         SQOperatorString::Hash> {
+  public:
+    NormalOrderedSparseOperator() = default;
+    /// @brief  add a term to this operator
+    /// @param str a string that defines the product of operators in the format [... q_2 q_1 q_0]
+    /// @param coefficient a coefficient that multiplies the product of second quantized operators
+    /// @param allow_reordering if true, the operator will be reordered to canonical form
+    void add_term_from_str(std::string str, double coefficient, bool allow_reordering = false);
+};
+
 class SparseOperatorList : public VectorSpaceList<SparseOperatorList, SQOperatorString, double> {
   public:
     SparseOperatorList() = default;
@@ -129,14 +141,5 @@ void sim_trans_fact_op(SparseOperator& O, const SparseOperatorList& T, bool reve
 
 void sim_trans_fact_antiherm(SparseOperator& O, const SparseOperatorList& T, bool reverse = false,
                              double screen_threshold = 1e-12);
-
-// class NormalOrderedOperator {
-//   public:
-//     NormalOrderedOperator() = default;
-//     NormalOrderedOperator(const SparseOperator& op, const MOSpaceInfo& mo_space_info,
-//                           const RDMs& rdm);
-
-//   private:
-// };
 
 } // namespace forte

@@ -104,65 +104,65 @@ def run_test_sparse_operator_transform(type, O, A, theta):
 
 
 def test_sparse_operator_transform_1():
-    O = forte.make_sparse_operator("[2a+ 0a-]", 1.0)
+    O = forte.make_sparse_operator_list("[2a+ 0a-]", 1.0)
     theta = 0.3  # math.pi / 2
-    A = forte.make_sparse_operator("[2a+ 0a-]", theta)
+    A = forte.make_sparse_operator_list("[2a+ 0a-]", theta)
     run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_2():
-    O = forte.make_sparse_operator("[0a+ 2a+ 1a- 0a-]", 1.0)
+    O = forte.make_sparse_operator_list("[0a+ 2a+ 1a- 0a-]", 1.0)
     theta = 0.23  # math.pi / 2
-    A = forte.make_sparse_operator("[2a+ 0a-]", theta)
+    A = forte.make_sparse_operator_list("[2a+ 0a-]", theta)
     run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_3():
-    O = forte.make_sparse_operator("[0a+ 3a+ 2a- 0a-]", 1.0)
+    O = forte.make_sparse_operator_list("[0a+ 3a+ 2a- 0a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[2a+ 0a-]", theta)
+    A = forte.make_sparse_operator_list("[2a+ 0a-]", theta)
     run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_4():
-    O = forte.make_sparse_operator("[0a+ 3b+ 2b- 0a-]", 1.0)
+    O = forte.make_sparse_operator_list("[0a+ 3b+ 2b- 0a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[2a+ 0a-]", theta)
+    A = forte.make_sparse_operator_list("[2a+ 0a-]", theta)
     run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_5():
-    O = forte.make_sparse_operator("[0b+ 0b-]", 1.0)
+    O = forte.make_sparse_operator_list("[0b+ 0b-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[2b+ 0b-]", theta)
+    A = forte.make_sparse_operator_list("[2b+ 0b-]", theta)
     run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_6():
-    O = forte.make_sparse_operator("[0a+ 1a+ 7a- 3a-]", 1.0)
+    O = forte.make_sparse_operator_list("[0a+ 1a+ 7a- 3a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[1a+ 7a+ 3a- 2a-]", theta)
+    A = forte.make_sparse_operator_list("[1a+ 7a+ 3a- 2a-]", theta)
     run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_7():
-    O = forte.make_sparse_operator("[1a+ 4a+ 7a- 3a-]", 1.0)
+    O = forte.make_sparse_operator_list("[1a+ 4a+ 7a- 3a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[0a+ 7a+ 2a- 1a-]", theta)
+    A = forte.make_sparse_operator_list("[0a+ 7a+ 2a- 1a-]", theta)
     run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
 def test_sparse_operator_transform_8():
-    O = forte.make_sparse_operator("[0a+ 0a-]", 1.0)
+    O = forte.make_sparse_operator_list("[0a+ 0a-]", 1.0)
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[2a- 0a-]", theta)
+    A = forte.make_sparse_operator_list("[2a- 0a-]", theta)
     run_test_sparse_operator_transform("exc", O, A, theta)
 
 
 def test_sparse_operator_transform_9():
-    O = forte.make_sparse_operator([("[0a+ 0a-]", 1.0), ("[1a+ 1a-]", 1.0), ("[1a+ 4a+ 7a- 3a-]", 1.0)])
+    O = forte.make_sparse_operator_list([("[0a+ 0a-]", 1.0), ("[1a+ 1a-]", 1.0), ("[1a+ 4a+ 7a- 3a-]", 1.0)])
     theta = 0.37  # math.pi / 2
-    A = forte.make_sparse_operator("[0a+ 7a+ 2a- 1a-]", theta)
+    A = forte.make_sparse_operator_list("[0a+ 7a+ 2a- 1a-]", theta)
     run_test_sparse_operator_transform("antiherm", O, A, theta)
 
 
