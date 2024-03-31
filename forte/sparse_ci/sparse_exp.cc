@@ -73,11 +73,11 @@ StateVector SparseExp::compute(OperatorType op_type, const SparseOperator& sop,
         alg = Algorithm::OnTheFlySorted;
     } else if (algorithm == "ontheflystd") {
         alg = Algorithm::OnTheFlyStd;
-    } else if (algorithm == "cached") {
+    } else if (algorithm == "cached" or algorithm == "default") {
         alg = Algorithm::Cached;
     } else {
         throw std::runtime_error("Unknown algorithm for SparseExp: " + algorithm +
-                                 ". Options are onthefly, ontheflystd.");
+                                 ". Options are onthefly, ontheflystd, or cached (default).");
     }
 
     auto state = apply_exp_operator(op_type, sop, state0, scaling_factor, maxk, screen_thresh, alg);
@@ -97,7 +97,7 @@ StateVector SparseExp::apply_exp_operator(OperatorType op_type, const SparseOper
 
     double factor = 1.0;
     for (int k = 1; k <= maxk; k++) {
-        factor *= scaling_factor / static_cast<double>(k);
+        state *= scaling_factor / static_cast<double>(k);
         if (alg == Algorithm::OnTheFlyStd) {
             new_terms = apply_operator_std(op_type, sop, state, screen_thresh);
         } else if (alg == Algorithm::OnTheFlySorted) {
@@ -107,11 +107,10 @@ StateVector SparseExp::apply_exp_operator(OperatorType op_type, const SparseOper
         }
         double norm = 0.0;
         double inf_norm = 0.0;
-        for (const auto& det_c : new_terms) {
-            const double delta_exp = factor * det_c.second;
-            exp_state[det_c.first] += delta_exp;
-            norm += std::pow(delta_exp, 2.0);
-            inf_norm = std::max(inf_norm, std::fabs(delta_exp));
+        exp_state += new_terms;
+        for (const auto& [det, c] : new_terms) {
+            norm += std::pow(c, 2.0);
+            inf_norm = std::max(inf_norm, std::abs(c));
         }
         norm = std::sqrt(norm);
         if (inf_norm < convergence_threshold_) {
@@ -179,45 +178,45 @@ StateVector SparseExp::apply_operator_cached(OperatorType op_type, const SparseO
         timings_["exp"] += t_sum.get();
     }
 
-    if (op_type == OperatorType::Antihermitian) {
-        for (const auto& [absc, c, d] : state_sorted) {
-            if (absc > screen_thresh) {
-                auto search = couplings_dexc_.find(d);
+    if (op_type != OperatorType::Antihermitian) {
+        return new_terms;
+    }
 
-                if (search == couplings_dexc_.end()) {
-                    local_timer t_couplings;
-                    // we have to build the coupling list for this determinant
-                    std::vector<std::tuple<SQOperatorString, Determinant, double>> d_couplings;
-                    // loop over all the operators
-                    for (const auto& [sqop, _] : sop.elements()) {
-                        // create a mask for screening determinants according to the
-                        // annihilation operators. This mask looks only at annihilation
-                        // operators that are not preceeded by creation operators
-                        const Determinant ucre = sqop.ann() - sqop.cre();
-                        // check if this operator can be applied
-                        if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
-                            new_d = d;
-                            double value =
-                                apply_operator_to_det_fast(new_d, sqop.ann(), sqop.cre());
-                            d_couplings.push_back(std::make_tuple(sqop, new_d, value));
-                        }
-                    }
-                    couplings_dexc_[d] = d_couplings;
-                    timings_["couplings"] += t_couplings.get();
+    for (const auto& [absc, c, d] : state_sorted) {
+        if (absc * max_t < screen_thresh)
+            break;
+
+        auto search = couplings_dexc_.find(d);
+
+        if (search == couplings_dexc_.end()) {
+            local_timer t_couplings;
+            // we have to build the coupling list for this determinant
+            std::vector<std::tuple<SQOperatorString, Determinant, double>> d_couplings;
+            // loop over all the operators
+            for (const auto& [sqop, _] : sop.elements()) {
+                // create a mask for screening determinants according to the
+                // annihilation operators. This mask looks only at annihilation
+                // operators that are not preceeded by creation operators
+                const Determinant ucre = sqop.ann() - sqop.cre();
+                // check if this operator can be applied
+                if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
+                    new_d = d;
+                    double value = apply_operator_to_det_fast(new_d, sqop.ann(), sqop.cre());
+                    d_couplings.push_back(std::make_tuple(sqop, new_d, value));
                 }
-                local_timer t_sum;
-                // apply the operator
-                const auto& d_couplings = couplings_dexc_[d];
-                for (const auto& [sqop, d2, f] : d_couplings) {
-                    const double value = sop[sqop] * f * c;
-                    if (std::fabs(value) > screen_thresh)
-                        new_terms[d2] -= value;
-                }
-                timings_["exp"] += t_sum.get();
-            } else {
-                break;
             }
+            couplings_dexc_[d] = d_couplings;
+            timings_["couplings"] += t_couplings.get();
         }
+        local_timer t_sum;
+        // apply the operator
+        const auto& d_couplings = couplings_dexc_[d];
+        for (const auto& [sqop, d2, f] : d_couplings) {
+            const double value = sop[sqop] * f * c;
+            if (std::fabs(value) > screen_thresh)
+                new_terms[d2] -= value;
+        }
+        timings_["exp"] += t_sum.get();
     }
     return new_terms;
 }
