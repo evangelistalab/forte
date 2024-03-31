@@ -75,6 +75,11 @@ class StateVector {
     /// @param d the determinant to search
     double& operator[](const Determinant& d) { return state_vec_[d]; }
 
+    StateVector& operator+=(const StateVector& rhs);
+    StateVector& operator-=(const StateVector& rhs);
+    StateVector& operator*=(double rhs);
+    double norm() const;
+
   private:
     /// Holds an unordered map Determinant -> double
     det_hash<double> state_vec_;

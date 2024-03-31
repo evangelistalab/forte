@@ -129,8 +129,8 @@ class SparseExp {
     std::map<std::string, double> timings_;
     DeterminantHashVec exp_hash_;
     // map Determinant -> [(operator, new determinant, factor),...]
-    det_hash<std::vector<std::tuple<size_t, Determinant, double>>> couplings_;
-    det_hash<std::vector<std::tuple<size_t, Determinant, double>>> couplings_dexc_;
+    det_hash<std::vector<std::tuple<SQOperatorString, Determinant, double>>> couplings_;
+    det_hash<std::vector<std::tuple<SQOperatorString, Determinant, double>>> couplings_dexc_;
 };
 
 } // namespace forte

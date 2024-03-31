@@ -508,6 +508,9 @@ void export_Determinant(py::module& m) {
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def("str", &StateVector::str)
         .def("size", &StateVector::size)
+        .def("norm", &StateVector::norm)
+        .def("__iadd__", &StateVector::operator+=, "Add a StateVector to this StateVector")
+        .def("__isub__", &StateVector::operator-=, "Subtract a StateVector from this StateVector")
         .def("__len__", &StateVector::size)
         .def("__eq__", &StateVector::operator==)
         .def("__repr__", [](const StateVector& v) { return v.str(); })

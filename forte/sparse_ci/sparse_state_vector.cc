@@ -54,11 +54,38 @@ std::string StateVector::str(int n) const {
     }
     std::string s;
     for (const auto& [det, c] : state_vec_) {
-        if (std::fabs(c) > 1.0e-12) {
-            s += forte::str(det, n) + " * " + std::to_string(c) + "\n";
+        if (std::abs(c) > 1.0e-8) {
+            s += forte::str(det, n) + " * " + to_string_with_precision(c, 10) + "\n";
         }
     }
     return s;
+}
+
+StateVector& StateVector::operator+=(const StateVector& rhs) {
+    for (const auto& [det, c] : rhs.map()) {
+        state_vec_[det] += c;
+    }
+    return *this;
+}
+
+StateVector& StateVector::operator-=(const StateVector& rhs) {
+    for (const auto& [det, c] : rhs.map()) {
+        state_vec_[det] -= c;
+    }
+    return *this;
+}
+
+StateVector& StateVector::operator*=(double rhs) {
+    for (auto& [det, c] : state_vec_) {
+        c *= rhs;
+    }
+    return *this;
+}
+
+double StateVector::norm() const {
+    return std::sqrt(
+        std::accumulate(state_vec_.begin(), state_vec_.end(), 0.0,
+                        [](double sum, const auto& p) { return sum + p.second * p.second; }));
 }
 
 StateVector apply_operator_lin(const SparseOperator& sop, const StateVector& state,
