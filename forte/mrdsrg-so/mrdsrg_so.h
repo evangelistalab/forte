@@ -211,6 +211,11 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
     void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
 
+    void H1_T1_C0_slow(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
+    void H2_T1_C0_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
+    void H1_T2_C0_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
+    void H2_T2_C0_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+
     /// Compute one-body term of commutator [H, T]
     void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
@@ -219,12 +224,28 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void H3_T1_C1(BlockedTensor& H3, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     void H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
+    void H1_T1_C1_slow(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                       BlockedTensor& C1);
+    void H1_T2_C1_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                       BlockedTensor& C1);
+    void H2_T1_C1_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                       BlockedTensor& C1);
+    void H2_T2_C1_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                       BlockedTensor& C1);
+
     /// Compute two-body term of commutator [H, T]
     void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     void H3_T1_C2(BlockedTensor& H3, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     void H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
+    void H2_T1_C2_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                       BlockedTensor& C2);
+    void H1_T2_C2_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                       BlockedTensor& C2);
+    void H2_T2_C2_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                       BlockedTensor& C2);
 
     /// Compute three-body term of commutator [H, T]
     void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);

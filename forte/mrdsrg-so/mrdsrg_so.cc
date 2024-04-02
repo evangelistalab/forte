@@ -752,6 +752,8 @@ void MRDSRG_SO::compute_hbar() {
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
+    bool do_wicked = foptions_->get_bool("DO_WICKED");
+
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
         // prefactor before n-nested commutator
@@ -761,23 +763,43 @@ void MRDSRG_SO::compute_hbar() {
         double C0 = 0.0;
         C1.zero();
         C2.zero();
+        if (do_wicked) {
+            outfile->Printf("\n  Wick&d contraction");
+            // zero-body
+            H1_T1_C0(O1, T1, factor, C0);
+            H1_T2_C0(O1, T2, factor, C0);
+            H2_T1_C0(O2, T1, factor, C0);
+            H2_T2_C0(O2, T2, factor, C0);
 
-        // zero-body
-        H1_T1_C0(O1, T1, factor, C0);
-        H1_T2_C0(O1, T2, factor, C0);
-        H2_T1_C0(O2, T1, factor, C0);
-        H2_T2_C0(O2, T2, factor, C0);
+            // one-body
+            H1_T1_C1(O1, T1, factor, C1);
+            H1_T2_C1(O1, T2, factor, C1);
+            H2_T1_C1(O2, T1, factor, C1);
+            H2_T2_C1(O2, T2, factor, C1);
 
-        // one-body
-        H1_T1_C1(O1, T1, factor, C1);
-        H1_T2_C1(O1, T2, factor, C1);
-        H2_T1_C1(O2, T1, factor, C1);
-        H2_T2_C1(O2, T2, factor, C1);
+            // two-body
+            H1_T2_C2(O1, T2, factor, C2);
+            H2_T1_C2(O2, T1, factor, C2);
+            H2_T2_C2(O2, T2, factor, C2);
+        } else {
+            outfile->Printf("\n  Original contraction");
+            // zero-body
+            H1_T1_C0_slow(O1, T1, factor, C0);
+            H1_T2_C0_slow(O1, T2, factor, C0);
+            H2_T1_C0_slow(O2, T1, factor, C0);
+            H2_T2_C0_slow(O2, T2, factor, C0);
 
-        // two-body
-        H1_T2_C2(O1, T2, factor, C2);
-        H2_T1_C2(O2, T1, factor, C2);
-        H2_T2_C2(O2, T2, factor, C2);
+            // one-body
+            H1_T1_C1_slow(O1, T1, factor, C1);
+            H1_T2_C1_slow(O1, T2, factor, C1);
+            H2_T1_C1_slow(O2, T1, factor, C1);
+            H2_T2_C1_slow(O2, T2, factor, C1);
+
+            // two-body
+            H1_T2_C2_slow(O1, T2, factor, C2);
+            H2_T1_C2_slow(O2, T1, factor, C2);
+            H2_T2_C2_slow(O2, T2, factor, C2);
+        }
 
         //        outfile->Printf("\n   H0  = %20.12f", C0);
         //        outfile->Printf("\n  |H1| = %20.12f", C1.norm(1));
@@ -790,6 +812,13 @@ void MRDSRG_SO::compute_hbar() {
         C1["pq"] += O1["qp"];
         O2["pqrs"] = C2["pqrs"];
         C2["pqrs"] += O2["rspq"];
+
+        if (do_wicked) {
+            O2["pqrs"] = C2["pqrs"];
+            C2["pqrs"] -= O2["qprs"];
+            C2["pqrs"] -= O2["pqsr"];
+            C2["pqrs"] += O2["qpsr"];
+        }
 
         // Hbar += C
         Hbar0 += C0;
@@ -921,283 +950,287 @@ void MRDSRG_SO::compute_qhbar() {
     //    -----------------------------------------------------------------");
 }
 
-// void MRDSRG_SO::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar1, T1] -> C0 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H1_T1_C0_slow(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                              double& C0) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar1, T1] -> C0 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     double E = 0.0;
-//     BlockedTensor temp;
-//     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hp"});
-//     temp["jb"] = T1["ia"] * Eta1["ab"] * Gamma1["ji"];
-//     E += temp["jb"] * H1["bj"];
-//     E *= alpha;
-//     C0 += E;
-//     //    outfile->Printf("  Done. Timing %10.3f s; Energy = %14.10f Eh",
-//     //    timer.get(), E);
-// }
+    double E = 0.0;
+    BlockedTensor temp;
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hp"});
+    temp["jb"] = T1["ia"] * Eta1["ab"] * Gamma1["ji"];
+    E += temp["jb"] * H1["bj"];
+    E *= alpha;
+    C0 += E;
+    //    outfile->Printf("  Done. Timing %10.3f s; Energy = %14.10f Eh",
+    //    timer.get(), E);
+}
 
-// void MRDSRG_SO::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar2, T1] -> C0 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H2_T1_C0_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                              double& C0) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar2, T1] -> C0 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     double E = 0.0;
-//     BlockedTensor temp;
-//     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
-//     temp["uvxy"] += H2["evxy"] * T1["ue"];
-//     temp["uvxy"] -= H2["uvmy"] * T1["mx"];
-//     E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
-//     E *= alpha;
-//     C0 += E;
-//     //    outfile->Printf("  Done. Timing %10.3f s; Energy = %14.10f Eh",
-//     //    timer.get(), E);
-// }
+    double E = 0.0;
+    BlockedTensor temp;
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
+    temp["uvxy"] += H2["evxy"] * T1["ue"];
+    temp["uvxy"] -= H2["uvmy"] * T1["mx"];
+    E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
+    E *= alpha;
+    C0 += E;
+    //    outfile->Printf("  Done. Timing %10.3f s; Energy = %14.10f Eh",
+    //    timer.get(), E);
+}
 
-// void MRDSRG_SO::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar1, T2] -> C0 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H1_T2_C0_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                              double& C0) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar1, T2] -> C0 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     double E = 0.0;
-//     BlockedTensor temp;
-//     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
-//     temp["uvxy"] += H1["ex"] * T2["uvey"];
-//     temp["uvxy"] -= H1["vm"] * T2["umxy"];
-//     E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
-//     E *= alpha;
-//     C0 += E;
-//     //    outfile->Printf("  Done. Timing %10.3f s; Energy = %14.10f Eh",
-//     //    timer.get(), E);
-// }
+    double E = 0.0;
+    BlockedTensor temp;
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
+    temp["uvxy"] += H1["ex"] * T2["uvey"];
+    temp["uvxy"] -= H1["vm"] * T2["umxy"];
+    E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
+    E *= alpha;
+    C0 += E;
+    //    outfile->Printf("  Done. Timing %10.3f s; Energy = %14.10f Eh",
+    //    timer.get(), E);
+}
 
-// void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar2, T2] -> C0 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H2_T2_C0_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                              double& C0) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar2, T2] -> C0 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     // <[Hbar2, T2]> (C_2)^4
-//     double E = 0.25 * H2["efmn"] * T2["mnef"];
+    // <[Hbar2, T2]> (C_2)^4
+    double E = 0.25 * H2["efmn"] * T2["mnef"];
 
-//     BlockedTensor temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhaa"});
-//     BlockedTensor temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"hhaa"});
-//     temp1["klux"] = T2["ijux"] * Gamma1["ki"] * Gamma1["lj"];
-//     temp2["klvy"] = temp1["klux"] * Eta1["uv"] * Eta1["xy"];
-//     E += 0.25 * H2["vykl"] * temp2["klvy"];
+    BlockedTensor temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhaa"});
+    BlockedTensor temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"hhaa"});
+    temp1["klux"] = T2["ijux"] * Gamma1["ki"] * Gamma1["lj"];
+    temp2["klvy"] = temp1["klux"] * Eta1["uv"] * Eta1["xy"];
+    E += 0.25 * H2["vykl"] * temp2["klvy"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhav"});
-//     temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"hhav"});
-//     temp1["klue"] = T2["ijue"] * Gamma1["ki"] * Gamma1["lj"];
-//     temp2["klve"] = temp1["klue"] * Eta1["uv"];
-//     E += 0.5 * H2["vekl"] * temp2["klve"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhav"});
+    temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"hhav"});
+    temp1["klue"] = T2["ijue"] * Gamma1["ki"] * Gamma1["lj"];
+    temp2["klve"] = temp1["klue"] * Eta1["uv"];
+    E += 0.5 * H2["vekl"] * temp2["klve"];
 
-//     temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"aaaa"});
-//     temp2["yvxu"] -= H2["fexu"] * T2["yvef"];
-//     E += 0.25 * temp2["yvxu"] * Gamma1["xy"] * Gamma1["uv"];
+    temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"aaaa"});
+    temp2["yvxu"] -= H2["fexu"] * T2["yvef"];
+    E += 0.25 * temp2["yvxu"] * Gamma1["xy"] * Gamma1["uv"];
 
-//     temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"aa"});
-//     temp2["vu"] -= H2["femu"] * T2["mvef"];
-//     E += 0.5 * temp2["vu"] * Gamma1["uv"];
+    temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"aa"});
+    temp2["vu"] -= H2["femu"] * T2["mvef"];
+    E += 0.5 * temp2["vu"] * Gamma1["uv"];
 
-//     // <[Hbar2, T2]> C_4 (C_2)^2 HH
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"aahh"});
-//     temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"aaaa"});
-//     temp1["uvij"] = H2["uvkl"] * Gamma1["ki"] * Gamma1["lj"];
-//     temp2["uvxy"] += 0.125 * temp1["uvij"] * T2["ijxy"];
+    // <[Hbar2, T2]> C_4 (C_2)^2 HH
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"aahh"});
+    temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"aaaa"});
+    temp1["uvij"] = H2["uvkl"] * Gamma1["ki"] * Gamma1["lj"];
+    temp2["uvxy"] += 0.125 * temp1["uvij"] * T2["ijxy"];
 
-//     // <[Hbar2, T2]> C_4 (C_2)^2 PP
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"aapp"});
-//     temp1["uvcd"] = T2["uvab"] * Eta1["ac"] * Eta1["bd"];
-//     temp2["uvxy"] += 0.125 * temp1["uvcd"] * H2["cdxy"];
+    // <[Hbar2, T2]> C_4 (C_2)^2 PP
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"aapp"});
+    temp1["uvcd"] = T2["uvab"] * Eta1["ac"] * Eta1["bd"];
+    temp2["uvxy"] += 0.125 * temp1["uvcd"] * H2["cdxy"];
 
-//     // <[Hbar2, T2]> C_4 (C_2)^2 PH
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hapa"});
-//     temp1["juby"] = T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
-//     temp2["uvxy"] += H2["vbjx"] * temp1["juby"];
-//     E += temp2["uvxy"] * Lambda2["xyuv"];
+    // <[Hbar2, T2]> C_4 (C_2)^2 PH
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hapa"});
+    temp1["juby"] = T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
+    temp2["uvxy"] += H2["vbjx"] * temp1["juby"];
+    E += temp2["uvxy"] * Lambda2["xyuv"];
 
-//     // <[Hbar2, T2]> C_6 C_2
-//     if (foptions_->get_str("THREEPDC") != "ZERO") {
-//         temp1 = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
-//         temp1["uvwxyz"] += H2["uviz"] * T2["iwxy"];
-//         temp1["uvwxyz"] += H2["waxy"] * T2["uvaz"];
-//         E += 0.25 * temp1["uvwxyz"] * Lambda3["xyzuvw"];
-//     }
+    // <[Hbar2, T2]> C_6 C_2
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
+        temp1 = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
+        temp1["uvwxyz"] += H2["uviz"] * T2["iwxy"];
+        temp1["uvwxyz"] += H2["waxy"] * T2["uvaz"];
+        E += 0.25 * temp1["uvwxyz"] * Lambda3["xyzuvw"];
+    }
 
-//     E *= alpha;
-//     C0 += E;
-//     //    outfile->Printf("  Done. Timing %10.3f s; Energy = %14.10f Eh",
-//     //    timer.get(), E);
-// }
+    E *= alpha;
+    C0 += E;
+    //    outfile->Printf("  Done. Timing %10.3f s; Energy = %14.10f Eh",
+    //    timer.get(), E);
+}
 
-// void MRDSRG_SO::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-//                          BlockedTensor& C1) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar1, T1] -> C1 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H1_T1_C1_slow(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                              BlockedTensor& C1) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar1, T1] -> C1 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     C1["ip"] += alpha * H1["ap"] * T1["ia"];
-//     C1["pa"] -= alpha * H1["pi"] * T1["ia"];
+    C1["ip"] += alpha * H1["ap"] * T1["ia"];
+    C1["pa"] -= alpha * H1["pi"] * T1["ia"];
 
-//     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-// }
+    //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
 
-// void MRDSRG_SO::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-//                          BlockedTensor& C1) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar2, T1] -> C1 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H2_T1_C1_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                              BlockedTensor& C1) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar2, T1] -> C1 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     C1["qp"] += alpha * T1["ia"] * H2["qapj"] * Gamma1["ji"];
-//     C1["qp"] -= alpha * T1["mu"] * H2["qvpm"] * Gamma1["uv"];
+    C1["qp"] += alpha * T1["ia"] * H2["qapj"] * Gamma1["ji"];
+    C1["qp"] -= alpha * T1["mu"] * H2["qvpm"] * Gamma1["uv"];
 
-//     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-// }
+    //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
 
-// void MRDSRG_SO::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-//                          BlockedTensor& C1) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar1, T2] -> C1 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H1_T2_C1_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                              BlockedTensor& C1) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar1, T2] -> C1 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     C1["ia"] += alpha * T2["ijab"] * H1["bk"] * Gamma1["kj"];
-//     C1["ia"] -= alpha * T2["ijau"] * H1["vj"] * Gamma1["uv"];
+    C1["ia"] += alpha * T2["ijab"] * H1["bk"] * Gamma1["kj"];
+    C1["ia"] -= alpha * T2["ijau"] * H1["vj"] * Gamma1["uv"];
 
-//     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-// }
+    //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
 
-// void MRDSRG_SO::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-//                          BlockedTensor& C1) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar2, T2] -> C1 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H2_T2_C1_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                              BlockedTensor& C1) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar2, T2] -> C1 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     // [Hbar2, T2] (C_2)^3 -> C1
-//     BlockedTensor temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhgh"});
-//     temp1["ijrk"] = H2["abrk"] * T2["ijab"];
-//     C1["ir"] += 0.5 * alpha * temp1["ijrk"] * Gamma1["kj"];
+    // [Hbar2, T2] (C_2)^3 -> C1
+    BlockedTensor temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhgh"});
+    temp1["ijrk"] = H2["abrk"] * T2["ijab"];
+    C1["ir"] += 0.5 * alpha * temp1["ijrk"] * Gamma1["kj"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhaa"});
-//     temp1["ijvy"] = T2["ijux"] * Gamma1["uv"] * Gamma1["xy"];
-//     C1["ir"] += 0.5 * alpha * temp1["ijvy"] * H2["vyrj"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhaa"});
+    temp1["ijvy"] = T2["ijux"] * Gamma1["uv"] * Gamma1["xy"];
+    C1["ir"] += 0.5 * alpha * temp1["ijvy"] * H2["vyrj"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhap"});
-//     temp1["ikvb"] = T2["ijub"] * Gamma1["kj"] * Gamma1["uv"];
-//     C1["ir"] -= alpha * temp1["ikvb"] * H2["vbrk"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhap"});
+    temp1["ikvb"] = T2["ijub"] * Gamma1["kj"] * Gamma1["uv"];
+    C1["ir"] -= alpha * temp1["ikvb"] * H2["vbrk"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhpa"});
-//     temp1["ijav"] = T2["ijau"] * Gamma1["uv"];
-//     C1["pa"] -= 0.5 * alpha * temp1["ijav"] * H2["pvij"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhpa"});
+    temp1["ijav"] = T2["ijau"] * Gamma1["uv"];
+    C1["pa"] -= 0.5 * alpha * temp1["ijav"] * H2["pvij"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhpp"});
-//     temp1["klab"] = T2["ijab"] * Gamma1["ki"] * Gamma1["lj"];
-//     C1["pa"] -= 0.5 * alpha * temp1["klab"] * H2["pbkl"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhpp"});
+    temp1["klab"] = T2["ijab"] * Gamma1["ki"] * Gamma1["lj"];
+    C1["pa"] -= 0.5 * alpha * temp1["klab"] * H2["pbkl"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhpa"});
-//     temp1["ikav"] = T2["ijau"] * Gamma1["uv"] * Gamma1["kj"];
-//     C1["pa"] += alpha * temp1["ikav"] * H2["pvik"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhpa"});
+    temp1["ikav"] = T2["ijau"] * Gamma1["uv"] * Gamma1["kj"];
+    C1["pa"] += alpha * temp1["ikav"] * H2["pvik"];
 
-//     // [Hbar2, T2] C_4 C_2 2:2 -> C1
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhaa"});
-//     temp1["ijuv"] = T2["ijxy"] * Lambda2["xyuv"];
-//     C1["ir"] += 0.25 * alpha * temp1["ijuv"] * H2["uvrj"];
+    // [Hbar2, T2] C_4 C_2 2:2 -> C1
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhaa"});
+    temp1["ijuv"] = T2["ijxy"] * Lambda2["xyuv"];
+    C1["ir"] += 0.25 * alpha * temp1["ijuv"] * H2["uvrj"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"aapp"});
-//     temp1["xyab"] = T2["uvab"] * Lambda2["xyuv"];
-//     C1["pa"] -= 0.25 * alpha * temp1["xyab"] * H2["pbxy"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"aapp"});
+    temp1["xyab"] = T2["uvab"] * Lambda2["xyuv"];
+    C1["pa"] -= 0.25 * alpha * temp1["xyab"] * H2["pbxy"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hapa"});
-//     temp1["iuax"] = T2["iyav"] * Lambda2["uvxy"];
-//     C1["ir"] += alpha * temp1["iuax"] * H2["axru"];
-//     C1["pa"] -= alpha * temp1["iuax"] * H2["pxiu"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hapa"});
+    temp1["iuax"] = T2["iyav"] * Lambda2["uvxy"];
+    C1["ir"] += alpha * temp1["iuax"] * H2["axru"];
+    C1["pa"] -= alpha * temp1["iuax"] * H2["pxiu"];
 
-//     // [Hbar2, T2] C_4 C_2 1:3 -> C1
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"pa"});
-//     temp1["au"] = H2["avxy"] * Lambda2["xyuv"];
-//     C1["jb"] += 0.5 * alpha * temp1["au"] * T2["ujab"];
+    // [Hbar2, T2] C_4 C_2 1:3 -> C1
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"pa"});
+    temp1["au"] = H2["avxy"] * Lambda2["xyuv"];
+    C1["jb"] += 0.5 * alpha * temp1["au"] * T2["ujab"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"ah"});
-//     temp1["ui"] = H2["xyiv"] * Lambda2["uvxy"];
-//     C1["jb"] -= 0.5 * alpha * temp1["ui"] * T2["ijub"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"ah"});
+    temp1["ui"] = H2["xyiv"] * Lambda2["uvxy"];
+    C1["jb"] -= 0.5 * alpha * temp1["ui"] * T2["ijub"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"av"});
-//     temp1["xe"] = T2["uvey"] * Lambda2["xyuv"];
-//     C1["qs"] += 0.5 * alpha * temp1["xe"] * H2["eqxs"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"av"});
+    temp1["xe"] = T2["uvey"] * Lambda2["xyuv"];
+    C1["qs"] += 0.5 * alpha * temp1["xe"] * H2["eqxs"];
 
-//     temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"ca"});
-//     temp1["mx"] = T2["myuv"] * Lambda2["uvxy"];
-//     C1["qs"] -= 0.5 * alpha * temp1["mx"] * H2["xqms"];
+    temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"ca"});
+    temp1["mx"] = T2["myuv"] * Lambda2["uvxy"];
+    C1["qs"] -= 0.5 * alpha * temp1["mx"] * H2["xqms"];
 
-//     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-// }
+    //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
 
-// void MRDSRG_SO::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-//                          BlockedTensor& C2) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar1, T2] -> C2 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H1_T2_C2_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                              BlockedTensor& C2) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar1, T2] -> C2 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
-//     C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
-//     C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
-//     C2["iqab"] -= alpha * T2["ijab"] * H1["qj"];
+    C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
+    C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
+    C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
+    C2["iqab"] -= alpha * T2["ijab"] * H1["qj"];
 
-//     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-// }
+    //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
 
-// void MRDSRG_SO::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-//                          BlockedTensor& C2) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar2, T1] -> C2 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H2_T1_C2_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                              BlockedTensor& C2) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar2, T1] -> C2 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
-//     C2["ripq"] += alpha * T1["ia"] * H2["rapq"];
-//     C2["rsaq"] -= alpha * T1["ia"] * H2["rsiq"];
-//     C2["rspa"] -= alpha * T1["ia"] * H2["rspi"];
+    C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
+    C2["ripq"] += alpha * T1["ia"] * H2["rapq"];
+    C2["rsaq"] -= alpha * T1["ia"] * H2["rsiq"];
+    C2["rspa"] -= alpha * T1["ia"] * H2["rspi"];
 
-//     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-// }
+    //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
 
-// void MRDSRG_SO::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-//                          BlockedTensor& C2) {
-//     //    local_timer timer;
-//     //    std::string str = "Computing [Hbar2, T2] -> C2 ...";
-//     //    outfile->Printf("\n    %-35s", str.c_str());
+void MRDSRG_SO::H2_T2_C2_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                              BlockedTensor& C2) {
+    //    local_timer timer;
+    //    std::string str = "Computing [Hbar2, T2] -> C2 ...";
+    //    outfile->Printf("\n    %-35s", str.c_str());
 
-//     // particle-particle contractions
-//     C2["ijrs"] += 0.5 * alpha * H2["abrs"] * T2["ijab"];
+    // particle-particle contractions
+    C2["ijrs"] += 0.5 * alpha * H2["abrs"] * T2["ijab"];
 
-//     BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpa"});
-//     temp["ijby"] = T2["ijbx"] * Gamma1["xy"];
-//     C2["ijrs"] -= alpha * temp["ijby"] * H2["byrs"];
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpa"});
+    temp["ijby"] = T2["ijbx"] * Gamma1["xy"];
+    C2["ijrs"] -= alpha * temp["ijby"] * H2["byrs"];
 
-//     // hole-hole contractions
-//     C2["pqab"] += 0.5 * alpha * H2["pqij"] * T2["ijab"];
+    // hole-hole contractions
+    C2["pqab"] += 0.5 * alpha * H2["pqij"] * T2["ijab"];
 
-//     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ahpp"});
-//     temp["xjab"] = T2["yjab"] * Eta1["xy"];
-//     C2["pqab"] -= alpha * temp["xjab"] * H2["pqxj"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ahpp"});
+    temp["xjab"] = T2["yjab"] * Eta1["xy"];
+    C2["pqab"] -= alpha * temp["xjab"] * H2["pqxj"];
 
-//     // particle-hole contractions
-//     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpp"});
-//     temp["kjab"] = T2["ijab"] * Gamma1["ki"];
-//     C2["qjsb"] += alpha * temp["kjab"] * H2["aqks"];
-//     C2["qjas"] += alpha * temp["kjab"] * H2["bqks"];
+    // particle-hole contractions
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpp"});
+    temp["kjab"] = T2["ijab"] * Gamma1["ki"];
+    C2["qjsb"] += alpha * temp["kjab"] * H2["aqks"];
+    C2["qjas"] += alpha * temp["kjab"] * H2["bqks"];
 
-//     C2["iqsb"] -= alpha * temp["kiab"] * H2["aqks"];
-//     C2["iqas"] -= alpha * temp["kiab"] * H2["bqks"];
+    C2["iqsb"] -= alpha * temp["kiab"] * H2["aqks"];
+    C2["iqas"] -= alpha * temp["kiab"] * H2["bqks"];
 
-//     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhap"});
-//     temp["ijvb"] = T2["ijub"] * Gamma1["uv"];
-//     C2["qjsb"] -= alpha * temp["ijvb"] * H2["vqis"];
-//     C2["iqsb"] -= alpha * temp["ijvb"] * H2["vqjs"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhap"});
+    temp["ijvb"] = T2["ijub"] * Gamma1["uv"];
+    C2["qjsb"] -= alpha * temp["ijvb"] * H2["vqis"];
+    C2["iqsb"] -= alpha * temp["ijvb"] * H2["vqjs"];
 
-//     C2["qjas"] += alpha * temp["ijva"] * H2["vqis"];
-//     C2["iqas"] += alpha * temp["ijva"] * H2["vqjs"];
+    C2["qjas"] += alpha * temp["ijva"] * H2["vqis"];
+    C2["iqas"] += alpha * temp["ijva"] * H2["vqjs"];
 
-//     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-// }
+    //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
 
 void MRDSRG_SO::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C3) {
